@@ -62,8 +62,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                     handlerType: interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
                     eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("PropertyChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'INotifyPropertyChanged.PropertyChanged' add accessor method
@@ -84,8 +83,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                     handlerType: interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
                     eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("PropertyChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'INotifyPropertyChanged.PropertyChanged' remove accessor method

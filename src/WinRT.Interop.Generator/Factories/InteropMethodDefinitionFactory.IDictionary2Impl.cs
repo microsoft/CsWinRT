@@ -51,7 +51,7 @@ internal static partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -159,7 +159,7 @@ internal static partial class InteropMethodDefinitionFactory
                         valueAbiType,
                         module.CorLibTypeFactory.Boolean.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -273,7 +273,7 @@ internal static partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         keyType.GetAbiType(interopReferences)]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -373,7 +373,7 @@ internal static partial class InteropMethodDefinitionFactory
                     returnType: module.CorLibTypeFactory.Int32,
                     parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:

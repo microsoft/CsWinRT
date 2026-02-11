@@ -289,8 +289,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: actionType,
                 implementationMethod: get_ProgressMethod,
                 forwardedMethod: progressMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'set_Progress' getter method
             MethodDefinition set_ProgressMethod = new(
@@ -310,8 +309,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: actionType,
                 implementationMethod: set_ProgressMethod,
                 forwardedMethod: progressMethods[1],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Progress' property
             PropertyDefinition progressProperty = new(
@@ -344,8 +342,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: actionType,
                 implementationMethod: get_CompletedMethod,
                 forwardedMethod: completedMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'set_Completed' setter method
             MethodDefinition set_CompletedMethod = new(
@@ -365,8 +362,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: actionType,
                 implementationMethod: set_CompletedMethod,
                 forwardedMethod: completedMethods[1],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Completed' property
             PropertyDefinition completedProperty = new(
@@ -396,8 +392,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: actionType,
                 implementationMethod: getResultsMethod,
                 forwardedMethod: actionMethodsType.GetMethod("GetResults"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
         }
 
         /// <summary>
@@ -430,7 +425,6 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ProgressMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.get_Handler(
                 methodName: "get_Progress"u8,
                 asyncInfoType: actionType,
-                handlerType: asyncActionProgressHandlerType,
                 get_HandlerMethod: interopReferences.IAsyncActionWithProgress1get_Progress(progressType),
                 convertToUnmanagedMethod: progressConvertToUnmanagedMethod,
                 interopReferences: interopReferences,
@@ -444,7 +438,6 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition set_ProgressMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.set_Handler(
                 methodName: "set_Progress"u8,
                 asyncInfoType: actionType,
-                handlerType: asyncActionProgressHandlerType,
                 set_HandlerMethod: interopReferences.IAsyncActionWithProgress1set_Progress(progressType),
                 convertToManagedMethod: progressConvertToManagedMethod,
                 interopReferences: interopReferences,
@@ -461,7 +454,6 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.get_Handler(
                 methodName: "get_Completed"u8,
                 asyncInfoType: actionType,
-                handlerType: asyncActionWithProgressCompletedHandlerType,
                 get_HandlerMethod: interopReferences.IAsyncActionWithProgress1get_Completed(progressType),
                 convertToUnmanagedMethod: completedConvertToUnmanagedMethod,
                 interopReferences: interopReferences,
@@ -475,7 +467,6 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition set_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoImpl.set_Handler(
                 methodName: "set_Completed"u8,
                 asyncInfoType: actionType,
-                handlerType: asyncActionWithProgressCompletedHandlerType,
                 set_HandlerMethod: interopReferences.IAsyncActionWithProgress1set_Completed(progressType),
                 convertToManagedMethod: completedConvertToManagedMethod,
                 interopReferences: interopReferences,

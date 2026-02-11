@@ -57,7 +57,7 @@ internal partial class InteropMethodDefinitionFactory
                         keyType.GetAbiType(interopReferences),
                         valueType.GetAbiType(interopReferences).MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -190,7 +190,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.UInt32.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -293,7 +293,7 @@ internal partial class InteropMethodDefinitionFactory
                         keyType.GetAbiType(interopReferences),
                         module.CorLibTypeFactory.Boolean.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -429,7 +429,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType().MakePointerType(),
                         module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:

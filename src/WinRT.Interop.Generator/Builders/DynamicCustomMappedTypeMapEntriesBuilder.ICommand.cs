@@ -62,8 +62,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                     handlerType: interopReferences.EventHandler.ToReferenceTypeSignature(),
                     eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CanExecuteChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'ICommand.CanExecuteChanged' add accessor method
@@ -84,8 +83,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                     handlerType: interopReferences.EventHandler.ToReferenceTypeSignature(),
                     eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CanExecuteChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'ICommand.CanExecuteChanged' remove accessor method
@@ -123,8 +121,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 interfaceType: interfaceType,
                 implementationMethod: canExecuteMethod,
                 forwardedMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CanExecute"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Define the 'ICommand.Execute' method
             MethodDefinition executeMethod = new(
@@ -144,8 +141,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 interfaceType: interfaceType,
                 implementationMethod: executeMethod,
                 forwardedMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("Execute"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
         }
     }
 }

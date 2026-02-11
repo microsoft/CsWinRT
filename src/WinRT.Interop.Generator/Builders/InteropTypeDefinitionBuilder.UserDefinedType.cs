@@ -68,7 +68,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState,
-                module: module,
                 useWindowsUIXamlProjections: useWindowsUIXamlProjections));
 
             // Add the built-in native interfaces at the end
@@ -95,7 +94,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
         /// <param name="interfaceEntriesType">The <see cref="TypeDefinition"/> for the interface entries type returned by <see cref="InterfaceEntriesImpl"/>.</param>
         /// <param name="interfaceEntriesImplType">The <see cref="TypeDefinition"/> for the interface entries implementation type returned by <see cref="InterfaceEntriesImpl"/>.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -103,7 +101,6 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature userDefinedType,
             TypeDefinition interfaceEntriesType,
             TypeDefinition interfaceEntriesImplType,
-            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)

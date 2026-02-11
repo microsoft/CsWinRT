@@ -36,7 +36,6 @@ internal partial class InteropMethodRewriter
         /// <param name="parameterIndex">The index of the parameter to marshal.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static void RewriteMethod(
             TypeSignature parameterType,
             MethodDefinition method,
@@ -45,8 +44,7 @@ internal partial class InteropMethodRewriter
             CilInstruction finallyMarker,
             int parameterIndex,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
             if (method.CilMethodBody is not CilMethodBody body)
@@ -98,8 +96,7 @@ internal partial class InteropMethodRewriter
                         parameterIndex: parameterIndex,
                         marshallerMethod: emitState.LookupTypeDefinition(parameterType, "Marshaller").GetMethod("ConvertToUnmanaged"),
                         disposeMethod: null,
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else if (parameterType.IsConstructedNullableValueType(interopReferences))
                 {
@@ -114,8 +111,7 @@ internal partial class InteropMethodRewriter
                         parameterIndex: parameterIndex,
                         marshallerMethod: marshallerType.BoxToUnmanaged(),
                         disposeMethod: null,
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else if (parameterType.IsManagedValueType(interopReferences))
                 {
@@ -131,8 +127,7 @@ internal partial class InteropMethodRewriter
                         parameterIndex: parameterIndex,
                         marshallerMethod: marshallerType.ConvertToUnmanaged(),
                         disposeMethod: marshallerType.Dispose(),
-                        interopReferences: interopReferences,
-                        module: module);
+                        interopReferences: interopReferences);
                 }
                 else
                 {
@@ -153,8 +148,7 @@ internal partial class InteropMethodRewriter
                     loadMarker: loadMarker,
                     finallyMarker: finallyMarker,
                     parameterIndex: parameterIndex,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
             }
             else if (parameterType.IsTypeOfType(interopReferences))
             {
@@ -164,8 +158,7 @@ internal partial class InteropMethodRewriter
                     loadMarker: loadMarker,
                     finallyMarker: finallyMarker,
                     parameterIndex: parameterIndex,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
             }
             else if (parameterType.IsTypeOfException(interopReferences))
             {
@@ -189,8 +182,7 @@ internal partial class InteropMethodRewriter
                     parameterIndex: parameterIndex,
                     marshallerMethod: marshallerType.ConvertToUnmanaged(),
                     disposeMethod: null,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
             }
         }
 
@@ -207,8 +199,7 @@ internal partial class InteropMethodRewriter
             int parameterIndex,
             IMethodDefOrRef marshallerMethod,
             IMethodDefOrRef? disposeMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature parameterAbiType = parameterType.GetAbiType(interopReferences);
 
@@ -289,8 +280,7 @@ internal partial class InteropMethodRewriter
             CilInstruction loadMarker,
             CilInstruction finallyMarker,
             int parameterIndex,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Declare the local variables:
             //   [0]: 'ref char' (for the pinned 'string')
@@ -385,8 +375,7 @@ internal partial class InteropMethodRewriter
             CilInstruction loadMarker,
             CilInstruction finallyMarker,
             int parameterIndex,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             // Declare the local variables:
             //   [0]: 'TypeReference' (for 'typeReference')

@@ -56,7 +56,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.UInt32,
                         elementType.GetAbiType(interopReferences).MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -161,7 +161,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.UInt32.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -264,7 +264,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.UInt32.MakePointerType(),
                         module.CorLibTypeFactory.Boolean.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
@@ -428,7 +428,7 @@ internal partial class InteropMethodDefinitionFactory
                         elementType.GetAbiType(interopReferences).MakePointerType(),
                         module.CorLibTypeFactory.UInt32.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Labels for jumps

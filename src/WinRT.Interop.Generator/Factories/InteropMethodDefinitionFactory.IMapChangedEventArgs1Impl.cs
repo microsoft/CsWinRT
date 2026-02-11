@@ -46,7 +46,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         interopReferences.CollectionChange.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Labels for jumps
@@ -136,7 +136,7 @@ internal partial class InteropMethodDefinitionFactory
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         keyType.GetAbiType(interopReferences).MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Labels for jumps

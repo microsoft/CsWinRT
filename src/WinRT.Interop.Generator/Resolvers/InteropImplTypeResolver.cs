@@ -21,13 +21,11 @@ internal static class InteropImplTypeResolver
     /// </summary>
     /// <param name="type">The type to get the "Impl" method for.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="emitState">The emit state for this invocation.</param>
     /// <returns>The "Impl" methods for <paramref name="type"/>.</returns>
     public static (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) GetGenericInstanceTypeImpl(
         GenericInstanceTypeSignature type,
         InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
         InteropGeneratorEmitState emitState)
     {
         // For generic types (i.e. generic interfaces), their marshalling code will be in 'WinRT.Interop.dll',

@@ -259,7 +259,7 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.UInt32.MakePointerType(),
                         arrayType.BaseType.GetAbiType(interopReferences).MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Jump labels
@@ -382,7 +382,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState,
-                module: module,
                 useWindowsUIXamlProjections: useWindowsUIXamlProjections));
 
             var propertyValueImpl = InteropImplTypeResolver.GetSzArrayTypeImpl(arrayType, interopReferences);
@@ -416,7 +415,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="arrayInterfaceEntriesImplType">The <see cref="TypeDefinition"/> instance returned by <see cref="InterfaceEntriesImpl"/>.</param>
         /// <param name="arrayComWrappersCallbackType">The <see cref="TypeDefinition"/> instance returned by <see cref="ComWrappersCallback"/>.</param>
         /// <param name="get_IidMethod">The 'IID' get method for the 'IReferenceArray`1&lt;T&gt;' interface.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -426,7 +424,6 @@ internal partial class InteropTypeDefinitionBuilder
             TypeDefinition arrayInterfaceEntriesImplType,
             TypeDefinition arrayComWrappersCallbackType,
             MethodDefinition get_IidMethod,
-            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)

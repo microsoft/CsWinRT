@@ -32,14 +32,12 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="interfaceType">The <see cref="TypeSignature"/> for the interface type.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <param name="get_IidMethod">The resulting 'IID' get method for <paramref name="interfaceType"/>.</param>
     public static void IID(
         TypeSignature interfaceType,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
-        ModuleDefinition module,
         bool useWindowsUIXamlProjections,
         out MethodDefinition get_IidMethod)
     {
@@ -47,7 +45,6 @@ internal static partial class InteropTypeDefinitionBuilder
             name: InteropUtf8NameFactory.TypeName(interfaceType),
             interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
-            module: module,
             iid: GuidGenerator.CreateIID(interfaceType, interopReferences, useWindowsUIXamlProjections),
             out get_IidMethod);
     }
@@ -58,14 +55,12 @@ internal static partial class InteropTypeDefinitionBuilder
     /// <param name="name">The property and field name.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="iid">The <see cref="Guid"/> value to use for the RVA field.</param>
     /// <param name="get_IidMethod">The resulting 'get_IID' method.</param>
     private static void IID(
         Utf8String name,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
-        ModuleDefinition module,
         in Guid iid,
         out MethodDefinition get_IidMethod)
     {
@@ -74,7 +69,6 @@ internal static partial class InteropTypeDefinitionBuilder
             iidRvaFieldName: name,
             iidRvaDataType: interopDefinitions.IIDRvaDataSize_16,
             interopReferences: interopReferences,
-            module: module,
             iid: in iid,
             out FieldDefinition iidRvaField,
             out get_IidMethod,
@@ -909,8 +903,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 value: runtimeClassName,
                 target: externalTypeMapTargetType!,
                 trimTarget: externalTypeMapTrimTargetType!,
-                interopReferences: interopReferences,
-                module: module));
+                interopReferences: interopReferences));
         }
 
         // Emit the '[TypeMap<TTypeMapGroup>]' attribute for the metadata type map.
@@ -921,8 +914,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 value: metadataTypeName,
                 target: externalTypeMapTargetType!,
                 trimTarget: externalTypeMapTrimTargetType!,
-                interopReferences: interopReferences,
-                module: module));
+                interopReferences: interopReferences));
         }
 
         // Emit the '[TypeMapAssociation<TTypeMapGroup>]' attribute for the proxy type map.
@@ -932,8 +924,7 @@ internal static partial class InteropTypeDefinitionBuilder
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationWindowsRuntimeComWrappersTypeMapGroup(
                 source: marshallingTypeMapSourceType,
                 proxy: marshallingTypeMapProxyType!,
-                interopReferences: interopReferences,
-                module: module));
+                interopReferences: interopReferences));
         }
 
         // Emit the '[TypeMapAssociation<TTypeMapGroup>]' attribute for the metadata type map.
@@ -943,8 +934,7 @@ internal static partial class InteropTypeDefinitionBuilder
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationWindowsRuntimeMetadataTypeMapGroup(
                 source: metadataTypeMapSourceType,
                 proxy: metadataTypeMapProxyType!,
-                interopReferences: interopReferences,
-                module: module));
+                interopReferences: interopReferences));
         }
 
         // Emit the '[TypeMapAssociation<TTypeMapGroup>]' attribute for 'IDynamicInterfaceCastable' scenarios.
@@ -954,8 +944,7 @@ internal static partial class InteropTypeDefinitionBuilder
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.TypeMapAssociationDynamicInterfaceCastableImplementationTypeMapGroup(
                 source: interfaceTypeMapSourceType,
                 proxy: interfaceTypeMapProxyType!,
-                interopReferences: interopReferences,
-                module: module));
+                interopReferences: interopReferences));
         }
     }
 }

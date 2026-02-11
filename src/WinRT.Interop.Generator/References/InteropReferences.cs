@@ -6157,54 +6157,6 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="EventHandler1EventSource"/>'s marshalling method.
-    /// </summary>
-    /// <param name="delegateType">The input delegate type.</param>
-    public MemberReference EventHandler1EventSourceConvertToUnmanaged(TypeSignature delegateType)
-    {
-        return EventHandler1EventSource
-            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateInstance(
-                returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                parameterTypes: [delegateType]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="EventHandler2EventSource"/>'s marshalling method.
-    /// </summary>
-    /// <param name="delegateType">The input delegate type.</param>
-    public MemberReference EventHandler2EventSourceConvertToUnmanaged(TypeSignature delegateType)
-    {
-        return EventHandler2EventSource
-            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateInstance(
-                returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                parameterTypes: [delegateType]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="VectorChangedEventHandler1EventSource"/>'s marshalling method.
-    /// </summary>
-    /// <param name="delegateType">The input delegate type.</param>
-    public MemberReference VectorChangedEventHandler1EventSourceConvertToUnmanaged(TypeSignature delegateType)
-    {
-        return VectorChangedEventHandler1EventSource
-            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateInstance(
-                returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                parameterTypes: [delegateType]));
-    }
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="MapChangedEventHandler2EventSource"/>'s marshalling method.
-    /// </summary>
-    /// <param name="delegateType">The input delegate type.</param>
-    public MemberReference MapChangedEventHandler2EventSourceConvertToUnmanaged(TypeSignature delegateType)
-    {
-        return MapChangedEventHandler2EventSource
-            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateInstance(
-                returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                parameterTypes: [delegateType]));
-    }
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given base type for a <c>NativeObject</c> type.
     /// </summary>
     /// <param name="enumeratorType">The input native object base type.</param>

@@ -40,7 +40,6 @@ internal partial class InteropTypeDefinitionBuilder
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.EventHandler1EventSource,
                 baseEventSource_ctor: interopReferences.EventHandler1EventSource_ctor(eventArgsType),
-                baseEventSourceConvertToUnmanaged: interopReferences.EventHandler1EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
                 module: module,
@@ -69,7 +68,6 @@ internal partial class InteropTypeDefinitionBuilder
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.EventHandler2EventSource,
                 baseEventSource_ctor: interopReferences.EventHandler2EventSource_ctor(senderType, eventArgsType),
-                baseEventSourceConvertToUnmanaged: interopReferences.EventHandler2EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
                 module: module,
@@ -99,7 +97,6 @@ internal partial class InteropTypeDefinitionBuilder
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.VectorChangedEventHandler1EventSource,
                 baseEventSource_ctor: interopReferences.VectorChangedEventHandler1EventSource_ctor(elementType),
-                baseEventSourceConvertToUnmanaged: interopReferences.VectorChangedEventHandler1EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
                 module: module,
@@ -130,7 +127,6 @@ internal partial class InteropTypeDefinitionBuilder
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.MapChangedEventHandler2EventSource,
                 baseEventSource_ctor: interopReferences.MapChangedEventHandler2EventSource_ctor,
-                baseEventSourceConvertToUnmanaged: interopReferences.MapChangedEventHandler2EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
                 module: module,
@@ -146,7 +142,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the delegate type.</param>
         /// <param name="baseEventSourceType">The <see cref="TypeReference"/> for the base event source type.</param>
         /// <param name="baseEventSource_ctor">The <see cref="MemberReference"/> for the constructor of the base event source type.</param>
-        /// <param name="baseEventSourceConvertToUnmanaged">The <see cref="MemberReference"/> for the marshalling method of the base event source type.</param>
         /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Delegate.Marshaller"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -155,7 +150,6 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature delegateType,
             TypeReference baseEventSourceType,
             MemberReference baseEventSource_ctor,
-            MemberReference baseEventSourceConvertToUnmanaged,
             TypeDefinition marshallerType,
             InteropReferences interopReferences,
             ModuleDefinition module,

@@ -52,8 +52,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Vftbl"),
                 elementType: elementType.GetAbiType(interopReferences),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             module.TopLevelTypes.Add(vftblType);
         }
@@ -280,7 +279,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
         /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceImplType">The resulting interface implementation type.</param>
@@ -288,7 +286,6 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature readOnlyListType,
             TypeDefinition readOnlyListMethodsType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceImplType)
@@ -336,8 +333,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: readOnlyListType,
                 implementationMethod: get_ItemMethod,
                 forwardedMethod: readOnlyListMethodsType.GetMethod("Item"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Item' property
             PropertyDefinition itemProperty = new(
@@ -368,8 +364,7 @@ internal partial class InteropTypeDefinitionBuilder
                     interfaceType: readOnlyListType,
                     implementationMethod: get_CountMethod,
                     forwardedMethod: readOnlyListMethodsType.GetMethod("Count"u8),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 // Create the 'Count' property
                 PropertyDefinition countProperty = new(

@@ -29,7 +29,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="enumeratorType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="get_IidMethod">The resulting 'IID' get method for the <c>IIterator&lt;T&gt;</c> interface.</param>
@@ -37,7 +36,6 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature enumeratorType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
-            ModuleDefinition module,
             InteropGeneratorEmitState emitState,
             bool useWindowsUIXamlProjections,
             out MethodDefinition get_IidMethod)
@@ -46,7 +44,6 @@ internal partial class InteropTypeDefinitionBuilder
                 name: InteropUtf8NameFactory.TypeName(enumeratorType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
-                module: module,
                 iid: GuidGenerator.CreateIID(enumeratorType, interopReferences, useWindowsUIXamlProjections),
                 out get_IidMethod);
 
@@ -415,8 +412,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: enumeratorType,
                 implementationMethod: get_IEnumerator1CurrentMethod,
                 forwardedMethod: iteratorMethodsType.GetMethod("Current"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'IEnumerator<T>.Current' property
             PropertyDefinition enumerator1CurrentProperty = new(
@@ -486,8 +482,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: enumeratorType,
                 implementationMethod: moveNextMethod,
                 forwardedMethod: iteratorMethodsType.GetMethod("MoveNext"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Define the 'System.IEnumerator.Reset' method
             MethodDefinition resetMethod = new(

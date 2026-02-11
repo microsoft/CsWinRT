@@ -108,8 +108,7 @@ internal partial class InteropTypeDefinitionBuilder
                 implementationMethod: get_CountMethod,
                 forwardedMethod1: emitState.LookupTypeDefinition(readOnlyDictionaryType, "Methods").GetMethod("Count"u8),
                 forwardedMethod2: emitState.LookupTypeDefinition(readOnlyListType, "Methods").GetMethod("Count"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Count' property
             PropertyDefinition countProperty = new(

@@ -26,7 +26,6 @@ internal static class WellKnownCilMethodBodyFactory
     /// <param name="implementationMethod">The method being implemented.</param>
     /// <param name="forwardedMethod">The forwarded method with the actual marshalling implementation.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
     /// <returns>The resulting method body.</returns>
     /// <remarks>
     /// The resulting method body is meant to be used for direct method call forwarding (i.e. not for events).
@@ -35,8 +34,7 @@ internal static class WellKnownCilMethodBodyFactory
         TypeSignature interfaceType,
         MethodDefinition implementationMethod,
         MethodDefinition forwardedMethod,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // Prepare the method body with the basic setup and the call to the forwarded method
         CilMethodBody body = new()
@@ -76,7 +74,6 @@ internal static class WellKnownCilMethodBodyFactory
     /// <param name="forwardedMethod1">The first forwarded method with the actual marshalling implementation.</param>
     /// <param name="forwardedMethod2">The second forwarded method with the actual marshalling implementation.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
     /// <returns>The resulting method body.</returns>
     /// <remarks>
     /// <para>
@@ -92,8 +89,7 @@ internal static class WellKnownCilMethodBodyFactory
         MethodDefinition implementationMethod,
         MethodDefinition forwardedMethod1,
         MethodDefinition forwardedMethod2,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // Declare the local variables:
         //   [0]: 'WindowsRuntimeObject' (for 'thisObject')
@@ -173,7 +169,6 @@ internal static class WellKnownCilMethodBodyFactory
     /// <param name="eventMethod">The method returning the event table to use.</param>
     /// <param name="eventAccessorAttributes">The kind of accessor method to generate.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
     /// <returns>The resulting method body.</returns>
     /// <remarks>
     /// The resulting method body is specifically meant to be used for event accessors.
@@ -184,8 +179,7 @@ internal static class WellKnownCilMethodBodyFactory
         TypeSignature handlerType,
         MethodDefinition eventMethod,
         MethodSemanticsAttributes eventAccessorAttributes,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // Get the right accessor method to invoke
         MemberReference accessorMethod = eventAccessorAttributes switch

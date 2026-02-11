@@ -61,7 +61,7 @@ internal static partial class MetadataAssemblyAttributesBuilder
         module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.AssemblyMetadata("IsAotCompatible", "True", interopReferences, module));
 
         // Add the '[DisableRuntimeMarshalling]' attribute
-        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences, module));
+        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.DisableRuntimeMarshalling(interopReferences));
 
         // Copy over all module attributes from the runtime assembly
         foreach (CustomAttribute moduleAttribute in windowsRuntimeModule.CustomAttributes)

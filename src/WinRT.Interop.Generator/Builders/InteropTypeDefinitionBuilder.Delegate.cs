@@ -29,7 +29,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the <see cref="Delegate"/> type.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="get_IidMethod">The resulting 'IID' get method for the 'IDelegate' interface.</param>
         /// <param name="get_ReferenceIidMethod">The resulting 'IID' get method for the boxed 'IDelegate' interface.</param>
@@ -37,7 +36,6 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature delegateType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
-            ModuleDefinition module,
             bool useWindowsUIXamlProjections,
             out MethodDefinition get_IidMethod,
             out MethodDefinition get_ReferenceIidMethod)
@@ -47,7 +45,6 @@ internal partial class InteropTypeDefinitionBuilder
                 name: InteropUtf8NameFactory.TypeName(delegateType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
-                module: module,
                 iid: GuidGenerator.CreateIID(delegateType, interopReferences, useWindowsUIXamlProjections),
                 out get_IidMethod);
 
@@ -61,7 +58,6 @@ internal partial class InteropTypeDefinitionBuilder
                 name: InteropUtf8NameFactory.TypeName(delegateType, "Reference"),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
-                module: module,
                 iid: GuidGenerator.CreateIID(delegateType.MakeBoxedType(), interopReferences, useWindowsUIXamlProjections),
                 out get_ReferenceIidMethod);
         }
@@ -111,8 +107,7 @@ internal partial class InteropTypeDefinitionBuilder
                     name: InteropUtf8NameFactory.TypeName(delegateType, "Vftbl"),
                     senderType: senderType.GetAbiType(interopReferences),
                     argsType: argsType.GetAbiType(interopReferences),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(vftblType);
 
@@ -147,8 +142,7 @@ internal partial class InteropTypeDefinitionBuilder
                     name: InteropUtf8NameFactory.TypeName(sharedEventHandlerType, "Vftbl"),
                     senderType: senderType,
                     argsType: argsType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 // Go through the lookup so that we can reuse the vtable later
                 vftblType = emitState.GetOrAddDelegateVftblType(senderType, argsType, newVftblType);
@@ -227,7 +221,7 @@ internal partial class InteropTypeDefinitionBuilder
                         senderType.GetAbiType(interopReferences),
                         argsType.GetAbiType(interopReferences)]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Labels for jumps
@@ -333,7 +327,7 @@ internal partial class InteropTypeDefinitionBuilder
                         module.CorLibTypeFactory.Void.MakePointerType(),
                         module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Jump labels

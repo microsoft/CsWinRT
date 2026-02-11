@@ -116,8 +116,7 @@ internal partial class InteropTypeDefinitionBuilder
                 implementationMethod: addKeyValuePairMethod,
                 forwardedMethod1: dictionaryAddMethods[1],
                 forwardedMethod2: emitState.LookupTypeDefinition(listType, "Methods").GetMethod("Add"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Remove' ('KeyValuePair<,>') method
             MethodDefinition removeKeyValuePairMethod = new(
@@ -139,8 +138,7 @@ internal partial class InteropTypeDefinitionBuilder
                 implementationMethod: removeKeyValuePairMethod,
                 forwardedMethod1: dictionaryRemoveMethods[1],
                 forwardedMethod2: emitState.LookupTypeDefinition(listType, "Methods").GetMethod("Remove"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Contains' method
             MethodDefinition containsMethod = new(
@@ -162,8 +160,7 @@ internal partial class InteropTypeDefinitionBuilder
                 implementationMethod: containsMethod,
                 forwardedMethod1: emitState.LookupTypeDefinition(dictionaryType, "Methods").GetMethod("Contains"u8),
                 forwardedMethod2: emitState.LookupTypeDefinition(listType, "Methods").GetMethod("Contains"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Clear' method
             MethodDefinition clearMethod = new(
@@ -183,8 +180,7 @@ internal partial class InteropTypeDefinitionBuilder
                 implementationMethod: clearMethod,
                 forwardedMethod1: emitState.LookupTypeDefinition(dictionaryType, "Methods").GetMethod("Clear"u8),
                 forwardedMethod2: emitState.LookupTypeDefinition(listType, "Methods").GetMethod("Clear"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'CopyTo' method
             MethodDefinition copyToMethod = InteropMethodDefinitionFactory.ICollectionKeyValuePair2InterfaceImpl.CopyTo(
@@ -216,8 +212,7 @@ internal partial class InteropTypeDefinitionBuilder
                 implementationMethod: get_CountMethod,
                 forwardedMethod1: emitState.LookupTypeDefinition(dictionaryType, "Methods").GetMethod("Count"u8),
                 forwardedMethod2: emitState.LookupTypeDefinition(listType, "Methods").GetMethod("Count"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Count' property
             PropertyDefinition countProperty = new(

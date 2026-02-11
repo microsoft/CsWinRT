@@ -59,7 +59,6 @@ internal partial class InteropTypeDefinitionBuilder
             WellKnownMemberDefinitionFactory.IID(
                 forwardedIidMethod: get_IidMethod,
                 interopReferences: interopReferences,
-                module: module,
                 out MethodDefinition get_IidMethod2,
                 out PropertyDefinition iidProperty);
 
@@ -393,8 +392,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: enumerableType,
                 implementationMethod: enumerable1GetEnumeratorMethod,
                 forwardedMethod: iterableMethodsType.GetMethod("First"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'IEnumerable.GetEnumerator' method
             MethodDefinition enumerableGetEnumeratorMethod = new(
