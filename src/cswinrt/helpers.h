@@ -852,6 +852,7 @@ namespace cswinrt
                     { "Size", "Windows.Foundation", "Size" },
                     { "TimeSpan", "System", "TimeSpan", true },
                     { "TypedEventHandler`2", "System", "EventHandler`2", false },
+                    { "UniversalApiContract", "Windows.Foundation", "UniversalApiContract"},
                     { "Uri", "System", "Uri", true }
                 }
             },
