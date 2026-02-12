@@ -248,7 +248,8 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncInfo) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IStringable);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IStringable) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IBuffer);
         }
 
         /// <summary>
