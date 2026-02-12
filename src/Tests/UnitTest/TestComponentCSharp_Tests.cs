@@ -1970,8 +1970,17 @@ namespace UnitTest
             unsafe static (WeakReference, WindowsRuntimeObjectReference) CreateCCW(Action<object, int> action)
             {
                 EventHandler<object, int> eventHandler = (o, i) => action(o, i);
-                WindowsRuntimeObjectReference ccw1 = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(WindowsRuntimeMarshal.ConvertToUnmanaged(eventHandler), WellKnownInterfaceIIDs.IID_IInspectable, out _);
-                return (new WeakReference(eventHandler), ccw1);
+                void* eventHandlerCcwPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(eventHandler);
+
+                try
+                {
+                    WindowsRuntimeObjectReference ccw1 = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(eventHandlerCcwPtr, WellKnownInterfaceIIDs.IID_IInspectable, out _);
+                    return (new WeakReference(eventHandler), ccw1);
+                }
+                finally
+                {
+                    WindowsRuntimeMarshal.Free(eventHandlerCcwPtr);
+                }
             }
 
             static (WeakReference obj, WeakReference ccw) GetWeakReferenceToObjectAndCCW(Action<object, int> action)

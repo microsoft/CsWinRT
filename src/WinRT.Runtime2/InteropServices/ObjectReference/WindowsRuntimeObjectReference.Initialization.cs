@@ -266,7 +266,16 @@ public unsafe partial class WindowsRuntimeObjectReference
         // Do a 'QueryInterface' to actually get the interface pointer we're looking for
         IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in iid, out void* interfacePtr).Assert();
 
-        return InitializeObjectReferenceUnsafe(interfacePtr, in iid);
+        try
+        {
+            return InitializeObjectReferenceUnsafe(interfacePtr, in iid);
+        }
+        finally
+        {
+            // We need to release the pointer which we get from the QueryInterface,
+            // given InitializeObjectReferenceUnsafe does its own AddRef.
+            _ = IUnknownVftbl.ReleaseUnsafe(interfacePtr);
+        }
     }
 
     /// <summary>
