@@ -282,7 +282,21 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
         // We always pass no flags, as our implementation will use 'CreatedWrapperFlags' to signal the
         // appropriate flags back from the marshalling stubs. We do pass a user state so that we can
         // pick the overload that will actually observe the returned 'CreatedWrapperFlags' value.
-        return GetOrCreateObjectForComInstance(externalComObject, CreateObjectFlags.None, userState: null);
+        try
+        {
+            return GetOrCreateObjectForComInstance(externalComObject, CreateObjectFlags.None, userState: null);
+        }
+        finally
+        {
+            // Always reset the shared state after the call, regardless of whether the call succeeded. We want to
+            // make sure that those fields are always 'null' before any following calls. This is necessary because
+            // we cannot guarantee callers will always go through this overload to set them correctly. In particular,
+            // the 'WeakReference<T>' callback might use this 'ComWrappers' instance externally, and if any of these
+            // fields were set it would cause issues. See additional notes below for this in 'CreateObject'.
+            ObjectComWrappersCallback = null;
+            UnsealedObjectComWrappersCallback = null;
+            CreateObjectTargetInterfacePointer = null;
+        }
     }
 
     /// <inheritdoc/>

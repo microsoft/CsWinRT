@@ -52,8 +52,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Vftbl"),
                 elementType: elementType.GetAbiType(interopReferences),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             module.TopLevelTypes.Add(vftblType);
         }
@@ -82,9 +81,9 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType, "IVectorViewMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IVectorViewMethods1.MakeGenericReferenceType(elementType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IVectorViewMethods1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(vectorViewMethodsType);
@@ -94,12 +93,11 @@ internal partial class InteropTypeDefinitionBuilder
                 readOnlyListType: readOnlyListType,
                 vftblType: vftblType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Add and implement the 'GetAt' method
             vectorViewMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IVectorViewMethods1GetAt(elementType).Import(module),
+                declaration: interopReferences.IVectorViewMethods1GetAt(elementType),
                 method: getAtMethod);
         }
 
@@ -127,7 +125,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(readOnlyListMethodsType);
 
@@ -141,10 +139,10 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Item"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: elementType.Import(module),
+                    returnType: elementType,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        module.CorLibTypeFactory.Int32]));
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        interopReferences.Int32]));
 
             readOnlyListMethodsType.Methods.Add(get_ItemMethod);
 
@@ -155,7 +153,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Call, interopReferences.IReadOnlyListMethods1get_Item(elementType, vectorViewMethodsType).Import(module) },
+                    { Call, interopReferences.IReadOnlyListMethods1get_Item(elementType, vectorViewMethodsType) },
                     { Ret }
                 }
             };
@@ -167,8 +165,8 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Count"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]));
+                    returnType: interopReferences.Int32,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
 
             readOnlyListMethodsType.Methods.Add(countMethod);
 
@@ -178,7 +176,7 @@ internal partial class InteropTypeDefinitionBuilder
                 Instructions =
                 {
                     { Ldarg_0 },
-                    { Call, interopReferences.IReadOnlyListMethodsCount.Import(module) },
+                    { Call, interopReferences.IReadOnlyListMethodsCount },
                     { Ret }
                 }
             };
@@ -280,7 +278,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyListType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyList{T}"/> type.</param>
         /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceImplType">The resulting interface implementation type.</param>
@@ -288,7 +285,6 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature readOnlyListType,
             TypeDefinition readOnlyListMethodsType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceImplType)
@@ -306,15 +302,15 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
-                    InteropCustomAttributeFactory.Guid(readOnlyListType, interopReferences, module, useWindowsUIXamlProjections)
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
+                    InteropCustomAttributeFactory.Guid(readOnlyListType, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {
-                    new InterfaceImplementation(readOnlyListType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(readOnlyCollectionType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
+                    new InterfaceImplementation(readOnlyListType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(readOnlyCollectionType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable)
                 }
             };
 
@@ -324,11 +320,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyList<{elementType.FullName}>.get_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(elementType.Import(module), module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(elementType, interopReferences.Int32));
 
             // Add and implement the 'get_Item' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IReadOnlyList1get_Item(elementType).Import(module),
+                declaration: interopReferences.IReadOnlyList1get_Item(elementType),
                 method: get_ItemMethod);
 
             // Create a body for the 'get_Item' method
@@ -336,8 +332,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: readOnlyListType,
                 implementationMethod: get_ItemMethod,
                 forwardedMethod: readOnlyListMethodsType.GetMethod("Item"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Item' property
             PropertyDefinition itemProperty = new(
@@ -356,11 +351,11 @@ internal partial class InteropTypeDefinitionBuilder
                 MethodDefinition get_CountMethod = new(
                     name: $"System.Collections.Generic.IReadOnlyCollection<{elementType.FullName}>.get_Count",
                     attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                    signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+                    signature: MethodSignature.CreateInstance(interopReferences.Int32));
 
                 // Add and implement the 'get_Count' method
                 interfaceImplType.AddMethodImplementation(
-                    declaration: interopReferences.IReadOnlyCollection1get_Count(elementType).Import(module),
+                    declaration: interopReferences.IReadOnlyCollection1get_Count(elementType),
                     method: get_CountMethod);
 
                 // Create a body for the 'get_Count' method
@@ -368,8 +363,7 @@ internal partial class InteropTypeDefinitionBuilder
                     interfaceType: readOnlyListType,
                     implementationMethod: get_CountMethod,
                     forwardedMethod: readOnlyListMethodsType.GetMethod("Count"u8),
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 // Create the 'Count' property
                 PropertyDefinition countProperty = new(
@@ -408,31 +402,27 @@ internal partial class InteropTypeDefinitionBuilder
                 readOnlyListType: readOnlyListType,
                 getAtMethod: interopReferences.IReadOnlyListAdapter1GetAt(elementType),
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Define the 'get_Size' method
             MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.get_Size(
                 readOnlyListType: readOnlyListType,
                 sizeMethod: interopReferences.IReadOnlyListAdapter1Size(elementType),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Define the 'IndexOf' method
             MethodDefinition indexOfMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.IndexOf(
                 readOnlyListType: readOnlyListType,
                 indexOfMethod: interopReferences.IReadOnlyListAdapter1IndexOf(elementType),
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Define the 'GetMany' method
             MethodDefinition getManyMethod = InteropMethodDefinitionFactory.IReadOnlyList1Impl.GetMany(
                 readOnlyListType: readOnlyListType,
                 getManyMethod: null,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,

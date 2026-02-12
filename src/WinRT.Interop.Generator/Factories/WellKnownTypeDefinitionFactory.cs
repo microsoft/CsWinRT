@@ -20,16 +20,15 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates an <c>IUnknownVftbl</c> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <c>IUnknownVftbl</c> type.</returns>
-    public static TypeDefinition IUnknownVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IUnknownVftbl(InteropReferences interopReferences)
     {
         // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IUnknownVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -41,9 +40,9 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
         // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -52,16 +51,15 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates an <c>IUnknownVftbl</c> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <c>IUnknownVftbl</c> type.</returns>
-    public static TypeDefinition IInspectableVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IInspectableVftbl(InteropReferences interopReferences)
     {
         // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IInspectableVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -81,12 +79,12 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT> GetIids;
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -95,21 +93,19 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of a <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     /// <remarks>
-    /// Unlike <see cref="DelegateVftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// Unlike <see cref="DelegateVftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences)"/>,
     /// this overload just uses <see cref="void"/><c>*</c> as sender and args types, so it can be shared across reference types (for both types).
     /// </remarks>
-    public static TypeDefinition DelegateVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition DelegateVftbl(InteropReferences interopReferences)
     {
         return DelegateVftbl(
             ns: null,
             name: "<DelegateVftbl>"u8,
             senderType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
             argsType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            interopReferences: interopReferences,
-            module: module);
+            interopReferences: interopReferences);
     }
 
     /// <summary>
@@ -120,22 +116,20 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="senderType">The sender type for the vtable type.</param>
     /// <param name="argsType">The args type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition DelegateVftbl(
         Utf8String? ns,
         Utf8String name,
         TypeSignature senderType,
         TypeSignature argsType,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // We're declaring an 'internal struct' type
         TypeDefinition vftblType = new(
             ns: ns,
             name: name,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -154,10 +148,10 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
         // public delegate* unmanaged[MemberFunction]<void*, uint> Release;
         // public delegate* unmanaged[MemberFunction]<void*, <SENDER_TYPE>, <ARGS_TYPE>, HRESULT> Invoke;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Invoke"u8, FieldAttributes.Public, invokeType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Invoke"u8, FieldAttributes.Public, invokeType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -166,15 +160,14 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IReference&lt;T&gt;' instantiation for some <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition DelegateReferenceVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition DelegateReferenceVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<DelegateReferenceVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -192,10 +185,10 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
+                baseType: interopReferences.CorLibTypeFactory.Int32),
             parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
 
         // The vtable layout for 'IReference<T>' looks like this:
         //
@@ -206,13 +199,13 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
         // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Value;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, valueType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, valueType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -221,18 +214,17 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for COM interface entries for a <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition DelegateInterfaceEntriesType(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition DelegateInterfaceEntriesType(InteropReferences interopReferences)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
             name: "<DelegateInterfaceEntries>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
-        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
+        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.ToValueTypeSignature();
 
         // The type layout looks like this:
         //
@@ -262,15 +254,14 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IEnumerator{T}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IEnumerator1Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IEnumerator1Vftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IEnumerator1Vftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -300,16 +291,16 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> get_HasCurrent;
         // public delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> MoveNext;
         // public delegate* unmanaged[MemberFunction]<void*, uint, void*, uint*, HRESULT> GetMany;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Current"u8, FieldAttributes.Public, get_CurrentType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_HasCurrent"u8, FieldAttributes.Public, get_HasCurrentType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("MoveNext"u8, FieldAttributes.Public, moveNextType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetMany"u8, FieldAttributes.Public, getManyType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Current"u8, FieldAttributes.Public, get_CurrentType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_HasCurrent"u8, FieldAttributes.Public, get_HasCurrentType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("MoveNext"u8, FieldAttributes.Public, moveNextType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetMany"u8, FieldAttributes.Public, getManyType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -318,15 +309,14 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IEnumerable{T}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IEnumerable1Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IEnumerable1Vftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IEnumerable1Vftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -350,13 +340,13 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
         // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> First;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("First"u8, FieldAttributes.Public, firstType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("First"u8, FieldAttributes.Public, firstType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -365,20 +355,18 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IReadOnlyList{T}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     /// <remarks>
-    /// Unlike <see cref="IReadOnlyList1Vftbl(Utf8String?, Utf8String, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// Unlike <see cref="IReadOnlyList1Vftbl(Utf8String?, Utf8String, TypeSignature, InteropReferences)"/>,
     /// this overload just uses <see cref="void"/><c>*</c> as element type, so it can be shared across reference types.
     /// </remarks>
-    public static TypeDefinition IReadOnlyList1Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IReadOnlyList1Vftbl(InteropReferences interopReferences)
     {
         return IReadOnlyList1Vftbl(
             ns: null,
             name: "<IReadOnlyList1Vftbl>"u8,
             elementType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            interopReferences: interopReferences,
-            module: module);
+            interopReferences: interopReferences);
     }
 
     /// <summary>
@@ -388,20 +376,18 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="name">The type name.</param>
     /// <param name="elementType">The element type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition IReadOnlyList1Vftbl(
         Utf8String? ns,
         Utf8String name,
         TypeSignature elementType,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: ns,
             name: name,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -431,16 +417,16 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT> get_Size;
         // public delegate* unmanaged[MemberFunction]<void*, <ELEMENT_TYPE>, uint*, HRESULT> IndexOf;
         // public delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetAt"u8, FieldAttributes.Public, getAtType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Size"u8, FieldAttributes.Public, get_SizeType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("IndexOf"u8, FieldAttributes.Public, indexOfType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetMany"u8, FieldAttributes.Public, getManyType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetAt"u8, FieldAttributes.Public, getAtType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Size"u8, FieldAttributes.Public, get_SizeType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("IndexOf"u8, FieldAttributes.Public, indexOfType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetMany"u8, FieldAttributes.Public, getManyType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -449,20 +435,18 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IList{T}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     /// <remarks>
-    /// Unlike <see cref="IList1Vftbl(Utf8String?, Utf8String, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// Unlike <see cref="IList1Vftbl(Utf8String?, Utf8String, TypeSignature, InteropReferences)"/>,
     /// this overload just uses <see cref="void"/><c>*</c> as element type, so it can be shared across reference types.
     /// </remarks>
-    public static TypeDefinition IList1Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IList1Vftbl(InteropReferences interopReferences)
     {
         return IList1Vftbl(
             ns: null,
             name: "<IList1Vftbl>"u8,
             elementType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            interopReferences: interopReferences,
-            module: module);
+            interopReferences: interopReferences);
     }
 
     /// <summary>
@@ -472,20 +456,18 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="name">The type name.</param>
     /// <param name="elementType">The element type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition IList1Vftbl(
         Utf8String? ns,
         Utf8String name,
         TypeSignature elementType,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: ns,
             name: name,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -532,24 +514,24 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, HRESULT> Clear;
         // public delegate* unmanaged[MemberFunction]<void*, uint, uint, <ELEMENT_TYPE>*, uint*, HRESULT> GetMany;
         // public delegate* unmanaged[MemberFunction]<void*, uint, <ELEMENT_TYPE>*, HRESULT> ReplaceAll;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetAt"u8, FieldAttributes.Public, getAtType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Size"u8, FieldAttributes.Public, get_SizeType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetView"u8, FieldAttributes.Public, getViewType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("IndexOf"u8, FieldAttributes.Public, indexOfType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("SetAt"u8, FieldAttributes.Public, setAtType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("InsertAt"u8, FieldAttributes.Public, insertAtType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("RemoveAt"u8, FieldAttributes.Public, removeAtType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Append"u8, FieldAttributes.Public, appendType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("RemoveAtEnd"u8, FieldAttributes.Public, removeAtEndType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Clear"u8, FieldAttributes.Public, clearType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetMany"u8, FieldAttributes.Public, getManyType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("ReplaceAll"u8, FieldAttributes.Public, replaceAllType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetAt"u8, FieldAttributes.Public, getAtType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Size"u8, FieldAttributes.Public, get_SizeType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetView"u8, FieldAttributes.Public, getViewType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("IndexOf"u8, FieldAttributes.Public, indexOfType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("SetAt"u8, FieldAttributes.Public, setAtType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("InsertAt"u8, FieldAttributes.Public, insertAtType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("RemoveAt"u8, FieldAttributes.Public, removeAtType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Append"u8, FieldAttributes.Public, appendType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("RemoveAtEnd"u8, FieldAttributes.Public, removeAtEndType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Clear"u8, FieldAttributes.Public, clearType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetMany"u8, FieldAttributes.Public, getManyType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("ReplaceAll"u8, FieldAttributes.Public, replaceAllType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -558,21 +540,19 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     /// <remarks>
-    /// Unlike <see cref="IReadOnlyDictionary2Vftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// Unlike <see cref="IReadOnlyDictionary2Vftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences)"/>,
     /// this overload just uses <see cref="void"/><c>*</c> as key and value types, so it can be shared across reference types (for both types).
     /// </remarks>
-    public static TypeDefinition IReadOnlyDictionary2Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IReadOnlyDictionary2Vftbl(InteropReferences interopReferences)
     {
         return IReadOnlyDictionary2Vftbl(
             ns: null,
             name: "<IReadOnlyDictionary2Vftbl>"u8,
             keyType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
             valueType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            interopReferences: interopReferences,
-            module: module);
+            interopReferences: interopReferences);
     }
 
     /// <summary>
@@ -583,21 +563,19 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="keyType">The key type for the vtable type.</param>
     /// <param name="valueType">The value type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition IReadOnlyDictionary2Vftbl(
         Utf8String? ns,
         Utf8String name,
         TypeSignature keyType,
         TypeSignature valueType,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: ns,
             name: name,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -627,16 +605,16 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, uint*, HRESULT> get_Size;
         // public delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, bool*, HRESULT> HasKey;
         // public delegate* unmanaged[MemberFunction]<void*, void**, void**, HRESULT> Split;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Lookup"u8, FieldAttributes.Public, lookupType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Size"u8, FieldAttributes.Public, get_SizeType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("HasKey"u8, FieldAttributes.Public, hasKeyType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Split"u8, FieldAttributes.Public, splitType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Lookup"u8, FieldAttributes.Public, lookupType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Size"u8, FieldAttributes.Public, get_SizeType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("HasKey"u8, FieldAttributes.Public, hasKeyType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Split"u8, FieldAttributes.Public, splitType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -645,21 +623,19 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> instantiation.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     /// <remarks>
-    /// Unlike <see cref="IDictionary2Vftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences, ModuleDefinition)"/>,
+    /// Unlike <see cref="IDictionary2Vftbl(Utf8String?, Utf8String, TypeSignature, TypeSignature, InteropReferences)"/>,
     /// this overload just uses <see cref="void"/><c>*</c> as key and value types, so it can be shared across reference types (for both types).
     /// </remarks>
-    public static TypeDefinition IDictionary2Vftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IDictionary2Vftbl(InteropReferences interopReferences)
     {
         return IDictionary2Vftbl(
             ns: null,
             name: "<IDictionary2Vftbl>"u8,
             keyType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
             valueType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
-            interopReferences: interopReferences,
-            module: module);
+            interopReferences: interopReferences);
     }
 
     /// <summary>
@@ -670,21 +646,19 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="keyType">The key type for the vtable type.</param>
     /// <param name="valueType">The value type for the vtable type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
     public static TypeDefinition IDictionary2Vftbl(
         Utf8String? ns,
         Utf8String name,
         TypeSignature keyType,
         TypeSignature valueType,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: ns,
             name: name,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -720,19 +694,19 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, <VALUE_TYPE>, bool*, HRESULT> Insert;
         // public delegate* unmanaged[MemberFunction]<void*, <KEY_TYPE>, HRESULT> Remove;
         // public delegate* unmanaged[MemberFunction]<void*, HRESULT> Clear;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Lookup"u8, FieldAttributes.Public, lookupType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Size"u8, FieldAttributes.Public, get_SizeType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("HasKey"u8, FieldAttributes.Public, hasKeyType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetView"u8, FieldAttributes.Public, getViewType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Insert"u8, FieldAttributes.Public, insertType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Remove"u8, FieldAttributes.Public, removeType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Clear"u8, FieldAttributes.Public, clearType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Lookup"u8, FieldAttributes.Public, lookupType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Size"u8, FieldAttributes.Public, get_SizeType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("HasKey"u8, FieldAttributes.Public, hasKeyType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetView"u8, FieldAttributes.Public, getViewType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Insert"u8, FieldAttributes.Public, insertType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Remove"u8, FieldAttributes.Public, removeType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Clear"u8, FieldAttributes.Public, clearType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -741,15 +715,14 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IKeyValuePair`2&lt;K, V&gt;' instantiation for some <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IKeyValuePairVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IKeyValuePairVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IKeyValuePairVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -767,10 +740,10 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
+                baseType: interopReferences.CorLibTypeFactory.Int32),
             parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType()]);
+                interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                interopReferences.CorLibTypeFactory.Void.MakePointerType()]);
 
         // The vtable layout for 'IKeyValuePair`2<Key, Value>' looks like this:
         //
@@ -782,14 +755,14 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
         // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Key;
         // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Value;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Key"u8, FieldAttributes.Public, get_KeyOrValueType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, get_KeyOrValueType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Key"u8, FieldAttributes.Public, get_KeyOrValueType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, get_KeyOrValueType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -798,18 +771,17 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for COM interface entries for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IKeyValuePairInterfaceEntriesType(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IKeyValuePairInterfaceEntriesType(InteropReferences interopReferences)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
             name: "<IKeyValuePairInterfaceEntries>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the signature for the 'ComInterfaceEntry' type (this is a bit involved, so cache it)
-        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
+        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.ToValueTypeSignature();
 
         // The type layout looks like this:
         //
@@ -835,15 +807,14 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IMapChangedEventArgs`1&lt;K&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IMapChangedEventArgsVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IMapChangedEventArgsVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IMapChangedEventArgsVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -869,14 +840,14 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
         // public delegate* unmanaged[MemberFunction]<void*, CollectionChange*, HRESULT> get_CollectionChange;
         // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Key;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_CollectionChange"u8, FieldAttributes.Public, collectionChangeType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Key"u8, FieldAttributes.Public, keyType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_CollectionChange"u8, FieldAttributes.Public, collectionChangeType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Key"u8, FieldAttributes.Public, keyType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -885,15 +856,14 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IObservableVector`1&lt;T&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IObservableVectorVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IObservableVectorVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IObservableVectorVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -919,14 +889,14 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
         // public delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, HRESULT> add_VectorChanged;
         // public delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, HRESULT> remove_VectorChanged;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("add_VectorChanged"u8, FieldAttributes.Public, add_VectorChanged.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("remove_VectorChanged"u8, FieldAttributes.Public, remove_VectorChanged.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("add_VectorChanged"u8, FieldAttributes.Public, add_VectorChanged.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("remove_VectorChanged"u8, FieldAttributes.Public, remove_VectorChanged.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -935,15 +905,14 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IObservableMap`2&lt;K, V&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IObservableMapVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IObservableMapVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IObservableMapVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -969,14 +938,14 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
         // public delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, HRESULT> add_MapChanged;
         // public delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, HRESULT> remove_MapChanged;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("add_MapChanged"u8, FieldAttributes.Public, add_MapChanged.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("remove_MapChanged"u8, FieldAttributes.Public, remove_MapChanged.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("add_MapChanged"u8, FieldAttributes.Public, add_MapChanged.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("remove_MapChanged"u8, FieldAttributes.Public, remove_MapChanged.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -985,15 +954,14 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IAsyncActionWithProgress`1&lt;TProgress&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IAsyncActionWithProgressVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IAsyncActionWithProgressVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IAsyncActionWithProgressVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -1035,17 +1003,17 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
         // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> set_Completed;
         // public delegate* unmanaged[MemberFunction]<void*, HRESULT> GetResults;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("set_Progress"u8, FieldAttributes.Public, set_ProgressType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Progress"u8, FieldAttributes.Public, get_ProgressType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("set_Progress"u8, FieldAttributes.Public, set_ProgressType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Progress"u8, FieldAttributes.Public, get_ProgressType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -1054,15 +1022,14 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IAsyncOperation`1&lt;TResult&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IAsyncOperationVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IAsyncOperationVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IAsyncOperationVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -1092,15 +1059,15 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
         // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> set_Completed;
         // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> GetResults;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -1109,15 +1076,14 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IAsyncOperationWithProgress`2&lt;TResult, TProgress&gt;' instantiation for some type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IAsyncOperationWithProgressVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition IAsyncOperationWithProgressVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IAsyncOperationWithProgressVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -1153,17 +1119,17 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
         // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> set_Completed;
         // public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> GetResults;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("set_Progress"u8, FieldAttributes.Public, set_ProgressType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Progress"u8, FieldAttributes.Public, get_ProgressType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("set_Progress"u8, FieldAttributes.Public, set_ProgressType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Progress"u8, FieldAttributes.Public, get_ProgressType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("set_Completed"u8, FieldAttributes.Public, set_CompletedType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Completed"u8, FieldAttributes.Public, get_CompletedType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetResults"u8, FieldAttributes.Public, getResultsType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -1172,15 +1138,14 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for the vtable of an 'IReferenceArray`1&lt;T&gt;' instantiation for some SZ array type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition ReferenceArrayVftbl(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition ReferenceArrayVftbl(InteropReferences interopReferences)
     {
         TypeDefinition vftblType = new(
             ns: null,
             name: "<IReferenceArrayVftbl>"u8,
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the 'IUnknown' signatures
         MethodSignature queryInterfaceType = WellKnownTypeSignatureFactory.QueryInterfaceImpl(interopReferences);
@@ -1198,11 +1163,11 @@ internal static partial class WellKnownTypeDefinitionFactory
             returnType: new CustomModifierTypeSignature(
                 modifierType: interopReferences.CallConvMemberFunction,
                 isRequired: false,
-                baseType: module.CorLibTypeFactory.Int32),
+                baseType: interopReferences.Int32),
             parameterTypes: [
-                module.CorLibTypeFactory.Void.MakePointerType(),
-                module.CorLibTypeFactory.UInt32.MakePointerType(),
-                module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]);
+                interopReferences.Void.MakePointerType(),
+                interopReferences.UInt32.MakePointerType(),
+                interopReferences.Void.MakePointerType().MakePointerType()]);
 
         // The vtable layout for 'IReferenceArray`1<T>' looks like this:
         //
@@ -1213,13 +1178,13 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> GetRuntimeClassName;
         // public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
         // public delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT> get_Value;
-        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.Import(module).MakeFunctionPointerType()));
-        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, valueType.Import(module).MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("QueryInterface"u8, FieldAttributes.Public, queryInterfaceType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("AddRef"u8, FieldAttributes.Public, addRefType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("Release"u8, FieldAttributes.Public, releaseType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetIids"u8, FieldAttributes.Public, getIidsType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetRuntimeClassName"u8, FieldAttributes.Public, getRuntimeClassNameType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("GetTrustLevel"u8, FieldAttributes.Public, getTrustLevelType.MakeFunctionPointerType()));
+        vftblType.Fields.Add(new FieldDefinition("get_Value"u8, FieldAttributes.Public, valueType.MakeFunctionPointerType()));
 
         return vftblType;
     }
@@ -1229,18 +1194,17 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// </summary>
     /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition UserDefinedInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition UserDefinedInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
             name: $"<UserDefinedInterfaceEntries(Count={numberOfEntries})>",
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the signature for the 'ComInterfaceEntry' type
-        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
+        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.ToValueTypeSignature();
 
         // Calculate the number of dynamic entries, i.e. the ones from explicitly implemented interfaces
         int numberOfDynamicEntries = numberOfEntries - InteropInterfaceEntriesResolver.NumberOfNativeComInterfaceEntries;
@@ -1276,18 +1240,17 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// </summary>
     /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition SzArrayInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition SzArrayInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
             name: $"<SzArrayInterfaceEntries(Count={numberOfEntries})>",
             attributes: TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-            baseType: interopReferences.ValueType.Import(module));
+            baseType: interopReferences.ValueType);
 
         // Get the signature for the 'ComInterfaceEntry' type
-        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.Import(module).ToValueTypeSignature();
+        TypeSignature comInterfaceEntryType = interopReferences.ComInterfaceEntry.ToValueTypeSignature();
 
         // Calculate the number of dynamic entries, i.e. the ones from explicitly implemented interfaces.
         // This is similar to user-defined types (see above), except we also have two additional entries
@@ -1330,26 +1293,25 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates types to use to declare RVA fields.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <returns>The <see cref="TypeDefinition"/> to use to contain all RVA fields.</returns>
     /// <remarks>
     /// The returned type will have exactly one nested type, for RVA fields of size 16 (ie. <see cref="Guid"/>).
     /// </remarks>
-    public static TypeDefinition RvaFields(InteropReferences interopReferences, ModuleDefinition module)
+    public static TypeDefinition RvaFields(InteropReferences interopReferences)
     {
         // Define the special '<RvaFields>' type, to contain all RVA fields
         TypeDefinition rvaFieldsType = new(
             ns: null,
             name: "<RvaFields>"u8,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
 
         // Define the data type for IID data
         TypeDefinition iidRvaDataType = new(
             ns: null,
             name: "IIDRvaData(Size=16|Align=4)",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
-            baseType: interopReferences.ValueType.Import(module))
+            baseType: interopReferences.ValueType)
         {
             ClassLayout = new ClassLayout(packingSize: 4, classSize: 16)
         };
@@ -1363,15 +1325,15 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <summary>
     /// Creates the container type for all IID properties.
     /// </summary>
-    /// <param name="module">The module that will contain the type being created.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>The resulting <c>InterfaceIIDs</c> type.</returns>
-    public static TypeDefinition InterfaceIIDs(ModuleDefinition module)
+    public static TypeDefinition InterfaceIIDs(InteropReferences interopReferences)
     {
         // We're declaring an 'internal static class' type
         return new(
             ns: null,
             name: "<InterfaceIIDs>"u8,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-            baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+            baseType: interopReferences.Object.ToTypeDefOrRef());
     }
 }

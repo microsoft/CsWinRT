@@ -27,7 +27,6 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="getResultsMethod">The interface method to invoke on <paramref name="operationType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         /// <remarks>
         /// This method can also be used to define the <c>GetResults</c> method for <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult,TProgress&gt;</c> interfaces.
         /// </remarks>
@@ -35,8 +34,7 @@ internal partial class InteropMethodDefinitionFactory
             GenericInstanceTypeSignature operationType,
             MemberReference getResultsMethod,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature resultType = operationType.TypeArguments[0];
 
@@ -48,19 +46,19 @@ internal partial class InteropMethodDefinitionFactory
                 name: "GetResults"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        resultType.GetAbiType(interopReferences).Import(module).MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        resultType.GetAbiType(interopReferences).MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_1_tryStart = new(Ldarg_1);
             CilInstruction ldloc_0_returnHResult = new(Ldloc_0);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
             CilInstruction nop_convertToUnmanaged = new(Nop);
 
             // Create a method body for the 'GetResults' method
@@ -68,7 +66,7 @@ internal partial class InteropMethodDefinitionFactory
             {
                 // Declare 1 variable:
                 //   [0]: 'int' (the 'HRESULT' to return)
-                LocalVariables = { new CilLocalVariable(module.CorLibTypeFactory.Int32) },
+                LocalVariables = { new CilLocalVariable(interopReferences.Int32) },
                 Instructions =
                 {
                     // Return 'E_POINTER' if the argument is 'null'
@@ -83,8 +81,8 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(operationType).Import(module) },
-                    { Callvirt, getResultsMethod.Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(operationType) },
+                    { Callvirt, getResultsMethod },
                     { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_0 },
@@ -108,7 +106,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_0_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };

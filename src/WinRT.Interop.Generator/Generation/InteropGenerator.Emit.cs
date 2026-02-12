@@ -45,7 +45,7 @@ internal partial class InteropGenerator
 
         // Setup the well known items to use when emitting code
         InteropReferences interopReferences = new(module.CorLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
-        InteropDefinitions interopDefinitions = new(interopReferences, module);
+        InteropDefinitions interopDefinitions = new(interopReferences);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -151,7 +151,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Rewrite the IL methods of marshalling stubs needing two-pass generation
-        RewriteMethodDefinitions(args, emitState, interopReferences, module);
+        RewriteMethodDefinitions(args, emitState, interopReferences);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -176,7 +176,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Add all '[IgnoresAccessChecksTo]' attributes
-        DefineIgnoresAccessChecksToAttributes(discoveryState, interopDefinitions, module);
+        DefineIgnoresAccessChecksToAttributes(discoveryState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -237,20 +237,23 @@ internal partial class InteropGenerator
 
         try
         {
-            AssemblyDefinition winRTInteropAssembly = new(InteropNames.InteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0));
-            ModuleDefinition winRTInteropModule = new(InteropNames.InteropDllNameUtf8, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib());
+            // Create the module for the 'WinRT.Interop.dll' assembly, where we'll add all generated types to
+            ModuleDefinition winRTInteropModule = new(InteropNames.InteropDllNameUtf8, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib())
+            {
+                // Create and set a metadata resolver from the assembly resolver that we created during the discovery phase (used for auto-import)
+                MetadataResolver = new DefaultMetadataResolver(discoveryState.AssemblyResolver),
 
-            // Add the assembly references to the interop module
-            winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(assemblyModule.Assembly?.Name, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
-            winRTInteropModule.AssemblyReferences.Add(new AssemblyReference(windowsRuntimeModule.Assembly?.Name, windowsRuntimeModule.Assembly?.Version ?? new Version(0, 0, 0, 0)));
-            winRTInteropModule.MetadataResolver = new DefaultMetadataResolver(discoveryState.AssemblyResolver);
+                // We need a deterministic MVID for the generated module, so we create one based on the input assemblies.
+                // This logic will produce a hash from each .NET assembly that was loaded and analyzed during discovery.
+                Mvid = MvidGenerator.CreateMvid(discoveryState.ModuleDefinitions.Keys)
+            };
 
-            // We need a deterministic MVID for the generated module, so we create one based on the input assemblies.
-            // This logic will produce a hash from each .NET assembly that was loaded and analyzed during discovery.
-            winRTInteropModule.Mvid = MvidGenerator.CreateMvid(discoveryState.ModuleDefinitions.Keys);
-
-            // Add the module to the parent assembly
-            winRTInteropAssembly.Modules.Add(winRTInteropModule);
+            // Also create a containing assembly for it (needed for the emit phase). We don't actually need the assembly
+            // ourselves, but creating it and adding the module will update the declaring assembly for types added to it.
+            _ = new AssemblyDefinition(InteropNames.InteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
+            {
+                Modules = { winRTInteropModule }
+            };
 
             return winRTInteropModule;
         }
@@ -287,7 +290,6 @@ internal partial class InteropGenerator
                     delegateType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod,
                     get_ReferenceIidMethod: out MethodDefinition get_ReferenceIidMethod);
@@ -453,7 +455,6 @@ internal partial class InteropGenerator
                     enumeratorType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     emitState: emitState,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
@@ -579,7 +580,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -705,7 +705,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -779,7 +778,6 @@ internal partial class InteropGenerator
                     readOnlyListType: typeSignature,
                     readOnlyListMethodsType: readOnlyListMethodsType,
                     interopReferences: interopReferences,
-                    emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
@@ -834,7 +832,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -916,7 +913,6 @@ internal partial class InteropGenerator
                     listType: typeSignature,
                     listMethodsType: listMethodsType,
                     interopReferences: interopReferences,
-                    emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
@@ -971,7 +967,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1100,7 +1095,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1253,7 +1247,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1280,7 +1273,6 @@ internal partial class InteropGenerator
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
-                    module: module,
                     keyAccessorMethod: out MethodDefinition keyAccessorMethod,
                     valueAccessorMethod: out MethodDefinition valueAccessorMethod);
 
@@ -1353,7 +1345,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1464,7 +1455,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1478,7 +1468,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IObservableVector1.EventSourceFactory(
                     vectorType: typeSignature,
-                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1487,9 +1476,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IObservableVector1.Methods(
                     vectorType: typeSignature,
                     eventSourceFactoryType: factoryType,
-                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    emitState: emitState,
                     module: module,
                     methodsType: out TypeDefinition methodsType);
 
@@ -1585,7 +1572,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1599,7 +1585,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IObservableMap2.EventSourceFactory(
                     mapType: typeSignature,
-                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1608,9 +1593,7 @@ internal partial class InteropGenerator
                 InteropTypeDefinitionBuilder.IObservableMap2.Methods(
                     mapType: typeSignature,
                     eventSourceFactoryType: factoryType,
-                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    emitState: emitState,
                     module: module,
                     methodsType: out TypeDefinition methodsType);
 
@@ -1706,7 +1689,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1817,7 +1799,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -1928,7 +1909,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -2153,7 +2133,6 @@ internal partial class InteropGenerator
                     interfaceType: typeSignature,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
-                    module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     get_IidMethod: out MethodDefinition get_IidMethod);
 
@@ -2198,7 +2177,6 @@ internal partial class InteropGenerator
                     arrayInterfaceEntriesImplType: arrayInterfaceEntriesImplType,
                     arrayComWrappersCallbackType: arrayComWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
-                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition arrayComWrappersMarshallerType);
@@ -2231,12 +2209,10 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
     private static void RewriteMethodDefinitions(
         InteropGeneratorArgs args,
         InteropGeneratorEmitState emitState,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+        InteropReferences interopReferences)
     {
         // We need to sort all items to a temporary list first, as the underlying items
         // might otherwise change as we rewrite methods. This is because e.g. the target
@@ -2260,8 +2236,7 @@ internal partial class InteropGenerator
                             method: rawRetValInfo.Method,
                             marker: rawRetValInfo.Marker,
                             interopReferences: interopReferences,
-                            emitState: emitState,
-                            module: module);
+                            emitState: emitState);
                         break;
 
                     // Rewrite return values for managed types
@@ -2272,8 +2247,7 @@ internal partial class InteropGenerator
                             marker: returnValueInfo.Marker,
                             source: returnValueInfo.Source,
                             interopReferences: interopReferences,
-                            emitState: emitState,
-                            module: module);
+                            emitState: emitState);
                         break;
 
                     // Rewrite return values for native types
@@ -2283,8 +2257,7 @@ internal partial class InteropGenerator
                             method: retValInfo.Method,
                             marker: retValInfo.Marker,
                             interopReferences: interopReferences,
-                            emitState: emitState,
-                            module: module);
+                            emitState: emitState);
                         break;
 
                     // Rewrite managed values
@@ -2294,8 +2267,7 @@ internal partial class InteropGenerator
                             method: managedValueInfo.Method,
                             marker: managedValueInfo.Marker,
                             interopReferences: interopReferences,
-                            emitState: emitState,
-                            module: module);
+                            emitState: emitState);
                         break;
 
                     // Rewrite managed parameters
@@ -2306,8 +2278,7 @@ internal partial class InteropGenerator
                             marker: managedParameterInfo.Marker,
                             parameterIndex: managedParameterInfo.ParameterIndex,
                             interopReferences: interopReferences,
-                            emitState: emitState,
-                            module: module);
+                            emitState: emitState);
                         break;
 
                     // Rewrite native parameters
@@ -2320,8 +2291,7 @@ internal partial class InteropGenerator
                             finallyMarker: nativeParameterInfo.FinallyMarker,
                             parameterIndex: nativeParameterInfo.ParameterIndex,
                             interopReferences: interopReferences,
-                            emitState: emitState,
-                            module: module);
+                            emitState: emitState);
                         break;
 
                     // Rewrite direct calls to 'Dispose' (or the appropriate 'Free' method)
@@ -2331,8 +2301,7 @@ internal partial class InteropGenerator
                             method: disposeInfo.Method,
                             marker: disposeInfo.Marker,
                             interopReferences: interopReferences,
-                            emitState: emitState,
-                            module: module);
+                            emitState: emitState);
                         break;
                     default: throw new UnreachableException();
                 }
@@ -2432,7 +2401,6 @@ internal partial class InteropGenerator
                     userDefinedType: typeSignature,
                     interfaceEntriesType: interfaceEntriesType,
                     interfaceEntriesImplType: interfaceEntriesImplType,
-                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
@@ -2571,10 +2539,12 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineIgnoresAccessChecksToAttributes(
         InteropGeneratorDiscoveryState discoveryState,
         InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
         ModuleDefinition module)
     {
         try
@@ -2586,6 +2556,7 @@ internal partial class InteropGenerator
             IgnoresAccessChecksToBuilder.AssemblyAttributes(
                 referencePathModules: discoveryState.ModuleDefinitions.Values.OrderByFullyQualifiedName(),
                 interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
                 module: module);
         }
         catch (Exception e)

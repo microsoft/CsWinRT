@@ -27,13 +27,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Key(
             GenericInstanceTypeSignature argsType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = argsType.TypeArguments[0];
             TypeSignature keyAbiType = keyType.GetAbiType(interopReferences);
@@ -45,17 +43,17 @@ internal partial class InteropMethodDefinitionFactory
                 name: "Key"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: keyType.Import(module),
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+                    returnType: keyType,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             { NoInlining = true };
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: '<ABI_KEY_TYPE>' (the native value that was retrieved)
-            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
-            CilLocalVariable loc_2_keyNative = new(keyAbiType.Import(module));
+            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
+            CilLocalVariable loc_2_keyNative = new(keyAbiType);
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
@@ -71,12 +69,12 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // Initialize 'thisValue'
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
                     { Stloc_0 },
 
                     // '.try' code
                     { ldloca_s_0_tryStart },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe },
                     { Stloc_1 },
                     { Ldloc_1 },
                     { Ldloca_S, loc_2_keyNative },
@@ -84,13 +82,13 @@ internal partial class InteropMethodDefinitionFactory
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, interopDefinitions.IMapChangedEventArgsVftbl.GetField("get_Key"u8) },
-                    { Calli, WellKnownTypeSignatureFactory.get_UntypedRetVal(interopReferences).Import(module).MakeStandAloneSignature() },
-                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Calli, WellKnownTypeSignatureFactory.get_UntypedRetVal(interopReferences).MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR },
                     { Leave_S, nop_finallyEnd.CreateLabel() },
 
                     // '.finally' code
                     { ldloca_s_0_finallyStart },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose },
                     { Endfinally },
                     { nop_finallyEnd },
 

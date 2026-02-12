@@ -29,13 +29,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="get_MapChangedTableMethod">The <see cref="MethodDefinition"/> to get the event token table.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition add_MapChanged(
             GenericInstanceTypeSignature mapType,
             MethodDefinition get_MapChangedTableMethod,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature keyType = mapType.TypeArguments[0];
             TypeSignature valueType = mapType.TypeArguments[1];
@@ -57,29 +55,29 @@ internal partial class InteropMethodDefinitionFactory
                 name: "add_MapChanged"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        interopReferences.EventRegistrationToken.MakePointerType().Import(module)]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.EventRegistrationToken.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Jump labels
             CilInstruction ldc_i4_e_pointer = new(Ldc_I4, unchecked((int)0x80004003));
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
-            CilInstruction callvirt_catchHResult = new(Callvirt, interopReferences.Exceptionget_HResult.Import(module));
+            CilInstruction callvirt_catchHResult = new(Callvirt, interopReferences.Exceptionget_HResult);
             CilInstruction ldloc_2_returnHResult = new(Ldloc_2);
 
             // Declare the local variables:
             //   [0]: '<MAP_TYPE>' (the 'unboxedValue' object)
             //   [1]: 'MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>' (the 'managedHandler' object)
             //   [2]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_unboxedValue = new(mapType.Import(module));
-            CilLocalVariable loc_1_managedHandler = new(eventHandlerType.Import(module));
-            CilLocalVariable loc_2_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_unboxedValue = new(mapType);
+            CilLocalVariable loc_1_managedHandler = new(eventHandlerType);
+            CilLocalVariable loc_2_hresult = new(interopReferences.Int32);
 
             // Create a method body for the 'add_MapChanged' method
             add_MapChangedMethod.CilMethodBody = new CilMethodBody()
@@ -102,7 +100,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(mapType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(mapType) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Call, emitState.LookupTypeDefinition(eventHandlerType, "Marshaller").GetMethod("ConvertToManaged"u8) },
@@ -112,15 +110,15 @@ internal partial class InteropMethodDefinitionFactory
                     { Ldarg_2 },
                     { Call, get_MapChangedTableMethod },
                     { Ldloc_0 },
-                    { Callvirt, interopReferences.ConditionalWeakTable2GetOrCreateValue(conditionalWeakTableType).Import(module) },
+                    { Callvirt, interopReferences.ConditionalWeakTable2GetOrCreateValue(conditionalWeakTableType) },
                     { Ldloc_1 },
-                    { Callvirt, interopReferences.EventRegistrationTokenTableAddEventHandler(eventRegistrationTokenTableType).Import(module) },
-                    { Stobj, interopReferences.EventRegistrationToken.Import(module) },
+                    { Callvirt, interopReferences.EventRegistrationTokenTableAddEventHandler(eventRegistrationTokenTableType) },
+                    { Stobj, interopReferences.EventRegistrationToken },
 
                     // unboxedValue.MapChanged += managedHandler;
                     { Ldloc_0 },
                     { Ldloc_1 },
-                    { Callvirt, interopReferences.IObservableMap2add_MapChanged(keyType, valueType).Import(module) },
+                    { Callvirt, interopReferences.IObservableMap2add_MapChanged(keyType, valueType) },
                     { Ldc_I4_0 },
                     { Stloc_2 },
                     { Leave_S, ldloc_2_returnHResult.CreateLabel() },
@@ -143,7 +141,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = callvirt_catchHResult.CreateLabel(),
                         HandlerStart = callvirt_catchHResult.CreateLabel(),
                         HandlerEnd = ldloc_2_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -157,12 +155,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="mapType">The <see cref="TypeSignature"/> for the map type.</param>
         /// <param name="get_MapChangedTableMethod">The <see cref="MethodDefinition"/> to get the event token table.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition remove_MapChanged(
             GenericInstanceTypeSignature mapType,
             MethodDefinition get_MapChangedTableMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature keyType = mapType.TypeArguments[0];
             TypeSignature valueType = mapType.TypeArguments[1];
@@ -184,18 +180,18 @@ internal partial class InteropMethodDefinitionFactory
                 name: "remove_MapChanged"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        interopReferences.EventRegistrationToken.ToValueTypeSignature().Import(module)]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.EventRegistrationToken.ToValueTypeSignature()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Jump labels
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction ldc_i4_0_return0 = new(Ldc_I4_0);
-            CilInstruction callvirt_catchHResult = new(Callvirt, interopReferences.Exceptionget_HResult.Import(module));
+            CilInstruction callvirt_catchHResult = new(Callvirt, interopReferences.Exceptionget_HResult);
             CilInstruction ldloc_3_returnHResult = new(Ldloc_3);
 
             // Declare the local variables:
@@ -203,10 +199,10 @@ internal partial class InteropMethodDefinitionFactory
             //   [1]: 'EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>>' (the 'table' object)
             //   [2]: 'MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>' (the 'managedHandler' object)
             //   [3]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_unboxedValue = new(mapType.Import(module));
-            CilLocalVariable loc_1_table = new(eventRegistrationTokenTableType.Import(module));
-            CilLocalVariable loc_2_managedHandler = new(eventHandlerType.Import(module));
-            CilLocalVariable loc_3_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_unboxedValue = new(mapType);
+            CilLocalVariable loc_1_table = new(eventRegistrationTokenTableType);
+            CilLocalVariable loc_2_managedHandler = new(eventHandlerType);
+            CilLocalVariable loc_3_hresult = new(interopReferences.Int32);
 
             // Create a method body for the 'remove_MapChanged' method
             remove_MapChangedMethod.CilMethodBody = new CilMethodBody()
@@ -216,7 +212,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(mapType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(mapType) },
                     { Stloc_0 },
 
                     // if (unboxedValue != null && MapChangedTable.TryGetValue(unboxedValue, out EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>> table))
@@ -225,20 +221,20 @@ internal partial class InteropMethodDefinitionFactory
                     { Call, get_MapChangedTableMethod },
                     { Ldloc_0 },
                     { Ldloca_S, loc_1_table },
-                    { Callvirt, interopReferences.ConditionalWeakTable2TryGetValue(conditionalWeakTableType).Import(module) },
+                    { Callvirt, interopReferences.ConditionalWeakTable2TryGetValue(conditionalWeakTableType) },
                     { Brfalse_S, ldc_i4_0_return0.CreateLabel() },
 
                     // if (table.RemoveEventHandler(token, out MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>> managedHandler))
                     { Ldloc_1 },
                     { Ldarg_1 },
                     { Ldloca_S, loc_2_managedHandler },
-                    { Callvirt, interopReferences.EventRegistrationTokenTableRemoveEventHandler(eventRegistrationTokenTableType).Import(module) },
+                    { Callvirt, interopReferences.EventRegistrationTokenTableRemoveEventHandler(eventRegistrationTokenTableType) },
                     { Brfalse_S, ldc_i4_0_return0.CreateLabel() },
 
                     // unboxedValue.MapChanged -= managedHandler;
                     { Ldloc_0 },
                     { Ldloc_2 },
-                    { Callvirt, interopReferences.IObservableMap2remove_MapChanged(keyType, valueType).Import(module) },
+                    { Callvirt, interopReferences.IObservableMap2remove_MapChanged(keyType, valueType) },
 
                     // Return S_OK
                     { ldc_i4_0_return0 },
@@ -263,7 +259,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = callvirt_catchHResult.CreateLabel(),
                         HandlerStart = callvirt_catchHResult.CreateLabel(),
                         HandlerEnd = ldloc_3_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };

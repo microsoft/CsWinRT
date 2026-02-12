@@ -66,7 +66,7 @@
     <AssemblyTitle>C#/WinRT Authoring Source Generator v$(VersionString)</AssemblyTitle>
     <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
     <SignAssembly>true</SignAssembly>
-    <!-- <AssemblyOriginatorKeyFile>$(SolutionDir)WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile> -->
+    <AssemblyOriginatorKeyFile>..\..\WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

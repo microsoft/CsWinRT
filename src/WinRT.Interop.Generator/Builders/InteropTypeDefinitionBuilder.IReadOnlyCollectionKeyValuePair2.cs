@@ -77,14 +77,14 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
                     new CustomAttribute(forwarderAttributeType.GetMethod(".ctor"u8))
                 },
                 Interfaces =
                 {
-                    new InterfaceImplementation(readOnlyCollectionType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module).ToTypeDefOrRef())
+                    new InterfaceImplementation(readOnlyCollectionType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable)
                 }
             };
 
@@ -94,11 +94,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CountMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.get_Count",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(module.CorLibTypeFactory.Int32));
+                signature: MethodSignature.CreateInstance(interopReferences.Int32));
 
             // Add and implement the 'get_Count' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IReadOnlyCollection1get_Count(keyValuePairType).Import(module),
+                declaration: interopReferences.IReadOnlyCollection1get_Count(keyValuePairType),
                 method: get_CountMethod);
 
             // Create a body for the 'get_Count' method
@@ -108,8 +108,7 @@ internal partial class InteropTypeDefinitionBuilder
                 implementationMethod: get_CountMethod,
                 forwardedMethod1: emitState.LookupTypeDefinition(readOnlyDictionaryType, "Methods").GetMethod("Count"u8),
                 forwardedMethod2: emitState.LookupTypeDefinition(readOnlyListType, "Methods").GetMethod("Count"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Count' property
             PropertyDefinition countProperty = new(

@@ -41,10 +41,10 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
-                    InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, module, useWindowsUIXamlProjections)
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
+                    InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, useWindowsUIXamlProjections)
                 },
-                Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interfaceType.ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(interfaceImplType);
@@ -54,21 +54,20 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.Windows.Input.ICommand.add_CanExecuteChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.EventHandler.Import(module).ToReferenceTypeSignature()]))
+                    returnType: interopReferences.Void,
+                    parameterTypes: [interopReferences.EventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.EventHandler.ToReferenceTypeSignature(),
                     eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CanExecuteChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'ICommand.CanExecuteChanged' add accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICommandadd_CanExecuteChanged.Import(module),
+                declaration: interopReferences.ICommandadd_CanExecuteChanged,
                 method: add_ICommandCanExecuteChangedMethod);
 
             // Create the 'ICommand.CanExecuteChanged' remove method
@@ -76,28 +75,27 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.Windows.Input.ICommand.remove_CanExecuteChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.EventHandler.Import(module).ToReferenceTypeSignature()]))
+                    returnType: interopReferences.Void,
+                    parameterTypes: [interopReferences.EventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.EventHandler.ToReferenceTypeSignature(),
                     eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CanExecuteChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'ICommand.CanExecuteChanged' remove accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICommandremove_CanExecuteChanged.Import(module),
+                declaration: interopReferences.ICommandremove_CanExecuteChanged,
                 method: remove_ICommandCanExecuteChangedMethod);
 
             // Create the 'ICommand.CanExecuteChanged' event
             EventDefinition canExecuteChangedProperty = new(
                 name: "System.Windows.Input.ICommand.CanExecuteChanged",
                 attributes: default,
-                eventType: interopReferences.EventHandler.Import(module))
+                eventType: interopReferences.EventHandler)
             {
                 AddMethod = add_ICommandCanExecuteChangedMethod,
                 RemoveMethod = remove_ICommandCanExecuteChangedMethod
@@ -110,12 +108,12 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.Windows.Input.ICommand.CanExecute"u8,
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [module.CorLibTypeFactory.Object]));
+                    returnType: interopReferences.Boolean,
+                    parameterTypes: [interopReferences.Object]));
 
             // Add and implement the 'CanExecute' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICommandCanExecute.Import(module),
+                declaration: interopReferences.ICommandCanExecute,
                 method: canExecuteMethod);
 
             // Create a method body for the 'CanExecute' method
@@ -123,20 +121,19 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 interfaceType: interfaceType,
                 implementationMethod: canExecuteMethod,
                 forwardedMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CanExecute"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Define the 'ICommand.Execute' method
             MethodDefinition executeMethod = new(
                 name: "System.Windows.Input.ICommand.Execute"u8,
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [module.CorLibTypeFactory.Object]));
+                    returnType: interopReferences.Void,
+                    parameterTypes: [interopReferences.Object]));
 
             // Add and implement the 'Execute' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.ICommandExecute.Import(module),
+                declaration: interopReferences.ICommandExecute,
                 method: executeMethod);
 
             // Create a method body for the 'Execute' method
@@ -144,8 +141,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 interfaceType: interfaceType,
                 implementationMethod: executeMethod,
                 forwardedMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("Execute"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
         }
     }
 }

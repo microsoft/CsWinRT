@@ -25,12 +25,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="collectionType">The <see cref="TypeSignature"/> for the vector type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition CopyTo(
             GenericInstanceTypeSignature collectionType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             GenericInstanceTypeSignature keyValuePairType = (GenericInstanceTypeSignature)collectionType.TypeArguments[0];
             TypeSignature keyType = keyValuePairType.TypeArguments[0];
@@ -46,10 +44,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: $"System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<{keyType.FullName},{valueType.FullName}>>.CopyTo",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
-                        keyValuePairType.MakeSzArrayType().Import(module),
-                        module.CorLibTypeFactory.Int32]));
+                        keyValuePairType.MakeSzArrayType(),
+                        interopReferences.Int32]));
 
             // Jump labels
             CilInstruction ldloc_0_type2Check = new(Ldloc_0);
@@ -57,8 +55,8 @@ internal partial class InteropMethodDefinitionFactory
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObject' (for 'thisObject')
             //   [1]: 'WindowsRuntimeObjectReference' (for 'interfaceReference')
-            CilLocalVariable loc_0_thisObject = new(interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature().Import(module));
-            CilLocalVariable loc_1_interfaceReference = new(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature().Import(module));
+            CilLocalVariable loc_0_thisObject = new(interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature());
+            CilLocalVariable loc_1_interfaceReference = new(interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature());
 
             // Create a body for the 'CopyTo' method. This method is special: we also need to pass a 'WindowsRuntimeObjectReference'
             // for the 'IEnumerable<KeyValuePair<TKey, TValue>>' interface, as it needs to enumerate the key-value pairs. So here we
@@ -70,25 +68,25 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // WindowsRuntimeObject thisObject = (WindowsRuntimeObject)this;
                     { Ldarg_0 },
-                    { Castclass, interopReferences.WindowsRuntimeObject.Import(module) },
+                    { Castclass, interopReferences.WindowsRuntimeObject },
                     { Stloc_0 },
 
                     // if (thisObject.TryGetObjectReferenceForInterface(typeof(<DICTIONARY_TYPE>), out interfaceReference))
                     { Ldloc_0 },
-                    { Ldtoken, dictionaryType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Ldtoken, dictionaryType.ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle },
+                    { Callvirt, interopReferences.Typeget_TypeHandle },
                     { Ldloca_S, loc_1_interfaceReference },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectTryGetObjectReferenceForInterface.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectTryGetObjectReferenceForInterface },
                     { Brfalse_S, ldloc_0_type2Check.CreateLabel() },
 
                     // <DICTIONARY_METHODS_TYPE>.CopyTo(interfaceReference, <ARGS>);
                     { Ldloc_1 },
                     { Ldloc_0 },
-                    { Ldtoken, enumerableType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldtoken, enumerableType.ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle },
+                    { Callvirt, interopReferences.Typeget_TypeHandle },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface },
                     { Ldarg_1 },
                     { Ldarg_2 },
                     { Call, emitState.LookupTypeDefinition(dictionaryType, "Methods").GetMethod("CopyTo"u8) },
@@ -96,10 +94,10 @@ internal partial class InteropMethodDefinitionFactory
 
                     // interfaceReference = thisObject.GetObjectReferenceForInterface(typeof(<INTERFACE_TYPE2>));
                     { ldloc_0_type2Check },
-                    { Ldtoken, listType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface.Import(module) },
+                    { Ldtoken, listType.ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle },
+                    { Callvirt, interopReferences.Typeget_TypeHandle },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectGetObjectReferenceForInterface },
                     { Stloc_1 },
 
                     // <LIST_METHODS_TYPE>.CopyTo(interfaceReference, <ARGS>);

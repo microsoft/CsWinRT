@@ -68,7 +68,6 @@ internal partial class InteropTypeDefinitionBuilder
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState,
-                module: module,
                 useWindowsUIXamlProjections: useWindowsUIXamlProjections));
 
             // Add the built-in native interfaces at the end
@@ -95,7 +94,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="userDefinedType">The <see cref="TypeSignature"/> for the user-defined type.</param>
         /// <param name="interfaceEntriesType">The <see cref="TypeDefinition"/> for the interface entries type returned by <see cref="InterfaceEntriesImpl"/>.</param>
         /// <param name="interfaceEntriesImplType">The <see cref="TypeDefinition"/> for the interface entries implementation type returned by <see cref="InterfaceEntriesImpl"/>.</param>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="marshallerType">The resulting marshaller type.</param>
@@ -103,7 +101,6 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature userDefinedType,
             TypeDefinition interfaceEntriesType,
             TypeDefinition interfaceEntriesImplType,
-            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition marshallerType)
@@ -113,17 +110,19 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
                 name: InteropUtf8NameFactory.TypeName(userDefinedType, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute.Import(module));
+                baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
             module.TopLevelTypes.Add(marshallerType);
 
             // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(module, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
+            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(
+                corLibTypeFactory: interopReferences.CorLibTypeFactory,
+                constructorMethod: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
             marshallerType.Methods.Add(ctor);
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
-            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.Import(module).MakePointerType();
+            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.MakePointerType();
 
             // Define the 'ComputeVtables' method as follows:
             //
@@ -133,7 +132,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
                     returnType: computeVtablesReturnType,
-                    parameterTypes: [module.CorLibTypeFactory.Int32.MakeByReferenceType()]))
+                    parameterTypes: [interopReferences.Int32.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [1],
                 CilInstructions =
@@ -155,14 +154,14 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "GetOrCreateComInterfaceForObject"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void.MakePointerType(),
-                    parameterTypes: [module.CorLibTypeFactory.Object]))
+                    returnType: interopReferences.Void.MakePointerType(),
+                    parameterTypes: [interopReferences.Object]))
             {
                 CilInstructions =
                 {
                     { Ldarg_1 },
                     { CilInstruction.CreateLdcI4((int)CreateComInterfaceFlags.TrackerSupport) },
-                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeComWrappersMarshalGetOrCreateComInterfaceForObject },
                     { Ret }
                 }
             };

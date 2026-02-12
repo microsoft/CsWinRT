@@ -30,13 +30,11 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition UnmanagedValueType(
             GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
@@ -52,8 +50,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeUnmanagedValueTypeElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
                 isValueType: true,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -62,13 +59,11 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ManagedValueType(
             GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
@@ -85,8 +80,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeManagedValueTypeElementMarshallerConvertToUnmanaged(elementType, elementAbiType),
                 isValueType: true,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Rewriting labels
             CilInstruction nop_dispose = new(Nop);
@@ -97,7 +91,7 @@ internal partial class InteropTypeDefinitionFactory
             MethodDefinition disposeMethod = new(
                 name: "Dispose"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(module.CorLibTypeFactory.Void, elementAbiType.Import(module)))
+                signature: MethodSignature.CreateStatic(interopReferences.Void, elementAbiType))
             {
                 CilInstructions =
                 {
@@ -109,7 +103,7 @@ internal partial class InteropTypeDefinitionFactory
 
             // Add and implement the 'Dispose' method
             elementMarshallerType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeManagedValueTypeElementMarshallerDispose(elementType, elementAbiType).Import(module),
+                declaration: interopReferences.IWindowsRuntimeManagedValueTypeElementMarshallerDispose(elementType, elementAbiType),
                 method: disposeMethod);
 
             // Track rewriting the disposal for 'Dispose'
@@ -127,13 +121,11 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition KeyValuePair(
             GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             GenericInstanceTypeSignature elementType = (GenericInstanceTypeSignature)enumeratorType.TypeArguments[0];
             TypeSignature keyType = elementType.TypeArguments[0];
@@ -153,8 +145,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeKeyValuePairTypeElementMarshallerConvertToUnmanaged(keyType, valueType),
                 isValueType: isValueType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -163,13 +154,11 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ReferenceType(
             GenericInstanceTypeSignature enumeratorType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = enumeratorType.TypeArguments[0];
 
@@ -184,8 +173,7 @@ internal partial class InteropTypeDefinitionFactory
                 convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeReferenceTypeElementMarshallerConvertToUnmanaged(elementType),
                 isValueType: false,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -197,7 +185,6 @@ internal partial class InteropTypeDefinitionFactory
         /// <param name="isValueType">Indicates whether the element marshaller type should be emitted as a value type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
         /// <returns>The resulting element marshaller type.</returns>
         public static TypeDefinition ElementMarshaller(
             TypeSignature elementType,
@@ -205,13 +192,12 @@ internal partial class InteropTypeDefinitionFactory
             MemberReference convertToUnmanagedInterfaceMethod,
             bool isValueType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Select the attributes and base type depending on whether we want a value type or not
             (TypeAttributes attributes, ITypeDefOrRef baseType) = isValueType
-                ? (TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, interopReferences.ValueType.Import(module))
-                : (TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit, module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                ? (TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, interopReferences.ValueType)
+                : (TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit, interopReferences.Object.ToTypeDefOrRef());
 
             // We're declaring an 'internal abstract class' type
             TypeDefinition elementMarshallerType = new(
@@ -220,7 +206,7 @@ internal partial class InteropTypeDefinitionFactory
                 attributes: attributes,
                 baseType: baseType)
             {
-                Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interfaceType.ToTypeDefOrRef()) }
             };
 
             // Rewriting labels
@@ -233,8 +219,8 @@ internal partial class InteropTypeDefinitionFactory
                 name: "ConvertToUnmanaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateStatic(
-                    returnType: elementType.GetRawAbiType(interopReferences).Import(module),
-                    parameterTypes: [elementType.Import(module)]))
+                    returnType: elementType.GetRawAbiType(interopReferences),
+                    parameterTypes: [elementType]))
             {
                 CilInstructions =
                 {
@@ -246,7 +232,7 @@ internal partial class InteropTypeDefinitionFactory
 
             // Add and implement the 'ConvertToUnmanaged' method
             elementMarshallerType.AddMethodImplementation(
-                declaration: convertToUnmanagedInterfaceMethod.Import(module),
+                declaration: convertToUnmanagedInterfaceMethod,
                 method: convertToUnmanagedMethod);
 
             // Track rewriting the native value for 'ConvertToUnmanaged'

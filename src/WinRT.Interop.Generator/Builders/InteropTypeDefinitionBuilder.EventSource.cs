@@ -40,7 +40,6 @@ internal partial class InteropTypeDefinitionBuilder
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.EventHandler1EventSource,
                 baseEventSource_ctor: interopReferences.EventHandler1EventSource_ctor(eventArgsType),
-                baseEventSourceConvertToUnmanaged: interopReferences.EventHandler1EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
                 module: module,
@@ -69,7 +68,6 @@ internal partial class InteropTypeDefinitionBuilder
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.EventHandler2EventSource,
                 baseEventSource_ctor: interopReferences.EventHandler2EventSource_ctor(senderType, eventArgsType),
-                baseEventSourceConvertToUnmanaged: interopReferences.EventHandler2EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
                 module: module,
@@ -99,7 +97,6 @@ internal partial class InteropTypeDefinitionBuilder
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.VectorChangedEventHandler1EventSource,
                 baseEventSource_ctor: interopReferences.VectorChangedEventHandler1EventSource_ctor(elementType),
-                baseEventSourceConvertToUnmanaged: interopReferences.VectorChangedEventHandler1EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
                 module: module,
@@ -130,7 +127,6 @@ internal partial class InteropTypeDefinitionBuilder
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.MapChangedEventHandler2EventSource,
                 baseEventSource_ctor: interopReferences.MapChangedEventHandler2EventSource_ctor,
-                baseEventSourceConvertToUnmanaged: interopReferences.MapChangedEventHandler2EventSourceConvertToUnmanaged(delegateType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
                 module: module,
@@ -146,7 +142,6 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="delegateType">The <see cref="TypeSignature"/> for the delegate type.</param>
         /// <param name="baseEventSourceType">The <see cref="TypeReference"/> for the base event source type.</param>
         /// <param name="baseEventSource_ctor">The <see cref="MemberReference"/> for the constructor of the base event source type.</param>
-        /// <param name="baseEventSourceConvertToUnmanaged">The <see cref="MemberReference"/> for the marshalling method of the base event source type.</param>
         /// <param name="marshallerType">The <see cref="TypeDefinition"/> instance returned by <see cref="Delegate.Marshaller"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
@@ -155,7 +150,6 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature delegateType,
             TypeReference baseEventSourceType,
             MemberReference baseEventSource_ctor,
-            MemberReference baseEventSourceConvertToUnmanaged,
             TypeDefinition marshallerType,
             InteropReferences interopReferences,
             ModuleDefinition module,
@@ -168,7 +162,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: "ABI.WindowsRuntime.InteropServices"u8,
                 name: InteropUtf8NameFactory.TypeName(baseEventSourceSignature),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: baseEventSourceSignature.Import(module).ToTypeDefOrRef());
+                baseType: baseEventSourceSignature.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(eventSourceType);
 
@@ -181,17 +175,17 @@ internal partial class InteropTypeDefinitionBuilder
             //
             // All the actual initialization logic is done in the base 'EventSource<T>' type.
             MethodDefinition ctor = MethodDefinition.CreateConstructor(
-                module: module,
+                corLibTypeFactory: interopReferences.CorLibTypeFactory,
                 parameterTypes: [
-                    interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                    module.CorLibTypeFactory.Int32]);
+                    interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    interopReferences.Int32]);
 
             eventSourceType.Methods.Add(ctor);
 
             _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
             _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
             _ = ctor.CilMethodBody!.Instructions.Insert(2, Ldarg_2);
-            _ = ctor.CilMethodBody!.Instructions.Insert(3, Call, baseEventSource_ctor.Import(module));
+            _ = ctor.CilMethodBody!.Instructions.Insert(3, Call, baseEventSource_ctor);
 
             // Define the 'ConvertToUnmanaged' method as follows:
             //
@@ -200,8 +194,8 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ConvertToUnmanaged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.Import(module).ToValueTypeSignature(),
-                    parameterTypes: [delegateType.Import(module)]))
+                    returnType: interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                    parameterTypes: [delegateType]))
             {
                 CilInstructions =
                 {

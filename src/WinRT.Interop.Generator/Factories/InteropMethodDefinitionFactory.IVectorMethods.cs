@@ -28,13 +28,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblType">The vtable type for <paramref name="listType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition SetAt(
             GenericInstanceTypeSignature listType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -44,8 +42,7 @@ internal partial class InteropMethodDefinitionFactory
                 listType: listType,
                 vftblType: vftblType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -55,13 +52,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblType">The vtable type for <paramref name="listType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition InsertAt(
             GenericInstanceTypeSignature listType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -71,8 +66,7 @@ internal partial class InteropMethodDefinitionFactory
                 listType: listType,
                 vftblType: vftblType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -82,13 +76,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblType">The vtable type for <paramref name="listType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Append(
             GenericInstanceTypeSignature listType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
@@ -100,17 +92,17 @@ internal partial class InteropMethodDefinitionFactory
                 name: "Append"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        elementType.Import(module)]))
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        elementType]))
             { NoInlining = true };
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'void*' (for 'thisPtr')
-            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
 
             // Jump labels
             CilInstruction nop_try_this = new(Nop);
@@ -128,7 +120,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // Initialize 'thisValue'
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
                     { Stloc_0 },
                     { nop_try_this },
 
@@ -137,15 +129,15 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { Ldloca_S, loc_0_thisValue },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe },
                     { Stloc_1 },
                     { Ldloc_1 },
                     { nop_ld_value },
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, vftblType.GetField("Append"u8) },
-                    { Calli, WellKnownTypeSignatureFactory.IList1AppendImpl(elementAbiType, interopReferences).Import(module).MakeStandAloneSignature() },
-                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Calli, WellKnownTypeSignatureFactory.IList1AppendImpl(elementAbiType, interopReferences).MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR },
                     { Leave_S, ret_finally_end_this.CreateLabel() },
 
                     // Optional 'finally' block for the marshalled key
@@ -153,7 +145,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.finally' code
                     { ldloca_s_0_finally_this },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose },
                     { Endfinally },
 
                     // return result;
@@ -191,13 +183,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblType">The vtable type for <paramref name="listType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition IndexOf(
             GenericInstanceTypeSignature listType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
@@ -209,10 +199,10 @@ internal partial class InteropMethodDefinitionFactory
                 name: "IndexOf"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        elementType.Import(module),
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        elementType,
                         interopReferences.CorLibTypeFactory.UInt32.MakeByReferenceType()]))
             {
                 NoInlining = true,
@@ -224,8 +214,8 @@ internal partial class InteropMethodDefinitionFactory
             //   [1]: 'void*' (for 'thisPtr')
             //   [2]: 'ref uint' (for the pinned 'out uint' parameter)
             //   [3]: 'bool' (for the return value)
-            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_2_pinnedIndex = new(interopReferences.CorLibTypeFactory.UInt32.MakeByReferenceType().MakePinnedType());
             CilLocalVariable loc_3_result = new(interopReferences.CorLibTypeFactory.Boolean);
 
@@ -245,7 +235,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // Initialize 'thisValue'
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
                     { Stloc_0 },
                     { nop_try_this },
 
@@ -258,7 +248,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { Ldloca_S, loc_0_thisValue },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe },
                     { Stloc_1 },
                     { Ldloc_1 },
                     { nop_ld_value },
@@ -269,8 +259,8 @@ internal partial class InteropMethodDefinitionFactory
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, vftblType.GetField("IndexOf"u8) },
-                    { Calli, WellKnownTypeSignatureFactory.IList1IndexOfImpl(elementAbiType, interopReferences).Import(module).MakeStandAloneSignature() },
-                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Calli, WellKnownTypeSignatureFactory.IList1IndexOfImpl(elementAbiType, interopReferences).MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR },
                     { Leave_S, ldloc_3_finally_end_this.CreateLabel() },
 
                     // Optional 'finally' block for the marshalled key. We could have another stub here to unpin
@@ -282,7 +272,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.finally' code
                     { ldloca_s_0_finally_this },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose },
                     { Endfinally },
 
                     // return result;
@@ -323,15 +313,13 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vftblType">The vtable type for <paramref name="listType"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         private static MethodDefinition SetAtOrInsertAt(
             Utf8String methodName,
             MethodSignature methodSignature,
             GenericInstanceTypeSignature listType,
             TypeDefinition vftblType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -342,18 +330,18 @@ internal partial class InteropMethodDefinitionFactory
                 name: methodName,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         interopReferences.CorLibTypeFactory.UInt32,
-                        elementType.Import(module)]))
+                        elementType]))
             { NoInlining = true };
 
             // Declare the local variables:
             //   [0]: 'WindowsRuntimeObjectReferenceValue' (for 'thisValue')
             //   [1]: 'void*' (for 'thisPtr')
-            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature().Import(module));
-            CilLocalVariable loc_1_thisPtr = new(module.CorLibTypeFactory.Void.MakePointerType());
+            CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
+            CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
 
             // Jump labels
             CilInstruction nop_try_this = new(Nop);
@@ -371,7 +359,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // Initialize 'thisValue'
                     { Ldarg_0 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectReferenceAsValue },
                     { Stloc_0 },
                     { nop_try_this },
 
@@ -380,7 +368,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { Ldloca_S, loc_0_thisValue },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe },
                     { Stloc_1 },
                     { Ldloc_1 },
                     { Ldarg_1 },
@@ -388,8 +376,8 @@ internal partial class InteropMethodDefinitionFactory
                     { Ldloc_1 },
                     { Ldind_I },
                     { Ldfld, vftblType.GetField(methodName) },
-                    { Calli, methodSignature.Import(module).MakeStandAloneSignature() },
-                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR.Import(module) },
+                    { Calli, methodSignature.MakeStandAloneSignature() },
+                    { Call, interopReferences.RestrictedErrorInfoThrowExceptionForHR },
                     { Leave_S, ret_finally_end_this.CreateLabel() },
 
                     // Optional 'finally' block for the marshalled key
@@ -397,7 +385,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.finally' code
                     { ldloca_s_0_finally_this },
-                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose.Import(module) },
+                    { Call, interopReferences.WindowsRuntimeObjectReferenceValueDispose },
                     { Endfinally },
 
                     // return result;

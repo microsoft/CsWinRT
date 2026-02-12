@@ -41,10 +41,10 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
-                    InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, module, useWindowsUIXamlProjections)
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
+                    InteropCustomAttributeFactory.Guid(interfaceType, interopReferences, useWindowsUIXamlProjections)
                 },
-                Interfaces = { new InterfaceImplementation(interfaceType.Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interfaceType.ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(interfaceImplType);
@@ -54,21 +54,20 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.ComponentModel.INotifyPropertyChanged.add_PropertyChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.PropertyChangedEventHandler.Import(module).ToReferenceTypeSignature()]))
+                    returnType: interopReferences.Void,
+                    parameterTypes: [interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
                     eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("PropertyChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'INotifyPropertyChanged.PropertyChanged' add accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.INotifyPropertyChangedadd_PropertyChanged.Import(module),
+                declaration: interopReferences.INotifyPropertyChangedadd_PropertyChanged,
                 method: add_INotifyPropertyChangedPropertyChangedMethod);
 
             // Create the 'INotifyPropertyChanged.PropertyChanged' remove method
@@ -76,28 +75,27 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 name: "System.ComponentModel.INotifyPropertyChanged.remove_PropertyChanged",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.PropertyChangedEventHandler.Import(module).ToReferenceTypeSignature()]))
+                    returnType: interopReferences.Void,
+                    parameterTypes: [interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature()]))
             {
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
                     eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("PropertyChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
-                    interopReferences: interopReferences,
-                    module: module)
+                    interopReferences: interopReferences)
             };
 
             // Add and implement the 'INotifyPropertyChanged.PropertyChanged' remove accessor method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.INotifyPropertyChangedremove_PropertyChanged.Import(module),
+                declaration: interopReferences.INotifyPropertyChangedremove_PropertyChanged,
                 method: remove_INotifyPropertyChangedPropertyChangedMethod);
 
             // Create the 'INotifyPropertyChanged.PropertyChanged' event
             EventDefinition propertyChangedProperty = new(
                 name: "System.ComponentModel.INotifyPropertyChanged.PropertyChanged",
                 attributes: default,
-                eventType: interopReferences.PropertyChangedEventHandler.Import(module))
+                eventType: interopReferences.PropertyChangedEventHandler)
             {
                 AddMethod = add_INotifyPropertyChangedPropertyChangedMethod,
                 RemoveMethod = remove_INotifyPropertyChangedPropertyChangedMethod

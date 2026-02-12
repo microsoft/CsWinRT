@@ -43,9 +43,9 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
                 name: InteropUtf8NameFactory.TypeName(dictionaryType, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeInterface.Import(module)) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IWindowsRuntimeInterface) }
             };
 
             module.TopLevelTypes.Add(interfaceType);
@@ -57,7 +57,6 @@ internal partial class InteropTypeDefinitionBuilder
             WellKnownMemberDefinitionFactory.IID(
                 forwardedIidMethod: get_IidMethod,
                 interopReferences: interopReferences,
-                module: module,
                 out MethodDefinition get_IidMethod2,
                 out PropertyDefinition iidProperty);
 
@@ -65,7 +64,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Add and implement the 'get_IID' method
             interfaceType.AddMethodImplementation(
-                declaration: interopReferences.IWindowsRuntimeInterfaceget_IID.Import(module),
+                declaration: interopReferences.IWindowsRuntimeInterfaceget_IID,
                 method: get_IidMethod2);
         }
 
@@ -109,8 +108,7 @@ internal partial class InteropTypeDefinitionBuilder
                     name: InteropUtf8NameFactory.TypeName(dictionaryType, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 module.TopLevelTypes.Add(vftblType);
 
@@ -145,8 +143,7 @@ internal partial class InteropTypeDefinitionBuilder
                     name: InteropUtf8NameFactory.TypeName(sharedDictionaryType, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
-                    interopReferences: interopReferences,
-                    module: module);
+                    interopReferences: interopReferences);
 
                 // Go through the lookup so that we can reuse the vtable later
                 vftblType = emitState.GetOrAddIMap2VftblType(keyType, valueType, newVftblType);
@@ -162,9 +159,9 @@ internal partial class InteropTypeDefinitionBuilder
             if (isKeyReferenceType)
             {
                 GetOrCreateVftbl(
-                    keyType: module.CorLibTypeFactory.Void.MakePointerType(),
+                    keyType: interopReferences.Void.MakePointerType(),
                     valueType: valueType,
-                    displayKeyType: module.CorLibTypeFactory.Object,
+                    displayKeyType: interopReferences.Object,
                     displayValueType: valueType,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -175,9 +172,9 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 GetOrCreateVftbl(
                     keyType: keyType,
-                    valueType: module.CorLibTypeFactory.Void.MakePointerType(),
+                    valueType: interopReferences.Void.MakePointerType(),
                     displayKeyType: keyType,
-                    displayValueType: module.CorLibTypeFactory.Object,
+                    displayValueType: interopReferences.Object,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -210,9 +207,9 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
                 name: InteropUtf8NameFactory.TypeName(dictionaryType, "IMapMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef())
+                baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IMapMethodsImpl2.MakeGenericReferenceType(keyType, valueType).Import(module).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IMapMethodsImpl2.MakeGenericReferenceType(keyType, valueType).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(mapMethodsType);
@@ -225,12 +222,11 @@ internal partial class InteropTypeDefinitionBuilder
                 readOnlyDictionaryType: dictionaryType,
                 vftblType: vftblType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Add and implement the 'HasKey' method
             mapMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IMapMethodsImpl2HasKey(keyType, valueType).Import(module),
+                declaration: interopReferences.IMapMethodsImpl2HasKey(keyType, valueType),
                 method: hasKeyMethod);
 
             // Define the 'Lookup' method
@@ -238,12 +234,11 @@ internal partial class InteropTypeDefinitionBuilder
                 readOnlyDictionaryType: dictionaryType,
                 vftblType: vftblType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Add and implement the 'Lookup' method
             mapMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IMapMethodsImpl2Lookup(keyType, valueType).Import(module),
+                declaration: interopReferences.IMapMethodsImpl2Lookup(keyType, valueType),
                 method: lookupMethod);
 
             // Define the 'Insert' method
@@ -251,12 +246,11 @@ internal partial class InteropTypeDefinitionBuilder
                 dictionaryType: dictionaryType,
                 vftblType: vftblType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Add and implement the 'Insert' method
             mapMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IMapMethodsImpl2Insert(keyType, valueType).Import(module),
+                declaration: interopReferences.IMapMethodsImpl2Insert(keyType, valueType),
                 method: insertMethod);
 
             // Define the 'Remove' method
@@ -264,12 +258,11 @@ internal partial class InteropTypeDefinitionBuilder
                 dictionaryType: dictionaryType,
                 vftblType: vftblType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Add and implement the 'Remove' method
             mapMethodsType.AddMethodImplementation(
-                declaration: interopReferences.IMapMethodsImpl2Remove(keyType, valueType).Import(module),
+                declaration: interopReferences.IMapMethodsImpl2Remove(keyType, valueType),
                 method: removeMethod);
         }
 
@@ -298,7 +291,7 @@ internal partial class InteropTypeDefinitionBuilder
                 ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
                 name: InteropUtf8NameFactory.TypeName(dictionaryType, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: module.CorLibTypeFactory.Object.ToTypeDefOrRef());
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(dictionaryMethodsType);
 
@@ -312,16 +305,16 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Item"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: valueType.Import(module),
+                    returnType: valueType,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        keyType]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Call, interopReferences.IDictionaryMethods2get_Item(keyType, valueType, mapMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2get_Item(keyType, valueType, mapMethodsType) },
                     { Ret }
                 }
             };
@@ -335,18 +328,18 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Item"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module),
-                        valueType.Import(module)]))
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        keyType,
+                        valueType]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
                     { Ldarg_2 },
-                    { Call, interopReferences.IDictionaryMethods2set_Item(keyType, valueType, mapMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2set_Item(keyType, valueType, mapMethodsType) },
                     { Ret }
                 }
             };
@@ -360,18 +353,18 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Add"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module),
-                        valueType.Import(module)]))
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        keyType,
+                        valueType]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
                     { Ldarg_2 },
-                    { Call, interopReferences.IDictionaryMethods2Add(keyType, valueType, mapMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2Add(keyType, valueType, mapMethodsType) },
                     { Ret }
                 }
             };
@@ -385,16 +378,16 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Remove"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        keyType]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Call, interopReferences.IDictionaryMethods2Remove(keyType, valueType, mapMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2Remove(keyType, valueType, mapMethodsType) },
                     { Ret }
                 }
             };
@@ -408,13 +401,13 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Count"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+                    returnType: interopReferences.Int32,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Call, interopReferences.IDictionaryMethodsCount.Import(module) },
+                    { Call, interopReferences.IDictionaryMethodsCount },
                     { Ret }
                 }
             };
@@ -428,16 +421,16 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ContainsKey"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module)]))
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        keyType]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Call, interopReferences.IDictionaryMethods2ContainsKey(keyType, valueType, mapMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2ContainsKey(keyType, valueType, mapMethodsType) },
                     { Ret }
                 }
             };
@@ -451,11 +444,11 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "TryGetValue"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        keyType.Import(module),
-                        valueType.Import(module).MakeByReferenceType()]))
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        keyType,
+                        valueType.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [3],
                 CilInstructions =
@@ -463,7 +456,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldarg_0 },
                     { Ldarg_1 },
                     { Ldarg_2 },
-                    { Call, interopReferences.IDictionaryMethods2TryGetValue(keyType, valueType, mapMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2TryGetValue(keyType, valueType, mapMethodsType) },
                     { Ret }
                 }
             };
@@ -477,16 +470,16 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Add"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType).Import(module)]))
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Call, interopReferences.IDictionaryMethods2AddKeyValuePair(keyType, valueType, mapMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2AddKeyValuePair(keyType, valueType, mapMethodsType) },
                     { Ret }
                 }
             };
@@ -500,16 +493,16 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Remove"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType).Import(module)]))
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Call, interopReferences.IDictionaryMethods2RemoveKeyValuePair(keyType, valueType, mapMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2RemoveKeyValuePair(keyType, valueType, mapMethodsType) },
                     { Ret }
                 }
             };
@@ -523,13 +516,13 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Clear"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature()]))
+                    returnType: interopReferences.Void,
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Call, interopReferences.IDictionaryMethodsClear.Import(module) },
+                    { Call, interopReferences.IDictionaryMethodsClear },
                     { Ret }
                 }
             };
@@ -543,16 +536,16 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Contains"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType).Import(module)]))
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)]))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
                     { Ldarg_1 },
-                    { Call, interopReferences.IDictionaryMethods2Contains(keyType, valueType, mapMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2Contains(keyType, valueType, mapMethodsType) },
                     { Ret }
                 }
             };
@@ -575,12 +568,12 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "CopyTo"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Void,
+                    returnType: interopReferences.Void,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).ToReferenceTypeSignature(),
-                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType).Import(module).MakeSzArrayType(),
-                        module.CorLibTypeFactory.Int32]))
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType).MakeSzArrayType(),
+                        interopReferences.Int32]))
             {
                 CilInstructions =
                 {
@@ -588,7 +581,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Ldarg_1 },
                     { Ldarg_2 },
                     { Ldarg_3 },
-                    { Call, interopReferences.IDictionaryMethods2CopyTo(keyType, valueType, iterableMethodsType).Import(module) },
+                    { Call, interopReferences.IDictionaryMethods2CopyTo(keyType, valueType, iterableMethodsType) },
                     { Ret }
                 }
             };
@@ -721,15 +714,15 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 CustomAttributes =
                 {
-                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor.Import(module)),
-                    InteropCustomAttributeFactory.Guid(dictionaryType, interopReferences, module, useWindowsUIXamlProjections)
+                    new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
+                    InteropCustomAttributeFactory.Guid(dictionaryType, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {
-                    new InterfaceImplementation(dictionaryType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(collectionType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(enumerableType.Import(module).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerable.Import(module))
+                    new InterfaceImplementation(dictionaryType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(collectionType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(enumerableType.ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable)
                 }
             };
 
@@ -742,11 +735,11 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.get_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(valueType.Import(module), keyType.Import(module)));
+                signature: MethodSignature.CreateInstance(valueType, keyType));
 
             // Add and implement the 'get_Item' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IDictionary2get_Item(keyType, valueType).Import(module),
+                declaration: interopReferences.IDictionary2get_Item(keyType, valueType),
                 method: get_ItemMethod);
 
             // Create a body for the 'get_Item' method
@@ -754,20 +747,19 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: get_ItemMethod,
                 forwardedMethod: itemMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'set_Item' setter method
             MethodDefinition set_ItemMethod = new(
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.set_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [keyType.Import(module), valueType.Import(module)]));
+                    returnType: interopReferences.Void,
+                    parameterTypes: [keyType, valueType]));
 
             // Add and implement the 'set_Item' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IDictionary2set_Item(keyType, valueType).Import(module),
+                declaration: interopReferences.IDictionary2set_Item(keyType, valueType),
                 method: set_ItemMethod);
 
             // Create a body for the 'set_Item' method
@@ -775,8 +767,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: set_ItemMethod,
                 forwardedMethod: itemMethods[1],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Item' property
             PropertyDefinition itemProperty = new(
@@ -794,19 +785,19 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_KeysMethod = new(
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.get_Keys",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType(keyType).Import(module)))
+                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType(keyType)))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Newobj, interopReferences.DictionaryKeyCollection2_ctor(keyType, valueType).Import(module) },
+                    { Newobj, interopReferences.DictionaryKeyCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }
             };
 
             // Add and implement the 'get_Keys' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IDictionary2get_Keys(keyType, valueType).Import(module),
+                declaration: interopReferences.IDictionary2get_Keys(keyType, valueType),
                 method: get_KeysMethod);
 
             // Create the 'Keys' property
@@ -822,19 +813,19 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ValuesMethod = new(
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.get_Values",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType(valueType).Import(module)))
+                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType(valueType)))
             {
                 CilInstructions =
                 {
                     { Ldarg_0 },
-                    { Newobj, interopReferences.DictionaryValueCollection2_ctor(keyType, valueType).Import(module) },
+                    { Newobj, interopReferences.DictionaryValueCollection2_ctor(keyType, valueType) },
                     { Ret }
                 }
             };
 
             // Add and implement the 'get_Values' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IDictionary2get_Values(keyType, valueType).Import(module),
+                declaration: interopReferences.IDictionary2get_Values(keyType, valueType),
                 method: get_ValuesMethod);
 
             // Create the 'Values' property
@@ -851,12 +842,12 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.ContainsKey",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [keyType.Import(module)]));
+                    returnType: interopReferences.Boolean,
+                    parameterTypes: [keyType]));
 
             // Add and implement the 'ContainsKey' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IDictionary2ContainsKey(keyType, valueType).Import(module),
+                declaration: interopReferences.IDictionary2ContainsKey(keyType, valueType),
                 method: containsKeyMethod);
 
             // Create a body for the 'ContainsKey' method
@@ -864,21 +855,20 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: containsKeyMethod,
                 forwardedMethod: dictionaryMethodsType.GetMethod("ContainsKey"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'TryGetValue' method
             MethodDefinition tryGetValueMethod = new(
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.TryGetValue",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [keyType.Import(module), valueType.Import(module).MakeByReferenceType()]))
+                    returnType: interopReferences.Boolean,
+                    parameterTypes: [keyType, valueType.MakeByReferenceType()]))
             { CilOutParameterIndices = [2] };
 
             // Add and implement the 'TryGetValue' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IDictionary2TryGetValue(keyType, valueType).Import(module),
+                declaration: interopReferences.IDictionary2TryGetValue(keyType, valueType),
                 method: tryGetValueMethod);
 
             // Create a body for the 'TryGetValue' method
@@ -886,8 +876,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: tryGetValueMethod,
                 forwardedMethod: dictionaryMethodsType.GetMethod("TryGetValue"u8),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // There's two 'Add' and 'Remove' overloads, one from 'IDictionary<,>' and one from 'ICollection<>'.
             // They are always emitted in this relative order in the "Methods" type, so get them in advance here.
@@ -899,12 +888,12 @@ internal partial class InteropTypeDefinitionBuilder
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.Add",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Void,
-                    parameterTypes: [keyType.Import(module), valueType.Import(module)]));
+                    returnType: interopReferences.Void,
+                    parameterTypes: [keyType, valueType]));
 
             // Add and implement the 'Add' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IDictionary2Add(keyType, valueType).Import(module),
+                declaration: interopReferences.IDictionary2Add(keyType, valueType),
                 method: addMethod);
 
             // Create a body for the 'Add' method
@@ -912,20 +901,19 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: addMethod,
                 forwardedMethod: addMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Create the 'Remove' method
             MethodDefinition removeMethod = new(
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.Remove",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
-                    parameterTypes: [keyType.Import(module)]));
+                    returnType: interopReferences.Boolean,
+                    parameterTypes: [keyType]));
 
             // Add and implement the 'Remove' method
             interfaceImplType.AddMethodImplementation(
-                declaration: interopReferences.IDictionary2Remove(keyType, valueType).Import(module),
+                declaration: interopReferences.IDictionary2Remove(keyType, valueType),
                 method: removeMethod);
 
             // Create a body for the 'Remove' method
@@ -933,8 +921,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interfaceType: dictionaryType,
                 implementationMethod: removeMethod,
                 forwardedMethod: removeMethods[0],
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
         }
 
         /// <summary>
@@ -964,50 +951,43 @@ internal partial class InteropTypeDefinitionBuilder
                 readOnlyDictionaryType: dictionaryType,
                 lookupMethod: interopReferences.IReadOnlyDictionaryAdapter2Lookup(keyType, valueType),
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Define the 'get_Size' method
             MethodDefinition sizeMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.get_Size(
                 readOnlyDictionaryType: dictionaryType,
                 sizeMethod: interopReferences.IDictionaryAdapter2Size(keyType, valueType),
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             // Define the 'HasKey' method
             MethodDefinition hasKeyMethod = InteropMethodDefinitionFactory.IReadOnlyDictionary2Impl.HasKey(
                 readOnlyDictionaryType: dictionaryType,
                 containsKeyMethod: interopReferences.IDictionary2ContainsKey(keyType, valueType),
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Define the 'GetView' method
             MethodDefinition getViewMethod = InteropMethodDefinitionFactory.IDictionary2Impl.GetView(
                 dictionaryType: dictionaryType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Define the 'Insert' method
             MethodDefinition insertMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Insert(
                 dictionaryType: dictionaryType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Define the 'Remove' method
             MethodDefinition removeMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Remove(
                 dictionaryType: dictionaryType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
 
             // Define the 'Clear' method
             MethodDefinition clearMethod = InteropMethodDefinitionFactory.IDictionary2Impl.Clear(
                 dictionaryType: dictionaryType,
-                interopReferences: interopReferences,
-                module: module);
+                interopReferences: interopReferences);
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,

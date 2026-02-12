@@ -45,12 +45,14 @@ internal partial class InteropTypeDefinitionFactory
                 ns: InteropUtf8NameFactory.TypeNamespace(readOnlyCollectionType),
                 name: InteropUtf8NameFactory.TypeName(readOnlyCollectionType, "ForwarderAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.DynamicInterfaceCastableForwarderAttribute.Import(module));
+                baseType: interopReferences.DynamicInterfaceCastableForwarderAttribute);
 
             module.TopLevelTypes.Add(forwarderAttributeType);
 
             // Define the constructor
-            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(module, interopReferences.DynamicInterfaceCastableForwarderAttribute_ctor);
+            MethodDefinition ctor = MethodDefinition.CreateDefaultConstructor(
+                corLibTypeFactory: interopReferences.CorLibTypeFactory,
+                constructorMethod: interopReferences.DynamicInterfaceCastableForwarderAttribute_ctor);
 
             forwarderAttributeType.Methods.Add(ctor);
 
@@ -64,30 +66,30 @@ internal partial class InteropTypeDefinitionFactory
                 name: "IsInterfaceImplemented"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: module.CorLibTypeFactory.Boolean,
+                    returnType: interopReferences.Boolean,
                     parameterTypes: [
-                        interopReferences.WindowsRuntimeObject.Import(module).ToReferenceTypeSignature(),
-                        interopReferences.WindowsRuntimeObjectReference.Import(module).MakeByReferenceType()]))
+                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
+                        interopReferences.WindowsRuntimeObjectReference.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilInstructions =
                 {
                     // if (thisObject.TryGetObjectReferenceForInterface(typeof(<READ_ONLY_DICTIONARY_TYPE>), out interfaceReference)) return true;
                     { Ldarg_1 },
-                    { Ldtoken, readOnlyDictionaryType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Ldtoken, readOnlyDictionaryType.ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle },
+                    { Callvirt, interopReferences.Typeget_TypeHandle },
                     { Ldarg_2 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectTryGetObjectReferenceForInterface.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectTryGetObjectReferenceForInterface },
                     { Brtrue_S, ldc_i4_1_afterChecks.CreateLabel() },
 
                     // return thisObject.TryGetObjectReferenceForInterface(typeof(<READ_ONLY_LIST_TYPE>), out interfaceReference));
                     { Ldarg_1 },
-                    { Ldtoken, readOnlyListType.Import(module).ToTypeDefOrRef() },
-                    { Call, interopReferences.TypeGetTypeFromHandle.Import(module) },
-                    { Callvirt, interopReferences.Typeget_TypeHandle.Import(module) },
+                    { Ldtoken, readOnlyListType.ToTypeDefOrRef() },
+                    { Call, interopReferences.TypeGetTypeFromHandle },
+                    { Callvirt, interopReferences.Typeget_TypeHandle },
                     { Ldarg_2 },
-                    { Callvirt, interopReferences.WindowsRuntimeObjectTryGetObjectReferenceForInterface.Import(module) },
+                    { Callvirt, interopReferences.WindowsRuntimeObjectTryGetObjectReferenceForInterface },
                     { Ret },
                     { ldc_i4_1_afterChecks },
                     { Ret }

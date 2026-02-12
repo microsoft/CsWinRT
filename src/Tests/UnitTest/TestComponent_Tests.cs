@@ -384,8 +384,8 @@ namespace UnitTest
             string[] b = null;
             string[] c;
             string[] d = Tests.Array12(a, b, out c);
-            Assert.Null(c);
-            Assert.Null(d);
+            Assert.Empty(c);
+            Assert.Empty(d);
         }
 
         [Fact]

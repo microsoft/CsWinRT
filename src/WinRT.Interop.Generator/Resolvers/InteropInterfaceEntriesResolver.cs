@@ -42,14 +42,12 @@ internal static class InteropInterfaceEntriesResolver
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="module">The module that will contain the type being created.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     public static IEnumerable<InteropInterfaceEntryInfo> EnumerateMetadataInterfaceEntries(
         TypeSignatureEquatableSet vtableTypes,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         InteropGeneratorEmitState emitState,
-        ModuleDefinition module,
         bool useWindowsUIXamlProjections)
     {
         // Append all entries for the type (which we share for all matching user-defined types)
@@ -62,7 +60,6 @@ internal static class InteropInterfaceEntriesResolver
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
                     type: genericTypeSignature,
                     interopDefinitions: interopDefinitions,
-                    interopReferences: interopReferences,
                     emitState: emitState);
 
                 yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
@@ -221,14 +218,14 @@ internal static class InteropInterfaceEntriesResolver
         /// <inheritdoc/>
         public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
         {
-            _ = instructions.Add(Call, get_IID.Import(module));
-            _ = instructions.Add(Ldobj, interopReferences.Guid.Import(module));
+            _ = instructions.Add(Call, get_IID);
+            _ = instructions.Add(Ldobj, interopReferences.Guid);
         }
 
         /// <inheritdoc/>
         public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
         {
-            _ = instructions.Add(Call, get_Vtable.Import(module));
+            _ = instructions.Add(Call, get_Vtable);
         }
     }
 
@@ -241,15 +238,15 @@ internal static class InteropInterfaceEntriesResolver
         /// <inheritdoc/>
         public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
         {
-            _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
-            _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_Iid.Import(module));
+            _ = instructions.Add(Constrained, interfaceInformationType.ToTypeDefOrRef());
+            _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_Iid);
         }
 
         /// <inheritdoc/>
         public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
         {
-            _ = instructions.Add(Constrained, interfaceInformationType.Import(module).ToTypeDefOrRef());
-            _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable.Import(module));
+            _ = instructions.Add(Constrained, interfaceInformationType.ToTypeDefOrRef());
+            _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable);
         }
     }
 }

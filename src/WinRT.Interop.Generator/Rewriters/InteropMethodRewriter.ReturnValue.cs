@@ -32,15 +32,13 @@ internal partial class InteropMethodRewriter
         /// <param name="source">The method local containing the ABI value to marshal.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static void RewriteMethod(
             TypeSignature returnType,
             MethodDefinition method,
             CilInstruction marker,
             CilLocalVariable source,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             // Validate that we do have some IL body for the input method (this should always be the case)
             if (method.CilMethodBody is not CilMethodBody body)
@@ -86,8 +84,7 @@ internal partial class InteropMethodRewriter
                         marker: marker,
                         source: source,
                         marshallerMethod: emitState.LookupTypeDefinition(returnType, "Marshaller").GetMethod("ConvertToManaged"),
-                        releaseOrDisposeMethod: interopReferences.WindowsRuntimeUnknownMarshallerFree,
-                        module: module);
+                        releaseOrDisposeMethod: interopReferences.WindowsRuntimeUnknownMarshallerFree);
                 }
                 else if (returnType.IsConstructedNullableValueType(interopReferences))
                 {
@@ -100,8 +97,7 @@ internal partial class InteropMethodRewriter
                         marker: marker,
                         source: source,
                         marshallerMethod: marshallerType.UnboxToManaged(),
-                        releaseOrDisposeMethod: interopReferences.WindowsRuntimeUnknownMarshallerFree,
-                        module: module);
+                        releaseOrDisposeMethod: interopReferences.WindowsRuntimeUnknownMarshallerFree);
                 }
                 else if (returnType.IsManagedValueType(interopReferences))
                 {
@@ -117,8 +113,7 @@ internal partial class InteropMethodRewriter
                         marker: marker,
                         source: source,
                         marshallerMethod: marshallerType.ConvertToManaged(),
-                        releaseOrDisposeMethod: marshallerType.Dispose(),
-                        module: module);
+                        releaseOrDisposeMethod: marshallerType.Dispose());
                 }
                 else
                 {
@@ -129,7 +124,7 @@ internal partial class InteropMethodRewriter
                     // We can directly call the marshaller and return it, no 'try/finally' complexity is needed
                     body.Instructions.ReferenceReplaceRange(marker, [
                         CilInstruction.CreateLdloc(source, body),
-                        new CilInstruction(Call, marshallerType.ConvertToManaged().Import(module)),
+                        new CilInstruction(Call, marshallerType.ConvertToManaged()),
                         new CilInstruction(Ret)]);
                 }
             }
@@ -142,8 +137,7 @@ internal partial class InteropMethodRewriter
                     marker: marker,
                     source: source,
                     marshallerMethod: interopReferences.HStringMarshallerConvertToManaged,
-                    releaseOrDisposeMethod: interopReferences.HStringMarshallerFree,
-                    module: module);
+                    releaseOrDisposeMethod: interopReferences.HStringMarshallerFree);
             }
             else if (returnType.IsTypeOfType(interopReferences))
             {
@@ -154,15 +148,14 @@ internal partial class InteropMethodRewriter
                     marker: marker,
                     source: source,
                     marshallerMethod: interopReferences.TypeMarshallerConvertToManaged,
-                    releaseOrDisposeMethod: interopReferences.TypeMarshallerDispose,
-                    module: module);
+                    releaseOrDisposeMethod: interopReferences.TypeMarshallerDispose);
             }
             else if (returnType.IsTypeOfException(interopReferences))
             {
                 // 'Exception' is also special, though it's simple: the ABI type is an unmanaged value type
                 body.Instructions.ReferenceReplaceRange(marker, [
                     CilInstruction.CreateLdloc(source, body),
-                    new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToManaged.Import(module)),
+                    new CilInstruction(Call, interopReferences.ExceptionMarshallerConvertToManaged),
                     new CilInstruction(Ret)]);
             }
             else
@@ -177,8 +170,7 @@ internal partial class InteropMethodRewriter
                     marker: marker,
                     source: source,
                     marshallerMethod: marshallerType.ConvertToManaged(),
-                    releaseOrDisposeMethod: interopReferences.WindowsRuntimeUnknownMarshallerFree,
-                    module: module);
+                    releaseOrDisposeMethod: interopReferences.WindowsRuntimeUnknownMarshallerFree);
             }
         }
 
@@ -192,13 +184,12 @@ internal partial class InteropMethodRewriter
             CilInstruction marker,
             CilLocalVariable source,
             IMethodDefOrRef marshallerMethod,
-            IMethodDefOrRef releaseOrDisposeMethod,
-            ModuleDefinition module)
+            IMethodDefOrRef releaseOrDisposeMethod)
         {
             // Add a new local for the marshalled return value. We need this because it will be
             // assigned from inside a protected region (a 'try') block, so we can't return the
             // value directly. Instead, we'll load and return the local after the handler code.
-            CilLocalVariable loc_returnValue = new(returnType.Import(module));
+            CilLocalVariable loc_returnValue = new(returnType);
 
             body.LocalVariables.Add(loc_returnValue);
 
@@ -210,11 +201,11 @@ internal partial class InteropMethodRewriter
             // Marshal the value and release the original interface pointer, or dispose the ABI value
             body.Instructions.ReferenceReplaceRange(marker, [
                 ldloc_tryStart,
-                new CilInstruction(Call, marshallerMethod.Import(module)),
+                new CilInstruction(Call, marshallerMethod),
                 CilInstruction.CreateStloc(loc_returnValue, body),
                 new CilInstruction(Leave_S, ldloc_finallyEnd.CreateLabel()),
                 ldloc_finallyStart,
-                new CilInstruction(Call, releaseOrDisposeMethod.Import(module)),
+                new CilInstruction(Call, releaseOrDisposeMethod),
                 new CilInstruction(Endfinally),
                 ldloc_finallyEnd,
                 new CilInstruction(Ret)]);

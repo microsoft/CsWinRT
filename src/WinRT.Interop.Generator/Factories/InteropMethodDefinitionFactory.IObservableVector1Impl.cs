@@ -29,13 +29,11 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="get_VectorChangedTableMethod">The <see cref="MethodDefinition"/> to get the event token table.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition add_VectorChanged(
             GenericInstanceTypeSignature vectorType,
             MethodDefinition get_VectorChangedTableMethod,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = vectorType.TypeArguments[0];
 
@@ -56,29 +54,29 @@ internal partial class InteropMethodDefinitionFactory
                 name: "add_VectorChanged"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        interopReferences.EventRegistrationToken.MakePointerType().Import(module)]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.EventRegistrationToken.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Jump labels
             CilInstruction ldc_i4_e_pointer = new(Ldc_I4, unchecked((int)0x80004003));
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
-            CilInstruction callvirt_catchHResult = new(Callvirt, interopReferences.Exceptionget_HResult.Import(module));
+            CilInstruction callvirt_catchHResult = new(Callvirt, interopReferences.Exceptionget_HResult);
             CilInstruction ldloc_2_returnHResult = new(Ldloc_2);
 
             // Declare the local variables:
             //   [0]: '<VECTOR_TYPE>' (the 'unboxedValue' object)
             //   [1]: 'VectorChangedEventHandler<<ELEMENT_TYPE>>' (the 'managedHandler' object)
             //   [2]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_unboxedValue = new(vectorType.Import(module));
-            CilLocalVariable loc_1_managedHandler = new(eventHandlerType.Import(module));
-            CilLocalVariable loc_2_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_unboxedValue = new(vectorType);
+            CilLocalVariable loc_1_managedHandler = new(eventHandlerType);
+            CilLocalVariable loc_2_hresult = new(interopReferences.Int32);
 
             // Create a method body for the 'add_VectorChanged' method
             add_VectorChangedMethod.CilMethodBody = new CilMethodBody()
@@ -101,7 +99,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(vectorType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(vectorType) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Call, emitState.LookupTypeDefinition(eventHandlerType, "Marshaller").GetMethod("ConvertToManaged"u8) },
@@ -111,15 +109,15 @@ internal partial class InteropMethodDefinitionFactory
                     { Ldarg_2 },
                     { Call, get_VectorChangedTableMethod },
                     { Ldloc_0 },
-                    { Callvirt, interopReferences.ConditionalWeakTable2GetOrCreateValue(conditionalWeakTableType).Import(module) },
+                    { Callvirt, interopReferences.ConditionalWeakTable2GetOrCreateValue(conditionalWeakTableType) },
                     { Ldloc_1 },
-                    { Callvirt, interopReferences.EventRegistrationTokenTableAddEventHandler(eventRegistrationTokenTableType).Import(module) },
-                    { Stobj, interopReferences.EventRegistrationToken.Import(module) },
+                    { Callvirt, interopReferences.EventRegistrationTokenTableAddEventHandler(eventRegistrationTokenTableType) },
+                    { Stobj, interopReferences.EventRegistrationToken },
 
                     // unboxedValue.VectorChanged += managedHandler;
                     { Ldloc_0 },
                     { Ldloc_1 },
-                    { Callvirt, interopReferences.IObservableVector1add_VectorChanged(elementType).Import(module) },
+                    { Callvirt, interopReferences.IObservableVector1add_VectorChanged(elementType) },
                     { Ldc_I4_0 },
                     { Stloc_2 },
                     { Leave_S, ldloc_2_returnHResult.CreateLabel() },
@@ -142,7 +140,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = callvirt_catchHResult.CreateLabel(),
                         HandlerStart = callvirt_catchHResult.CreateLabel(),
                         HandlerEnd = ldloc_2_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -156,12 +154,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="vectorType">The <see cref="TypeSignature"/> for the vector type.</param>
         /// <param name="get_VectorChangedTableMethod">The <see cref="MethodDefinition"/> to get the event token table.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition remove_VectorChanged(
             GenericInstanceTypeSignature vectorType,
             MethodDefinition get_VectorChangedTableMethod,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature elementType = vectorType.TypeArguments[0];
 
@@ -182,18 +178,18 @@ internal partial class InteropMethodDefinitionFactory
                 name: "remove_VectorChanged"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        interopReferences.EventRegistrationToken.ToValueTypeSignature().Import(module)]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.EventRegistrationToken.ToValueTypeSignature()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Jump labels
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction ldc_i4_0_return0 = new(Ldc_I4_0);
-            CilInstruction callvirt_catchHResult = new(Callvirt, interopReferences.Exceptionget_HResult.Import(module));
+            CilInstruction callvirt_catchHResult = new(Callvirt, interopReferences.Exceptionget_HResult);
             CilInstruction ldloc_3_returnHResult = new(Ldloc_3);
 
             // Declare the local variables:
@@ -201,10 +197,10 @@ internal partial class InteropMethodDefinitionFactory
             //   [1]: 'EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>>' (the 'table' object)
             //   [2]: 'VectorChangedEventHandler<<ELEMENT_TYPE>>' (the 'managedHandler' object)
             //   [3]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_unboxedValue = new(vectorType.Import(module));
-            CilLocalVariable loc_1_table = new(eventRegistrationTokenTableType.Import(module));
-            CilLocalVariable loc_2_managedHandler = new(eventHandlerType.Import(module));
-            CilLocalVariable loc_3_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_unboxedValue = new(vectorType);
+            CilLocalVariable loc_1_table = new(eventRegistrationTokenTableType);
+            CilLocalVariable loc_2_managedHandler = new(eventHandlerType);
+            CilLocalVariable loc_3_hresult = new(interopReferences.Int32);
 
             // Create a method body for the 'remove_VectorChanged' method
             remove_VectorChangedMethod.CilMethodBody = new CilMethodBody()
@@ -214,7 +210,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(vectorType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(vectorType) },
                     { Stloc_0 },
 
                     // if (unboxedValue != null && VectorChangedTable.TryGetValue(unboxedValue, out EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>> table))
@@ -223,20 +219,20 @@ internal partial class InteropMethodDefinitionFactory
                     { Call, get_VectorChangedTableMethod },
                     { Ldloc_0 },
                     { Ldloca_S, loc_1_table },
-                    { Callvirt, interopReferences.ConditionalWeakTable2TryGetValue(conditionalWeakTableType).Import(module) },
+                    { Callvirt, interopReferences.ConditionalWeakTable2TryGetValue(conditionalWeakTableType) },
                     { Brfalse_S, ldc_i4_0_return0.CreateLabel() },
 
                     // if (table.RemoveEventHandler(token, out VectorChangedEventHandler<<ELEMENT_TYPE>> managedHandler))
                     { Ldloc_1 },
                     { Ldarg_1 },
                     { Ldloca_S, loc_2_managedHandler },
-                    { Callvirt, interopReferences.EventRegistrationTokenTableRemoveEventHandler(eventRegistrationTokenTableType).Import(module) },
+                    { Callvirt, interopReferences.EventRegistrationTokenTableRemoveEventHandler(eventRegistrationTokenTableType) },
                     { Brfalse_S, ldc_i4_0_return0.CreateLabel() },
 
                     // unboxedValue.VectorChanged -= managedHandler;
                     { Ldloc_0 },
                     { Ldloc_2 },
-                    { Callvirt, interopReferences.IObservableVector1remove_VectorChanged(elementType).Import(module) },
+                    { Callvirt, interopReferences.IObservableVector1remove_VectorChanged(elementType) },
 
                     // Return S_OK
                     { ldc_i4_0_return0 },
@@ -261,7 +257,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = callvirt_catchHResult.CreateLabel(),
                         HandlerStart = callvirt_catchHResult.CreateLabel(),
                         HandlerEnd = ldloc_3_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };

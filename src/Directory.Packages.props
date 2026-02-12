@@ -5,8 +5,8 @@
   <ItemGroup>
     <PackageVersion Include="AsmResolver.DotNet" Version="6.0.0-development.344" />
     <PackageVersion Include="Basic.Reference.Assemblies.Net100" Version="1.8.3" />
-    <PackageVersion Include="BenchmarkDotNet" Version="0.14.0" />
-    <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.14.0" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageVersion Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.15.8" />
     <PackageVersion Include="CommandLineParser" Version="2.4.3" />
     <PackageVersion Include="CommunityToolkit.HighPerformance" Version="8.4.0" />
     <PackageVersion Include="ConsoleAppFramework" Version="5.6.2" />

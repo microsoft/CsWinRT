@@ -29,12 +29,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition GetView(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -46,25 +44,25 @@ internal partial class InteropMethodDefinitionFactory
                 name: "GetView"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.Void.MakePointerType().MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(listType.Import(module));
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_thisObject = new(listType);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction nop_beforeTry = new(Nop);
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
             CilInstruction nop_convertToUnmanaged = new(Nop);
 
             // Create a method body for the 'GetView' method
@@ -84,11 +82,11 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Ldloc_0 },
-                    { Call, interopReferences.IListAdapter1GetView(elementType).Import(module) },
+                    { Call, interopReferences.IListAdapter1GetView(elementType) },
                     { nop_convertToUnmanaged },
                     { Ldc_I4_0 },
                     { Stloc_1 },
@@ -112,7 +110,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -132,12 +130,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition SetAt(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -146,8 +142,7 @@ internal partial class InteropMethodDefinitionFactory
                 adapterMethod: interopReferences.IListAdapter1SetAt(elementType),
                 listType: listType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -156,12 +151,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition InsertAt(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -170,8 +163,7 @@ internal partial class InteropMethodDefinitionFactory
                 adapterMethod: interopReferences.IListAdapter1InsertAt(elementType),
                 listType: listType,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -179,11 +171,9 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition RemoveAt(
             GenericInstanceTypeSignature listType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -195,24 +185,24 @@ internal partial class InteropMethodDefinitionFactory
                 name: "RemoveAt"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(listType.Import(module));
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_thisObject = new(listType);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Create a method body for the 'RemoveAt' method
             removeAtMethod.CilMethodBody = new CilMethodBody()
@@ -222,11 +212,11 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { Ldarg_1 },
-                    { Call, interopReferences.IListAdapter1RemoveAt(elementType).Import(module) },
+                    { Call, interopReferences.IListAdapter1RemoveAt(elementType) },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },
@@ -249,7 +239,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -263,12 +253,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Append(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -280,25 +268,25 @@ internal partial class InteropMethodDefinitionFactory
                 name: "Append"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        elementType.GetAbiType(interopReferences).Import(module)]))
+                        interopReferences.Void.MakePointerType(),
+                        elementType.GetAbiType(interopReferences)]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(listType.Import(module));
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_thisObject = new(listType);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction nop_parameter1Rewrite = new(Nop);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Create a method body for the 'Append' method
             appendMethod.CilMethodBody = new CilMethodBody()
@@ -308,11 +296,11 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { nop_parameter1Rewrite },
-                    { Callvirt, interopReferences.ICollection1Add(elementType).Import(module) },
+                    { Callvirt, interopReferences.ICollection1Add(elementType) },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },
@@ -335,7 +323,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -355,11 +343,9 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition RemoveAtEnd(
             GenericInstanceTypeSignature listType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -371,22 +357,22 @@ internal partial class InteropMethodDefinitionFactory
                 name: "RemoveAtEnd"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    returnType: interopReferences.Int32,
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(listType.Import(module));
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_thisObject = new(listType);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Create a method body for the 'RemoveAtEnd' method
             removeAtEndMethod.CilMethodBody = new CilMethodBody()
@@ -396,10 +382,10 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
                     { Stloc_0 },
                     { Ldloc_0 },
-                    { Call, interopReferences.IListAdapter1RemoveAtEnd(elementType).Import(module) },
+                    { Call, interopReferences.IListAdapter1RemoveAtEnd(elementType) },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },
@@ -422,7 +408,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -435,11 +421,9 @@ internal partial class InteropMethodDefinitionFactory
         /// </summary>
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition Clear(
             GenericInstanceTypeSignature listType,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -451,22 +435,22 @@ internal partial class InteropMethodDefinitionFactory
                 name: "Clear"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
-                    parameterTypes: [module.CorLibTypeFactory.Void.MakePointerType()]))
+                    returnType: interopReferences.Int32,
+                    parameterTypes: [interopReferences.Void.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(listType.Import(module));
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_thisObject = new(listType);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Create a method body for the 'Clear' method
             clearMethod.CilMethodBody = new CilMethodBody()
@@ -476,10 +460,10 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
                     { Stloc_0 },
                     { Ldloc_0 },
-                    { Callvirt, interopReferences.ICollection1Clear(elementType).Import(module) },
+                    { Callvirt, interopReferences.ICollection1Clear(elementType) },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },
@@ -502,7 +486,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -516,12 +500,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition GetMany(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -555,8 +537,7 @@ internal partial class InteropMethodDefinitionFactory
                 readOnlyListType: listType,
                 getManyMethod: getManyMethod,
                 interopReferences: interopReferences,
-                emitState: emitState,
-                module: module);
+                emitState: emitState);
         }
 
         /// <summary>
@@ -565,12 +546,10 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         public static MethodDefinition ReplaceAll(
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
             TypeSignature elementAbiType = elementType.GetAbiType(interopReferences);
@@ -583,22 +562,22 @@ internal partial class InteropMethodDefinitionFactory
                 name: "ReplaceAll"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32,
-                        elementAbiType.Import(module).MakePointerType()]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32,
+                        elementAbiType.MakePointerType()]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'uint' (for the 'i' loop variable)
             //   [2]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(listType.Import(module));
-            CilLocalVariable loc_1_i = new(module.CorLibTypeFactory.UInt32);
-            CilLocalVariable loc_2_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_thisObject = new(listType);
+            CilLocalVariable loc_1_i = new(interopReferences.UInt32);
+            CilLocalVariable loc_2_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_2_nullCheck = new(Ldarg_2);
@@ -608,7 +587,7 @@ internal partial class InteropMethodDefinitionFactory
             CilInstruction ldloc_0_loopStart = new(Ldloc_0);
             CilInstruction nop_convertToManaged = new(Nop);
             CilInstruction ldloc_2_returnHResult = new(Ldloc_2);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Create a method body for the 'ReplaceAll' method
             replaceAllMethod.CilMethodBody = new CilMethodBody()
@@ -633,12 +612,12 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code to load the list
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
                     { Stloc_0 },
 
                     // list.Clear();
                     { Ldloc_0 },
-                    { Callvirt, interopReferences.ICollection1Clear(elementType).Import(module) },
+                    { Callvirt, interopReferences.ICollection1Clear(elementType) },
 
                     // int i = 0;
                     { Ldc_I4_0 },
@@ -650,14 +629,14 @@ internal partial class InteropMethodDefinitionFactory
                     { Ldarg_2 },
                     { Ldloc_1 },
                     { Conv_U8 },
-                    { Sizeof, elementAbiType.Import(module).ToTypeDefOrRef() },
+                    { Sizeof, elementAbiType.ToTypeDefOrRef() },
                     { Conv_I8 },
                     { Mul },
                     { Conv_I },
                     { Add },
-                    { CilInstruction.CreateLdind(elementAbiType, module) },
+                    { CilInstruction.CreateLdind(elementAbiType) },
                     { nop_convertToManaged },
-                    { Callvirt, interopReferences.ICollection1Add(elementType).Import(module) },
+                    { Callvirt, interopReferences.ICollection1Add(elementType) },
 
                     // i++;
                     { Ldloc_1 },
@@ -693,7 +672,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_2_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };
@@ -715,14 +694,12 @@ internal partial class InteropMethodDefinitionFactory
         /// <param name="listType">The <see cref="TypeSignature"/> for the <see cref="System.Collections.Generic.IList{T}"/> type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
-        /// <param name="module">The interop module being built.</param>
         private static MethodDefinition SetAtOrInsertAt(
             Utf8String methodName,
             MemberReference adapterMethod,
             GenericInstanceTypeSignature listType,
             InteropReferences interopReferences,
-            InteropGeneratorEmitState emitState,
-            ModuleDefinition module)
+            InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = listType.TypeArguments[0];
 
@@ -734,26 +711,26 @@ internal partial class InteropMethodDefinitionFactory
                 name: methodName,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: module.CorLibTypeFactory.Int32,
+                    returnType: interopReferences.Int32,
                     parameterTypes: [
-                        module.CorLibTypeFactory.Void.MakePointerType(),
-                        module.CorLibTypeFactory.UInt32,
-                        elementType.GetAbiType(interopReferences).Import(module)]))
+                        interopReferences.Void.MakePointerType(),
+                        interopReferences.UInt32,
+                        elementType.GetAbiType(interopReferences)]))
             {
-                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences, module) }
+                CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
 
             // Declare the local variables:
             //   [0]: '<READONLY_LIST_TYPE>' (for 'thisObject')
             //   [1]: 'int' (the 'HRESULT' to return)
-            CilLocalVariable loc_0_thisObject = new(listType.Import(module));
-            CilLocalVariable loc_1_hresult = new(module.CorLibTypeFactory.Int32);
+            CilLocalVariable loc_0_thisObject = new(listType);
+            CilLocalVariable loc_1_hresult = new(interopReferences.Int32);
 
             // Labels for jumps
             CilInstruction ldarg_0_tryStart = new(Ldarg_0);
             CilInstruction nop_parameter2Rewrite = new(Nop);
             CilInstruction ldloc_1_returnHResult = new(Ldloc_1);
-            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged.Import(module));
+            CilInstruction call_catchStartMarshalException = new(Call, interopReferences.RestrictedErrorInfoExceptionMarshallerConvertToUnmanaged);
 
             // Create a method body for the 'SetAt' or 'InsertAt' method
             setAtOrInsertAtMethod.CilMethodBody = new CilMethodBody()
@@ -763,12 +740,12 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType).Import(module) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { Ldarg_1 },
                     { nop_parameter2Rewrite },
-                    { Call, adapterMethod.Import(module) },
+                    { Call, adapterMethod },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },
@@ -791,7 +768,7 @@ internal partial class InteropMethodDefinitionFactory
                         TryEnd = call_catchStartMarshalException.CreateLabel(),
                         HandlerStart = call_catchStartMarshalException.CreateLabel(),
                         HandlerEnd = ldloc_1_returnHResult.CreateLabel(),
-                        ExceptionType = interopReferences.Exception.Import(module)
+                        ExceptionType = interopReferences.Exception
                     }
                 }
             };

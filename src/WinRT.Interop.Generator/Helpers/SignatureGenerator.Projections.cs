@@ -58,13 +58,11 @@ internal partial class SignatureGenerator
     /// <param name="typeFullName">The full name of the enum type.</param>
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> to generate the signature for.</param>
     /// <param name="interopReferences"><inheritdoc cref="GetSignature" path="/param[@name='interopReferences']/node()"/></param>
-    /// <param name="useWindowsUIXamlProjections"><inheritdoc cref="GetSignature" path="/param[@name='useWindowsUIXamlProjections']/node()"/></param>
     /// <returns>The resulting signature, or <see langword="null"/> in case of failures.</returns>
     private static string? Enum(
         string typeFullName,
         TypeDefinition typeDefinition,
-        InteropReferences interopReferences,
-        bool useWindowsUIXamlProjections)
+        InteropReferences interopReferences)
     {
         // For '[Flags]' enum types, the underlying types is always 'uint', otherwise 'int'
         string underlyingTypeSignature = typeDefinition.HasCustomAttribute(interopReferences.FlagsAttribute)
