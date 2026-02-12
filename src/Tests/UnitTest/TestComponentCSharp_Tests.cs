@@ -2872,16 +2872,15 @@ namespace UnitTest
             IList<E> arr4 = new List<E>() { E.A, E.B, E.C };
             Array arr5 = new PropertyType[] { PropertyType.UInt8, PropertyType.Int16, PropertyType.UInt16 };
 
-            // TODO: Enable once non WinRT arrays are supported.
-            // Assert.Equal(string.Empty, Class.GetName(arr));
-            // Assert.Equal(string.Empty, Class.GetName(arr2));
+            Assert.Equal("Microsoft.UI.Xaml.Interop.IBindableVector", Class.GetName(arr));
+            Assert.Equal("Microsoft.UI.Xaml.Interop.IBindableVector", Class.GetName(arr2));
             Assert.Equal("Windows.Foundation.IReferenceArray`1<Int32>", Class.GetName(arr3));
             Assert.Equal("Microsoft.UI.Xaml.Interop.IBindableVector", Class.GetName(arr4));
             Assert.Equal("Windows.Foundation.IReferenceArray`1<Windows.Foundation.PropertyType>", Class.GetName(arr5));
-            // Assert.Equal(string.Empty, Class.GetName(arr.GetValue(0)));
-            // Assert.Equal(string.Empty, Class.GetName(arr2.GetValue(0)));
+            Assert.Equal("Object", Class.GetName(arr.GetValue(0)));
+            Assert.Equal("Object", Class.GetName(arr2.GetValue(0)));
             Assert.Equal("Windows.Foundation.IReference`1<Int32>", Class.GetName(arr3.GetValue(0)));
-            // Assert.Equal(string.Empty, Class.GetName(arr4[0]));
+            Assert.Equal("Object", Class.GetName(arr4[0]));
             Assert.Equal("Windows.Foundation.IReference`1<Windows.Foundation.PropertyType>", Class.GetName(arr5.GetValue(0)));
 
             Assert.Equal("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>", Class.GetName(typeof(IProperties1)));
