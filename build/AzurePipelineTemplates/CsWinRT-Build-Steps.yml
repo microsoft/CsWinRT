@@ -48,7 +48,6 @@ steps:
     inputs:
       packageType: sdk
       version: 10.x
-      includePreviewVersions: true
       installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
     env:
       PROCESSOR_ARCHITECTURE: x86
@@ -70,7 +69,6 @@ steps:
     inputs:
       packageType: sdk
       version: 10.x
-      includePreviewVersions: true
       installationPath: $(LocalAppData)\Microsoft\dotnet\
 
 # Set Dotnet path for x86.  The normal one already gets set above.

@@ -15,7 +15,7 @@
 
   <!-- Tests non WinRT APIs, so intentionally no reference on projections. -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator.Roslyn4120\WinRT.SourceGenerator.Roslyn4120.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=x64" />
+    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TestUnsafeDisabled)' == 'true'">

@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 using System;
 using System.Reflection;
 
+/*
 #if !NETCOREAPP3_1
 using WinRT;
 
@@ -79,3 +80,4 @@ namespace Benchmarks
     }
 }
 #endif
+*/

@@ -45,9 +45,9 @@
     <VersionString Condition="'$(VersionString)'==''">0.0.0-private.0</VersionString>
     <BuildPlatform>$(Platform)</BuildPlatform>
     <BuildPlatform Condition="'$(Platform)'=='Win32'">x86</BuildPlatform>
-    <BuildOutDir Condition="'$(BuildOutDir)'==''">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
+    <BuildOutDir Condition="'$(BuildOutDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
     <CsWinRTPath>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', 'cswinrt', 'bin'))</CsWinRTPath>
-    <CsWinRTPath Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', 'x86', '$(Configuration)', 'cswinrt', 'bin'))</CsWinRTPath>
+    <CsWinRTPath Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)_build', 'x86', '$(Configuration)', 'cswinrt', 'bin'))</CsWinRTPath>
     <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$(CsWinRTPath)WinRT.Interop.winmd</CsWinRTInteropMetadata>
   </PropertyGroup>
 

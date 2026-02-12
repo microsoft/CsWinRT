@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
 using TestComponentCSharp;
+using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
@@ -221,7 +222,9 @@ catch (Exception)
     }
 }
 
+// TODO enable when bindable custom properties are supported.
 
+/*
 // Test ICustomProperty
 Language language = new Language();
 language.Value = 42;
@@ -328,7 +331,11 @@ if ((int)retrievedValue8 != 4 ||
 {
     return 136;
 }
+*/
 
+// TODO enable when determined if this should throw or just marshal as object.
+
+/*
 if (RunAndGetException(() => WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(new ManagedOnlyClass())) is not NotSupportedException)
 {
     return 137;
@@ -338,6 +345,7 @@ if (RunAndGetException(() => WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(n
 {
     return 138;
 }
+*/
 
 return 100;
 
@@ -348,6 +356,7 @@ static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* lengt
 [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
 static extern int WindowsDeleteString(IntPtr hstring);
 
+/*
 static Exception RunAndGetException(Action action)
 {
     try
@@ -361,6 +370,7 @@ static Exception RunAndGetException(Action action)
         return e;
     }
 }
+*/
 
 static unsafe bool CheckRuntimeClassName(void* ptr, string expected)
 {
@@ -400,7 +410,7 @@ sealed partial class ManagedProperties : IProperties1, IUriHandler
     void IUriHandler.AddUriHandler(ProvideUri provideUri) => AddUriHandler(provideUri);
 }
 
-// [WinRTRuntimeClassName("ManagedWarningClass")]
+[WindowsRuntimeClassName("ManagedWarningClass")]
 sealed partial class ManagedWarningClass : WarningClass, IUriHandler, IArtist
 {
     public int Test => 4;

@@ -7,6 +7,11 @@
     <IsAotCompatible>true</IsAotCompatible>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
 
+    <!-- Common metadata properties for publishing -->
+    <Description>C#/WinRT Runtime v$(VersionString)</Description>
+    <AssemblyTitle>C#/WinRT Runtime v$(VersionString)</AssemblyTitle>
+    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+
     <!--
       Emit the '[module: SkipLocalsInit]' attribute, to further reduce runtime overhead. This is especially useful when
       using 'stackalloc'. See: https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.skiplocalsinitattribute.
@@ -76,6 +81,10 @@
 
     <!-- Ignore warnings for '[Obsolete]' members that are a private implementation detail (since they're allowed here) -->
     <NoWarn>$(NoWarn);CSWINRT3001</NoWarn>
+
+    <!-- Enable strong name signing -->
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
     
   <!--
