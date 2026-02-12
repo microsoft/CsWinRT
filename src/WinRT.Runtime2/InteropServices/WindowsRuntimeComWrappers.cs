@@ -292,7 +292,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
             // make sure that those fields are always 'null' before any following calls. This is necessary because
             // we cannot guarantee callers will always go through this overload to set them correctly. In particular,
             // the 'WeakReference<T>' callback might use this 'ComWrappers' instance externally, and if any of these
-            // fields were set it would causes issues. See additional notes below for this in 'CreateObject'.
+            // fields were set it would cause issues. See additional notes below for this in 'CreateObject'.
             ObjectComWrappersCallback = null;
             UnsealedObjectComWrappersCallback = null;
             CreateObjectTargetInterfacePointer = null;
