@@ -266,7 +266,9 @@ public unsafe partial class WindowsRuntimeObjectReference
         // Do a 'QueryInterface' to actually get the interface pointer we're looking for
         IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in iid, out void* interfacePtr).Assert();
 
-        return InitializeObjectReferenceUnsafe(interfacePtr, in iid);
+        // Pass the interface pointer with ownership, so we can avoid a whole pair of 'AddRef' and
+        // 'Release' calls, which we would've otherwise had to pay with the non-acquiring overload.
+        return InitializeObjectReferenceUnsafe(ref interfacePtr, in iid);
     }
 
     /// <summary>
@@ -322,5 +324,52 @@ public unsafe partial class WindowsRuntimeObjectReference
         return iid == WellKnownWindowsInterfaceIIDs.IID_IInspectable
             ? new ContextAwareInspectableObjectReference(externalComObject, referenceTracker)
             : new ContextAwareInterfaceObjectReference(externalComObject, referenceTracker, in iid);
+    }
+
+    /// <inheritdoc cref="InitializeObjectReferenceUnsafe(void*, in Guid)"/>
+    /// <remarks>
+    /// This method is equivalent to <see cref="InitializeObjectReferenceUnsafe(void*, in Guid)"/>, with the only difference
+    /// that it takes ownership of <paramref name="externalComObject"/>, so callers don't need to release it on their end.
+    /// </remarks>
+    private static WindowsRuntimeObjectReference InitializeObjectReferenceUnsafe(ref void* externalComObject, in Guid iid)
+    {
+        void* acquiredExternalComObject = externalComObject;
+
+        externalComObject = null;
+
+        // Early free-threaded check, to handle failure cases too (see notes above). As with the rest
+        // of this method, the entire implementation should be kept in sync with the overload above.
+        HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(acquiredExternalComObject);
+
+        // If the free-threaded check failed, make sure to release the interface pointer to avoid leaks.
+        // This matches what we do in 'InitializeFromManagedTypeUnsafe' above too to avoid this issue.
+        if (isFreeThreaded.Failed())
+        {
+            _ = IUnknownVftbl.ReleaseUnsafe(acquiredExternalComObject);
+
+            Marshal.ThrowExceptionForHR(isFreeThreaded);
+        }
+
+        // Try to resolve an 'IReferenceTracker' pointer (see detailed notes above)
+        _ = IUnknownVftbl.QueryInterfaceUnsafe(acquiredExternalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
+
+        // If we resolved a reference tracker, set it up (see notes above)
+        if (referenceTracker is not null)
+        {
+            _ = IReferenceTrackerVftbl.AddRefFromTrackerSourceUnsafe(referenceTracker);
+
+            _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
+        }
+
+        // Special case for free-threaded object references (see notes above)
+        if (isFreeThreaded == WellKnownErrorCodes.S_OK)
+        {
+            return new FreeThreadedObjectReference(acquiredExternalComObject, referenceTracker);
+        }
+
+        // Optimize the returned context-aware object reference (see notes above)
+        return iid == WellKnownWindowsInterfaceIIDs.IID_IInspectable
+            ? new ContextAwareInspectableObjectReference(acquiredExternalComObject, referenceTracker)
+            : new ContextAwareInterfaceObjectReference(acquiredExternalComObject, referenceTracker, in iid);
     }
 }
