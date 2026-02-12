@@ -78,7 +78,7 @@ TypeCase[] TestCases =
     // --------------------
     new(typeof(DataErrorsChangedEventArgs), "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", "Metadata", 400),
     new(typeof(INotifyDataErrorInfo),       "Microsoft.UI.Xaml.Data.INotifyDataErrorInfo",       "Metadata", 401),
-    new(typeof(INotifyPropertyChanged),          "Microsoft.UI.Xaml.Data.INotifyPropertyChanged",     "Metadata", 402),
+    new(typeof(INotifyPropertyChanged),     "Microsoft.UI.Xaml.Data.INotifyPropertyChanged",     "Metadata", 402),
     new(typeof(PropertyChangedEventArgs),   "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs",   "Metadata", 403),
     new(typeof(PropertyChangedEventHandler),"Microsoft.UI.Xaml.Data.PropertyChangedEventHandler","Metadata", 404),
 
