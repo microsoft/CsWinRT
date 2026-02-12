@@ -4,6 +4,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
@@ -106,6 +107,67 @@ public static unsafe class HStringMarshaller
     }
 
     /// <summary>
+    /// Converts an array of <see cref="string"/> values to unmanaged fast-pass <c>HSTRING</c> values.
+    /// </summary>
+    /// <param name="values">
+    /// The span of <see cref="string"/> values to convert.
+    /// </param>
+    /// <param name="hstringHeaderArray">
+    /// Pointer to an array of <see cref="HSTRING_HEADER"/> structures, one for each string in <paramref name="values"/>.
+    /// This is a pointer to ensure that the array is fixed and the caller should ensure to keep it fixed while using the hstrings.
+    /// </param>
+    /// <param name="hstrings">
+    /// Span to receive the resulting unmanaged <c>HSTRING</c> values. Each element corresponds to a string in <paramref name="values"/>.
+    /// </param>
+    /// <param name="pinnedGCHandles">
+    /// Span to receive the pinned GC handles for each string. These must be disposed by caller by calling <see cref="Dispose"/> after use to release pinned memory.
+    /// </param>
+    /// <remarks>
+    /// This method creates fast-pass <c>HSTRING</c> values for each string in the input array. The caller is responsible for disposing the pinned GC handles.
+    /// </remarks>
+    public static void ConvertToUnmanagedUnsafe(ReadOnlySpan<string> values, HSTRING_HEADER* hstringHeaderArray, Span<nint> hstrings, Span<nint> pinnedGCHandles)
+    {
+        int i = 0;
+        try
+        {
+            // Create the fast-pass 'HSTRING' for each string in values.
+            foreach (string value in values)
+            {
+                int idx = i;
+                PinnedGCHandle<string> pinnedGCHandle = new(value);
+                // We use i to keep track of the gc handle index to dispose up to.
+                // Given it is possible getting the GC handle fails, we increment the
+                // index after we have gotten it.
+                pinnedGCHandles[i++] = PinnedGCHandle<string>.ToIntPtr(pinnedGCHandle);
+
+                // Create the fast-pass 'HSTRING' on the target location.
+                HSTRING hstring;
+                WindowsRuntimeImports.WindowsCreateStringReference(
+                    sourceString: pinnedGCHandle.GetAddressOfStringData(),
+                    length: (uint)value.Length,
+                    hstringHeader: hstringHeaderArray + idx,
+                    @string: &hstring).Assert();
+                hstrings[idx] = (nint)hstring;
+            }
+        }
+        catch (Exception)
+        {
+            for (int j = 0; j < i; j++)
+            {
+                PinnedGCHandle<string>.FromIntPtr(pinnedGCHandles[j]).Dispose();
+            }
+
+            // Given the caller will also try to dispose the handles as part of its cleanup,
+            // clear the span if we had freed it as part of exception handling. This allows
+            // to make sure we don't run into issues if we hadn't populated the entire span
+            // Given this is an edge case, we do the clear here rather than always in the caller.
+            pinnedGCHandles.Clear();
+
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Converts an unmanaged <c>HSTRING</c> to a <see cref="string"/> value.
     /// </summary>
     /// <param name="value">The <c>HSTRING</c> to convert.</param>
@@ -170,5 +232,17 @@ public static unsafe class HStringMarshaller
 
         // We can ignore the return value, as this method always returns 'S_OK'
         _ = WindowsRuntimeImports.WindowsDeleteString(value);
+    }
+
+    /// <summary>
+    /// Releases all pinned GC handles represented by the provided span.
+    /// </summary>
+    /// <param name="pinnedGCHandles">A span containing nints for the pinned GC handles to be released.</param>
+    public static void Dispose(Span<nint> pinnedGCHandles)
+    {
+        foreach (nint value in pinnedGCHandles)
+        {
+            PinnedGCHandle<string>.FromIntPtr(value).Dispose();
+        }
     }
 }

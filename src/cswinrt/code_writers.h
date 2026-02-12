@@ -5522,12 +5522,31 @@ Span<%> __%_span = %.Length <= 16
                     if (!is_ref() && marshaler_type == "HStringMarshaller")
                     {
                         w.write(R"(
-Unsafe.SkipInit(out InlineArray16<HStringReference> __%_inlineReferenceArray);
-HStringReference[] __%_referenceArrayFromPool = null;
-Span<HStringReference> __%_referenceSpan = %.Length <= 16
-    ? __%_inlineReferenceArray[..%.Length]
-    : (__%_referenceArrayFromPool = global::System.Buffers.ArrayPool<HStringReference>.Shared.Rent(%.Length));
+Unsafe.SkipInit(out InlineArray16<HSTRING_HEADER> __%_inlineHeaderArray);
+HSTRING_HEADER[] __%_headerArrayFromPool = null;
+Span<HSTRING_HEADER> __%_headerSpan = %.Length <= 16
+    ? __%_inlineHeaderArray[..%.Length]
+    : (__%_headerArrayFromPool = global::System.Buffers.ArrayPool<HSTRING_HEADER>.Shared.Rent(%.Length));
+
+Unsafe.SkipInit(out InlineArray16<nint> __%_inlinePinnedHandleArray);
+nint[] __%_pinnedHandleArrayFromPool = null;
+Span<nint> __%_pinnedHandleSpan = %.Length <= 16
+    ? __%_inlinePinnedHandleArray[..%.Length]
+    : (__%_pinnedHandleArrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent(%.Length));
 )",
+                            // inlineHeaderArray
+                            // SkipInit
+                            param_name,
+                            // array
+                            param_name,
+                            // span
+                            param_name,
+                            get_escaped_param_name(w),
+                            param_name,
+                            get_escaped_param_name(w),
+                            param_name,
+                            get_escaped_param_name(w),
+                            // inlinePinnedHandleArray
                             // SkipInit
                             param_name,
                             // array
@@ -5628,7 +5647,7 @@ Span<HStringReference> __%_referenceSpan = %.Length <= 16
                 
                 if (!is_ref() && marshaler_type == "HStringMarshaller")
                 {
-                    w.write(", _%_reference = __%_referenceSpan",
+                    w.write(", _%_inlineHeaderArray = __%_headerSpan",
                         param_name,
                         param_name);
                 }
@@ -5657,26 +5676,21 @@ Span<HStringReference> __%_referenceSpan = %.Length <= 16
                         return;
                     }
 
-                    write_copy_to_unmanaged_function(w);
                     w.write(R"(
-CopyToUnmanagedUnsafe_%(
-    null,
-    value: %,
-    destinationSize: (uint)__%_span.Length,
-    destination: _%,
-    headersSize: (uint)__%_referenceSpan.Length,
-    headers: _%_reference);
+HStringMarshaller.ConvertToUnmanagedUnsafe(
+    values: %,
+    hstringHeaderArray: (HSTRING_HEADER*) _%_inlineHeaderArray,
+    hstrings: __%_span,
+    pinnedGCHandles: __%_pinnedHandleSpan);
 )",
-                        param_name,
                         get_escaped_param_name(w),
-                        param_name,
                         param_name,
                         param_name,
                         param_name);
                 }
                 else
                 {
-                    w.write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_%, %.Length, out HStringReference __%);",
+                    w.write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_%, %?.Length ?? 0, out HStringReference __%);",
                         param_name, get_escaped_param_name(w), param_name);
                 }
             }
@@ -5906,8 +5920,31 @@ CopyToUnmanagedUnsafe_%(
             {
                 if (is_array())
                 {
-                    // HStringReference doesn't need to be freed.
-                    if ((is_ref() || marshaler_type != "HStringMarshaller") && !skip_disposer)
+                    if (category == param_category::pass_array &&
+                        marshaler_type == "HStringMarshaller")
+                    {
+                        w.write(R"(
+HStringMarshaller.Dispose(__%_pinnedHandleSpan);
+
+if (__%_pinnedHandleArrayFromPool is not null)
+{
+global::System.Buffers.ArrayPool<nint>.Shared.Return(__%_pinnedHandleArrayFromPool);
+}
+
+if (__%_headerArrayFromPool is not null)
+{
+global::System.Buffers.ArrayPool<HSTRING_HEADER>.Shared.Return(__%_headerArrayFromPool);
+}
+)",
+                            param_name,
+                            param_name,
+                            param_name,
+                            param_name,
+                            param_name);
+                    }
+                    // We need to dispose when it is fill array including for strings.
+                    // We also need to dispose for pass arrays of other types that has a disposer.
+                    else if (!skip_disposer)
                     {
                         write_interop_dispose_function(w);
 
