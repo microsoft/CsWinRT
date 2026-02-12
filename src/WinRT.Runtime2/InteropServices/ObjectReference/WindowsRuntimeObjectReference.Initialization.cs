@@ -272,8 +272,8 @@ public unsafe partial class WindowsRuntimeObjectReference
         }
         finally
         {
-            // We need to release the pointer which we get from the QueryInterface,
-            // given InitializeObjectReferenceUnsafe does its own AddRef.
+            // We need to release the interface pointer which we got from the 'QueryInterface'
+            // call, because 'InitializeObjectReferenceUnsafe' will perform its own 'AddRef'.
             _ = IUnknownVftbl.ReleaseUnsafe(interfacePtr);
         }
     }
