@@ -6,7 +6,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsAotCompatible>true</IsAotCompatible>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
-      
+
+    <!-- Common metadata properties for publishing -->
     <Description>C#/WinRT Runtime v$(VersionString)</Description>
     <AssemblyTitle>C#/WinRT Runtime v$(VersionString)</AssemblyTitle>
     <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
