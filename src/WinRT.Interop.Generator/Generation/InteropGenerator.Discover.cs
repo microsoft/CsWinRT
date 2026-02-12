@@ -89,7 +89,7 @@ internal partial class InteropGenerator
         // Load the 'WinRT.Projection.dll' module, this should always be available
         ModuleDefinition winRTProjectionModule = ModuleDefinition.FromFile(args.WinRTProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
 
-        discoveryState.TrackWinRTProjectionModuleDefinition(winRTProjectionModule);
+        discoveryState.TrackWindowsRuntimeProjectionModule(winRTProjectionModule);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -98,7 +98,7 @@ internal partial class InteropGenerator
         {
             ModuleDefinition winRTComponentModule = ModuleDefinition.FromFile(args.WinRTComponentAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
 
-            discoveryState.TrackWinRTComponentModuleDefinition(winRTComponentModule);
+            discoveryState.TrackWindowsRuntimeComponentModule(winRTComponentModule);
         }
     }
 
@@ -154,7 +154,7 @@ internal partial class InteropGenerator
             return;
         }
 
-        discoveryState.TrackModuleDefinition(path, module);
+        discoveryState.TrackModule(path, module);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -236,6 +236,10 @@ internal partial class InteropGenerator
         try
         {
             InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropDefinitions interopDefinitions = new(
+                interopReferences: interopReferences,
+                windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule!,
+                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
             // We can share a single builder when processing all types to reduce allocations
             TypeSignatureEquatableSet.Builder interfaces = new();
@@ -250,6 +254,7 @@ internal partial class InteropGenerator
                     typeSignature: type.ToTypeSignature(),
                     args: args,
                     discoveryState: discoveryState,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module);
             }
@@ -274,6 +279,10 @@ internal partial class InteropGenerator
         try
         {
             InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropDefinitions interopDefinitions = new(
+                interopReferences: interopReferences,
+                windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule!,
+                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
             foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
             {
@@ -284,6 +293,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     args: args,
                     discoveryState: discoveryState,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module);
             }
@@ -308,6 +318,10 @@ internal partial class InteropGenerator
         try
         {
             InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+            InteropDefinitions interopDefinitions = new(
+                interopReferences: interopReferences,
+                windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule!,
+                windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
             foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())
             {
@@ -318,6 +332,7 @@ internal partial class InteropGenerator
                     typeSignature: typeSignature,
                     args: args,
                     discoveryState: discoveryState,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module);
             }
@@ -348,7 +363,7 @@ internal partial class InteropGenerator
         }
 
         // Filter all invalid modules (i.e. that reference the 'WinRT.Runtime.dll' assembly version 2)
-        IEnumerable<string> invalidModuleNames = discoveryState.ModuleDefinitions
+        IEnumerable<string> invalidModuleNames = discoveryState.Modules
             .Values
             .Where(static module => module.ReferencesWindowsRuntimeVersion2Assembly)
             .Select(static module => module.Name?.ToString() ?? "")

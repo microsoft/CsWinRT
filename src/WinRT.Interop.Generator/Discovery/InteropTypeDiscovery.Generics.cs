@@ -20,12 +20,14 @@ internal partial class InteropTypeDiscovery
     /// <param name="typeSignature">The <see cref="GenericInstanceTypeSignature"/> for the constructed type to analyze.</param>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module currently being analyzed.</param>
     public static void TryTrackGenericTypeInstance(
         GenericInstanceTypeSignature typeSignature,
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
@@ -62,6 +64,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: typeSignature,
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
         }
@@ -73,6 +76,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: typeSignature,
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
         }
@@ -84,12 +88,14 @@ internal partial class InteropTypeDiscovery
     /// <param name="typeSignature">The <see cref="SzArrayTypeSignature"/> for the SZ array type to analyze.</param>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module currently being analyzed.</param>
     public static void TryTrackSzArrayType(
         SzArrayTypeSignature typeSignature,
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
@@ -125,6 +131,7 @@ internal partial class InteropTypeDiscovery
             typeSignature: typeSignature,
             args: args,
             discoveryState: discoveryState,
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module);
     }
@@ -136,6 +143,7 @@ internal partial class InteropTypeDiscovery
     /// <param name="typeSignature">The <see cref="GenericInstanceTypeSignature"/> for the constructed type to analyze.</param>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module currently being analyzed.</param>
     private static void TryTrackWindowsRuntimeGenericTypeInstance(
@@ -143,6 +151,7 @@ internal partial class InteropTypeDiscovery
         GenericInstanceTypeSignature typeSignature,
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
@@ -171,6 +180,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: typeSignature,
                 args: args,
                 discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -202,6 +212,7 @@ internal partial class InteropTypeDiscovery
                     typeSignature: constructedSignature,
                     args: args,
                     discoveryState,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module);
             }
@@ -214,12 +225,14 @@ internal partial class InteropTypeDiscovery
     /// <param name="typeSignature">The <see cref="GenericInstanceTypeSignature"/> for the constructed type to analyze.</param>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module currently being analyzed.</param>
     private static void TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
         GenericInstanceTypeSignature typeSignature,
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
@@ -248,6 +261,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IEnumerator1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -257,6 +271,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IEnumeratorAdapter1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
         }
@@ -270,6 +285,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IReadOnlyList1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -279,6 +295,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -293,6 +310,7 @@ internal partial class InteropTypeDiscovery
                     typeSignature: interopReferences.IDictionary2.MakeGenericReferenceType(keySignature, valueSignature),
                     args: args,
                     discoveryState: discoveryState,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module);
             }
@@ -304,6 +322,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.ReadOnlyCollection1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
         }
@@ -316,6 +335,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -329,6 +349,7 @@ internal partial class InteropTypeDiscovery
                     typeSignature: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType(keySignature, valueSignature),
                     args: args,
                     discoveryState: discoveryState,
+                    interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module);
             }
@@ -350,6 +371,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -363,6 +385,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IList1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -372,6 +395,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -382,6 +406,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.ReadOnlyDictionary2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -395,6 +420,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.DictionaryKeyCollection2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -403,6 +429,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.DictionaryKeyCollection2Enumerator.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -411,6 +438,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.DictionaryValueCollection2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -419,6 +447,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.DictionaryValueCollection2Enumerator.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
         }
@@ -434,6 +463,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IReadOnlyList1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -442,6 +472,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -450,6 +481,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.ReadOnlyDictionaryKeyCollection2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -458,6 +490,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.ReadOnlyDictionaryKeyCollection2Enumerator.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -466,6 +499,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.ReadOnlyDictionaryValueCollection2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -474,6 +508,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.ReadOnlyDictionaryValueCollection2Enumerator.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -482,6 +517,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IReadOnlyDictionarySplitAdapter2.MakeGenericReferenceType([.. typeSignature.TypeArguments]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -490,6 +526,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.ArraySegment1Enumerator.MakeGenericValueType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
         }
@@ -516,6 +553,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: interopReferences.IMapChangedEventArgs1.MakeGenericReferenceType(typeSignature.TypeArguments[0]),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
         }
@@ -556,6 +594,7 @@ internal partial class InteropTypeDiscovery
     /// <param name="typeSignature">The <see cref="GenericInstanceTypeSignature"/> for the constructed type to analyze.</param>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module currently being analyzed.</param>
     private static void TryTrackManagedGenericTypeInstance(
@@ -563,6 +602,7 @@ internal partial class InteropTypeDiscovery
         GenericInstanceTypeSignature typeSignature,
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
@@ -579,6 +619,7 @@ internal partial class InteropTypeDiscovery
                 typeSignature: typeSignature.TypeArguments[0].MakeSzArrayType(),
                 args: args,
                 discoveryState: discoveryState,
+                interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
 
@@ -591,6 +632,7 @@ internal partial class InteropTypeDiscovery
             typeSignature: typeSignature,
             args: args,
             discoveryState: discoveryState,
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module);
     }
