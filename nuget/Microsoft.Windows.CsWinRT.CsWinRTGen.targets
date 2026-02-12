@@ -11,7 +11,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenToolsDirectory>$(SolutionDir)WinRT.Interop.Generator\bin\$(Configuration)\net10.0\</CsWinRTGenToolsDirectory>
     <CsWinRTImplToolsDirectory>$(SolutionDir)WinRT.Impl.Generator\bin\$(Configuration)\net10.0\</CsWinRTImplToolsDirectory>
     <CsWinRTMergedProjectionToolsDirectory>$(SolutionDir)WinRT.Projection.Generator\bin\$(Configuration)\net10.0\</CsWinRTMergedProjectionToolsDirectory>
-
     <CsWinRTToolsArchitecture>AnyCPU</CsWinRTToolsArchitecture>
     <_TargetPlatformVersionUsesCsWinRT3>true</_TargetPlatformVersionUsesCsWinRT3>
 
