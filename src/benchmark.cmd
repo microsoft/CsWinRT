@@ -1,5 +1,4 @@
 nuget restore TestWinRT\Test.sln
-nuget restore cswinrt.slnx
 msbuild -t:restore -t:Benchmarks /p:platform=x64 /p:configuration=release /p:solutiondir=%~dp0 /p:IsDotnetBuild=false %this_dir%cswinrt.slnx
 dotnet %~dp0Benchmarks\bin\x64\Release\net10.0\Benchmarks.dll -filter * --runtimes net10.0
 nuget restore Perf\ResultsComparer\ResultsComparer.sln
