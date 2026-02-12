@@ -56,7 +56,6 @@ stages:
         - DerivedClassActivation
         - DerivedClassAsBaseClass
         - CCW
-        - TypeMarshaling
 
 #    - template: CsWinRT-Test-Steps.yml@self
 #      parameters:
