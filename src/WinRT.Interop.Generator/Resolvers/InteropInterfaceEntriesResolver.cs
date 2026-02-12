@@ -63,9 +63,14 @@ internal static class InteropInterfaceEntriesResolver
                     emitState: emitState);
 
                 yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
+
+                continue;
             }
-            else if (typeSignature.IsCustomMappedWindowsRuntimeInterfaceType(interopReferences) ||
-                     typeSignature.IsManuallyProjectedWindowsRuntimeInterfaceType(interopReferences))
+
+            // If the interface type is custom-mapped or manually projected, it means its interop code lives in
+            // the 'WinRT.Runtime.dll' assembly. So we have to special-case this scenario for all of those types.
+            if (typeSignature.IsCustomMappedWindowsRuntimeInterfaceType(interopReferences) ||
+                typeSignature.IsManuallyProjectedWindowsRuntimeInterfaceType(interopReferences))
             {
                 // If the user explicitly implemented 'IStringable', we skip it here. We want to always emit it
                 // at the end of the list of entries, to have consistent ordering with the built-in interfaces.
@@ -81,45 +86,64 @@ internal static class InteropInterfaceEntriesResolver
                     useWindowsUIXamlProjections: useWindowsUIXamlProjections);
 
                 yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
+
+                continue;
             }
-            else
+
+            // We always need to resolve the user-defined types in all cases below, so just do it once first
+            TypeDefinition interfaceType = typeSignature.Resolve()!;
+
+            // Handle the common case for all normally projected, non-generic Windows Runtime interface types. For those, all the
+            // interop code will just like in the 'WinRT.Projection.dll' assembly, with all projected types for the application domain.
+            if (interfaceType.IsProjectedWindowsRuntimeType)
             {
-                // We always need to resolve the user-defined types in all cases below, so just do it once first
-                TypeDefinition interfaceType = typeSignature.Resolve()!;
+                (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetProjectedTypeImpl(
+                    type: interfaceType,
+                    interopReferences: interopReferences);
 
-                // For '[GeneratedComInterface]', we need to retrieve and use the generated vtable from the COM generators
-                if (interfaceType.IsGeneratedComInterfaceType)
+                yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
+
+                continue;
+            }
+
+            // For '[GeneratedComInterface]', we need to retrieve and use the generated vtable from the COM generators
+            if (interfaceType.IsGeneratedComInterfaceType)
+            {
+                // Ignore interfaces we can't retrieve information for (this should never happen, interfaces are filtered during discovery)
+                if (!interfaceType.TryGetInterfaceInformationType(interopReferences, out TypeSignature? interfaceInformationType))
                 {
-                    // Ignore interfaces we can't retrieve information for (this should never happen, interfaces are filtered during discovery)
-                    if (!interfaceType.TryGetInterfaceInformationType(interopReferences, out TypeSignature? interfaceInformationType))
-                    {
-                        continue;
-                    }
-
-                    // Get the IID of the interface (same as above, this is pre-validated)
-                    if (!interfaceType.TryGetGuidAttribute(interopReferences, out Guid interfaceId))
-                    {
-                        continue;
-                    }
-
-                    // If we find the special 'IMarshal' interface, ignore it here. We want to use this
-                    // later to replace our built-in 'IMarshal' implementation in its own vtable slot.
-                    if (interfaceId == WellKnownInterfaceIIDs.IID_IMarshal)
-                    {
-                        continue;
-                    }
-
-                    yield return new ComInterfaceEntryInfo(interfaceInformationType);
+                    continue;
                 }
-                else
+
+                // Get the IID of the interface (same as above, this is pre-validated)
+                if (!interfaceType.TryGetGuidAttribute(interopReferences, out Guid interfaceId))
                 {
-                    // This is the common case for all normally projected, non-generic Windows Runtime types
-                    (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetProjectedTypeImpl(
-                        type: interfaceType,
-                        interopReferences: interopReferences);
-
-                    yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
+                    continue;
                 }
+
+                // If we find the special 'IMarshal' interface, ignore it here. We want to use this
+                // later to replace our built-in 'IMarshal' implementation in its own vtable slot.
+                if (interfaceId == WellKnownInterfaceIIDs.IID_IMarshal)
+                {
+                    continue;
+                }
+
+                yield return new ComInterfaceEntryInfo(interfaceInformationType);
+
+                continue;
+            }
+
+            // Lastly, if the type represents an '[exclusiveto]' interface for an authored type from a Windows Runtime
+            // component written in C#, we resolve the implementation from the generated 'WinRT.Component.dll' assembly.
+            if (interfaceType.HasCustomAttribute(interopReferences.WindowsRuntimeExclusiveToInterfaceAttribute))
+            {
+                (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetComponentTypeImpl(
+                    type: interfaceType,
+                    interopDefinitions: interopDefinitions);
+
+                yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
+
+                continue;
             }
         }
     }
