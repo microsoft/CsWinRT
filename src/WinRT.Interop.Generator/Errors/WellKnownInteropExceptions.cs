@@ -763,6 +763,22 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Missing .dll reference to the <c>WinRT.Component.dll</c> assembly.
+    /// </summary>
+    public static WellKnownInteropException EnsureWindowsRuntimeComponentModuleError()
+    {
+        return Exception(88, "Missing .dll reference to the 'WinRT.Component.dll' assembly, which is required to produce marshalling code for the current project.");
+    }
+
+    /// <summary>
+    /// Missing .dll reference to the <c>WinRT.Component.dll</c> assembly.
+    /// </summary>
+    public static WellKnownInteropException ComponentExclusiveToTypeArgumentNotResolvedError()
+    {
+        return Exception(89, "Missing .dll reference to the 'WinRT.Component.dll' assembly, which is required to produce marshalling code for the current project.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
