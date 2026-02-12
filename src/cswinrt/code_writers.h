@@ -5522,11 +5522,11 @@ Span<%> __%_span = %.Length <= 16
                     if (!is_ref() && marshaler_type == "HStringMarshaller")
                     {
                         w.write(R"(
-Unsafe.SkipInit(out InlineArray16<HSTRING_HEADER> __%_inlineHeaderArray);
-HSTRING_HEADER[] __%_headerArrayFromPool = null;
-Span<HSTRING_HEADER> __%_headerSpan = %.Length <= 16
+Unsafe.SkipInit(out InlineArray16<HStringHeader> __%_inlineHeaderArray);
+HStringHeader[] __%_headerArrayFromPool = null;
+Span<HStringHeader> __%_headerSpan = %.Length <= 16
     ? __%_inlineHeaderArray[..%.Length]
-    : (__%_headerArrayFromPool = global::System.Buffers.ArrayPool<HSTRING_HEADER>.Shared.Rent(%.Length));
+    : (__%_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent(%.Length));
 
 Unsafe.SkipInit(out InlineArray16<nint> __%_inlinePinnedHandleArray);
 nint[] __%_pinnedHandleArrayFromPool = null;
@@ -5677,9 +5677,9 @@ Span<nint> __%_pinnedHandleSpan = %.Length <= 16
                     }
 
                     w.write(R"(
-HStringMarshaller.ConvertToUnmanagedUnsafe(
-    values: %,
-    hstringHeaderArray: (HSTRING_HEADER*) _%_inlineHeaderArray,
+HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
+    source: %,
+    hstringHeaders: (HStringHeader*) _%_inlineHeaderArray,
     hstrings: __%_span,
     pinnedGCHandles: __%_pinnedHandleSpan);
 )",
@@ -5690,7 +5690,7 @@ HStringMarshaller.ConvertToUnmanagedUnsafe(
                 }
                 else
                 {
-                    w.write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_%, %?.Length ?? 0, out HStringReference __%);",
+                    w.write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_%, %?.Length, out HStringReference __%);",
                         param_name, get_escaped_param_name(w), param_name);
                 }
             }
@@ -5924,7 +5924,7 @@ HStringMarshaller.ConvertToUnmanagedUnsafe(
                         marshaler_type == "HStringMarshaller")
                     {
                         w.write(R"(
-HStringMarshaller.Dispose(__%_pinnedHandleSpan);
+HStringArrayMarshaller.Dispose(__%_pinnedHandleSpan);
 
 if (__%_pinnedHandleArrayFromPool is not null)
 {
@@ -5933,7 +5933,7 @@ global::System.Buffers.ArrayPool<nint>.Shared.Return(__%_pinnedHandleArrayFromPo
 
 if (__%_headerArrayFromPool is not null)
 {
-global::System.Buffers.ArrayPool<HSTRING_HEADER>.Shared.Return(__%_headerArrayFromPool);
+global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__%_headerArrayFromPool);
 }
 )",
                             param_name,
