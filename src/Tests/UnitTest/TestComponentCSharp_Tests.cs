@@ -93,6 +93,14 @@ namespace UnitTest
             E value;
         }
 
+        [Fact]
+        public void TestDelegateCallBackOnSealedType()
+        {
+            // In CSWinRT 2.0, this scenario would throw an exception but this is fixed in 3.0
+            SealedDelegateClassTest testType = new SealedDelegateClassTest();
+            // Passing a projected function of SealedDelegateClassTest as a delegate
+            StaticDelegateClassTest.Run(testType.Run);
+        }
 
         // Test a fix for a bug in Mono.Cecil that was affecting the IIDOptimizer when it encountered long class names 
         [Fact]

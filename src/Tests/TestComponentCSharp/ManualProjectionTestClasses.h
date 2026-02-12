@@ -4,11 +4,24 @@
 #include "CustomBindableVectorTest.g.h"
 #include "CustomBindableObservableVectorTest.g.h"
 #include "CustomIteratorTest.g.h"
+#include "SealedDelegateClassTest.g.h"
+#include "StaticDelegateClassTest.g.h"
 #include "SetTypeProperties.g.h"
 #include <winrt/Windows.UI.Xaml.Interop.h>
 
 namespace winrt::TestComponentCSharp::implementation
 {
+	struct StaticDelegateClassTest
+	{
+		static void Run(EventHandler0 e);
+	};
+
+	struct SealedDelegateClassTest : SealedDelegateClassTestT<SealedDelegateClassTest>
+	{
+		SealedDelegateClassTest() = default;
+		void Run();
+	};
+	
     struct SetTypeProperties : SetTypePropertiesT<SetTypeProperties>
     {
         SetTypeProperties();
@@ -86,6 +99,16 @@ namespace winrt::TestComponentCSharp::factory_implementation
     {
 
     };
+
+	struct StaticDelegateClassTest : StaticDelegateClassTestT<StaticDelegateClassTest, implementation::StaticDelegateClassTest>
+	{
+
+	};
+
+	struct SealedDelegateClassTest : SealedDelegateClassTestT<SealedDelegateClassTest, implementation::SealedDelegateClassTest>
+	{
+
+	};
 
 	struct CustomBindableIteratorTest : CustomBindableIteratorTestT<CustomBindableIteratorTest, implementation::CustomBindableIteratorTest>
 	{
