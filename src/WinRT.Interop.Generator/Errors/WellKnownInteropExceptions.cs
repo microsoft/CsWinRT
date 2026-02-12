@@ -763,6 +763,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// An implementation for an interface for an authored type has an invalid name.
+    /// </summary>
+    public static WellKnownInteropWarning ComponentTypeExclusiveToInterfaceInvalidNameError(TypeDefinition interfaceType, TypeDefinition type)
+    {
+        return Warning(88, $"The '[exclusiveto]' interface type implementation '{interfaceType}' for type '{type}' has an invalid name: the interface will not be included in the set of available COM interface entries.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
