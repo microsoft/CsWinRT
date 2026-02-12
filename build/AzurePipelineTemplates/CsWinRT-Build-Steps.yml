@@ -154,7 +154,6 @@ steps:
     # Stage BinLog
     - task: CopyFiles@2
       displayName: Stage BinLog
-      condition: failed()
       inputs:
         SourceFolder: $(Build.SourcesDirectory)
         Contents: cswinrt.binlog
