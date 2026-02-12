@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -48,11 +49,11 @@ TypeCase[] TestCases =
     new(typeof(DateTimeOffset),      "Windows.Foundation.DateTime",              "Metadata", 250),
     new(typeof(EventHandler<Guid>),  "Windows.Foundation.EventHandler`1<Guid>",  "Metadata", 251),
     new(typeof(Exception),           "Windows.Foundation.HResult",               "Metadata", 252),
-    new(typeof(Guid),                "Guid",                                      "Metadata", 253),
+    new(typeof(Guid),                "Guid",                                     "Metadata", 253),
     new(typeof(IDisposable),         "Windows.Foundation.IClosable",             "Metadata", 254),
-    new(typeof(IServiceProvider),    "Microsoft.UI.Xaml.IXamlServiceProvider",   "Metadata", 255, true),
-    new(typeof(object),              "Object",                                    "Metadata", 256),
-    new(typeof(string),              "String",                                    "Metadata", 257),
+    new(typeof(IServiceProvider),    "Microsoft.UI.Xaml.IXamlServiceProvider",   "Metadata", 255),
+    new(typeof(object),              "Object",                                   "Metadata", 256),
+    new(typeof(string),              "String",                                   "Metadata", 257),
     new(typeof(TimeSpan),            "Windows.Foundation.TimeSpan",              "Metadata", 258),
     new(typeof(Type),                "Windows.UI.Xaml.Interop.TypeName",         "Metadata", 259),
     new(typeof(Uri),                 "Windows.Foundation.Uri",                   "Metadata", 260),
@@ -69,7 +70,7 @@ TypeCase[] TestCases =
     // --------------------
     // Mapped System.Collections.Specialized* Types
     // --------------------
-    new(typeof(INotifyCollectionChanged),          "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged",          "Metadata", 350, true),
+    new(typeof(INotifyCollectionChanged),          "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged",          "Metadata", 350),
     new(typeof(NotifyCollectionChangedEventArgs),  "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs",  "Metadata", 351),
     new(typeof(NotifyCollectionChangedEventHandler),"Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler","Metadata", 352),
 
@@ -251,7 +252,10 @@ TypeCase[] TestCases =
     new(typeof(NotifyCollectionChangedAction?), "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction>", "Metadata", 1001),
 ];
 
-UntrimmedTypes();
+// Do this before running the tests loop
+KeepType(typeof(IServiceProvider));
+KeepType(typeof(INotifyCollectionChanged));
+KeepType(typeof(INotifyPropertyChanged));
 
 // Convert to Managed Trimmed Metadata NoMetadataTypeInfo Test Case
 // Goes into NoMetadataTypeInfo codepath for Type.cs ConvertToManaged
@@ -273,13 +277,6 @@ static int RunCases(ReadOnlySpan<TypeCase> cases)
     for (int i = 0; i < cases.Length; i++)
     {
         TypeCase c = cases[i];
-
-        if (isAOT() && cases[i].ignoreAOT)
-        {
-            Console.WriteLine($"Skipping {c.Name}");
-
-            continue;
-        }
 
         string expected = $"{c.Name} {c.Kind}";
 
@@ -316,25 +313,12 @@ static int FailIfNotEqual(string actual, string expected, int errorCode)
     return 0;
 }
 
-void UntrimmedTypes()
+[MethodImpl(MethodImplOptions.NoInlining)]
+static void KeepType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type type)
 {
-    // Untrimming INotifyPropertyChanged
-    var person = new Person();
-
-    person.PropertyChanged += (sender, args) =>
-    {
-        Console.WriteLine($"Untrim INotifyPropertyChanged");
-    };
-
-    person.Name = "TestName";
 }
 
-static bool isAOT()
-{
-    return !RuntimeFeature.IsDynamicCodeSupported;
-}
-
-readonly record struct TypeCase(Type Type, string Name, string Kind, int ErrorCode, bool ignoreAOT = false);
+readonly record struct TypeCase(Type Type, string Name, string Kind, int ErrorCode);
 
 sealed class TestType : IType
 {
@@ -350,25 +334,3 @@ interface ITestCSharp<T>
 }
 
 delegate void DelegateTestCSharp<T>(object sender, T value);
-
-public sealed class Person : INotifyPropertyChanged
-{
-    private string _name;
-
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    public string Name
-    {
-        get => _name;
-        set
-        {
-            if (_name != value)
-            {
-                _name = value;
-                PropertyChanged?.Invoke(
-                    this,
-                    new PropertyChangedEventArgs(nameof(Name)));
-            }
-        }
-    }
-}
