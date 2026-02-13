@@ -1495,6 +1495,11 @@ internal sealed class InteropReferences
     public TypeReference IBuffer => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Storage.Streams"u8, "IBuffer"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Storage.Streams.InputStreamOptions</c>.
+    /// </summary>
+    public TypeReference InputStreamOptions => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Storage.Streams"u8, "InputStreamOptions"u8);
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="string.Length"/>.
     /// </summary>
     public MemberReference Stringget_Length => field ??= _corLibTypeFactory.String

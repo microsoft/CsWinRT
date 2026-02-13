@@ -183,7 +183,8 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Point) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Rect) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Size) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventRegistrationToken);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventRegistrationToken) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.InputStreamOptions);
         }
 
         /// <summary>
