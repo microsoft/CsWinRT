@@ -1,16 +1,18 @@
-﻿<!-- file: UnitTestProject1.csproj -->
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(AppBuildTFMs)</TargetFrameworks>
+    <TargetFramework>$(AppBuildTFMs)</TargetFramework>
     <Platforms>x64;x86</Platforms>
     <ProjectName>UnitTest</ProjectName>
     <NoWarn>1701;1702;0436;1658</NoWarn>
+    <!--<SelfContained>true</SelfContained>-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CsWinRTEnabled>false</CsWinRTEnabled>
-
-    <OutputType>exe</OutputType>
-    <PublishAot>true</PublishAot>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <!--<OutputType>exe</OutputType>
+    <PublishAot>true</PublishAot>-->
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,7 +21,8 @@
       close sourced, licensed the same as our extensions 
       with Microsoft Testing Platform Tools license.
     -->
-    <PackageReference Include="MSTest.Engine" />
+    <PackageReference Include="MSTest" />
+    <!--<PackageReference Include="MSTest.Engine" />
     <PackageReference Include="MSTest.SourceGeneration" />
 
     <PackageReference Include="Microsoft.CodeCoverage.MSBuild" />
@@ -28,7 +31,7 @@
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
     <PackageReference Include="MSTest.TestFramework" />
-    <PackageReference Include="MSTest.Analyzers" />
+    <PackageReference Include="MSTest.Analyzers" />-->
     
     <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
     <ProjectReference Include="..\..\Projections\TestSubset\TestSubset.csproj" />
@@ -36,7 +39,7 @@
     <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
     <ProjectReference Include="..\..\Projections\Test\Test.csproj" />
     <!--<ProjectReference Include="..\OOPExe\OOPExe.csproj" />-->
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+
     <PackageReference Include="Microsoft.VCRTForwarders.140" />
     <PackageReference Include="Microsoft.Windows.CsWin32">
         <PrivateAssets>all</PrivateAssets>
