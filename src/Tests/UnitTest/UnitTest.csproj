@@ -10,6 +10,8 @@
     <SelfContained>true</SelfContained>
     <OutputType>exe</OutputType>
     <PublishAot>true</PublishAot>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
   
   <ItemGroup>
