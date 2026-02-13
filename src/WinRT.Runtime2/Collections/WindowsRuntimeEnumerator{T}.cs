@@ -8,7 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using WindowsRuntime.InteropServices;
 
-#pragma warning disable CA1816, IDE0046
+#pragma warning disable CS9264, CA1816, IDE0046
 
 namespace WindowsRuntime;
 
