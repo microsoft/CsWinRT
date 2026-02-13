@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WinRT.Runtime2": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
