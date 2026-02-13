@@ -60,7 +60,7 @@ public interface IRandomAccessStream : IDisposable, IInputStream, IOutputStream
     IOutputStream GetOutputStreamAt(ulong position);
 
     /// <summary>
-    /// Sets the position of the stream to the specified valu
+    /// Sets the position of the stream to the specified value.
     /// </summary>
     /// <param name="position">The new position of the stream.</param>
     /// <remarks>
