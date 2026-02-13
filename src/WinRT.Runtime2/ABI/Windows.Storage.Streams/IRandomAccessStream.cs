@@ -497,7 +497,7 @@ public static unsafe class IRandomAccessStreamImpl
 /// The <see cref="IDynamicInterfaceCastable"/> implementation for <see cref="IRandomAccessStream"/>.
 /// </summary>
 [DynamicInterfaceCastableImplementation]
-[Guid("00000036-0000-0000-C000-000000000046")]
+[Guid("905A0FE1-BC53-11DF-8C49-001E4FC686DA")]
 file interface IRandomAccessStreamInterfaceImpl : IRandomAccessStream
 {
     /// <inheritdoc/>
