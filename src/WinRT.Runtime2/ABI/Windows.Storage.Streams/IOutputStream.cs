@@ -170,7 +170,7 @@ public static unsafe class IOutputStreamImpl
         get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.storage.streams.IOutputStream.writeasync"/>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.storage.streams.ioutputstream.writeasync"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT WriteAsync(void* thisPtr, void* buffer, void** result)
     {

@@ -146,7 +146,7 @@ public static unsafe class IInputStreamImpl
         get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.storage.streams.IInputStream.readasync"/>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.storage.streams.iinputstream.readasync"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT ReadAsync(void* thisPtr, void* buffer, uint count, InputStreamOptions options, void** result)
     {
