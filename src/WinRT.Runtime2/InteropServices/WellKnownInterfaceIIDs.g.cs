@@ -211,4 +211,25 @@ public static class WellKnownInterfaceIIDs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
         get => ref WellKnownWindowsInterfaceIIDs.IID_IBuffer;
     }
+
+    /// <summary>The IID for <c>Windows.Storage.Streams.IInputStream</c> (mapped to <see cref="global::Windows.Storage.Streams.IInputStream"/>.</summary>
+    public static ref readonly Guid IID_Windows_Storage_Streams_IInputStream
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IInputStream;
+    }
+
+    /// <summary>The IID for <c>Windows.Storage.Streams.IOutputStream</c> (mapped to <see cref="global::Windows.Storage.Streams.IOutputStream"/>.</summary>
+    public static ref readonly Guid IID_Windows_Storage_Streams_IOutputStream
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IOutputStream;
+    }
+
+    /// <summary>The IID for <c>Windows.Storage.Streams.IRandomAccessStream</c> (mapped to <see cref="global::Windows.Storage.Streams.IRandomAccessStream"/>.</summary>
+    public static ref readonly Guid IID_Windows_Storage_Streams_IRandomAccessStream
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IRandomAccessStream;
+    }
 }
