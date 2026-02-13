@@ -99,14 +99,6 @@ internal partial class InteropGenerator
             {
                 outputAssemblyPath = destinationPath;
             }
-            else if (dllEntry.Name == args.WinRTProjectionAssemblyPath)
-            {
-                winRTProjectionAssemblyHashedName = destinationPath;
-            }
-            else if (args.WinRTComponentAssemblyPath is not null && dllEntry.Name == args.WinRTComponentAssemblyPath)
-            {
-                winRTComponentAssemblyHashedName = destinationPath;
-            }
             else if (Path.IsWithinDirectoryName(dllEntry.FullName, "references"))
             {
                 referencePaths.Add(destinationPath);
@@ -114,6 +106,16 @@ internal partial class InteropGenerator
             else
             {
                 implementationPaths.Add(destinationPath);
+            }
+
+            // Also track the private implementation detail .dll-s (these are also in the set of references)
+            if (dllEntry.Name == args.WinRTProjectionAssemblyPath)
+            {
+                winRTProjectionAssemblyHashedName = destinationPath;
+            }
+            else if (args.WinRTComponentAssemblyPath is not null && dllEntry.Name == args.WinRTComponentAssemblyPath)
+            {
+                winRTComponentAssemblyHashedName = destinationPath;
             }
         }
 
@@ -318,6 +320,24 @@ internal partial class InteropGenerator
         File.Copy(assemblyPath, destinationPath, overwrite: true);
 
         token.ThrowIfCancellationRequested();
+
+        // Special case for private implementation detail assemblies (e.g. 'WinRT.Projection.dll') that are
+        // both passed via the reference set, but also explicitly as separate properties. In that case, we
+        // expect that those should already be in the original paths at this point. So we validate that
+        // the path actually matches, and simply do nothing if that's the case, as this is intended.
+        if (originalPaths.TryGetValue(hashedName, out string? originalPath) && originalPath == assemblyPath)
+        {
+            return hashedName;
+        }
+
+        // If we get to this point, it means that either a private implementation assembly was passed with a
+        // different path than the one provided to the reference set, which should never happen (it's invalid).
+        if (originalPaths.ContainsKey(hashedName))
+        {
+            string fileName = Path.GetFileName(Path.Normalize(assemblyPath));
+
+            throw WellKnownInteropExceptions.ReservedDllOriginalPathMismatchFromDebugRepro(fileName);
+        }
 
         originalPaths.Add(hashedName, assemblyPath);
 
