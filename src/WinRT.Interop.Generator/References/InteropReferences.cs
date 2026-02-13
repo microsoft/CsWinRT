@@ -1505,6 +1505,11 @@ internal sealed class InteropReferences
     public TypeReference IOutputStream => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Storage.Streams"u8, "IOutputStream"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Storage.Streams.IRandomAccessStream</c>.
+    /// </summary>
+    public TypeReference IRandomAccessStream => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Storage.Streams"u8, "IRandomAccessStream"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Storage.Streams.InputStreamOptions</c>.
     /// </summary>
     public TypeReference InputStreamOptions => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Storage.Streams"u8, "InputStreamOptions"u8);

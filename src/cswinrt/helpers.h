@@ -897,6 +897,7 @@ namespace cswinrt
                     { "IBuffer", "Windows.Storage.Streams", "IBuffer" },
                     { "IInputStream", "Windows.Storage.Streams", "IInputStream" },
                     { "IOutputStream", "Windows.Storage.Streams", "IOutputStream" },
+                    { "IRandomAccessStream", "Windows.Storage.Streams", "IRandomAccessStream" },
                     { "InputStreamOptions", "Windows.Storage.Streams", "InputStreamOptions" },
                 }
             },
