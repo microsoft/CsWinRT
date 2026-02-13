@@ -1,0 +1,53 @@
+﻿<!-- file: UnitTestProject1.csproj -->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AppBuildTFMs)</TargetFrameworks>
+    <Platforms>x64;x86</Platforms>
+    <ProjectName>UnitTest</ProjectName>
+    <NoWarn>1701;1702;0436;1658</NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CsWinRTEnabled>false</CsWinRTEnabled>
+
+    <OutputType>exe</OutputType>
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 
+      Experimental MSTest Engine & source generator, 
+      close sourced, licensed the same as our extensions 
+      with Microsoft Testing Platform Tools license.
+    -->
+    <PackageReference Include="MSTest.Engine" />
+    <PackageReference Include="MSTest.SourceGeneration" />
+
+    <PackageReference Include="Microsoft.CodeCoverage.MSBuild" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
+    <PackageReference Include="MSTest.TestFramework" />
+    <PackageReference Include="MSTest.Analyzers" />
+    
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
+    <ProjectReference Include="..\..\Projections\TestSubset\TestSubset.csproj" />
+    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
+    <ProjectReference Include="..\..\Projections\Test\Test.csproj" />
+    <!--<ProjectReference Include="..\OOPExe\OOPExe.csproj" />-->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.VCRTForwarders.140" />
+    <PackageReference Include="Microsoft.Windows.CsWin32">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" />
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />     
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+
+</Project>

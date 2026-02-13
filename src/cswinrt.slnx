@@ -208,6 +208,11 @@
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/UnitTest2/UnitTest2.csproj" Id="b6bbe0f4-6b21-4f32-a50d-b17f11245220">
+      <Platform Solution="*|ARM" Project="ARM" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x86" Project="Win32" />
+    </Project>
     <Project Path="TestWinRT/TestComponent/TestComponent.vcxproj" Id="2954f343-85a7-46f5-a3f3-f106fdd13900">
       <BuildDependency Project="cswinrt/cswinrt.vcxproj" />
       <Platform Solution="*|ARM64" Project="Win32" />
