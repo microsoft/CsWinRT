@@ -315,11 +315,6 @@ internal partial class InteropGenerator
         }
 
         string hashedName = GetHashedFileName(assemblyPath);
-        string destinationPath = Path.Combine(destinationDirectory, hashedName);
-
-        File.Copy(assemblyPath, destinationPath, overwrite: true);
-
-        token.ThrowIfCancellationRequested();
 
         // Special case for private implementation detail assemblies (e.g. 'WinRT.Projection.dll') that are
         // both passed via the reference set, but also explicitly as separate properties. In that case, we
@@ -338,6 +333,14 @@ internal partial class InteropGenerator
 
             throw WellKnownInteropExceptions.ReservedDllOriginalPathMismatchFromDebugRepro(fileName);
         }
+
+        string destinationPath = Path.Combine(destinationDirectory, hashedName);
+
+        // After validating that the file is unique and should be copied, we can safely do that. We move
+        // this operation to ensure we don't accidentally end up with duplicated .dll-s in the debug repro.
+        File.Copy(assemblyPath, destinationPath, overwrite: true);
+
+        token.ThrowIfCancellationRequested();
 
         originalPaths.Add(hashedName, assemblyPath);
 
