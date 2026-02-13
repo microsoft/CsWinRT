@@ -335,6 +335,31 @@ internal static class WellKnownWindowsInterfaceIIDs
         }
     }
 
+    /// <summary>The IID for <c>IOutputStream</c> (905A0FE6-BC53-11DF-8C49-001E4FC686DA).</summary>
+    public static ref readonly Guid IID_IOutputStream
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0xE6, 0x0F, 0x5A, 0x90,
+                0x53, 0xBC,
+                0xDF, 0x11,
+                0x8C,
+                0x49,
+                0x00,
+                0x1E,
+                0x4F,
+                0xC6,
+                0x86,
+                0xDA
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
     /// <summary>The IID for <c>IContextCallback</c> (000001DA-0000-0000-C000-000000000046).</summary>
     public static ref readonly Guid IID_IContextCallback
     {
