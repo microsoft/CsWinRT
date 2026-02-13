@@ -19,6 +19,7 @@ namespace Windows.Storage.Streams;
 [WindowsRuntimeReferenceType(typeof(InputStreamOptions?))]
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
+[ABI.Windows.Storage.Streams.InputStreamOptionsComWrappersMarshaller]
 public enum InputStreamOptions : uint
 {
     /// <summary>
