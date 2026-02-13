@@ -70,7 +70,7 @@ public abstract class WindowsRuntimeEnumerator<T, TIIteratorMethods> : WindowsRu
                 throw new InvalidOperationException("InvalidOperation_EnumEnded");
             }
 
-            return field!;
+            return field;
         }
         private set;
     }

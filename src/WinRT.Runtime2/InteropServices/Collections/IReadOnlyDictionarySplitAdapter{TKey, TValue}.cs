@@ -99,7 +99,7 @@ public sealed class IReadOnlyDictionarySplitAdapter<TKey, TValue> : IReadOnlyDic
                 ThrowKeyNotFoundException();
             }
 
-            return value!;
+            return value;
         }
     }
 
