@@ -195,48 +195,51 @@ Where <spec> is one or more of:
 
             w.flush_to_console();
 
-            // Write GUID properties out to InterfaceIIDs static class 
-            std::set<TypeDef> interfacesFromClassesEmitted;
-            writer guidWriter("ABI");
-            guidWriter.write_begin_interface_iids();
-            for (auto&& ns_members : c.namespaces())
+            // Write GUID properties out to InterfaceIIDs static class
+            if (!settings.reference_projection)
             {
-                auto&& [ns, members] = ns_members;
-                for (auto&& [name, type] : members.types)
+                std::set<TypeDef> interfacesFromClassesEmitted;
+                writer guidWriter("ABI");
+                guidWriter.write_begin_interface_iids();
+                for (auto&& ns_members : c.namespaces())
                 {
-                    if (!settings.filter.includes(type)) { continue; }
-                    if (distance(type.GenericParam()) != 0) { continue; }
-                    if (auto mapping = get_mapped_type(ns, name))
+                    auto&& [ns, members] = ns_members;
+                    for (auto&& [name, type] : members.types)
                     {
-                        if (!mapping->emit_abi)
+                        if (!settings.filter.includes(type)) { continue; }
+                        if (distance(type.GenericParam()) != 0) { continue; }
+                        if (auto mapping = get_mapped_type(ns, name))
                         {
-                            continue;
+                            if (!mapping->emit_abi)
+                            {
+                                continue;
+                            }
+                        }
+                        switch (get_category(type))
+                        {
+                        case category::delegate_type:
+                            write_iid_guid_property_from_signature(guidWriter, type);
+                            write_iid_guid_property_from_type(guidWriter, type);
+                            break;
+                        case category::enum_type:
+                            write_iid_guid_property_from_signature(guidWriter, type);
+                            break;
+                        case category::interface_type:
+                            write_iid_guid_property_from_type(guidWriter, type);
+                            break;
+                        case category::struct_type:
+                            write_iid_guid_property_from_signature(guidWriter, type);
+                            break;
+                        case category::class_type:
+                            write_iid_guid_property_for_class_interfaces(guidWriter, type, interfacesFromClassesEmitted);
+                            break;
                         }
                     }
-                    switch (get_category(type))
-                    {
-                    case category::delegate_type:
-                        write_iid_guid_property_from_signature(guidWriter, type);
-                        write_iid_guid_property_from_type(guidWriter, type);
-                        break;
-                    case category::enum_type:
-                        write_iid_guid_property_from_signature(guidWriter, type);
-                        break;
-                    case category::interface_type:
-                        write_iid_guid_property_from_type(guidWriter, type);
-                        break;
-                    case category::struct_type:
-                        write_iid_guid_property_from_signature(guidWriter, type);
-                        break;
-                    case category::class_type:
-                        write_iid_guid_property_for_class_interfaces(guidWriter, type, interfacesFromClassesEmitted);
-                        break;
-                    }
                 }
+                guidWriter.write_end_interface_iids();
+                auto filename = guidWriter.write_temp("%.cs", "GeneratedInterfaceIIDs");
+                guidWriter.flush_to_file(settings.output_folder / filename);
             }
-            guidWriter.write_end_interface_iids();
-            auto filename = guidWriter.write_temp("%.cs", "GeneratedInterfaceIIDs");
-            guidWriter.flush_to_file(settings.output_folder / filename);
 
             task_group group;
             concurrency::concurrent_unordered_map<std::string, std::string> typeNameToEventDefinitionMap, typeNameToBaseTypeMap, authoredTypeNameToMetadataTypeNameMap;
