@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using System.Windows.Input;
@@ -47,11 +49,11 @@ TypeCase[] TestCases =
     new(typeof(DateTimeOffset),      "Windows.Foundation.DateTime",              "Metadata", 250),
     new(typeof(EventHandler<Guid>),  "Windows.Foundation.EventHandler`1<Guid>",  "Metadata", 251),
     new(typeof(Exception),           "Windows.Foundation.HResult",               "Metadata", 252),
-    new(typeof(Guid),                "Guid",                                      "Metadata", 253),
+    new(typeof(Guid),                "Guid",                                     "Metadata", 253),
     new(typeof(IDisposable),         "Windows.Foundation.IClosable",             "Metadata", 254),
     new(typeof(IServiceProvider),    "Microsoft.UI.Xaml.IXamlServiceProvider",   "Metadata", 255),
-    new(typeof(object),              "Object",                                    "Metadata", 256),
-    new(typeof(string),              "String",                                    "Metadata", 257),
+    new(typeof(object),              "Object",                                   "Metadata", 256),
+    new(typeof(string),              "String",                                   "Metadata", 257),
     new(typeof(TimeSpan),            "Windows.Foundation.TimeSpan",              "Metadata", 258),
     new(typeof(Type),                "Windows.UI.Xaml.Interop.TypeName",         "Metadata", 259),
     new(typeof(Uri),                 "Windows.Foundation.Uri",                   "Metadata", 260),
@@ -250,6 +252,11 @@ TypeCase[] TestCases =
     new(typeof(NotifyCollectionChangedAction?), "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction>", "Metadata", 1001),
 ];
 
+// Do this before running the tests loop
+KeepType(typeof(IServiceProvider));
+KeepType(typeof(INotifyCollectionChanged));
+KeepType(typeof(INotifyPropertyChanged));
+
 // Convert to Managed Trimmed Metadata NoMetadataTypeInfo Test Case
 // Goes into NoMetadataTypeInfo codepath for Type.cs ConvertToManaged
 // Do not reference TestComponentCSharp::TestType1 in managed because it needs to be trimmed to test the Metadata TypeKind scenario
@@ -270,9 +277,11 @@ static int RunCases(ReadOnlySpan<TypeCase> cases)
     for (int i = 0; i < cases.Length; i++)
     {
         TypeCase c = cases[i];
+
         string expected = $"{c.Name} {c.Kind}";
 
         int failure = CheckType(c.Type, expected, c.ErrorCode);
+
         if (failure != 0)
         {
             return failure;
@@ -302,6 +311,11 @@ static int FailIfNotEqual(string actual, string expected, int errorCode)
     }
 
     return 0;
+}
+
+[MethodImpl(MethodImplOptions.NoInlining)]
+static void KeepType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type type)
+{
 }
 
 readonly record struct TypeCase(Type Type, string Name, string Kind, int ErrorCode);
