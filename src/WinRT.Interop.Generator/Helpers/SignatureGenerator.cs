@@ -105,7 +105,7 @@ internal static partial class SignatureGenerator
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
     /// <returns>Whether <paramref name="iid"/> was successfully retrieved.</returns>
-    public static bool TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+    private static bool TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
         ITypeDescriptor type,
         bool useWindowsUIXamlProjections,
         InteropDefinitions interopDefinitions,
@@ -146,7 +146,7 @@ internal static partial class SignatureGenerator
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
     /// <returns>Whether <paramref name="iid"/> was successfully retrieved.</returns>
-    public static bool TryGetIIDFromAttribute(
+    private static bool TryGetIIDFromAttribute(
         TypeDefinition type,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
