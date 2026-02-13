@@ -112,7 +112,7 @@ var entries = new (string Name, string IID)[]
     ("IReferenceOfAsyncStatus", "A4B74936-2947-5FE8-88D5-51CD35050E71"),
     ("IReferenceOfAsyncActionCompletedHandler", "F31DBB29-606D-5A89-A23A-C09AB9605B8F"),
     ("IReferenceOfCollectionChange", "25BCAF91-880D-537D-82FC-9BBF0CACCB8B"),
-    ("IReferenceOfInputStreamOptions", "00000000-0000-0000-C000-000000000046"), // TODO
+    ("IReferenceOfInputStreamOptions", "AEA3CA95-06D3-5B19-A94D-907D1E6BCF18"),
     ("IReferenceArrayOfInt32", "A6D080A5-B087-5BC2-9A9F-5CD687B4D1F7"),
     ("IReferenceArrayOfString", "0385688E-E3C7-5C5E-A389-5524EDE349F1"),
     ("IReferenceArrayOfByte", "2AF22683-3734-56D0-A60E-688CC85D1619"),

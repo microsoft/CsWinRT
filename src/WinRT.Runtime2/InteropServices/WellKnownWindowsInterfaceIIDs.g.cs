@@ -2385,7 +2385,7 @@ internal static class WellKnownWindowsInterfaceIIDs
         }
     }
 
-    /// <summary>The IID for <c>IReferenceOfInputStreamOptions</c> (00000000-0000-0000-C000-000000000046).</summary>
+    /// <summary>The IID for <c>IReferenceOfInputStreamOptions</c> (AEA3CA95-06D3-5B19-A94D-907D1E6BCF18).</summary>
     public static ref readonly Guid IID_IReferenceOfInputStreamOptions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]   
@@ -2393,17 +2393,17 @@ internal static class WellKnownWindowsInterfaceIIDs
         {
             ReadOnlySpan<byte> data =
             [
-                0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00,
-                0x00, 0x00,
-                0xC0,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x46
+                0x95, 0xCA, 0xA3, 0xAE,
+                0xD3, 0x06,
+                0x19, 0x5B,
+                0xA9,
+                0x4D,
+                0x90,
+                0x7D,
+                0x1E,
+                0x6B,
+                0xCF,
+                0x18
             ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
