@@ -8,8 +8,4 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
-  </ItemGroup>
-
 </Project>

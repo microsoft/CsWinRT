@@ -16,9 +16,7 @@
   <!-- Temporary workaround, remove when https://github.com/dotnet/sdk/pull/41936 is available in the .NET SDK -->
   <ItemGroup>
     <CompilerVisibleProperty Include="CsWinRTUseWindowsUIXamlProjections" />
-    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS"
-                                    Value="$(CsWinRTUseWindowsUIXamlProjections)"
-                                    Trim="true" />
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Value="$(CsWinRTUseWindowsUIXamlProjections)" Trim="true" />
   </ItemGroup>
   
   <ItemGroup>    
@@ -26,7 +24,6 @@
     <ProjectReference Include="..\..\Projections\Windows.UI.Xaml\Windows.UI.Xaml.csproj" />
     <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator.Roslyn4120\WinRT.SourceGenerator.Roslyn4120.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

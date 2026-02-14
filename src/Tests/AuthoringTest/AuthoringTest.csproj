@@ -51,7 +51,6 @@
     <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator.Roslyn4120\WinRT.SourceGenerator.Roslyn4120.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>
 
 </Project>
