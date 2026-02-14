@@ -877,7 +877,8 @@ namespace cswinrt
                 {
                     { "AttributeTargets", "System", "AttributeTargets" },
                     { "AttributeUsageAttribute", "System", "AttributeUsageAttribute" },
-                    { "ContractVersionAttribute", "Windows.Foundation.Metadata", "ContractVersionAttribute"}
+                    { "ContractVersionAttribute", "Windows.Foundation.Metadata", "ContractVersionAttribute"},
+                    { "MarshalingType", "Windows.Foundation.Metadata", "MarshalingType"}
                 }
             },
             { "Windows.Foundation.Numerics",
