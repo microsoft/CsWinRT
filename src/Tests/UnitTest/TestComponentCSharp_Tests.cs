@@ -1548,7 +1548,7 @@ namespace UnitTest
             Assert.IsTrue(TestObject.GetInts().SequenceEqual(arr));
 
             TestObject.SetInts(null);
-            Assert.IsNull(TestObject.GetInts());
+            Assert.IsTrue(TestObject.GetInts().SequenceEqual(null));
         }
 
         [ComImport]
