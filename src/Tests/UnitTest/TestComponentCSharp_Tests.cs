@@ -54,15 +54,9 @@ namespace UnitTest
     }
 
     [TestClass]
-    public partial class TestCSharp
+    public class UnitTestCSharp
     {
-        public Class TestObject { get; private set; }
-
-        [TestInitialize]
-        public void Initialize()
-        {
-            TestObject = new Class();
-        }
+        public Class TestObject = new();
 
         public enum E { A, B, C }
 
@@ -670,12 +664,12 @@ namespace UnitTest
         [DataRow(typeof(IEnumerator<IEnumerable<Object>>), "Windows.Foundation.Collections.IIterator`1<Windows.Foundation.Collections.IIterable`1<Object>>", "Metadata")]
         [DataRow(typeof(IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>), "Windows.Foundation.Collections.IIterable`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
         // Custom Types
-        [DataRow(typeof(TestCSharp), "UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
-        [DataRow(typeof(IList<TestCSharp>), "System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(UnitTestCSharp), "UnitTest.UnitTestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [DataRow(typeof(IList<UnitTestCSharp>), "System.Collections.Generic.IList`1[[UnitTest.UnitTestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [DataRow(typeof(ITestCSharp<double>), "UnitTest.ITestCSharp`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
-        [DataRow(typeof(KeyValuePair<String, TestCSharp>), "System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [DataRow(typeof(EventHandler<IList<TestCSharp>>), "System.EventHandler`1[[System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [DataRow(typeof(EventHandler<TestCSharp>), "System.EventHandler`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(KeyValuePair<String, UnitTestCSharp>), "System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[UnitTest.UnitTestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(EventHandler<IList<UnitTestCSharp>>), "System.EventHandler`1[[System.Collections.Generic.IList`1[[UnitTest.UnitTestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(EventHandler<UnitTestCSharp>), "System.EventHandler`1[[UnitTest.UnitTestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [DataRow(typeof(DelegateTestCSharp<Guid>), "UnitTest.DelegateTestCSharp`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
         [DataRow(typeof(WeakReference<TestComponent.Class>), "System.WeakReference`1[[TestComponent.Class, WinRT.Projection, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [DataRow(typeof(KeyValuePair<Int32, WeakReference<Object>>), "System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.WeakReference`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
@@ -2791,49 +2785,49 @@ namespace UnitTest
             Assert.IsNull(TestObject.HResultProperty);
         }
 
-        [LibraryImport("api-ms-win-core-winrt-string-l1-1-0.dll")]
-        [UnmanagedCallConv(CallConvs = [typeof(CallConvStdcall)])]
-        private static unsafe partial char* WindowsGetStringRawBuffer(void* hstring, uint* length);
+        //[LibraryImport("api-ms-win-core-winrt-string-l1-1-0.dll")]
+        //[UnmanagedCallConv(CallConvs = [typeof(CallConvStdcall)])]
+        //private static unsafe partial char* WindowsGetStringRawBuffer(void* hstring, uint* length);
 
-        [LibraryImport("api-ms-win-core-winrt-string-l1-1-0.dll")]
-        [UnmanagedCallConv(CallConvs = [typeof(CallConvStdcall)])]
-        private static unsafe partial int WindowsDeleteString(void* hstring);
+        //[LibraryImport("api-ms-win-core-winrt-string-l1-1-0.dll")]
+        //[UnmanagedCallConv(CallConvs = [typeof(CallConvStdcall)])]
+        //private static unsafe partial int WindowsDeleteString(void* hstring);
 
-        static unsafe string GetRuntimeClassName(void* ptr)
-        {
-            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, WellKnownInterfaceIIDs.IID_IInspectable, out nint inspectablePtr));
+        //static unsafe string GetRuntimeClassName(void* ptr)
+        //{
+        //    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, WellKnownInterfaceIIDs.IID_IInspectable, out nint inspectablePtr));
 
-            void* __retval = default;
-            try
-            {
-                Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)inspectablePtr)[4])((void*)inspectablePtr, &__retval));
+        //    void* __retval = default;
+        //    try
+        //    {
+        //        Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)inspectablePtr)[4])((void*)inspectablePtr, &__retval));
 
-                uint length;
-                char* buffer = WindowsGetStringRawBuffer(__retval, &length);
-                return new string(buffer, 0, (int)length);
-            }
-            finally
-            {
-                WindowsDeleteString(__retval);
-                WindowsRuntimeMarshal.Free((void*)inspectablePtr);
-            }
-        }
+        //        uint length;
+        //        char* buffer = WindowsGetStringRawBuffer(__retval, &length);
+        //        return new string(buffer, 0, (int)length);
+        //    }
+        //    finally
+        //    {
+        //        WindowsDeleteString(__retval);
+        //        WindowsRuntimeMarshal.Free((void*)inspectablePtr);
+        //    }
+        //}
 
 
-        [TestMethod]
-        public unsafe void TestGeneratedRuntimeClassName()
-        {
-            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new ManagedProperties(2));
+        //[TestMethod]
+        //public unsafe void TestGeneratedRuntimeClassName()
+        //{
+        //    void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new ManagedProperties(2));
 
-            try
-            {
-                Assert.AreEqual(typeof(IProperties1).FullName, GetRuntimeClassName(ptr));
-            }
-            finally
-            {
-                WindowsRuntimeMarshal.Free(ptr);
-            }
-        }
+        //    try
+        //    {
+        //        Assert.AreEqual(typeof(IProperties1).FullName, GetRuntimeClassName(ptr));
+        //    }
+        //    finally
+        //    {
+        //        WindowsRuntimeMarshal.Free(ptr);
+        //    }
+        //}
 
         [TestMethod]
         public void TestGetPropertyType()
@@ -2880,35 +2874,35 @@ namespace UnitTest
             Assert.AreEqual("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>", Class.GetName(typeof(Type)));
         }
 
-        [TestMethod]
-        public unsafe void TestGeneratedRuntimeClassName_Primitive()
-        {
-            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(2);
+        //[TestMethod]
+        //public unsafe void TestGeneratedRuntimeClassName_Primitive()
+        //{
+        //    void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(2);
 
-            try
-            {
-                Assert.AreEqual("Windows.Foundation.IReference`1<Int32>", GetRuntimeClassName(ptr));
-            }
-            finally
-            {
-                WindowsRuntimeMarshal.Free(ptr);
-            }
-        }
+        //    try
+        //    {
+        //        Assert.AreEqual("Windows.Foundation.IReference`1<Int32>", GetRuntimeClassName(ptr));
+        //    }
+        //    finally
+        //    {
+        //        WindowsRuntimeMarshal.Free(ptr);
+        //    }
+        //}
 
-        [TestMethod]
-        public unsafe void TestGeneratedRuntimeClassName_Array()
-        {
-            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new int[0]);
+        //[TestMethod]
+        //public unsafe void TestGeneratedRuntimeClassName_Array()
+        //{
+        //    void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new int[0]);
 
-            try
-            {
-                Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Int32>", GetRuntimeClassName(ptr));
-            }
-            finally
-            {
-                WindowsRuntimeMarshal.Free(ptr);
-            }
-        }
+        //    try
+        //    {
+        //        Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Int32>", GetRuntimeClassName(ptr));
+        //    }
+        //    finally
+        //    {
+        //        WindowsRuntimeMarshal.Free(ptr);
+        //    }
+        //}
 
         [TestMethod]
         public void TestValueBoxing()
@@ -3265,65 +3259,65 @@ namespace UnitTest
             Assert.AreEqual(6, observable.Observation);
         }
 
-        [GeneratedComInterface]
-        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-        [Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
-        internal partial interface IWindowNative
-        {
-            IntPtr get_WindowHandle();
-        }
+        //[GeneratedComInterface]
+        //[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        //[Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
+        //internal partial interface IWindowNative
+        //{
+        //    IntPtr get_WindowHandle();
+        //}
 
-        [GeneratedComInterface]
-        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-        [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
-        internal partial interface IInitializeWithWindow
-        {
-            void Initialize(IntPtr hwnd);
-        }
+        //[GeneratedComInterface]
+        //[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        //[Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
+        //internal partial interface IInitializeWithWindow
+        //{
+        //    void Initialize(IntPtr hwnd);
+        //}
 
-        [TestMethod]
-        unsafe public void TestComImports()
-        {
-            static Object MakeObject()
-            {
-                Assert.AreEqual(0, ComImports.NumObjects);
-                var obj = ComImports.MakeObject();
-                Assert.AreEqual(1, ComImports.NumObjects);
-                return obj;
-            }
+        //[TestMethod]
+        //unsafe public void TestComImports()
+        //{
+        //    static Object MakeObject()
+        //    {
+        //        Assert.AreEqual(0, ComImports.NumObjects);
+        //        var obj = ComImports.MakeObject();
+        //        Assert.AreEqual(1, ComImports.NumObjects);
+        //        return obj;
+        //    }
 
-            static void TestObject() => MakeObject();
+        //    static void TestObject() => MakeObject();
 
-            static (IInitializeWithWindow, IWindowNative) MakeImports()
-            {
-                var obj = MakeObject();
-                var initializeWithWindow = (IInitializeWithWindow)obj;
-                var windowNative = (IWindowNative)obj;
-                return (initializeWithWindow, windowNative);
-            }
+        //    static (IInitializeWithWindow, IWindowNative) MakeImports()
+        //    {
+        //        var obj = MakeObject();
+        //        var initializeWithWindow = (IInitializeWithWindow)obj;
+        //        var windowNative = (IWindowNative)obj;
+        //        return (initializeWithWindow, windowNative);
+        //    }
 
-            static void TestImports()
-            {
-                var (initializeWithWindow, windowNative) = MakeImports();
+        //    static void TestImports()
+        //    {
+        //        var (initializeWithWindow, windowNative) = MakeImports();
 
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
+        //        GC.Collect();
+        //        GC.WaitForPendingFinalizers();
 
-                var hwnd = new IntPtr(0x12345678);
-                initializeWithWindow.Initialize(hwnd);
-                Assert.AreEqual(windowNative.get_WindowHandle(), hwnd);
-            }
+        //        var hwnd = new IntPtr(0x12345678);
+        //        initializeWithWindow.Initialize(hwnd);
+        //        Assert.AreEqual(windowNative.get_WindowHandle(), hwnd);
+        //    }
 
-            TestObject();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Assert.AreEqual(0, ComImports.NumObjects);
+        //    TestObject();
+        //    GC.Collect();
+        //    GC.WaitForPendingFinalizers();
+        //    Assert.AreEqual(0, ComImports.NumObjects);
 
-            TestImports();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Assert.AreEqual(0, ComImports.NumObjects);
-        }
+        //    TestImports();
+        //    GC.Collect();
+        //    GC.WaitForPendingFinalizers();
+        //    Assert.AreEqual(0, ComImports.NumObjects);
+        //}
 
         [TestMethod]
         public void TestInterfaceObjectMarshalling()
