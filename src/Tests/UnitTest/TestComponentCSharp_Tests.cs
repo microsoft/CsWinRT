@@ -2932,13 +2932,13 @@ namespace UnitTest
         public void TestArrayBoxing()
         {
             int[] i = new[] { 42, 1, 4, 50, 0, -23 };
-            Assert.AreEqual((IEnumerable<int>)i, Class.UnboxInt32Array(i));
+            Assert.IsTrue(i.SequenceEqual(Class.UnboxInt32Array(i)));
 
             bool[] b = new[] { true, false, true, true, false };
-            Assert.AreEqual((IEnumerable<bool>)b, Class.UnboxBooleanArray(b));
+            Assert.IsTrue(b.SequenceEqual(Class.UnboxBooleanArray(b)));
 
             string[] s = new[] { "Hello World!", "WinRT", "C#", "Boxing" };
-            Assert.AreEqual((IEnumerable<string>)s, Class.UnboxStringArray(s));
+            Assert.IsTrue(s.SequenceEqual(Class.UnboxStringArray(s)));
         }
 
         [TestMethod]
