@@ -33,6 +33,8 @@
     <RemoveDir Directories="$(IntDir)" />
   </Target>
 
+  <Target Name="PublishBuildTool" AfterTargets="Build" DependsOnTargets="Publish" Condition="'$(IsBuildTool)' == 'true' AND '$(PublishBuildTool)' == 'true'" />
+
   <!--
     The following target has been ported from TerraFX.Interop.Windows.
     See: https://github.com/terrafx/terrafx.interop.windows.

@@ -29,6 +29,9 @@
     <Features>strict</Features>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
+    <!-- Used to enable publishing project in build -->
+    <IsBuildTool>true</IsBuildTool>
+
     <!--
       Workaround for: "CSC(0,0): Error AD0001: Analyzer 'ILLink.RoslynAnalyzer.DynamicallyAccessedMembersAnalyzer' threw
       an exception of type 'System.InvalidCastException' with message 'Unable to cast object of type

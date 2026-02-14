@@ -147,7 +147,7 @@ steps:
       displayName: Build cswinrt.slnx
       inputs:
         solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
-        msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\cswinrt.binlog
+        msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true /bl:$(Build.SourcesDirectory)\cswinrt.binlog
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
@@ -254,3 +254,43 @@ steps:
           Microsoft.CodeAnalysis.dll
         TargetFolder: $(StagingFolder)\net10.0\CsWinMD
 
+    # Stage build tools
+    - task: CopyFiles@2
+      displayName: Stage cswinrtgen
+      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Interop.Generator\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        Contents: |
+          cswinrtgen.exe
+          cswinrtgen.pdb
+        TargetFolder: $(StagingFolder)\net10.0\native
+
+    - task: CopyFiles@2
+      displayName: Stage cswinrtimplgen
+      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Impl.Generator\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        Contents: |
+          cswinrtimplgen.exe
+          cswinrtimplgen.pdb
+        TargetFolder: $(StagingFolder)\net10.0\native
+
+    - task: CopyFiles@2
+      displayName: Stage cswinrtprojectiongen
+      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Projection.Generator\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        Contents: |
+          cswinrtprojectiongen.exe
+          cswinrtprojectiongen.pdb
+        TargetFolder: $(StagingFolder)\net10.0\native
+
+    - task: CopyFiles@2
+      displayName: Stage RunCsWinRTGeneratorTask
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\RunCsWinRTGeneratorTask\bin\$(BuildConfiguration)\netstandard2.0\RunCsWinRTGeneratorTask.dll
+        Contents: |
+          RunCsWinRTGeneratorTask.dll
+          RunCsWinRTGeneratorTask.pdb
+        TargetFolder: $(StagingFolder)\netstandard2.0

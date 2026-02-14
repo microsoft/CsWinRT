@@ -28,6 +28,9 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <Features>strict</Features>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Used to enable publishing project in build -->  
+    <IsBuildTool>true</IsBuildTool>
   </PropertyGroup>
 
   <ItemGroup>
