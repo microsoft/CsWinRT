@@ -177,7 +177,7 @@ steps:
       displayName: Stage merged projection
       condition: failed()
       inputs:
-        rootFolderOrFile: $(Agent.TempDirectory)\CsWinRT\
+        rootFolderOrFile: $(temp)\CsWinRT\
         includeRootFolder: false
         sevenZipCompression: 5
         archiveFile: $(StagingFolder)\merged\sources.zip
