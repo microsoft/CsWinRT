@@ -279,7 +279,7 @@ steps:
     # Stage build tools
     - task: CopyFiles@2
       displayName: Stage cswinrtgen
-      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Interop.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         Contents: |
@@ -289,7 +289,7 @@ steps:
 
     - task: CopyFiles@2
       displayName: Stage cswinrtimplgen
-      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Impl.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         Contents: |
@@ -299,7 +299,7 @@ steps:
 
     - task: CopyFiles@2
       displayName: Stage cswinrtprojectiongen
-      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Projection.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         Contents: |
