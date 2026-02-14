@@ -40,36 +40,12 @@ using Windows.UI.Notifications;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
-using WinRT.Interop;
-using Xunit;
-using Xunit.Sdk;
-using static System.Diagnostics.Activity;
 
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.18362.0")]
 
 namespace UnitTest
 {
-    [CLSCompliant(false)]
-    [DataDiscoverer("Xunit.Sdk.InlineDataDiscoverer", "xunit.core")]
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public sealed class InlineDataAttribute<T> : DataAttribute
-    {
-        private readonly object[] data;
-
-        public InlineDataAttribute(params object[] data)
-        {
-            this.data = data;
-        }
-
-        public override IEnumerable<object[]> GetData(MethodInfo testMethod)
-        {
-            object[] arguments = [typeof(T), .. data];
-
-            return [arguments];
-        }
-    }
-
     public delegate void DelegateTestCSharp<T>();
 
     public interface ITestCSharp<T>
@@ -77,11 +53,13 @@ namespace UnitTest
         void TestMethod<T>();
     }
 
+    [TestClass]
     public partial class TestCSharp
     {
         public Class TestObject { get; private set; }
 
-        public TestCSharp()
+        [TestInitialize]
+        public void Initialize()
         {
             TestObject = new Class();
         }
@@ -93,7 +71,7 @@ namespace UnitTest
             E value;
         }
 
-        [Fact]
+        [TestMethod]
         public void TestDelegateCallBackOnSealedType()
         {
             // In CSWinRT 2.0, this scenario would throw an exception but this is fixed in 3.0
@@ -103,7 +81,7 @@ namespace UnitTest
         }
 
         // Test a fix for a bug in Mono.Cecil that was affecting the IIDOptimizer when it encountered long class names 
-        [Fact]
+        [TestMethod]
         public void TestLongClassNameEventSource()
         {
             bool flag = false;
@@ -112,118 +90,118 @@ namespace UnitTest
                 (ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz sender, ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz args)
                 => flag = true;
             long_class_name.InvokeEvent();
-            Assert.True(flag);
+            Assert.IsTrue(flag);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestEventArgsVector()
         {
             var eventArgsVector = TestObject.GetEventArgsVector();
-            Assert.Equal(1, eventArgsVector.Count);
+            Assert.AreEqual(1, eventArgsVector.Count);
             foreach (var dataErrorChangedEventArgs in eventArgsVector)
             {
                 var propName = dataErrorChangedEventArgs.PropertyName;
-                Assert.Equal("name", propName);
+                Assert.AreEqual("name", propName);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestNonGenericDelegateVector()
         {
             var provideUriVector = TestObject.GetNonGenericDelegateVector();
 
-            Assert.Equal(1, provideUriVector.Count);
+            Assert.AreEqual(1, provideUriVector.Count);
 
             foreach (var provideUri in provideUriVector)
             {
                 Uri delegateTarget = provideUri.Invoke();
-                Assert.Equal("http://microsoft.com", delegateTarget.OriginalString);
+                Assert.AreEqual("http://microsoft.com", delegateTarget.OriginalString);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestEnums()
         {
             // Enums
             var expectedEnum = EnumValue.Two;
             TestObject.EnumProperty = expectedEnum;
-            Assert.Equal(expectedEnum, TestObject.EnumProperty);
+            Assert.AreEqual(expectedEnum, TestObject.EnumProperty);
             expectedEnum = EnumValue.One;
             TestObject.CallForEnum(() => expectedEnum);
             TestObject.EnumPropertyChanged +=
-                (object sender, EnumValue value) => Assert.Equal(expectedEnum, value);
+                (object sender, EnumValue value) => Assert.AreEqual(expectedEnum, value);
             TestObject.RaiseEnumChanged();
 
             var expectedEnumStruct = new EnumStruct() { value = EnumValue.Two };
             TestObject.EnumStructProperty = expectedEnumStruct;
-            Assert.Equal(expectedEnumStruct, TestObject.EnumStructProperty);
+            Assert.AreEqual(expectedEnumStruct, TestObject.EnumStructProperty);
             expectedEnumStruct = new EnumStruct() { value = EnumValue.One };
             TestObject.CallForEnumStruct(() => expectedEnumStruct);
             TestObject.EnumStructPropertyChanged +=
-                (object sender, EnumStruct value) => Assert.Equal(expectedEnumStruct, value);
+                (object sender, EnumStruct value) => Assert.AreEqual(expectedEnumStruct, value);
             TestObject.RaiseEnumStructChanged();
 
             var expectedEnums = new EnumValue[] { EnumValue.One, EnumValue.Two };
             TestObject.EnumsProperty = expectedEnums;
-            Assert.Equal(expectedEnums, TestObject.EnumsProperty);
+            Assert.AreEqual(expectedEnums, TestObject.EnumsProperty);
             TestObject.CallForEnums(() => expectedEnums);
-            Assert.Equal(expectedEnums, TestObject.EnumsProperty);
+            Assert.AreEqual(expectedEnums, TestObject.EnumsProperty);
 
             TestObject.EnumsProperty = null;
-            Assert.Empty(TestObject.EnumsProperty);
+            Assert.IsNull(TestObject.EnumsProperty);
 
             var expectedEnumStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two) };
             TestObject.EnumStructsProperty = expectedEnumStructs;
-            Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
+            Assert.AreEqual(expectedEnumStructs, TestObject.EnumStructsProperty);
             TestObject.CallForEnumStructs(() => expectedEnumStructs);
-            Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
+            Assert.AreEqual(expectedEnumStructs, TestObject.EnumStructsProperty);
 
             TestObject.EnumStructsProperty = null;
-            Assert.Empty(TestObject.EnumStructsProperty);
+            Assert.IsNull(TestObject.EnumStructsProperty);
 
             // Flags
             var expectedFlag = FlagValue.All;
             TestObject.FlagProperty = expectedFlag;
-            Assert.Equal(expectedFlag, TestObject.FlagProperty);
+            Assert.AreEqual(expectedFlag, TestObject.FlagProperty);
             expectedFlag = FlagValue.One;
             TestObject.CallForFlag(() => expectedFlag);
             TestObject.FlagPropertyChanged +=
-                (object sender, FlagValue value) => Assert.Equal(expectedFlag, value);
+                (object sender, FlagValue value) => Assert.AreEqual(expectedFlag, value);
             TestObject.RaiseFlagChanged();
 
             var expectedFlagStruct = new FlagStruct() { value = FlagValue.All };
             TestObject.FlagStructProperty = expectedFlagStruct;
-            Assert.Equal(expectedFlagStruct, TestObject.FlagStructProperty);
+            Assert.AreEqual(expectedFlagStruct, TestObject.FlagStructProperty);
             expectedFlagStruct = new FlagStruct() { value = FlagValue.One };
             TestObject.CallForFlagStruct(() => expectedFlagStruct);
             TestObject.FlagStructPropertyChanged +=
-                (object sender, FlagStruct value) => Assert.Equal(expectedFlagStruct, value);
+                (object sender, FlagStruct value) => Assert.AreEqual(expectedFlagStruct, value);
             TestObject.RaiseFlagStructChanged();
 
             var expectedFlags = new FlagValue[] { FlagValue.One, FlagValue.All };
             TestObject.FlagsProperty = expectedFlags;
-            Assert.Equal(expectedFlags, TestObject.FlagsProperty);
+            Assert.AreEqual(expectedFlags, TestObject.FlagsProperty);
             TestObject.CallForFlags(() => expectedFlags);
-            Assert.Equal(expectedFlags, TestObject.FlagsProperty);
+            Assert.AreEqual(expectedFlags, TestObject.FlagsProperty);
 
             var expectedFlagStructs = new FlagStruct[] { new FlagStruct(FlagValue.One), new FlagStruct(FlagValue.All) };
             TestObject.FlagStructsProperty = expectedFlagStructs;
-            Assert.Equal(expectedFlagStructs, TestObject.FlagStructsProperty);
+            Assert.AreEqual(expectedFlagStructs, TestObject.FlagStructsProperty);
             TestObject.CallForFlagStructs(() => expectedFlagStructs);
-            Assert.Equal(expectedFlagStructs, TestObject.FlagStructsProperty);
+            Assert.AreEqual(expectedFlagStructs, TestObject.FlagStructsProperty);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestGetByte()
         {
             var array = new byte[] { 0x01 };
             var buff = array.AsBuffer();
-            Assert.True(buff.Length == 1);
+            Assert.IsTrue(buff.Length == 1);
             byte b = buff.GetByte(0);
-            Assert.True(b == 0x01);
+            Assert.IsTrue(b == 0x01);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestManyBufferExtensionMethods()
         {
             var arrayLen3 = new byte[] { 0x01, 0x02, 0x03 };
@@ -235,184 +213,184 @@ namespace UnitTest
             var arrayLen4Again = new byte[4];
 
             arrayLen3.CopyTo(1, buffLen4, 0, 1); // copy just the second element of the array to the beginning of the buffer 
-            Assert.True(buffLen4.Length == 4);
-            Assert.Throws<ArgumentException>(() => buffLen4.GetByte(5)); // shouldn't have a 5th element
-            Assert.True(buffLen4.GetByte(0) == 0x02); // make sure we got the 2nd element of the array
+            Assert.IsTrue(buffLen4.Length == 4);
+            Assert.ThrowsException<ArgumentException>(() => buffLen4.GetByte(5)); // shouldn't have a 5th element
+            Assert.IsTrue(buffLen4.GetByte(0) == 0x02); // make sure we got the 2nd element of the array
 
             arrayLen3.CopyTo(buffLen4); // Array to Buffer copying
-            Assert.True(buffLen4.Length == 4);
-            Assert.True(buffLen4.GetByte(0) == 0x01); // make sure we updated the first few 
-            Assert.True(buffLen4.GetByte(1) == 0x02);
-            Assert.True(buffLen4.GetByte(2) == 0x03);
-            Assert.True(buffLen4.GetByte(3) == 0x14); // and kept the last one 
+            Assert.IsTrue(buffLen4.Length == 4);
+            Assert.IsTrue(buffLen4.GetByte(0) == 0x01); // make sure we updated the first few 
+            Assert.IsTrue(buffLen4.GetByte(1) == 0x02);
+            Assert.IsTrue(buffLen4.GetByte(2) == 0x03);
+            Assert.IsTrue(buffLen4.GetByte(3) == 0x14); // and kept the last one 
 
             var buffLen3Again = buffLen3.ToArray().AsBuffer();
-            Assert.True(buffLen3Again.GetByte(0) == 0x01);
-            Assert.True(buffLen3Again.GetByte(1) == 0x02);
-            Assert.True(buffLen3Again.GetByte(2) == 0x03);
+            Assert.IsTrue(buffLen3Again.GetByte(0) == 0x01);
+            Assert.IsTrue(buffLen3Again.GetByte(1) == 0x02);
+            Assert.IsTrue(buffLen3Again.GetByte(2) == 0x03);
 
-            Assert.False(buffLen3.IsSameData(buffLen3Again)); // different memory regions
+            Assert.IsFalse(buffLen3.IsSameData(buffLen3Again)); // different memory regions
 
             buffLen4.CopyTo(arrayLen4Again);  // Buffer to Array copying
             var array4 = buffLen4.ToArray();
-            Assert.True(arrayLen4Again.Length == array4.Length);
+            Assert.IsTrue(arrayLen4Again.Length == array4.Length);
             for (int i = 0; i < arrayLen4Again.Length; ++i)
             {
-                Assert.True(arrayLen4Again[i] == array4[i]); // make sure we have equal array
+                Assert.IsTrue(arrayLen4Again[i] == array4[i]); // make sure we have equal array
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestIsSameDataDifferentArrays()
         {
             var arr = new byte[] { 0x01, 0x02 };
             var buf1 = arr.AsBuffer();
             var arr2 = new byte[] { 0x01, 0x02 };
             var buf2 = arr2.AsBuffer();
-            Assert.False(buf1.IsSameData(buf2));
+            Assert.IsFalse(buf1.IsSameData(buf2));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestIsSameDataUsingCopyTo()
         {
             var arr = new byte[] { 0x01, 0x02 };
             var buf1 = arr.AsBuffer();
             var buf2 = new Windows.Storage.Streams.Buffer(2);
             buf1.CopyTo(buf2);
-            Assert.False(buf1.IsSameData(buf2));
+            Assert.IsFalse(buf1.IsSameData(buf2));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestIsSameDataUsingAsBufferTwice()
         {
             var arr = new byte[] { 0x01, 0x02 };
             var buf1 = arr.AsBuffer();
             var buf2 = arr.AsBuffer();
-            Assert.True(buf1.IsSameData(buf2));
+            Assert.IsTrue(buf1.IsSameData(buf2));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestIsSameDataUsingToArray()
         {
             var arr = new byte[] { 0x01, 0x02 };
             var buf1 = arr.AsBuffer();
             var buf2 = buf1.ToArray().AsBuffer();
-            Assert.False(buf1.IsSameData(buf2));
+            Assert.IsFalse(buf1.IsSameData(buf2));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferAsStreamUsingAsBuffer()
         {
             var arr = new byte[] { 0x01, 0x02 };
             Stream stream = arr.AsBuffer().AsStream();
-            Assert.True(stream != null);
-            Assert.True(stream.Length == 2);
+            Assert.IsTrue(stream != null);
+            Assert.IsTrue(stream.Length == 2);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferAsStreamUsingAsBufferWithOffset()
         {
             var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
             var buffer = arr.AsBuffer(1, 2);
             Stream stream = buffer.AsStream();
-            Assert.True(stream != null);
-            Assert.True(stream.Length == 2);
+            Assert.IsTrue(stream != null);
+            Assert.IsTrue(stream.Length == 2);
 
             stream.Write(new byte[] { 0x05, 0x06 });
-            Assert.True(stream.Length == 2);
-            Assert.True(buffer.Length == 2);
+            Assert.IsTrue(stream.Length == 2);
+            Assert.IsTrue(buffer.Length == 2);
 
-            Assert.Equal((byte)0x05, arr[1]);
-            Assert.Equal((byte)0x06, arr[2]);
+            Assert.AreEqual((byte)0x05, arr[1]);
+            Assert.AreEqual((byte)0x06, arr[2]);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferAsStreamUsingAsBufferWithOffsetAndCapacity()
         {
             var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
             var buffer = arr.AsBuffer(1, 2, 3);
             Stream stream = buffer.AsStream();
-            Assert.True(stream != null);
-            Assert.True(stream.Length == 2);
+            Assert.IsTrue(stream != null);
+            Assert.IsTrue(stream.Length == 2);
 
             stream.Write(new byte[] { 0x05, 0x06, 0x07 });
-            Assert.True(stream.Length == 3);
-            Assert.True(buffer.Length == 3);
+            Assert.IsTrue(stream.Length == 3);
+            Assert.IsTrue(buffer.Length == 3);
 
-            Assert.Equal((byte)0x05, arr[1]);
-            Assert.Equal((byte)0x06, arr[2]);
-            Assert.Equal((byte)0x07, arr[3]);
+            Assert.AreEqual((byte)0x05, arr[1]);
+            Assert.AreEqual((byte)0x06, arr[2]);
+            Assert.AreEqual((byte)0x07, arr[3]);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferAsStreamWithEmptyBuffer()
         {
             var buffer = new Windows.Storage.Streams.Buffer(0);
             Stream stream = buffer.AsStream();
-            Assert.True(stream != null);
-            Assert.True(stream.Length == 0);
+            Assert.IsTrue(stream != null);
+            Assert.IsTrue(stream.Length == 0);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferAsStreamRead()
         {
             var arr = new byte[] { 0x01, 0x02 };
             Stream stream = arr.AsBuffer().AsStream();
-            Assert.True(stream != null);
-            Assert.True(stream.Length == 2);
+            Assert.IsTrue(stream != null);
+            Assert.IsTrue(stream.Length == 2);
             int byte1 = stream.ReadByte();
-            Assert.Equal(0x01, byte1);
+            Assert.AreEqual(0x01, byte1);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferAsStreamWrite()
         {
             var buffer = new Windows.Storage.Streams.Buffer(2);
             Stream stream = buffer.AsStream();
-            Assert.True(stream != null);
-            Assert.True(stream.Length == 0);
+            Assert.IsTrue(stream != null);
+            Assert.IsTrue(stream.Length == 0);
             stream.WriteByte(0x01);
-            Assert.True(stream.Length == 1);
-            Assert.True(buffer.Length == 1);
+            Assert.IsTrue(stream.Length == 1);
+            Assert.IsTrue(buffer.Length == 1);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferImproperReadCopyToOutOfBounds()
         {
             var array = new byte[] { 0x01, 0x02, 0x03 };
             var buffer = array.AsBuffer();
             var biggerBuffer = new Windows.Storage.Streams.Buffer(5);
             buffer.CopyTo(biggerBuffer);
-            Assert.Throws<ArgumentException>(() => biggerBuffer.ToArray(4, 2));
+            Assert.ThrowsException<ArgumentException>(() => biggerBuffer.ToArray(4, 2));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferImproperReadCopyToStraddleBounds()
         {
             var array = new byte[] { 0x01, 0x02, 0x03 };
             var buffer = array.AsBuffer();
             var biggerBuffer = new Windows.Storage.Streams.Buffer(5);
             buffer.CopyTo(biggerBuffer);
-            Assert.Throws<ArgumentException>(() => biggerBuffer.ToArray(2, 2));
+            Assert.ThrowsException<ArgumentException>(() => biggerBuffer.ToArray(2, 2));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferImproperReadGetByte()
         {
             var array = new byte[] { 0x01, 0x02, 0x03 };
             var buffer = array.AsBuffer();
-            Assert.Throws<ArgumentException>(() => buffer.GetByte(4));
+            Assert.ThrowsException<ArgumentException>(() => buffer.GetByte(4));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestEmptyBufferToArray()
         {
             var buffer = new Windows.Storage.Streams.Buffer(0);
             var array = buffer.ToArray();
-            Assert.True(array.Length == 0);
+            Assert.IsTrue(array.Length == 0);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestArrayCopyToBufferEndToBeginning()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -420,7 +398,7 @@ namespace UnitTest
             arr.CopyTo(3, buf, 0, 0);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestArrayCopyToBufferEndToEnd2()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -428,7 +406,7 @@ namespace UnitTest
             arr.CopyTo(0, buf, 0, 3);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestArrayCopyToBufferEndToEnd()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -436,7 +414,7 @@ namespace UnitTest
             arr.CopyTo(3, buf, 3, 0);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestArrayCopyToBufferMidToMid()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -444,7 +422,7 @@ namespace UnitTest
             arr.CopyTo(1, buf, 1, 0);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestArrayCopyToBufferMidToEnd()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -452,7 +430,7 @@ namespace UnitTest
             arr.CopyTo(1, buf, 3, 0);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferCopyToArrayEndToEnd()
         {
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
@@ -461,44 +439,44 @@ namespace UnitTest
             buf.CopyTo(3, target, 4, 0);
         }
 
-        [Fact]
+        [TestMethod]
         public void BufferToArrayWithZeroCountAtEnd2()
         {
             byte[] array = { 0xA1, 0xA2, 0xA3 };
             var result = array.AsBuffer().ToArray(3, 0);
-            Assert.True(result != null);
-            Assert.True(0 == result.Length);
+            Assert.IsTrue(result != null);
+            Assert.IsTrue(0 == result.Length);
         }
 
-        [Fact]
+        [TestMethod]
         public void BufferToArrayWithZeroCountAtEnd_WorksWithSpans()
         {
             byte[] array = { 0xA1, 0xA2, 0xA3 };
             var result = array.AsSpan().Slice(3, 0).ToArray();
-            Assert.True(result != null);
-            Assert.True(0 == result.Length);
+            Assert.IsTrue(result != null);
+            Assert.IsTrue(0 == result.Length);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestWinRTBufferWithZeroLength()
         {
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
             MemoryStream stream = new MemoryStream(arr, 0, 3, false, true);
             IBuffer buff = stream.GetWindowsRuntimeBuffer(3, 0);
-            Assert.True(buff != null);
-            Assert.True(buff.Length == 0);
+            Assert.IsTrue(buff != null);
+            Assert.IsTrue(buff.Length == 0);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestEmptyBufferCopyTo()
         {
             var buffer = new Windows.Storage.Streams.Buffer(0);
             byte[] array = { };
             buffer.CopyTo(array);
-            Assert.True(array.Length == 0);
+            Assert.IsTrue(array.Length == 0);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferToArrayCapacityLargerThanLength()
         {
             var buffer = new Windows.Storage.Streams.Buffer(100);
@@ -506,10 +484,10 @@ namespace UnitTest
             arr.CopyTo(0, buffer, 0, 3);
 
             byte[] newArr = buffer.ToArray();
-            Assert.True(newArr.Length == 3);
+            Assert.IsTrue(newArr.Length == 3);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferCopyToBufferCapacityLargerThanLength()
         {
             var buffer = new Windows.Storage.Streams.Buffer(100);
@@ -520,13 +498,13 @@ namespace UnitTest
             byte[] arr2 = new byte[] { 0x01, 0x02 };
             arr2.CopyTo(0, buffer2, 0, 2);
 
-            Assert.True(buffer2.Length == 2);
+            Assert.IsTrue(buffer2.Length == 2);
 
             buffer.CopyTo(buffer2);
-            Assert.True(buffer2.Length == 3);
+            Assert.IsTrue(buffer2.Length == 3);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestTryGetDataUnsafe()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -535,213 +513,215 @@ namespace UnitTest
 
             unsafe
             {
-                Assert.True(WindowsRuntimeBufferMarshal.TryGetDataUnsafe(buf, out byte* dataPtr));
-                Assert.True(dataPtr != null);
+                Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetDataUnsafe(buf, out byte* dataPtr));
+                Assert.IsTrue(dataPtr != null);
 
                 Span<byte> buffSpan = new Span<byte>((byte*)dataPtr, (int)buf.Length);
 
                 byte[] arr2 = buffSpan.ToArray();
-                Assert.True(arr.SequenceEqual(arr2));
+                Assert.IsTrue(arr.SequenceEqual(arr2));
             }
 
             // Ensure buf doesn't get collected while we use the data pointer
             GC.KeepAlive(buf);
         }
 
-        [Fact]
+        [TestMethod]
         public unsafe void TestTryGetDataUnsafe_MemoryBufferReference()
         {
             var buffer = new Windows.Foundation.MemoryBuffer(256);
             var reference = buffer.CreateReference();
 
-            Assert.True(WindowsRuntimeBufferMarshal.TryGetDataUnsafe(reference, out byte* dataPtr1, out uint capacity1));
-            Assert.True(dataPtr1 != null);
-            Assert.True(capacity1 == 256);
+            Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetDataUnsafe(reference, out byte* dataPtr1, out uint capacity1));
+            Assert.IsTrue(dataPtr1 != null);
+            Assert.IsTrue(capacity1 == 256);
 
-            Assert.True(WindowsRuntimeBufferMarshal.TryGetDataUnsafe(reference, out byte* dataPtr2, out uint capacity2));
-            Assert.True(dataPtr2 != null);
-            Assert.True(capacity2 == 256);
+            Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetDataUnsafe(reference, out byte* dataPtr2, out uint capacity2));
+            Assert.IsTrue(dataPtr2 != null);
+            Assert.IsTrue(capacity2 == 256);
 
-            Assert.True(dataPtr1 == dataPtr2);
+            Assert.IsTrue(dataPtr1 == dataPtr2);
 
             // Ensure the reference doesn't get collected while we use the data pointer
             GC.KeepAlive(reference);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferTryGetArray()
         {
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
             var buffer = arr.AsBuffer();
 
-            Assert.True(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
-            Assert.Equal(arr, array.Array);
+            Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.AreEqual(arr, array.Array);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBufferTryGetArraySubset()
         {
             var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
             var buffer = arr.AsBuffer(1, 2);
 
-            Assert.True(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
-            Assert.Equal(arr, array.Array);
-            Assert.Equal(1, array.Offset);
-            Assert.Equal(2, array.Count);
+            Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.AreEqual(arr, array.Array);
+            Assert.AreEqual(1, array.Offset);
+            Assert.AreEqual(2, array.Count);
         }
 
-        [Theory]
+        [TestMethod]
         // Mapped System.* Types Primitive Types
-        [InlineData(typeof(bool), "Boolean", "Primitive")]
-        [InlineData(typeof(byte), "UInt8", "Primitive")]
-        [InlineData(typeof(char), "Char16", "Primitive")]
-        [InlineData(typeof(double), "Double", "Primitive")]
-        [InlineData(typeof(short), "Int16", "Primitive")]
-        [InlineData(typeof(int), "Int32", "Primitive")]
-        [InlineData(typeof(long), "Int64", "Primitive")]
-        [InlineData(typeof(float), "Single", "Primitive")]
-        [InlineData(typeof(ushort), "UInt16", "Primitive")]
-        [InlineData(typeof(uint), "UInt32", "Primitive")]
-        [InlineData(typeof(ulong), "UInt64", "Primitive")]
+        [DataRow(typeof(bool), "Boolean", "Primitive")]
+        [DataRow(typeof(byte), "UInt8", "Primitive")]
+        [DataRow(typeof(char), "Char16", "Primitive")]
+        [DataRow(typeof(double), "Double", "Primitive")]
+        [DataRow(typeof(short), "Int16", "Primitive")]
+        [DataRow(typeof(int), "Int32", "Primitive")]
+        [DataRow(typeof(long), "Int64", "Primitive")]
+        [DataRow(typeof(float), "Single", "Primitive")]
+        [DataRow(typeof(ushort), "UInt16", "Primitive")]
+        [DataRow(typeof(uint), "UInt32", "Primitive")]
+        [DataRow(typeof(ulong), "UInt64", "Primitive")]
         // Mapped System.* Types Metadata Types
-        [InlineData(typeof(DateTimeOffset), "Windows.Foundation.DateTime", "Metadata")]
-        [InlineData<EventHandler<Guid>>(typeof(EventHandler<Guid>), "Windows.Foundation.EventHandler`1<Guid>", "Metadata")]
-        [InlineData(typeof(Exception), "Windows.Foundation.HResult", "Metadata")]
-        [InlineData(typeof(Guid), "Guid", "Metadata")]
-        [InlineData(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
-        [InlineData(typeof(IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider", "Metadata")]
-        [InlineData(typeof(object), "Object", "Metadata")]
-        [InlineData(typeof(string), "String", "Metadata")]
-        [InlineData(typeof(TimeSpan), "Windows.Foundation.TimeSpan", "Metadata")]
-        [InlineData(typeof(Type), "Windows.UI.Xaml.Interop.TypeName", "Metadata")]
-        [InlineData(typeof(Uri), "Windows.Foundation.Uri", "Metadata")]
-        [InlineData(typeof(ICommand), "Microsoft.UI.Xaml.Input.ICommand", "Metadata")]
+        [DataRow(typeof(DateTimeOffset), "Windows.Foundation.DateTime", "Metadata")]
+        [DataRow(typeof(EventHandler<Guid>), "Windows.Foundation.EventHandler`1<Guid>", "Metadata")]
+        [DataRow(typeof(Exception), "Windows.Foundation.HResult", "Metadata")]
+        [DataRow(typeof(Guid), "Guid", "Metadata")]
+        [DataRow(typeof(IDisposable), "Windows.Foundation.IClosable", "Metadata")]
+        [DataRow(typeof(IServiceProvider), "Microsoft.UI.Xaml.IXamlServiceProvider", "Metadata")]
+        [DataRow(typeof(object), "Object", "Metadata")]
+        [DataRow(typeof(string), "String", "Metadata")]
+        [DataRow(typeof(TimeSpan), "Windows.Foundation.TimeSpan", "Metadata")]
+        [DataRow(typeof(Type), "Windows.UI.Xaml.Interop.TypeName", "Metadata")]
+        [DataRow(typeof(Uri), "Windows.Foundation.Uri", "Metadata")]
+        [DataRow(typeof(ICommand), "Microsoft.UI.Xaml.Input.ICommand", "Metadata")]
         // Mapped System.Collections.* Types
-        [InlineData(typeof(IEnumerable), "Microsoft.UI.Xaml.Interop.IBindableIterable", "Metadata")]
-        [InlineData(typeof(IEnumerator), "Microsoft.UI.Xaml.Interop.IBindableIterator", "Metadata")]
-        [InlineData(typeof(IList), "Microsoft.UI.Xaml.Interop.IBindableVector", "Metadata")]
-        [InlineData<IReadOnlyList<long>>(typeof(IReadOnlyList<long>), "Windows.Foundation.Collections.IVectorView`1<Int64>", "Metadata")]
+        [DataRow(typeof(IEnumerable), "Microsoft.UI.Xaml.Interop.IBindableIterable", "Metadata")]
+        [DataRow(typeof(IEnumerator), "Microsoft.UI.Xaml.Interop.IBindableIterator", "Metadata")]
+        [DataRow(typeof(IList), "Microsoft.UI.Xaml.Interop.IBindableVector", "Metadata")]
+        [DataRow(typeof(IReadOnlyList<long>), "Windows.Foundation.Collections.IVectorView`1<Int64>", "Metadata")]
         // Mapped System.Collections.Specialized* Types
-        [InlineData(typeof(INotifyCollectionChanged), "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged", "Metadata")]
-        [InlineData(typeof(NotifyCollectionChangedEventArgs), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", "Metadata")]
-        [InlineData(typeof(NotifyCollectionChangedEventHandler), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", "Metadata")]
+        [DataRow(typeof(INotifyCollectionChanged), "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged", "Metadata")]
+        [DataRow(typeof(NotifyCollectionChangedEventArgs), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", "Metadata")]
+        [DataRow(typeof(NotifyCollectionChangedEventHandler), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", "Metadata")]
         // Mapped System.ComponentModel.* Types
-        [InlineData(typeof(DataErrorsChangedEventArgs), "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", "Metadata")]
-        [InlineData(typeof(INotifyDataErrorInfo), "Microsoft.UI.Xaml.Data.INotifyDataErrorInfo", "Metadata")]
-        [InlineData(typeof(INotifyPropertyChanged), "Microsoft.UI.Xaml.Data.INotifyPropertyChanged", "Metadata")]
-        [InlineData(typeof(PropertyChangedEventArgs), "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", "Metadata")]
-        [InlineData(typeof(PropertyChangedEventHandler), "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler", "Metadata")]
+        [DataRow(typeof(DataErrorsChangedEventArgs), "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", "Metadata")]
+        [DataRow(typeof(INotifyDataErrorInfo), "Microsoft.UI.Xaml.Data.INotifyDataErrorInfo", "Metadata")]
+        [DataRow(typeof(INotifyPropertyChanged), "Microsoft.UI.Xaml.Data.INotifyPropertyChanged", "Metadata")]
+        [DataRow(typeof(PropertyChangedEventArgs), "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", "Metadata")]
+        [DataRow(typeof(PropertyChangedEventHandler), "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler", "Metadata")]
         // Mapped System.Numerics.* Types
-        [InlineData(typeof(Matrix3x2), "Windows.Foundation.Numerics.Matrix3x2", "Metadata")]
-        [InlineData(typeof(Matrix4x4), "Windows.Foundation.Numerics.Matrix4x4", "Metadata")]
-        [InlineData(typeof(Plane), "Windows.Foundation.Numerics.Plane", "Metadata")]
-        [InlineData(typeof(Quaternion), "Windows.Foundation.Numerics.Quaternion", "Metadata")]
-        [InlineData(typeof(Vector2), "Windows.Foundation.Numerics.Vector2", "Metadata")]
-        [InlineData(typeof(Vector3), "Windows.Foundation.Numerics.Vector3", "Metadata")]
-        [InlineData(typeof(Vector4), "Windows.Foundation.Numerics.Vector4", "Metadata")]
+        [DataRow(typeof(Matrix3x2), "Windows.Foundation.Numerics.Matrix3x2", "Metadata")]
+        [DataRow(typeof(Matrix4x4), "Windows.Foundation.Numerics.Matrix4x4", "Metadata")]
+        [DataRow(typeof(Plane), "Windows.Foundation.Numerics.Plane", "Metadata")]
+        [DataRow(typeof(Quaternion), "Windows.Foundation.Numerics.Quaternion", "Metadata")]
+        [DataRow(typeof(Vector2), "Windows.Foundation.Numerics.Vector2", "Metadata")]
+        [DataRow(typeof(Vector3), "Windows.Foundation.Numerics.Vector3", "Metadata")]
+        [DataRow(typeof(Vector4), "Windows.Foundation.Numerics.Vector4", "Metadata")]
         // Mapped Windows.Foundation.* Types
-        [InlineData(typeof(AsyncActionCompletedHandler), "Windows.Foundation.AsyncActionCompletedHandler", "Metadata")]
-        [InlineData(typeof(IAsyncAction), "Windows.Foundation.IAsyncAction", "Metadata")]
-        [InlineData(typeof(IAsyncInfo), "Windows.Foundation.IAsyncInfo", "Metadata")]
-        [InlineData(typeof(Point), "Windows.Foundation.Point", "Metadata")]
-        [InlineData(typeof(Rect), "Windows.Foundation.Rect", "Metadata")]
-        [InlineData(typeof(Size), "Windows.Foundation.Size", "Metadata")]
-        [InlineData(typeof(IStringable), "Windows.Foundation.IStringable", "Metadata")]
+        [DataRow(typeof(AsyncActionCompletedHandler), "Windows.Foundation.AsyncActionCompletedHandler", "Metadata")]
+        [DataRow(typeof(IAsyncAction), "Windows.Foundation.IAsyncAction", "Metadata")]
+        [DataRow(typeof(IAsyncInfo), "Windows.Foundation.IAsyncInfo", "Metadata")]
+        [DataRow(typeof(Point), "Windows.Foundation.Point", "Metadata")]
+        [DataRow(typeof(Rect), "Windows.Foundation.Rect", "Metadata")]
+        [DataRow(typeof(Size), "Windows.Foundation.Size", "Metadata")]
+        [DataRow(typeof(IStringable), "Windows.Foundation.IStringable", "Metadata")]
         // Mapped Windows.Foundation.Collections.* Types
-        [InlineData(typeof(CollectionChange), "Windows.Foundation.Collections.CollectionChange", "Metadata")]
-        [InlineData(typeof(IVectorChangedEventArgs), "Windows.Foundation.Collections.IVectorChangedEventArgs", "Metadata")]
+        [DataRow(typeof(CollectionChange), "Windows.Foundation.Collections.CollectionChange", "Metadata")]
+        [DataRow(typeof(IVectorChangedEventArgs), "Windows.Foundation.Collections.IVectorChangedEventArgs", "Metadata")]
         // Mapped WindowsRuntime.InteropServices.* Types
-        [InlineData(typeof(EventRegistrationToken), "WindowsRuntime.InteropServices.EventRegistrationToken", "Metadata")]
+        [DataRow(typeof(EventRegistrationToken), "WindowsRuntime.InteropServices.EventRegistrationToken", "Metadata")]
         // Others
-        [InlineData<NotifyCollectionChangedAction>(typeof(NotifyCollectionChangedAction), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", "Metadata")]
-        [InlineData<NotifyCollectionChangedAction?>(typeof(NotifyCollectionChangedAction?), "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction>", "Metadata")]
+        [DataRow(typeof(NotifyCollectionChangedAction), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", "Metadata")]
+        [DataRow(typeof(NotifyCollectionChangedAction?), "Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction>", "Metadata")]
         // Projected WinRT Types
-        [InlineData(typeof(TestComponent.Class), "TestComponent.Class", "Metadata")]
-        [InlineData(typeof(TestComponent.Nested), "TestComponent.Nested", "Metadata")]
-        [InlineData(typeof(TestComponent.IRequiredOne), "TestComponent.IRequiredOne", "Metadata")]
-        [InlineData(typeof(TestComponent.Param6Handler), "TestComponent.Param6Handler", "Metadata")]
-        [InlineData(typeof(TestComponentCSharp.Class), "TestComponentCSharp.Class", "Metadata")]
-        [InlineData(typeof(TestComponentCSharp.ComposedBlittableStruct), "TestComponentCSharp.ComposedBlittableStruct", "Metadata")]
-        [InlineData(typeof(TestComponentCSharp.IArtist), "TestComponentCSharp.IArtist", "Metadata")]
-        [InlineData(typeof(TestComponentCSharp.EnumValue), "TestComponentCSharp.EnumValue", "Metadata")]
-        [InlineData(typeof(TestComponentCSharp.EventHandler0), "TestComponentCSharp.EventHandler0", "Metadata")]
+        [DataRow(typeof(TestComponent.Class), "TestComponent.Class", "Metadata")]
+        [DataRow(typeof(TestComponent.Nested), "TestComponent.Nested", "Metadata")]
+        [DataRow(typeof(TestComponent.IRequiredOne), "TestComponent.IRequiredOne", "Metadata")]
+        [DataRow(typeof(TestComponent.Param6Handler), "TestComponent.Param6Handler", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.Class), "TestComponentCSharp.Class", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.ComposedBlittableStruct), "TestComponentCSharp.ComposedBlittableStruct", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.IArtist), "TestComponentCSharp.IArtist", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.EnumValue), "TestComponentCSharp.EnumValue", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.EventHandler0), "TestComponentCSharp.EventHandler0", "Metadata")]
         // Nullable Types
-        [InlineData(typeof(long?), "Windows.Foundation.IReference`1<Int64>", "Metadata")]
-        [InlineData(typeof(Point?), "Windows.Foundation.IReference`1<Windows.Foundation.Point>", "Metadata")]
-        [InlineData(typeof(Vector3?), "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector3>", "Metadata")]
-        [InlineData(typeof(Guid?), "Windows.Foundation.IReference`1<Guid>", "Metadata")]
-        [InlineData(typeof(TestComponentCSharp.EnumValue?), "Windows.Foundation.IReference`1<TestComponentCSharp.EnumValue>", "Metadata")]
-        [InlineData(typeof(TestComponentCSharp.BlittableStruct?), "Windows.Foundation.IReference`1<TestComponentCSharp.BlittableStruct>", "Metadata")]
-        [InlineData<IList<Int32?>>(typeof(IList<Int32?>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
-        [InlineData<Int32?[]>(typeof(Int32?[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
+        [DataRow(typeof(long?), "Windows.Foundation.IReference`1<Int64>", "Metadata")]
+        [DataRow(typeof(Point?), "Windows.Foundation.IReference`1<Windows.Foundation.Point>", "Metadata")]
+        [DataRow(typeof(Vector3?), "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector3>", "Metadata")]
+        [DataRow(typeof(Guid?), "Windows.Foundation.IReference`1<Guid>", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.EnumValue?), "Windows.Foundation.IReference`1<TestComponentCSharp.EnumValue>", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.BlittableStruct?), "Windows.Foundation.IReference`1<TestComponentCSharp.BlittableStruct>", "Metadata")]
+        [DataRow(typeof(IList<Int32?>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
+        [DataRow(typeof(Int32?[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
         // Generic Types
-        [InlineData<IList<long>>(typeof(IList<long>), "Windows.Foundation.Collections.IVector`1<Int64>", "Metadata")]
-        [InlineData<IList<TestComponentCSharp.EventWithGuid>>(typeof(IList<TestComponentCSharp.EventWithGuid>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.EventWithGuid>", "Metadata")] // Using the fully qualified asssembly name
-        [InlineData<IList<TestComponentCSharp.Class>>(typeof(IList<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.Class>", "Metadata")] // Using the fully qualified asssembly name
-        [InlineData<IEnumerator<TestComponentCSharp.Class>>(typeof(IEnumerator<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterator`1<TestComponentCSharp.Class>", "Metadata")]
-        [InlineData<IEnumerable<TestComponentCSharp.Class>>(typeof(IEnumerable<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterable`1<TestComponentCSharp.Class>", "Metadata")]
-        [InlineData<EventHandler<TestComponentCSharp.Class>>(typeof(EventHandler<TestComponentCSharp.Class>), "Windows.Foundation.EventHandler`1<TestComponentCSharp.Class>", "Metadata")]
-        [InlineData<KeyValuePair<Object, TestComponentCSharp.Class>>(typeof(KeyValuePair<Object, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, TestComponentCSharp.Class>", "Metadata")]
-        [InlineData<KeyValuePair<Object, Object>>(typeof(KeyValuePair<Object, Object>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>", "Metadata")]
-        [InlineData<KeyValuePair<String, TestComponentCSharp.Class>>(typeof(KeyValuePair<String, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>", "Metadata")]
+        [DataRow(typeof(IList<long>), "Windows.Foundation.Collections.IVector`1<Int64>", "Metadata")]
+        [DataRow(typeof(IList<TestComponentCSharp.EventWithGuid>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.EventWithGuid>", "Metadata")] // Using the fully qualified asssembly name
+        [DataRow(typeof(IList<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.Class>", "Metadata")] // Using the fully qualified asssembly name
+        [DataRow(typeof(IEnumerator<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterator`1<TestComponentCSharp.Class>", "Metadata")]
+        [DataRow(typeof(IEnumerable<TestComponentCSharp.Class>), "Windows.Foundation.Collections.IIterable`1<TestComponentCSharp.Class>", "Metadata")]
+        [DataRow(typeof(EventHandler<TestComponentCSharp.Class>), "Windows.Foundation.EventHandler`1<TestComponentCSharp.Class>", "Metadata")]
+        [DataRow(typeof(KeyValuePair<Object, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, TestComponentCSharp.Class>", "Metadata")]
+        [DataRow(typeof(KeyValuePair<Object, Object>), "Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>", "Metadata")]
+        [DataRow(typeof(KeyValuePair<String, TestComponentCSharp.Class>), "Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>", "Metadata")]
         // Nested Generics
-        [InlineData<EventHandler<IList<long>>>(typeof(EventHandler<IList<long>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
-        [InlineData<EventHandler<KeyValuePair<Object, Object>>>(typeof(EventHandler<KeyValuePair<Object, Object>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
-        [InlineData<EventHandler<KeyValuePair<String, TestComponentCSharp.Class>>>(typeof(EventHandler<KeyValuePair<String, TestComponentCSharp.Class>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
-        [InlineData<IList<KeyValuePair<Object, Object>>>(typeof(IList<KeyValuePair<Object, Object>>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
-        [InlineData<IEnumerator<IEnumerable<Object>>>(typeof(IEnumerator<IEnumerable<Object>>), "Windows.Foundation.Collections.IIterator`1<Windows.Foundation.Collections.IIterable`1<Object>>", "Metadata")]
-        [InlineData<IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>>(typeof(IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>), "Windows.Foundation.Collections.IIterable`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
+        [DataRow(typeof(EventHandler<IList<long>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
+        [DataRow(typeof(EventHandler<KeyValuePair<Object, Object>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [DataRow(typeof(EventHandler<KeyValuePair<String, TestComponentCSharp.Class>>), "Windows.Foundation.EventHandler`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
+        [DataRow(typeof(IList<KeyValuePair<Object, Object>>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [DataRow(typeof(IEnumerator<IEnumerable<Object>>), "Windows.Foundation.Collections.IIterator`1<Windows.Foundation.Collections.IIterable`1<Object>>", "Metadata")]
+        [DataRow(typeof(IEnumerable<KeyValuePair<string, TestComponentCSharp.Class>>), "Windows.Foundation.Collections.IIterable`1<Windows.Foundation.Collections.IKeyValuePair`2<String, TestComponentCSharp.Class>>", "Metadata")]
         // Custom Types
-        [InlineData(typeof(TestCSharp), "UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
-        [InlineData<IList<TestCSharp>>(typeof(IList<TestCSharp>), "System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<ITestCSharp<double>>(typeof(ITestCSharp<double>), "UnitTest.ITestCSharp`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
-        [InlineData<KeyValuePair<String, TestCSharp>>(typeof(KeyValuePair<String, TestCSharp>), "System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<EventHandler<IList<TestCSharp>>>(typeof(EventHandler<IList<TestCSharp>>), "System.EventHandler`1[[System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<EventHandler<TestCSharp>>(typeof(EventHandler<TestCSharp>), "System.EventHandler`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<DelegateTestCSharp<Guid>>(typeof(DelegateTestCSharp<Guid>), "UnitTest.DelegateTestCSharp`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
-        [InlineData<WeakReference<TestComponent.Class>>(typeof(WeakReference<TestComponent.Class>), "System.WeakReference`1[[TestComponent.Class, WinRT.Projection, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<KeyValuePair<Int32, WeakReference<Object>>>(typeof(KeyValuePair<Int32, WeakReference<Object>>), "System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.WeakReference`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<ICollection<object>>(typeof(ICollection<object>), "System.Collections.Generic.ICollection`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<KeyValuePair<Object, Object>?>(typeof(KeyValuePair<Object, Object>?), "System.Nullable`1[[System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<KeyValuePair<Object, Object[]>>(typeof(KeyValuePair<Object, Object[]>), "System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object[], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [InlineData<long[][]>(typeof(long[][]), "System.Int64[][], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(TestCSharp), "UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [DataRow(typeof(IList<TestCSharp>), "System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(ITestCSharp<double>), "UnitTest.ITestCSharp`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [DataRow(typeof(KeyValuePair<String, TestCSharp>), "System.Collections.Generic.KeyValuePair`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(EventHandler<IList<TestCSharp>>), "System.EventHandler`1[[System.Collections.Generic.IList`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(EventHandler<TestCSharp>), "System.EventHandler`1[[UnitTest.TestCSharp, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(DelegateTestCSharp<Guid>), "UnitTest.DelegateTestCSharp`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Custom")]
+        [DataRow(typeof(WeakReference<TestComponent.Class>), "System.WeakReference`1[[TestComponent.Class, WinRT.Projection, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(KeyValuePair<Int32, WeakReference<Object>>), "System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.WeakReference`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(ICollection<object>), "System.Collections.Generic.ICollection`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(KeyValuePair<Object, Object>?), "System.Nullable`1[[System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(KeyValuePair<Object, Object[]>), "System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object[], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(long[][]), "System.Int64[][], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         // Arrays
-        [InlineData<Object[]>(typeof(Object[]), "Windows.Foundation.IReferenceArray`1<Object>", "Metadata")]
-        [InlineData<long[]>(typeof(long[]), "Windows.Foundation.IReferenceArray`1<Int64>", "Metadata")]
-        [InlineData<TestComponentCSharp.Class[]>(typeof(TestComponentCSharp.Class[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", "Metadata")]
-        [InlineData<TestComponentCSharp.ComposedBlittableStruct[]>(typeof(TestComponentCSharp.ComposedBlittableStruct[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.ComposedBlittableStruct>", "Metadata")]
-        [InlineData<TestComponentCSharp.IArtist[]>(typeof(TestComponentCSharp.IArtist[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IArtist>", "Metadata")]
-        [InlineData<TestComponentCSharp.EnumValue[]>(typeof(TestComponentCSharp.EnumValue[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EnumValue>", "Metadata")]
-        [InlineData<TestComponentCSharp.EventHandler0[]>(typeof(TestComponentCSharp.EventHandler0[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EventHandler0>", "Metadata")]
-        [InlineData<Point[]>(typeof(Point[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Point>", "Metadata")]
-        [InlineData<IList<long>[]>(typeof(IList<long>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
-        [InlineData<IList<long?>[]>(typeof(IList<long?>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int64>>>", "Metadata")]
-        [InlineData<KeyValuePair<Object, Object>[]>(typeof(KeyValuePair<Object, Object>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [DataRow(typeof(Object[]), "Windows.Foundation.IReferenceArray`1<Object>", "Metadata")]
+        [DataRow(typeof(long[]), "Windows.Foundation.IReferenceArray`1<Int64>", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.Class[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.ComposedBlittableStruct[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.ComposedBlittableStruct>", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.IArtist[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IArtist>", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.EnumValue[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EnumValue>", "Metadata")]
+        [DataRow(typeof(TestComponentCSharp.EventHandler0[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EventHandler0>", "Metadata")]
+        [DataRow(typeof(Point[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Point>", "Metadata")]
+        [DataRow(typeof(IList<long>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
+        [DataRow(typeof(IList<long?>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int64>>>", "Metadata")]
+        [DataRow(typeof(KeyValuePair<Object, Object>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
         public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
             // test method here
             TestObject.TypeProperty = type;
-            Assert.Equal(name, TestObject.GetTypePropertyAbiName());
-            Assert.Equal(kind, TestObject.GetTypePropertyKind());
+            Assert.AreEqual(name, TestObject.GetTypePropertyAbiName());
+            Assert.AreEqual(kind, TestObject.GetTypePropertyKind());
         }
 
         class CustomDictionary : Dictionary<string, string> { }
 
-        [Fact]
+        [TestMethod]
         public void TestTypePropertyWithCustomType()
         {
             TestObject.TypeProperty = typeof(CustomDictionary);
             var name = TestObject.GetTypePropertyAbiName();
-            Assert.Equal("UnitTest.TestCSharp+CustomDictionary, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", name);
+            Assert.AreEqual("UnitTest.TestCSharp+CustomDictionary, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", name);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestVectorCastConversion()
         {
+
             var vector = TestObject.GetUriVectorAsIInspectableVector();
             var uriVector = vector.Cast<Uri>();
             var first = uriVector.First();
-            Assert.Equal(vector, uriVector);
+            // Assert the sequences are equivalent
+            Assert.IsTrue(vector.Cast<Uri>().SequenceEqual(uriVector)); // [2]
         }
 
         async Task LookupPorts()
@@ -752,14 +732,14 @@ namespace UnitTest
             foreach (var port in ports)
             {
                 object o = port.Properties["System.ItemNameDisplay"];
-                Assert.NotNull(o);
+                Assert.IsNotNull(o);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestReadOnlyDictionaryLookup()
         {
-            Assert.True(LookupPorts().Wait(5000));
+            Assert.IsTrue(LookupPorts().Wait(5000));
         }
 
 #if NET
@@ -774,10 +754,10 @@ namespace UnitTest
             await stream.WriteAsync(data, data.Length, 0);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStreamWriteZeroByte()
         {
-            Assert.True(InvokeStreamWriteZeroBytes().Wait(1000));
+            Assert.IsTrue(InvokeStreamWriteZeroBytes().Wait(1000));
         }
 
         async Task InvokeStreamWriteAsync()
@@ -788,16 +768,16 @@ namespace UnitTest
             var winRTBuffer = new Windows.Storage.Streams.Buffer(capacity: 0);
 
             await winRTStream.WriteAsync(winRTBuffer);
-            Assert.True(true);
+            Assert.IsTrue(true);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStreamWriteAsync()
         {
-            Assert.True(InvokeStreamWriteAsync().Wait(1000));
+            Assert.IsTrue(InvokeStreamWriteAsync().Wait(1000));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestAsStream()
         {
             using InMemoryRandomAccessStream winrtStream = new InMemoryRandomAccessStream();
@@ -818,38 +798,38 @@ namespace UnitTest
 
             byte[] read = new byte[256];
             await stream.ReadAsync(read, 0, read.Length);
-            Assert.Equal(read, data);
+            Assert.AreEqual(read, data);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStreamWriteAndRead()
         {
-            Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
+            Assert.IsTrue(InvokeStreamWriteAndReadAsync().Wait(1000));
         }
 
         /* TODO
-        [Fact]
+        [TestMethod]
         public void TestDynamicInterfaceCastingOnValidInterface()
         {
             var agileObject = (IAgileObject)(IWinRTObject)TestObject;
-            Assert.NotNull(agileObject);
+            Assert.IsNotNull(agileObject);
         }
         */
 
-        [Fact]
+        [TestMethod]
         public void TestDynamicInterfaceCastingOnInvalidInterface()
         {
-            Assert.ThrowsAny<System.Exception>(() => (IStringableInterop)(WindowsRuntimeObject)TestObject);
+            Assert.ThrowsException<System.Exception>(() => (IStringableInterop)(WindowsRuntimeObject)TestObject);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBuffer()
         {
             var arr1 = new byte[] { 0x01, 0x02 };
             var buff = arr1.AsBuffer();
             var arr2 = buff.ToArray(0, 2);
-            Assert.True(arr1[0] == arr2[0]);
-            Assert.True(arr1[1] == arr2[1]);
+            Assert.IsTrue(arr1[0] == arr2[0]);
+            Assert.IsTrue(arr1[1] == arr2[1]);
         }
 
 #endif
@@ -859,13 +839,13 @@ namespace UnitTest
             var folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             StorageFile file = await StorageFile.GetFileFromPathAsync(folderPath + "\\UnitTest.dll");
             var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(file, FileAccess.Read);
-            Assert.NotNull(handle);
+            Assert.IsNotNull(handle);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStorageFile()
         {
-            Assert.True(TestStorageFileAsync().Wait(5000));
+            Assert.IsTrue(TestStorageFileAsync().Wait(5000));
         }
 
         async Task TestStorageFolderAsync()
@@ -873,13 +853,13 @@ namespace UnitTest
             var folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(folderPath);
             var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(folder, "UnitTest.dll", FileMode.Open, FileAccess.Read);
-            Assert.NotNull(handle);
+            Assert.IsNotNull(handle);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStorageFolder()
         {
-            Assert.True(TestStorageFolderAsync().Wait(5000));
+            Assert.IsTrue(TestStorageFolderAsync().Wait(5000));
         }
 
         async Task InvokeWriteBufferAsync()
@@ -893,13 +873,13 @@ namespace UnitTest
             await stream.WriteAsync(buffer);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestWriteBuffer()
         {
-            Assert.True(InvokeWriteBufferAsync().Wait(1000));
+            Assert.IsTrue(InvokeWriteBufferAsync().Wait(1000));
         }
 
-        [Fact]
+        [TestMethod]
         public unsafe void TestUri()
         {
             var base_uri = "https://github.com";
@@ -910,50 +890,50 @@ namespace UnitTest
             using WindowsRuntimeObjectReferenceValue uriObjectRefValue = ABI.System.UriMarshaller.ConvertToUnmanaged(managedUri);
             var uri1 = ABI.System.UriMarshaller.ConvertToManaged(uriObjectRefValue.GetThisPtrUnsafe());
             var str1 = uri1.ToString();
-            Assert.Equal(full_uri, str1);
+            Assert.AreEqual(full_uri, str1);
 
             var expected = new Uri("http://expected");
             TestObject.UriProperty = expected;
-            Assert.Equal(expected, TestObject.UriProperty);
+            Assert.AreEqual(expected, TestObject.UriProperty);
 
             TestObject.CallForUri(() => managedUri);
             TestObject.UriPropertyChanged +=
-                (object sender, Uri value) => Assert.Equal(managedUri, value);
+                (object sender, Uri value) => Assert.AreEqual(managedUri, value);
             TestObject.RaiseUriChanged();
 
             var uri2 = WindowsRuntimeMarshal.ConvertToManaged(WindowsRuntimeMarshal.ConvertToUnmanaged(managedUri));
             var str2 = uri2.ToString();
-            Assert.Equal(full_uri, str2);
+            Assert.AreEqual(full_uri, str2);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestNulls()
         {
             TestObject.StringProperty = null;
-            Assert.Equal("", TestObject.StringProperty);
+            Assert.AreEqual("", TestObject.StringProperty);
             TestObject.CallForString(() => null);
             TestObject.StringPropertyChanged +=
-                (Class sender, string value) => Assert.Equal("", value);
+                (Class sender, string value) => Assert.AreEqual("", value);
             TestObject.RaiseStringChanged();
 
             TestObject.UriProperty = null;
-            Assert.Null(TestObject.UriProperty);
+            Assert.IsNull(TestObject.UriProperty);
             TestObject.CallForUri(() => null);
             TestObject.UriPropertyChanged +=
-                (object sender, Uri value) => Assert.Null(value);
+                (object sender, Uri value) => Assert.IsNull(value);
             TestObject.RaiseUriChanged();
 
             TestObject.ObjectProperty = null;
-            Assert.Null(TestObject.ObjectProperty);
+            Assert.IsNull(TestObject.ObjectProperty);
             TestObject.CallForObject(() => null);
             TestObject.ObjectPropertyChanged +=
-                (object sender, Object value) => Assert.Null(value);
+                (object sender, Object value) => Assert.IsNull(value);
             TestObject.RaiseObjectChanged();
 
             // todo: arrays, delegates, event args, mapped types...
         }
 
-        [Fact]
+        [TestMethod]
         public void TestEvents()
         {
             int events_expected = 0;
@@ -966,7 +946,7 @@ namespace UnitTest
             TestObject.Event1 += (Class sender) =>
             {
                 events_received++;
-                Assert.IsAssignableFrom<Class>(sender);
+                Assert.IsInstanceOfType<Class>(sender);
             };
             TestObject.InvokeEvent1(TestObject);
             events_expected++;
@@ -975,7 +955,7 @@ namespace UnitTest
             TestObject.Event2 += (Class sender, int arg0) =>
             {
                 events_received++;
-                Assert.Equal(arg0, int0);
+                Assert.AreEqual(arg0, int0);
             };
             TestObject.InvokeEvent2(TestObject, int0);
             events_expected++;
@@ -984,7 +964,7 @@ namespace UnitTest
             TestObject.Event3 += (Class sender, int arg0, string arg1) =>
             {
                 events_received++;
-                Assert.Equal(arg1, string1);
+                Assert.AreEqual(arg1, string1);
             };
             TestObject.InvokeEvent3(TestObject, int0, string1);
             events_expected++;
@@ -993,7 +973,7 @@ namespace UnitTest
             TestObject.NestedEvent += (object sender, IList<int> arg0) =>
             {
                 events_received++;
-                Assert.True(arg0.SequenceEqual(ints));
+                Assert.IsTrue(arg0.SequenceEqual(ints));
             };
             TestObject.InvokeNestedEvent(TestObject, ints);
             events_expected++;
@@ -1003,7 +983,7 @@ namespace UnitTest
                 events_received++;
                 return arg0;
             };
-            Assert.Equal(42, TestObject.InvokeReturnEvent(42));
+            Assert.AreEqual(42, TestObject.InvokeReturnEvent(42));
             events_expected++;
 
             var collection0 = new int[] { 42, 1729 };
@@ -1011,13 +991,13 @@ namespace UnitTest
             TestObject.CollectionEvent += (Class sender, IList<int> arg0, IDictionary<int, string> arg1) =>
             {
                 events_received++;
-                Assert.True(arg0.SequenceEqual(collection0));
-                Assert.True(arg1.SequenceEqual(collection1));
+                Assert.IsTrue(arg0.SequenceEqual(collection0));
+                Assert.IsTrue(arg1.SequenceEqual(collection1));
             };
             TestObject.InvokeCollectionEvent(TestObject, collection0, collection1);
             events_expected++;
 
-            Assert.Equal(events_received, events_expected);
+            Assert.AreEqual(events_received, events_expected);
         }
 
         class ManagedUriHandler : IUriHandler
@@ -1032,16 +1012,16 @@ namespace UnitTest
             public void AddUriHandler(ProvideUri provideUri)
             {
                 TestObject.CallForUri(provideUri);
-                Assert.Equal(new Uri("http://github.com"), TestObject.UriProperty);
+                Assert.AreEqual(new Uri("http://github.com"), TestObject.UriProperty);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestDelegateUnwrapping()
         {
             var obj = TestObject.GetUriDelegate();
             TestObject.CallForUri(obj);
-            Assert.Equal(new Uri("http://microsoft.com"), TestObject.UriProperty);
+            Assert.AreEqual(new Uri("http://microsoft.com"), TestObject.UriProperty);
 
             TestObject.AddUriHandler(new ManagedUriHandler(TestObject));
         }
@@ -1062,7 +1042,7 @@ namespace UnitTest
             void GetService(IntPtr type, out IntPtr service);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestCustomProjections()
         {
             // INotifyDataErrorsInfo
@@ -1072,7 +1052,7 @@ namespace UnitTest
                 propertyName = e.PropertyName;
             };
             TestObject.RaiseDataErrorChanged();
-            Assert.Equal("name", propertyName);
+            Assert.AreEqual("name", propertyName);
 
             bool eventCalled = false;
             TestObject.CanExecuteChanged += (object sender, EventArgs e) =>
@@ -1081,51 +1061,51 @@ namespace UnitTest
             };
 
             TestObject.RaiseCanExecuteChanged();
-            Assert.True(eventCalled);
+            Assert.IsTrue(eventCalled);
 
             // IXamlServiceProvider <-> IServiceProvider
             /* TODO
             var serviceProvider = Class.ServiceProvider.As<IServiceProviderInterop>();
             IntPtr service;
             serviceProvider.GetService(IntPtr.Zero, out service);
-            Assert.Equal(new IntPtr(42), service);
+            Assert.AreEqual(new IntPtr(42), service);
             */
 
             // Ensure robustness with bad runtime class names (parsing errors, type not found, etc)
             var badRuntimeClassName = Class.BadRuntimeClassName;
-            Assert.NotNull(badRuntimeClassName);
+            Assert.IsNotNull(badRuntimeClassName);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestKeyValuePair()
         {
             var expected = new KeyValuePair<string, string>("key", "value");
             TestObject.StringPairProperty = expected;
-            Assert.Equal(expected, TestObject.StringPairProperty);
+            Assert.AreEqual(expected, TestObject.StringPairProperty);
 
             expected = new KeyValuePair<string, string>("foo", "bar");
             TestObject.CallForStringPair(() => expected);
             TestObject.StringPairPropertyChanged +=
-                (object sender, KeyValuePair<string, string> value) => Assert.Equal(expected, value);
+                (object sender, KeyValuePair<string, string> value) => Assert.AreEqual(expected, value);
             TestObject.RaiseStringPairChanged();
 
             var expected2 = new KeyValuePair<EnumValue, EnumStruct>(EnumValue.Two, new EnumStruct() { value = EnumValue.One });
             TestObject.EnumPairProperty = expected2;
-            Assert.Equal(expected2, TestObject.EnumPairProperty);
+            Assert.AreEqual(expected2, TestObject.EnumPairProperty);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestObjectCasting()
         {
             object expected_uri = new Uri("http://aka.ms/cswinrt");
             TestObject.ObjectProperty = expected_uri;
-            Assert.Equal(expected_uri, TestObject.UriProperty);
-            Assert.Equal(expected_uri, TestObject.ObjectProperty);
+            Assert.AreEqual(expected_uri, TestObject.UriProperty);
+            Assert.AreEqual(expected_uri, TestObject.ObjectProperty);
 
             var expected = new KeyValuePair<string, string>("key", "value");
             TestObject.ObjectProperty = expected;
             var out_pair = (KeyValuePair<string, string>)TestObject.ObjectProperty;
-            Assert.Equal(expected, out_pair);
+            Assert.AreEqual(expected, out_pair);
 
             var nested = new KeyValuePair<KeyValuePair<int, int>, KeyValuePair<string, string>>(
                 new KeyValuePair<int, int>(42, 1729),
@@ -1133,7 +1113,7 @@ namespace UnitTest
             );
             TestObject.ObjectProperty = nested;
             var out_nested = (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<string, string>>)TestObject.ObjectProperty;
-            Assert.Equal(nested, out_nested);
+            Assert.AreEqual(nested, out_nested);
 
             // Test projected types in generic of KeyValuePair
             TestObject.ObjectProperty = new KeyValuePair<string, IProperties1>("one", new Class());
@@ -1147,41 +1127,41 @@ namespace UnitTest
             var strings_in = new[] { "hello", "world" };
             TestObject.StringsProperty = strings_in;
             var strings_out = TestObject.StringsProperty;
-            Assert.True(strings_out.SequenceEqual(strings_in));
+            Assert.IsTrue(strings_out.SequenceEqual(strings_in));
 
             TestObject.ObjectProperty = strings_in;
             strings_out = (string[])TestObject.ObjectProperty;
-            Assert.True(strings_out.SequenceEqual(strings_in));
+            Assert.IsTrue(strings_out.SequenceEqual(strings_in));
 
             var eventHandler = new EventHandler<int>((sender, args) => { });
             TestObject.ObjectProperty = eventHandler;
-            Assert.Equal(eventHandler, TestObject.ObjectProperty);
+            Assert.AreEqual(eventHandler, TestObject.ObjectProperty);
 
             var objects = new List<ManagedType>() { new ManagedType(), new ManagedType() };
             var query = from item in objects select item;
             TestObject.ObjectIterableProperty = query;
 
             TestObject.ObjectProperty = "test";
-            Assert.Equal("test", TestObject.ObjectProperty);
+            Assert.AreEqual("test", TestObject.ObjectProperty);
 
             var objectArray = new ManagedType[] { new ManagedType(), new ManagedType() };
             TestObject.ObjectIterableProperty = objectArray;
-            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectArray));
+            Assert.IsTrue(TestObject.ObjectIterableProperty.SequenceEqual(objectArray));
 
             var strArray = new string[] { "str1", "str2", "str3" };
             TestObject.ObjectIterableProperty = strArray;
-            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(strArray));
+            Assert.IsTrue(TestObject.ObjectIterableProperty.SequenceEqual(strArray));
 
             var uriArray = new Uri[] { new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") };
             TestObject.ObjectIterableProperty = uriArray;
-            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(uriArray));
+            Assert.IsTrue(TestObject.ObjectIterableProperty.SequenceEqual(uriArray));
 
             var objectUriArray = new object[] { new Uri("http://github.com") };
             TestObject.ObjectIterableProperty = objectUriArray;
-            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectUriArray));
+            Assert.IsTrue(TestObject.ObjectIterableProperty.SequenceEqual(objectUriArray));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStringMap()
         {
             var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
@@ -1190,17 +1170,17 @@ namespace UnitTest
             {
                 stringMap[item.Key] = item.Value;
             }
-            Assert.Equal(map.Count, stringMap.Count);
+            Assert.AreEqual(map.Count, stringMap.Count);
             foreach (var item in map)
             {
-                Assert.Equal(stringMap[item.Key], item.Value);
+                Assert.AreEqual(stringMap[item.Key], item.Value);
             }
             KeyValuePair<string, string>[] pairs = new KeyValuePair<string, string>[2];
             stringMap.CopyTo(pairs, 0);
-            Assert.Equal(2, pairs.Length);
+            Assert.AreEqual(2, pairs.Length);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestPropertySet()
         {
             var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
@@ -1209,14 +1189,14 @@ namespace UnitTest
             {
                 propertySet[item.Key] = item.Value;
             }
-            Assert.Equal(map.Count, propertySet.Count);
+            Assert.AreEqual(map.Count, propertySet.Count);
             foreach (var item in map)
             {
-                Assert.Equal(propertySet[item.Key], item.Value);
+                Assert.AreEqual(propertySet[item.Key], item.Value);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestValueSet()
         {
             var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
@@ -1225,14 +1205,14 @@ namespace UnitTest
             {
                 valueSet[item.Key] = item.Value;
             }
-            Assert.Equal(map.Count, valueSet.Count);
+            Assert.AreEqual(map.Count, valueSet.Count);
             foreach (var item in map)
             {
-                Assert.Equal(valueSet[item.Key], item.Value);
+                Assert.AreEqual(valueSet[item.Key], item.Value);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestValueSetArrays()
         {
             var map = new Dictionary<string, long[]>
@@ -1247,70 +1227,70 @@ namespace UnitTest
             {
                 valueSet[item.Key] = item.Value;
             }
-            Assert.Equal(map.Count, valueSet.Count);
+            Assert.AreEqual(map.Count, valueSet.Count);
             foreach (var item in map)
             {
-                Assert.Equal(valueSet[item.Key], item.Value);
+                Assert.AreEqual(valueSet[item.Key], item.Value);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestFactories()
         {
             var cls1 = new Class();
 
             var cls2 = new Class(42);
-            Assert.Equal(42, cls2.IntProperty);
+            Assert.AreEqual(42, cls2.IntProperty);
 
             var cls3 = new Class(42, "foo");
-            Assert.Equal(42, cls3.IntProperty);
-            Assert.Equal("foo", cls3.StringProperty);
+            Assert.AreEqual(42, cls3.IntProperty);
+            Assert.AreEqual("foo", cls3.StringProperty);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestFactoriesWithExplicitlyImplementedIUnknown()
         {
             var cls1 = new ClassWithExplicitIUnknown();
-            Assert.Equal(0, cls1.Value);
+            Assert.AreEqual(0, cls1.Value);
             cls1.Value = 42;
-            Assert.Equal(42, cls1.Value);
+            Assert.AreEqual(42, cls1.Value);
 
             var cls2 = new ClassWithExplicitIUnknown(42);
-            Assert.Equal(42, cls2.Value);
+            Assert.AreEqual(42, cls2.Value);
             cls2.Value = 22;
-            Assert.Equal(22, cls2.Value);
+            Assert.AreEqual(22, cls2.Value);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStaticMembers()
         {
             Class.StaticIntProperty = 42;
-            Assert.Equal(42, Class.StaticIntProperty);
+            Assert.AreEqual(42, Class.StaticIntProperty);
 
             Class.StaticStringProperty = "foo";
-            Assert.Equal("foo", Class.StaticStringProperty);
+            Assert.AreEqual("foo", Class.StaticStringProperty);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestInterfaces()
         {
             var expected = "hello";
             TestObject.StringProperty = expected;
 
             // projected wrapper
-            Assert.Equal(expected, TestObject.ToString());
+            Assert.AreEqual(expected, TestObject.ToString());
 
             // implicit cast
             var str = (IStringable)TestObject;
-            Assert.Equal(expected, str.ToString());
+            Assert.AreEqual(expected, str.ToString());
 
             var str2 = TestObject as IStringable;
-            Assert.Equal(expected, str2.ToString());
+            Assert.AreEqual(expected, str2.ToString());
 
-            Assert.IsAssignableFrom<IStringable>(TestObject);
+            Assert.IsInstanceOfType<IStringable>(TestObject);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestAsync()
         {
             TestObject.IntProperty = 42;
@@ -1318,7 +1298,7 @@ namespace UnitTest
             int async_int = 0;
             async_get_int.Completed = (info, status) => async_int = info.GetResults();
             async_get_int.GetResults();
-            Assert.Equal(42, async_int);
+            Assert.AreEqual(42, async_int);
 
             TestObject.StringProperty = "foo";
             var async_get_string = TestObject.GetStringAsync();
@@ -1327,18 +1307,18 @@ namespace UnitTest
             int async_progress;
             async_get_string.Progress = (info, progress) => async_progress = progress;
             async_get_string.GetResults();
-            Assert.Equal("foo", async_string);
+            Assert.AreEqual("foo", async_string);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestPrimitives()
         {
             var test_int = 21;
             TestObject.IntPropertyChanged += (object sender, Int32 value) =>
             {
-                Assert.IsAssignableFrom<Class>(sender);
+                Assert.IsInstanceOfType<Class>(sender);
                 var c = (Class)sender;
-                Assert.Equal(value, test_int);
+                Assert.AreEqual(value, test_int);
             };
             TestObject.IntProperty = test_int;
 
@@ -1346,22 +1326,22 @@ namespace UnitTest
             var hits = 0;
             TestObject.BoolPropertyChanged += (object sender, bool value) =>
             {
-                Assert.Equal(expectedVal, value);
+                Assert.AreEqual(expectedVal, value);
                 ++hits;
             };
 
             TestObject.BoolProperty = true;
-            Assert.Equal(1, hits);
+            Assert.AreEqual(1, hits);
 
             expectedVal = false;
             TestObject.CallForBool(() => false);
-            Assert.Equal(2, hits);
+            Assert.AreEqual(2, hits);
 
             TestObject.RaiseBoolChanged();
-            Assert.Equal(3, hits);
+            Assert.AreEqual(3, hits);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStrings()
         {
             string test_string = "x";
@@ -1372,102 +1352,102 @@ namespace UnitTest
 
             // Out hstring from native->managed only creates System.String on demand
             var sp = TestObject.StringProperty;
-            Assert.Equal(sp, test_string);
+            Assert.AreEqual(sp, test_string);
 
             // Out hstring from managed->native always creates HString from System.String
             TestObject.CallForString(() => test_string2);
-            Assert.Equal(TestObject.StringProperty, test_string2);
+            Assert.AreEqual(TestObject.StringProperty, test_string2);
 
             // In hstring from native->managed only creates System.String on demand
             TestObject.StringPropertyChanged += (Class sender, string value) => sender.StringProperty2 = value;
             TestObject.RaiseStringChanged();
-            Assert.Equal(TestObject.StringProperty2, test_string2);
+            Assert.AreEqual(TestObject.StringProperty2, test_string2);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBlittableStruct()
         {
             // Property setter/getter
             var val = new BlittableStruct() { i32 = 42 };
             TestObject.BlittableStructProperty = val;
-            Assert.Equal(42, TestObject.BlittableStructProperty.i32);
+            Assert.AreEqual(42, TestObject.BlittableStructProperty.i32);
 
             // Manual getter
-            Assert.Equal(42, TestObject.GetBlittableStruct().i32);
+            Assert.AreEqual(42, TestObject.GetBlittableStruct().i32);
 
             // Manual setter
             val.i32 = 8;
             TestObject.SetBlittableStruct(val);
-            Assert.Equal(8, TestObject.BlittableStructProperty.i32);
+            Assert.AreEqual(8, TestObject.BlittableStructProperty.i32);
 
             // Output argument
             val = default;
             TestObject.OutBlittableStruct(out val);
-            Assert.Equal(8, val.i32);
+            Assert.AreEqual(8, val.i32);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestComposedBlittableStruct()
         {
             // Property setter/getter
             var val = new ComposedBlittableStruct() { blittable = new BlittableStruct() { i32 = 42 } };
             TestObject.ComposedBlittableStructProperty = val;
-            Assert.Equal(42, TestObject.ComposedBlittableStructProperty.blittable.i32);
+            Assert.AreEqual(42, TestObject.ComposedBlittableStructProperty.blittable.i32);
 
             // Manual getter
-            Assert.Equal(42, TestObject.GetComposedBlittableStruct().blittable.i32);
+            Assert.AreEqual(42, TestObject.GetComposedBlittableStruct().blittable.i32);
 
             // Manual setter
             var blittable = val.blittable;
             blittable.i32 = 8;
             val.blittable = blittable;
             TestObject.SetComposedBlittableStruct(val);
-            Assert.Equal(8, TestObject.ComposedBlittableStructProperty.blittable.i32);
+            Assert.AreEqual(8, TestObject.ComposedBlittableStructProperty.blittable.i32);
 
             // Output argument
             val = default;
             TestObject.OutComposedBlittableStruct(out val);
-            Assert.Equal(8, val.blittable.i32);
+            Assert.AreEqual(8, val.blittable.i32);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestNonBlittableStringStruct()
         {
             // Property getter/setter
             var val = new NonBlittableStringStruct() { str = "I like tacos" };
             TestObject.NonBlittableStringStructProperty = val;
-            Assert.Equal("I like tacos", TestObject.NonBlittableStringStructProperty.str.ToString());
+            Assert.AreEqual("I like tacos", TestObject.NonBlittableStringStructProperty.str.ToString());
 
             // Manual getter
-            Assert.Equal("I like tacos", TestObject.GetNonBlittableStringStruct().str.ToString());
+            Assert.AreEqual("I like tacos", TestObject.GetNonBlittableStringStruct().str.ToString());
 
             // Manual setter
             val.str = "Hello, world";
             TestObject.SetNonBlittableStringStruct(val);
-            Assert.Equal("Hello, world", TestObject.NonBlittableStringStructProperty.str.ToString());
+            Assert.AreEqual("Hello, world", TestObject.NonBlittableStringStructProperty.str.ToString());
 
             // Output argument
             val = default;
             TestObject.OutNonBlittableStringStruct(out val);
-            Assert.Equal("Hello, world", val.str.ToString());
+            Assert.AreEqual("Hello, world", val.str.ToString());
         }
 
-        [Fact]
+        [TestMethod]
         public void TestNonBlittableBoolStruct()
         {
             // Property getter/setter
             var val = new NonBlittableBoolStruct() { w = true, x = false, y = true, z = false };
             TestObject.NonBlittableBoolStructProperty = val;
-            Assert.True(TestObject.NonBlittableBoolStructProperty.w);
-            Assert.False(TestObject.NonBlittableBoolStructProperty.x);
-            Assert.True(TestObject.NonBlittableBoolStructProperty.y);
-            Assert.False(TestObject.NonBlittableBoolStructProperty.z);
+            Assert.IsTrue(TestObject.NonBlittableBoolStructProperty.w);
+            Assert.IsFalse(TestObject.NonBlittableBoolStructProperty.x);
+            Assert.IsTrue(TestObject.NonBlittableBoolStructProperty.y);
+            Assert.IsFalse(TestObject.NonBlittableBoolStructProperty.z);
 
             // Manual getter
-            Assert.True(TestObject.GetNonBlittableBoolStruct().w);
-            Assert.False(TestObject.GetNonBlittableBoolStruct().x);
-            Assert.True(TestObject.GetNonBlittableBoolStruct().y);
-            Assert.False(TestObject.GetNonBlittableBoolStruct().z);
+            Assert.IsTrue(TestObject.GetNonBlittableBoolStruct().w);
+            Assert.IsFalse(TestObject.GetNonBlittableBoolStruct().x);
+            Assert.IsTrue(TestObject.GetNonBlittableBoolStruct().y);
+            Assert.IsFalse(TestObject.GetNonBlittableBoolStruct().z);
 
             // Manual setter
             val.w = false;
@@ -1475,39 +1455,39 @@ namespace UnitTest
             val.y = false;
             val.z = true;
             TestObject.SetNonBlittableBoolStruct(val);
-            Assert.False(TestObject.NonBlittableBoolStructProperty.w);
-            Assert.True(TestObject.NonBlittableBoolStructProperty.x);
-            Assert.False(TestObject.NonBlittableBoolStructProperty.y);
-            Assert.True(TestObject.NonBlittableBoolStructProperty.z);
+            Assert.IsFalse(TestObject.NonBlittableBoolStructProperty.w);
+            Assert.IsTrue(TestObject.NonBlittableBoolStructProperty.x);
+            Assert.IsFalse(TestObject.NonBlittableBoolStructProperty.y);
+            Assert.IsTrue(TestObject.NonBlittableBoolStructProperty.z);
 
             // Output argument
             val = default;
             TestObject.OutNonBlittableBoolStruct(out val);
-            Assert.False(val.w);
-            Assert.True(val.x);
-            Assert.False(val.y);
-            Assert.True(val.z);
+            Assert.IsFalse(val.w);
+            Assert.IsTrue(val.x);
+            Assert.IsFalse(val.y);
+            Assert.IsTrue(val.z);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestNonBlittableRefStruct()
         {
             // Property getter/setter
             // TODO: Need to either support interface inheritance or project IReference/INullable for setter
-            Assert.Equal(42, TestObject.NonBlittableRefStructProperty.ref32.Value);
+            Assert.AreEqual(42, TestObject.NonBlittableRefStructProperty.ref32.Value);
 
             // Manual getter
-            Assert.Equal(42, TestObject.GetNonBlittableRefStruct().ref32.Value);
+            Assert.AreEqual(42, TestObject.GetNonBlittableRefStruct().ref32.Value);
 
             // TODO: Manual setter
 
             // Output argument
             NonBlittableRefStruct val;
             TestObject.OutNonBlittableRefStruct(out val);
-            Assert.Equal(42, val.ref32.Value);
+            Assert.AreEqual(42, val.ref32.Value);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestComposedNonBlittableStruct()
         {
             // Property getter/setter
@@ -1519,20 +1499,20 @@ namespace UnitTest
                 refs = TestObject.NonBlittableRefStructProperty // TODO: Need to either support interface inheritance or project IReference/INullable for setter
             };
             TestObject.ComposedNonBlittableStructProperty = val;
-            Assert.Equal(42, TestObject.ComposedNonBlittableStructProperty.blittable.i32);
-            Assert.Equal("I like tacos", TestObject.ComposedNonBlittableStructProperty.strings.str);
-            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.w);
-            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.x);
-            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.y);
-            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.z);
+            Assert.AreEqual(42, TestObject.ComposedNonBlittableStructProperty.blittable.i32);
+            Assert.AreEqual("I like tacos", TestObject.ComposedNonBlittableStructProperty.strings.str);
+            Assert.IsTrue(TestObject.ComposedNonBlittableStructProperty.bools.w);
+            Assert.IsFalse(TestObject.ComposedNonBlittableStructProperty.bools.x);
+            Assert.IsTrue(TestObject.ComposedNonBlittableStructProperty.bools.y);
+            Assert.IsFalse(TestObject.ComposedNonBlittableStructProperty.bools.z);
 
             // Manual getter
-            Assert.Equal(42, TestObject.GetComposedNonBlittableStruct().blittable.i32);
-            Assert.Equal("I like tacos", TestObject.GetComposedNonBlittableStruct().strings.str);
-            Assert.True(TestObject.GetComposedNonBlittableStruct().bools.w);
-            Assert.False(TestObject.GetComposedNonBlittableStruct().bools.x);
-            Assert.True(TestObject.GetComposedNonBlittableStruct().bools.y);
-            Assert.False(TestObject.GetComposedNonBlittableStruct().bools.z);
+            Assert.AreEqual(42, TestObject.GetComposedNonBlittableStruct().blittable.i32);
+            Assert.AreEqual("I like tacos", TestObject.GetComposedNonBlittableStruct().strings.str);
+            Assert.IsTrue(TestObject.GetComposedNonBlittableStruct().bools.w);
+            Assert.IsFalse(TestObject.GetComposedNonBlittableStruct().bools.x);
+            Assert.IsTrue(TestObject.GetComposedNonBlittableStruct().bools.y);
+            Assert.IsFalse(TestObject.GetComposedNonBlittableStruct().bools.z);
 
             // Manual setter
             var blittable = val.blittable;
@@ -1548,33 +1528,33 @@ namespace UnitTest
             bools.z = true;
             val.bools = bools;
             TestObject.SetComposedNonBlittableStruct(val);
-            Assert.Equal(8, TestObject.ComposedNonBlittableStructProperty.blittable.i32);
-            Assert.Equal("Hello, world", TestObject.ComposedNonBlittableStructProperty.strings.str);
-            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.w);
-            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.x);
-            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.y);
-            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.z);
+            Assert.AreEqual(8, TestObject.ComposedNonBlittableStructProperty.blittable.i32);
+            Assert.AreEqual("Hello, world", TestObject.ComposedNonBlittableStructProperty.strings.str);
+            Assert.IsFalse(TestObject.ComposedNonBlittableStructProperty.bools.w);
+            Assert.IsTrue(TestObject.ComposedNonBlittableStructProperty.bools.x);
+            Assert.IsFalse(TestObject.ComposedNonBlittableStructProperty.bools.y);
+            Assert.IsTrue(TestObject.ComposedNonBlittableStructProperty.bools.z);
 
             // Output argument
             val = default;
             TestObject.OutComposedNonBlittableStruct(out val);
-            Assert.Equal(8, val.blittable.i32);
-            Assert.Equal("Hello, world", val.strings.str);
-            Assert.False(val.bools.w);
-            Assert.True(val.bools.x);
-            Assert.False(val.bools.y);
-            Assert.True(val.bools.z);
+            Assert.AreEqual(8, val.blittable.i32);
+            Assert.AreEqual("Hello, world", val.strings.str);
+            Assert.IsFalse(val.bools.w);
+            Assert.IsTrue(val.bools.x);
+            Assert.IsFalse(val.bools.y);
+            Assert.IsTrue(val.bools.z);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBlittableArrays()
         {
             int[] arr = new[] { 2, 4, 6, 8 };
             TestObject.SetInts(arr);
-            Assert.True(TestObject.GetInts().SequenceEqual(arr));
+            Assert.IsTrue(TestObject.GetInts().SequenceEqual(arr));
 
             TestObject.SetInts(null);
-            Assert.Empty(TestObject.GetInts());
+            Assert.IsNull(TestObject.GetInts());
         }
 
         [ComImport]
@@ -1593,7 +1573,7 @@ namespace UnitTest
         }
 
         /* TODO
-        [Fact]
+        [TestMethod]
         public unsafe void TestFactoryCast()
         {
             IntPtr hstr;
@@ -1601,35 +1581,35 @@ namespace UnitTest
             // Access nonstatic class factory 
             var instanceFactory = Class.As<IStringableInterop>();
             instanceFactory.ToString(out hstr);
-            Assert.Equal("Class", HStringMarshaller.ConvertToManaged((void*)hstr));
+            Assert.AreEqual("Class", HStringMarshaller.ConvertToManaged((void*)hstr));
 
             // Access static class factory
             var staticFactory = ComImports.As<IStringableInterop>();
             staticFactory.ToString(out hstr);
-            Assert.Equal("ComImports", HStringMarshaller.ConvertToManaged((void*)hstr));
+            Assert.AreEqual("ComImports", HStringMarshaller.ConvertToManaged((void*)hstr));
         }
         */
 
-        [Fact]
+        [TestMethod]
         public unsafe void TestMarshalString_FromAbiUnsafe()
         {
             // The span must be empty and point to a null-terminated buffer (HSTRING-s are null-terminated too)
             var span = HStringMarshaller.ConvertToManagedUnsafe(null);
-            Assert.Equal(0, span.Length);
-            Assert.True(MemoryMarshal.GetReference(span) == '\0');
+            Assert.AreEqual(0, span.Length);
+            Assert.IsTrue(MemoryMarshal.GetReference(span) == '\0');
 
             // Same thing but with round-tripping from a null string
             var hstr = HStringMarshaller.ConvertToUnmanaged(null);
             span = HStringMarshaller.ConvertToManagedUnsafe(hstr);
-            Assert.Equal(0, span.Length);
-            Assert.True(MemoryMarshal.GetReference(span) == '\0');
+            Assert.AreEqual(0, span.Length);
+            Assert.IsTrue(MemoryMarshal.GetReference(span) == '\0');
             HStringMarshaller.Free(hstr);
 
             // Same thing but with an empty string (equivalent to null)
             hstr = HStringMarshaller.ConvertToUnmanaged("");
             span = HStringMarshaller.ConvertToManagedUnsafe(hstr);
-            Assert.Equal(0, span.Length);
-            Assert.True(MemoryMarshal.GetReference(span) == '\0');
+            Assert.AreEqual(0, span.Length);
+            Assert.IsTrue(MemoryMarshal.GetReference(span) == '\0');
             HStringMarshaller.Free(hstr);
 
             // Marshal from some non-null, non-empty string. We want to check that both the span has the expected content,
@@ -1637,97 +1617,97 @@ namespace UnitTest
             // before, because the memory should point to the HSTRING buffer, which is always null-terminated as well.
             hstr = HStringMarshaller.ConvertToUnmanaged(nameof(TestMarshalString_FromAbiUnsafe));
             span = HStringMarshaller.ConvertToManagedUnsafe(hstr);
-            Assert.True(span.SequenceEqual(nameof(TestMarshalString_FromAbiUnsafe)));
-            Assert.True(Unsafe.Add(ref MemoryMarshal.GetReference(span), span.Length) == '\0');
+            Assert.IsTrue(span.SequenceEqual(nameof(TestMarshalString_FromAbiUnsafe)));
+            Assert.IsTrue(Unsafe.Add(ref MemoryMarshal.GetReference(span), span.Length) == '\0');
             HStringMarshaller.Free(hstr);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestFundamentalGeneric()
         {
             var ints = TestObject.GetIntVector();
-            Assert.Equal(10, ints.Count);
+            Assert.AreEqual(10, ints.Count);
             for (int i = 0; i < 10; ++i)
             {
-                Assert.Equal(i, ints[i]);
+                Assert.AreEqual(i, ints[i]);
             }
 
             var bools = TestObject.GetBoolVector();
-            Assert.Equal(4, bools.Count);
+            Assert.AreEqual(4, bools.Count);
             for (int i = 0; i < 4; ++i)
             {
-                Assert.Equal(i % 2 == 0, bools[i]);
+                Assert.AreEqual(i % 2 == 0, bools[i]);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStringGeneric()
         {
             var strings = TestObject.GetStringVector();
-            Assert.Equal(5, strings.Count);
+            Assert.AreEqual(5, strings.Count);
             for (int i = 0; i < 5; ++i)
             {
-                Assert.Equal("String" + i, strings[i]);
+                Assert.AreEqual("String" + i, strings[i]);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStructGeneric()
         {
             var blittable = TestObject.GetBlittableStructVector();
-            Assert.Equal(5, blittable.Count);
+            Assert.AreEqual(5, blittable.Count);
             for (int i = 0; i < 5; ++i)
             {
-                Assert.Equal(i, blittable[i].blittable.i32);
+                Assert.AreEqual(i, blittable[i].blittable.i32);
             }
 
             var nonblittable = TestObject.GetNonBlittableStructVector();
-            Assert.Equal(3, nonblittable.Count);
+            Assert.AreEqual(3, nonblittable.Count);
             for (int i = 0; i < 3; ++i)
             {
                 var val = nonblittable[i];
-                Assert.Equal(i, val.blittable.i32);
-                Assert.Equal("String" + i, val.strings.str);
-                Assert.Equal(i % 2 == 0, val.bools.w);
-                Assert.Equal(i % 2 == 1, val.bools.x);
-                Assert.Equal(i % 2 == 0, val.bools.y);
-                Assert.Equal(i % 2 == 1, val.bools.z);
-                Assert.Equal(i, val.refs.ref32.Value);
+                Assert.AreEqual(i, val.blittable.i32);
+                Assert.AreEqual("String" + i, val.strings.str);
+                Assert.AreEqual(i % 2 == 0, val.bools.w);
+                Assert.AreEqual(i % 2 == 1, val.bools.x);
+                Assert.AreEqual(i % 2 == 0, val.bools.y);
+                Assert.AreEqual(i % 2 == 1, val.bools.z);
+                Assert.AreEqual(i, val.refs.ref32.Value);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestValueUnboxing()
         {
             var objs = TestObject.GetObjectVector();
-            Assert.Equal(3, objs.Count);
+            Assert.AreEqual(3, objs.Count);
             for (int i = 0; i < 3; ++i)
             {
-                Assert.Equal(i, (int)objs[i]);
+                Assert.AreEqual(i, (int)objs[i]);
             }
         }
 
-        [Fact]
+        [TestMethod]
         void TestInterfaceGeneric()
         {
             var objs = TestObject.GetInterfaceVector();
-            Assert.Equal(3, objs.Count);
+            Assert.AreEqual(3, objs.Count);
             TestObject.ReadWriteProperty = 42;
             for (int i = 0; i < 3; ++i)
             {
                 var obj = objs[i];
-                Assert.Same(obj, TestObject);
-                Assert.Equal(42, obj.ReadWriteProperty);
+                Assert.AreSame(obj, TestObject);
+                Assert.AreEqual(42, obj.ReadWriteProperty);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestIterable()
         {
             var ints_in = new int[] { 0, 1, 2 };
             TestObject.SetIntIterable(ints_in);
             var ints_out = TestObject.GetIntIterable();
-            Assert.True(ints_in.SequenceEqual(ints_out));
+            Assert.IsTrue(ints_in.SequenceEqual(ints_out));
         }
 
         class ManagedBindableObservable : IBindableObservableVector
@@ -1811,70 +1791,70 @@ namespace UnitTest
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBindable()
         {
             var expected = new int[] { 0, 1, 2 };
 
             TestObject.BindableIterableProperty = expected;
-            Assert.Equal(expected, TestObject.BindableIterableProperty);
+            Assert.AreEqual(expected, TestObject.BindableIterableProperty);
             TestObject.CallForBindableIterable(() => expected);
             TestObject.BindableIterablePropertyChanged +=
-                (object sender, IEnumerable value) => Assert.Equal(expected, value);
+                (object sender, IEnumerable value) => Assert.AreEqual(expected, value);
             TestObject.RaiseBindableIterableChanged();
 
             TestObject.BindableVectorProperty = expected;
-            Assert.Equal(expected, TestObject.BindableVectorProperty);
+            Assert.AreEqual(expected, TestObject.BindableVectorProperty);
             TestObject.CallForBindableVector(() => expected);
             TestObject.BindableVectorPropertyChanged +=
-                (object sender, IList value) => Assert.Equal(expected, value);
+                (object sender, IList value) => Assert.AreEqual(expected, value);
             TestObject.RaiseBindableVectorChanged();
 
             var observable = new ManagedBindableObservable(expected);
             TestObject.BindableObservableVectorProperty = observable;
             observable.Add(3);
-            Assert.Equal(6, observable.Observation);
+            Assert.AreEqual(6, observable.Observation);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestClassGeneric()
         {
             var objs = TestObject.GetClassVector();
-            Assert.Equal(3, objs.Count);
+            Assert.AreEqual(3, objs.Count);
             for (int i = 0; i < 3; ++i)
             {
                 var obj = objs[i];
-                Assert.Same(obj, TestObject);
-                Assert.Equal(TestObject, objs[i]);
+                Assert.AreSame(obj, TestObject);
+                Assert.AreEqual(TestObject, objs[i]);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestSimpleCCWs()
         {
             var managedProperties = new ManagedProperties(42);
             TestObject.CopyProperties(managedProperties);
-            Assert.Equal(managedProperties.ReadWriteProperty, TestObject.ReadWriteProperty);
+            Assert.AreEqual(managedProperties.ReadWriteProperty, TestObject.ReadWriteProperty);
         }
 
-        [Fact]
+        [TestMethod]
         public unsafe void TestCCWMarshaler()
         {
             Guid IID_IMarshal = new Guid("00000003-0000-0000-c000-000000000046");
             var managedProperties = new ManagedProperties(42);
             using WindowsRuntimeObjectReferenceValue ccw = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(managedProperties, typeof(IProperties1).GUID);
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw.GetThisPtrUnsafe(), in IID_IMarshal, out var marshalCCW));
-            Assert.NotEqual(IntPtr.Zero, marshalCCW);
+            Assert.AreNotEqual(IntPtr.Zero, marshalCCW);
 
             var array = new byte[] { 0x01 };
             var buff = array.AsBuffer();
             using WindowsRuntimeObjectReferenceValue ccw2 = WindowsRuntimeInterfaceMarshaller<IBuffer>.ConvertToUnmanaged(buff, typeof(IBuffer).GUID);
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw2.GetThisPtrUnsafe(), in IID_IMarshal, out var marshalCCW2));
-            Assert.NotEqual(IntPtr.Zero, marshalCCW2);
+            Assert.AreNotEqual(IntPtr.Zero, marshalCCW2);
         }
 
 #if NET
-        [Fact]
+        [TestMethod]
         public void TestDelegateCCWMarshaler()
         {
             CreateAndValidateStreamedFile().Wait();
@@ -1887,9 +1867,9 @@ namespace UnitTest
             using var stream = inputStream.AsStreamForRead();
             byte[] buff = new byte[50];
             var numRead = stream.Read(buff, 0, 50);
-            Assert.True(numRead > 0);
+            Assert.IsTrue(numRead > 0);
             var result = System.Text.Encoding.Default.GetString(buff, 0, numRead).TrimEnd(null);
-            Assert.Equal("Success!", result);
+            Assert.AreEqual("Success!", result);
         }
 
         private static async void StreamedFileWriter(StreamedFileDataRequest request)
@@ -1910,24 +1890,24 @@ namespace UnitTest
         }
 #endif
 
-        [Fact]
+        [TestMethod]
         public void TestWeakReference()
         {
             var managedProperties = new ManagedProperties(42);
             TestObject.CopyPropertiesViaWeakReference(managedProperties);
-            Assert.Equal(managedProperties.ReadWriteProperty, TestObject.ReadWriteProperty);
+            Assert.AreEqual(managedProperties.ReadWriteProperty, TestObject.ReadWriteProperty);
         }
 
-        [Fact]
+        [TestMethod]
         public unsafe void TestCCWIdentity()
         {
             var managedProperties = new ManagedProperties(42);
             using WindowsRuntimeObjectReferenceValue ccw1 = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(managedProperties, typeof(IProperties1).GUID);
             using WindowsRuntimeObjectReferenceValue ccw2 = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(managedProperties, typeof(IProperties1).GUID);
-            Assert.Equal((nint)ccw1.GetThisPtrUnsafe(), (nint)ccw2.GetThisPtrUnsafe());
+            Assert.AreEqual((nint)ccw1.GetThisPtrUnsafe(), (nint)ccw2.GetThisPtrUnsafe());
         }
 
-        [Fact]
+        [TestMethod]
         public void TestInterfaceCCWLifetime()
         {
             unsafe static (WeakReference, WindowsRuntimeObjectReference) CreateCCW()
@@ -1945,7 +1925,7 @@ namespace UnitTest
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
 
-                Assert.True(reference.IsAlive);
+                Assert.IsTrue(reference.IsAlive);
                 return (reference, new WeakReference(ccw));
             }
 
@@ -1961,10 +1941,10 @@ namespace UnitTest
             // Run GC one more time to collect the managed object.
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Assert.False(obj.IsAlive);
+            Assert.IsFalse(obj.IsAlive);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestDelegateCCWLifetime()
         {
             unsafe static (WeakReference, WindowsRuntimeObjectReference) CreateCCW(Action<object, int> action)
@@ -1990,7 +1970,7 @@ namespace UnitTest
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
 
-                Assert.True(reference.IsAlive);
+                Assert.IsTrue(reference.IsAlive);
                 return (reference, new WeakReference(ccw));
             }
 
@@ -2006,10 +1986,10 @@ namespace UnitTest
             // Run GC one more time to collect the managed object.
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Assert.False(obj.IsAlive);
+            Assert.IsFalse(obj.IsAlive);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestCCWIdentityThroughRefCountZero()
         {
             unsafe static (WeakReference, IntPtr) CreateCCWReference(IProperties1 properties)
@@ -2026,25 +2006,27 @@ namespace UnitTest
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            Assert.False(ccwWeakReference.IsAlive);
+            Assert.IsFalse(ccwWeakReference.IsAlive);
 
             var (_, ptr2) = CreateCCWReference(obj);
 
-            Assert.Equal(ptr, ptr2);
+            Assert.AreEqual(ptr, ptr2);
         }
 
-        [Fact()]
+        [TestMethod]
         public void TestExceptionPropagation_Managed()
         {
             var exceptionToThrow = new ArgumentNullException("foo");
             var properties = new ThrowingManagedProperties(exceptionToThrow);
-            Assert.Throws<ArgumentNullException>("foo", () => TestObject.CopyProperties(properties));
+            var ex = Assert.ThrowsException<ArgumentNullException>(() => TestObject.CopyProperties(properties));
+            Assert.AreEqual("foo", ex.ParamName);
 
             var properties2 = new ThrowingManagedProperties2(TestObject);
-            Assert.Throws<ArgumentNullException>("foo", () => TestObject.CopyProperties(properties2));
+            var ex2 = Assert.ThrowsException<ArgumentNullException>(() => TestObject.CopyProperties(properties2));
+            Assert.AreEqual("foo", ex2.ParamName);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestExceptionPropagation()
         {
             VerifyException<ArgumentException>(() => TestObject.ThrowExceptionWithMessage("Parameter1", false), "Parameter1");
@@ -2071,15 +2053,15 @@ namespace UnitTest
                 try
                 {
                     action();
-                    Assert.True(false);
+                    Assert.IsTrue(false);
                 }
                 catch (T ex)
                 {
-                    Assert.Contains(expectedMessage, ex.Message);
+                    StringAssert.Contains(expectedMessage, ex.Message);
                 }
                 catch (Exception)
                 {
-                    Assert.True(false);
+                    Assert.IsTrue(false);
                 }
             }
         }
@@ -2166,75 +2148,75 @@ namespace UnitTest
             await TestObject.DoitAsync();
         }
 
-        [Fact]
+        [TestMethod]
         public void TestAsyncAction()
         {
             var task = InvokeDoitAsync();
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(5000));
-            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+            Assert.IsTrue(task.Wait(5000));
+            Assert.AreEqual(TaskStatus.RanToCompletion, task.Status);
 
             task = InvokeDoitAsync();
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.Equal(E_FAIL, e.InnerException.HResult);
-            Assert.Equal(TaskStatus.Faulted, task.Status);
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.AreEqual(E_FAIL, e.InnerException.HResult);
+            Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
             var src = new CancellationTokenSource();
             task = TestObject.DoitAsync().AsTask(src.Token);
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.True(e.InnerException is TaskCanceledException);
-            Assert.Equal(TaskStatus.Canceled, task.Status);
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.IsTrue(e.InnerException is TaskCanceledException);
+            Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestAsyncActionWait()
         {
             var asyncAction = TestObject.DoitAsync();
             TestObject.CompleteAsync();
             asyncAction.AsTask().Wait();
-            Assert.Equal(AsyncStatus.Completed, asyncAction.Status);
+            Assert.AreEqual(AsyncStatus.Completed, asyncAction.Status);
 
             asyncAction = TestObject.DoitAsync();
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => asyncAction.AsTask().Wait());
-            Assert.Equal(E_FAIL, e.InnerException.HResult);
-            Assert.Equal(AsyncStatus.Error, asyncAction.Status);
+            var e = Assert.ThrowsException<AggregateException>(() => asyncAction.AsTask().Wait());
+            Assert.AreEqual(E_FAIL, e.InnerException.HResult);
+            Assert.AreEqual(AsyncStatus.Error, asyncAction.Status);
 
             asyncAction = TestObject.DoitAsync();
             asyncAction.Cancel();
-            e = Assert.Throws<AggregateException>(() => asyncAction.AsTask().Wait());
-            Assert.True(e.InnerException is TaskCanceledException);
-            Assert.Equal(AsyncStatus.Canceled, asyncAction.Status);
+            e = Assert.ThrowsException<AggregateException>(() => asyncAction.AsTask().Wait());
+            Assert.IsTrue(e.InnerException is TaskCanceledException);
+            Assert.AreEqual(AsyncStatus.Canceled, asyncAction.Status);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestAsyncActionRoundTrip()
         {
             var task = InvokeDoitAsync().AsAsyncAction().AsTask();
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(5000));
-            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+            Assert.IsTrue(task.Wait(5000));
+            Assert.AreEqual(TaskStatus.RanToCompletion, task.Status);
 
             task = InvokeDoitAsync().AsAsyncAction().AsTask();
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.Equal(E_FAIL, e.InnerException.HResult);
-            Assert.Equal(TaskStatus.Faulted, task.Status);
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.AreEqual(E_FAIL, e.InnerException.HResult);
+            Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
             var src = new CancellationTokenSource();
             task = InvokeDoitAsync().AsAsyncAction().AsTask(src.Token);
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.True(e.InnerException is TaskCanceledException);
-            Assert.Equal(TaskStatus.Canceled, task.Status);
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.IsTrue(e.InnerException is TaskCanceledException);
+            Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
 
         async Task InvokeDoitAsyncWithProgress()
@@ -2242,7 +2224,7 @@ namespace UnitTest
             await TestObject.DoitAsyncWithProgress();
         }
 
-        [Fact]
+        [TestMethod]
         public void TestAsyncActionWithProgress()
         {
             int progress = 0;
@@ -2256,48 +2238,48 @@ namespace UnitTest
             for (int i = 1; i <= 10; ++i)
             {
                 TestObject.AdvanceAsync(10);
-                Assert.True(evt.WaitOne(5000));
-                Assert.Equal(10 * i, progress);
+                Assert.IsTrue(evt.WaitOne(5000));
+                Assert.AreEqual(10 * i, progress);
             }
 
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(5000));
-            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+            Assert.IsTrue(task.Wait(5000));
+            Assert.AreEqual(TaskStatus.RanToCompletion, task.Status);
 
             task = InvokeDoitAsyncWithProgress();
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.Equal(E_FAIL, e.InnerException.HResult);
-            Assert.Equal(TaskStatus.Faulted, task.Status);
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.AreEqual(E_FAIL, e.InnerException.HResult);
+            Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
             var src = new CancellationTokenSource();
             task = TestObject.DoitAsyncWithProgress().AsTask(src.Token);
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.True(e.InnerException is TaskCanceledException);
-            Assert.Equal(TaskStatus.Canceled, task.Status);
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.IsTrue(e.InnerException is TaskCanceledException);
+            Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestAsyncActionWithProgressWait()
         {
             var asyncAction = TestObject.DoitAsyncWithProgress();
             TestObject.CompleteAsync();
             asyncAction.AsTask().Wait();
-            Assert.Equal(AsyncStatus.Completed, asyncAction.Status);
+            Assert.AreEqual(AsyncStatus.Completed, asyncAction.Status);
 
             asyncAction = TestObject.DoitAsyncWithProgress();
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => asyncAction.AsTask().Wait());
-            Assert.Equal(E_FAIL, e.InnerException.HResult);
-            Assert.Equal(AsyncStatus.Error, asyncAction.Status);
+            var e = Assert.ThrowsException<AggregateException>(() => asyncAction.AsTask().Wait());
+            Assert.AreEqual(E_FAIL, e.InnerException.HResult);
+            Assert.AreEqual(AsyncStatus.Error, asyncAction.Status);
 
             asyncAction = TestObject.DoitAsyncWithProgress();
             asyncAction.Cancel();
-            e = Assert.Throws<AggregateException>(() => asyncAction.AsTask().Wait());
-            Assert.True(e.InnerException is TaskCanceledException);
-            Assert.Equal(AsyncStatus.Canceled, asyncAction.Status);
+            e = Assert.ThrowsException<AggregateException>(() => asyncAction.AsTask().Wait());
+            Assert.IsTrue(e.InnerException is TaskCanceledException);
+            Assert.AreEqual(AsyncStatus.Canceled, asyncAction.Status);
         }
 
         async Task<int> InvokeAddAsync(int lhs, int rhs)
@@ -2305,78 +2287,78 @@ namespace UnitTest
             return await TestObject.AddAsync(lhs, rhs);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestAsyncOperation()
         {
             var task = InvokeAddAsync(42, 8);
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(10000));
-            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
-            Assert.Equal(50, task.Result);
+            Assert.IsTrue(task.Wait(10000));
+            Assert.AreEqual(TaskStatus.RanToCompletion, task.Status);
+            Assert.AreEqual(50, task.Result);
 
             task = InvokeAddAsync(0, 0);
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.Equal(E_FAIL, e.InnerException.HResult);
-            Assert.Equal(TaskStatus.Faulted, task.Status);
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.AreEqual(E_FAIL, e.InnerException.HResult);
+            Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
             var src = new CancellationTokenSource();
             task = TestObject.AddAsync(0, 0).AsTask(src.Token);
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.True(e.InnerException is TaskCanceledException);
-            Assert.Equal(TaskStatus.Canceled, task.Status);
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.IsTrue(e.InnerException is TaskCanceledException);
+            Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestAsyncOperationWait()
         {
             var asyncOperation = TestObject.AddAsync(42, 8);
             TestObject.CompleteAsync();
             asyncOperation.AsTask().Wait();
-            Assert.Equal(AsyncStatus.Completed, asyncOperation.Status);
+            Assert.AreEqual(AsyncStatus.Completed, asyncOperation.Status);
 
             asyncOperation = TestObject.AddAsync(42, 8);
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => asyncOperation.AsTask().Wait());
-            Assert.Equal(E_FAIL, e.InnerException.HResult);
-            Assert.Equal(AsyncStatus.Error, asyncOperation.Status);
+            var e = Assert.ThrowsException<AggregateException>(() => asyncOperation.AsTask().Wait());
+            Assert.AreEqual(E_FAIL, e.InnerException.HResult);
+            Assert.AreEqual(AsyncStatus.Error, asyncOperation.Status);
 
             asyncOperation = TestObject.AddAsync(42, 8);
             asyncOperation.Cancel();
-            e = Assert.Throws<AggregateException>(() => asyncOperation.AsTask().Wait());
-            Assert.True(e.InnerException is TaskCanceledException);
-            Assert.Equal(AsyncStatus.Canceled, asyncOperation.Status);
+            e = Assert.ThrowsException<AggregateException>(() => asyncOperation.AsTask().Wait());
+            Assert.IsTrue(e.InnerException is TaskCanceledException);
+            Assert.AreEqual(AsyncStatus.Canceled, asyncOperation.Status);
         }
 
 
-        [Fact]
+        [TestMethod]
         public void TestAsyncOperationRoundTrip()
         {
             var task = InvokeAddAsync(42, 8).AsAsyncOperation().AsTask();
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(5000));
-            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
-            Assert.Equal(50, task.Result);
+            Assert.IsTrue(task.Wait(5000));
+            Assert.AreEqual(TaskStatus.RanToCompletion, task.Status);
+            Assert.AreEqual(50, task.Result);
 
             task = InvokeAddAsync(0, 0).AsAsyncOperation().AsTask();
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.Equal(E_FAIL, e.InnerException.HResult);
-            Assert.Equal(TaskStatus.Faulted, task.Status);
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.AreEqual(E_FAIL, e.InnerException.HResult);
+            Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
             var src = new CancellationTokenSource();
             task = InvokeAddAsync(0, 0).AsAsyncOperation().AsTask(src.Token);
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.True(e.InnerException is TaskCanceledException);
-            Assert.Equal(TaskStatus.Canceled, task.Status);
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.IsTrue(e.InnerException is TaskCanceledException);
+            Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
 
         async Task<int> InvokeAddAsyncWithProgress(int lhs, int rhs)
@@ -2384,7 +2366,7 @@ namespace UnitTest
             return await TestObject.AddAsyncWithProgress(lhs, rhs);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestAsyncOperationWithProgress()
         {
             int progress = 0;
@@ -2398,189 +2380,189 @@ namespace UnitTest
             for (int i = 1; i <= 10; ++i)
             {
                 TestObject.AdvanceAsync(10);
-                Assert.True(evt.WaitOne(5000));
-                Assert.Equal(10 * i, progress);
+                Assert.IsTrue(evt.WaitOne(5000));
+                Assert.AreEqual(10 * i, progress);
             }
 
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(5000));
-            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
-            Assert.Equal(50, task.Result);
+            Assert.IsTrue(task.Wait(5000));
+            Assert.AreEqual(TaskStatus.RanToCompletion, task.Status);
+            Assert.AreEqual(50, task.Result);
 
             task = InvokeAddAsyncWithProgress(0, 0);
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.Equal(E_FAIL, e.InnerException.HResult);
-            Assert.Equal(TaskStatus.Faulted, task.Status);
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.AreEqual(E_FAIL, e.InnerException.HResult);
+            Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
             var src = new CancellationTokenSource();
             task = TestObject.AddAsyncWithProgress(0, 0).AsTask(src.Token);
-            Assert.False(task.Wait(25));
+            Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.Throws<AggregateException>(() => task.Wait(5000));
-            Assert.True(e.InnerException is TaskCanceledException);
-            Assert.Equal(TaskStatus.Canceled, task.Status);
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
+            Assert.IsTrue(e.InnerException is TaskCanceledException);
+            Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestAsyncOperationWithProgressWait()
         {
             var asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
             TestObject.CompleteAsync();
             asyncOperation.AsTask().Wait();
-            Assert.Equal(AsyncStatus.Completed, asyncOperation.Status);
+            Assert.AreEqual(AsyncStatus.Completed, asyncOperation.Status);
 
             asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.Throws<AggregateException>(() => asyncOperation.AsTask().Wait());
-            Assert.Equal(E_FAIL, e.InnerException.HResult);
-            Assert.Equal(AsyncStatus.Error, asyncOperation.Status);
+            var e = Assert.ThrowsException<AggregateException>(() => asyncOperation.AsTask().Wait());
+            Assert.AreEqual(E_FAIL, e.InnerException.HResult);
+            Assert.AreEqual(AsyncStatus.Error, asyncOperation.Status);
 
             asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
             asyncOperation.Cancel();
-            e = Assert.Throws<AggregateException>(() => asyncOperation.AsTask().Wait());
-            Assert.True(e.InnerException is TaskCanceledException);
-            Assert.Equal(AsyncStatus.Canceled, asyncOperation.Status);
+            e = Assert.ThrowsException<AggregateException>(() => asyncOperation.AsTask().Wait());
+            Assert.IsTrue(e.InnerException is TaskCanceledException);
+            Assert.AreEqual(AsyncStatus.Canceled, asyncOperation.Status);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestPointTypeMapping()
         {
             var pt = new Point { X = 3.14F, Y = 42 };
             TestObject.PointProperty = pt;
-            Assert.Equal(pt.X, TestObject.PointProperty.X);
-            Assert.Equal(pt.Y, TestObject.PointProperty.Y);
-            Assert.True(TestObject.PointProperty == pt);
-            Assert.Equal(pt, TestObject.GetPointReference().Value);
+            Assert.AreEqual(pt.X, TestObject.PointProperty.X);
+            Assert.AreEqual(pt.Y, TestObject.PointProperty.Y);
+            Assert.IsTrue(TestObject.PointProperty == pt);
+            Assert.AreEqual(pt, TestObject.GetPointReference().Value);
 
             var vector2 = TestObject.PointProperty.ToVector2();
-            Assert.Equal(pt.X, vector2.X);
-            Assert.Equal(pt.Y, vector2.Y);
+            Assert.AreEqual(pt.X, vector2.X);
+            Assert.AreEqual(pt.Y, vector2.Y);
 
             TestObject.PointProperty = vector2.ToPoint();
-            Assert.Equal(pt.X, TestObject.PointProperty.X);
-            Assert.Equal(pt.Y, TestObject.PointProperty.Y);
+            Assert.AreEqual(pt.X, TestObject.PointProperty.X);
+            Assert.AreEqual(pt.Y, TestObject.PointProperty.Y);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestRectTypeMapping()
         {
             var rect = new Rect { X = 3.14F, Y = 42, Height = 3.14F, Width = 42 };
             TestObject.RectProperty = rect;
-            Assert.Equal(rect.X, TestObject.RectProperty.X);
-            Assert.Equal(rect.Y, TestObject.RectProperty.Y);
-            Assert.Equal(rect.Height, TestObject.RectProperty.Height);
-            Assert.Equal(rect.Width, TestObject.RectProperty.Width);
-            Assert.True(TestObject.RectProperty == rect);
+            Assert.AreEqual(rect.X, TestObject.RectProperty.X);
+            Assert.AreEqual(rect.Y, TestObject.RectProperty.Y);
+            Assert.AreEqual(rect.Height, TestObject.RectProperty.Height);
+            Assert.AreEqual(rect.Width, TestObject.RectProperty.Width);
+            Assert.IsTrue(TestObject.RectProperty == rect);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestSizeTypeMapping()
         {
             var size = new Size { Height = 3.14F, Width = 42 };
             TestObject.SizeProperty = size;
-            Assert.Equal(size.Height, TestObject.SizeProperty.Height);
-            Assert.Equal(size.Width, TestObject.SizeProperty.Width);
-            Assert.True(TestObject.SizeProperty == size);
+            Assert.AreEqual(size.Height, TestObject.SizeProperty.Height);
+            Assert.AreEqual(size.Width, TestObject.SizeProperty.Width);
+            Assert.IsTrue(TestObject.SizeProperty == size);
 
             var vector2 = TestObject.SizeProperty.ToVector2();
-            Assert.Equal(size.Width, vector2.X);
-            Assert.Equal(size.Height, vector2.Y);
+            Assert.AreEqual(size.Width, vector2.X);
+            Assert.AreEqual(size.Height, vector2.Y);
 
             TestObject.SizeProperty = vector2.ToSize();
-            Assert.Equal(size.Width, TestObject.SizeProperty.Width);
-            Assert.Equal(size.Height, TestObject.SizeProperty.Height);
+            Assert.AreEqual(size.Width, TestObject.SizeProperty.Width);
+            Assert.AreEqual(size.Height, TestObject.SizeProperty.Height);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestColorTypeMapping()
         {
             var color = new Color { A = 0x20, R = 0x40, G = 0x60, B = 0x80 };
             TestObject.ColorProperty = color;
-            Assert.Equal(color.A, TestObject.ColorProperty.A);
-            Assert.Equal(color.R, TestObject.ColorProperty.R);
-            Assert.Equal(color.G, TestObject.ColorProperty.G);
-            Assert.Equal(color.B, TestObject.ColorProperty.B);
-            Assert.True(TestObject.ColorProperty == color);
+            Assert.AreEqual(color.A, TestObject.ColorProperty.A);
+            Assert.AreEqual(color.R, TestObject.ColorProperty.R);
+            Assert.AreEqual(color.G, TestObject.ColorProperty.G);
+            Assert.AreEqual(color.B, TestObject.ColorProperty.B);
+            Assert.IsTrue(TestObject.ColorProperty == color);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestCornerRadiusTypeMapping()
         {
             var cornerRadius = new CornerRadius { TopLeft = 1, TopRight = 2, BottomRight = 3, BottomLeft = 4 };
             TestObject.CornerRadiusProperty = cornerRadius;
-            Assert.Equal(cornerRadius.TopLeft, TestObject.CornerRadiusProperty.TopLeft);
-            Assert.Equal(cornerRadius.TopRight, TestObject.CornerRadiusProperty.TopRight);
-            Assert.Equal(cornerRadius.BottomRight, TestObject.CornerRadiusProperty.BottomRight);
-            Assert.Equal(cornerRadius.BottomLeft, TestObject.CornerRadiusProperty.BottomLeft);
-            Assert.True(TestObject.CornerRadiusProperty == cornerRadius);
+            Assert.AreEqual(cornerRadius.TopLeft, TestObject.CornerRadiusProperty.TopLeft);
+            Assert.AreEqual(cornerRadius.TopRight, TestObject.CornerRadiusProperty.TopRight);
+            Assert.AreEqual(cornerRadius.BottomRight, TestObject.CornerRadiusProperty.BottomRight);
+            Assert.AreEqual(cornerRadius.BottomLeft, TestObject.CornerRadiusProperty.BottomLeft);
+            Assert.IsTrue(TestObject.CornerRadiusProperty == cornerRadius);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestDurationTypeMapping()
         {
             var duration = new Duration(TimeSpan.FromTicks(42));
             TestObject.DurationProperty = duration;
-            Assert.Equal(duration.TimeSpan, TestObject.DurationProperty.TimeSpan);
-            Assert.True(TestObject.DurationProperty == duration);
+            Assert.AreEqual(duration.TimeSpan, TestObject.DurationProperty.TimeSpan);
+            Assert.IsTrue(TestObject.DurationProperty == duration);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestGridLengthTypeMapping()
         {
             var gridLength = new GridLength(42, GridUnitType.Pixel);
             TestObject.GridLengthProperty = gridLength;
-            Assert.Equal(gridLength.GridUnitType, TestObject.GridLengthProperty.GridUnitType);
-            Assert.Equal(gridLength.Value, TestObject.GridLengthProperty.Value);
-            Assert.True(TestObject.GridLengthProperty == gridLength);
+            Assert.AreEqual(gridLength.GridUnitType, TestObject.GridLengthProperty.GridUnitType);
+            Assert.AreEqual(gridLength.Value, TestObject.GridLengthProperty.Value);
+            Assert.IsTrue(TestObject.GridLengthProperty == gridLength);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestThicknessTypeMapping()
         {
             var thickness = new Thickness { Left = 1, Top = 2, Right = 3, Bottom = 4 };
             TestObject.ThicknessProperty = thickness;
-            Assert.Equal(thickness.Left, TestObject.ThicknessProperty.Left);
-            Assert.Equal(thickness.Top, TestObject.ThicknessProperty.Top);
-            Assert.Equal(thickness.Right, TestObject.ThicknessProperty.Right);
-            Assert.Equal(thickness.Bottom, TestObject.ThicknessProperty.Bottom);
-            Assert.True(TestObject.ThicknessProperty == thickness);
+            Assert.AreEqual(thickness.Left, TestObject.ThicknessProperty.Left);
+            Assert.AreEqual(thickness.Top, TestObject.ThicknessProperty.Top);
+            Assert.AreEqual(thickness.Right, TestObject.ThicknessProperty.Right);
+            Assert.AreEqual(thickness.Bottom, TestObject.ThicknessProperty.Bottom);
+            Assert.IsTrue(TestObject.ThicknessProperty == thickness);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestGeneratorPositionTypeMapping()
         {
             var generatorPosition = new GeneratorPosition { Index = 1, Offset = 2 };
             TestObject.GeneratorPositionProperty = generatorPosition;
-            Assert.Equal(generatorPosition.Index, TestObject.GeneratorPositionProperty.Index);
-            Assert.Equal(generatorPosition.Offset, TestObject.GeneratorPositionProperty.Offset);
-            Assert.True(TestObject.GeneratorPositionProperty == generatorPosition);
+            Assert.AreEqual(generatorPosition.Index, TestObject.GeneratorPositionProperty.Index);
+            Assert.AreEqual(generatorPosition.Offset, TestObject.GeneratorPositionProperty.Offset);
+            Assert.IsTrue(TestObject.GeneratorPositionProperty == generatorPosition);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestMatrixTypeMapping()
         {
             var matrix = new Matrix { M11 = 11, M12 = 12, M21 = 21, M22 = 22, OffsetX = 3, OffsetY = 4 };
             TestObject.MatrixProperty = matrix;
-            Assert.Equal(matrix.M11, TestObject.MatrixProperty.M11);
-            Assert.Equal(matrix.M12, TestObject.MatrixProperty.M12);
-            Assert.Equal(matrix.M21, TestObject.MatrixProperty.M21);
-            Assert.Equal(matrix.M22, TestObject.MatrixProperty.M22);
-            Assert.Equal(matrix.OffsetX, TestObject.MatrixProperty.OffsetX);
-            Assert.Equal(matrix.OffsetY, TestObject.MatrixProperty.OffsetY);
-            Assert.True(TestObject.MatrixProperty == matrix);
+            Assert.AreEqual(matrix.M11, TestObject.MatrixProperty.M11);
+            Assert.AreEqual(matrix.M12, TestObject.MatrixProperty.M12);
+            Assert.AreEqual(matrix.M21, TestObject.MatrixProperty.M21);
+            Assert.AreEqual(matrix.M22, TestObject.MatrixProperty.M22);
+            Assert.AreEqual(matrix.OffsetX, TestObject.MatrixProperty.OffsetX);
+            Assert.AreEqual(matrix.OffsetY, TestObject.MatrixProperty.OffsetY);
+            Assert.IsTrue(TestObject.MatrixProperty == matrix);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestKeyTimeTypeMapping()
         {
             var keyTime = KeyTime.FromTimeSpan(TimeSpan.FromTicks(42));
             TestObject.KeyTimeProperty = keyTime;
-            Assert.Equal(keyTime.TimeSpan, TestObject.KeyTimeProperty.TimeSpan);
-            Assert.True(TestObject.KeyTimeProperty == keyTime);
+            Assert.AreEqual(keyTime.TimeSpan, TestObject.KeyTimeProperty.TimeSpan);
+            Assert.IsTrue(TestObject.KeyTimeProperty == keyTime);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestRepeatBehaviorTypeMapping()
         {
             var repeatBehavior = new RepeatBehavior
@@ -2590,13 +2572,13 @@ namespace UnitTest
                 Type = RepeatBehaviorType.Forever
             };
             TestObject.RepeatBehaviorProperty = repeatBehavior;
-            Assert.Equal(repeatBehavior.Count, TestObject.RepeatBehaviorProperty.Count);
-            Assert.Equal(repeatBehavior.Duration, TestObject.RepeatBehaviorProperty.Duration);
-            Assert.Equal(repeatBehavior.Type, TestObject.RepeatBehaviorProperty.Type);
-            Assert.True(TestObject.RepeatBehaviorProperty == repeatBehavior);
+            Assert.AreEqual(repeatBehavior.Count, TestObject.RepeatBehaviorProperty.Count);
+            Assert.AreEqual(repeatBehavior.Duration, TestObject.RepeatBehaviorProperty.Duration);
+            Assert.AreEqual(repeatBehavior.Type, TestObject.RepeatBehaviorProperty.Type);
+            Assert.IsTrue(TestObject.RepeatBehaviorProperty == repeatBehavior);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestMatrix3DTypeMapping()
         {
             var matrix3D = new Matrix3D
@@ -2620,26 +2602,26 @@ namespace UnitTest
             };
 
             TestObject.Matrix3DProperty = matrix3D;
-            Assert.Equal(matrix3D.M11, TestObject.Matrix3DProperty.M11);
-            Assert.Equal(matrix3D.M12, TestObject.Matrix3DProperty.M12);
-            Assert.Equal(matrix3D.M13, TestObject.Matrix3DProperty.M13);
-            Assert.Equal(matrix3D.M14, TestObject.Matrix3DProperty.M14);
-            Assert.Equal(matrix3D.M21, TestObject.Matrix3DProperty.M21);
-            Assert.Equal(matrix3D.M22, TestObject.Matrix3DProperty.M22);
-            Assert.Equal(matrix3D.M23, TestObject.Matrix3DProperty.M23);
-            Assert.Equal(matrix3D.M24, TestObject.Matrix3DProperty.M24);
-            Assert.Equal(matrix3D.M31, TestObject.Matrix3DProperty.M31);
-            Assert.Equal(matrix3D.M32, TestObject.Matrix3DProperty.M32);
-            Assert.Equal(matrix3D.M33, TestObject.Matrix3DProperty.M33);
-            Assert.Equal(matrix3D.M34, TestObject.Matrix3DProperty.M34);
-            Assert.Equal(matrix3D.OffsetX, TestObject.Matrix3DProperty.OffsetX);
-            Assert.Equal(matrix3D.OffsetY, TestObject.Matrix3DProperty.OffsetY);
-            Assert.Equal(matrix3D.OffsetZ, TestObject.Matrix3DProperty.OffsetZ);
-            Assert.Equal(matrix3D.M44, TestObject.Matrix3DProperty.M44);
-            Assert.True(TestObject.Matrix3DProperty == matrix3D);
+            Assert.AreEqual(matrix3D.M11, TestObject.Matrix3DProperty.M11);
+            Assert.AreEqual(matrix3D.M12, TestObject.Matrix3DProperty.M12);
+            Assert.AreEqual(matrix3D.M13, TestObject.Matrix3DProperty.M13);
+            Assert.AreEqual(matrix3D.M14, TestObject.Matrix3DProperty.M14);
+            Assert.AreEqual(matrix3D.M21, TestObject.Matrix3DProperty.M21);
+            Assert.AreEqual(matrix3D.M22, TestObject.Matrix3DProperty.M22);
+            Assert.AreEqual(matrix3D.M23, TestObject.Matrix3DProperty.M23);
+            Assert.AreEqual(matrix3D.M24, TestObject.Matrix3DProperty.M24);
+            Assert.AreEqual(matrix3D.M31, TestObject.Matrix3DProperty.M31);
+            Assert.AreEqual(matrix3D.M32, TestObject.Matrix3DProperty.M32);
+            Assert.AreEqual(matrix3D.M33, TestObject.Matrix3DProperty.M33);
+            Assert.AreEqual(matrix3D.M34, TestObject.Matrix3DProperty.M34);
+            Assert.AreEqual(matrix3D.OffsetX, TestObject.Matrix3DProperty.OffsetX);
+            Assert.AreEqual(matrix3D.OffsetY, TestObject.Matrix3DProperty.OffsetY);
+            Assert.AreEqual(matrix3D.OffsetZ, TestObject.Matrix3DProperty.OffsetZ);
+            Assert.AreEqual(matrix3D.M44, TestObject.Matrix3DProperty.M44);
+            Assert.IsTrue(TestObject.Matrix3DProperty == matrix3D);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestMatrix3x2TypeMapping()
         {
             var matrix3x2 = new Matrix3x2
@@ -2652,16 +2634,16 @@ namespace UnitTest
                 M32 = 32,
             };
             TestObject.Matrix3x2Property = matrix3x2;
-            Assert.Equal(matrix3x2.M11, TestObject.Matrix3x2Property.M11);
-            Assert.Equal(matrix3x2.M12, TestObject.Matrix3x2Property.M12);
-            Assert.Equal(matrix3x2.M21, TestObject.Matrix3x2Property.M21);
-            Assert.Equal(matrix3x2.M22, TestObject.Matrix3x2Property.M22);
-            Assert.Equal(matrix3x2.M31, TestObject.Matrix3x2Property.M31);
-            Assert.Equal(matrix3x2.M32, TestObject.Matrix3x2Property.M32);
-            Assert.True(TestObject.Matrix3x2Property == matrix3x2);
+            Assert.AreEqual(matrix3x2.M11, TestObject.Matrix3x2Property.M11);
+            Assert.AreEqual(matrix3x2.M12, TestObject.Matrix3x2Property.M12);
+            Assert.AreEqual(matrix3x2.M21, TestObject.Matrix3x2Property.M21);
+            Assert.AreEqual(matrix3x2.M22, TestObject.Matrix3x2Property.M22);
+            Assert.AreEqual(matrix3x2.M31, TestObject.Matrix3x2Property.M31);
+            Assert.AreEqual(matrix3x2.M32, TestObject.Matrix3x2Property.M32);
+            Assert.IsTrue(TestObject.Matrix3x2Property == matrix3x2);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestMatrix4x4TypeMapping()
         {
             var matrix4x4 = new Matrix4x4
@@ -2684,127 +2666,129 @@ namespace UnitTest
                 M44 = 44
             };
             TestObject.Matrix4x4Property = matrix4x4;
-            Assert.Equal(matrix4x4.M11, TestObject.Matrix4x4Property.M11);
-            Assert.Equal(matrix4x4.M12, TestObject.Matrix4x4Property.M12);
-            Assert.Equal(matrix4x4.M13, TestObject.Matrix4x4Property.M13);
-            Assert.Equal(matrix4x4.M14, TestObject.Matrix4x4Property.M14);
-            Assert.Equal(matrix4x4.M21, TestObject.Matrix4x4Property.M21);
-            Assert.Equal(matrix4x4.M22, TestObject.Matrix4x4Property.M22);
-            Assert.Equal(matrix4x4.M23, TestObject.Matrix4x4Property.M23);
-            Assert.Equal(matrix4x4.M24, TestObject.Matrix4x4Property.M24);
-            Assert.Equal(matrix4x4.M31, TestObject.Matrix4x4Property.M31);
-            Assert.Equal(matrix4x4.M32, TestObject.Matrix4x4Property.M32);
-            Assert.Equal(matrix4x4.M33, TestObject.Matrix4x4Property.M33);
-            Assert.Equal(matrix4x4.M34, TestObject.Matrix4x4Property.M34);
-            Assert.Equal(matrix4x4.M41, TestObject.Matrix4x4Property.M41);
-            Assert.Equal(matrix4x4.M42, TestObject.Matrix4x4Property.M42);
-            Assert.Equal(matrix4x4.M43, TestObject.Matrix4x4Property.M43);
-            Assert.Equal(matrix4x4.M44, TestObject.Matrix4x4Property.M44);
-            Assert.True(TestObject.Matrix4x4Property == matrix4x4);
+            Assert.AreEqual(matrix4x4.M11, TestObject.Matrix4x4Property.M11);
+            Assert.AreEqual(matrix4x4.M12, TestObject.Matrix4x4Property.M12);
+            Assert.AreEqual(matrix4x4.M13, TestObject.Matrix4x4Property.M13);
+            Assert.AreEqual(matrix4x4.M14, TestObject.Matrix4x4Property.M14);
+            Assert.AreEqual(matrix4x4.M21, TestObject.Matrix4x4Property.M21);
+            Assert.AreEqual(matrix4x4.M22, TestObject.Matrix4x4Property.M22);
+            Assert.AreEqual(matrix4x4.M23, TestObject.Matrix4x4Property.M23);
+            Assert.AreEqual(matrix4x4.M24, TestObject.Matrix4x4Property.M24);
+            Assert.AreEqual(matrix4x4.M31, TestObject.Matrix4x4Property.M31);
+            Assert.AreEqual(matrix4x4.M32, TestObject.Matrix4x4Property.M32);
+            Assert.AreEqual(matrix4x4.M33, TestObject.Matrix4x4Property.M33);
+            Assert.AreEqual(matrix4x4.M34, TestObject.Matrix4x4Property.M34);
+            Assert.AreEqual(matrix4x4.M41, TestObject.Matrix4x4Property.M41);
+            Assert.AreEqual(matrix4x4.M42, TestObject.Matrix4x4Property.M42);
+            Assert.AreEqual(matrix4x4.M43, TestObject.Matrix4x4Property.M43);
+            Assert.AreEqual(matrix4x4.M44, TestObject.Matrix4x4Property.M44);
+            Assert.IsTrue(TestObject.Matrix4x4Property == matrix4x4);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestPlaneTypeMapping()
         {
             var plane = new Plane { D = 3.14F, Normal = new Vector3(1, 2, 3) };
             TestObject.PlaneProperty = plane;
-            Assert.Equal(plane.D, TestObject.PlaneProperty.D);
-            Assert.Equal(plane.Normal, TestObject.PlaneProperty.Normal);
-            Assert.True(TestObject.PlaneProperty == plane);
+            Assert.AreEqual(plane.D, TestObject.PlaneProperty.D);
+            Assert.AreEqual(plane.Normal, TestObject.PlaneProperty.Normal);
+            Assert.IsTrue(TestObject.PlaneProperty == plane);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestQuaternionTypeMapping()
         {
             var quaternion = new Quaternion { W = 3.14F, X = 1, Y = 42, Z = 1729 };
             TestObject.QuaternionProperty = quaternion;
-            Assert.Equal(quaternion.W, TestObject.QuaternionProperty.W);
-            Assert.Equal(quaternion.X, TestObject.QuaternionProperty.X);
-            Assert.Equal(quaternion.Y, TestObject.QuaternionProperty.Y);
-            Assert.Equal(quaternion.Z, TestObject.QuaternionProperty.Z);
-            Assert.True(TestObject.QuaternionProperty == quaternion);
+            Assert.AreEqual(quaternion.W, TestObject.QuaternionProperty.W);
+            Assert.AreEqual(quaternion.X, TestObject.QuaternionProperty.X);
+            Assert.AreEqual(quaternion.Y, TestObject.QuaternionProperty.Y);
+            Assert.AreEqual(quaternion.Z, TestObject.QuaternionProperty.Z);
+            Assert.IsTrue(TestObject.QuaternionProperty == quaternion);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestVector2TypeMapping()
         {
             var vector2 = new Vector2 { X = 1, Y = 42 };
             TestObject.Vector2Property = vector2;
-            Assert.Equal(vector2.X, TestObject.Vector2Property.X);
-            Assert.Equal(vector2.Y, TestObject.Vector2Property.Y);
-            Assert.True(TestObject.Vector2Property == vector2);
+            Assert.AreEqual(vector2.X, TestObject.Vector2Property.X);
+            Assert.AreEqual(vector2.Y, TestObject.Vector2Property.Y);
+            Assert.IsTrue(TestObject.Vector2Property == vector2);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestVector3TypeMapping()
         {
             var vector3 = new Vector3 { X = 1, Y = 42, Z = 1729 };
             TestObject.Vector3Property = vector3;
-            Assert.Equal(vector3.X, TestObject.Vector3Property.X);
-            Assert.Equal(vector3.Y, TestObject.Vector3Property.Y);
-            Assert.Equal(vector3.Z, TestObject.Vector3Property.Z);
-            Assert.True(TestObject.Vector3Property == vector3);
+            Assert.AreEqual(vector3.X, TestObject.Vector3Property.X);
+            Assert.AreEqual(vector3.Y, TestObject.Vector3Property.Y);
+            Assert.AreEqual(vector3.Z, TestObject.Vector3Property.Z);
+            Assert.IsTrue(TestObject.Vector3Property == vector3);
 
             TestObject.Vector3NullableProperty = Vector3.Zero;
-            Assert.Equal(0, TestObject.Vector3Property.X);
-            Assert.Equal(0, TestObject.Vector3Property.Y);
-            Assert.Equal(0, TestObject.Vector3Property.Z);
-            Assert.Equal(Vector3.Zero, TestObject.Vector3NullableProperty);
+            Assert.AreEqual(0, TestObject.Vector3Property.X);
+            Assert.AreEqual(0, TestObject.Vector3Property.Y);
+            Assert.AreEqual(0, TestObject.Vector3Property.Z);
+            Assert.AreEqual(Vector3.Zero, TestObject.Vector3NullableProperty);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestVector4TypeMapping()
         {
             var vector4 = new Vector4 { W = 3.14F, X = 1, Y = 42, Z = 1729 };
             TestObject.Vector4Property = vector4;
-            Assert.Equal(vector4.W, TestObject.Vector4Property.W);
-            Assert.Equal(vector4.X, TestObject.Vector4Property.X);
-            Assert.Equal(vector4.Y, TestObject.Vector4Property.Y);
-            Assert.Equal(vector4.Z, TestObject.Vector4Property.Z);
-            Assert.True(TestObject.Vector4Property == vector4);
+            Assert.AreEqual(vector4.W, TestObject.Vector4Property.W);
+            Assert.AreEqual(vector4.X, TestObject.Vector4Property.X);
+            Assert.AreEqual(vector4.Y, TestObject.Vector4Property.Y);
+            Assert.AreEqual(vector4.Z, TestObject.Vector4Property.Z);
+            Assert.IsTrue(TestObject.Vector4Property == vector4);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestTimeSpanMapping()
         {
             var ts = TimeSpan.FromSeconds(42);
             TestObject.TimeSpanProperty = ts;
-            Assert.Equal(ts, TestObject.TimeSpanProperty);
-            Assert.Equal(ts, TestObject.GetTimeSpanReference().Value);
-            Assert.Equal(ts, Class.FromSeconds(42));
+            Assert.AreEqual(ts, TestObject.TimeSpanProperty);
+            Assert.AreEqual(ts, TestObject.GetTimeSpanReference().Value);
+            Assert.AreEqual(ts, Class.FromSeconds(42));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestDateTimeMapping()
         {
             var now = DateTimeOffset.Now;
-            Assert.InRange((Class.Now() - now).Ticks, -TimeSpan.TicksPerSecond, TimeSpan.TicksPerSecond); // Unlikely to be the same, but should be within a second
+            var ticks = (Class.Now() - now).Ticks;
+            Assert.IsTrue(ticks >= -TimeSpan.TicksPerSecond && ticks <= TimeSpan.TicksPerSecond,
+                $"Expected value between {-TimeSpan.TicksPerSecond} and {TimeSpan.TicksPerSecond}, but got {ticks}");
             TestObject.DateTimeProperty = now;
-            Assert.Equal(now, TestObject.DateTimeProperty);
-            Assert.Equal(now, TestObject.GetDateTimeProperty().Value);
+            Assert.AreEqual(now, TestObject.DateTimeProperty);
+            Assert.AreEqual(now, TestObject.GetDateTimeProperty().Value);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestDateTimeMappingNegative()
         {
             var time = new DateTimeOffset(1501, 1, 1, 0, 0, 0, TimeSpan.Zero);
             TestObject.DateTimeProperty = time;
-            Assert.Equal(time, TestObject.DateTimeProperty);
-            Assert.Equal(time, TestObject.GetDateTimeProperty().Value);
+            Assert.AreEqual(time, TestObject.DateTimeProperty);
+            Assert.AreEqual(time, TestObject.GetDateTimeProperty().Value);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestExceptionMapping()
         {
             var ex = new ArgumentOutOfRangeException();
 
             TestObject.HResultProperty = ex;
 
-            Assert.IsType<ArgumentOutOfRangeException>(TestObject.HResultProperty);
+            Assert.IsInstanceOfType<ArgumentOutOfRangeException>(TestObject.HResultProperty);
 
             TestObject.HResultProperty = null;
 
-            Assert.Null(TestObject.HResultProperty);
+            Assert.IsNull(TestObject.HResultProperty);
         }
 
         [LibraryImport("api-ms-win-core-winrt-string-l1-1-0.dll")]
@@ -2836,14 +2820,14 @@ namespace UnitTest
         }
 
 
-        [Fact]
+        [TestMethod]
         public unsafe void TestGeneratedRuntimeClassName()
         {
             void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new ManagedProperties(2));
 
             try
             {
-                Assert.Equal(typeof(IProperties1).FullName, GetRuntimeClassName(ptr));
+                Assert.AreEqual(typeof(IProperties1).FullName, GetRuntimeClassName(ptr));
             }
             finally
             {
@@ -2851,7 +2835,7 @@ namespace UnitTest
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestGetPropertyType()
         {
             Array arr = new[] { E.A, E.B, E.C };
@@ -2860,19 +2844,19 @@ namespace UnitTest
             IList<E> arr4 = new List<E>() { E.A, E.B, E.C };
             Array arr5 = new PropertyType[] { PropertyType.UInt8, PropertyType.Int16, PropertyType.UInt16 };
 
-            Assert.Equal(-1, Class.GetPropertyType(arr));
-            Assert.Equal(-1, Class.GetPropertyType(arr2));
-            Assert.Equal((int)PropertyType.Int32Array, Class.GetPropertyType(arr3));
-            Assert.Equal(-1, Class.GetPropertyType(arr4));
-            Assert.Equal((int)PropertyType.OtherTypeArray, Class.GetPropertyType(arr5));
-            Assert.Equal(-1, Class.GetPropertyType(arr.GetValue(0)));
-            Assert.Equal(-1, Class.GetPropertyType(arr2.GetValue(0)));
-            Assert.Equal((int)PropertyType.Int32, Class.GetPropertyType(arr3.GetValue(0)));
-            Assert.Equal(-1, Class.GetPropertyType(arr4[0]));
-            Assert.Equal((int)PropertyType.OtherType, Class.GetPropertyType(arr5.GetValue(0)));
+            Assert.AreEqual(-1, Class.GetPropertyType(arr));
+            Assert.AreEqual(-1, Class.GetPropertyType(arr2));
+            Assert.AreEqual((int)PropertyType.Int32Array, Class.GetPropertyType(arr3));
+            Assert.AreEqual(-1, Class.GetPropertyType(arr4));
+            Assert.AreEqual((int)PropertyType.OtherTypeArray, Class.GetPropertyType(arr5));
+            Assert.AreEqual(-1, Class.GetPropertyType(arr.GetValue(0)));
+            Assert.AreEqual(-1, Class.GetPropertyType(arr2.GetValue(0)));
+            Assert.AreEqual((int)PropertyType.Int32, Class.GetPropertyType(arr3.GetValue(0)));
+            Assert.AreEqual(-1, Class.GetPropertyType(arr4[0]));
+            Assert.AreEqual((int)PropertyType.OtherType, Class.GetPropertyType(arr5.GetValue(0)));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestGetRuntimeClassName()
         {
             Array arr = new[] { E.A, E.B, E.C };
@@ -2881,29 +2865,29 @@ namespace UnitTest
             IList<E> arr4 = new List<E>() { E.A, E.B, E.C };
             Array arr5 = new PropertyType[] { PropertyType.UInt8, PropertyType.Int16, PropertyType.UInt16 };
 
-            Assert.Equal("Microsoft.UI.Xaml.Interop.IBindableVector", Class.GetName(arr));
-            Assert.Equal("Microsoft.UI.Xaml.Interop.IBindableVector", Class.GetName(arr2));
-            Assert.Equal("Windows.Foundation.IReferenceArray`1<Int32>", Class.GetName(arr3));
-            Assert.Equal("Microsoft.UI.Xaml.Interop.IBindableVector", Class.GetName(arr4));
-            Assert.Equal("Windows.Foundation.IReferenceArray`1<Windows.Foundation.PropertyType>", Class.GetName(arr5));
-            Assert.Equal("Object", Class.GetName(arr.GetValue(0)));
-            Assert.Equal("Object", Class.GetName(arr2.GetValue(0)));
-            Assert.Equal("Windows.Foundation.IReference`1<Int32>", Class.GetName(arr3.GetValue(0)));
-            Assert.Equal("Object", Class.GetName(arr4[0]));
-            Assert.Equal("Windows.Foundation.IReference`1<Windows.Foundation.PropertyType>", Class.GetName(arr5.GetValue(0)));
+            Assert.AreEqual("Microsoft.UI.Xaml.Interop.IBindableVector", Class.GetName(arr));
+            Assert.AreEqual("Microsoft.UI.Xaml.Interop.IBindableVector", Class.GetName(arr2));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Int32>", Class.GetName(arr3));
+            Assert.AreEqual("Microsoft.UI.Xaml.Interop.IBindableVector", Class.GetName(arr4));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Windows.Foundation.PropertyType>", Class.GetName(arr5));
+            Assert.AreEqual("Object", Class.GetName(arr.GetValue(0)));
+            Assert.AreEqual("Object", Class.GetName(arr2.GetValue(0)));
+            Assert.AreEqual("Windows.Foundation.IReference`1<Int32>", Class.GetName(arr3.GetValue(0)));
+            Assert.AreEqual("Object", Class.GetName(arr4[0]));
+            Assert.AreEqual("Windows.Foundation.IReference`1<Windows.Foundation.PropertyType>", Class.GetName(arr5.GetValue(0)));
 
-            Assert.Equal("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>", Class.GetName(typeof(IProperties1)));
-            Assert.Equal("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>", Class.GetName(typeof(Type)));
+            Assert.AreEqual("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>", Class.GetName(typeof(IProperties1)));
+            Assert.AreEqual("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>", Class.GetName(typeof(Type)));
         }
 
-        [Fact]
+        [TestMethod]
         public unsafe void TestGeneratedRuntimeClassName_Primitive()
         {
             void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(2);
 
             try
             {
-                Assert.Equal("Windows.Foundation.IReference`1<Int32>", GetRuntimeClassName(ptr));
+                Assert.AreEqual("Windows.Foundation.IReference`1<Int32>", GetRuntimeClassName(ptr));
             }
             finally
             {
@@ -2911,14 +2895,14 @@ namespace UnitTest
             }
         }
 
-        [Fact]
+        [TestMethod]
         public unsafe void TestGeneratedRuntimeClassName_Array()
         {
             void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new int[0]);
 
             try
             {
-                Assert.Equal("Windows.Foundation.IReferenceArray`1<Int32>", GetRuntimeClassName(ptr));
+                Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Int32>", GetRuntimeClassName(ptr));
             }
             finally
             {
@@ -2926,161 +2910,161 @@ namespace UnitTest
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestValueBoxing()
         {
             int i = 42;
-            Assert.Equal(i, Class.UnboxInt32(i));
+            Assert.AreEqual(i, Class.UnboxInt32(i));
 
             bool b = true;
-            Assert.Equal(b, Class.UnboxBoolean(b));
+            Assert.AreEqual(b, Class.UnboxBoolean(b));
 
             string s = "Hello World!";
-            Assert.Equal(s, Class.UnboxString(s));
+            Assert.AreEqual(s, Class.UnboxString(s));
 
             ProvideInt intHandler = () => 42;
-            Assert.Equal(intHandler, Class.UnboxDelegate(intHandler));
+            Assert.AreEqual(intHandler, Class.UnboxDelegate(intHandler));
 
             EnumValue enumValue = EnumValue.Two;
-            Assert.Equal(enumValue, Class.UnboxEnum(enumValue));
+            Assert.AreEqual(enumValue, Class.UnboxEnum(enumValue));
 
             var type = typeof(EnumValue);
-            Assert.Equal(type, Class.UnboxType(type));
+            Assert.AreEqual(type, Class.UnboxType(type));
 
-            Assert.Equal(typeof(Class), Class.BoxedType);
+            Assert.AreEqual(typeof(Class), Class.BoxedType);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestArrayBoxing()
         {
             int[] i = new[] { 42, 1, 4, 50, 0, -23 };
-            Assert.Equal((IEnumerable<int>)i, Class.UnboxInt32Array(i));
+            Assert.AreEqual((IEnumerable<int>)i, Class.UnboxInt32Array(i));
 
             bool[] b = new[] { true, false, true, true, false };
-            Assert.Equal((IEnumerable<bool>)b, Class.UnboxBooleanArray(b));
+            Assert.AreEqual((IEnumerable<bool>)b, Class.UnboxBooleanArray(b));
 
             string[] s = new[] { "Hello World!", "WinRT", "C#", "Boxing" };
-            Assert.Equal((IEnumerable<string>)s, Class.UnboxStringArray(s));
+            Assert.AreEqual((IEnumerable<string>)s, Class.UnboxStringArray(s));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestArrayUnboxing()
         {
             int[] i = new[] { 42, 1, 4, 50, 0, -23 };
 
             var obj = PropertyValue.CreateInt32Array(i);
-            Assert.IsType<int[]>(obj);
-            Assert.Equal(i, (IEnumerable<int>)obj);
+            Assert.IsInstanceOfType<int[]>(obj);
+            Assert.AreEqual(i, (IEnumerable<int>)obj);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestUnboxingUsingPropertyValue()
         {
             int i = 24;
-            Assert.Equal(i, Class.UnboxInt32UsingPropertyValue(i));
+            Assert.AreEqual(i, Class.UnboxInt32UsingPropertyValue(i));
 
             uint j = 42;
-            Assert.Equal((int)j, Class.UnboxInt32UsingPropertyValue(j));
+            Assert.AreEqual((int)j, Class.UnboxInt32UsingPropertyValue(j));
 
             System.Nullable<int> k = new System.Nullable<int>(34);
-            Assert.Equal(k, Class.UnboxInt32UsingPropertyValue(k));
+            Assert.AreEqual(k, Class.UnboxInt32UsingPropertyValue(k));
 
             string s = "Hello!";
-            Assert.Equal(s, Class.UnboxStringUsingPropertyValue(s));
+            Assert.AreEqual(s, Class.UnboxStringUsingPropertyValue(s));
 
             Guid guid = new("36AA48DD-ACBB-4570-B12A-86BF71D09A12");
-            Assert.Equal("36AA48DD-ACBB-4570-B12A-86BF71D09A12", Class.UnboxStringUsingPropertyValue(guid), true);
+            Assert.AreEqual("36AA48DD-ACBB-4570-B12A-86BF71D09A12", Class.UnboxStringUsingPropertyValue(guid), true);
 
-            Assert.Throws<InvalidCastException>(() => Class.UnboxInt32UsingPropertyValue(s));
+            Assert.ThrowsException<InvalidCastException>(() => Class.UnboxInt32UsingPropertyValue(s));
 
             Rect rect = new Rect(1, 2, 3, 4);
-            Assert.Equal(rect, Class.UnboxRectUsingPropertyValue(rect));
+            Assert.AreEqual(rect, Class.UnboxRectUsingPropertyValue(rect));
 
             int[] iArr = new[] { 42, 0, -23 };
-            Assert.Equal(iArr, (IEnumerable<int>)Class.UnboxInt32ArrayUsingPropertyValue(iArr));
+            Assert.AreEqual(iArr, (IEnumerable<int>)Class.UnboxInt32ArrayUsingPropertyValue(iArr));
 
             bool[] bArr = new[] { true, false, false };
-            Assert.Equal((IEnumerable<bool>)bArr, Class.UnboxBooleanArrayUsingPropertyValue(bArr));
+            Assert.AreEqual((IEnumerable<bool>)bArr, Class.UnboxBooleanArrayUsingPropertyValue(bArr));
 
             Point[] pArr = new[] { new Point(1, 3), new Point(2, 4) };
-            Assert.Equal((IEnumerable<Point>)pArr, Class.UnboxPointArrayUsingPropertyValue(pArr));
+            Assert.AreEqual((IEnumerable<Point>)pArr, Class.UnboxPointArrayUsingPropertyValue(pArr));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestListOfTypes()
         {
             var types = Class.ListOfTypes;
-            Assert.Equal(2, types.Count);
-            Assert.Equal(typeof(Class), types[0]);
-            Assert.Equal(typeof(int?), types[1]);
+            Assert.AreEqual(2, types.Count);
+            Assert.AreEqual(typeof(Class), types[0]);
+            Assert.AreEqual(typeof(int?), types[1]);
         }
 
-        [Fact]
+        [TestMethod]
         public void PrimitiveTypeInfo()
         {
-            Assert.Equal(typeof(int), Class.Int32Type);
-            Assert.True(Class.VerifyTypeIsInt32Type(typeof(int)));
+            Assert.AreEqual(typeof(int), Class.Int32Type);
+            Assert.IsTrue(Class.VerifyTypeIsInt32Type(typeof(int)));
         }
 
-        [Fact]
+        [TestMethod]
         public void WinRTTypeInfo()
         {
-            Assert.Equal(typeof(Class), Class.ThisClassType);
-            Assert.True(Class.VerifyTypeIsThisClassType(typeof(Class)));
+            Assert.AreEqual(typeof(Class), Class.ThisClassType);
+            Assert.IsTrue(Class.VerifyTypeIsThisClassType(typeof(Class)));
         }
 
-        [Fact]
+        [TestMethod]
         public void ProjectedTypeInfo()
         {
-            Assert.Equal(typeof(int?), Class.ReferenceInt32Type);
-            Assert.True(Class.VerifyTypeIsReferenceInt32Type(typeof(int?)));
+            Assert.AreEqual(typeof(int?), Class.ReferenceInt32Type);
+            Assert.IsTrue(Class.VerifyTypeIsReferenceInt32Type(typeof(int?)));
         }
 
-        [Fact]
+        [TestMethod]
         public void TypeInfoGenerics()
         {
             var typeName = Class.GetTypeNameForType(typeof(IList<int>));
-            Assert.Equal("Windows.Foundation.Collections.IVector`1<Int32>", typeName);
+            Assert.AreEqual("Windows.Foundation.Collections.IVector`1<Int32>", typeName);
         }
 
-        [Fact]
+        [TestMethod]
         public void TypeInfoType()
         {
             var typeName = Class.GetTypeNameForType(typeof(Type));
-            Assert.Equal("Windows.UI.Xaml.Interop.TypeName", typeName);
+            Assert.AreEqual("Windows.UI.Xaml.Interop.TypeName", typeName);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStringUnboxing()
         {
             var str1 = Class.EmptyString;
             var str2 = Class.EmptyString;
-            Assert.IsType<string>(str1);
-            Assert.IsType<string>(str2);
-            Assert.Equal(string.Empty, (string)str1);
-            Assert.Equal(string.Empty, (string)str2);
+            Assert.IsInstanceOfType<string>(str1);
+            Assert.IsInstanceOfType<string>(str2);
+            Assert.AreEqual(string.Empty, (string)str1);
+            Assert.AreEqual(string.Empty, (string)str2);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestDelegateUnboxing()
         {
             var del = Class.BoxedDelegate;
-            Assert.IsType<ProvideUri>(del);
+            Assert.IsInstanceOfType<ProvideUri>(del);
             var provideUriDel = (ProvideUri)del;
-            Assert.Equal(new Uri("http://microsoft.com"), provideUriDel());
+            Assert.AreEqual(new Uri("http://microsoft.com"), provideUriDel());
         }
 
-        [Fact]
+        [TestMethod]
         public void TestEnumUnboxing()
         {
             var enumVal = Class.BoxedEnum;
-            Assert.IsType<EnumValue>(enumVal);
-            Assert.Equal(EnumValue.Two, enumVal);
+            Assert.IsInstanceOfType<EnumValue>(enumVal);
+            Assert.AreEqual(EnumValue.Two, enumVal);
         }
 
         internal class ManagedType { }
 
-        [Fact]
+        [TestMethod]
         public unsafe void CCWOfListOfManagedType()
         {
             void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new List<ManagedType>());
@@ -3088,22 +3072,22 @@ namespace UnitTest
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, IID_IEnumerableObject, out nint _));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestForIterableObject()
         {
             // Make sure for collections of value types that they don't project IEnumerable<object>
             // as it isn't a covariant interface.
-            Assert.False(TestObject.CheckForBindableObjectInterface(new List<int>()));
-            Assert.False(TestObject.CheckForBindableObjectInterface(new List<EnumValue>()));
-            Assert.False(TestObject.CheckForBindableObjectInterface(new List<System.DateTimeOffset>()));
-            Assert.False(TestObject.CheckForBindableObjectInterface(new Dictionary<string, System.DateTimeOffset>()));
+            Assert.IsFalse(TestObject.CheckForBindableObjectInterface(new List<int>()));
+            Assert.IsFalse(TestObject.CheckForBindableObjectInterface(new List<EnumValue>()));
+            Assert.IsFalse(TestObject.CheckForBindableObjectInterface(new List<System.DateTimeOffset>()));
+            Assert.IsFalse(TestObject.CheckForBindableObjectInterface(new Dictionary<string, System.DateTimeOffset>()));
 
             // Make sure for collections of object types that they do project IEnumerable<object>
             // as it is an covariant interface.
-            Assert.True(TestObject.CheckForBindableObjectInterface(new List<object>()));
-            Assert.True(TestObject.CheckForBindableObjectInterface(new List<Class>()));
-            Assert.True(TestObject.CheckForBindableObjectInterface(new List<IProperties1>()));
-            Assert.True(TestObject.CheckForBindableObjectInterface(new List<ManagedType2>()));
+            Assert.IsTrue(TestObject.CheckForBindableObjectInterface(new List<object>()));
+            Assert.IsTrue(TestObject.CheckForBindableObjectInterface(new List<Class>()));
+            Assert.IsTrue(TestObject.CheckForBindableObjectInterface(new List<IProperties1>()));
+            Assert.IsTrue(TestObject.CheckForBindableObjectInterface(new List<ManagedType2>()));
         }
 
         internal class ManagedType2 : List<ManagedType2> { }
@@ -3115,7 +3099,7 @@ namespace UnitTest
             }
         }
 
-        [Fact]
+        [TestMethod]
         public unsafe void CCWOfListOfManagedType2()
         {
             void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new ManagedType2());
@@ -3123,7 +3107,7 @@ namespace UnitTest
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, IID_IEnumerableObject, out nint _));
         }
 
-        [Fact]
+        [TestMethod]
         public unsafe void CCWOfListOfManagedType3()
         {
             void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new ManagedType3());
@@ -3135,30 +3119,30 @@ namespace UnitTest
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, IID_IEnumerable_IDisposable, out nint _));
         }
 
-        [Fact]
+        [TestMethod]
         public void WeakReferenceOfManagedObject()
         {
             var properties = new ManagedProperties(42);
             WeakReference<IProperties1> weakReference = new WeakReference<IProperties1>(properties);
-            Assert.True(weakReference.TryGetTarget(out var propertiesStrong));
-            Assert.Same(properties, propertiesStrong);
+            Assert.IsTrue(weakReference.TryGetTarget(out var propertiesStrong));
+            Assert.AreSame(properties, propertiesStrong);
         }
 
-        [Fact]
+        [TestMethod]
         public void WeakReferenceOfNativeObject()
         {
             var weakReference = new WeakReference<Class>(TestObject);
-            Assert.True(weakReference.TryGetTarget(out var classStrong));
-            Assert.Same(TestObject, classStrong);
+            Assert.IsTrue(weakReference.TryGetTarget(out var classStrong));
+            Assert.AreSame(TestObject, classStrong);
         }
 
-        [Fact]
+        [TestMethod]
         public void WeakReferenceOfNativeObjectRehydratedAfterWrapperIsCollected()
         {
             unsafe static (WeakReference<Class> winrt, WeakReference net, WindowsRuntimeObjectReference objRef) GetWeakReferences()
             {
                 var obj = new Class();
-                Assert.True(WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(obj, out WindowsRuntimeObjectReference? objRef));
+                Assert.IsTrue(WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(obj, out WindowsRuntimeObjectReference? objRef));
                 return (new WeakReference<Class>(obj), new WeakReference(obj), objRef);
             }
 
@@ -3166,67 +3150,67 @@ namespace UnitTest
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Assert.False(net.IsAlive);
-            Assert.True(winrt.TryGetTarget(out _));
+            Assert.IsFalse(net.IsAlive);
+            Assert.IsTrue(winrt.TryGetTarget(out _));
             GC.KeepAlive(objRef);
         }
 
-        [Fact]
+        [TestMethod]
         public unsafe void TestUnwrapInspectable()
         {
-            Assert.True(WindowsRuntimeMarshal.TryGetNativeObject(TestObject, out _));
+            Assert.IsTrue(WindowsRuntimeMarshal.TryGetNativeObject(TestObject, out _));
 
             using WindowsRuntimeObjectReferenceValue objRefValue = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(TestObject);
-            Assert.False(objRefValue.IsNull);
+            Assert.IsFalse(objRefValue.IsNull);
         }
 
         /* TODO
-        [Fact]
+        [TestMethod]
         public void TestManagedAgileObject()
         {
             using var testObjectAgileRef = TestObject.AsAgile();
             var agileTestObject = testObjectAgileRef.Get();
-            Assert.Equal(TestObject, agileTestObject);
+            Assert.AreEqual(TestObject, agileTestObject);
 
             IProperties1 properties = new ManagedProperties(42);
             using var propertiesAgileRef = properties.AsAgile();
             var agileProperties = propertiesAgileRef.Get();
-            Assert.Equal(properties.ReadWriteProperty, agileProperties.ReadWriteProperty);
+            Assert.AreEqual(properties.ReadWriteProperty, agileProperties.ReadWriteProperty);
 
             var agileObject = TestObject.As<IAgileObject>();
-            Assert.NotNull(agileObject);
+            Assert.IsNotNull(agileObject);
 
             IProperties1 properties2 = null;
             using var properties2AgileRef = properties2.AsAgile();
             var agileProperties2 = properties2AgileRef.Get();
-            Assert.Null(agileProperties2);
+            Assert.IsNull(agileProperties2);
         }
 
         class NonAgileClassCaller
         {
             public void AcquireObject()
             {
-                Assert.Equal(ApartmentState.STA, Thread.CurrentThread.GetApartmentState());
+                Assert.AreEqual(ApartmentState.STA, Thread.CurrentThread.GetApartmentState());
                 nonAgileObject = new Windows.UI.Popups.PopupMenu();
                 nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test"));
                 nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test2"));
-                Assert.ThrowsAny<System.Exception>(() => nonAgileObject.As<IAgileObject>());
+                Assert.ThrowsException<System.Exception>(() => nonAgileObject.As<IAgileObject>());
 
                 agileReference = nonAgileObject.AsAgile();
                 objectAcquired.Set();
                 valueAcquired.WaitOne();
 
                 // Object gets proxied to the apartment.
-                Assert.Equal(2, proxyObject.Commands.Count);
+                Assert.AreEqual(2, proxyObject.Commands.Count);
                 agileReference.Dispose();
             }
 
             public void CheckValue()
             {
                 objectAcquired.WaitOne();
-                Assert.Equal(ApartmentState.MTA, Thread.CurrentThread.GetApartmentState());
+                Assert.AreEqual(ApartmentState.MTA, Thread.CurrentThread.GetApartmentState());
                 proxyObject = agileReference.Get();
-                Assert.Equal(2, proxyObject.Commands.Count);
+                Assert.AreEqual(2, proxyObject.Commands.Count);
 
                 valueAcquired.Set();
             }
@@ -3235,7 +3219,7 @@ namespace UnitTest
             {
                 // Call to a proxy object which we internally use an agile reference
                 // to resolve after the apartment is gone should throw.
-                Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands);
+                Assert.ThrowsException<System.Exception>(() => proxyObject.Commands);
             }
 
             private Windows.UI.Popups.PopupMenu nonAgileObject;
@@ -3246,7 +3230,7 @@ namespace UnitTest
         }
 
 
-        [Fact]
+        [TestMethod]
         public void TestNonAgileObjectCall()
         {
             NonAgileClassCaller caller = new NonAgileClassCaller();
@@ -3270,7 +3254,7 @@ namespace UnitTest
         }
         */
 
-        [Fact]
+        [TestMethod]
         public void TestNonAgileDelegateCall()
         {
             var expected = new int[] { 0, 1, 2 };
@@ -3278,7 +3262,7 @@ namespace UnitTest
             var nonAgileClass = new NonAgileClass();
             nonAgileClass.Observe(observable);
             observable.Add(3);
-            Assert.Equal(6, observable.Observation);
+            Assert.AreEqual(6, observable.Observation);
         }
 
         [GeneratedComInterface]
@@ -3297,14 +3281,14 @@ namespace UnitTest
             void Initialize(IntPtr hwnd);
         }
 
-        [Fact]
+        [TestMethod]
         unsafe public void TestComImports()
         {
             static Object MakeObject()
             {
-                Assert.Equal(0, ComImports.NumObjects);
+                Assert.AreEqual(0, ComImports.NumObjects);
                 var obj = ComImports.MakeObject();
-                Assert.Equal(1, ComImports.NumObjects);
+                Assert.AreEqual(1, ComImports.NumObjects);
                 return obj;
             }
 
@@ -3327,42 +3311,42 @@ namespace UnitTest
 
                 var hwnd = new IntPtr(0x12345678);
                 initializeWithWindow.Initialize(hwnd);
-                Assert.Equal(windowNative.get_WindowHandle(), hwnd);
+                Assert.AreEqual(windowNative.get_WindowHandle(), hwnd);
             }
 
             TestObject();
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Assert.Equal(0, ComImports.NumObjects);
+            Assert.AreEqual(0, ComImports.NumObjects);
 
             TestImports();
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Assert.Equal(0, ComImports.NumObjects);
+            Assert.AreEqual(0, ComImports.NumObjects);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestInterfaceObjectMarshalling()
         {
             var nativeProperties = Class.NativeProperties1;
 
             TestObject.CopyProperties(nativeProperties);
 
-            Assert.Equal(TestObject.ReadWriteProperty, nativeProperties.ReadWriteProperty);
+            Assert.AreEqual(TestObject.ReadWriteProperty, nativeProperties.ReadWriteProperty);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestSetPropertyAcrossProjections()
         {
             var setPropertyClass = new TestComponentCSharp.AnotherAssembly.SetPropertyClass();
             setPropertyClass.ReadWriteProperty = 4;
-            Assert.Equal(4, setPropertyClass.ReadWriteProperty);
+            Assert.AreEqual(4, setPropertyClass.ReadWriteProperty);
 
             IProperties1 property = setPropertyClass;
-            Assert.Equal(4, property.ReadWriteProperty);
+            Assert.AreEqual(4, property.ReadWriteProperty);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestStaticPropertyImplementedAcrossInterfaces()
         {
             // Testing call doesn't fail.
@@ -3371,80 +3355,80 @@ namespace UnitTest
         }
 
         // Test scenario where type reported by runtimeclass name is not a valid type (i.e. internal type).
-        [Fact]
+        [TestMethod]
         public void TestNonProjectedRuntimeClass()
         {
             string key = ".....";
             IBuffer keyMaterial = CryptographicBuffer.ConvertStringToBinary(key, BinaryStringEncoding.Utf8);
             MacAlgorithmProvider mac = MacAlgorithmProvider.OpenAlgorithm(MacAlgorithmNames.HmacSha1);
             CryptographicKey cryptoKey = mac.CreateKey(keyMaterial);
-            Assert.NotNull(cryptoKey);
+            Assert.IsNotNull(cryptoKey);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestIBindableIterator()
         {
             CustomBindableIteratorTest bindableIterator = new CustomBindableIteratorTest();
-            Assert.True(bindableIterator.MoveNext());
-            Assert.Equal(27861, bindableIterator.Current);
+            Assert.IsTrue(bindableIterator.MoveNext());
+            Assert.AreEqual(27861, bindableIterator.Current);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestIDisposable()
         {
             CustomDisposableTest disposable = new CustomDisposableTest();
             disposable.Dispose();
         }
 
-        [Fact]
+        [TestMethod]
         public void TestIBindableVector()
         {
             CustomBindableVectorTest vector = new CustomBindableVectorTest();
-            Assert.NotNull(vector);
-            Assert.Equal(1, vector.Count);
-            Assert.False(vector.IsSynchronized);
-            Assert.NotNull(vector.SyncRoot);
-            Assert.Equal(1, vector[0]);
+            Assert.IsNotNull(vector);
+            Assert.AreEqual(1, vector.Count);
+            Assert.IsFalse(vector.IsSynchronized);
+            Assert.IsNotNull(vector.SyncRoot);
+            Assert.AreEqual(1, vector[0]);
 
             var enumerator = ((IEnumerable)vector).GetEnumerator();
-            Assert.NotNull(enumerator);
+            Assert.IsNotNull(enumerator);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestBindableObservableVector()
         {
             CustomBindableObservableVectorTest vector = new CustomBindableObservableVectorTest();
-            Assert.Equal(1, vector.Count);
-            Assert.False(vector.IsSynchronized);
-            Assert.NotNull(vector.SyncRoot);
-            Assert.Equal(1, vector[0]);
+            Assert.AreEqual(1, vector.Count);
+            Assert.IsFalse(vector.IsSynchronized);
+            Assert.IsNotNull(vector.SyncRoot);
+            Assert.AreEqual(1, vector[0]);
             vector.Clear();
         }
 
-        [Fact]
+        [TestMethod]
         public void TestNonProjectedBindableObservableVector()
         {
             var expected = new int[] { 0, 1, 2 };
             var observable = new ManagedBindableObservable(expected);
             var nativeObservable = TestObject.GetBindableObservableVector(observable);
-            Assert.Equal(3, ((ICollection)(object)nativeObservable).Count);
-            Assert.Equal(3, nativeObservable.Count);
-            Assert.NotNull(nativeObservable.SyncRoot);
-            Assert.Equal(0, nativeObservable[0]);
+            Assert.AreEqual(3, ((ICollection)(object)nativeObservable).Count);
+            Assert.AreEqual(3, nativeObservable.Count);
+            Assert.IsNotNull(nativeObservable.SyncRoot);
+            Assert.AreEqual(0, nativeObservable[0]);
             nativeObservable.Clear();
-            Assert.Equal(0, nativeObservable.Count);
+            Assert.AreEqual(0, nativeObservable.Count);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestIterator()
         {
             CustomIteratorTest iterator = new CustomIteratorTest();
             iterator.MoveNext();
-            Assert.Equal(2, iterator.Current);
-            Assert.Equal(2, ((IEnumerator)iterator).Current);
+            Assert.AreEqual(2, iterator.Current);
+            Assert.AreEqual(2, ((IEnumerator)iterator).Current);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestCovariance()
         {
             var listOfListOfPoints = new List<List<Point>>() {
@@ -3453,7 +3437,7 @@ namespace UnitTest
                 new List<Point>{ new Point(3, 1), new Point(3, 2), new Point(3, 3) }
             };
             TestObject.IterableOfPointIterablesProperty = listOfListOfPoints;
-            Assert.True(TestObject.IterableOfPointIterablesProperty.SequenceEqual(listOfListOfPoints));
+            Assert.IsTrue(TestObject.IterableOfPointIterablesProperty.SequenceEqual(listOfListOfPoints));
 
             var listOfListOfUris = new List<List<Uri>>() {
                 new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") },
@@ -3461,7 +3445,7 @@ namespace UnitTest
                 new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://microsoft.com") }
             };
             TestObject.IterableOfObjectIterablesProperty = listOfListOfUris;
-            Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
+            Assert.IsTrue(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
 
         (System.WeakReference<Class>, System.WeakReference<EventHandlerClass>) TestEventDelegateCleanup()
@@ -3474,7 +3458,7 @@ namespace UnitTest
             GC.Collect(2, GCCollectionMode.Forced, true);
             GC.WaitForPendingFinalizers();
             classInstance.IntProperty = 3;
-            Assert.True(eventCalled);
+            Assert.IsTrue(eventCalled);
 
             // No strong reference to handler class, but delegate is still registered on
             // the WinRT object keeping it alive.
@@ -3484,8 +3468,8 @@ namespace UnitTest
             GC.Collect(2, GCCollectionMode.Forced, true);
             GC.WaitForPendingFinalizers();
             classInstance.IntProperty = 3;
-            Assert.True(eventCalled);
-            Assert.True(weakEventHandlerClass.TryGetTarget(out var _));
+            Assert.IsTrue(eventCalled);
+            Assert.IsTrue(weakEventHandlerClass.TryGetTarget(out var _));
 
             // No strong reference to WinRT object.  It should no longer be alive
             // and should also cause for the event handler class to be no longer alive.
@@ -3495,7 +3479,7 @@ namespace UnitTest
         }
 
         // Ensure that event subscription state is properly cached to enable later unsubscribes
-        [Fact]
+        [TestMethod]
         public void TestEventSourceCaching()
         {
             bool eventCalled = false;
@@ -3509,27 +3493,27 @@ namespace UnitTest
             GC.WaitForPendingFinalizers();
             Class.StaticIntPropertyChanged -= Class_StaticIntPropertyChanged;
             Class.StaticIntProperty = 3;
-            Assert.False(eventCalled);
+            Assert.IsFalse(eventCalled);
             Class.StaticIntPropertyChanged += Class_StaticIntPropertyChanged;
             GC.Collect(2, GCCollectionMode.Forced, true);
             GC.WaitForPendingFinalizers();
             Class.StaticIntProperty = 3;
-            Assert.True(eventCalled);
+            Assert.IsTrue(eventCalled);
             eventCalled = false;
 
             // Test adding another delegate to validate COM reference tracking in EventSource
             Class.StaticIntPropertyChanged += Class_StaticIntPropertyChanged2;
             Class.StaticIntProperty = 3;
-            Assert.True(eventCalled);
-            Assert.True(eventCalled2);
+            Assert.IsTrue(eventCalled);
+            Assert.IsTrue(eventCalled2);
             GC.Collect(2, GCCollectionMode.Forced, true);
             GC.WaitForPendingFinalizers();
             eventCalled = false;
             eventCalled2 = false;
             Class.StaticIntPropertyChanged -= Class_StaticIntPropertyChanged;
             Class.StaticIntProperty = 3;
-            Assert.False(eventCalled);
-            Assert.True(eventCalled2);
+            Assert.IsFalse(eventCalled);
+            Assert.IsTrue(eventCalled2);
 
             // Test dynamic WeakRef-based EventSource caching
             eventCalled = false;
@@ -3541,12 +3525,12 @@ namespace UnitTest
             GC.WaitForPendingFinalizers();
             Unsubscribe(Class_StaticIntPropertyChanged);
             Assign(3);
-            Assert.False(eventCalled);
+            Assert.IsFalse(eventCalled);
             Subscribe(Class_StaticIntPropertyChanged);
             GC.Collect(2, GCCollectionMode.Forced, true);
             GC.WaitForPendingFinalizers();
             Assign(3);
-            Assert.True(eventCalled);
+            Assert.IsTrue(eventCalled);
 
             // Test that event delegates don't leak when not unsubscribed.
             // Test runs into a different function as the finalizer wasn't
@@ -3557,8 +3541,8 @@ namespace UnitTest
             GC.WaitForPendingFinalizers();
             GC.Collect(2, GCCollectionMode.Forced, true);
             GC.WaitForPendingFinalizers();
-            Assert.False(weakClassInstance.TryGetTarget(out _));
-            Assert.False(weakEventHandlerClass.TryGetTarget(out _));
+            Assert.IsFalse(weakClassInstance.TryGetTarget(out _));
+            Assert.IsFalse(weakEventHandlerClass.TryGetTarget(out _));
         }
 
         class EventHandlerClass
@@ -3574,7 +3558,7 @@ namespace UnitTest
         }
 
         // Test scenario where events may be removed by the native event source without an unsubscribe.
-        [Fact]
+        [TestMethod]
         public void TestEventRemovalByEventSource()
         {
             bool eventCalled = false;
@@ -3585,14 +3569,14 @@ namespace UnitTest
             var classInstance = new Class();
             classInstance.IntPropertyChanged += Class_IntPropertyChanged;
             classInstance.IntProperty = 3;
-            Assert.True(eventCalled);
-            Assert.False(eventCalled2);
+            Assert.IsTrue(eventCalled);
+            Assert.IsFalse(eventCalled2);
             eventCalled = false;
             classInstance.RemoveLastIntPropertyChangedHandler();
             classInstance.IntPropertyChanged += Class_IntPropertyChanged2;
             classInstance.IntProperty = 3;
-            Assert.False(eventCalled);
-            Assert.True(eventCalled2);
+            Assert.IsFalse(eventCalled);
+            Assert.IsTrue(eventCalled2);
             eventCalled2 = false;
 
             classInstance.RemoveLastIntPropertyChangedHandler();
@@ -3600,17 +3584,17 @@ namespace UnitTest
             GC.WaitForPendingFinalizers();
             classInstance.IntPropertyChanged += Class_IntPropertyChanged;
             classInstance.IntProperty = 3;
-            Assert.True(eventCalled);
-            Assert.False(eventCalled2);
+            Assert.IsTrue(eventCalled);
+            Assert.IsFalse(eventCalled2);
             eventCalled = false;
 
             classInstance.IntPropertyChanged += Class_IntPropertyChanged2;
             classInstance.IntProperty = 3;
-            Assert.True(eventCalled);
-            Assert.True(eventCalled2);
+            Assert.IsTrue(eventCalled);
+            Assert.IsTrue(eventCalled2);
         }
 
-        //[Fact]
+        //[TestMethod]
         //public unsafe void TestProxiedDelegate()
         //{
         //    var obj = new OOPAsyncAction();
@@ -3628,7 +3612,7 @@ namespace UnitTest
         //    var proc = Process.Start(launchExePath);
         //    Thread.Sleep(5000);
         //    obj.Close();
-        //    Assert.True(obj.delegateCalled);
+        //    Assert.IsTrue(obj.delegateCalled);
 
         //    try
         //    {
@@ -3639,7 +3623,7 @@ namespace UnitTest
         //    }
         //}
 
-        [Fact]
+        [TestMethod]
         private async Task TestPnpPropertiesInLoop()
         {
             for (int i = 0; i < 10; i++)
@@ -3711,11 +3695,11 @@ namespace UnitTest
         {
             // Types
             var a = new WarningAttribute();    // warning CA1416
-            Assert.NotNull(a);
+            Assert.IsNotNull(a);
             var w = new WarningStruct { i32 = 0 }; // warning CA1416
-            Assert.Equal(0, w.i32);     // warning CA1416
+            Assert.AreEqual(0, w.i32);     // warning CA1416
             var v = WarningEnum.Value;
-            Assert.NotEqual(WarningEnum.WarningValue, v);   // warning CA1416
+            Assert.AreNotEqual(WarningEnum.WarningValue, v);   // warning CA1416
 
             // Members
             var o = new WarningClass();    // warning CA1416
@@ -3739,7 +3723,7 @@ namespace UnitTest
             WarningStatic.WarningEvent += (object s, Int32 v) => { }; // warning CA1416
         }
 
-        [Fact]
+        [TestMethod]
         public void TestObjectFunctions()
         {
             CustomEquals first = new()
@@ -3755,30 +3739,30 @@ namespace UnitTest
                 Value = 2
             };
 
-            Assert.False(first.Equals(second));
-            Assert.True(first.Equals(third));
-            Assert.True(first.Equals(first));
-            Assert.True(Object.Equals(first, second));
-            Assert.True(Object.Equals(second, third));
-            Assert.Equal(5, first.GetHashCode());
-            Assert.Equal(5, second.GetHashCode());
+            Assert.IsFalse(first.Equals(second));
+            Assert.IsTrue(first.Equals(third));
+            Assert.IsTrue(first.Equals(first));
+            Assert.IsTrue(Object.Equals(first, second));
+            Assert.IsTrue(Object.Equals(second, third));
+            Assert.AreEqual(5, first.GetHashCode());
+            Assert.AreEqual(5, second.GetHashCode());
 
             Class fourth = new();
             Class fifth = new();
-            Assert.True(fourth.Equals(fourth));
-            Assert.False(fourth.Equals(fifth));
-            Assert.False(Object.Equals(fourth, fifth));
-            Assert.True(Object.Equals(fifth, fifth));
+            Assert.IsTrue(fourth.Equals(fourth));
+            Assert.IsFalse(fourth.Equals(fifth));
+            Assert.IsFalse(Object.Equals(fourth, fifth));
+            Assert.IsTrue(Object.Equals(fifth, fifth));
             fourth.GetHashCode();
 
             CustomEquals2 sixth = new()
             {
                 Value = 4
             };
-            Assert.Equal(4, sixth.Equals(sixth));
-            Assert.Equal(4, sixth.Equals(fifth));
-            Assert.False(object.Equals(sixth, fifth));
-            Assert.True(object.Equals(sixth, sixth));
+            Assert.AreEqual(4, sixth.Equals(sixth));
+            Assert.AreEqual(4, sixth.Equals(fifth));
+            Assert.IsFalse(object.Equals(sixth, fifth));
+            Assert.IsTrue(object.Equals(sixth, sixth));
 
             UnSealedCustomEquals seventh = new()
             {
@@ -3788,10 +3772,10 @@ namespace UnitTest
             {
                 Value = 2
             };
-            Assert.Equal(10, eighth.GetHashCode());
+            Assert.AreEqual(10, eighth.GetHashCode());
             // Uses Equals defined on derived.
-            Assert.True(eighth.Equals(seventh));
-            Assert.False(seventh.Equals(eighth));
+            Assert.IsTrue(eighth.Equals(seventh));
+            Assert.IsFalse(seventh.Equals(eighth));
         }
 
         // Manually verify warning for experimental.
@@ -3809,7 +3793,7 @@ namespace UnitTest
         {
         }
 
-        [Fact]
+        [TestMethod]
         public void TestWeakReferenceEventsFromMultipleContexts()
         {
             SemaphoreSlim semaphore = new SemaphoreSlim(0);
@@ -3817,24 +3801,33 @@ namespace UnitTest
 
             Thread staThread = new Thread(() =>
             {
-                Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
+                Assert.IsTrue(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
 
                 watcher = DeviceInformation.CreateWatcher();
-                var exception = Record.Exception(() =>
+
+
+                try
                 {
                     watcher.Added += OnDeviceAdded;
-                });
-                Assert.Null(exception);
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail("Expected no exception, but got: " + ex);
+                }
+
 
                 Thread mtaThread = new Thread(() =>
                 {
-                    Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
+                    Assert.IsTrue(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
 
-                    exception = Record.Exception(() =>
+                    try
                     {
                         watcher.Updated += OnDeviceUpdated;
-                    });
-                    Assert.Null(exception);
+                    }
+                    catch (Exception ex)
+                    {
+                        Assert.Fail("Expected no exception, but got: " + ex);
+                    }
                 });
                 mtaThread.SetApartmentState(ApartmentState.MTA);
                 mtaThread.Start();
@@ -3845,43 +3838,51 @@ namespace UnitTest
             staThread.Join();
         }
 
-        [Fact]
+        [TestMethod]
         public void TestActivationFactoriesFromMultipleContexts()
         {
             Exception exception = null;
 
             Thread staThread = new Thread(() =>
             {
-                Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
+                Assert.IsTrue(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
 
-                exception = Record.Exception(() =>
+                try
                 {
                     var xmlDoc = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText01);
                     _ = new ToastNotification(xmlDoc);
-                });
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail("Expected no exception, but got: " + ex);
+                }
 
             });
             staThread.SetApartmentState(ApartmentState.STA);
             staThread.Start();
             staThread.Join();
 
-            Assert.Null(exception);
+            Assert.IsNull(exception);
 
             Thread mtaThread = new Thread(() =>
             {
-                Assert.True(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
+                Assert.IsTrue(Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA);
 
-                exception = Record.Exception(() =>
+                try
                 {
                     var xmlDoc = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText01);
                     _ = new ToastNotification(xmlDoc);
-                });
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail("Expected no exception, but got: " + ex);
+                }
             });
             mtaThread.SetApartmentState(ApartmentState.MTA);
             mtaThread.Start();
             mtaThread.Join();
 
-            Assert.Null(exception);
+            Assert.IsNull(exception);
         }
 
         /* TODO
@@ -3987,13 +3988,13 @@ namespace UnitTest
             }
         };
 
-        [Fact]
+        [TestMethod]
         public unsafe void TestActivationHandler()
         {
             WindowsRuntimeActivationFactory.SetWindowsRuntimeActivationHandler((string name, in Guid iid, out void* activationFactory) =>
             {
-                Assert.Equal("Windows.Foundation.GuidHelper", name);
-                Assert.Equal(typeof(IGuidHelperStatics).GUID, iid);
+                Assert.AreEqual("Windows.Foundation.GuidHelper", name);
+                Assert.AreEqual(typeof(IGuidHelperStatics).GUID, iid);
 
                 activationFactory = WindowsRuntimeInterfaceMarshaller<ICustomGuidHelperStatics>.ConvertToUnmanaged(new CustomGuidHelper(), typeof(ICustomGuidHelperStatics).GUID).GetThisPtrUnsafe();
                 return 0;
@@ -4002,30 +4003,30 @@ namespace UnitTest
             CustomGuidHelper.Mock = new Guid("78872A91-C365-4DDB-9509-1CCA002B6FD9");
 
             Guid guid = GuidHelper.CreateNewGuid();
-            Assert.Equal(CustomGuidHelper.Mock, guid);
+            Assert.AreEqual(CustomGuidHelper.Mock, guid);
 
             WindowsRuntimeActivationFactory.SetWindowsRuntimeActivationHandler(null);
         }
         */
 
-        [Fact]
+        [TestMethod]
         public void TestDictionary()
         {
             var intToIntDict = TestObject.GetIntToIntDictionary();
-            Assert.Equal(8, intToIntDict[2]);
-            Assert.Equal(8, intToIntDict[2]);
-            Assert.Equal(12, intToIntDict[3]);
+            Assert.AreEqual(8, intToIntDict[2]);
+            Assert.AreEqual(8, intToIntDict[2]);
+            Assert.AreEqual(12, intToIntDict[3]);
 
             var stringToBlittableDict = TestObject.GetStringToBlittableDictionary();
-            Assert.Equal(5, stringToBlittableDict["alpha"].blittable.i32);
-            Assert.Equal(7, stringToBlittableDict["charlie"].blittable.i32);
-            Assert.Equal(5, stringToBlittableDict["alpha"].blittable.i32);
+            Assert.AreEqual(5, stringToBlittableDict["alpha"].blittable.i32);
+            Assert.AreEqual(7, stringToBlittableDict["charlie"].blittable.i32);
+            Assert.AreEqual(5, stringToBlittableDict["alpha"].blittable.i32);
 
             var stringToNonBlittableDict = TestObject.GetStringToNonBlittableDictionary();
-            Assert.Equal(1, stringToNonBlittableDict["String1"].blittable.i32);
-            Assert.Equal("String1", stringToNonBlittableDict["String1"].strings.str);
-            Assert.False(stringToNonBlittableDict["String1"].bools.w);
-            Assert.True(stringToNonBlittableDict["String1"].bools.x);
+            Assert.AreEqual(1, stringToNonBlittableDict["String1"].blittable.i32);
+            Assert.AreEqual("String1", stringToNonBlittableDict["String1"].strings.str);
+            Assert.IsFalse(stringToNonBlittableDict["String1"].bools.w);
+            Assert.IsTrue(stringToNonBlittableDict["String1"].bools.x);
 
             var blittableToObjectDict = TestObject.GetBlittableToObjectDictionary();
             ComposedBlittableStruct key = new();
@@ -4034,55 +4035,55 @@ namespace UnitTest
                 i32 = 4
             };
             key.blittable = blittable;
-            Assert.Equal("box", (string)blittableToObjectDict[key]);
-            Assert.Equal("box", (string)blittableToObjectDict[key]);
+            Assert.AreEqual("box", (string)blittableToObjectDict[key]);
+            Assert.AreEqual("box", (string)blittableToObjectDict[key]);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestTimeSpanDictionary()
         {
             IDictionary<TimeSpan, TimeSpan> timeSpanDict = TestObject.GetTimeSpanToTimeSpanDictionary();
 
-            Assert.False(timeSpanDict.ContainsKey(TimeSpan.FromSeconds(1)));
-            Assert.True(timeSpanDict.ContainsKey(TimeSpan.FromSeconds(6)));
-            Assert.True(timeSpanDict.ContainsKey(TimeSpan.FromHours(7)));
+            Assert.IsFalse(timeSpanDict.ContainsKey(TimeSpan.FromSeconds(1)));
+            Assert.IsTrue(timeSpanDict.ContainsKey(TimeSpan.FromSeconds(6)));
+            Assert.IsTrue(timeSpanDict.ContainsKey(TimeSpan.FromHours(7)));
 
-            Assert.Equal(TimeSpan.FromTicks(7), timeSpanDict[TimeSpan.FromHours(7)]);
-            Assert.Equal(TimeSpan.FromTicks(5), timeSpanDict[TimeSpan.FromTicks(4)]);
+            Assert.AreEqual(TimeSpan.FromTicks(7), timeSpanDict[TimeSpan.FromHours(7)]);
+            Assert.AreEqual(TimeSpan.FromTicks(5), timeSpanDict[TimeSpan.FromTicks(4)]);
 
-            Assert.True(timeSpanDict.Remove(TimeSpan.FromHours(7)));
-            Assert.False(timeSpanDict.ContainsKey(TimeSpan.FromHours(7)));
+            Assert.IsTrue(timeSpanDict.Remove(TimeSpan.FromHours(7)));
+            Assert.IsFalse(timeSpanDict.ContainsKey(TimeSpan.FromHours(7)));
 
-            Assert.Equal(2, timeSpanDict.Keys.Count);
+            Assert.AreEqual(2, timeSpanDict.Keys.Count);
 
             timeSpanDict.Clear();
 
-            Assert.False(timeSpanDict.ContainsKey(TimeSpan.FromSeconds(6)));
-            Assert.Empty(timeSpanDict.Keys);
+            Assert.IsFalse(timeSpanDict.ContainsKey(TimeSpan.FromSeconds(6)));
+            Assert.IsNull(timeSpanDict.Keys);
 
             // Key - value entries are 1 minute apart as it is used for validation later.
             timeSpanDict.Add(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(2));
             timeSpanDict[TimeSpan.FromMinutes(3)] = TimeSpan.FromMinutes(4);
 
-            Assert.True(timeSpanDict.TryGetValue(TimeSpan.FromMinutes(1), out TimeSpan value1));
-            Assert.Equal(TimeSpan.FromMinutes(2), value1);
-            Assert.False(timeSpanDict.TryGetValue(TimeSpan.FromMinutes(6), out TimeSpan _));
+            Assert.IsTrue(timeSpanDict.TryGetValue(TimeSpan.FromMinutes(1), out TimeSpan value1));
+            Assert.AreEqual(TimeSpan.FromMinutes(2), value1);
+            Assert.IsFalse(timeSpanDict.TryGetValue(TimeSpan.FromMinutes(6), out TimeSpan _));
 
-            Assert.Equal(2, timeSpanDict.Keys.Count);
+            Assert.AreEqual(2, timeSpanDict.Keys.Count);
 
             foreach (var entries in timeSpanDict)
             {
-                Assert.Equal(TimeSpan.FromMinutes(1), entries.Value - entries.Key);
+                Assert.AreEqual(TimeSpan.FromMinutes(1), entries.Value - entries.Key);
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestNontProjectedClassAsBaseClass()
         {
             UnSealedCustomEquals customEquals = Class.NonProjectedClassInstance;
             customEquals.Value = 3;
             // Non projected class changes the behavior of the Value property to double it.
-            Assert.Equal(6, customEquals.Value);
+            Assert.AreEqual(6, customEquals.Value);
         }
     }
 }
