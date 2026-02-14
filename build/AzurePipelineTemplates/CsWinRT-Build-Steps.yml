@@ -259,7 +259,7 @@ steps:
       displayName: Stage cswinrtgen
       condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Interop.Generator\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Interop.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         Contents: |
           cswinrtgen.exe
           cswinrtgen.pdb
@@ -269,7 +269,7 @@ steps:
       displayName: Stage cswinrtimplgen
       condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Impl.Generator\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Impl.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         Contents: |
           cswinrtimplgen.exe
           cswinrtimplgen.pdb
@@ -279,7 +279,7 @@ steps:
       displayName: Stage cswinrtprojectiongen
       condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Projection.Generator\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Projection.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         Contents: |
           cswinrtprojectiongen.exe
           cswinrtprojectiongen.pdb
