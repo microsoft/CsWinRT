@@ -1794,14 +1794,14 @@ namespace UnitTest
             Assert.AreEqual(expected, TestObject.BindableIterableProperty);
             TestObject.CallForBindableIterable(() => expected);
             TestObject.BindableIterablePropertyChanged +=
-                (object sender, IEnumerable value) => Assert.AreEqual(expected, value);
+                (object sender, IEnumerable value) => Assert.IsTrue(expected.SequenceEqual(value.Cast<int>()));
             TestObject.RaiseBindableIterableChanged();
 
             TestObject.BindableVectorProperty = expected;
-            Assert.AreEqual(expected, TestObject.BindableVectorProperty);
+            Assert.IsTrue(expected.SequenceEqual(TestObject.BindableVectorProperty.Cast<int>()));
             TestObject.CallForBindableVector(() => expected);
             TestObject.BindableVectorPropertyChanged +=
-                (object sender, IList value) => Assert.AreEqual(expected, value);
+                (object sender, IList value) => Assert.IsTrue(expected.SequenceEqual(value.Cast<int>()) );
             TestObject.RaiseBindableVectorChanged();
 
             var observable = new ManagedBindableObservable(expected);
@@ -2948,7 +2948,7 @@ namespace UnitTest
 
             var obj = PropertyValue.CreateInt32Array(i);
             Assert.IsInstanceOfType<int[]>(obj);
-            Assert.AreEqual(i, (IEnumerable<int>)obj);
+            Assert.IsTrue(i.SequenceEqual((IEnumerable<int>)obj));
         }
 
         [TestMethod]
