@@ -15,6 +15,7 @@ namespace Windows.Foundation.Metadata;
 [WindowsRuntimeReferenceType(typeof(MarshalingType?))]
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+[ABI.Windows.Foundation.Metadata.MarshalingTypeComWrappersMarshaller]
 public enum MarshalingType
 {
     /// <summary>

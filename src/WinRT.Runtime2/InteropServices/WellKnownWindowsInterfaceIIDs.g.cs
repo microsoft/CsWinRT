@@ -2310,6 +2310,31 @@ internal static class WellKnownWindowsInterfaceIIDs
         }
     }
 
+    /// <summary>The IID for <c>IReferenceOfMarshalingType</c> (DA90778C-9486-5C10-956F-59E9FA71E7A5).</summary>
+    public static ref readonly Guid IID_IReferenceOfMarshalingType
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x8C, 0x77, 0x90, 0xDA,
+                0x86, 0x94,
+                0x10, 0x5C,
+                0x95,
+                0x6F,
+                0x59,
+                0xE9,
+                0xFA,
+                0x71,
+                0xE7,
+                0xA5
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
     /// <summary>The IID for <c>IReferenceArrayOfInt32</c> (A6D080A5-B087-5BC2-9A9F-5CD687B4D1F7).</summary>
     public static ref readonly Guid IID_IReferenceArrayOfInt32
     {
