@@ -7,7 +7,6 @@
     <NoWarn>1701;1702;0436;1658</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CsWinRTEnabled>false</CsWinRTEnabled>
- <CsWinRTGeneratorDebugReproDirectory>$(MSBuildProjectDirectory)\debug\</CsWinRTGeneratorDebugReproDirectory>      
   </PropertyGroup>
   
   <ItemGroup>
