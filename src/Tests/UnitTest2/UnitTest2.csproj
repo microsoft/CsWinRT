@@ -5,14 +5,12 @@
     <Platforms>x64;x86</Platforms>
     <ProjectName>UnitTest</ProjectName>
     <NoWarn>1701;1702;0436;1658</NoWarn>
-    <!--<SelfContained>true</SelfContained>-->
+    <SelfContained>true</SelfContained>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CsWinRTEnabled>false</CsWinRTEnabled>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <!--<OutputType>exe</OutputType>
-    <PublishAot>true</PublishAot>-->
+    <OutputType>exe</OutputType>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,11 +19,19 @@
       close sourced, licensed the same as our extensions 
       with Microsoft Testing Platform Tools license.
     -->
-    <PackageReference Include="MSTest" />
-    <!--<PackageReference Include="MSTest.Engine" />
+
+    <!-- Core MSTest attributes/assertions -->
+    <PackageReference Include="MSTest.TestFramework" />
+    <PackageReference Include="MSTest.Analyzers" />
+
+    <!-- MTP build integration + optional reporting -->
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+
+    <PackageReference Include="MSTest.Engine" />
     <PackageReference Include="MSTest.SourceGeneration" />
 
-    <PackageReference Include="Microsoft.CodeCoverage.MSBuild" />
+    <!--<PackageReference Include="Microsoft.CodeCoverage.MSBuild" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
 
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
