@@ -172,6 +172,16 @@ steps:
         Contents: cswinrt.binlog
         TargetFolder: $(StagingFolder)\binlog
 
+    # Stage merged projection
+    - task: ArchiveFiles@2
+      displayName: Stage merged projection
+      condition: failed()
+      inputs:
+        rootFolderOrFile: $(Agent.TempDirectory)\CsWinRT\
+        includeRootFolder: false
+        sevenZipCompression: 5
+        archiveFile: $(StagingFolder)\merged\sources.zip
+
     # Stage Windows projection
     - task: ArchiveFiles@2
       displayName: Stage Windows projection
