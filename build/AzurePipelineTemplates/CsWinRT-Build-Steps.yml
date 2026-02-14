@@ -140,6 +140,18 @@ steps:
       feedsToUse: config
       nugetConfigPath: NuGet.config
 
+  - task: CmdLine@2
+    displayName: Set CsWinRT Build Tools Arch
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)
+      script: |
+        rem We use x64 build tools on x86.
+        set CsWinRTBuildToolsArch=$(BuildPlatform)
+        if "$(BuildPlatform)"=="x86" (
+          set CsWinRTBuildToolsArch=x64
+        )
+        echo ##vso[task.setvariable variable=CsWinRTBuildToolsArch;]%CsWinRTBuildToolsArch%
+
   - ${{ if eq(parameters.SetupForBuildOnly, false) }}:
 
 # PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
@@ -147,7 +159,7 @@ steps:
       displayName: Build cswinrt.slnx
       inputs:
         solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
-        msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(BuildPlatform) /bl:$(Build.SourcesDirectory)\cswinrt.binlog
+        msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch) /bl:$(Build.SourcesDirectory)\cswinrt.binlog
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
