@@ -311,7 +311,7 @@ steps:
       displayName: Stage RunCsWinRTGeneratorTask
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\RunCsWinRTGeneratorTask\bin\$(BuildConfiguration)\netstandard2.0\RunCsWinRTGeneratorTask.dll
+        SourceFolder: $(Build.SourcesDirectory)\src\RunCsWinRTGeneratorTask\bin\$(BuildConfiguration)\netstandard2.0
         Contents: |
           RunCsWinRTGeneratorTask.dll
           RunCsWinRTGeneratorTask.pdb
