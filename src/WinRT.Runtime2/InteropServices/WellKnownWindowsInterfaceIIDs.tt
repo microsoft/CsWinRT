@@ -62,7 +62,6 @@ var entries = new (string Name, string IID)[]
     ("UriRuntimeClassFactory", "44A9796F-723E-4FDF-A218-033E75B0C084"),
     ("INotifyDataErrorInfo", "0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA"),
     ("ICommand", "E5AF3542-CA67-4081-995B-709DD13792DF"),
-    ("IGlobalInterfaceTable", "00000146-0000-0000-C000-000000000046"),
     ("EventHandler", "C50898F6-C536-5F47-8583-8B2C2438A13B"),
     ("IBindableIterable", "036D2C08-DF29-41AF-8AA2-D774BE62BA6F"),
     ("IBindableIterator", "6A1D6C07-076D-49F2-8314-F52C9C9A8331"),

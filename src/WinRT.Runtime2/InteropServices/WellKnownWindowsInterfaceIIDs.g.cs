@@ -1135,31 +1135,6 @@ internal static class WellKnownWindowsInterfaceIIDs
         }
     }
 
-    /// <summary>The IID for <c>IGlobalInterfaceTable</c> (00000146-0000-0000-C000-000000000046).</summary>
-    public static ref readonly Guid IID_IGlobalInterfaceTable
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get
-        {
-            ReadOnlySpan<byte> data =
-            [
-                0x46, 0x01, 0x00, 0x00,
-                0x00, 0x00,
-                0x00, 0x00,
-                0xC0,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x46
-            ];
-
-            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-        }
-    }
-
     /// <summary>The IID for <c>EventHandler</c> (C50898F6-C536-5F47-8583-8B2C2438A13B).</summary>
     public static ref readonly Guid IID_EventHandler
     {
