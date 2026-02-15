@@ -13,10 +13,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' != 'true'">false</CsWinRTEnabled>
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
-    <CsWinRTGenerateReferenceProjection Condition="'$(CsWinRTGenerateReferenceProjection)' == ''">false</CsWinRTGenerateReferenceProjection>
-    <DebugSymbols Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">false</DebugSymbols>
-    <ProduceOnlyReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">true</ProduceOnlyReferenceAssembly>
-    <ProduceReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">false</ProduceReferenceAssembly>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
 
     <!--
@@ -67,22 +63,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTAotWarningLevel" />
     <CompilerVisibleProperty Include="CsWinRTGenerateManagedDllGetActivationFactory" />
   </ItemGroup>
-
-  <!-- TODO: Remove once ProduceOnlyReferenceAssembly is set earlier for _DebugSymbolsIntermediatePath to be set correctly.
-             This only impacts incremental builds.
-    -->
-  <ItemGroup Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
-    <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />
-  </ItemGroup>
-
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
   
-  <Target Name="CsWinRTNet5EOL" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5" BeforeTargets="CsWinRTPrepareProjection">
-    <Error Text="Support for .NET 5 ended with C#/WinRT 2.0. For .NET 5 support, use C#/WinRT version 1.6.5. See https://github.com/microsoft/CsWinRT/discussions/1232" />
-  </Target>
-
-  <Target Name="CsWinRTNet6EOL" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 6 or $([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 7" BeforeTargets="CsWinRTPrepareProjection">
-    <Error Text="Support for .NET 6 and .NET 7 ended with C#/WinRT 2.2. For .NET 6 or .NET 7 support, use C#/WinRT version 2.2.x." />
+  <Target Name="CsWinRTMinNet10" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) &lt;= 9" BeforeTargets="CsWinRTPrepareProjection">
+    <Error Text="CsWinRT 3.x requires .NET 10 or later.  For .NET 8 or .NET 9, use C#/WinRT version 2.2.x." />
   </Target>
 
   <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
@@ -564,7 +547,6 @@ $(CsWinRTInternalProjection)
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
 
   <!-- Default values for all custom CsWinRT runtime feature switches -->
   <PropertyGroup>
@@ -629,7 +611,7 @@ $(CsWinRTInternalProjection)
     <RuntimeHostConfigurationOption Include="CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION"
                                     Value="$(CsWinRTManifestFreeActivationReportOriginalException)"
                                     Trim="true" />
-	  
+      
     <!-- CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC"
                                     Value="$(CsWinRTLoadComponentsInDefaultALC)"

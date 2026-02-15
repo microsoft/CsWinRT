@@ -9,6 +9,11 @@
     <GeneratedFilesDir>$([MSBuild]::NormalizeDirectory('$(GeneratedFilesRootDir)', '$(TargetFramework)'))</GeneratedFilesDir>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'">
+    <!-- Set in targets file to ensure we set it after .NET SDK sets it default based on TFM -->
+    <_TargetPlatformVersionUsesCsWinRT3>true</_TargetPlatformVersionUsesCsWinRT3>      
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="$(GeneratedFilesRootDir)**/*.cs" />
     <None Include="$(GeneratedFilesRootDir)**/*.cs" />

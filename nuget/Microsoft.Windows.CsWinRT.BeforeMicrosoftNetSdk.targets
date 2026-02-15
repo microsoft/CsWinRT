@@ -9,6 +9,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   
     <!-- We need to set the final value of this property here, as if that's set, we need to do additional work before the .NET SDK .targets -->
     <CsWinRTMergeReferencedActivationFactories Condition="'$(CsWinRTMergeReferencedActivationFactories)' == ''">false</CsWinRTMergeReferencedActivationFactories>
+
+    <!-- We need to set ProduceOnlyReferenceAssembly here before the .NET SDK targets check its value -->
+    <CsWinRTGenerateReferenceProjection Condition="'$(CsWinRTGenerateReferenceProjection)' == ''">false</CsWinRTGenerateReferenceProjection>
+    <ProduceOnlyReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">true</ProduceOnlyReferenceAssembly>
   </PropertyGroup>
 
   <!--

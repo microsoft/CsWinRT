@@ -6,14 +6,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- Setup common properties for '_RunCsWinRTGenerator' below -->
   <PropertyGroup>
-      
-    <CsWinRTGenTasksAssembly>$(SolutionDir)RunCsWinRTGeneratorTask\bin\$(Configuration)\netstandard2.0\RunCsWinRTGeneratorTask.dll</CsWinRTGenTasksAssembly>
-    <_CsWinRTToolsArchFolder Condition="'$(BuildToolArch)' != ''">win-$(BuildToolArch)\</_CsWinRTToolsArchFolder>
-    <CsWinRTGenToolsDirectory>$(SolutionDir)WinRT.Interop.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTGenToolsDirectory>
-    <CsWinRTImplToolsDirectory>$(SolutionDir)WinRT.Impl.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTImplToolsDirectory>
-    <CsWinRTMergedProjectionToolsDirectory>$(SolutionDir)WinRT.Projection.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTMergedProjectionToolsDirectory>
-    <CsWinRTToolsArchitecture>AnyCPU</CsWinRTToolsArchitecture>
-    <_TargetPlatformVersionUsesCsWinRT3>true</_TargetPlatformVersionUsesCsWinRT3>
+
+    <!-- Default property value for CsWinRTGenTasksAssembly -->
+    <CsWinRTGenTasksAssembly Condition="'$(CsWinRTGenTasksAssembly)' == ''">$(MSBuildThisFileDirectory)..\tools\RunCsWinRTGeneratorTask.dll</CsWinRTGenTasksAssembly>
 
     <!--
       Running 'cswinrtgen' is required for CsWinRT 3.0, and it is currently in preview.
@@ -99,11 +94,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTOrTargetingPackRootDirectory>$([System.IO.Path]::GetDirectoryName('$(_CsWinRTOrTargetingPackLibDirectory)'))</_CsWinRTOrTargetingPackRootDirectory>
       <_CsWinRTOrTargetingPackToolsDirectory>$([System.IO.Path]::Combine('$(_CsWinRTOrTargetingPackRootDirectory)', 'tools'))</_CsWinRTOrTargetingPackToolsDirectory>
 
-      <CsWinRTGenEffectiveToolsDirectory>$(CsWinRTGenToolsDirectory)</CsWinRTGenEffectiveToolsDirectory>
       <CsWinRTGenEffectiveToolsDirectory Condition="'$(CsWinRTGenEffectiveToolsDirectory)' == ''">$(_CsWinRTOrTargetingPackToolsDirectory)</CsWinRTGenEffectiveToolsDirectory>
-      <CsWinRTImplEffectiveToolsDirectory>$(CsWinRTImplToolsDirectory)</CsWinRTImplEffectiveToolsDirectory>
       <CsWinRTImplEffectiveToolsDirectory Condition="'$(CsWinRTImplEffectiveToolsDirectory)' == ''">$(_CsWinRTOrTargetingPackToolsDirectory)</CsWinRTImplEffectiveToolsDirectory>
-      <CsWinRTMergedProjectionEffectiveToolsDirectory>$(CsWinRTMergedProjectionToolsDirectory)</CsWinRTMergedProjectionEffectiveToolsDirectory>
       <CsWinRTMergedProjectionEffectiveToolsDirectory Condition="'$(CsWinRTMergedProjectionEffectiveToolsDirectory)' == ''">$(_CsWinRTOrTargetingPackToolsDirectory)</CsWinRTMergedProjectionEffectiveToolsDirectory>
     </PropertyGroup>
   </Target>    
