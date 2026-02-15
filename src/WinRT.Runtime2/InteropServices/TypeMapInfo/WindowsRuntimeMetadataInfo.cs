@@ -36,7 +36,7 @@ internal sealed class WindowsRuntimeMetadataInfo
     /// <remarks>
     /// This will only have non <see langword="null"/> values for types needing special metadata handling.
     /// </remarks>
-    private static readonly ConditionalWeakTable<Type, WindowsRuntimeMetadataInfo?> TypeToMetadataInfoTable = [];
+    private static readonly ConcurrentDictionary<Type, WindowsRuntimeMetadataInfo?> TypeToMetadataInfoTable = [];
 
     /// <summary>
     /// Cached creation factory for <see cref="CreateMetadataInfo"/>.

@@ -515,6 +515,12 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <inheritdoc/>
     RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
     {
+        // Fail immediately if the feature switch is disabled, to ensure all related code can be trimmed
+        if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+        {
+            WindowsRuntimeObjectExceptions.ThrowNotSupportedException();
+        }
+
         Type type = Type.GetTypeFromHandle(interfaceType)!;
 
         // If we can resolve the implementation type through the Windows Runtime infrastructure, return it
@@ -538,6 +544,20 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <inheritdoc/>
     bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
     {
+        // Early feature switch check to improve trimming (same as above)
+        if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+        {
+            // If we should throw, explicitly throw the same exception as from 'GetInterfaceImplementation', rather than
+            // just returning 'false' and letting the runtime throw an 'InvalidCastException'. This allows developers to
+            // more easily understand why a given runtime cast might be failing under different configurations.
+            if (throwIfNotImplemented)
+            {
+                WindowsRuntimeObjectExceptions.ThrowNotSupportedException();
+            }
+
+            return false;
+        }
+
         return TryGetCastResult(
             interfaceType: interfaceType,
             implementationType: out _,
@@ -675,6 +695,13 @@ public abstract unsafe class WindowsRuntimeObject :
     private bool LookupDynamicInterfaceCastableImplementationInfo(RuntimeTypeHandle interfaceType, out DynamicInterfaceCastableResult? castResult)
     {
         castResult = null;
+
+        // Also fail from here if the feature switch is disabled, to ensure that 'DynamicInterfaceCastableImplementationInfo'
+        // can fully be trimmed. In theory this path shouldn't be reachable if the feature is disabled, but this can help.
+        if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+        {
+            return false;
+        }
 
         Type type = Type.GetTypeFromHandle(interfaceType)!;
 
@@ -874,4 +901,22 @@ public abstract unsafe class WindowsRuntimeObject :
     /// A dummy type to use for caching adaptive <see cref="IEnumerable"/> object references in <see cref="TryGetObjectReferenceForIEnumerableInterfaceInstance"/>.
     /// </summary>
     private static class IEnumerableInstance;
+}
+
+/// <summary>
+/// Exception stubs for <see cref="WindowsRuntimeObject"/>.
+/// </summary>
+file static class WindowsRuntimeObjectExceptions
+{
+    /// <summary>
+    /// Throws a <see cref="NotSupportedException"/> if support for <see cref="IDynamicInterfaceCastable"/> is disabled.
+    /// </summary>
+    [DoesNotReturn]
+    [StackTraceHidden]
+    public static void ThrowNotSupportedException()
+    {
+        throw new NotSupportedException(
+            $"Support for 'IDynamicInterfaceCastable' is disabled (make sure that the 'CsWinRTEnableIDynamicInterfaceCastableSupport' property is not set to 'false'). " +
+            $"In this configuration, runtime casts on Windows Runtime objects will only work if the managed object implements the target interface in metadata.");
+    }
 }
