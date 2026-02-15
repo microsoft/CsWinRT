@@ -112,7 +112,7 @@ public partial class AuthoringExportTypesGenerator
                 return;
             }
 
-            IndentedTextWriter writer = new(literalLength: 0, formattedCount: 0);
+            IndentedTextWriter writer = new(literalLength: 0, formattedCount: 0); // TODO: adjust the literal length
 
             // Emit the '[WindowsRuntimeComponentAssemblyExportsType]' attribute so other tooling (including this same generator)
             // can reliably find the generated export types from other assemblies, which is needed when merging activation factories.
