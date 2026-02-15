@@ -82,12 +82,7 @@ internal partial class ProjectionGenerator
         try
         {
             ConsoleApp.Log("Writing projection dll");
-
-            // Configure emit options for embedded symbols
-            EmitOptions emitOptions = new(
-                debugInformationFormat: DebugInformationFormat.Embedded,
-                includePrivateMembers: true);
-
+            
             string projectionDllPath = Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName + ".dll");
 
             EmitResult result;
@@ -95,7 +90,7 @@ internal partial class ProjectionGenerator
             // Emit the compilation to a file
             using (FileStream fileStream = new(projectionDllPath, FileMode.Create))
             {
-                result = compilation.Emit(fileStream, options: emitOptions);
+                result = compilation.Emit(fileStream);
             }
 
             if (!result.Success)
