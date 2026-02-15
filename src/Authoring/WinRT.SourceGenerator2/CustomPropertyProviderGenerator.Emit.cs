@@ -22,7 +22,7 @@ public partial class CustomPropertyProviderGenerator
         /// <param name="info">The input <see cref="CustomPropertyProviderInfo"/> state to use.</param>
         public static void WriteCustomPropertyProviderImplementation(SourceProductionContext context, CustomPropertyProviderInfo info)
         {
-            using IndentedTextWriter writer = new();
+            IndentedTextWriter writer = new(literalLength: 0, formattedCount: 0); // TODO: adjust the literal length
 
             // Emit the implementation on the annotated type
             info.TypeHierarchy.WriteSyntax(
@@ -39,7 +39,7 @@ public partial class CustomPropertyProviderGenerator
             WriteCustomPropertyImplementationTypes(info, writer);
 
             // Add the source file for the annotated type
-            context.AddSource($"{info.TypeHierarchy.FullyQualifiedMetadataName}.g.cs", writer.ToString());
+            context.AddSource($"{info.TypeHierarchy.FullyQualifiedMetadataName}.g.cs", writer.ToStringAndClear());
         }
 
         /// <summary>
