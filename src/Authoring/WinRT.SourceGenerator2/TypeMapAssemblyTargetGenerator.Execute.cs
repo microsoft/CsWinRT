@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis;
 namespace WindowsRuntime.SourceGenerator;
 
 /// <inheritdoc cref="TypeMapAssemblyTargetGenerator"/>
-public partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerator
+public partial class TypeMapAssemblyTargetGenerator
 {
     /// <summary>
     /// Generation methods for <see cref="TypeMapAssemblyTargetGenerator"/>.
