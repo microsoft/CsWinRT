@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ConsoleAppFramework;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
@@ -32,9 +33,13 @@ internal partial class ProjectionGenerator
             // Parse the source files into syntax trees
             List<SyntaxTree> syntaxTrees = [];
 
+            ConsoleApp.Log("Generating syntax trees");
+
             foreach (string file in Directory.GetFiles(processingState.SourcesFolder, "*.cs"))
             {
                 args.Token.ThrowIfCancellationRequested();
+
+                ConsoleApp.Log($"Generating syntax tree for {file}");
 
                 using Stream stream = File.OpenRead(file);
                 syntaxTrees.Add(CSharpSyntaxTree.ParseText(SourceText.From(stream), path: file));
@@ -43,12 +48,16 @@ internal partial class ProjectionGenerator
             // Build the references list
             List<MetadataReference> references = [];
 
+            ConsoleApp.Log("Building reference list");
+
             foreach (string refPath in processingState.ReferencesWithoutProjections)
             {
                 references.Add(MetadataReference.CreateFromFile(refPath));
             }
 
             args.Token.ThrowIfCancellationRequested();
+
+            ConsoleApp.Log("Starting compilation");
 
             // Create the compilation
             compilation = CSharpCompilation.Create(
@@ -72,6 +81,8 @@ internal partial class ProjectionGenerator
         // Emit the projection .dll to disk
         try
         {
+            ConsoleApp.Log("Writing projection dll");
+
             // Configure emit options for embedded symbols
             EmitOptions emitOptions = new(
                 debugInformationFormat: DebugInformationFormat.Embedded,
