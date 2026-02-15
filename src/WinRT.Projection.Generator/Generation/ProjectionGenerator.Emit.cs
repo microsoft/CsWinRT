@@ -82,7 +82,7 @@ internal partial class ProjectionGenerator
         try
         {
             ConsoleApp.Log("Writing projection dll");
-            
+
             string projectionDllPath = Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName + ".dll");
 
             EmitResult result;
