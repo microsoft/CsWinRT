@@ -242,10 +242,10 @@ steps:
       displayName: Stage Net10.0
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net10.0
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime2\bin\$(BuildConfiguration)\net10.0
         Contents: |
-          WinRT.Runtime.dll
-          WinRT.Runtime.pdb
+          WinRT.Runtime2.dll
+          WinRT.Runtime2.pdb
         TargetFolder: $(StagingFolder)\net10.0
 
     # Stage WinRT.Host.Shim
