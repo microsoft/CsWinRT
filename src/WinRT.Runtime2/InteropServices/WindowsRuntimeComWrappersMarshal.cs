@@ -6,7 +6,6 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using Windows.Foundation.Metadata;
 using WindowsRuntime.InteropServices.Marshalling;
 
 #pragma warning disable CS1573
@@ -52,18 +51,18 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     }
 
     /// <inheritdoc cref="CreateObjectReference(void*, in Guid, out CreatedWrapperFlags)"/>
-    /// <param name="marshalingType">The <see cref="MarshalingType"/> value available in metadata for the type being marshalled.</param>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
     [SupportedOSPlatform("Windows10.0.10240.0")]
     public static WindowsRuntimeObjectReference CreateObjectReference(
         void* externalComObject,
         in Guid iid,
-        MarshalingType marshalingType,
+        CreateObjectReferenceMarshalingType marshalingType,
         out CreatedWrapperFlags wrapperFlags)
     {
         WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.InitializeObjectReference(
             externalComObject: externalComObject,
             iid: in iid,
-            marshalingType: CreateObjectReferenceMarshalingType.FromMetadata(marshalingType));
+            marshalingType: marshalingType);
 
         wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() is null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
 
@@ -104,18 +103,18 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     }
 
     /// <inheritdoc cref="CreateObjectReferenceUnsafe(void*, in Guid, out CreatedWrapperFlags)"/>
-    /// <param name="marshalingType">The <see cref="MarshalingType"/> value available in metadata for the type being marshalled.</param>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
     [SupportedOSPlatform("Windows10.0.10240.0")]
     public static WindowsRuntimeObjectReference CreateObjectReferenceUnsafe(
         void* externalComObject,
         in Guid iid,
-        MarshalingType marshalingType,
+        CreateObjectReferenceMarshalingType marshalingType,
         out CreatedWrapperFlags wrapperFlags)
     {
         WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.InitializeObjectReferenceUnsafe(
             externalComObject: externalComObject,
             iid: in iid,
-            marshalingType: CreateObjectReferenceMarshalingType.FromMetadata(marshalingType));
+            marshalingType: marshalingType);
 
         wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() is null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
 
