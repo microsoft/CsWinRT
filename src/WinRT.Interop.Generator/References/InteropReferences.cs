@@ -1490,6 +1490,11 @@ internal sealed class InteropReferences
     public TypeReference AsyncOperationWithProgressCompletedHandler2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationWithProgressCompletedHandler`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Metadata.MarshalingType</c>.
+    /// </summary>
+    public TypeReference MarshalingType => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation.Metadata"u8, "MarshalingType"u8);
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <see cref="string.Length"/>.
     /// </summary>
     public MemberReference Stringget_Length => field ??= _corLibTypeFactory.String
