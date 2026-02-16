@@ -175,7 +175,6 @@ steps:
     # Stage merged projection
     - task: ArchiveFiles@2
       displayName: Stage merged projection
-      condition: failed()
       inputs:
         rootFolderOrFile: $(temp)\CsWinRT\
         includeRootFolder: false
