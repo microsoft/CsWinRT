@@ -40,7 +40,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">net8.0</CsWinRTExeTFM>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
-    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(EffectiveTargetPlatformVersion)</CsWinRTWindowsMetadata>
 
     <!--
       Default to using the environment tools if in a Visual Studio Developer Command Prompt (or PowerShell).
@@ -399,12 +399,12 @@ $(CsWinRTInternalProjection)
       <!-- Also get the root for the Windows SDK headers -->
       <_WindowsSdk10InstallDirectory Condition="'$(_WindowsSdk10InstallDirectory)' == '' AND '$(WindowsSdkPath)' != ''">$(WindowsSdkPath)</_WindowsSdk10InstallDirectory>
       <_WindowsSdk10InstallDirectory Condition="'$(_WindowsSdk10InstallDirectory)' == ''">C:\Program Files (x86)\Windows Kits\10</_WindowsSdk10InstallDirectory>
-      <_WindowsSdkIncludePath Condition="'$(TargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Include', '$(TargetPlatformVersion)'))</_WindowsSdkIncludePath>
+      <_WindowsSdkIncludePath Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Include', '$(EffectiveTargetPlatformVersion)'))</_WindowsSdkIncludePath>
       <_WindowsSdk-ucrt-IncludePath>$([System.IO.Path]::Combine($(_WindowsSdkIncludePath), 'ucrt'))</_WindowsSdk-ucrt-IncludePath>
       <_WindowsSdk-um-IncludePath>$([System.IO.Path]::Combine($(_WindowsSdkIncludePath), 'um'))</_WindowsSdk-um-IncludePath>
 
       <!-- Do the same for libs as well -->
-      <_WindowsSdkLibPath Condition="'$(TargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Lib', '$(TargetPlatformVersion)'))</_WindowsSdkLibPath>
+      <_WindowsSdkLibPath Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Lib', '$(EffectiveTargetPlatformVersion)'))</_WindowsSdkLibPath>
       <_WindowsSdk-ucrt-LibPath>$([System.IO.Path]::Combine($(_WindowsSdkLibPath), 'ucrt', '$(_StubExePlatform)'))</_WindowsSdk-ucrt-LibPath>
       <_WindowsSdk-um-LibPath>$([System.IO.Path]::Combine($(_WindowsSdkLibPath), 'um', '$(_StubExePlatform)'))</_WindowsSdk-um-LibPath>
       <_WindowsSdk-ucrt-LibWildcardPath>$([System.IO.Path]::Combine($(_WindowsSdk-ucrt-LibPath), '*.lib'))</_WindowsSdk-ucrt-LibWildcardPath>
