@@ -175,6 +175,7 @@ steps:
     # Stage merged projection
     - task: ArchiveFiles@2
       displayName: Stage merged projection
+      condition: always()
       inputs:
         rootFolderOrFile: $(temp)\CsWinRT\
         includeRootFolder: false
@@ -315,3 +316,4 @@ steps:
           RunCsWinRTGeneratorTask.dll
           RunCsWinRTGeneratorTask.pdb
         TargetFolder: $(StagingFolder)\netstandard2.0
+
