@@ -62,6 +62,8 @@ public unsafe partial class WindowsRuntimeObjectReference
         // Also see: https://learn.microsoft.com/windows/win32/com/aggregation.
         void* externalComObject = isAggregation ? acquiredInnerInstanceUnknown : acquiredNewInstanceUnknown;
 
+        ComObjectHelpers.ValidateMarshalingType(externalComObject, marshalingType);
+
         bool isFreeThreaded;
 
         // Depending on the input marshaling type, we can either use a fast-path where we just trust the
@@ -326,6 +328,8 @@ public unsafe partial class WindowsRuntimeObjectReference
         in Guid iid,
         CreateObjectReferenceMarshalingType marshalingType)
     {
+        ComObjectHelpers.ValidateMarshalingType(externalComObject, marshalingType);
+
         bool isFreeThreaded;
 
         // Check whether the object is free-threaded, optimizing if possible (see notes above)
@@ -395,6 +399,8 @@ public unsafe partial class WindowsRuntimeObjectReference
         void* acquiredExternalComObject = externalComObject;
 
         externalComObject = null;
+
+        ComObjectHelpers.ValidateMarshalingType(acquiredExternalComObject, marshalingType);
 
         bool isFreeThreaded;
 
