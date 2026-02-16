@@ -10,6 +10,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Default property value for CsWinRTGenTasksAssembly -->
     <CsWinRTGenTasksAssembly Condition="'$(CsWinRTGenTasksAssembly)' == ''">$(MSBuildThisFileDirectory)..\tools\RunCsWinRTGeneratorTask.dll</CsWinRTGenTasksAssembly>
 
+    <!-- Disable the tasks from the .NET SDK given we want to use the one from here. -->
+    <CsWinRTGeneratorTasksOverriden>true</CsWinRTGeneratorTasksOverriden>
+
     <!--
       Running 'cswinrtgen' is required for CsWinRT 3.0, and it is currently in preview.
       So the switch for it is currently opt-in. It can be changed to opt-out in the future.
@@ -18,6 +21,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == '' and '$(_TargetPlatformVersionUsesCsWinRT3)' == 'true' and ('$(OutputType)' == 'Exe' or '$(OutputType)' == 'Winexe')">true</CsWinRTGenerateInteropAssembly>
     <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == '' and '$(_TargetPlatformVersionUsesCsWinRT3)' == 'true' and '$(OutputType)' == 'Library' and '$(PublishAOT)' == 'true'">true</CsWinRTGenerateInteropAssembly>   
     <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == ''">false</CsWinRTGenerateInteropAssembly>
+
+    <!--
+     The duplicate targets in .NET SDK currently use CsWinRTGenerateInteropAssembly to determine whether to run.
+     We use a different property from that for our targets and set the one used by the .NET SDK to false.
+     -->
+    <CsWinRTGenerateInteropAssembly2>$(CsWinRTGenerateInteropAssembly)</CsWinRTGenerateInteropAssembly2>
+    <CsWinRTGenerateInteropAssembly>false</CsWinRTGenerateInteropAssembly>
 
     <!--
       Default property values for 'cswinrtgen'. Not setting 'CsWinRTToolsDirectory' and
@@ -38,7 +48,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <_CsWinRTGeneratorInteropAssemblyName>WinRT.Interop</_CsWinRTGeneratorInteropAssemblyName>
     <_CsWinRTGeneratorInteropAssemblyFileName>$(_CsWinRTGeneratorInteropAssemblyName).dll</_CsWinRTGeneratorInteropAssemblyFileName>
     <_CsWinRTGeneratorInteropAssemblyPath>$(CsWinRTGeneratorInteropAssemblyDirectory)$(_CsWinRTGeneratorInteropAssemblyFileName)</_CsWinRTGeneratorInteropAssemblyPath>	  
-    <!-- <_CsWinRTGeneratorInteropAssemblyPath>$([MSBuild]::NormalizePath('$(CsWinRTGeneratorInteropAssemblyDirectory)', '$(_CsWinRTGeneratorInteropAssemblyFileName)'))</_CsWinRTGeneratorInteropAssemblyPath> -->
 
     <!--
       Set the path of the file with the hash of all input properties for 'cswinrtgen'.
@@ -70,7 +79,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Resolves and initalizes the location of the CsWinRT generator tools.
     ============================================================
   -->
-  <Target Name="_ResolveCsWinRToolsDirectory" DependsOnTargets="ResolveAssemblyReferences">
+  <Target Name="_ResolveCsWinRToolsDirectory" DependsOnTargets="ResolveAssemblyReferences" BeforeTargets="_ComputeRunCsWinRTGeneratorCache">
 
     <!--
       If the user hasn't specified the 'CsWinRTToolsDirectory' property, we need to resolve the correct
@@ -97,6 +106,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTGenEffectiveToolsDirectory Condition="'$(CsWinRTGenEffectiveToolsDirectory)' == ''">$(_CsWinRTOrTargetingPackToolsDirectory)</CsWinRTGenEffectiveToolsDirectory>
       <CsWinRTImplEffectiveToolsDirectory Condition="'$(CsWinRTImplEffectiveToolsDirectory)' == ''">$(_CsWinRTOrTargetingPackToolsDirectory)</CsWinRTImplEffectiveToolsDirectory>
       <CsWinRTMergedProjectionEffectiveToolsDirectory Condition="'$(CsWinRTMergedProjectionEffectiveToolsDirectory)' == ''">$(_CsWinRTOrTargetingPackToolsDirectory)</CsWinRTMergedProjectionEffectiveToolsDirectory>
+
+      <!-- Temporarily setting this due to .NET SDK targets check it. -->
+      <CsWinRTToolsDirectory>$(CsWinRTGenEffectiveToolsDirectory)</CsWinRTToolsDirectory>
+
+      <!-- Temporarily setting this due to .NET SDK targets override it to the wrong value. -->
+      <_CsWinRTGeneratorInteropAssemblyPath>$(CsWinRTGeneratorInteropAssemblyDirectory)$(_CsWinRTGeneratorInteropAssemblyFileName)</_CsWinRTGeneratorInteropAssemblyPath>
     </PropertyGroup>
   </Target>    
     
@@ -111,7 +126,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="_ComputeRunCsWinRTGeneratorCache" DependsOnTargets="ResolveAssemblyReferences;_ResolveCsWinRToolsDirectory">
 
     <ItemGroup>
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTEffectiveToolsDirectory)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGenEffectiveToolsDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorInteropAssemblyDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorDebugReproDirectory)" />
@@ -145,14 +160,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Runs 'cswinrtgen' to produce the 'WinRT.Interop.dll' assembly.
     ============================================================
   -->
-  <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden)' != 'true'" TaskName="RunCsWinRTGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
+  <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
-    Name="_RunCsWinRTGenerator"
+    Name="_RunCsWinRTInteropGenerator"
     DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);@(IntermediateAssembly);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorInteropAssemblyPath)"
-    Condition="'$(CsWinRTGenerateInteropAssembly)' == 'true'">
+    Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
     <ItemGroup>
         <!--
@@ -230,7 +245,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Runs 'cswinrtimplgen' to produce the forwarders assembly.
     ============================================================
   -->
-  <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden)' != 'true'" TaskName="RunCsWinRTForwarderImplGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
+  <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTForwarderImplGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTForwarderImplGenerator"
     DependsOnTargets="Compile;_ResolveCsWinRToolsDirectory"
@@ -296,14 +311,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Runs 'cswinrtprojectiongen' to produce the forwarders assembly.
     ============================================================
   -->
-  <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
+  <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTMergedProjectionGenerator"
     DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
-    Condition="'$(CsWinRTGenerateInteropAssembly)' == 'true'">
+    Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
     <ItemGroup>
         <_ReferencePathsWithWinMDs Include="@(ReferencePathWithRefAssemblies)" Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
