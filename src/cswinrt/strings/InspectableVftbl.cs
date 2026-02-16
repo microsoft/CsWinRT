@@ -1,18 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Windows.Foundation;
-
 #pragma warning disable CSWINRT3001 // "Type or member '...' is a private implementation detail"
 
 #if CSWINRT_REFERENCE_PROJECTION
 [assembly: WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssembly]
 #else
-[assembly: System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute]
-#endif
+using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Windows.Foundation;
+
+[assembly: DisableRuntimeMarshallingAttribute]
 
 namespace WindowsRuntime.InteropServices;
 
@@ -46,3 +45,4 @@ internal unsafe struct IUnknownVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
 }
+#endif

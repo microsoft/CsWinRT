@@ -13,6 +13,7 @@ namespace WindowsRuntime.SourceGenerator;
 /// </summary>
 internal static class ISymbolExtensions
 {
+    /// <param name="symbol">The input <see cref="ISymbol"/> instance.</param>
     extension(ISymbol symbol)
     {
         /// <summary>
@@ -46,6 +47,16 @@ internal static class ISymbolExtensions
             attributeData = null;
 
             return false;
+        }
+
+        /// <summary>
+        /// Checks whether a given symbol is accessible from the assembly of a given compilation (including eg. through nested types).
+        /// </summary>
+        /// <param name="compilation">The <see cref="Compilation"/> instance currently in use.</param>
+        /// <returns>Whether <paramref name="symbol"/> is accessible from the assembly for <paramref name="compilation"/>.</returns>
+        public bool IsAccessibleFromCompilationAssembly(Compilation compilation)
+        {
+            return compilation.IsSymbolAccessibleWithin(symbol, compilation.Assembly);
         }
     }
 }

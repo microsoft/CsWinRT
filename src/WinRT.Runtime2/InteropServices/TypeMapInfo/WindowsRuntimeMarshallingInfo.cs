@@ -56,7 +56,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// This will only have non <see langword="null"/> values for types needing special marshalling. Types which are meant to
     /// be marshalled as opaque <c>IInspectable</c> objects will have no associated values, and should be handled separately.
     /// </remarks>
-    private static readonly ConditionalWeakTable<Type, WindowsRuntimeMarshallingInfo?> TypeToMarshallingInfoTable = [];
+    private static readonly ConcurrentDictionary<Type, WindowsRuntimeMarshallingInfo?> TypeToMarshallingInfoTable = [];
 
     /// <summary>
     /// Cached creation factory for <see cref="CreateMarshallingInfo"/>.
@@ -466,12 +466,19 @@ internal sealed class WindowsRuntimeMarshallingInfo
             return GetInfo(typeof(Exception));
         }
 
-        // Special case for 'Type' instances too. This is needed even without considering custom user-defined types
-        // (which shouldn't really be common anyway), because 'Type' itself is just a base type and not instantiated.
-        // That is, when e.g. doing 'typeof(Foo)', the actual object is some 'RuntimeType' object itself (non public).
-        if (instance is Type)
+        // Only enable this marshalling if the feature switch is enabled, to minimize size. Supporting 'Type'
+        // marshalling actually roots a significant amount of additional code, such as the metadata type map.
+        // We check the feature switch first to allow the 'Type' cast itself to be trimmed as well. This is
+        // something that can actually impact binary size, since it will root the type map entries for 'Type'.
+        if (WindowsRuntimeFeatureSwitches.EnableXamlTypeMarshalling)
         {
-            return GetInfo(typeof(Type));
+            // Special case for 'Type' instances too. This is needed even without considering custom user-defined types
+            // (which shouldn't really be common anyway), because 'Type' itself is just a base type and not instantiated.
+            // That is, when e.g. doing 'typeof(Foo)', the actual object is some 'RuntimeType' object itself (non public).
+            if (instance is Type)
+            {
+                return GetInfo(typeof(Type));
+            }
         }
 
         // For all other cases, we fallback to the marshalling info for 'object'. This is the
