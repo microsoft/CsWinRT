@@ -11,10 +11,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
+using System.Runtime.Versioning;
 using System.Threading;
+using Windows.Foundation.Metadata;
 using WindowsRuntime.InteropServices;
 
-#pragma warning disable IDE0046
+#pragma warning disable CS1573, IDE0046
 
 namespace WindowsRuntime;
 
@@ -80,7 +82,40 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationTypes.DerivedSealed _,
         WindowsRuntimeObjectReference activationFactoryObjectReference,
-        in Guid iid)
+        in Guid iid) : this(
+            _: default(WindowsRuntimeActivationTypes.DerivedSealed),
+            activationFactoryObjectReference: activationFactoryObjectReference,
+            iid: in iid,
+            marshalingType: CreateObjectReferenceMarshalingType.Unknown)
+    {
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedSealed, WindowsRuntimeObjectReference, in Guid)"/>
+    /// <param name="marshalingType">The <see cref="MarshalingType"/> value available in metadata for the type being marshalled.</param>
+    [SupportedOSPlatform("Windows10.0.10240.0")]
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected WindowsRuntimeObject(
+        WindowsRuntimeActivationTypes.DerivedSealed _,
+        WindowsRuntimeObjectReference activationFactoryObjectReference,
+        in Guid iid,
+        MarshalingType marshalingType) : this(
+            _: default(WindowsRuntimeActivationTypes.DerivedSealed),
+            activationFactoryObjectReference: activationFactoryObjectReference,
+            iid: in iid,
+            marshalingType: CreateObjectReferenceMarshalingType.FromMetadata(marshalingType))
+    {
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedSealed, WindowsRuntimeObjectReference, in Guid)"/>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
+    private WindowsRuntimeObject(
+        WindowsRuntimeActivationTypes.DerivedSealed _,
+        WindowsRuntimeObjectReference activationFactoryObjectReference,
+        in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryObjectReference);
 
@@ -101,7 +136,8 @@ public abstract unsafe class WindowsRuntimeObject :
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
-            newInstanceIid: in iid);
+            newInstanceIid: in iid,
+            marshalingType: marshalingType);
     }
 
     /// <summary>
@@ -123,7 +159,40 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationTypes.DerivedComposed _,
         WindowsRuntimeObjectReference activationFactoryObjectReference,
-        in Guid iid)
+        in Guid iid) : this(
+            _: default(WindowsRuntimeActivationTypes.DerivedComposed),
+            activationFactoryObjectReference: activationFactoryObjectReference,
+            iid: in iid,
+            marshalingType: CreateObjectReferenceMarshalingType.Unknown)
+    {
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedComposed, WindowsRuntimeObjectReference, in Guid)"/>
+    /// <param name="marshalingType">The <see cref="MarshalingType"/> value available in metadata for the type being marshalled.</param>
+    [SupportedOSPlatform("Windows10.0.10240.0")]
+    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    protected WindowsRuntimeObject(
+        WindowsRuntimeActivationTypes.DerivedComposed _,
+        WindowsRuntimeObjectReference activationFactoryObjectReference,
+        in Guid iid,
+        MarshalingType marshalingType) : this(
+            _: default(WindowsRuntimeActivationTypes.DerivedComposed),
+            activationFactoryObjectReference: activationFactoryObjectReference,
+            iid: in iid,
+            marshalingType: CreateObjectReferenceMarshalingType.FromMetadata(marshalingType))
+    {
+    }
+
+    /// <inheritdoc cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedComposed, WindowsRuntimeObjectReference, in Guid)"/>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
+    private WindowsRuntimeObject(
+        WindowsRuntimeActivationTypes.DerivedComposed _,
+        WindowsRuntimeObjectReference activationFactoryObjectReference,
+        in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryObjectReference);
 
@@ -157,7 +226,8 @@ public abstract unsafe class WindowsRuntimeObject :
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
-            newInstanceIid: in iid);
+            newInstanceIid: in iid,
+            marshalingType: marshalingType);
 
         // Optimization: if we are activating the current type for composition, then the returned object reference
         // will wrap the 'IInspectable' pointer for the controlling instance (ie. 'innerInterface'). In this case,
