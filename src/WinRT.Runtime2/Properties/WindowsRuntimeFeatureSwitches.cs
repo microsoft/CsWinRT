@@ -44,6 +44,11 @@ internal static class WindowsRuntimeFeatureSwitches
     private const string EnableIDynamicInterfaceCastableSupportPropertyName = "CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE_SUPPORT";
 
     /// <summary>
+    /// The configuration property name for <see cref="EnableMarshalingTypeValidation"/>.
+    /// </summary>
+    private const string EnableMarshalingTypeValidationPropertyName = "CSWINRT_ENABLE_MARSHALING_TYPE_VALIDATION";
+
+    /// <summary>
     /// Gets a value indicating whether or not manifest free WinRT activation is supported (defaults to <see langword="true"/>).
     /// </summary>
     [FeatureSwitchDefinition(EnableManifestFreeActivationPropertyName)]
@@ -72,6 +77,12 @@ internal static class WindowsRuntimeFeatureSwitches
     /// </summary>
     [FeatureSwitchDefinition(EnableIDynamicInterfaceCastableSupportPropertyName)]
     public static bool EnableIDynamicInterfaceCastableSupport { get; } = GetConfigurationValue(EnableIDynamicInterfaceCastableSupportPropertyName, defaultValue: true);
+
+    /// <summary>
+    /// Gets a value indicating whether or not validation for <see cref="InteropServices.CreateObjectReferenceMarshalingType"/> values should be enabled (defaults to <see langword="false"/>).
+    /// </summary>
+    [FeatureSwitchDefinition(EnableMarshalingTypeValidationPropertyName)]
+    public static bool EnableMarshalingTypeValidation { get; } = GetConfigurationValue(EnableMarshalingTypeValidationPropertyName, defaultValue: false);
 
     /// <summary>
     /// Gets a configuration value for a specified property.
