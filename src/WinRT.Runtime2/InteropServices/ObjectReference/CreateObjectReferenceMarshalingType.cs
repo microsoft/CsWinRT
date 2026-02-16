@@ -17,7 +17,7 @@ namespace WindowsRuntime.InteropServices;
 public enum CreateObjectReferenceMarshalingType
 {
     /// <summary>
-    /// No static type information is available to known in advance the marshaling type for the class.
+    /// No static type information is available to know in advance the marshaling type for the class.
     /// </summary>
     Unknown,
 
