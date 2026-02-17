@@ -144,7 +144,7 @@ public sealed class DictionaryValueCollection<TKey, TValue> : ICollection<TValue
         }
 
         /// <inheritdoc/>
-        public TValue Current => _enumerator!.Current.Value;
+        public TValue Current => _enumerator.Current.Value;
 
         /// <inheritdoc/>
         object IEnumerator.Current => Current!;

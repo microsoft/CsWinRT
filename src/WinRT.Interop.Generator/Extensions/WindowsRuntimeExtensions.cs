@@ -183,7 +183,8 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Point) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Rect) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.Size) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventRegistrationToken);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.EventRegistrationToken) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.InputStreamOptions);
         }
 
         /// <summary>
@@ -248,7 +249,11 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncInfo) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs) ||
-                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IStringable);
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IStringable) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IBuffer) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IInputStream) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IOutputStream) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IRandomAccessStream);
         }
 
         /// <summary>
