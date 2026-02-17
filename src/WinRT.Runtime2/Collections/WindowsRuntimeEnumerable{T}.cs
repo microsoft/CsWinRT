@@ -12,7 +12,7 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime;
 
 /// <summary>
-/// The implementation of all projected Windows Runtime <see cref="IEnumerable{T}"/> types.
+/// The implementation of all custom-mapped Windows Runtime <see cref="IEnumerable{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
 /// <typeparam name="TIIterableMethods">The <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> implementation type.</typeparam>

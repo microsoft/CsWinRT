@@ -11,7 +11,7 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime;
 
 /// <summary>
-/// The implementation of all projected Windows Runtime <see cref="IList"/> types.
+/// The implementation of the custom-mapped Windows Runtime <see cref="IList"/> type.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector"/>
 [WindowsRuntimeManagedOnlyType]

@@ -9,7 +9,7 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime;
 
 /// <summary>
-/// The implementation of all projected Windows Runtime <see cref="IEnumerable"/> types.
+/// The implementation of the custom-mapped Windows Runtime <see cref="IEnumerable"/> type.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterable"/>
 [WindowsRuntimeManagedOnlyType]
