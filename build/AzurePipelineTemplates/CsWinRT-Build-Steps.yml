@@ -252,6 +252,7 @@ steps:
     - task: CopyFiles@2 
       displayName: Stage WinRT.Host.Shim
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      enabled: false
       continueOnError: True
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net10.0
