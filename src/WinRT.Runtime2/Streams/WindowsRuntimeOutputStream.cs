@@ -31,9 +31,7 @@ internal sealed class WindowsRuntimeOutputStream : WindowsRuntimeObject,
     {
     }
 
-    /// <summary>
-    /// Gets the lazy-loaded, cached object reference for <see cref="IDisposable"/> for the current object.
-    /// </summary>
+    /// <inheritdoc cref="WindowsRuntimeInputStream.IClosableObjectReference"/>
     private WindowsRuntimeObjectReference IClosableObjectReference
     {
         get
