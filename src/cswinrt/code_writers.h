@@ -9157,11 +9157,19 @@ return new %(valueReference);
     {
         method_signature signature{ get_delegate_invoke(type) };
         w.write(R"(
-%%%% delegate % %(%);
+%%%%% delegate % %(%);
 )",
             bind<write_winrt_metadata_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
             bind<write_comwrapper_marshaller_attribute>(type),
+            bind([&](writer& w)
+            {
+                if (!settings.reference_projection)
+                {
+                    write_guid_attribute(w, type);
+                    w.write("\n");
+                }
+            }),
             internal_accessibility(),
             bind<write_projection_return_type>(signature),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
