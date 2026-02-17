@@ -20,7 +20,7 @@
     <!-- This project produces a CLI tool, so we want a nice short name for it -->
     <AssemblyName>cswinrtprojectiongen</AssemblyName>
       
-    <!-- Same settings as WinRT.Runtime2 -->
+    <!-- Same settings as WinRT.Runtime -->
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
     <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
@@ -40,6 +40,6 @@
   <ItemGroup>
     <PackageReference Include="AsmResolver.DotNet" />
     <PackageReference Include="ConsoleAppFramework" PrivateAssets="all" />
-	<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 </Project>

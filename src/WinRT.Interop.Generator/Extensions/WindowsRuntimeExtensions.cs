@@ -1035,13 +1035,13 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a <see cref="ModuleDefinition"/> is the Windows Runtime assembly.
         /// </summary>
         /// <returns>Whether the module is the Windows Runtime assembly.</returns>
-        public bool IsWindowsRuntimeModule => module.Name == WellKnownMetadataNames.WinRTRuntime2ModuleName;
+        public bool IsWindowsRuntimeModule => module.Name == WellKnownMetadataNames.WinRTRuntimeModuleName;
 
         /// <summary>
         /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
         /// </summary>
         /// <returns>Whether the module references the Windows Runtime assembly.</returns>
-        public bool ReferencesWindowsRuntimeAssembly => module.ReferencesAssembly(WellKnownMetadataNames.WinRTRuntime2AssemblyName);
+        public bool ReferencesWindowsRuntimeAssembly => module.ReferencesAssembly(WellKnownMetadataNames.WinRTRuntimeAssemblyName);
 
         /// <summary>
         /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly version 2.
@@ -1079,14 +1079,9 @@ file static class WellKnownMetadataNames
     public static readonly Utf8String WinRTRuntimeAssemblyName = "WinRT.Runtime"u8;
 
     /// <summary>
-    /// The current name of the WinRT runtime assembly.
-    /// </summary>
-    public static readonly Utf8String WinRTRuntime2AssemblyName = "WinRT.Runtime2"u8;
-
-    /// <summary>
     /// The current name of the WinRT runtime module.
     /// </summary>
-    public static readonly Utf8String WinRTRuntime2ModuleName = "WinRT.Runtime2.dll"u8;
+    public static readonly Utf8String WinRTRuntimeModuleName = "WinRT.Runtime.dll"u8;
 
     /// <summary>
     /// The <c>"WindowsRuntime"</c> text.

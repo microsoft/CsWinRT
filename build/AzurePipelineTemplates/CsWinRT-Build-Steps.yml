@@ -244,8 +244,8 @@ steps:
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime2\bin\$(BuildConfiguration)\net10.0
         Contents: |
-          WinRT.Runtime2.dll
-          WinRT.Runtime2.pdb
+          WinRT.Runtime.dll
+          WinRT.Runtime.pdb
         TargetFolder: $(StagingFolder)\net10.0
 
     # Stage WinRT.Host.Shim
