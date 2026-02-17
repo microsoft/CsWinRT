@@ -4054,7 +4054,7 @@ namespace UnitTest
             timeSpanDict.Clear();
 
             Assert.IsFalse(timeSpanDict.ContainsKey(TimeSpan.FromSeconds(6)));
-            Assert.IsNull(timeSpanDict.Keys);
+            Assert.IsTrue(timeSpanDict.Keys.SequenceEqual(Enumerable.Empty<TimeSpan>()));
 
             // Key - value entries are 1 minute apart as it is used for validation later.
             timeSpanDict.Add(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(2));
