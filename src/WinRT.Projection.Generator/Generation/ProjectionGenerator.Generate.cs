@@ -22,10 +22,17 @@ internal partial class ProjectionGenerator
     /// Creates a temporary folder for CsWinRT generation output.
     /// </summary>
     /// <returns>The path to the created temporary folder.</returns>
+    /// <remarks>
+    /// The returned folder is guaranteed to already exist when this method returns.
+    /// </remarks>
     private static string GetTempFolder()
     {
+        // Create a temporary folder with this structure: '%TEMP%/CsWinRT/<RANDOM_NAME>'
         string outputDir = Path.Combine(Path.GetTempPath(), "CsWinRT", Path.GetRandomFileName()).TrimEnd('\\');
+
+        // Ensure the folder does exist (code using it might rely on it existing already)
         _ = Directory.CreateDirectory(outputDir);
+
         return outputDir;
     }
 
@@ -139,6 +146,7 @@ internal partial class ProjectionGenerator
                     // we just include that namespace rather than going through the types.
                     fileStream.WriteLine($"-include Windows");
                     fileStream.WriteLine($"-include WinRT.Interop");
+
                     continue;
                 }
                 else if (moduleDefinition.Assembly.Name == "Microsoft.WinUI")
@@ -158,6 +166,7 @@ internal partial class ProjectionGenerator
         fileStream.WriteLine($"-target {args.TargetFramework}");
         fileStream.WriteLine($"-input {args.WindowsMetadata}");
         fileStream.WriteLine($"-output \"{outputFolder}\"");
+
         foreach (string winmdPath in args.WinMDPaths)
         {
             fileStream.WriteLine($"-input \"{winmdPath}\"");
