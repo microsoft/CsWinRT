@@ -2801,49 +2801,41 @@ namespace UnitTest
             Assert.IsNull(TestObject.HResultProperty);
         }
 
-        //[LibraryImport("api-ms-win-core-winrt-string-l1-1-0.dll")]
-        //[UnmanagedCallConv(CallConvs = [typeof(CallConvStdcall)])]
-        //private static unsafe partial char* WindowsGetStringRawBuffer(void* hstring, uint* length);
+        static unsafe string GetRuntimeClassName(void* ptr)
+        {
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, WellKnownInterfaceIIDs.IID_IInspectable, out nint inspectablePtr));
 
-        //[LibraryImport("api-ms-win-core-winrt-string-l1-1-0.dll")]
-        //[UnmanagedCallConv(CallConvs = [typeof(CallConvStdcall)])]
-        //private static unsafe partial int WindowsDeleteString(void* hstring);
+            void* __retval = default;
+            try
+            {
+                Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)inspectablePtr)[4])((void*)inspectablePtr, &__retval));
 
-        //static unsafe string GetRuntimeClassName(void* ptr)
-        //{
-        //    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)ptr, WellKnownInterfaceIIDs.IID_IInspectable, out nint inspectablePtr));
-
-        //    void* __retval = default;
-        //    try
-        //    {
-        //        Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)inspectablePtr)[4])((void*)inspectablePtr, &__retval));
-
-        //        uint length;
-        //        char* buffer = WindowsGetStringRawBuffer(__retval, &length);
-        //        return new string(buffer, 0, (int)length);
-        //    }
-        //    finally
-        //    {
-        //        WindowsDeleteString(__retval);
-        //        WindowsRuntimeMarshal.Free((void*)inspectablePtr);
-        //    }
-        //}
+                uint length;
+                char* buffer = UnitTestHelper.WindowsGetStringRawBuffer(__retval, &length);
+                return new string(buffer, 0, (int)length);
+            }
+            finally
+            {
+                UnitTestHelper.WindowsDeleteString(__retval);
+                WindowsRuntimeMarshal.Free((void*)inspectablePtr);
+            }
+        }
 
 
-        //[TestMethod]
-        //public unsafe void TestGeneratedRuntimeClassName()
-        //{
-        //    void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new ManagedProperties(2));
+        [TestMethod]
+        public unsafe void TestGeneratedRuntimeClassName()
+        {
+            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new ManagedProperties(2));
 
-        //    try
-        //    {
-        //        Assert.AreEqual(typeof(IProperties1).FullName, GetRuntimeClassName(ptr));
-        //    }
-        //    finally
-        //    {
-        //        WindowsRuntimeMarshal.Free(ptr);
-        //    }
-        //}
+            try
+            {
+                Assert.AreEqual(typeof(IProperties1).FullName, GetRuntimeClassName(ptr));
+            }
+            finally
+            {
+                WindowsRuntimeMarshal.Free(ptr);
+            }
+        }
 
         [TestMethod]
         public void TestGetPropertyType()
@@ -2890,35 +2882,35 @@ namespace UnitTest
             Assert.AreEqual("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>", Class.GetName(typeof(Type)));
         }
 
-        //[TestMethod]
-        //public unsafe void TestGeneratedRuntimeClassName_Primitive()
-        //{
-        //    void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(2);
+        [TestMethod]
+        public unsafe void TestGeneratedRuntimeClassName_Primitive()
+        {
+            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(2);
 
-        //    try
-        //    {
-        //        Assert.AreEqual("Windows.Foundation.IReference`1<Int32>", GetRuntimeClassName(ptr));
-        //    }
-        //    finally
-        //    {
-        //        WindowsRuntimeMarshal.Free(ptr);
-        //    }
-        //}
+            try
+            {
+                Assert.AreEqual("Windows.Foundation.IReference`1<Int32>", GetRuntimeClassName(ptr));
+            }
+            finally
+            {
+                WindowsRuntimeMarshal.Free(ptr);
+            }
+        }
 
-        //[TestMethod]
-        //public unsafe void TestGeneratedRuntimeClassName_Array()
-        //{
-        //    void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new int[0]);
+        [TestMethod]
+        public unsafe void TestGeneratedRuntimeClassName_Array()
+        {
+            void* ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(new int[0]);
 
-        //    try
-        //    {
-        //        Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Int32>", GetRuntimeClassName(ptr));
-        //    }
-        //    finally
-        //    {
-        //        WindowsRuntimeMarshal.Free(ptr);
-        //    }
-        //}
+            try
+            {
+                Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Int32>", GetRuntimeClassName(ptr));
+            }
+            finally
+            {
+                WindowsRuntimeMarshal.Free(ptr);
+            }
+        }
 
         [TestMethod]
         public void TestValueBoxing()
