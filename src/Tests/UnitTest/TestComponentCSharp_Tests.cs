@@ -61,6 +61,14 @@ namespace UnitTest
     {
         public Class TestObject = new();
 
+        // TestInitialize does not work with AOT
+        // See https://devblogs.microsoft.com/dotnet/testing-your-native-aot-dotnet-apps/
+        // [TestInitialize]
+        // public void Initialize()
+        //{
+        //    TestObject = new();
+        //}
+
         public enum E { A, B, C }
 
         public struct Estruct

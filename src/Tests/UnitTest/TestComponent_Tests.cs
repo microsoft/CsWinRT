@@ -17,7 +17,8 @@ namespace UnitTest
     {
         public ITests Tests { get; private set; } = TestRunner.MakeTests();
 
-        // NOTE: TestInitialize removed for NativeAOT runner path. [1](https://github.com/microsoft/testfx/issues/2756)
+        // TestInitialize does not work with AOT
+        // See https://devblogs.microsoft.com/dotnet/testing-your-native-aot-dotnet-apps/
         // [TestInitialize]
         // public void Initialize()
         // {
