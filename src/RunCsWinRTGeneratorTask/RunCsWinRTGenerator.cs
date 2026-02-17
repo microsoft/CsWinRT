@@ -15,7 +15,7 @@ namespace Microsoft.NET.Build.Tasks;
 /// <summary>
 /// The custom MSBuild task that invokes the 'cswinrtinteropgen' tool.
 /// </summary>
-public sealed class RunCsWinRTGenerator : ToolTask
+public sealed class RunCsWinRTInteropGenerator : ToolTask
 {
     /// <summary>
     /// Gets or sets the paths to assembly files that are reference assemblies, representing
