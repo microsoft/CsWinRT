@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -10,6 +11,7 @@ using Windows.Storage.Streams;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+using WindowsRuntime.Streams;
 using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable CA2256, IDE0008, IDE1006
@@ -45,7 +47,50 @@ public static unsafe class IInputStreamMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
     public static IInputStream? ConvertToManaged(void* value)
     {
-        return (IInputStream?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (IInputStream?)WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<IInputStreamComWrappersCallback>(value);
+    }
+}
+
+/// <summary>
+/// A custom <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="IInputStream"/>.
+/// </summary>
+file abstract unsafe class IInputStreamComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
+{
+    /// <inheritdoc/>
+    public static bool TryCreateObject(
+        void* value,
+        ReadOnlySpan<char> runtimeClassName,
+        [NotNullWhen(true)] out object? wrapperObject,
+        out CreatedWrapperFlags wrapperFlags)
+    {
+        if (runtimeClassName.SequenceEqual("Windows.Storage.Streams.IInputStream"))
+        {
+            WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+                externalComObject: value,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IInputStream,
+                wrapperFlags: out wrapperFlags);
+
+            wrapperObject = new WindowsRuntimeInputStream(objectReference);
+
+            return true;
+        }
+
+        wrapperFlags = CreatedWrapperFlags.None;
+
+        wrapperObject = null;
+
+        return false;
+    }
+
+    /// <inheritdoc/>
+    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+            externalComObject: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IInputStream,
+            wrapperFlags: out wrapperFlags);
+
+        return new WindowsRuntimeInputStream(objectReference);
     }
 }
 
