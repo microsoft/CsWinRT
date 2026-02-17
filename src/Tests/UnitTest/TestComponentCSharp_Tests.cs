@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -137,21 +138,21 @@ namespace UnitTest
 
             var expectedEnums = new EnumValue[] { EnumValue.One, EnumValue.Two };
             TestObject.EnumsProperty = expectedEnums;
-            Assert.AreEqual(expectedEnums, TestObject.EnumsProperty);
+            Assert.IsTrue(expectedEnums.SequenceEqual(TestObject.EnumsProperty));
             TestObject.CallForEnums(() => expectedEnums);
-            Assert.AreEqual(expectedEnums, TestObject.EnumsProperty);
+            Assert.IsTrue(expectedEnums.SequenceEqual(TestObject.EnumsProperty));
 
             TestObject.EnumsProperty = null;
-            Assert.IsNull(TestObject.EnumsProperty);
+            Assert.IsTrue(TestObject.EnumsProperty.SequenceEqual(null));
 
             var expectedEnumStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two) };
             TestObject.EnumStructsProperty = expectedEnumStructs;
-            Assert.AreEqual(expectedEnumStructs, TestObject.EnumStructsProperty);
+            Assert.IsTrue(expectedEnumStructs.SequenceEqual(TestObject.EnumStructsProperty));
             TestObject.CallForEnumStructs(() => expectedEnumStructs);
-            Assert.AreEqual(expectedEnumStructs, TestObject.EnumStructsProperty);
+            Assert.IsTrue(expectedEnumStructs.SequenceEqual(TestObject.EnumStructsProperty));
 
             TestObject.EnumStructsProperty = null;
-            Assert.IsNull(TestObject.EnumStructsProperty);
+            Assert.IsTrue(TestObject.EnumStructsProperty.SequenceEqual(null));
 
             // Flags
             var expectedFlag = FlagValue.All;
@@ -174,15 +175,15 @@ namespace UnitTest
 
             var expectedFlags = new FlagValue[] { FlagValue.One, FlagValue.All };
             TestObject.FlagsProperty = expectedFlags;
-            Assert.AreEqual(expectedFlags, TestObject.FlagsProperty);
+            Assert.IsTrue(expectedFlags.SequenceEqual(TestObject.FlagsProperty));
             TestObject.CallForFlags(() => expectedFlags);
-            Assert.AreEqual(expectedFlags, TestObject.FlagsProperty);
+            Assert.IsTrue(expectedFlags.SequenceEqual(TestObject.FlagsProperty));
 
             var expectedFlagStructs = new FlagStruct[] { new FlagStruct(FlagValue.One), new FlagStruct(FlagValue.All) };
             TestObject.FlagStructsProperty = expectedFlagStructs;
-            Assert.AreEqual(expectedFlagStructs, TestObject.FlagStructsProperty);
+            Assert.IsTrue(expectedFlagStructs.SequenceEqual(TestObject.FlagStructsProperty));
             TestObject.CallForFlagStructs(() => expectedFlagStructs);
-            Assert.AreEqual(expectedFlagStructs, TestObject.FlagStructsProperty);
+            Assert.IsTrue(expectedFlagStructs.SequenceEqual(TestObject.FlagStructsProperty));
         }
 
         [TestMethod]
@@ -674,7 +675,7 @@ namespace UnitTest
         [DataRow(typeof(WeakReference<TestComponent.Class>), "System.WeakReference`1[[TestComponent.Class, WinRT.Projection, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [DataRow(typeof(KeyValuePair<Int32, WeakReference<Object>>), "System.Collections.Generic.KeyValuePair`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.WeakReference`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [DataRow(typeof(ICollection<object>), "System.Collections.Generic.ICollection`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [DataRow(typeof(KeyValuePair<Object, Object>?), "System.Nullable`1[[System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
+        [DataRow(typeof(KeyValuePair<Object, Object>?), "System.Nullable`1[[System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [DataRow(typeof(KeyValuePair<Object, Object[]>), "System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object[], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [DataRow(typeof(long[][]), "System.Int64[][], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         // Arrays
@@ -704,7 +705,7 @@ namespace UnitTest
         {
             TestObject.TypeProperty = typeof(CustomDictionary);
             var name = TestObject.GetTypePropertyAbiName();
-            Assert.AreEqual("UnitTest.TestCSharp+CustomDictionary, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", name);
+            Assert.AreEqual("UnitTest.UnitTestCSharp+CustomDictionary, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", name);
         }
 
         [TestMethod]
@@ -792,7 +793,7 @@ namespace UnitTest
 
             byte[] read = new byte[256];
             await stream.ReadAsync(read, 0, read.Length);
-            Assert.AreEqual(read, data);
+            Assert.IsTrue(read.SequenceEqual(data));
         }
 
         [TestMethod]
@@ -813,7 +814,7 @@ namespace UnitTest
         [TestMethod]
         public void TestDynamicInterfaceCastingOnInvalidInterface()
         {
-            Assert.ThrowsException<System.Exception>(() => (IStringableInterop)(WindowsRuntimeObject)TestObject);
+            Assert.ThrowsException<System.InvalidCastException>(() => (IStringableInterop)(WindowsRuntimeObject)TestObject);
         }
 
         [TestMethod]
@@ -2051,7 +2052,7 @@ namespace UnitTest
                 }
                 catch (T ex)
                 {
-                    StringAssert.Contains(expectedMessage, ex.Message);
+                    Assert.IsTrue(ex.Message.Contains(expectedMessage));
                 }
                 catch (Exception)
                 {
@@ -2975,13 +2976,13 @@ namespace UnitTest
             Assert.AreEqual(rect, Class.UnboxRectUsingPropertyValue(rect));
 
             int[] iArr = new[] { 42, 0, -23 };
-            Assert.AreEqual(iArr, (IEnumerable<int>)Class.UnboxInt32ArrayUsingPropertyValue(iArr));
+            Assert.IsTrue(iArr.SequenceEqual((IEnumerable<int>)Class.UnboxInt32ArrayUsingPropertyValue(iArr)));
 
             bool[] bArr = new[] { true, false, false };
-            Assert.AreEqual((IEnumerable<bool>)bArr, Class.UnboxBooleanArrayUsingPropertyValue(bArr));
+            Assert.IsTrue(Class.UnboxBooleanArrayUsingPropertyValue(bArr).SequenceEqual((IEnumerable<bool>)bArr));
 
             Point[] pArr = new[] { new Point(1, 3), new Point(2, 4) };
-            Assert.AreEqual((IEnumerable<Point>)pArr, Class.UnboxPointArrayUsingPropertyValue(pArr));
+            Assert.IsTrue(Class.UnboxPointArrayUsingPropertyValue(pArr).SequenceEqual((IEnumerable<Point>)pArr));
         }
 
         [TestMethod]
