@@ -388,7 +388,7 @@ internal partial class InteropTypeDiscovery
             // When we discover a constructed 'IDictionary<TKey, TValue>' instantiation, we'll be generating a native object type during
             // the emit phase, which is used to marshal anonymous objects. This derives from 'WindowsRuntimeDictionary<TKey, TValue, ...>'.
             // For the 'Keys' and 'Values' properties, that base type will return instances of the 'DictionaryKeyCollection<TKey, TValue>'
-            // and 'DictionaryValueCollection<TKey, TValue>' types, respectively. Those instantiations will not be seen by 'cswinrtgen',
+            // and 'DictionaryValueCollection<TKey, TValue>' types, respectively. Those instantiations will not be seen by 'cswinrtinteropgen',
             // because they will only exist in the final 'WinRT.Interop.dll' assembly being generated, and not in any input assemblies.
             // So to ensure that we can still correctly marshal those to native, if needed, we manually track them as if we had seen them.
             TryTrackGenericTypeInstance(

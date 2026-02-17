@@ -32,7 +32,7 @@ internal static partial class InteropGenerator
             // This is fully expected, it just means no debug repro is needed.
             if (Path.GetExtension(Path.Normalize(inputFilePath)) == ".zip")
             {
-                ConsoleApp.Log("Unpacking input 'cswinrtgen' debug repro");
+                ConsoleApp.Log("Unpacking input 'cswinrtinteropgen' debug repro");
 
                 isUsingDebugRepro = true;
 
@@ -71,7 +71,7 @@ internal static partial class InteropGenerator
             // repro, as there would be no point in creating a new one from that.
             if (args.DebugReproDirectory is not null && !isUsingDebugRepro)
             {
-                ConsoleApp.Log("Saving 'cswinrtgen' debug repro");
+                ConsoleApp.Log("Saving 'cswinrtinteropgen' debug repro");
 
                 SaveDebugRepro(args);
             }

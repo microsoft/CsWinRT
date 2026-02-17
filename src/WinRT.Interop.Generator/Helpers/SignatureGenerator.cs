@@ -83,7 +83,7 @@ internal static partial class SignatureGenerator
 
         // We've successfully computed a signature, so return it. We should generally always be
         // able to compute a Windows Runtime signature for all types. Possible issues might be:
-        //   - There's been some codegen/API changes in the projections, and 'cswinrtgen' was
+        //   - There's been some codegen/API changes in the projections, and 'cswinrtinteropgen' was
         //     either not updated correctly, or somehow a mismatched version has been loaded.
         //   - Some input types that are not Windows Runtime types haven't been filtered out.
         if (signature is not null)

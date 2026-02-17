@@ -20,7 +20,7 @@
     <!-- This project produces a CLI tool, so we want a nice short name for it -->
     <AssemblyName>cswinrtimplgen</AssemblyName>
       
-    <!-- Same settings as WinRT.Runtime2 -->
+    <!-- Same settings as WinRT.Runtime -->
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
     <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>

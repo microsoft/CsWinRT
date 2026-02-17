@@ -41,11 +41,6 @@ internal static class InteropNames
     public static ReadOnlySpan<byte> WindowsRuntimeDllNameUtf8 => "WinRT.Runtime.dll"u8;
 
     /// <summary>
-    /// The current name of the Windows Runtime .dll (i.e. <c>WinRT.Runtime2.dll</c>).
-    /// </summary>
-    public static ReadOnlySpan<byte> WindowsRuntime2DllNameUtf8 => "WinRT.Runtime2.dll"u8;
-
-    /// <summary>
     /// The name of the Windows SDK projections .dll.
     /// </summary>
     public static ReadOnlySpan<byte> WindowsSDKDllNameUtf8 => "Microsoft.Windows.SDK.NET.dll"u8;

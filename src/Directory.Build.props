@@ -38,9 +38,9 @@
 
   <!-- Set overrides to point to folder where they are built in solution -->
   <PropertyGroup>
-    <CsWinRTGenTasksAssembly>$(MSBuildThisFileDirectory)RunCsWinRTGeneratorTask\bin\$(Configuration)\netstandard2.0\RunCsWinRTGeneratorTask.dll</CsWinRTGenTasksAssembly>
+    <CsWinRTGenTasksAssembly>$(MSBuildThisFileDirectory)WinRT.Generator.Tasks\bin\$(Configuration)\netstandard2.0\WinRT.Generator.Tasks.dll</CsWinRTGenTasksAssembly>
     <_CsWinRTToolsArchFolder Condition="'$(BuildToolArch)' != ''">win-$(BuildToolArch)\</_CsWinRTToolsArchFolder>
-    <CsWinRTGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Interop.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTGenEffectiveToolsDirectory>
+    <CsWinRTInteropGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Interop.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTInteropGenEffectiveToolsDirectory>
     <CsWinRTImplEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Impl.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTImplEffectiveToolsDirectory>
     <CsWinRTMergedProjectionEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Projection.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTMergedProjectionEffectiveToolsDirectory>
     <CsWinRTToolsArchitecture>AnyCPU</CsWinRTToolsArchitecture>

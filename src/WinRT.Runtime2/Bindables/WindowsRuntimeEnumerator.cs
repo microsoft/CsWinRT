@@ -61,7 +61,7 @@ internal sealed class WindowsRuntimeEnumerator : WindowsRuntimeObject, IEnumerat
                 throw new InvalidOperationException("InvalidOperation_EnumEnded");
             }
 
-            return field!;
+            return field;
         }
         private set;
     }

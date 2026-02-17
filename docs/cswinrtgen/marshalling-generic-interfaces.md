@@ -17,7 +17,7 @@ Supporting all of these scenarios, and doing so as efficiently as possible while
 We will use `IEnumerator<T>` (`IIterator<T>`) as reference to document all of these types. There are some differences with other generic interface types, but they all follow the same general principles. This document will also mention such differences where relevant.
 
 > [!NOTE]
-> This document specifically only covers generic **collection** interfaces. Other generic type instantiations, such as delegate types (and associated event source infrastructure, when applicable) and `KeyValuePair<TKey, TValue>`, are handled differently, and are already implemented in `cswinrtgen`. See code there for reference.
+> This document specifically only covers generic **collection** interfaces. Other generic type instantiations, such as delegate types (and associated event source infrastructure, when applicable) and `KeyValuePair<TKey, TValue>`, are handled differently, and are already implemented in `cswinrtinteropgen`. See code there for reference.
 
 ## RCW (in `WinRT.Runtime.dll`)
 

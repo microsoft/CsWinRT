@@ -51,7 +51,7 @@ internal sealed partial class InteropGeneratorArgs
     [CommandLineArgumentName("--enable-incremental-generation")]
     public required bool EnableIncrementalGeneration { get; init; }
 
-    /// <summary>Gets whether to treat warnings coming from 'cswinrtgen' as errors (regardless of the global 'TreatWarningsAsErrors' setting).</summary>
+    /// <summary>Gets whether to treat warnings coming from 'cswinrtinteropgen' as errors (regardless of the global 'TreatWarningsAsErrors' setting).</summary>
     [CommandLineArgumentName("--treat-warnings-as-errors")]
     public required bool TreatWarningsAsErrors { get; init; }
 

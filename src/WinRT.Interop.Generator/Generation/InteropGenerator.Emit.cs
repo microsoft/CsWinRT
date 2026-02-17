@@ -213,7 +213,7 @@ internal partial class InteropGenerator
 
         // Get the loaded module for the runtime .dll (this should also always be available here)
         if ((windowsRuntimeModule = discoveryState.ModuleDefinitions.FirstOrDefault(
-            predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("WinRT.Runtime2.dll")).Value) is null)
+            predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("WinRT.Runtime.dll")).Value) is null)
         {
             throw WellKnownInteropExceptions.WinRTRuntimeModuleNotFound();
         }
@@ -225,16 +225,16 @@ internal partial class InteropGenerator
             throw WellKnownInteropExceptions.WindowsSdkProjectionModuleNotFound();
         }
 
-        // If assembly version validation is required, ensure that the 'cswinrtgen' version matches that of 'WinRT.Runtime.dll'.
+        // If assembly version validation is required, ensure that the 'cswinrtinteropgen' version matches that of 'WinRT.Runtime.dll'.
         // We only compare major and minor versions, as it's fine to ship small forward compatible fixes in revision updates.
         if (args.ValidateWinRTRuntimeAssemblyVersion)
         {
             Version? winRTRuntimeAssemblyVersion = windowsRuntimeModule.Assembly?.Version;
-            Version? cswinrtgenAssemblyVersion = typeof(InteropGenerator).Assembly.GetName().Version;
+            Version? cswinrtinteropgenAssemblyVersion = typeof(InteropGenerator).Assembly.GetName().Version;
 
-            if (winRTRuntimeAssemblyVersion?.EqualsInMajorAndMinorOnly(cswinrtgenAssemblyVersion) is not true)
+            if (winRTRuntimeAssemblyVersion?.EqualsInMajorAndMinorOnly(cswinrtinteropgenAssemblyVersion) is not true)
             {
-                throw WellKnownInteropExceptions.WinRTRuntimeAssemblyVersionMismatch(winRTRuntimeAssemblyVersion, cswinrtgenAssemblyVersion);
+                throw WellKnownInteropExceptions.WinRTRuntimeAssemblyVersionMismatch(winRTRuntimeAssemblyVersion, cswinrtinteropgenAssemblyVersion);
             }
         }
 

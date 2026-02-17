@@ -246,7 +246,7 @@ namespace ABI.System.Runtime.InteropServices.WindowsRuntime
         /// </summary>
         static WindowsRuntimeBufferInterfaceEntriesImpl()
         {
-            Entries.IBuffer.IID = global::ABI.InterfaceIIDs.IID_Windows_Storage_Streams_IBuffer;
+            Entries.IBuffer.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_Windows_Storage_Streams_IBuffer;
             Entries.IBuffer.Vtable = global::ABI.Windows.Storage.Streams.IBufferImpl.Vtable;
             Entries.IBufferByteAccess.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IBufferByteAccess;
             Entries.IBufferByteAccess.Vtable = global::ABI.Windows.Storage.Streams.IBufferByteAccessImpl.Vtable;

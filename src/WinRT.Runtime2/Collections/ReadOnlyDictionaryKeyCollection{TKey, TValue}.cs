@@ -78,7 +78,7 @@ public sealed class ReadOnlyDictionaryKeyCollection<TKey, TValue> : IEnumerable<
         }
 
         /// <inheritdoc/>
-        public TKey Current => _enumerator!.Current.Key;
+        public TKey Current => _enumerator.Current.Key;
 
         /// <inheritdoc/>
         object IEnumerator.Current => Current!;

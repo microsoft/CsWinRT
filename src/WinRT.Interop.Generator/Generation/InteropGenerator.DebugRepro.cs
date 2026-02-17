@@ -30,7 +30,7 @@ internal partial class InteropGenerator
     private static string UnpackDebugRepro(string path, CancellationToken token)
     {
         // Create a temporary directory to extract the files from the debug repro
-        string tempFolderName = $"cswinrtgen-debug-repro-unpack-{Guid.NewGuid().ToString().ToUpperInvariant()}";
+        string tempFolderName = $"cswinrtinteropgen-debug-repro-unpack-{Guid.NewGuid().ToString().ToUpperInvariant()}";
         string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
 
         _ = Directory.CreateDirectory(tempDirectory);
@@ -40,7 +40,7 @@ internal partial class InteropGenerator
         using ZipArchive archive = ZipFile.OpenRead(path);
 
         // Get all entries of interest
-        ZipArchiveEntry responseFileEntry = archive.Entries.Single(entry => entry.Name == "cswinrtgen.rsp");
+        ZipArchiveEntry responseFileEntry = archive.Entries.Single(entry => entry.Name == "cswinrtinteropgen.rsp");
         ZipArchiveEntry originalPathsEntry = archive.Entries.Single(entry => entry.Name == "original-paths.json");
         ZipArchiveEntry[] dllEntries = [.. archive.Entries.Where(entry => Path.GetExtension(Path.Normalize(entry.Name)) == ".dll")];
 
@@ -141,7 +141,7 @@ internal partial class InteropGenerator
         }.FormatToResponseFile();
 
         // Create the actual .rsp file
-        string rspFilePath = Path.Combine(tempDirectory, "cswinrtgen.rsp");
+        string rspFilePath = Path.Combine(tempDirectory, "cswinrtinteropgen.rsp");
 
         File.WriteAllText(rspFilePath, rspText);
 
@@ -171,7 +171,7 @@ internal partial class InteropGenerator
         string zipPath = Path.Combine(args.DebugReproDirectory, "debug-repro.zip");
 
         // Create a temporary directory to stage files for the ZIP
-        string tempFolderName = $"cswinrtgen-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";
+        string tempFolderName = $"cswinrtinteropgen-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";
         string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
         string referencesDirectory = Path.Combine(tempDirectory, "references");
         string implementationDirectory = Path.Combine(tempDirectory, "implementation");
@@ -217,7 +217,7 @@ internal partial class InteropGenerator
         }.FormatToResponseFile();
 
         // Create the actual .rsp file
-        string rspFilePath = Path.Combine(tempDirectory, "cswinrtgen.rsp");
+        string rspFilePath = Path.Combine(tempDirectory, "cswinrtinteropgen.rsp");
 
         File.WriteAllText(rspFilePath, rspText);
 
