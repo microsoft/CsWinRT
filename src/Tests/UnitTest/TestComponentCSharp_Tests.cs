@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -692,10 +693,24 @@ namespace UnitTest
         [DataRow(typeof(KeyValuePair<Object, Object>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
         public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
-            // test method here
             TestObject.TypeProperty = type;
             Assert.AreEqual(name, TestObject.GetTypePropertyAbiName());
             Assert.AreEqual(kind, TestObject.GetTypePropertyKind());
+        }
+        
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void KeepType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type type)
+        {
+        }
+        
+        // Some types will fail due to trimming when testing in AOT so it is necessary to
+        // have this support TestMethod that will call into KeepType to ensure that the types do not
+        // get trimmed. 
+        [TestMethod]
+        public void TestTypePropertySupport()
+        {
+            KeepType(typeof(INotifyCollectionChanged));
+            KeepType(typeof(INotifyPropertyChanged));
         }
 
         class CustomDictionary : Dictionary<string, string> { }
