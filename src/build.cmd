@@ -246,7 +246,7 @@ set cswinrtimplgen_x64=%this_dir%WinRT.Impl.Generator\bin\x64\%cswinrt_configura
 set cswinrtimplgen_arm64=%this_dir%WinRT.Impl.Generator\bin\arm64\%cswinrt_configuration%\net10.0\win-arm64\publish\cswinrtimplgen.exe
 set cswinrtprojectiongen_x64=%this_dir%WinRT.Projection.Generator\bin\x64\%cswinrt_configuration%\net10.0\win-x64\publish\cswinrtprojectiongen.exe
 set cswinrtprojectiongen_arm64=%this_dir%WinRT.Projection.Generator\bin\arm64\%cswinrt_configuration%\net10.0\win-arm64\publish\cswinrtprojectiongen.exe
-set run_cswinrt_generator_task=%this_dir%RunCsWinRTGeneratorTask\bin\%cswinrt_configuration%\netstandard2.0\RunCsWinRTGeneratorTask.dll
+set run_cswinrt_generator_task=%this_dir%RunCsWinRTGeneratorTask\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Generator.Tasks.dll
 
 rem Now call pack
 echo Creating nuget package

@@ -8,7 +8,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <PropertyGroup>
 
     <!-- Default property value for CsWinRTGenTasksAssembly -->
-    <CsWinRTGenTasksAssembly Condition="'$(CsWinRTGenTasksAssembly)' == ''">$(MSBuildThisFileDirectory)..\tools\RunCsWinRTGeneratorTask.dll</CsWinRTGenTasksAssembly>
+    <CsWinRTGenTasksAssembly Condition="'$(CsWinRTGenTasksAssembly)' == ''">$(MSBuildThisFileDirectory)..\tools\WinRT.Generator.Tasks.dll</CsWinRTGenTasksAssembly>
 
     <!-- Disable the tasks from the .NET SDK given we want to use the one from here. -->
     <CsWinRTGeneratorTasksOverriden>true</CsWinRTGeneratorTasksOverriden>

@@ -308,11 +308,11 @@ steps:
         TargetFolder: $(StagingFolder)\net10.0\native
 
     - task: CopyFiles@2
-      displayName: Stage RunCsWinRTGeneratorTask
+      displayName: Stage WinRT.Generator.Tasks
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\RunCsWinRTGeneratorTask\bin\$(BuildConfiguration)\netstandard2.0
         Contents: |
-          RunCsWinRTGeneratorTask.dll
-          RunCsWinRTGeneratorTask.pdb
+          WinRT.Generator.Tasks.dll
+          WinRT.Generator.Tasks.pdb
         TargetFolder: $(StagingFolder)\netstandard2.0
