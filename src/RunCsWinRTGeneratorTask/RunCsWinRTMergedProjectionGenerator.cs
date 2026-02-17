@@ -139,7 +139,7 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
 
         // Special case for when 'AnyCPU' is specified (mostly for testing scenarios).
         // We just reuse the exact input directory and assume the architecture matches.
-        // This makes it easy to run the task against a local build of 'cswinrtgen'.
+        // This makes it easy to run the task against a local build of 'cswinrtprojectiongen'.
         if (effectiveArchitecture?.Equals("AnyCPU", StringComparison.OrdinalIgnoreCase) is true)
         {
             return Path.Combine(CsWinRTToolsDirectory!, ToolName);

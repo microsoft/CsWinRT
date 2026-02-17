@@ -40,7 +40,7 @@ internal static class BindableIEnumerableAdapter
 
             // This is the same adapter we use for 'IEnumerator<T>'. Code paths dealing with it should also
             // be aware that they might potentially have another nested wrapper. We don't have special logic
-            // in 'cswinrtgen' to track a constructed 'IEnumerator<object>' when we see 'IEnumerable' being
+            // in 'cswinrtinteropgen' to track a constructed 'IEnumerator<object>' when we see 'IEnumerable' being
             // used, however that is not needed given that this interface will always be discovered anyway.
             // With that, trimming will then automatically keep code for it if this code path is reachable.
             IEnumeratorAdapter<object> enumeratorAdapter = new(managedObjectEnumerator);

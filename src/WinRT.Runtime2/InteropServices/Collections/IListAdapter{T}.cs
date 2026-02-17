@@ -74,7 +74,7 @@ public static class IListAdapter<T>
         // code calls 'GetView()', it would get back the same CCW instance, just through a
         // 'QueryInterface' call for 'IVectorView<T>' instead.
         //
-        // The returned 'ReadOnlyCollection<T>' type requires special handling in 'cswinrtgen' to
+        // The returned 'ReadOnlyCollection<T>' type requires special handling in 'cswinrtinteropgen' to
         // be tracked correctly. If this implementation is changed, it needs to be kept in sync.
         return list as IReadOnlyList<T> ?? new ReadOnlyCollection<T>(list);
     }

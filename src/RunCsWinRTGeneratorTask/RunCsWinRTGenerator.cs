@@ -13,7 +13,7 @@ using Microsoft.Build.Utilities;
 namespace Microsoft.NET.Build.Tasks;
 
 /// <summary>
-/// The custom MSBuild task that invokes the 'cswinrtgen' tool.
+/// The custom MSBuild task that invokes the 'cswinrtinteropgen' tool.
 /// </summary>
 public sealed class RunCsWinRTGenerator : ToolTask
 {
@@ -56,13 +56,13 @@ public sealed class RunCsWinRTGenerator : ToolTask
     public string? DebugReproDirectory { get; set; }
 
     /// <summary>
-    /// Gets or sets the tools directory where the 'cswinrtgen' tool is located.
+    /// Gets or sets the tools directory where the 'cswinrtinteropgen' tool is located.
     /// </summary>
     [Required]
     public string? CsWinRTToolsDirectory { get; set; }
 
     /// <summary>
-    /// Gets or sets the architecture of 'cswinrtgen' to use.
+    /// Gets or sets the architecture of 'cswinrtinteropgen' to use.
     /// </summary>
     /// <remarks>
     /// If not set, the architecture will be determined based on the current process architecture.
@@ -91,7 +91,7 @@ public sealed class RunCsWinRTGenerator : ToolTask
     public bool EnableIncrementalGeneration { get; set; } = true;
 
     /// <summary>
-    /// Gets whether to treat warnings coming from 'cswinrtgen' as errors (regardless of the global 'TreatWarningsAsErrors' setting).
+    /// Gets whether to treat warnings coming from 'cswinrtinteropgen' as errors (regardless of the global 'TreatWarningsAsErrors' setting).
     /// </summary>
     public bool TreatWarningsAsErrors { get; set; } = false;
 
@@ -107,7 +107,7 @@ public sealed class RunCsWinRTGenerator : ToolTask
     public ITaskItem[]? AdditionalArguments { get; set; }
 
     /// <inheritdoc/>
-    protected override string ToolName => "cswinrtgen.exe";
+    protected override string ToolName => "cswinrtinteropgen.exe";
 
     /// <summary>
     /// Gets the effective item spec for the output assembly.
@@ -202,7 +202,7 @@ public sealed class RunCsWinRTGenerator : ToolTask
 
         // Special case for when 'AnyCPU' is specified (mostly for testing scenarios).
         // We just reuse the exact input directory and assume the architecture matches.
-        // This makes it easy to run the task against a local build of 'cswinrtgen'.
+        // This makes it easy to run the task against a local build of 'cswinrtinteropgen'.
         if (effectiveArchitecture?.Equals("AnyCPU", StringComparison.OrdinalIgnoreCase) is true)
         {
             return Path.Combine(CsWinRTToolsDirectory!, ToolName);

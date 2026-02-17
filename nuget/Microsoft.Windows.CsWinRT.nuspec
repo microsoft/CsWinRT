@@ -48,8 +48,8 @@
     <file src="$winrt_host_resource_x86$"   target ="hosting\x86\native\en-US"/>
     <file src="$winrt_host_resource_arm64$" target ="hosting\arm64\native\en-US"/>
 
-    <file src="$cswinrtgen_x64$" target ="tools\win-x64"/>
-    <file src="$cswinrtgen_arm64$" target ="tools\win-arm64"/>
+    <file src="$cswinrtinteropgen_x64$" target ="tools\win-x64"/>
+    <file src="$cswinrtinteropgen_arm64$" target ="tools\win-arm64"/>
     <file src="$cswinrtimplgen_x64$" target ="tools\win-x64"/>
     <file src="$cswinrtimplgen_arm64$" target ="tools\win-arm64"/>
     <file src="$cswinrtprojectiongen_x64$" target ="tools\win-x64"/>

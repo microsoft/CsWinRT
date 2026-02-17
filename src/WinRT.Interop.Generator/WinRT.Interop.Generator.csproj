@@ -18,7 +18,7 @@
     <RootNamespace>WindowsRuntime.InteropGenerator</RootNamespace>
 
     <!-- This project produces a CLI tool, so we want a nice short name for it -->
-    <AssemblyName>cswinrtgen</AssemblyName>
+    <AssemblyName>cswinrtinteropgen</AssemblyName>
       
     <!-- Same settings as WinRT.Runtime -->
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>

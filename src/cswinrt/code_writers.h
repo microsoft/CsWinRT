@@ -4792,7 +4792,7 @@ R"(
 
     void write_winrt_idic_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
     {
-        // Generic interfaces are handled by cswinrtgen.
+        // Generic interfaces are handled by cswinrtinteropgen.
         if (distance(type.GenericParam()) != 0)
         {
             return;
