@@ -6,7 +6,7 @@ using System.ComponentModel;
 using Windows.Storage.Streams;
 using WindowsRuntime.InteropServices;
 
-namespace WindowsRuntime.Streams;
+namespace WindowsRuntime;
 
 /// <summary>
 /// The implementation of the projected Windows Runtime <see cref="IBuffer"/> type.
