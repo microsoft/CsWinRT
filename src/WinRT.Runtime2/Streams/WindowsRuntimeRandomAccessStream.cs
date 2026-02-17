@@ -27,7 +27,7 @@ internal sealed class WindowsRuntimeRandomAccessStream : WindowsRuntimeObject,
     /// Creates a <see cref="WindowsRuntimeRandomAccessStream"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
-    /// <exception cref="WindowsRuntimeRandomAccessStream">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
     public WindowsRuntimeRandomAccessStream(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
@@ -147,19 +147,19 @@ internal sealed class WindowsRuntimeRandomAccessStream : WindowsRuntimeObject,
     /// <inheritdoc/>
     public IAsyncOperationWithProgress<IBuffer, uint> ReadAsync(IBuffer buffer, uint count, InputStreamOptions options)
     {
-        return ABI.Windows.Storage.Streams.IInputStreamMethods.ReadAsync(NativeObjectReference, buffer, count, options);
+        return ABI.Windows.Storage.Streams.IInputStreamMethods.ReadAsync(IInputStreamObjectReference, buffer, count, options);
     }
 
     /// <inheritdoc/>
     public IAsyncOperationWithProgress<uint, uint> WriteAsync(IBuffer buffer)
     {
-        return ABI.Windows.Storage.Streams.IOutputStreamMethods.WriteAsync(NativeObjectReference, buffer);
+        return ABI.Windows.Storage.Streams.IOutputStreamMethods.WriteAsync(IOutputStreamObjectReference, buffer);
     }
 
     /// <inheritdoc/>
     public IAsyncOperation<bool> FlushAsync()
     {
-        return ABI.Windows.Storage.Streams.IOutputStreamMethods.FlushAsync(NativeObjectReference);
+        return ABI.Windows.Storage.Streams.IOutputStreamMethods.FlushAsync(IOutputStreamObjectReference);
     }
 
     /// <inheritdoc/>

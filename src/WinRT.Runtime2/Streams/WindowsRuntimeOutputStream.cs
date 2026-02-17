@@ -25,7 +25,7 @@ internal sealed class WindowsRuntimeOutputStream : WindowsRuntimeObject,
     /// Creates a <see cref="WindowsRuntimeOutputStream"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
-    /// <exception cref="WindowsRuntimeOutputStream">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
     public WindowsRuntimeOutputStream(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {

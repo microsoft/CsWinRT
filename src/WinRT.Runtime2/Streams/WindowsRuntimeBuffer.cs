@@ -19,7 +19,7 @@ internal sealed class WindowsRuntimeBuffer : WindowsRuntimeObject, IBuffer, IWin
     /// Creates a <see cref="WindowsRuntimeBuffer"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
-    /// <exception cref="WindowsRuntimeBuffer">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
     public WindowsRuntimeBuffer(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
