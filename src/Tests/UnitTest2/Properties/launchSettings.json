@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "UnitTest": {
-      "commandName": "Project",
-      "nativeDebugging": true
-    }
-  }
-}
