@@ -93,23 +93,6 @@ file abstract unsafe class IAsyncActionComWrappersCallback : IWindowsRuntimeUnse
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="IAsyncAction"/>.
-/// </summary>
-internal sealed unsafe class IAsyncActionComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
-{
-    /// <inheritdoc/>
-    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
-    {
-        WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
-            externalComObject: value,
-            iid: in WellKnownWindowsInterfaceIIDs.IID_IAsyncAction,
-            wrapperFlags: out wrapperFlags);
-
-        return new WindowsRuntimeAsyncAction(objectReference);
-    }
-}
-
-/// <summary>
 /// Interop methods for <see cref="IAsyncAction"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,

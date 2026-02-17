@@ -20,7 +20,6 @@ namespace Windows.Foundation;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [Guid("5A648006-843A-4DA9-865B-9D26E5DFAD7B")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
-[ABI.Windows.Foundation.IAsyncActionComWrappersMarshaller]
 public interface IAsyncAction : IAsyncInfo
 {
     /// <summary>
