@@ -7,7 +7,9 @@
   </Configurations>
   <Folder Name="/Authoring/">
     <Project Path="Authoring/CsWinMD/CsWinMD.csproj" />
-    <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj" />
+    <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj">
+      <Build Project="false" />
+    </Project>
     <Project Path="Authoring/WinRT.Host/WinRT.Host.vcxproj" Id="7e33bcb7-19c5-4061-981d-ba695322708a">
       <Platform Solution="*|ARM" Project="Win32" />
       <Build Solution="*|ARM" Project="false" />
