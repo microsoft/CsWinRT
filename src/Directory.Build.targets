@@ -19,7 +19,7 @@
     <None Include="$(GeneratedFilesRootDir)**/*.cs" />
     <Compile Condition="'$(GeneratedFilesDir)' != '$(GeneratedFilesRootDir)'" Include="$(GeneratedFilesDir)*.cs" />
   </ItemGroup>
-	
+    
   <ItemGroup>
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Windows" />
@@ -77,5 +77,5 @@
       <Compile Include="$(GeneratedSkipLocalsInitFile)" />
     </ItemGroup>
   </Target>
-	
+    
 </Project>
