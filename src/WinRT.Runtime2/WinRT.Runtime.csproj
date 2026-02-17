@@ -25,7 +25,7 @@
       The assembly name must always be 'WinRT.Runtime', as other components have a dependency on
       the exact .dll name. For instance, the UWP XAML compiler special cases 'WinRT.Runtime.dll'.
     -->
-    <AssemblyName>WinRT.Runtime2</AssemblyName>
+    <AssemblyName>WinRT.Runtime</AssemblyName>
 
     <!--
       Treat all warnings as errors, only in release configurations. This allows the dev inner loop to remain
@@ -84,7 +84,7 @@
 
     <!-- Enable strong name signing -->
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
     
   <!--

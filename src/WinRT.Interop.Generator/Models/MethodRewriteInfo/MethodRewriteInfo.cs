@@ -58,7 +58,7 @@ internal abstract partial class MethodRewriteInfo : IComparable<MethodRewriteInf
 
         // Next, compare by order of instructions within the target method.
         // There's no concern about stable sorting with respect to objects
-        // where the instructions are missing, as 'cswinrtgen' will fail.
+        // where the instructions are missing, as 'cswinrtinteropgen' will fail.
         int leftIndex = Method.CilMethodBody?.Instructions.ReferenceIndexOf(Marker) ?? -1;
         int rightIndex = other.Method.CilMethodBody?.Instructions.ReferenceIndexOf(other.Marker) ?? -1;
 

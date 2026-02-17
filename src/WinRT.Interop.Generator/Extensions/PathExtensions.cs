@@ -23,7 +23,7 @@ internal static class PathExtensions
         public static string? Normalize(string? path)
         {
             // If on Windows, no normalization is needed. Paths in debug repros will use this format.
-            // Note: 'cswinrtgen' is only meant to be used on Windows (because CsWinRT itself is
+            // Note: 'cswinrtinteropgen' is only meant to be used on Windows (because CsWinRT itself is
             // only supported on Windows), but this allows debugging repros on other platforms too.
             if (OperatingSystem.IsWindows())
             {

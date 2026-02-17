@@ -20,7 +20,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// The prefix for all errors produced by this tool.
     /// </summary>
-    public const string ErrorPrefix = "CSWINRTGEN";
+    public const string ErrorPrefix = "CSWINRTINTEROPGEN";
 
     /// <summary>
     /// A runtime class name is too long.
@@ -247,7 +247,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException ResponseFileReadError(Exception exception)
     {
-        return Exception(28, "Failed to read the response file to run 'cswinrtgen'.", exception);
+        return Exception(28, "Failed to read the response file to run 'cswinrtinteropgen'.", exception);
     }
 
     /// <summary>
@@ -279,11 +279,11 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException WinRTRuntimeAssemblyVersionMismatch(
         Version? winRTRuntimeAssemblyVersion,
-        Version? cswinrtgenAssemblyVersion)
+        Version? cswinrtinteropgenAssemblyVersion)
     {
         return Exception(32,
-            $"The assembly version of 'WinRT.Runtime.dll' ('{winRTRuntimeAssemblyVersion}') does not match the assembly version of the 'cswinrtgen' " +
-            $"tool being used ('{cswinrtgenAssemblyVersion}'). The two binaries must be versioned together to ensure things work correctly.");
+            $"The assembly version of 'WinRT.Runtime.dll' ('{winRTRuntimeAssemblyVersion}') does not match the assembly version of the 'cswinrtinteropgen' " +
+            $"tool being used ('{cswinrtinteropgenAssemblyVersion}'). The two binaries must be versioned together to ensure things work correctly.");
     }
 
     /// <summary>

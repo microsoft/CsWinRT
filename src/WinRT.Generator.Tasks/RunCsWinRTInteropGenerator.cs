@@ -1,7 +1,10 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Build.Framework;
@@ -10,17 +13,26 @@ using Microsoft.Build.Utilities;
 namespace Microsoft.NET.Build.Tasks;
 
 /// <summary>
-/// The custom MSBuild task that invokes the 'cswinrtimplgen' tool.
+/// The custom MSBuild task that invokes the 'cswinrtinteropgen' tool.
 /// </summary>
-public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
+public sealed class RunCsWinRTInteropGenerator : ToolTask
 {
     /// <summary>
     /// Gets or sets the paths to assembly files that are reference assemblies, representing
-    /// the entire surface area for compilation. These assemblies are the full set of assemblies
-    /// that will contribute to the interop .dll being generated.
+    /// the entire surface area for compilation. These assemblies, specificaly the ones
+    /// for Windows Runtime projections are the set of assemblies that will contribute
+    /// to the interop .dll being generated.
     /// </summary>
     [Required]
     public ITaskItem[]? ReferenceAssemblyPaths { get; set; }
+
+    /// <summary>
+    /// Gets or sets the paths to implementation assembly files.
+    /// These assemblies are the full set of assemblies
+    /// that will contribute to the interop .dll being generated.
+    /// </summary>
+    [Required]
+    public ITaskItem[]? ImplementationAssemblyPaths { get; set; }
 
     /// <summary>
     /// Gets or sets the path to the output assembly that was produced by the build (for the current project).
@@ -32,24 +44,25 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
     public ITaskItem[]? OutputAssemblyPath { get; set; }
 
     /// <summary>
-    /// Gets or sets the directory where the generated assembly will be placed.
+    /// Gets or sets the directory where the generated interop assembly will be placed.
     /// </summary>
     [Required]
-    public string? GeneratedAssemblyDirectory { get; set; }
+    public string? InteropAssemblyDirectory { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to the assembly originator key file containing the key to sign the output assembly, if any.
+    /// Gets or sets the directory where the debug repro will be produced.
     /// </summary>
-    public string? AssemblyOriginatorKeyFile { get; set; }
+    /// <remarks>If not set, no debug repro will be produced.</remarks>
+    public string? DebugReproDirectory { get; set; }
 
     /// <summary>
-    /// Gets or sets the tools directory where the 'cswinrtimplgen' tool is located.
+    /// Gets or sets the tools directory where the 'cswinrtinteropgen' tool is located.
     /// </summary>
     [Required]
     public string? CsWinRTToolsDirectory { get; set; }
 
     /// <summary>
-    /// Gets or sets the architecture of 'cswinrtimplgen' to use.
+    /// Gets or sets the architecture of 'cswinrtinteropgen' to use.
     /// </summary>
     /// <remarks>
     /// If not set, the architecture will be determined based on the current process architecture.
@@ -57,9 +70,36 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
     public string? CsWinRTToolsArchitecture { get; set; }
 
     /// <summary>
-    /// Gets whether to treat warnings coming from 'cswinrtgen' as errors (regardless of the global 'TreatWarningsAsErrors' setting).
+    /// Gets or sets whether to use <c>Windows.UI.Xaml</c> projections.
+    /// </summary>
+    /// <remarks>If not set, it will default to <see langword="false"/> (i.e. using <c>Microsoft.UI.Xaml</c> projections).</remarks>
+    public bool UseWindowsUIXamlProjections { get; set; } = false;
+
+    /// <summary>
+    /// Gets whether to validate the assembly version of <c>WinRT.Runtime.dll</c>, to ensure it matches the generator.
+    /// </summary>
+    public bool ValidateWinRTRuntimeAssemblyVersion { get; set; } = true;
+
+    /// <summary>
+    /// Gets whether to validate that any references to <c>WinRT.Runtime.dll</c> version 2 are present across any assemblies.
+    /// </summary>
+    public bool ValidateWinRTRuntimeDllVersion2References { get; set; } = true;
+
+    /// <summary>
+    /// Gets whether to enable incremental generation (i.e. with a cache file on disk saving the full set of types to generate).
+    /// </summary>
+    public bool EnableIncrementalGeneration { get; set; } = true;
+
+    /// <summary>
+    /// Gets whether to treat warnings coming from 'cswinrtinteropgen' as errors (regardless of the global 'TreatWarningsAsErrors' setting).
     /// </summary>
     public bool TreatWarningsAsErrors { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the maximum number of parallel tasks to use for execution.
+    /// </summary>
+    /// <remarks>If not set, the default will match the number of available processor cores.</remarks>
+    public int MaxDegreesOfParallelism { get; set; } = -1;
 
     /// <summary>
     /// Gets or sets additional arguments to pass to the tool.
@@ -67,7 +107,7 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
     public ITaskItem[]? AdditionalArguments { get; set; }
 
     /// <inheritdoc/>
-    protected override string ToolName => "cswinrtimplgen.exe";
+    protected override string ToolName => "cswinrtinteropgen.exe";
 
     /// <summary>
     /// Gets the effective item spec for the output assembly.
@@ -78,7 +118,7 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
 #if NET10_0_OR_GREATER
     [MemberNotNullWhen(true, nameof(ReferenceAssemblyPaths))]
     [MemberNotNullWhen(true, nameof(OutputAssemblyPath))]
-    [MemberNotNullWhen(true, nameof(GeneratedAssemblyDirectory))]
+    [MemberNotNullWhen(true, nameof(InteropAssemblyDirectory))]
     [MemberNotNullWhen(true, nameof(CsWinRTToolsDirectory))]
 #endif
     protected override bool ValidateParameters()
@@ -95,6 +135,13 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
             return false;
         }
 
+        if (ImplementationAssemblyPaths is not { Length: > 0 })
+        {
+            Log.LogWarning("Invalid 'ImplementationAssemblyPaths' input(s).");
+
+            return false;
+        }
+
         if (OutputAssemblyPath is not { Length: 1 })
         {
             Log.LogWarning("Invalid 'OutputAssemblyPath' input.");
@@ -102,9 +149,16 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
             return false;
         }
 
-        if (GeneratedAssemblyDirectory is null || !Directory.Exists(GeneratedAssemblyDirectory))
+        if (InteropAssemblyDirectory is null || !Directory.Exists(InteropAssemblyDirectory))
         {
-            Log.LogWarning("Generated assembly directory '{0}' is invalid or does not exist.", GeneratedAssemblyDirectory);
+            Log.LogWarning("Generated assembly directory '{0}' is invalid or does not exist.", InteropAssemblyDirectory);
+
+            return false;
+        }
+
+        if (DebugReproDirectory is not null && !Directory.Exists(DebugReproDirectory))
+        {
+            Log.LogWarning("Debug repro directory '{0}' is invalid or does not exist.", DebugReproDirectory);
 
             return false;
         }
@@ -127,6 +181,16 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
             return false;
         }
 
+        // The degrees of parallelism matches the semantics of the 'MaxDegreesOfParallelism' property of 'Parallel.For'. That is, it must either be exactly '-1', which is a special
+        // value meaning "use as many parallel threads as the runtime deems appropriate", or it must be set to a positive integer, to explicitly control the number of threads.
+        // See: https://learn.microsoft.com/dotnet/api/system.threading.tasks.paralleloptions.maxdegreeofparallelism#system-threading-tasks-paralleloptions-maxdegreeofparallelism.
+        if (MaxDegreesOfParallelism is not (-1 or > 0))
+        {
+            Log.LogWarning("Invalid 'MaxDegreesOfParallelism' value. It must be '-1' or greater than '0' (but was '{0}').", MaxDegreesOfParallelism);
+
+            return false;
+        }
+
         return true;
     }
 
@@ -138,7 +202,7 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
 
         // Special case for when 'AnyCPU' is specified (mostly for testing scenarios).
         // We just reuse the exact input directory and assume the architecture matches.
-        // This makes it easy to run the task against a local build of 'cswinrtgen'.
+        // This makes it easy to run the task against a local build of 'cswinrtinteropgen'.
         if (effectiveArchitecture?.Equals("AnyCPU", StringComparison.OrdinalIgnoreCase) is true)
         {
             return Path.Combine(CsWinRTToolsDirectory!, ToolName);
@@ -166,11 +230,20 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
         IEnumerable<string> referenceAssemblyPaths = ReferenceAssemblyPaths!.Select(static path => path.ItemSpec);
         string referenceAssemblyPathsArg = string.Join(",", referenceAssemblyPaths);
 
+        IEnumerable<string> implementationAssemblyPaths = ImplementationAssemblyPaths!.Select(static path => path.ItemSpec);
+        string implementationAssemblyPathsArg = string.Join(",", implementationAssemblyPaths);
+
         AppendResponseFileCommand(args, "--reference-assembly-paths", referenceAssemblyPathsArg);
+        AppendResponseFileCommand(args, "--implementation-assembly-paths", implementationAssemblyPathsArg);
         AppendResponseFileCommand(args, "--output-assembly-path", EffectiveOutputAssemblyItemSpec);
-        AppendResponseFileCommand(args, "--generated-assembly-directory", GeneratedAssemblyDirectory!);
-        AppendResponseFileOptionalCommand(args, "--assembly-originator-key-file", AssemblyOriginatorKeyFile);
+        AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
+        AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
+        AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
+        AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());
+        AppendResponseFileCommand(args, "--validate-winrt-runtime-dll-version-2-references", ValidateWinRTRuntimeDllVersion2References.ToString());
+        AppendResponseFileCommand(args, "--enable-incremental-generation", EnableIncrementalGeneration.ToString());
         AppendResponseFileCommand(args, "--treat-warnings-as-errors", TreatWarningsAsErrors.ToString());
+        AppendResponseFileCommand(args, "--max-degrees-of-parallelism", MaxDegreesOfParallelism.ToString());
 
         // Add any additional arguments that are not statically known
         foreach (ITaskItem additionalArgument in AdditionalArguments ?? [])
