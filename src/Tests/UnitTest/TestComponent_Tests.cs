@@ -15,7 +15,7 @@ namespace UnitTest
     [TestClass]
     public class TestWinRT
     {
-        public ITests Tests { get; private set; }
+        public ITests Tests { get; private set; } = TestRunner.MakeTests();
 
         // NOTE: TestInitialize removed for NativeAOT runner path. [1](https://github.com/microsoft/testfx/issues/2756)
         // [TestInitialize]
@@ -36,7 +36,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_Bool()
         {
-            Tests = TestRunner.MakeTests();
             bool a = true;
             bool b;
             bool c = Tests.Param1(a, out b);
@@ -46,7 +45,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_Byte()
         {
-            Tests = TestRunner.MakeTests();
             byte a = 123;
             byte b;
             byte c = Tests.Param2(a, out b);
@@ -56,7 +54,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_UInt16()
         {
-            Tests = TestRunner.MakeTests();
             UInt16 a = 123;
             UInt16 b;
             UInt16 c = Tests.Param3(a, out b);
@@ -66,7 +63,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_UInt32()
         {
-            Tests = TestRunner.MakeTests();
             UInt32 a = 123;
             UInt32 b;
             UInt32 c = Tests.Param4(a, out b);
@@ -76,7 +72,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_UInt64()
         {
-            Tests = TestRunner.MakeTests();
             UInt64 a = 123;
             UInt64 b;
             UInt64 c = Tests.Param5(a, out b);
@@ -86,7 +81,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_Int16()
         {
-            Tests = TestRunner.MakeTests();
             Int16 a = 123;
             Int16 b;
             Int16 c = Tests.Param6(a, out b);
@@ -96,7 +90,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_Int32()
         {
-            Tests = TestRunner.MakeTests();
             Int32 a = 123;
             Int32 b;
             Int32 c = Tests.Param7(a, out b);
@@ -106,7 +99,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_Int64()
         {
-            Tests = TestRunner.MakeTests();
             Int64 a = 123;
             Int64 b;
             Int64 c = Tests.Param8(a, out b);
@@ -116,7 +108,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_Float()
         {
-            Tests = TestRunner.MakeTests();
             float a = 12.3f;
             float b;
             float c = Tests.Param9(a, out b);
@@ -126,7 +117,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_Double()
         {
-            Tests = TestRunner.MakeTests();
             double a = 12.3;
             double b;
             double c = Tests.Param10(a, out b);
@@ -136,7 +126,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_Char()
         {
-            Tests = TestRunner.MakeTests();
             char a = 'W';
             char b;
             char c = Tests.Param11(a, out b);
@@ -146,7 +135,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_String()
         {
-            Tests = TestRunner.MakeTests();
             string a = "WinRT";
             string b;
             string c = Tests.Param12(a, out b);
@@ -156,7 +144,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_Blittable()
         {
-            Tests = TestRunner.MakeTests();
             Blittable a = new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID);
             Blittable b;
             Blittable c = Tests.Param13(a, in a, out b);
@@ -166,7 +153,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_NonBlittable()
         {
-            Tests = TestRunner.MakeTests();
             NonBlittable a = new NonBlittable(false, 'X', "WinRT", (long?)PropertyValue.CreateInt64(1234));
             NonBlittable b;
             NonBlittable c = Tests.Param14(a, in a, out b);
@@ -176,7 +162,6 @@ namespace UnitTest
         [TestMethod]
         public void Params_Nested()
         {
-            Tests = TestRunner.MakeTests();
             Nested a = new Nested(
                 new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID),
                 new NonBlittable(false, 'X', "WinRT", (long?)PropertyValue.CreateInt64(1234)));
@@ -188,112 +173,96 @@ namespace UnitTest
         [TestMethod]
         public void Params_Bool_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param1Call((bool a, out bool b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_Byte_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param2Call((byte a, out byte b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_UInt16_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param3Call((UInt16 a, out UInt16 b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_UInt32_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param4Call((UInt32 a, out UInt32 b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_UInt64_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param5Call((UInt64 a, out UInt64 b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_Int16_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param6Call((Int16 a, out Int16 b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_Int32_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param7Call((Int32 a, out Int32 b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_Int64_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param8Call((Int64 a, out Int64 b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_Float_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param9Call((float a, out float b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_Double_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param10Call((double a, out double b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_Char_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param11Call((char a, out char b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_String_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param12Call((string a, out string b) => { b = a; return a; });
         }
 
         [TestMethod]
         public void Params_Blittable_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param13Call((Blittable a, in Blittable b, out Blittable c) => { c = a; return a; });
         }
 
         [TestMethod]
         public void Params_NonBlittable_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param14Call((NonBlittable a, in NonBlittable b, out NonBlittable c) => { c = a; return a; });
         }
 
         [TestMethod]
         public void Params_Nested_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Param15Call((Nested a, in Nested b, out Nested c) => { c = a; return a; });
         }
 
         [TestMethod]
         public void Array_Bool()
         {
-            Tests = TestRunner.MakeTests();
             bool[] a = new[] { true, false, true };
             bool[] b = new bool[a.Length];
             bool[] c;
@@ -304,7 +273,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_Byte()
         {
-            Tests = TestRunner.MakeTests();
             byte[] a = new byte[] { 1, 2, 3 };
             byte[] b = new byte[a.Length];
             byte[] c;
@@ -315,7 +283,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_UInt16()
         {
-            Tests = TestRunner.MakeTests();
             UInt16[] a = new UInt16[] { 1, 2, 3 };
             UInt16[] b = new UInt16[a.Length];
             UInt16[] c;
@@ -326,7 +293,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_UInt32()
         {
-            Tests = TestRunner.MakeTests();
             UInt32[] a = new UInt32[] { 1, 2, 3 };
             UInt32[] b = new UInt32[a.Length];
             UInt32[] c;
@@ -337,7 +303,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_UInt64()
         {
-            Tests = TestRunner.MakeTests();
             UInt64[] a = new UInt64[] { 1, 2, 3 };
             UInt64[] b = new UInt64[a.Length];
             UInt64[] c;
@@ -348,7 +313,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_Int16()
         {
-            Tests = TestRunner.MakeTests();
             Int16[] a = new Int16[] { 1, 2, 3 };
             Int16[] b = new Int16[a.Length];
             Int16[] c;
@@ -359,7 +323,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_Int32()
         {
-            Tests = TestRunner.MakeTests();
             Int32[] a = new Int32[] { 1, 2, 3 };
             Int32[] b = new Int32[a.Length];
             Int32[] c;
@@ -370,7 +333,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_Int64()
         {
-            Tests = TestRunner.MakeTests();
             Int64[] a = new Int64[] { 1, 2, 3 };
             Int64[] b = new Int64[a.Length];
             Int64[] c;
@@ -381,7 +343,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_Float()
         {
-            Tests = TestRunner.MakeTests();
             float[] a = new float[] { 1.0f, 2.0f, 3.0f };
             float[] b = new float[a.Length];
             float[] c;
@@ -392,7 +353,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_Double()
         {
-            Tests = TestRunner.MakeTests();
             double[] a = new double[] { 1.0, 2.0, 3.0 };
             double[] b = new double[a.Length];
             double[] c;
@@ -403,7 +363,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_Char()
         {
-            Tests = TestRunner.MakeTests();
             char[] a = new char[] { 'a', 'b', 'c' };
             char[] b = new char[a.Length];
             char[] c;
@@ -414,7 +373,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_String()
         {
-            Tests = TestRunner.MakeTests();
             string[] a = new string[] { "apples", "oranges", "pears" };
             string[] b = new string[a.Length];
             string[] c;
@@ -425,7 +383,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_NullStringArray()
         {
-            Tests = TestRunner.MakeTests();
             string[] a = null;
             string[] b = null;
             string[] c;
@@ -437,7 +394,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_Blittable()
         {
-            Tests = TestRunner.MakeTests();
             Blittable[] a = new Blittable[] {
                 new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID),
                 new Blittable(10, 20, 30, 40, -50, -60, -70, 80.0f, 90.0, typeof(IStringable).GUID)
@@ -451,7 +407,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_NonBlittable()
         {
-            Tests = TestRunner.MakeTests();
             NonBlittable[] a = new NonBlittable[] {
                 new NonBlittable(false, 'X', "First", (long?)PropertyValue.CreateInt64(123)),
                 new NonBlittable(true, 'Y', "Second", (long?)PropertyValue.CreateInt64(456)),
@@ -466,7 +421,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_Nested()
         {
-            Tests = TestRunner.MakeTests();
             Nested[] a = new Nested[]{
                 new Nested(
                     new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID),
@@ -487,7 +441,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_Stringable()
         {
-            Tests = TestRunner.MakeTests();
             IStringable[] a = new IStringable[] {
                 Windows.Data.Json.JsonValue.CreateNumberValue(3),
                 Windows.Data.Json.JsonValue.CreateNumberValue(4),
@@ -502,7 +455,6 @@ namespace UnitTest
         [TestMethod]
         public void Array_NullInterfaces()
         {
-            Tests = TestRunner.MakeTests();
             IStringable[] a = null;
             IStringable[] b = null;
             IStringable[] c;
@@ -522,119 +474,102 @@ namespace UnitTest
         [TestMethod]
         public void Array_Bool_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array1Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_Byte_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array2Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_UInt16_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array3Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_UInt32_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array4Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_UInt64_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array5Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_Int16_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array6Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_Int32_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array7Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_Int64_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array8Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_Float_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array9Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_Double_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array10Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_Char_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array11Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_String_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array12Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_Blittable_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array13Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_NonBlittable_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array14Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_Nested_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array15Call(Array_Call);
         }
 
         [TestMethod]
         public void Array_Stringable_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Array16Call(Array_Call);
         }
 
         [TestMethod]
         public void Collections_IEnumerable()
         {
-            Tests = TestRunner.MakeTests();
             string[] a = new string[] { "apples", "oranges", "pears" };
             IEnumerable<string> b = null;
             var c = Tests.Collection1(a, out b);
@@ -644,7 +579,6 @@ namespace UnitTest
         [TestMethod]
         public void Collections_IEnumerable_Pair()
         {
-            Tests = TestRunner.MakeTests();
             var a = new KeyValuePair<string, string>[] {
                 new KeyValuePair<string,string>("apples", "1"),
                 new KeyValuePair<string,string>("oranges", "2"),
@@ -658,7 +592,6 @@ namespace UnitTest
         [TestMethod]
         public void Collections_Dictionary()
         {
-            Tests = TestRunner.MakeTests();
             var a = new Dictionary<string, string>()
             {
                 ["apples"] = "1",
@@ -691,7 +624,6 @@ namespace UnitTest
         [TestMethod]
         public unsafe void Collections_Dictionary_IDIC()
         {
-            Tests = TestRunner.MakeTests();
             var a = new Dictionary<string, string>()
             {
                 ["apples"] = "1",
@@ -750,7 +682,6 @@ namespace UnitTest
         [TestMethod]
         public void Collections_ReadOnly_Dictionary()
         {
-            Tests = TestRunner.MakeTests();
             var a = new Dictionary<string, string>()
             {
                 ["apples"] = "1",
@@ -766,7 +697,6 @@ namespace UnitTest
         [TestMethod]
         public unsafe void Collections_ReadOnly_Dictionary_IDIC()
         {
-            Tests = TestRunner.MakeTests();
             var a = new Dictionary<string, string>()
             {
                 ["apples"] = "1",
@@ -800,7 +730,6 @@ namespace UnitTest
         [TestMethod]
         public void Collections_List()
         {
-            Tests = TestRunner.MakeTests();
             string[] a = new string[] { "apples", "oranges", "pears" };
             IList<string> b = null;
             var c = Tests.Collection5(a, out b);
@@ -811,7 +740,6 @@ namespace UnitTest
         [TestMethod]
         public unsafe void Collections_List_IDIC()
         {
-            Tests = TestRunner.MakeTests();
             string[] a = new string[] { "apples", "oranges", "pears" };
             IList<string> b = null;
             var c = Tests.Collection5(a, out b);
@@ -853,7 +781,6 @@ namespace UnitTest
         [TestMethod]
         public void CastListToEnum_String()
         {
-            Tests = TestRunner.MakeTests();
             string[] a = new string[] { "apples", "oranges", "pears" };
             IList<string> b = null;
             var c = Tests.Collection5(a, out b);
@@ -864,7 +791,6 @@ namespace UnitTest
         [TestMethod]
         public void Collections_ReadOnly_List()
         {
-            Tests = TestRunner.MakeTests();
             string[] a = new string[] { "apples", "oranges", "pears" };
             IReadOnlyList<string> b = null;
             var c = Tests.Collection6(a, out b);
@@ -875,7 +801,6 @@ namespace UnitTest
         [TestMethod]
         public unsafe void Collections_ReadOnly_List_IDIC()
         {
-            Tests = TestRunner.MakeTests();
             string[] a = new string[] { "apples", "oranges", "pears" };
             IReadOnlyList<string> b = null;
             var c = Tests.Collection6(a, out b);
@@ -896,7 +821,6 @@ namespace UnitTest
         [TestMethod]
         public void Collections_IEnumerable_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Collection1Call((IEnumerable<string> a, out IEnumerable<string> b) =>
             {
                 b = a.Select(s => s);
@@ -907,7 +831,6 @@ namespace UnitTest
         [TestMethod]
         public void Collections_IEnumerable_Pair_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Collection2Call((IEnumerable<KeyValuePair<string, string>> a, out IEnumerable<KeyValuePair<string, string>> b) =>
             {
                 b = a.Select(s => s);
@@ -918,7 +841,6 @@ namespace UnitTest
         [TestMethod]
         public void Collections_Dictionary_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Collection3Call((IDictionary<string, string> a, out IDictionary<string, string> b) =>
             {
                 b = new Dictionary<string, string>(a);
@@ -930,7 +852,6 @@ namespace UnitTest
         [TestMethod]
         public void Collections_ReadOnly_Dictionary_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Collection4Call((IReadOnlyDictionary<string, string> a, out IReadOnlyDictionary<string, string> b) =>
             {
                 b = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(a));
@@ -942,7 +863,6 @@ namespace UnitTest
         [TestMethod]
         public void Collections_List_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Collection5Call((IList<string> a, out IList<string> b) =>
             {
                 b = a.Select(s => s).ToList();
@@ -953,7 +873,6 @@ namespace UnitTest
         [TestMethod]
         public void Collections_ReadOnly_List_Call()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Collection6Call((IReadOnlyList<string> a, out IReadOnlyList<string> b) =>
             {
                 b = a.Select(s => s).ToList();
@@ -964,7 +883,6 @@ namespace UnitTest
         [TestMethod]
         public void TestComposable()
         {
-            Tests = TestRunner.MakeTests();
             HierarchyA hierarchyA = new HierarchyA();
             Assert.AreEqual("HierarchyA.HierarchyA_Method", hierarchyA.HierarchyA_Method());
 
@@ -993,7 +911,6 @@ namespace UnitTest
         [TestMethod]
         public void TestVectorGetMany()
         {
-            Tests = TestRunner.MakeTests();
             var bools = new List<bool>()
             {
                 true,
@@ -1089,105 +1006,90 @@ namespace UnitTest
         [TestMethod]
         public void Box_Byte()
         {
-            Tests = TestRunner.MakeTests();
             Box_type<byte>(4, Tests.Box1);
         }
 
         [TestMethod]
         public void Box_UShort()
         {
-            Tests = TestRunner.MakeTests();
             Box_type<ushort>(4, Tests.Box2);
         }
 
         [TestMethod]
         public void Box_UInt()
         {
-            Tests = TestRunner.MakeTests();
             Box_type<uint>(4, Tests.Box3);
         }
 
         [TestMethod]
         public void Box_ULong()
         {
-            Tests = TestRunner.MakeTests();
             Box_type<ulong>(4, Tests.Box4);
         }
 
         [TestMethod]
         public void Box_Short()
         {
-            Tests = TestRunner.MakeTests();
             Box_type<short>(4, Tests.Box5);
         }
 
         [TestMethod]
         public void Box_Int()
         {
-            Tests = TestRunner.MakeTests();
             Box_type(4, Tests.Box6);
         }
 
         [TestMethod]
         public void Box_Long()
         {
-            Tests = TestRunner.MakeTests();
             Box_type<long>(4, Tests.Box7);
         }
 
         [TestMethod]
         public void Box_Bool()
         {
-            Tests = TestRunner.MakeTests();
             Box_type(true, Tests.Box8);
         }
 
         [TestMethod]
         public void Box_Float()
         {
-            Tests = TestRunner.MakeTests();
             Box_type<float>(4, Tests.Box9);
         }
 
         [TestMethod]
         public void Box_Double()
         {
-            Tests = TestRunner.MakeTests();
             Box_type(4.0, Tests.Box10);
         }
 
         [TestMethod]
         public void Box_Guid()
         {
-            Tests = TestRunner.MakeTests();
             Box_type(Guid.NewGuid(), Tests.Box11);
         }
 
         [TestMethod]
         public void Box_Char()
         {
-            Tests = TestRunner.MakeTests();
             Box_type('c', Tests.Box12);
         }
 
         [TestMethod]
         public void Box_String()
         {
-            Tests = TestRunner.MakeTests();
             Box_type("test", Tests.Box13);
         }
 
         [TestMethod]
         public void Box_Timespan()
         {
-            Tests = TestRunner.MakeTests();
             Box_type(TimeSpan.FromMilliseconds(4), Tests.Box14);
         }
 
         [TestMethod]
         public void Box_Blittable()
         {
-            Tests = TestRunner.MakeTests();
             Blittable blittable = new Blittable(3, 4, 5, 6, 7, 8, 9, 10, 11, typeof(ITests).GUID);
             Box_type(blittable, Tests.Box15);
         }
@@ -1195,7 +1097,6 @@ namespace UnitTest
         [TestMethod]
         public void Box_NonBittable()
         {
-            Tests = TestRunner.MakeTests();
             NonBlittable nonBlittable = new NonBlittable(true, 'a', "one", 1);
             Box_type(nonBlittable, Tests.Box16);
         }
@@ -1203,14 +1104,12 @@ namespace UnitTest
         [TestMethod]
         public void Box_DateTime()
         {
-            Tests = TestRunner.MakeTests();
             Box_type(DateTimeOffset.Now, Tests.Box17);
         }
 
         [TestMethod]
         public void Box_LongArray()
         {
-            Tests = TestRunner.MakeTests();
             ReadOnlySpan<long> arr = new long[] { 2, 4, 6 };
             Box_array(arr, Tests.Box18);
 
@@ -1228,7 +1127,6 @@ namespace UnitTest
         [TestMethod]
         public void Box_BoolArray()
         {
-            Tests = TestRunner.MakeTests();
             bool[] arr = new bool[] { true, false, true };
             Box_array(arr, Tests.Box19);
 
@@ -1246,7 +1144,6 @@ namespace UnitTest
         [TestMethod]
         public void Box_StringArray()
         {
-            Tests = TestRunner.MakeTests();
             string[] arr = new string[] { "one", "two", "three" };
             Box_array(arr, Tests.Box20);
 
@@ -1264,7 +1161,6 @@ namespace UnitTest
         [TestMethod]
         public void Box_TimeSpanArray()
         {
-            Tests = TestRunner.MakeTests();
             TimeSpan[] arr = new TimeSpan[] { TimeSpan.FromMilliseconds(4), TimeSpan.FromMilliseconds(5), TimeSpan.FromMilliseconds(6) };
             Box_array(arr, Tests.Box21);
 
@@ -1282,7 +1178,6 @@ namespace UnitTest
         [TestMethod]
         public void Fast_Abi_Simple()
         {
-            Tests = TestRunner.MakeTests();
             var simple = new test_component_fast.Simple();
             Assert.IsNotNull(simple);
             simple = new test_component_fast.Simple("Hello");
@@ -1312,7 +1207,6 @@ namespace UnitTest
         [TestMethod]
         public void Fast_Abi_Composition()
         {
-            Tests = TestRunner.MakeTests();
             var compositor = new test_component_fast.Composition.Compositor();
             var sv = compositor.CreateSpriteVisual();
             sv.Offset = 10;
@@ -1328,7 +1222,6 @@ namespace UnitTest
         [TestMethod]
         public void Z_Check_Coverage()
         {
-            Tests = TestRunner.MakeTests();
             Tests.Simple();
             //Assert.AreEqual((double)Tests.Percentage, (double)100);
         }
