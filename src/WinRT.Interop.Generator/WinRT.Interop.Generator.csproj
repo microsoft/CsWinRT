@@ -28,6 +28,11 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <Features>strict</Features>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Used to enable publishing project in build -->  
+    <IsBuildTool>true</IsBuildTool>
+    <RuntimeIdentifier Condition="'$(PublishBuildTool)' == 'true'">win-$(BuildToolArch)</RuntimeIdentifier>
+    <SelfContained Condition="'$(PublishBuildTool)' == 'true'">true</SelfContained>
   </PropertyGroup>
 
   <ItemGroup>

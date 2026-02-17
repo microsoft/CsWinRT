@@ -29,6 +29,11 @@
     <Features>strict</Features>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
+    <!-- Used to enable publishing project in build -->
+    <IsBuildTool>true</IsBuildTool>
+    <RuntimeIdentifier Condition="'$(PublishBuildTool)' == 'true'">win-$(BuildToolArch)</RuntimeIdentifier>
+    <SelfContained Condition="'$(PublishBuildTool)' == 'true'">true</SelfContained>
+
     <!--
       Workaround for: "CSC(0,0): Error AD0001: Analyzer 'ILLink.RoslynAnalyzer.DynamicallyAccessedMembersAnalyzer' threw
       an exception of type 'System.InvalidCastException' with message 'Unable to cast object of type
