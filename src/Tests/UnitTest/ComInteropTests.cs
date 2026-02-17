@@ -25,7 +25,7 @@ namespace UnitTest
     [Guid("15651B9F-6C6B-4CC0-944C-C7D7B0F36F81")]
     internal partial interface IComInterop
     {
-        long ReturnWindowHandle(IntPtr hwnd, Guid iid);
+        Int64 ReturnWindowHandle(IntPtr hwnd, Guid iid);
     }
 
     // Note: Many of the COM interop APIs cannot be easily tested without significant test setup.
