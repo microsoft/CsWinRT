@@ -80,32 +80,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
   -->
   <Target Name="_ResolveCsWinRToolsDirectory" DependsOnTargets="ResolveAssemblyReferences" BeforeTargets="_ComputeRunCsWinRTGeneratorCache">
-
-    <!--
-      If the user hasn't specified the 'CsWinRTToolsDirectory' property, we need to resolve the correct
-      tools path to use to find the 'cswinrtgen' binary that matches the 'WinRT.Runtime.dll' assembly in
-      use. To do so, we can leverage the assembly resolution logic that the .NET SDK is already doing.
-      We know that the right 'cswinrtgen' binary will always be in the '\tools' directory of whatever
-      package contains the 'WinRT.Runtime.dll' assembly (i.e. either 'Microsoft.Windows.SDK.NET.Ref' or
-      'Microsoft.Windows.CsWinRT'). So we can get the resolved assembly and compute the tools directory
-      path relative to it. We can use this value whenever 'CsWinRTToolsDirectory' isn't set.
-    -->
-    <ItemGroup>
-      <_WinRTRuntimeDllReferencePath
-        Include="@(ReferencePath)"
-        Condition="'%(Filename)%(Extension)' == 'WinRT.Runtime.dll'" />
-    </ItemGroup>
     
-    <!-- Compute the implicit '\tools' path, and use that if 'CsWinRTToolsDirectory' isn't set -->
+    <!-- Compute the implicit '\tools' path based on the location of this targets file. -->
     <PropertyGroup>
-      <_WinRTRuntimeDllDirectory>$([System.IO.Path]::GetDirectoryName('%(_WinRTRuntimeDllReferencePath.FullPath)'))</_WinRTRuntimeDllDirectory>
-      <_CsWinRTOrTargetingPackLibDirectory>$([System.IO.Path]::GetDirectoryName('$(_WinRTRuntimeDllDirectory)'))</_CsWinRTOrTargetingPackLibDirectory>
-      <_CsWinRTOrTargetingPackRootDirectory>$([System.IO.Path]::GetDirectoryName('$(_CsWinRTOrTargetingPackLibDirectory)'))</_CsWinRTOrTargetingPackRootDirectory>
-      <_CsWinRTOrTargetingPackToolsDirectory>$([System.IO.Path]::Combine('$(_CsWinRTOrTargetingPackRootDirectory)', 'tools'))</_CsWinRTOrTargetingPackToolsDirectory>
+      <_CsWinRTRootDirectory>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_CsWinRTRootDirectory>
+      <_CsWinRTToolsDirectory>$([System.IO.Path]::Combine('$(_CsWinRTRootDirectory)', 'tools'))</_CsWinRTToolsDirectory>
 
-      <CsWinRTInteropGenEffectiveToolsDirectory Condition="'$(CsWinRTInteropGenEffectiveToolsDirectory)' == ''">$(_CsWinRTOrTargetingPackToolsDirectory)</CsWinRTInteropGenEffectiveToolsDirectory>
-      <CsWinRTImplEffectiveToolsDirectory Condition="'$(CsWinRTImplEffectiveToolsDirectory)' == ''">$(_CsWinRTOrTargetingPackToolsDirectory)</CsWinRTImplEffectiveToolsDirectory>
-      <CsWinRTMergedProjectionEffectiveToolsDirectory Condition="'$(CsWinRTMergedProjectionEffectiveToolsDirectory)' == ''">$(_CsWinRTOrTargetingPackToolsDirectory)</CsWinRTMergedProjectionEffectiveToolsDirectory>
+      <CsWinRTInteropGenEffectiveToolsDirectory Condition="'$(CsWinRTInteropGenEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTInteropGenEffectiveToolsDirectory>
+      <CsWinRTImplEffectiveToolsDirectory Condition="'$(CsWinRTImplEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTImplEffectiveToolsDirectory>
+      <CsWinRTMergedProjectionEffectiveToolsDirectory Condition="'$(CsWinRTMergedProjectionEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTMergedProjectionEffectiveToolsDirectory>
 
       <!-- Temporarily setting this due to .NET SDK targets check it. -->
       <CsWinRTToolsDirectory>$(CsWinRTInteropGenEffectiveToolsDirectory)</CsWinRTToolsDirectory>
