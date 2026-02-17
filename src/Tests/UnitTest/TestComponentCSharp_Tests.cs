@@ -42,6 +42,7 @@ using Windows.UI.Notifications;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+using static UnitTest.UnitTestHelper;
 
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.18362.0")]
@@ -3267,65 +3268,49 @@ namespace UnitTest
             Assert.AreEqual(6, observable.Observation);
         }
 
-        //[GeneratedComInterface]
-        //[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-        //[Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
-        //internal partial interface IWindowNative
-        //{
-        //    IntPtr get_WindowHandle();
-        //}
+        [TestMethod]
+        unsafe public void TestComImports()
+        {
+            static Object MakeObject()
+            {
+                Assert.AreEqual(0, ComImports.NumObjects);
+                var obj = ComImports.MakeObject();
+                Assert.AreEqual(1, ComImports.NumObjects);
+                return obj;
+            }
 
-        //[GeneratedComInterface]
-        //[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-        //[Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
-        //internal partial interface IInitializeWithWindow
-        //{
-        //    void Initialize(IntPtr hwnd);
-        //}
+            static void TestObject() => MakeObject();
 
-        //[TestMethod]
-        //unsafe public void TestComImports()
-        //{
-        //    static Object MakeObject()
-        //    {
-        //        Assert.AreEqual(0, ComImports.NumObjects);
-        //        var obj = ComImports.MakeObject();
-        //        Assert.AreEqual(1, ComImports.NumObjects);
-        //        return obj;
-        //    }
+            static (IInitializeWithWindow, IWindowNative) MakeImports()
+            {
+                var obj = MakeObject();
+                var initializeWithWindow = (IInitializeWithWindow)obj;
+                var windowNative = (IWindowNative)obj;
+                return (initializeWithWindow, windowNative);
+            }
 
-        //    static void TestObject() => MakeObject();
+            static void TestImports()
+            {
+                var (initializeWithWindow, windowNative) = MakeImports();
 
-        //    static (IInitializeWithWindow, IWindowNative) MakeImports()
-        //    {
-        //        var obj = MakeObject();
-        //        var initializeWithWindow = (IInitializeWithWindow)obj;
-        //        var windowNative = (IWindowNative)obj;
-        //        return (initializeWithWindow, windowNative);
-        //    }
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
 
-        //    static void TestImports()
-        //    {
-        //        var (initializeWithWindow, windowNative) = MakeImports();
+                var hwnd = new IntPtr(0x12345678);
+                initializeWithWindow.Initialize(hwnd);
+                Assert.AreEqual(windowNative.get_WindowHandle(), hwnd);
+            }
 
-        //        GC.Collect();
-        //        GC.WaitForPendingFinalizers();
+            TestObject();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.AreEqual(0, ComImports.NumObjects);
 
-        //        var hwnd = new IntPtr(0x12345678);
-        //        initializeWithWindow.Initialize(hwnd);
-        //        Assert.AreEqual(windowNative.get_WindowHandle(), hwnd);
-        //    }
-
-        //    TestObject();
-        //    GC.Collect();
-        //    GC.WaitForPendingFinalizers();
-        //    Assert.AreEqual(0, ComImports.NumObjects);
-
-        //    TestImports();
-        //    GC.Collect();
-        //    GC.WaitForPendingFinalizers();
-        //    Assert.AreEqual(0, ComImports.NumObjects);
-        //}
+            TestImports();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.AreEqual(0, ComImports.NumObjects);
+        }
 
         [TestMethod]
         public void TestInterfaceObjectMarshalling()
