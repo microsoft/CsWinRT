@@ -222,7 +222,6 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/UnitTest/UnitTest.csproj">
-      <BuildDependency Project="WinRT.Runtime/WinRT.Runtime.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
@@ -407,6 +406,5 @@
   <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
   <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
   <Project Path="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" Id="eac7df05-21df-4129-b0dd-566733fd8bdc" />
-  <Project Path="WinRT.Runtime/WinRT.Runtime.csproj" />
   <Project Path="WinRT.Runtime2/WinRT.Runtime2.csproj" />
 </Solution>
