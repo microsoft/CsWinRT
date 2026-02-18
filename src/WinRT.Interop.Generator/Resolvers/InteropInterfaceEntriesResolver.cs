@@ -94,7 +94,7 @@ internal static class InteropInterfaceEntriesResolver
             TypeDefinition interfaceType = typeSignature.Resolve()!;
 
             // Handle the common case for all normally projected, non-generic Windows Runtime interface types. For those, all the
-            // interop code will just like in the 'WinRT.Projection.dll' assembly, with all projected types for the application domain.
+            // interop code will just live in the 'WinRT.Projection.dll' assembly, with all projected types for the application domain.
             if (interfaceType.IsProjectedWindowsRuntimeType)
             {
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetProjectedTypeImpl(
