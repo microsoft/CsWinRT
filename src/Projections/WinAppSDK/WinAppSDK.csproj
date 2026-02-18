@@ -44,11 +44,13 @@
     <PkgMicrosoft_WindowsAppSDK_Foundation>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk.foundation', '$(MicrosoftWinAppSDKFoundationVersion)'))</PkgMicrosoft_WindowsAppSDK_Foundation>
     <PkgMicrosoft_WindowsAppSDK_Ixp>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk.interactiveexperiences', '$(MicrosoftWinAppSDKIxpVersion)'))</PkgMicrosoft_WindowsAppSDK_Ixp>
     <PkgMicrosoft_WindowsAppSDK_WinUI>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk.winui', '$(MicrosoftWinAppSDKWinUIVersion)'))</PkgMicrosoft_WindowsAppSDK_WinUI>
+    <PkgMicrosoft_Web_WebView2>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.web.webview2', '$(MicrosoftWebWebView2Version)'))</PkgMicrosoft_Web_WebView2>
   </PropertyGroup>
   <ItemGroup>
     <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK_Foundation)/metadata/*.winmd" />
     <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK_Ixp)/metadata/10.0.18362.0/*.winmd" />
     <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSDK_WinUI)/metadata/*.winmd" />
+    <CsWinRTInputs Include="$(PkgMicrosoft_Web_WebView2)/lib/*.winmd" />
   </ItemGroup>
 
 </Project>

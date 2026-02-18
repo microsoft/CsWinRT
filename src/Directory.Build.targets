@@ -87,7 +87,7 @@
 
   <Target Name="CopyEmbeddedSymbols" 
           AfterTargets="Build" 
-          Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(TargetFramework)' != ''"
+          Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(TargetFramework)' != '' and '$(ProduceOnlyReferenceAssembly)' != 'true'"
           Inputs="$(TargetPath)"
           Outputs="$(OutputPath)$(AssemblyName).pdb">
     <PropertyGroup>
