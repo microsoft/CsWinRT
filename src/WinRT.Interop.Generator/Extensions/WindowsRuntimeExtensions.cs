@@ -610,8 +610,13 @@ internal static class WindowsRuntimeExtensions
                     return interopReferences.AbiDateTimeOffset.ToValueTypeSignature();
                 }
 
-                // Otherwise, we can rely on the blittable type being defined in the same module under the 'ABI' namespace
-                return interopReferences.WinRTProjection.CreateTypeReference(
+                // Determine the right assembly reference for this projected type
+                AssemblyReference projectionAssembly = type.IsProjectedWindowsSdkType
+                    ? interopReferences.WinRTSdkProjection
+                    : interopReferences.WinRTProjection;
+
+                // For all types that get here, their ABI types will be in the right projection assembly, under the 'ABI' namespace
+                return projectionAssembly.CreateTypeReference(
                     ns: (Utf8String)$"ABI.{typeDefinition.Namespace}",
                     name: typeDefinition.Name!).ToValueTypeSignature();
             }
