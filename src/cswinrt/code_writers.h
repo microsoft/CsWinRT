@@ -9547,7 +9547,7 @@ R"(
     {
         if (!is_type_blittable(type))
         {
-            w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\n%%% unsafe struct %\n{\n",
+            w.write("%%% unsafe struct %\n{\n",
                 bind<write_value_type_winrt_classname_attribute>(type),
                 bind<write_comwrapper_marshaller_attribute>(type),
                 internal_accessibility(),
