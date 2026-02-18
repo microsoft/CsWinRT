@@ -260,7 +260,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileCommand(args, "--implementation-assembly-paths", implementationAssemblyPathsArg);
         AppendResponseFileCommand(args, "--output-assembly-path", EffectiveOutputAssemblyItemSpec);
         AppendResponseFileCommand(args, "--winrt-sdk-projection-assembly-path", WinRTSdkProjectionAssemblyPath!.ItemSpec);
-        AppendResponseFileOptionalCommand(args, "--winrt-projection-assembly-path", WinRTProjectionAssemblyPath!.ItemSpec);
+        AppendResponseFileOptionalCommand(args, "--winrt-projection-assembly-path", WinRTProjectionAssemblyPath?.ItemSpec);
         AppendResponseFileOptionalCommand(args, "--winrt-component-assembly-path", WinRTComponentAssemblyPath?.ItemSpec);
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
