@@ -242,9 +242,17 @@ internal static partial class ImplGenerator
     {
         try
         {
-            // We need an assembly reference for the merged projection .dll that will be generated.
+            // We need an assembly reference for the precompiled projection .dll for the Windows SDK.
             // The version doesn't matter here (as long as it's not '255.255.255.255'). The real .dll
             // will always have a version number equal or higher than this, so it will load correctly.
+            AssemblyReference sdkProjectionAssembly = new("WinRT.Sdk.Projection"u8, new Version(0, 0, 0, 0))
+            {
+                PublicKeyOrToken = ImplValues.PublicKeyData,
+                HasPublicKey = true
+            };
+
+            // Similar as above, but for the merged projection .dll for all other Windows Runtime types.
+            // Unlike the implementation .dll for the Windows SDK however, this .dll is created on the fly.
             AssemblyReference projectionAssembly = new("WinRT.Projection"u8, new Version(0, 0, 0, 0))
             {
                 PublicKeyOrToken = ImplValues.PublicKeyData,
@@ -259,9 +267,21 @@ internal static partial class ImplGenerator
                     continue;
                 }
 
+                // Also make sure the type has a valid namespace, otherwise we can't handle it
+                if (exportedType.Namespace is null)
+                {
+                    continue;
+                }
+
+                // Determine the target assembly based on the namespace of the current type.
+                // This matches the logic in 'cswinrtinteropgen' to figure out the right one.
+                AssemblyReference implementationAssembly = exportedType.Namespace.AsSpan().StartsWith("Windows."u8)
+                    ? sdkProjectionAssembly
+                    : projectionAssembly;
+
                 // Emit the type forwards for all public (projected) types
                 implModule.ExportedTypes.Add(new ExportedType(
-                    implementation: projectionAssembly.ImportWith(implModule.DefaultImporter),
+                    implementation: implementationAssembly.ImportWith(implModule.DefaultImporter),
                     ns: exportedType.Namespace,
                     name: exportedType.Name)
                 {
