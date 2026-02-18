@@ -9309,7 +9309,6 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 
         auto projected_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
         w.write(R"(
-[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public static unsafe class %Marshaller
 {
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
