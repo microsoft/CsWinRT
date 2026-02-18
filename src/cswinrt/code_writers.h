@@ -4485,8 +4485,7 @@ return %.AsValue();
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
 
         w.write(
-R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-public static unsafe class %Marshaller
+R"(public static unsafe class %Marshaller
 {
 )", type.TypeName());
         
@@ -8614,7 +8613,6 @@ public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
     void write_interface_impl(writer& w, TypeDef const& type)
     {
         w.write(R"(
-[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public static unsafe class %Impl
 {
 [FixedAddressValueType]
@@ -8706,7 +8704,6 @@ file interface % : %
         auto projected_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
         w.write(R"(
 #nullable enable
-[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public static unsafe class %Marshaller
 {
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
