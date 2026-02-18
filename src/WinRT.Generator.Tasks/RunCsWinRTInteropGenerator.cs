@@ -44,7 +44,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public ITaskItem[]? OutputAssemblyPath { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to the WinRT Windows SDK projection assembly (i.e. <c>WinRT.Projection.Sdk.dll</c>).
+    /// Gets or sets the path to the WinRT Windows SDK projection assembly (i.e. <c>WinRT.Sdk.Projection.dll</c>).
     /// </summary>
     [Required]
     public ITaskItem? WinRTSdkProjectionAssemblyPath { get; set; }
