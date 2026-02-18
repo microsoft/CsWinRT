@@ -518,7 +518,7 @@ internal static partial class InteropTypeDiscovery
             if (componentType.IsClass && componentType.TryGetCustomAttribute(interopReferences.WindowsRuntimeExclusiveToInterfaceAttribute, out CustomAttribute? customAttribute))
             {
                 // Validate that we can resolve the target type for the attribute. We can safely ignore failures here
-                // since this would realistically never happen, since that .dll is being compild from C# (not from IL).
+                // since this would realistically never happen, since that .dll is being compiled from C# (not from IL).
                 if (customAttribute.Signature is not { FixedArguments: [{ Element: TypeSignature runtimeClassSignature }, ..] })
                 {
                     continue;
