@@ -63,6 +63,57 @@ steps:
       BuildConfiguration: $(BuildConfiguration)
       BuildPlatform: $(BuildPlatform) 
 
+  # Find MSBuild (hosted agent has VS installed)
+  - pwsh: |
+      $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+      if (-not $vs) { throw "VS not found on agent" }
+      $msbuild = Join-Path $vs 'MSBuild\Current\Bin\MSBuild.exe'
+      Write-Host "##vso[task.setvariable variable=MSBuildPath]$msbuild"
+      Write-Host "MSBuild: $msbuild"
+    displayName: Locate MSBuild
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+
+  # Publish NativeAOT test project
+  - pwsh: |
+      New-Item -ItemType Directory -Force -Path '$(PublishDir)' | Out-Null
+      & '$(MSBuildPath)' `
+        '$(Build.SourcesDirectory)\cswinrt.slnx' `
+        -restore `
+        /t:Tests\UnitTest:Publish `
+        /p:Platform=$(BuildPlatform);Configuration=$(BuildConfiguration);RuntimeIdentifier=$(RuntimeIdentifier);GenerateTestProjection=true `
+        /p:SolutionDir='$(Build.SourcesDirectory)\' `
+        /p:AppBuildTFMs=net10.0 `
+        /p:PublishDir='$(PublishDir)\' `
+        /bl:'$(Build.ArtifactStagingDirectory)\publish.binlog'
+    displayName: Publish UnitTest (NativeAOT)
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    
+  # Run the published test executable and emit TRX
+  - pwsh: |
+      New-Item -ItemType Directory -Force -Path '$(TestResultsDir)' | Out-Null
+
+      $exe = Get-ChildItem '$(PublishDir)' -Filter UnitTest.exe -Recurse | Select-Object -First 1
+      if (-not $exe) { throw "UnitTest.exe not found under $(PublishDir)" }
+
+      Write-Host "Running: $($exe.FullName)"
+      & $exe.FullName --report-trx --results-directory '$(TestResultsDir)'
+
+      # Ensure we fail the step if tests failed (nonzero exit)
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    displayName: Run NativeAOT tests (emit TRX)
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+
+  # Publish test results to the Tests tab
+  - task: PublishTestResults@2
+    displayName: Publish TRX to Azure Pipelines
+    ccondition: and(succeededOrFailed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      testResultsFormat: 'VSTest'   # VSTest == TRX (also works for MTP-generated TRX)
+      testResultsFiles: '**/*.trx'
+      searchFolder: '$(TestResultsDir)'
+      mergeTestResults: true
+      failTaskOnFailedTests: true
+
 # Disable GC stress
   - task: PowerShell@2
     displayName: Disable GC Stress
