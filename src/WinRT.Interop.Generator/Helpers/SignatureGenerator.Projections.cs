@@ -144,7 +144,7 @@ internal partial class SignatureGenerator
         bool useWindowsUIXamlProjections)
     {
         // Just like for generic instantiations, we need to resolve the IID for the type first
-        if (TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+        if (!TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
             type: typeDefinition,
             useWindowsUIXamlProjections: useWindowsUIXamlProjections,
             interopDefinitions: interopDefinitions,
