@@ -138,7 +138,7 @@ public static unsafe class INotifyDataErrorInfoMethods
 
             try
             {
-                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToManaged))]
                 static extern IEnumerable<object>? ConvertToManaged(
                     [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable'1<object>Marshaller, WinRT.Interop")] object? _,
                     void* value);
@@ -258,7 +258,7 @@ public static unsafe class INotifyDataErrorInfoImpl
         {
             var thisObject = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
 
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToManaged))]
             static extern EventHandler<DataErrorsChangedEventArgs>? ConvertToManaged(
                 [UnsafeAccessorType("ABI.System.<#corlib>EventHandler'1<<System-ObjectModel>System-ComponentModel-DataErrorsChangedEventArgs>Marshaller, WinRT.Interop")] object? _,
                 void* value);
@@ -310,7 +310,7 @@ public static unsafe class INotifyDataErrorInfoImpl
 
             IEnumerable managedResult = thisObject.GetErrors(HStringMarshaller.ConvertToManaged(propertyName));
 
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToUnmanaged))]
             static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
                 [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable'1<object>Marshaller, WinRT.Interop")] object? _,
                 IEnumerable<object>? value);

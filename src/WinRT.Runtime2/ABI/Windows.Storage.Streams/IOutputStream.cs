@@ -121,7 +121,7 @@ public static unsafe class IOutputStreamMethods
 
         try
         {
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToManaged))]
             static extern IAsyncOperationWithProgress<uint, uint>? ConvertToManaged(
                 [UnsafeAccessorType("ABI.Windows.Foundation.<#CsWinRT>IAsyncOperationWithProgress'2<uint|uint>Marshaller, WinRT.Interop")] object? _,
                 void* value);
@@ -149,7 +149,7 @@ public static unsafe class IOutputStreamMethods
 
         try
         {
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToManaged))]
             static extern IAsyncOperation<bool>? ConvertToManaged(
                 [UnsafeAccessorType("ABI.Windows.Foundation.<#CsWinRT>IAsyncOperation'1<bool>Marshaller, WinRT.Interop")] object? _,
                 void* value);
@@ -229,7 +229,7 @@ public static unsafe class IOutputStreamImpl
 
             IAsyncOperationWithProgress<uint, uint> operation = thisObject.WriteAsync(IBufferMarshaller.ConvertToManaged(buffer)!);
 
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToUnmanaged))]
             static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
                 [UnsafeAccessorType("ABI.Windows.Foundation.<#CsWinRT>IAsyncOperationWithProgress'2<uint|uint>Marshaller, WinRT.Interop")] object? _,
                 IAsyncOperationWithProgress<uint, uint>? value);
@@ -259,7 +259,7 @@ public static unsafe class IOutputStreamImpl
 
             IAsyncOperation<bool> operation = thisObject.FlushAsync();
 
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToUnmanaged))]
             static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
                 [UnsafeAccessorType("ABI.Windows.Foundation.<#CsWinRT>IAsyncOperation'1<bool>Marshaller, WinRT.Interop")] object? _,
                 IAsyncOperation<bool>? value);
