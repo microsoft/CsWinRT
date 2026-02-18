@@ -53,7 +53,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly for the Windows SDK (i.e. <c>WinRT.Sdk.Projection.dll</c>).
     /// </summary>
-    public ModuleDefinition? WindowsRuntimeSdkProjectionModule { get; }
+    public ModuleDefinition WindowsRuntimeSdkProjectionModule { get; }
 
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly (i.e. <c>WinRT.Projection.dll</c>).
