@@ -106,7 +106,7 @@ steps:
   # Publish test results to the Tests tab
   - task: PublishTestResults@2
     displayName: Publish TRX to Azure Pipelines
-    ccondition: and(succeededOrFailed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    condition: and(succeededOrFailed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
     inputs:
       testResultsFormat: 'VSTest'   # VSTest == TRX (also works for MTP-generated TRX)
       testResultsFiles: '**/*.trx'
