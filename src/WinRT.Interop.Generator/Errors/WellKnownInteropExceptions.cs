@@ -771,19 +771,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// Missing .dll reference to the <c>WinRT.Component.dll</c> assembly.
-    /// </summary>
-    public static WellKnownInteropException ComponentExclusiveToTypeArgumentNotResolvedError()
-    {
-        return Exception(89, "Missing .dll reference to the 'WinRT.Component.dll' assembly, which is required to produce marshalling code for the current project.");
-    }
-
-    /// <summary>
     /// An implementation for an interface for an authored type has an invalid name.
     /// </summary>
-    public static WellKnownInteropWarning ComponentTypeExclusiveToInterfaceInvalidNameError(TypeDefinition interfaceType, TypeDefinition type)
+    public static WellKnownInteropWarning ComponentTypeExclusiveToInterfaceInvalidFullNameError(TypeDefinition interfaceType, TypeDefinition type)
     {
-        return Warning(88, $"The '[exclusiveto]' interface type implementation '{interfaceType}' for type '{type}' has an invalid name: the interface will not be included in the set of available COM interface entries.");
+        return Warning(89, $"The '[exclusiveto]' interface type implementation '{interfaceType}' for type '{type}' has an invalid full name: the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
