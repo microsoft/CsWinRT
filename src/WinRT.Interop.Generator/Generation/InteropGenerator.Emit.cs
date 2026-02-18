@@ -47,7 +47,8 @@ internal partial class InteropGenerator
         InteropReferences interopReferences = new(module.CorLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
         InteropDefinitions interopDefinitions = new(
             interopReferences: interopReferences,
-            windowsRuntimeProjectionModule: discoveryState.WinRTProjectionModuleDefinition!,
+            windowsRuntimeSdkProjectionModule: discoveryState.WinRTSdkProjectionModuleDefinition!,
+            windowsRuntimeProjectionModule: discoveryState.WinRTProjectionModuleDefinition,
             windowsRuntimeComponentModule: discoveryState.WinRTComponentModuleDefinition);
 
         args.Token.ThrowIfCancellationRequested();
