@@ -11,24 +11,34 @@ namespace WindowsRuntime.InteropGenerator.References;
 internal static class InteropNames
 {
     /// <summary>
-    /// The name of the generated interop .dll.
+    /// The name of the generated interop .dll  (i.e. <c>WinRT.Interop.dll</c>).
     /// </summary>
-    public const string InteropDllName = "WinRT.Interop.dll";
+    public const string WindowsRuntimeInteropDllName = "WinRT.Interop.dll";
 
     /// <summary>
-    /// The name of the generated interop assembly.
+    /// The name of the generated projection .dll  (i.e. <c>WinRT.Projection.dll</c>).
     /// </summary>
-    public static ReadOnlySpan<byte> InteropAssemblyNameUtf8 => "WinRT.Interop"u8;
+    public const string WindowsRuntimeProjectionDllName = "WinRT.Projection.dll";
 
     /// <summary>
-    /// The name of the generated interop .dll.
+    /// The name of the generated component .dll  (i.e. <c>WinRT.Component.dll</c>).
     /// </summary>
-    public static ReadOnlySpan<byte> InteropDllNameUtf8 => "WinRT.Interop.dll"u8;
+    public const string WindowsRuntimeComponentDllName = "WinRT.Component.dll";
 
     /// <summary>
-    /// The name of the WinRT runtime .dll.
+    /// The name of the generated interop assembly (i.e. <c>WinRT.Interop.dll</c>).
     /// </summary>
-    public static ReadOnlySpan<byte> WinRTRuntimeDllNameUtf8 => "WinRT.Runtime.dll"u8;
+    public static ReadOnlySpan<byte> WindowsRuntimeInteropAssemblyNameUtf8 => "WinRT.Interop"u8;
+
+    /// <summary>
+    /// The name of the generated interop .dll (i.e. <c>WinRT.Interop.dll</c>).
+    /// </summary>
+    public static ReadOnlySpan<byte> WindowsRuntimeInteropDllNameUtf8 => "WinRT.Interop.dll"u8;
+
+    /// <summary>
+    /// The name of the Windows Runtime .dll (i.e. <c>WinRT.Runtime.dll</c>).
+    /// </summary>
+    public static ReadOnlySpan<byte> WindowsRuntimeDllNameUtf8 => "WinRT.Runtime.dll"u8;
 
     /// <summary>
     /// The name of the Windows SDK projections .dll.

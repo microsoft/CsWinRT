@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -21,11 +22,13 @@ internal static partial class SignatureGenerator
     /// Generates the Windows Runtime signature for the specified type.
     /// </summary>
     /// <param name="type">The <see cref="AsmResolver.DotNet.Signatures.TypeSignature"/> to generate the signature for.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences"> The <see cref="InteropReferences"/> instance to use. </param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <returns>The resulting signature for <paramref name="type"/>.</returns>
     public static string GetSignature(
         TypeSignature type,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         bool useWindowsUIXamlProjections)
     {
@@ -66,15 +69,15 @@ internal static partial class SignatureGenerator
             ElementType.Object => ObjectSignature,
             ElementType.String => StringSignature,
             ElementType.Type => TypeSignature,
-            ElementType.GenericInst => GenericInstance((GenericInstanceTypeSignature)type, interopReferences, useWindowsUIXamlProjections),
+            ElementType.GenericInst => GenericInstance((GenericInstanceTypeSignature)type, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
             ElementType.ValueType when typeDefinition.IsClass && typeDefinition.IsEnum => Enum(typeFullName, typeDefinition, interopReferences),
             ElementType.ValueType when typeDefinition.IsClass && type.IsTypeOfGuid(interopReferences) => GuidSignature,
-            ElementType.ValueType when typeDefinition.IsClass => ValueType(typeFullName, typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.Class when typeDefinition.IsClass && typeDefinition.IsDelegate => Delegate(typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.Class when typeDefinition.IsClass => Class(typeFullName, typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.Class when typeDefinition.IsInterface => Interface(typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.Boxed => Box((BoxedTypeSignature)type, typeDefinition, interopReferences, useWindowsUIXamlProjections),
-            ElementType.SzArray => Array((SzArrayTypeSignature)type, interopReferences, useWindowsUIXamlProjections),
+            ElementType.ValueType when typeDefinition.IsClass => ValueType(typeFullName, typeDefinition, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
+            ElementType.Class when typeDefinition.IsClass && typeDefinition.IsDelegate => Delegate(typeDefinition, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
+            ElementType.Class when typeDefinition.IsClass => Class(typeFullName, typeDefinition, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
+            ElementType.Class when typeDefinition.IsInterface => Interface(typeDefinition, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
+            ElementType.Boxed => Box((BoxedTypeSignature)type, typeDefinition, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
+            ElementType.SzArray => Array((SzArrayTypeSignature)type, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
             _ => null
         };
 
@@ -93,19 +96,106 @@ internal static partial class SignatureGenerator
     }
 
     /// <summary>
+    /// Tries to resolve the IID for the specified type signature by checking well-known Windows Runtime
+    /// interfaces and, if necessary, the type's <see cref="System.Runtime.InteropServices.GuidAttribute"/>.
+    /// </summary>
+    /// <param name="type">The type descriptor to try to get the IID for.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
+    /// <returns>Whether <paramref name="iid"/> was successfully retrieved.</returns>
+    private static bool TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+        ITypeDescriptor type,
+        bool useWindowsUIXamlProjections,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        out Guid iid)
+    {
+        // First try to get the IID from the custom-mapped types mapping
+        if (WellKnownInterfaceIIDs.TryGetGUID(
+            interfaceType: type,
+            useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interopReferences: interopReferences,
+            guid: out iid))
+        {
+            return true;
+        }
+
+        // If we can resolve the type, try to retrieve the IID from the '[Guid]' attribute on it
+        if (type.Resolve() is TypeDefinition typeDefinition)
+        {
+            return TryGetIIDFromAttribute(
+                typeDefinition,
+                interopDefinitions,
+                interopReferences,
+                out iid);
+        }
+
+        iid = Guid.Empty;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Attempts to retrieve the IID for the specified type by checking the <see cref="System.Runtime.InteropServices.GuidAttribute"/>
+    /// attribute applied to it, if presen. The type is assumed to be some projected Windows Runtime interface or delegate type.
+    /// </summary>
+    /// <param name="type">The type descriptor to try to get the IID for.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
+    /// <returns>Whether <paramref name="iid"/> was successfully retrieved.</returns>
+    private static bool TryGetIIDFromAttribute(
+        TypeDefinition type,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        out Guid iid)
+    {
+        // If the type had the '[Guid]' attribute directly on it, get it from there (this is the case for interfaces)
+        if (type.TryGetGuidAttribute(interopReferences, out iid))
+        {
+            return true;
+        }
+
+        // For delegates, try to get the projected type from the projection .dll, as they will have the '[Guid]' attribute on them.
+        // These are only needed to generate signatures, so we hide them from the reference assemblies, as they're not useful there.
+        if (type.IsDelegate &&
+            interopDefinitions.WindowsRuntimeProjectionModule.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType))
+        {
+            return projectedType.TryGetGuidAttribute(interopReferences, out iid);
+        }
+
+        iid = Guid.Empty;
+
+        return false;
+    }
+
+    /// <summary>
     /// Attempts to retrieve the default interface signature from the <c>[WindowsRuntimeDefaultInterface]</c>
     /// attribute applied to the specified type, which is assumed to be some projected Windows Runtime class.
     /// </summary>
     /// <param name="type">The type definition to inspect for the default interface attribute.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="defaultInterface">The <see cref="TypeSignature"/> instance for the default interface for <paramref name="type"/>, if found.</param>
     /// <returns>Whether <paramref name="defaultInterface"/> was successfully retrieved.</returns>
     private static bool TryGetDefaultInterfaceFromAttribute(
         TypeDefinition type,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         [NotNullWhen(true)] out TypeSignature? defaultInterface)
     {
-        if (type.TryGetCustomAttribute(interopReferences.WindowsRuntimeDefaultInterfaceAttribute, out CustomAttribute? customAttribute))
+        // Tries to get the projected type from the projection .dll, as it will have the attribute
+        if (!interopDefinitions.WindowsRuntimeProjectionModule.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType))
+        {
+            defaultInterface = null;
+
+            return false;
+        }
+
+        // Try to lookup '[WindowsRuntimeDefaultInterface]' from the projected type, if we found it
+        if (projectedType.TryGetCustomAttribute(interopReferences.WindowsRuntimeDefaultInterfaceAttribute, out CustomAttribute? customAttribute))
         {
             if (customAttribute.Signature is { FixedArguments: [{ Element: TypeSignature signature }, ..] })
             {

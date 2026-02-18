@@ -173,6 +173,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="argsType">The <see cref="GenericInstanceTypeSignature"/> for the args type.</param>
         /// <param name="argsMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -180,6 +181,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void InterfaceImpl(
             GenericInstanceTypeSignature argsType,
             TypeDefinition argsMethodsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -197,7 +199,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(argsType, interopReferences, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(argsType, interopDefinitions, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces = { new InterfaceImplementation(argsType.ToTypeDefOrRef()) }
             };

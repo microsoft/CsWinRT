@@ -23,6 +23,14 @@ internal sealed partial class InteropGeneratorArgs
     [CommandLineArgumentName("--output-assembly-path")]
     public required string OutputAssemblyPath { get; init; }
 
+    /// <summary>Gets the path of the <c>WinRT.Projection.dll</c> assembly.</summary>
+    [CommandLineArgumentName("--winrt-projection-assembly-path")]
+    public required string WinRTProjectionAssemblyPath { get; init; }
+
+    /// <summary>Gets the path of the <c>WinRT.Component.dll</c> assembly, if available.</summary>
+    [CommandLineArgumentName("--winrt-component-assembly-path")]
+    public string? WinRTComponentAssemblyPath { get; init; }
+
     /// <summary>Gets the directory to use to place the generated assembly.</summary>
     [CommandLineArgumentName("--generated-assembly-directory")]
     public required string GeneratedAssemblyDirectory { get; init; }

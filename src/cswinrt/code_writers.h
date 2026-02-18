@@ -4816,6 +4816,11 @@ R"(
 
     void write_winrt_reference_type_attribute(writer& w, TypeDef const& type)
     {
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
         w.write("[WindowsRuntimeReferenceType(typeof(%?))]\n", type.TypeName());
     }
 
@@ -4860,6 +4865,11 @@ R"(
 
     void write_default_interface_attribute(writer& w, TypeDef const& type)
     {
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
         auto default_interface = get_default_interface(type);
 
         for_typedef(w, get_type_semantics(default_interface), [&](auto type)
@@ -9154,7 +9164,7 @@ return new %(valueReference);
             bind<write_comwrapper_marshaller_attribute>(type),
             bind([&](writer& w)
             {
-                if (settings.reference_projection)
+                if (!settings.reference_projection)
                 {
                     write_guid_attribute(w, type);
                     w.write("\n");

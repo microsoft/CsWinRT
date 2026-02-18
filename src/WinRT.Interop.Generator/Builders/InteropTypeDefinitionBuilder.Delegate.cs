@@ -45,7 +45,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: InteropUtf8NameFactory.TypeName(delegateType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
-                iid: GuidGenerator.CreateIID(delegateType, interopReferences, useWindowsUIXamlProjections),
+                iid: GuidGenerator.CreateIID(delegateType, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
                 out get_IidMethod);
 
             // 'IReference<T>' IID, which uses a boxed type signature to represent it.
@@ -58,7 +58,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: InteropUtf8NameFactory.TypeName(delegateType, "Reference"),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
-                iid: GuidGenerator.CreateIID(delegateType.MakeBoxedType(), interopReferences, useWindowsUIXamlProjections),
+                iid: GuidGenerator.CreateIID(delegateType.MakeBoxedType(), interopDefinitions, interopReferences, useWindowsUIXamlProjections),
                 out get_ReferenceIidMethod);
         }
 
