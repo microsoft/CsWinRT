@@ -533,9 +533,9 @@ internal static partial class InteropTypeDiscovery
 
                 // We use a naming convention to map each generated '[exclusiveto]' interface to its IID, so we need to validate
                 // that the name for this type is in fact the one we expect, before actually tracking it for code generation.
-                if (!componentType.Name!.AsSpan().EndsWith("Impl"u8))
+                if (!componentType.Namespace!.AsSpan().StartsWith("ABI."u8) || !componentType.Name!.AsSpan().EndsWith("Impl"u8))
                 {
-                    WellKnownInteropExceptions.ComponentTypeExclusiveToInterfaceInvalidNameError(componentType, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
+                    WellKnownInteropExceptions.ComponentTypeExclusiveToInterfaceInvalidFullNameError(componentType, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
                 }
 
                 // Try to track the current implementation type. Note that this is not actually an interface (since we don't
