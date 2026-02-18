@@ -43,8 +43,9 @@ internal static partial class IgnoresAccessChecksToBuilder
             module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoresAccessChecksTo(assemblyName, interopDefinitions, interopReferences));
         }
 
-        // We also always add an attribute for 'WinRT.Projection', which is the merged Windows Runtime projection assembly.
-        // This assembly is generated at compile time by another task, and will not be present in the set of reference paths.
+        // We also always add an attribute for 'WinRT.Sdk.Projection', which is the precompiled projection .dll for the Windows SDK,
+        // and for 'WinRT.Projection', which is the merged Windows Runtime projection assembly that is generated at final build time.
+        module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoresAccessChecksTo("WinRT.Sdk.Projection", interopDefinitions, interopReferences));
         module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoresAccessChecksTo("WinRT.Projection", interopDefinitions, interopReferences));
     }
 }
