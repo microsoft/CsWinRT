@@ -62,6 +62,26 @@ internal static class WindowsRuntimeExtensions
     extension(ITypeDescriptor type)
     {
         /// <summary>
+        /// Gets a value indicating whether the type is a projected Windows SDK type (not custom-mapped or manually-projected).
+        /// </summary>
+        public bool IsProjectedWindowsSdkType
+        {
+            get
+            {
+                // Because only the Windows SDK can define Windows Runtime types in the 'Windows.*' namespaces,
+                // we can use this to determine the right implementation projection .dll to use for the lookup.
+                // We also optimize when an UTF8 value is available to avoid redundant UTF8 transcoding work.
+                return type switch
+                {
+                    ITypeDefOrRef { Namespace: Utf8String ns } => ns.AsSpan().StartsWith("Windows."u8),
+                    ITypeDefOrRef => false,
+                    { Namespace: string ns } => ns.StartsWith("Windows."),
+                    _ => false
+                };
+            }
+        }
+
+        /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Guid"/> type.
         /// </summary>
         /// <returns>Whether the type is some <see cref="Guid"/> type.</returns>

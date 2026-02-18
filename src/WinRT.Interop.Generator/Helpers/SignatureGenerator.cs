@@ -160,11 +160,10 @@ internal static partial class SignatureGenerator
 
         // For delegates, try to get the projected type from the right projection .dll, as they will have the '[Guid]' attribute on them.
         // These are only needed to generate signatures, so we hide them from the reference assemblies, as they're not useful there.
-        if (type.IsDelegate && type.Namespace is not null)
+        if (type.IsDelegate)
         {
-            // Because only the Windows SDK can define Windows Runtime types in the 'Windows.*' namespaces,
-            // we can use this to determine the right implementation projection .dll to use for the lookup.
-            ModuleDefinition? projectionModule = type.Namespace.AsSpan().StartsWith("Windows."u8)
+            // Determine the right implementation projection .dll to use for the lookup
+            ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
                 ? interopDefinitions.WindowsRuntimeSdkProjectionModule
                 : interopDefinitions.WindowsRuntimeProjectionModule;
 
@@ -195,16 +194,8 @@ internal static partial class SignatureGenerator
         InteropReferences interopReferences,
         [NotNullWhen(true)] out TypeSignature? defaultInterface)
     {
-        // We expect all valid projected types to have a namespace we can use
-        if (type.Namespace is null)
-        {
-            defaultInterface = null;
-
-            return false;
-        }
-
         // Determine the right implementation projection .dll (see notes above)
-        ModuleDefinition? projectionModule = type.Namespace.AsSpan().StartsWith("Windows."u8)
+        ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
             ? interopDefinitions.WindowsRuntimeSdkProjectionModule
             : interopDefinitions.WindowsRuntimeProjectionModule;
 
