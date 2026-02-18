@@ -9781,9 +9781,7 @@ internal sealed unsafe class %% : global::ABI.WinRT.Interop.EventSource<%>
 {
 %
 
-internal %(IObjectReference obj,
-delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, %WinRT.EventRegistrationToken%, int> addHandler,
-delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler, int index) : base(obj, addHandler, removeHandler, index)
+internal %(IObjectReference obj, int vtableIndexForAddHandler) : base(obj, vtableIndexForAddHandler)
 {
 %
 }
@@ -9822,8 +9820,6 @@ bind<write_event_source_generic_args>(eventTypeSemantics),
 eventTypeCode, // EventSource<%>
 genericInstantiationInitialization,
 bind<write_event_source_type_name>(eventTypeSemantics),
-settings.netstandard_compat ? "out " : "",
-settings.netstandard_compat ? "" : "*",
 genericInstantiationInitialization == "" ? "" : "_ = initialized;",
 eventTypeCode, // % handler
 abiTypeName,
