@@ -28,6 +28,17 @@ internal partial class InteropGeneratorArgs
         _ = builder.Append(' ');
         _ = builder.AppendLine(OutputAssemblyPath);
 
+        _ = builder.Append(GetCommandLineArgumentName(nameof(WinRTProjectionAssemblyPath)));
+        _ = builder.Append(' ');
+        _ = builder.AppendLine(WinRTProjectionAssemblyPath);
+
+        if (WinRTComponentAssemblyPath is not null)
+        {
+            _ = builder.Append(GetCommandLineArgumentName(nameof(WinRTComponentAssemblyPath)));
+            _ = builder.Append(' ');
+            _ = builder.AppendLine(WinRTComponentAssemblyPath);
+        }
+
         _ = builder.Append(GetCommandLineArgumentName(nameof(GeneratedAssemblyDirectory)));
         _ = builder.Append(' ');
         _ = builder.AppendLine(GeneratedAssemblyDirectory);

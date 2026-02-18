@@ -45,7 +45,7 @@ internal static partial class InteropTypeDefinitionBuilder
             name: InteropUtf8NameFactory.TypeName(interfaceType),
             interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
-            iid: GuidGenerator.CreateIID(interfaceType, interopReferences, useWindowsUIXamlProjections),
+            iid: GuidGenerator.CreateIID(interfaceType, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
             out get_IidMethod);
     }
 

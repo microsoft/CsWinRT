@@ -40,6 +40,10 @@ internal partial class InteropGenerator
         // No additional parameters will be passed to later steps: all the info is in this object.
         InteropGeneratorDiscoveryState discoveryState = new() { AssemblyResolver = pathAssemblyResolver };
 
+        // First, load the special 'WinRT.Projection.dll' and 'WinRT.Component.dll' modules (the latter is optional).
+        // These are necessary for surfacing some information needed to generate code, that is not present otherwise.
+        LoadWinRTModules(args, discoveryState);
+
         try
         {
             // Load and process all modules, potentially in parallel
@@ -76,6 +80,29 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Loads the special WinRT module definitions.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    private static void LoadWinRTModules(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState)
+    {
+        // Load the 'WinRT.Projection.dll' module, this should always be available
+        ModuleDefinition winRTProjectionModule = ModuleDefinition.FromFile(args.WinRTProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+
+        discoveryState.TrackWinRTProjectionModuleDefinition(winRTProjectionModule);
+
+        args.Token.ThrowIfCancellationRequested();
+
+        // Load the 'WinRT.Component.dll' module, if available
+        if (args.WinRTComponentAssemblyPath is not null)
+        {
+            ModuleDefinition winRTComponentModule = ModuleDefinition.FromFile(args.WinRTComponentAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+
+            discoveryState.TrackWinRTComponentModuleDefinition(winRTComponentModule);
+        }
+    }
+
+    /// <summary>
     /// Loads and processes a module definition.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
@@ -86,6 +113,33 @@ internal partial class InteropGenerator
         InteropGeneratorDiscoveryState discoveryState,
         string path)
     {
+        ReadOnlySpan<char> fileName = Path.GetFileName(path.AsSpan());
+
+        // Validate that the two possible private implementation detail .dll-s we expect have a matching path. These are:
+        //   - 'WinRT.Projection.dll': the generated merged projection assembly.
+        //   - 'WinRT.Component.dll': the optional generated merged component assembly.
+        if ((fileName.SequenceEqual(InteropNames.WindowsRuntimeProjectionDllName) && path != args.WinRTProjectionAssemblyPath) ||
+            (fileName.SequenceEqual(InteropNames.WindowsRuntimeComponentDllName) && path != args.WinRTComponentAssemblyPath))
+        {
+            throw WellKnownInteropExceptions.ReservedDllOriginalPathMismatch(fileName.ToString());
+        }
+
+        // If the current module is one of those two .dll-s, we just skip it. They will be loaded separately (see above).
+        // However since they're also passed in the reference set (as they need to be referenced by the app directly),
+        // they will also show up here. This is intended, and it simplifies the targets (no need for them to filter items).
+        if (fileName.SequenceEqual(InteropNames.WindowsRuntimeProjectionDllName) ||
+            fileName.SequenceEqual(InteropNames.WindowsRuntimeComponentDllName))
+        {
+            return;
+        }
+
+        // Validate that the reserved 'WinRT.Interop.dll' is not passed as input. This is the .dll that this tool is generating,
+        // so for it to already exist and be passed as input would always be invalid (and would indicate some kind of build issue).
+        if (fileName.SequenceEqual(InteropNames.WindowsRuntimeInteropDllName))
+        {
+            throw WellKnownInteropExceptions.ReservedDllNameReferenceError(fileName.ToString());
+        }
+
         ModuleDefinition module;
 
         // Try to load the .dll at the current path

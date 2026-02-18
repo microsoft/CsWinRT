@@ -6,7 +6,6 @@ using System.Buffers;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
-using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -27,54 +26,20 @@ internal static class GuidGenerator
     /// Generates the IID for the specified type by computing its Windows Runtime signature and deriving an IID from that signature.
     /// </summary>
     /// <param name="type">The <see cref="TypeSignature"/> to generate the IID for.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences"> The <see cref="InteropReferences"/> instance to use. </param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <returns>The resulting IID for <paramref name="type"/>.</returns>
-    public static Guid CreateIID(TypeSignature type, InteropReferences interopReferences, bool useWindowsUIXamlProjections)
+    public static Guid CreateIID(
+        TypeSignature type,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        bool useWindowsUIXamlProjections)
     {
-        string signature = SignatureGenerator.GetSignature(type, interopReferences, useWindowsUIXamlProjections);
+        string signature = SignatureGenerator.GetSignature(type, interopDefinitions, interopReferences, useWindowsUIXamlProjections);
         Guid guid = CreateGuidFromSignature(signature);
 
         return guid;
-    }
-
-    /// <summary>
-    /// Tries to resolve the IID for the specified type signature by checking well-known Windows Runtime
-    /// interfaces and, if necessary, the type's <see cref="System.Runtime.InteropServices.GuidAttribute"/>.
-    /// </summary>
-    /// <param name="type">The type descriptor to try to get the IID for.</param>
-    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
-    /// <returns>Whether <paramref name="iid"/> was succesfully retrieved.</returns>
-    public static bool TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
-        ITypeDescriptor type,
-        bool useWindowsUIXamlProjections,
-        InteropReferences interopReferences,
-        out Guid iid)
-    {
-        // First try to get the IID from the custom-mapped types mapping
-        if (WellKnownInterfaceIIDs.TryGetGUID(
-            interfaceType: type,
-            useWindowsUIXamlProjections: useWindowsUIXamlProjections,
-            interopReferences: interopReferences,
-            guid: out iid))
-        {
-            return true;
-        }
-
-        if (type.Resolve() is TypeDefinition typeDefinition)
-        {
-            // If the type was a normal projected type, then try to resolve the IID from the '[Guid]' attribute
-            if (typeDefinition.TryGetGuidAttribute(interopReferences, out iid))
-            {
-                return true;
-            }
-        }
-
-        iid = Guid.Empty;
-
-        return false;
     }
 
     /// <summary>

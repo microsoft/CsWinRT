@@ -44,7 +44,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: InteropUtf8NameFactory.TypeName(enumeratorType),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
-                iid: GuidGenerator.CreateIID(enumeratorType, interopReferences, useWindowsUIXamlProjections),
+                iid: GuidGenerator.CreateIID(enumeratorType, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
                 out get_IidMethod);
 
             // Track the IID method, as it's needed to marshal enumerators from the 'IIterable<T>.First' implementation
@@ -360,6 +360,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
         /// <param name="iteratorMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IIteratorMethods"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -367,6 +368,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void InterfaceImpl(
             GenericInstanceTypeSignature enumeratorType,
             TypeDefinition iteratorMethodsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -384,7 +386,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(enumeratorType, interopReferences, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(enumeratorType, interopDefinitions, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {

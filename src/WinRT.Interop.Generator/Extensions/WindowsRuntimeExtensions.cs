@@ -32,11 +32,17 @@ internal static class WindowsRuntimeExtensions
         public bool IsWindowsRuntimeReferenceAssembly => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntimeInteropServices, WellKnownMetadataNames.WindowsRuntimeReferenceAssemblyAttribute);
 
         /// <summary>
+        /// Checks whether a <see cref="IHasCustomAttribute"/> (expected to be an <see cref="AssemblyDefinition"/>) represents a Windows Runtime component assembly.
+        /// </summary>
+        /// <returns>Whether the module represents a Windows Runtime component assembly.</returns>
+        public bool IsWindowsRuntimeComponentAssembly => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntimeInteropServices, WellKnownMetadataNames.WindowsRuntimeComponentAssemblyAttribute);
+
+        /// <summary>
         /// Attempts to retrieve the IID from the <see cref="System.Runtime.InteropServices.GuidAttribute"/> applied to the specified metadata member.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
-        /// <returns>Whether <paramref name="iid"/> was succesfully retrieved.</returns>
+        /// <returns>Whether <paramref name="iid"/> was successfully retrieved.</returns>
         public bool TryGetGuidAttribute(InteropReferences interopReferences, out Guid iid)
         {
             if (member.TryGetCustomAttribute(interopReferences.GuidAttribute, out CustomAttribute? customAttribute))
@@ -1107,4 +1113,9 @@ file static class WellKnownMetadataNames
     /// The <c>"WindowsRuntimeReferenceAssemblyAttribute"</c> text.
     /// </summary>
     public static readonly Utf8String WindowsRuntimeReferenceAssemblyAttribute = "WindowsRuntimeReferenceAssemblyAttribute"u8;
+
+    /// <summary>
+    /// The <c>"WindowsRuntimeComponentAssemblyAttribute"</c> text.
+    /// </summary>
+    public static readonly Utf8String WindowsRuntimeComponentAssemblyAttribute = "WindowsRuntimeComponentAssemblyAttribute"u8;
 }
