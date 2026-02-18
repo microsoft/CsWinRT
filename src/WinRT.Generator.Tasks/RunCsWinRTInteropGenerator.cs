@@ -44,6 +44,17 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public ITaskItem[]? OutputAssemblyPath { get; set; }
 
     /// <summary>
+    /// Gets or sets the path to the WinRT merged projection assembly.
+    /// </summary>
+    [Required]
+    public ITaskItem? WinRTProjectionAssemblyPath { get; set; }
+
+    /// <summary>
+    /// Gets or sets the path to the WinRT merged component assembly generated for authoring scenarios.
+    /// </summary>
+    public ITaskItem? WinRTComponentAssemblyPath { get; set; }
+
+    /// <summary>
     /// Gets or sets the directory where the generated interop assembly will be placed.
     /// </summary>
     [Required]
@@ -149,6 +160,13 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
             return false;
         }
 
+        if (WinRTProjectionAssemblyPath is null)
+        {
+            Log.LogWarning("Invalid 'WinRTProjectionAssemblyPath' input.");
+
+            return false;
+        }
+
         if (InteropAssemblyDirectory is null || !Directory.Exists(InteropAssemblyDirectory))
         {
             Log.LogWarning("Generated assembly directory '{0}' is invalid or does not exist.", InteropAssemblyDirectory);
@@ -236,6 +254,8 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileCommand(args, "--reference-assembly-paths", referenceAssemblyPathsArg);
         AppendResponseFileCommand(args, "--implementation-assembly-paths", implementationAssemblyPathsArg);
         AppendResponseFileCommand(args, "--output-assembly-path", EffectiveOutputAssemblyItemSpec);
+        AppendResponseFileCommand(args, "--winrt-projection-assembly-path", WinRTProjectionAssemblyPath!.ItemSpec);
+        AppendResponseFileOptionalCommand(args, "--winrt-component-assembly-path", WinRTComponentAssemblyPath?.ItemSpec);
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());

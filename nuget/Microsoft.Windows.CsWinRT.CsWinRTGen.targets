@@ -14,7 +14,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGeneratorTasksOverriden>true</CsWinRTGeneratorTasksOverriden>
 
     <!--
-      Running 'cswinrtgen' is required for CsWinRT 3.0, and it is currently in preview.
+      Running 'cswinrtinteropgen' is required for CsWinRT 3.0, and it is currently in preview.
       So the switch for it is currently opt-in. It can be changed to opt-out in the future.
       We only enable this automatically if the project is explicitly targeting CsWinRT 3.0.
     -->
@@ -30,7 +30,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateInteropAssembly>false</CsWinRTGenerateInteropAssembly>
 
     <!--
-      Default property values for cswinrt generators. Not setting 'CsWinRTToolsDirectory' and
+      Default property values for 'cswinrt' generators. Not setting 'CsWinRTToolsDirectory' and
       'CsWinRTToolsArchitecture' because the task can handle their default values on its
       own, and it will use that to automatically set the right directory and architecture.
     -->
@@ -81,10 +81,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target Name="_ResolveCsWinRToolsDirectory" DependsOnTargets="ResolveAssemblyReferences" BeforeTargets="_ComputeRunCsWinRTGeneratorCache">
     
-    <!-- Compute the implicit '\tools' path based on the location of this targets file. -->
     <PropertyGroup>
-      <_CsWinRTRootDirectory>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_CsWinRTRootDirectory>
-      <_CsWinRTToolsDirectory>$([System.IO.Path]::Combine('$(_CsWinRTRootDirectory)', 'tools'))</_CsWinRTToolsDirectory>
+      <!-- Compute the implicit '\tools' path based on the location of this targets file. -->      
+      <_CsWinRTToolsDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'tools'))</_CsWinRTToolsDirectory>
 
       <CsWinRTInteropGenEffectiveToolsDirectory Condition="'$(CsWinRTInteropGenEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTInteropGenEffectiveToolsDirectory>
       <CsWinRTImplEffectiveToolsDirectory Condition="'$(CsWinRTImplEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTImplEffectiveToolsDirectory>
@@ -146,9 +145,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTInteropGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTInteropGenerator"
-    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache"
+    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache;_RunCsWinRTMergedProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
-    Inputs="@(ReferencePathWithRefAssemblies);@(IntermediateAssembly);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
+    Inputs="@(ReferencePathWithRefAssemblies);@(IntermediateAssembly);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
     Outputs="$(_CsWinRTGeneratorInteropAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
@@ -168,6 +167,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       ReferenceAssemblyPaths="@(_ReferenceAssemblyPaths)"
       ImplementationAssemblyPaths="@(ReferencePath)"      
       OutputAssemblyPath="@(IntermediateAssembly)"
+      WinRTProjectionAssemblyPath="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
       InteropAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
       CsWinRTToolsDirectory="$(CsWinRTInteropGenEffectiveToolsDirectory)"

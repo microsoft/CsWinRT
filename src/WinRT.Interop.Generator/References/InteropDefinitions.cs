@@ -32,12 +32,30 @@ internal sealed class InteropDefinitions
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    public InteropDefinitions(InteropReferences interopReferences)
+    /// <param name="windowsRuntimeProjectionModule">The <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly (i.e. <c>WinRT.Projection.dll</c>).</param>
+    /// <param name="windowsRuntimeComponentModule">The <see cref="ModuleDefinition"/> for the Windows Runtime component assembly (i.e. <c>WinRT.Component.dll</c>).</param>
+    public InteropDefinitions(
+        InteropReferences interopReferences,
+        ModuleDefinition windowsRuntimeProjectionModule,
+        ModuleDefinition? windowsRuntimeComponentModule)
     {
         _interopReferences = interopReferences;
         _userDefinedInterfaceEntries = [];
         _szArrayInterfaceEntries = [];
+
+        WindowsRuntimeProjectionModule = windowsRuntimeProjectionModule;
+        WindowsRuntimeComponentModule = windowsRuntimeComponentModule;
     }
+
+    /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly (i.e. <c>WinRT.Projection.dll</c>).
+    /// </summary>
+    public ModuleDefinition WindowsRuntimeProjectionModule { get; }
+
+    /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime component assembly (i.e. <c>WinRT.Component.dll</c>).
+    /// </summary>
+    public ModuleDefinition? WindowsRuntimeComponentModule { get; }
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IgnoresAccessChecksToAttribute</c> type.

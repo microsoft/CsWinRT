@@ -8,13 +8,6 @@ parameters:
     default: false
     
 steps:
-  # Clone TestWinRT
-  - task: CmdLine@2
-    displayName: Clone TestWinRT
-    inputs: 
-      script: get_testwinrt.cmd
-      workingDirectory: $(Build.SourcesDirectory)\src
-
   # Setup remote for source link to pick up
   - task: PowerShell@2
     condition: eq(variables['AdoMirrorBuild'], 'true')
@@ -231,11 +224,11 @@ steps:
       displayName: Stage Source Generator
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator.Roslyn4120\bin\$(BuildConfiguration)\netstandard2.0
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator2\bin\$(BuildConfiguration)\net10.0
         Contents: |
-          WinRT.SourceGenerator.dll
-          WinRT.SourceGenerator.pdb
-        TargetFolder: $(StagingFolder)\netstandard2.0\roslyn4120\
+          WinRT.SourceGenerator2.dll
+          WinRT.SourceGenerator2.pdb
+        TargetFolder: $(StagingFolder)\net10.0
 
     # Stage Net10.0
     - task: CopyFiles@2

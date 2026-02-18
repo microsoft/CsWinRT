@@ -25,10 +25,12 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// Defines all assembly attributes for dynamic custom-mapped type map entries.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     public static void AssemblyAttributes(
         InteropGeneratorArgs args,
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
@@ -60,16 +62,19 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             useComWrappersMarshallerAttribute: true);
 
         ICommandInterfaceType(
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
         INotifyCollectionChangedInterfaceType(
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
         INotifyPropertyChangedInterfaceType(
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
@@ -185,10 +190,12 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// <summary>
     /// Creates a new custom attribute value for <see cref="TypeMapAttribute{TTypeMapGroup}"/> for the <see cref="System.Windows.Input.ICommand"/> interface type.
     /// </summary>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     private static void ICommandInterfaceType(
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections)
@@ -215,6 +222,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
         // Define the 'InterfaceImpl' type for the 'ICommand' interface type
         ICommand.InterfaceImpl(
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: useWindowsUIXamlProjections,
@@ -239,10 +247,12 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// <summary>
     /// Creates a new custom attribute value for <see cref="TypeMapAttribute{TTypeMapGroup}"/> for the <see cref="System.Collections.Specialized.INotifyCollectionChanged"/> interface type.
     /// </summary>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     private static void INotifyCollectionChangedInterfaceType(
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections)
@@ -269,6 +279,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
         // Define the 'InterfaceImpl' type for the 'INotifyCollectionChanged' interface type
         INotifyCollectionChanged.InterfaceImpl(
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: useWindowsUIXamlProjections,
@@ -293,10 +304,12 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// <summary>
     /// Creates a new custom attribute value for <see cref="TypeMapAttribute{TTypeMapGroup}"/> for the <see cref="System.ComponentModel.INotifyPropertyChanged"/> interface type.
     /// </summary>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The module that the attribute will be used from.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     private static void INotifyPropertyChangedInterfaceType(
+        InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module,
         bool useWindowsUIXamlProjections)
@@ -323,6 +336,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
         // Define the 'InterfaceImpl' type for the 'INotifyPropertyChanged' interface type
         INotifyPropertyChanged.InterfaceImpl(
+            interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             module: module,
             useWindowsUIXamlProjections: useWindowsUIXamlProjections,

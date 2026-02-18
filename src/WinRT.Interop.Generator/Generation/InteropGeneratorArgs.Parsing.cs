@@ -100,6 +100,8 @@ internal partial class InteropGeneratorArgs
             ReferenceAssemblyPaths = GetStringArrayArgument(argsMap, nameof(ReferenceAssemblyPaths)),
             ImplementationAssemblyPaths = GetStringArrayArgument(argsMap, nameof(ImplementationAssemblyPaths)),
             OutputAssemblyPath = GetStringArgument(argsMap, nameof(OutputAssemblyPath)),
+            WinRTProjectionAssemblyPath = GetStringArgument(argsMap, nameof(WinRTProjectionAssemblyPath)),
+            WinRTComponentAssemblyPath = GetNullableStringArgument(argsMap, nameof(WinRTComponentAssemblyPath)),
             GeneratedAssemblyDirectory = GetStringArgument(argsMap, nameof(GeneratedAssemblyDirectory)),
             UseWindowsUIXamlProjections = GetBooleanArgument(argsMap, nameof(UseWindowsUIXamlProjections)),
             ValidateWinRTRuntimeAssemblyVersion = GetBooleanArgument(argsMap, nameof(ValidateWinRTRuntimeAssemblyVersion)),

@@ -97,7 +97,7 @@ public abstract unsafe class EventSource<T>
                 using WindowsRuntimeObjectReferenceValue eventInvokeValue = ConvertToUnmanaged(state.EventInvoke);
 
                 // Ensure the reference tracking is initialized on this new CCW
-                state.InitalizeReferenceTracking(eventInvokeValue.GetThisPtrUnsafe());
+                state.InitializeReferenceTracking(eventInvokeValue.GetThisPtrUnsafe());
 
                 EventRegistrationToken token;
 

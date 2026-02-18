@@ -1068,9 +1068,9 @@ namespace Generator
         {
             if (kind == TypeKind.Class || kind == TypeKind.Delegate)
             {
-                if (type is "System.String") return "global::WinRT.MarshalString";
+                if (type is "System.String" || type is "string") return "global::WinRT.MarshalString";
                 if (type is "System.Type") return "global::ABI.System.Type";
-                if (type is "System.Object") return "global::WinRT.MarshalInspectable<object>";
+                if (type is "System.Object" || type is "object") return "global::WinRT.MarshalInspectable<object>";
 
                 if (typeFlags.HasFlag(TypeFlags.Exception))
                 {

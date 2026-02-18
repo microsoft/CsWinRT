@@ -374,6 +374,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// </summary>
         /// <param name="readOnlyDictionaryType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/> type.</param>
         /// <param name="readOnlyDictionaryMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
@@ -381,6 +382,7 @@ internal partial class InteropTypeDefinitionBuilder
         public static void InterfaceImpl(
             GenericInstanceTypeSignature readOnlyDictionaryType,
             TypeDefinition readOnlyDictionaryMethodsType,
+            InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
@@ -402,7 +404,7 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(readOnlyDictionaryType, interopReferences, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(readOnlyDictionaryType, interopDefinitions, interopReferences, useWindowsUIXamlProjections)
                 },
                 Interfaces =
                 {

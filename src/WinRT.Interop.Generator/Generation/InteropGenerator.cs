@@ -115,6 +115,6 @@ internal static partial class InteropGenerator
         }
 
         // Notify the user that generation was successful
-        ConsoleApp.Log($"Interop code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.InteropDllName)}");
+        ConsoleApp.Log($"Interop code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName)}");
     }
 }

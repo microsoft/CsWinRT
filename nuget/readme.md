@@ -44,7 +44,6 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTGenerateProjection | *true \| false | Indicates whether to generate and compile projection sources (true), or only to compile them (false) |
 | CsWinRTPrivateProjection | true \| *false | Indicates if a projection based on `CsWinRTIncludesPrivate` and related 'private' properties should be generated as `internal` |
 | CsWinRTGeneratedFilesDir | *"$(IntermediateOutputPath)\Generated Files" | Specifies the location for generated project source files |
-| CsWinRTIIDOptimizerOptOut | true \| *false | Determines whether to run the IIDOptimizer on the projection assembly |
 | CsWinRTRcwFactoryFallbackGeneratorForceOptIn | true \| *false | Forces the RCW factory fallback generator to be enabled (it only runs on .exe projects by default)  |
 | CsWinRTRcwFactoryFallbackGeneratorForceOptOut | true \| *false | Forces the RCW factory fallback generator to be disabled (overrides "ForceOptIn" as well)  |
 | CsWinRTMergeReferencedActivationFactories | true \| *false | Makes the native `DllGetActivationFactory` exported function for AOT scenarios also forward the activation call to all referenced WinRT components, allowing them to all be merged into a single executable or shared library |

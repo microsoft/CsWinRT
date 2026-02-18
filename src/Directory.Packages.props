@@ -19,18 +19,21 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.2" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="4.11.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.12.0-3.final" />
+    <PackageVersion Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="1.1.0-beta2-25565-01" />
     <PackageVersion Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20560.3" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Microsoft.TestPlatform.TestHost" Version="17.14.1" />
     <PackageVersion Include="Microsoft.VCRTForwarders.140" Version="1.1.0" />
+    <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.3179.45" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.1.635-beta" />
-    <PackageVersion Include="Microsoft.Windows.CsWinRT" Version="1.4.1" />
+    <PackageVersion Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
     <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="[10.0.22000.194]" />
     <PackageVersion Include="Microsoft.Windows.SDK.Contracts" Version="10.0.18362.2005" />
-    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWinAppSDKVersion)" />
-    <PackageVersion Include="Microsoft.WinUI" Version="[$(MicrosoftWinUIVersion)]" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK.Foundation" Version="$(MicrosoftWinAppSDKFoundationVersion)" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK.InteractiveExperiences" Version="$(MicrosoftWinAppSDKIxpVersion)" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="$(MicrosoftWinAppSDKWinUIVersion)" />
     <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="NUnit" Version="3.12.0" />

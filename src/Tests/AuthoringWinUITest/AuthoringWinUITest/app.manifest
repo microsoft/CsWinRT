@@ -35,6 +35,10 @@
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
+        name="AuthoringTest.CustomStackPanel"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />	  
+    <activatableClass
         name="AuthoringTest.CustomVector"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />

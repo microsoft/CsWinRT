@@ -41,6 +41,9 @@ jobs:
       ob_symbolsPublishing_searchPattern: '**/*.@(pdb|dll)'
 
     steps:
+    - checkout: TestWinRT
+      path: 's\src\TestWinRT'
+      displayName: "Checkout TestWinRT"
    
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
@@ -62,7 +65,7 @@ jobs:
         signing_profile: external_distribution
         files_to_sign: |
           native/cswinrt.exe;
-          netstandard2.0/roslyn4120/WinRT.SourceGenerator.dll;
+          net10.0/WinRT.SourceGenerator2.dll;
           net10.0/WinRT.Host.Shim.dll;
           net10.0/WinRT.Runtime.dll;
           native/WinRT.Host.dll;
@@ -132,6 +135,14 @@ jobs:
       StagingFolder: $(ob_outputDirectory)
       BuildPlatform: 'x64' 
     steps:
+    - checkout: self
+      clean: true
+      persistCredentials: true
+      path: 's'
+    - checkout: TestWinRT
+      path: 's\src\TestWinRT'
+      displayName: "Checkout TestWinRT"
+      
 # Build Steps 
     - template: CsWinRT-Build-Steps.yml@self
       parameters:

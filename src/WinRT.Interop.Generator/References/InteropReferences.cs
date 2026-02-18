@@ -21,7 +21,7 @@ internal sealed class InteropReferences
     private readonly CorLibTypeFactory _corLibTypeFactory;
 
     /// <summary>
-    /// The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.
+    /// The <see cref="ModuleDefinition"/> for the Windows Runtime assembly (i.e. <c>WinRT.Runtime.dll</c>).
     /// </summary>
     private readonly IResolutionScope _windowsRuntimeModule;
 
@@ -34,7 +34,7 @@ internal sealed class InteropReferences
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
     /// <param name="corLibTypeFactory">The <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> currently in use.</param>
-    /// <param name="windowsRuntimeModule">The <see cref="IResolutionScope"/> for the Windows Runtime assembly.</param>
+    /// <param name="windowsRuntimeModule">The <see cref="IResolutionScope"/> for the Windows Runtime assembly (i.e. <c>WinRT.Runtime.dll</c>).</param>
     /// <param name="windowsSdkProjectionModule">The <see cref="IResolutionScope"/> for the Windows SDK projection assembly.</param>
     public InteropReferences(
         CorLibTypeFactory corLibTypeFactory,
@@ -103,7 +103,7 @@ internal sealed class InteropReferences
     public CorLibTypeSignature Object => _corLibTypeFactory.Object;
 
     /// <summary>
-    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime assembly.
+    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime assembly (i.e. <c>WinRT.Runtime.dll</c>).
     /// </summary>
     public IResolutionScope WindowsRuntimeModule => _windowsRuntimeModule;
 
