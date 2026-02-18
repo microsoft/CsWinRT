@@ -143,7 +143,7 @@ public abstract unsafe class EventSourceState<T> : IDisposable
     /// Initializes the reference tracking for the current event source, if the target object implements it.
     /// </summary>
     /// <param name="eventInvokePtr">The pointer to the native CCW for the event invoke delegate (ie. <see cref="EventInvoke"/>).</param>
-    internal void InitalizeReferenceTracking(void* eventInvokePtr)
+    internal void InitializeReferenceTracking(void* eventInvokePtr)
     {
         _eventInvokePtr = eventInvokePtr;
 
