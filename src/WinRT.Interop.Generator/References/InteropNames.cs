@@ -16,7 +16,7 @@ internal static class InteropNames
     public const string WindowsRuntimeInteropDllName = "WinRT.Interop.dll";
 
     /// <summary>
-    /// The name of the precompiled projection .dll for the Windows SDK(i.e. <c>WinRT.Sdk.Projection.dll</c>).
+    /// The name of the precompiled projection .dll for the Windows SDK (i.e. <c>WinRT.Sdk.Projection.dll</c>).
     /// </summary>
     public const string WindowsRuntimeSdkProjectionDllName = "WinRT.Sdk.Projection.dll";
 
