@@ -68,6 +68,10 @@ jobs:
           native/WinRT.Host.dll;
           net10.0/CsWinMD/CsWinMD.exe;
           net10.0/CsWinMD/CsWinMD.dll;
+          netstandard2.0/WinRT.Generator.Tasks.dll;
+          net10.0/native/cswinrtinteropgen.exe;
+          net10.0/native/cswinrtimplgen.exe;
+          net10.0/native/cswinrtprojectiongen.exe;
         search_root: $(StagingFolder)
 
     - task: onebranch.pipeline.signing@1

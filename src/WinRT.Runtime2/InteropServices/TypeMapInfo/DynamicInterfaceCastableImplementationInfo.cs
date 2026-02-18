@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -25,7 +26,7 @@ internal sealed class DynamicInterfaceCastableImplementationInfo
     /// <summary>
     /// The table of marshalling info for all types that can participate in marshalling.
     /// </summary>
-    private static readonly ConditionalWeakTable<Type, DynamicInterfaceCastableImplementationInfo?> TypeToImplementationInfoTable = [];
+    private static readonly ConcurrentDictionary<Type, DynamicInterfaceCastableImplementationInfo?> TypeToImplementationInfoTable = [];
 
     /// <summary>
     /// Cached creation factory for <see cref="CreateImplementationInfo"/>.

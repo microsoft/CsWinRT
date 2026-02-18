@@ -34,6 +34,16 @@ internal static class WindowsRuntimeFeatureSwitches
     private const string UseWindowsUIXamlProjectionsPropertyName = "CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS";
 
     /// <summary>
+    /// The configuration property name for <see cref="EnableXamlTypeMarshalling"/>.
+    /// </summary>
+    private const string EnableXamlTypeMarshallingPropertyName = "CSWINRT_ENABLE_XAML_TYPE_MARSHALLING";
+
+    /// <summary>
+    /// The configuration property name for <see cref="EnableIDynamicInterfaceCastableSupport"/>.
+    /// </summary>
+    private const string EnableIDynamicInterfaceCastableSupportPropertyName = "CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE_SUPPORT";
+
+    /// <summary>
     /// Gets a value indicating whether or not manifest free WinRT activation is supported (defaults to <see langword="true"/>).
     /// </summary>
     [FeatureSwitchDefinition(EnableManifestFreeActivationPropertyName)]
@@ -50,6 +60,18 @@ internal static class WindowsRuntimeFeatureSwitches
     /// </summary>
     [FeatureSwitchDefinition(UseWindowsUIXamlProjectionsPropertyName)]
     public static bool UseWindowsUIXamlProjections { get; } = GetConfigurationValue(UseWindowsUIXamlProjectionsPropertyName, defaultValue: false);
+
+    /// <summary>
+    /// Gets a value indicating whether marshalling <see cref="Type"/> instances is supported.
+    /// </summary>
+    [FeatureSwitchDefinition(EnableXamlTypeMarshallingPropertyName)]
+    public static bool EnableXamlTypeMarshalling { get; } = GetConfigurationValue(EnableXamlTypeMarshallingPropertyName, defaultValue: true);
+
+    /// <summary>
+    /// Gets a value indicating whether or not <see cref="System.Runtime.InteropServices.IDynamicInterfaceCastable"/> should be supported by RCW types (defaults to <see langword="true"/>).
+    /// </summary>
+    [FeatureSwitchDefinition(EnableIDynamicInterfaceCastableSupportPropertyName)]
+    public static bool EnableIDynamicInterfaceCastableSupport { get; } = GetConfigurationValue(EnableIDynamicInterfaceCastableSupportPropertyName, defaultValue: true);
 
     /// <summary>
     /// Gets a configuration value for a specified property.

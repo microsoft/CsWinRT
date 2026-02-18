@@ -310,6 +310,81 @@ internal static class WellKnownWindowsInterfaceIIDs
         }
     }
 
+    /// <summary>The IID for <c>IInputStream</c> (905A0FE2-BC53-11DF-8C49-001E4FC686DA).</summary>
+    public static ref readonly Guid IID_IInputStream
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0xE2, 0x0F, 0x5A, 0x90,
+                0x53, 0xBC,
+                0xDF, 0x11,
+                0x8C,
+                0x49,
+                0x00,
+                0x1E,
+                0x4F,
+                0xC6,
+                0x86,
+                0xDA
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IOutputStream</c> (905A0FE6-BC53-11DF-8C49-001E4FC686DA).</summary>
+    public static ref readonly Guid IID_IOutputStream
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0xE6, 0x0F, 0x5A, 0x90,
+                0x53, 0xBC,
+                0xDF, 0x11,
+                0x8C,
+                0x49,
+                0x00,
+                0x1E,
+                0x4F,
+                0xC6,
+                0x86,
+                0xDA
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IRandomAccessStream</c> (905A0FE1-BC53-11DF-8C49-001E4FC686DA).</summary>
+    public static ref readonly Guid IID_IRandomAccessStream
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0xE1, 0x0F, 0x5A, 0x90,
+                0x53, 0xBC,
+                0xDF, 0x11,
+                0x8C,
+                0x49,
+                0x00,
+                0x1E,
+                0x4F,
+                0xC6,
+                0x86,
+                0xDA
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
     /// <summary>The IID for <c>IContextCallback</c> (000001DA-0000-0000-C000-000000000046).</summary>
     public static ref readonly Guid IID_IContextCallback
     {
@@ -1129,31 +1204,6 @@ internal static class WellKnownWindowsInterfaceIIDs
                 0x37,
                 0x92,
                 0xDF
-            ];
-
-            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-        }
-    }
-
-    /// <summary>The IID for <c>IGlobalInterfaceTable</c> (00000146-0000-0000-C000-000000000046).</summary>
-    public static ref readonly Guid IID_IGlobalInterfaceTable
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-        get
-        {
-            ReadOnlySpan<byte> data =
-            [
-                0x46, 0x01, 0x00, 0x00,
-                0x00, 0x00,
-                0x00, 0x00,
-                0xC0,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x46
             ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
@@ -2304,6 +2354,31 @@ internal static class WellKnownWindowsInterfaceIIDs
                 0xAC,
                 0xCB,
                 0x8B
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IReferenceOfInputStreamOptions</c> (AEA3CA95-06D3-5B19-A94D-907D1E6BCF18).</summary>
+    public static ref readonly Guid IID_IReferenceOfInputStreamOptions
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x95, 0xCA, 0xA3, 0xAE,
+                0xD3, 0x06,
+                0x19, 0x5B,
+                0xA9,
+                0x4D,
+                0x90,
+                0x7D,
+                0x1E,
+                0x6B,
+                0xCF,
+                0x18
             ];
 
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));

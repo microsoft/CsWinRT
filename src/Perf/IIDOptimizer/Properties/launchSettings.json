@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "IIDOptimizer": {
-      "commandName": "Project",
-      "nativeDebugging": true
-    }
-  }
-}

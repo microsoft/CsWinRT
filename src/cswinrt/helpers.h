@@ -775,7 +775,7 @@ namespace cswinrt
             },
             { "Microsoft.UI.Xaml.Input",
                 {
-                    { "ICommand", "System.Windows.Input", "ICommand", true }
+                    { "ICommand", "System.Windows.Input", "ICommand", true },
                 }
             },
             { "Microsoft.UI.Xaml.Interop",
@@ -852,7 +852,8 @@ namespace cswinrt
                     { "Size", "Windows.Foundation", "Size" },
                     { "TimeSpan", "System", "TimeSpan", true },
                     { "TypedEventHandler`2", "System", "EventHandler`2", false },
-                    { "Uri", "System", "Uri", true }
+                    { "UniversalApiContract", "Windows.Foundation", "UniversalApiContract"},
+                    { "Uri", "System", "Uri", true },
                 }
             },
             { "Windows.Foundation.Collections",
@@ -870,14 +871,14 @@ namespace cswinrt
                     { "IVectorView`1", "System.Collections.Generic", "IReadOnlyList`1", true, true },
                     { "IVector`1", "System.Collections.Generic", "IList`1", true, true },
                     { "MapChangedEventHandler`2", "Windows.Foundation.Collections", "MapChangedEventHandler`2" },
-                    { "VectorChangedEventHandler`1", "Windows.Foundation.Collections", "VectorChangedEventHandler`1" }
+                    { "VectorChangedEventHandler`1", "Windows.Foundation.Collections", "VectorChangedEventHandler`1" },
                 }
             },
             { "Windows.Foundation.Metadata",
                 {
                     { "AttributeTargets", "System", "AttributeTargets" },
                     { "AttributeUsageAttribute", "System", "AttributeUsageAttribute" },
-                    { "ContractVersionAttribute", "Windows.Foundation.Metadata", "ContractVersionAttribute"}
+                    { "ContractVersionAttribute", "Windows.Foundation.Metadata", "ContractVersionAttribute"},
                 }
             },
             { "Windows.Foundation.Numerics",
@@ -889,6 +890,15 @@ namespace cswinrt
                     { "Vector2", "System.Numerics", "Vector2" },
                     { "Vector3", "System.Numerics", "Vector3" },
                     { "Vector4", "System.Numerics", "Vector4" },
+                }
+            },
+            { "Windows.Storage.Streams",
+                {
+                    { "IBuffer", "Windows.Storage.Streams", "IBuffer" },
+                    { "IInputStream", "Windows.Storage.Streams", "IInputStream" },
+                    { "IOutputStream", "Windows.Storage.Streams", "IOutputStream" },
+                    { "IRandomAccessStream", "Windows.Storage.Streams", "IRandomAccessStream" },
+                    { "InputStreamOptions", "Windows.Storage.Streams", "InputStreamOptions" },
                 }
             },
             { "Windows.UI.Xaml",
@@ -929,7 +939,7 @@ namespace cswinrt
             },
             { "Windows.UI.Xaml.Input",
                 {
-                    { "ICommand", "System.Windows.Input", "ICommand", true }
+                    { "ICommand", "System.Windows.Input", "ICommand", true },
                 }
             },
             { "Windows.UI.Xaml.Interop",
@@ -942,7 +952,7 @@ namespace cswinrt
                     { "NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true },
                     { "NotifyCollectionChangedEventHandler", "System.Collections.Specialized", "NotifyCollectionChangedEventHandler", true },
                     { "TypeKind", "Windows.UI.Xaml.Interop", "TypeKind", true },
-                    { "TypeName", "System", "Type", true }
+                    { "TypeName", "System", "Type", true },
                 }
             },
             { "Windows.UI.Xaml.Media",

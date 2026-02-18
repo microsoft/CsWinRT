@@ -140,6 +140,18 @@ steps:
       feedsToUse: config
       nugetConfigPath: NuGet.config
 
+  - task: CmdLine@2
+    displayName: Set CsWinRT Build Tools Arch
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)
+      script: |
+        rem We use x64 build tools on x86.
+        set CsWinRTBuildToolsArch=$(BuildPlatform)
+        if "$(BuildPlatform)"=="x86" (
+          set CsWinRTBuildToolsArch=x64
+        )
+        echo ##vso[task.setvariable variable=CsWinRTBuildToolsArch;]%CsWinRTBuildToolsArch%
+
   - ${{ if eq(parameters.SetupForBuildOnly, false) }}:
 
 # PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
@@ -147,7 +159,7 @@ steps:
       displayName: Build cswinrt.slnx
       inputs:
         solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
-        msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config" /bl:$(Build.SourcesDirectory)\cswinrt.binlog
+        msbuildArgs: /restore /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch) /bl:$(Build.SourcesDirectory)\cswinrt.binlog
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
@@ -159,6 +171,16 @@ steps:
         SourceFolder: $(Build.SourcesDirectory)
         Contents: cswinrt.binlog
         TargetFolder: $(StagingFolder)\binlog
+
+    # Stage merged projection
+    - task: ArchiveFiles@2
+      displayName: Stage merged projection
+      condition: failed()
+      inputs:
+        rootFolderOrFile: $(temp)\CsWinRT\
+        includeRootFolder: false
+        sevenZipCompression: 5
+        archiveFile: $(StagingFolder)\merged\sources.zip
 
     # Stage Windows projection
     - task: ArchiveFiles@2
@@ -220,7 +242,7 @@ steps:
       displayName: Stage Net10.0
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime\bin\$(BuildConfiguration)\net10.0
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime2\bin\$(BuildConfiguration)\net10.0
         Contents: |
           WinRT.Runtime.dll
           WinRT.Runtime.pdb
@@ -230,6 +252,7 @@ steps:
     - task: CopyFiles@2 
       displayName: Stage WinRT.Host.Shim
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      enabled: false
       continueOnError: True
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net10.0
@@ -254,3 +277,43 @@ steps:
           Microsoft.CodeAnalysis.dll
         TargetFolder: $(StagingFolder)\net10.0\CsWinMD
 
+    # Stage build tools
+    - task: CopyFiles@2
+      displayName: Stage cswinrtinteropgen
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Interop.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        Contents: |
+          cswinrtinteropgen.exe
+          cswinrtinteropgen.pdb
+        TargetFolder: $(StagingFolder)\net10.0\native
+
+    - task: CopyFiles@2
+      displayName: Stage cswinrtimplgen
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Impl.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        Contents: |
+          cswinrtimplgen.exe
+          cswinrtimplgen.pdb
+        TargetFolder: $(StagingFolder)\net10.0\native
+
+    - task: CopyFiles@2
+      displayName: Stage cswinrtprojectiongen
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Projection.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        Contents: |
+          cswinrtprojectiongen.exe
+          cswinrtprojectiongen.pdb
+        TargetFolder: $(StagingFolder)\net10.0\native
+
+    - task: CopyFiles@2
+      displayName: Stage WinRT.Generator.Tasks
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Generator.Tasks\bin\$(BuildConfiguration)\netstandard2.0
+        Contents: |
+          WinRT.Generator.Tasks.dll
+          WinRT.Generator.Tasks.pdb
+        TargetFolder: $(StagingFolder)\netstandard2.0

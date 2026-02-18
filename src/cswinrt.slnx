@@ -7,7 +7,9 @@
   </Configurations>
   <Folder Name="/Authoring/">
     <Project Path="Authoring/CsWinMD/CsWinMD.csproj" />
-    <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj" />
+    <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj">
+      <Build Project="false" />
+    </Project>
     <Project Path="Authoring/WinRT.Host/WinRT.Host.vcxproj" Id="7e33bcb7-19c5-4061-981d-ba695322708a">
       <Platform Solution="*|ARM" Project="Win32" />
       <Build Solution="*|ARM" Project="false" />
@@ -18,6 +20,34 @@
     <Project Path="Authoring/WinRT.SourceGenerator.Roslyn4120/WinRT.SourceGenerator.Roslyn4120.csproj" />
     <Project Path="Authoring/WinRT.SourceGenerator/WinRT.SourceGenerator.shproj" />
     <Project Path="Authoring/WinRT.SourceGenerator2/WinRT.SourceGenerator2.csproj" />
+  </Folder>
+  <Folder Name="/Docs/">
+    <File Path="../docs/aot-trimming.md" />
+    <File Path="../docs/authoring.md" />
+    <File Path="../docs/breakingchanges-rc2.md" />
+    <File Path="../docs/cswinrt3.0-spec.md" />
+    <File Path="../docs/embedded.md" />
+    <File Path="../docs/hosting.md" />
+    <File Path="../docs/interop.md" />
+    <File Path="../docs/private-projection.md" />
+    <File Path="../docs/runtime-class-projections.md" />
+    <File Path="../docs/structure.md" />
+    <File Path="../docs/usage.md" />
+    <File Path="../docs/version-history.md" />
+    <File Path="../docs/versioning.md" />
+    <File Path="../docs/winrt-interop-dll-spec.md" />
+  </Folder>
+  <Folder Name="/Docs/cswinrtgen/">
+    <File Path="../docs/cswinrtgen/marshalling-arrays.md" />
+    <File Path="../docs/cswinrtgen/marshalling-generic-interfaces.md" />
+  </Folder>
+  <Folder Name="/Docs/diagnostics/">
+    <File Path="../docs/diagnostics/cswinrt30001.md" />
+  </Folder>
+  <Folder Name="/Docs/images/">
+    <File Path="../docs/images/AuthorPackage_VS.png" />
+    <File Path="../docs/images/Diagram_AddProjection.jpg" />
+    <File Path="../docs/images/Diagram_CreateProjection.jpg" />
   </Folder>
   <Folder Name="/Files/">
     <File Path=".gitignore" />
@@ -43,11 +73,6 @@
     <File Path="../nuget/readme.md" />
     <File Path="../nuget/readme.txt" />
     <File Path="../nuget/SignConfig.xml" />
-  </Folder>
-  <Folder Name="/Perf/">
-    <Project Path="Perf/IIDOptimizer/IIDOptimizer.csproj">
-      <Build Project="false" />
-    </Project>
   </Folder>
   <Folder Name="/Projections/">
     <File Path="Projections/Directory.Build.props" />
@@ -107,7 +132,7 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Projections/Windows/Windows.csproj">
-      <BuildDependency Project="RunCsWinRTGeneratorTask/RunCsWinRTGeneratorTask.csproj" />
+      <BuildDependency Project="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
       <BuildDependency Project="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
       <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
       <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
@@ -199,7 +224,6 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/UnitTest/UnitTest.csproj">
-      <BuildDependency Project="Perf/IIDOptimizer/IIDOptimizer.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
@@ -352,7 +376,7 @@
     <File Path="Tests/FunctionalTests/PublishProfiles/win-x86.pubxml" />
   </Folder>
   <Project Path="Benchmarks/Benchmarks.csproj">
-    <BuildDependency Project="RunCsWinRTGeneratorTask/RunCsWinRTGeneratorTask.csproj" />
+    <BuildDependency Project="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
     <BuildDependency Project="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
     <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
     <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
@@ -368,7 +392,7 @@
     <Platform Solution="*|ARM64" Project="Win32" />
     <Build Solution="*|ARM" Project="false" />
   </Project>
-  <Project Path="RunCsWinRTGeneratorTask/RunCsWinRTGeneratorTask.csproj" Id="d71298e7-f1c7-4534-8f5f-b9ef7c40d9de" />
+  <Project Path="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" Id="d71298e7-f1c7-4534-8f5f-b9ef7c40d9de" />
   <Project Path="Tests/ObjectLifetimeTests/ObjectLifetimeTests.Lifted.csproj">
     <Platform Solution="*|ARM" Project="x86" />
     <Platform Solution="*|ARM64" Project="arm64" />
@@ -384,5 +408,5 @@
   <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
   <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
   <Project Path="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" Id="eac7df05-21df-4129-b0dd-566733fd8bdc" />
-  <Project Path="WinRT.Runtime2/WinRT.Runtime2.csproj" />
+  <Project Path="WinRT.Runtime2/WinRT.Runtime.csproj" />
 </Solution>

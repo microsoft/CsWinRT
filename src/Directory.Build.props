@@ -36,8 +36,14 @@
     <CsWinRTMessageImportance>high</CsWinRTMessageImportance>
   </PropertyGroup>
 
+  <!-- Set overrides to point to folder where they are built in solution -->
   <PropertyGroup>
-    <CsWinRTIIDOptimizerPath>$(MSBuildThisFileDirectory)Perf\IIDOptimizer\bin\$(Configuration)\net8.0\</CsWinRTIIDOptimizerPath>
+    <CsWinRTGenTasksAssembly>$(MSBuildThisFileDirectory)WinRT.Generator.Tasks\bin\$(Configuration)\netstandard2.0\WinRT.Generator.Tasks.dll</CsWinRTGenTasksAssembly>
+    <_CsWinRTToolsArchFolder Condition="'$(BuildToolArch)' != ''">win-$(BuildToolArch)\</_CsWinRTToolsArchFolder>
+    <CsWinRTInteropGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Interop.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTInteropGenEffectiveToolsDirectory>
+    <CsWinRTImplEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Impl.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTImplEffectiveToolsDirectory>
+    <CsWinRTMergedProjectionEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Projection.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTMergedProjectionEffectiveToolsDirectory>
+    <CsWinRTToolsArchitecture>AnyCPU</CsWinRTToolsArchitecture>
   </PropertyGroup>
 
   <PropertyGroup>

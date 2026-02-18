@@ -13,10 +13,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' != 'true'">false</CsWinRTEnabled>
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
-    <CsWinRTGenerateReferenceProjection Condition="'$(CsWinRTGenerateReferenceProjection)' == ''">false</CsWinRTGenerateReferenceProjection>
-    <DebugSymbols Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">false</DebugSymbols>
-    <ProduceOnlyReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">true</ProduceOnlyReferenceAssembly>
-    <ProduceReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">false</ProduceReferenceAssembly>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
 
     <!--
@@ -44,7 +40,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">net8.0</CsWinRTExeTFM>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
-    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(EffectiveTargetPlatformVersion)</CsWinRTWindowsMetadata>
 
     <!--
       Default to using the environment tools if in a Visual Studio Developer Command Prompt (or PowerShell).
@@ -67,22 +63,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTAotWarningLevel" />
     <CompilerVisibleProperty Include="CsWinRTGenerateManagedDllGetActivationFactory" />
   </ItemGroup>
-
-  <!-- TODO: Remove once ProduceOnlyReferenceAssembly is set earlier for _DebugSymbolsIntermediatePath to be set correctly.
-             This only impacts incremental builds.
-    -->
-  <ItemGroup Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
-    <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />
-  </ItemGroup>
-
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
   
-  <Target Name="CsWinRTNet5EOL" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5" BeforeTargets="CsWinRTPrepareProjection">
-    <Error Text="Support for .NET 5 ended with C#/WinRT 2.0. For .NET 5 support, use C#/WinRT version 1.6.5. See https://github.com/microsoft/CsWinRT/discussions/1232" />
-  </Target>
-
-  <Target Name="CsWinRTNet6EOL" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 6 or $([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 7" BeforeTargets="CsWinRTPrepareProjection">
-    <Error Text="Support for .NET 6 and .NET 7 ended with C#/WinRT 2.2. For .NET 6 or .NET 7 support, use C#/WinRT version 2.2.x." />
+  <Target Name="CsWinRTMinNet10" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) &lt;= 9" BeforeTargets="CsWinRTPrepareProjection">
+    <Error Text="CsWinRT 3.x requires .NET 10 or later.  For .NET 8 or .NET 9, use C#/WinRT version 2.2.x." />
   </Target>
 
   <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
@@ -416,12 +399,12 @@ $(CsWinRTInternalProjection)
       <!-- Also get the root for the Windows SDK headers -->
       <_WindowsSdk10InstallDirectory Condition="'$(_WindowsSdk10InstallDirectory)' == '' AND '$(WindowsSdkPath)' != ''">$(WindowsSdkPath)</_WindowsSdk10InstallDirectory>
       <_WindowsSdk10InstallDirectory Condition="'$(_WindowsSdk10InstallDirectory)' == ''">C:\Program Files (x86)\Windows Kits\10</_WindowsSdk10InstallDirectory>
-      <_WindowsSdkIncludePath Condition="'$(TargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Include', '$(TargetPlatformVersion)'))</_WindowsSdkIncludePath>
+      <_WindowsSdkIncludePath Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Include', '$(EffectiveTargetPlatformVersion)'))</_WindowsSdkIncludePath>
       <_WindowsSdk-ucrt-IncludePath>$([System.IO.Path]::Combine($(_WindowsSdkIncludePath), 'ucrt'))</_WindowsSdk-ucrt-IncludePath>
       <_WindowsSdk-um-IncludePath>$([System.IO.Path]::Combine($(_WindowsSdkIncludePath), 'um'))</_WindowsSdk-um-IncludePath>
 
       <!-- Do the same for libs as well -->
-      <_WindowsSdkLibPath Condition="'$(TargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Lib', '$(TargetPlatformVersion)'))</_WindowsSdkLibPath>
+      <_WindowsSdkLibPath Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.IO.Path]::Combine($(_WindowsSdk10InstallDirectory), 'Lib', '$(EffectiveTargetPlatformVersion)'))</_WindowsSdkLibPath>
       <_WindowsSdk-ucrt-LibPath>$([System.IO.Path]::Combine($(_WindowsSdkLibPath), 'ucrt', '$(_StubExePlatform)'))</_WindowsSdk-ucrt-LibPath>
       <_WindowsSdk-um-LibPath>$([System.IO.Path]::Combine($(_WindowsSdkLibPath), 'um', '$(_StubExePlatform)'))</_WindowsSdk-um-LibPath>
       <_WindowsSdk-ucrt-LibWildcardPath>$([System.IO.Path]::Combine($(_WindowsSdk-ucrt-LibPath), '*.lib'))</_WindowsSdk-ucrt-LibWildcardPath>
@@ -564,18 +547,14 @@ $(CsWinRTInternalProjection)
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.CsWinRTGen.targets"/>
 
   <!-- Default values for all custom CsWinRT runtime feature switches -->
   <PropertyGroup>
-    <CsWinRTEnableDynamicObjectsSupport Condition="'$(CsWinRTEnableDynamicObjectsSupport)' == ''">true</CsWinRTEnableDynamicObjectsSupport>
-    <CsWinRTUseExceptionResourceKeys Condition="'$(CsWinRTUseExceptionResourceKeys)' == ''">false</CsWinRTUseExceptionResourceKeys>
-    <CsWinRTEnableDefaultCustomTypeMappings Condition="'$(CsWinRTEnableDefaultCustomTypeMappings)' == ''">true</CsWinRTEnableDefaultCustomTypeMappings>
-    <CsWinRTEnableICustomPropertyProviderSupport Condition="'$(CsWinRTEnableICustomPropertyProviderSupport)' == ''">true</CsWinRTEnableICustomPropertyProviderSupport>
-    <CsWinRTEnableIReferenceSupport Condition="'$(CsWinRTEnableIReferenceSupport)' == ''">true</CsWinRTEnableIReferenceSupport>
     <CsWinRTEnableIDynamicInterfaceCastableSupport Condition="'$(CsWinRTEnableIDynamicInterfaceCastableSupport)' == ''">true</CsWinRTEnableIDynamicInterfaceCastableSupport>
     <CsWinRTEnableManifestFreeActivation Condition="'$(CsWinRTEnableManifestFreeActivation)' == ''">true</CsWinRTEnableManifestFreeActivation>
     <CsWinRTManifestFreeActivationReportOriginalException Condition="'$(CsWinRTManifestFreeActivationReportOriginalException)' == ''">false</CsWinRTManifestFreeActivationReportOriginalException>
+    <CsWinRTEnableXamlTypeMarshalling Condition="'$(CsWinRTEnableXamlTypeMarshalling)' == ''">true</CsWinRTEnableXamlTypeMarshalling>
     <CsWinRTLoadComponentsInDefaultALC Condition="'$(CsWinRTLoadComponentsInDefaultALC)' == ''">false</CsWinRTLoadComponentsInDefaultALC>
 
     <!--
@@ -584,39 +563,11 @@ $(CsWinRTInternalProjection)
     -->
   </PropertyGroup>
 
-  <!--
-    Configuration for the feature switches (to support IL trimming).
-    See the 'ILLink.Substitutions.xml' file for more details on that.
-  -->
+  <!-- Configuration for the feature switches (to support IL trimming) -->
   <ItemGroup>
 
-    <!-- CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT switch -->
-    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DYNAMIC_OBJECTS_SUPPORT"
-                                    Value="$(CsWinRTEnableDynamicObjectsSupport)"
-                                    Trim="true" />
-
-    <!-- CSWINRT_USE_EXCEPTION_RESOURCE_KEYS switch -->
-    <RuntimeHostConfigurationOption Include="CSWINRT_USE_EXCEPTION_RESOURCE_KEYS"
-                                    Value="$(CsWinRTUseExceptionResourceKeys)"
-                                    Trim="true" />
-                                  
-    <!-- CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS switch -->
-    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DEFAULT_CUSTOM_TYPE_MAPPINGS"
-                                    Value="$(CsWinRTEnableDefaultCustomTypeMappings)"
-                                    Trim="true" />
-
-    <!-- CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT switch -->
-    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_ICUSTOMPROPERTYPROVIDER_SUPPORT"
-                                    Value="$(CsWinRTEnableICustomPropertyProviderSupport)"
-                                    Trim="true" />
-    
-    <!-- CSWINRT_ENABLE_IREFERENCE_SUPPORT switch -->
-    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_IREFERENCE_SUPPORT"
-                                    Value="$(CsWinRTEnableIReferenceSupport)"
-                                    Trim="true" />
-
-    <!-- CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE switch -->
-    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE"
+    <!-- CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE_SUPPORT"
                                     Value="$(CsWinRTEnableIDynamicInterfaceCastableSupport)"
                                     Trim="true" />
 
@@ -629,7 +580,12 @@ $(CsWinRTInternalProjection)
     <RuntimeHostConfigurationOption Include="CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION"
                                     Value="$(CsWinRTManifestFreeActivationReportOriginalException)"
                                     Trim="true" />
-	  
+
+    <!-- CSWINRT_ENABLE_XAML_TYPE_MARSHALLING switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_XAML_TYPE_MARSHALLING"
+                                    Value="$(CsWinRTEnableXamlTypeMarshalling)"
+                                    Trim="true" />
+
     <!-- CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC"
                                     Value="$(CsWinRTLoadComponentsInDefaultALC)"

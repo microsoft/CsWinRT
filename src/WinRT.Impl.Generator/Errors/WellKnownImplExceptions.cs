@@ -20,7 +20,7 @@ internal static class WellKnownImplExceptions
     /// </summary>
     public static Exception ResponseFileReadError(Exception exception)
     {
-        return Exception(1, "Failed to read the response file to run 'cswinrtgen'.", exception);
+        return Exception(1, "Failed to read the response file to run 'cswinrtimplgen'.", exception);
     }
 
     /// <summary>

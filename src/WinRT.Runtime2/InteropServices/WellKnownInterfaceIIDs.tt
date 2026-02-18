@@ -49,7 +49,11 @@ var entries = new (string ProjectedFullyQualifiedName, string WindowsRuntimeFull
     ("System.Windows.Input.ICommand", "Microsoft.UI.Xaml.Input.ICommand", false),
     ("Windows.Foundation.Collections.IVectorChangedEventArgs", null, false),
     ("Windows.Foundation.IAsyncAction", null, false),
-    ("Windows.Foundation.IAsyncInfo", null, false)
+    ("Windows.Foundation.IAsyncInfo", null, false),
+    ("Windows.Storage.Streams.IBuffer", null, false),
+    ("Windows.Storage.Streams.IInputStream", null, false),
+    ("Windows.Storage.Streams.IOutputStream", null, false),
+    ("Windows.Storage.Streams.IRandomAccessStream", null, false),
 };
 
 for (int i = 0; i < entries.Length; i++)

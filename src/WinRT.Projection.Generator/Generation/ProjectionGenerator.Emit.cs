@@ -37,6 +37,7 @@ internal partial class ProjectionGenerator
                 args.Token.ThrowIfCancellationRequested();
 
                 using Stream stream = File.OpenRead(file);
+
                 syntaxTrees.Add(CSharpSyntaxTree.ParseText(SourceText.From(stream), path: file));
             }
 

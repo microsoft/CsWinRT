@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !CSWINRT_REFERENCE_PROJECTION
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -35,3 +36,4 @@ internal struct DelegateReferenceInterfaceEntries
     public ComInterfaceEntry IInspectable;
     public ComInterfaceEntry IUnknown;
 }
+#endif

@@ -18,9 +18,9 @@
     <RootNamespace>WindowsRuntime.InteropGenerator</RootNamespace>
 
     <!-- This project produces a CLI tool, so we want a nice short name for it -->
-    <AssemblyName>cswinrtgen</AssemblyName>
+    <AssemblyName>cswinrtinteropgen</AssemblyName>
       
-    <!-- Same settings as WinRT.Runtime2 -->
+    <!-- Same settings as WinRT.Runtime -->
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
     <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
@@ -28,6 +28,11 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <Features>strict</Features>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Used to enable publishing project in build -->  
+    <IsBuildTool>true</IsBuildTool>
+    <RuntimeIdentifier Condition="'$(PublishBuildTool)' == 'true'">win-$(BuildToolArch)</RuntimeIdentifier>
+    <SelfContained Condition="'$(PublishBuildTool)' == 'true'">true</SelfContained>
   </PropertyGroup>
 
   <ItemGroup>

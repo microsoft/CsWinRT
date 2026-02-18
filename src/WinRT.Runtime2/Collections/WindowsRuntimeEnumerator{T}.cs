@@ -8,7 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using WindowsRuntime.InteropServices;
 
-#pragma warning disable CA1816, IDE0046
+#pragma warning disable CS9264, CA1816, IDE0046
 
 namespace WindowsRuntime;
 
@@ -70,7 +70,7 @@ public abstract class WindowsRuntimeEnumerator<T, TIIteratorMethods> : WindowsRu
                 throw new InvalidOperationException("InvalidOperation_EnumEnded");
             }
 
-            return field!;
+            return field;
         }
         private set;
     }
