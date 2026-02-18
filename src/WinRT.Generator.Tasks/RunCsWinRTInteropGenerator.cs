@@ -44,13 +44,18 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public ITaskItem[]? OutputAssemblyPath { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to the WinRT merged projection assembly.
+    /// Gets or sets the path to the WinRT Windows SDK projection assembly (i.e. <c>WinRT.Projection.Sdk.dll</c>).
     /// </summary>
     [Required]
+    public ITaskItem? WinRTSdkProjectionAssemblyPath { get; set; }
+
+    /// <summary>
+    /// Gets or sets the path to the WinRT merged projection assembly (i.e. <c>WinRT.Projection.dll</c>).
+    /// </summary>
     public ITaskItem? WinRTProjectionAssemblyPath { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to the WinRT merged component assembly generated for authoring scenarios.
+    /// Gets or sets the path to the WinRT merged component assembly generated for authoring scenarios (i.e. <c>WinRT.Component.dll</c>).
     /// </summary>
     public ITaskItem? WinRTComponentAssemblyPath { get; set; }
 
@@ -160,9 +165,9 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
             return false;
         }
 
-        if (WinRTProjectionAssemblyPath is null)
+        if (WinRTSdkProjectionAssemblyPath is null)
         {
-            Log.LogWarning("Invalid 'WinRTProjectionAssemblyPath' input.");
+            Log.LogWarning("Invalid 'WinRTSdkProjectionAssemblyPath' input.");
 
             return false;
         }
@@ -254,7 +259,8 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileCommand(args, "--reference-assembly-paths", referenceAssemblyPathsArg);
         AppendResponseFileCommand(args, "--implementation-assembly-paths", implementationAssemblyPathsArg);
         AppendResponseFileCommand(args, "--output-assembly-path", EffectiveOutputAssemblyItemSpec);
-        AppendResponseFileCommand(args, "--winrt-projection-assembly-path", WinRTProjectionAssemblyPath!.ItemSpec);
+        AppendResponseFileCommand(args, "--winrt-sdk-projection-assembly-path", WinRTSdkProjectionAssemblyPath!.ItemSpec);
+        AppendResponseFileOptionalCommand(args, "--winrt-projection-assembly-path", WinRTProjectionAssemblyPath!.ItemSpec);
         AppendResponseFileOptionalCommand(args, "--winrt-component-assembly-path", WinRTComponentAssemblyPath?.ItemSpec);
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
