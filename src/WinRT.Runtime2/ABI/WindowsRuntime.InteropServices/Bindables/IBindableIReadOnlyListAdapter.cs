@@ -124,7 +124,7 @@ file static unsafe class BindableIReadOnlyListAdapterImpl
     /// </summary>
     static BindableIReadOnlyListAdapterImpl()
     {
-        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.GetAt = &GetAt;
         Vftbl.get_Size = &get_Size;
