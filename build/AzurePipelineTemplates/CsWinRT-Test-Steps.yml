@@ -68,7 +68,7 @@ steps:
     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64'))))
     inputs:
       solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
-      msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
+      msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=netstandard2.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
       platform: $(BuildPlatform)
       configuration: $(BuildConfiguration)
   
