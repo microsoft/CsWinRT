@@ -12,6 +12,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Provides a managed implementation of the <see cref="IBuffer"/> interface backed by a pinned array.
 /// </summary>
+[WindowsRuntimeManagedOnlyType]
 internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
 {
     /// <summary>
@@ -103,15 +104,13 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
         }
     }
 
+    /// <summary>
+    /// Gets the array of bytes in the buffer.
+    /// </summary>
+    /// <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"/>
     internal unsafe byte* Buffer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => &((byte*)Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(_pinnedData)))[(uint)_offset];
-    }
-
-    internal void GetUnderlyingData(out byte[] underlyingDataArray, out int underlyingDataArrayStartOffset)
-    {
-        underlyingDataArray = _pinnedData;
-        underlyingDataArrayStartOffset = _offset;
     }
 }
