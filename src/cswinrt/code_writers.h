@@ -2683,7 +2683,7 @@ private static WindowsRuntimeObjectReference %
         {
             return __%;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName);
+        return field = WindowsRuntimeActivationFactory.GetActivationFactory("%");
     }
 }
 )",
@@ -2692,7 +2692,7 @@ private static WindowsRuntimeObjectReference %
             objrefname,
             objrefname,
             objrefname,
-            bind<write_type_name>(classType, typedef_name_type::ABI, true));
+            bind<write_type_name>(type, typedef_name_type::NonProjected, true));
     }
 
     void write_static_objref_definition(writer& w, TypeDef const& staticsType, TypeDef const& classType)
@@ -2724,7 +2724,7 @@ private static WindowsRuntimeObjectReference %
         {
             return __%;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName, %);
+        return field = WindowsRuntimeActivationFactory.GetActivationFactory("%", %);
     }
 }
 )",
@@ -2733,7 +2733,7 @@ private static WindowsRuntimeObjectReference %
             objrefname,
             objrefname,
             objrefname,
-            bind<write_type_name>(classType, typedef_name_type::ABI, true),
+            bind<write_type_name>(type, typedef_name_type::NonProjected, true),
             bind<write_iid_guid>(staticsType));
     }
 
@@ -4847,8 +4847,8 @@ R"(
             return;
         }
 
-        w.write("[WindowsRuntimeClassName(%.RuntimeClassName)]\n",
-            bind<write_type_name>(type, typedef_name_type::ABI, false));
+        w.write("[WindowsRuntimeClassName(\"%\")]\n",
+            bind<write_type_name>(type, typedef_name_type::NonProjected, true));
     }
 
     void write_comwrapper_marshaller_attribute(writer& w, TypeDef const& type)
@@ -8944,18 +8944,6 @@ protected override bool HasUnwrappableNativeObjectReference => true;)");
         // TODO: Fast ABI
     }
 
-    void write_runtime_class_name_class(writer& w, TypeDef const& type)
-    {
-        w.write(R"(
-public static class %
-{
-public const string RuntimeClassName = "%";
-}
-)",
-            type.TypeName(),
-            bind<write_type_name>(type, typedef_name_type::NonProjected, true));
-    }
-
     void write_class_marshaller(writer& w, TypeDef const& type)
     {
         auto projected_type_name = write_type_name_temp(w, type);
@@ -9097,7 +9085,7 @@ public static unsafe bool TryCreateObject(
     [global::System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out object? wrapperObject,
     out CreatedWrapperFlags wrapperFlags)
 {
-if (runtimeClassName.Equals(%.RuntimeClassName.AsSpan(), StringComparison.Ordinal))
+if (runtimeClassName.Equals("%".AsSpan()))
 {
     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
         externalComObject: value,
@@ -9135,7 +9123,7 @@ return new %(valueReference);
                     });
                 }),
                 // TryCreateObject
-                bind<write_type_name>(type, typedef_name_type::ABI, false),
+                bind<write_type_name>(type, typedef_name_type::NonProjected, true),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind<write_type_name>(type, typedef_name_type::Projected, true),
                 // CreateObject
@@ -9146,8 +9134,6 @@ return new %(valueReference);
 
     void write_abi_class(writer& w, TypeDef const& type)
     {
-        write_runtime_class_name_class(w, type);
-
         if (is_static(type))
         {
             return;
