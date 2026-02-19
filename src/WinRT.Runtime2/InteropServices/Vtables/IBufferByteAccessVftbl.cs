@@ -19,19 +19,17 @@ internal unsafe struct IBufferByteAccessVftbl
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-    public delegate* unmanaged[MemberFunction]<void*, byte**, int> get_Buffer;
+    public delegate* unmanaged[MemberFunction]<void*, byte**, HRESULT> Buffer;
 
     /// <summary>
     /// Gets the array of bytes in the buffer.
     /// </summary>
     /// <param name="thisPtr">The target COM object.</param>
-    /// <param name="result">The byte array.</param>
+    /// <param name="value">The byte array.</param>
     /// <returns>If this method succeeds, it returns <c>S_OK</c>. Otherwise, it returns an <c>HRESULT</c> error code.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int get_BufferUnsafe(
-        void* thisPtr,
-        byte** result)
+    public static HRESULT BufferUnsafe(void* thisPtr, byte** value)
     {
-        return ((IBufferByteAccessVftbl*)*(void***)thisPtr)->get_Buffer(thisPtr, result);
+        return ((IBufferByteAccessVftbl*)*(void***)thisPtr)->Buffer(thisPtr, value);
     }
 }
