@@ -9085,7 +9085,7 @@ public static unsafe bool TryCreateObject(
     [global::System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out object? wrapperObject,
     out CreatedWrapperFlags wrapperFlags)
 {
-if (runtimeClassName.Equals("%".AsSpan()))
+if (runtimeClassName.SequenceEqual("%".AsSpan()))
 {
     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
         externalComObject: value,
