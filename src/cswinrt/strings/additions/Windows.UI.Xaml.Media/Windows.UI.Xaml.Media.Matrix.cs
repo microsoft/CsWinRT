@@ -6,7 +6,7 @@ namespace Windows.UI.Xaml.Media
     partial struct Matrix : IFormattable
     {
         // the transform is identity by default
-        private static Matrix s_identity = CreateIdentity();
+        private static readonly Matrix s_identity = CreateIdentity();
 
         public static Matrix Identity
         {
