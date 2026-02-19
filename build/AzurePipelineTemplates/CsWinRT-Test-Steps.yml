@@ -62,31 +62,6 @@ steps:
     parameters:
       BuildConfiguration: $(BuildConfiguration)
       BuildPlatform: $(BuildPlatform) 
-
-  # Find MSBuild (hosted agent has VS installed)
-  - pwsh: |
-      $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
-      if (-not $vs) { throw "VS not found on agent" }
-      $msbuild = Join-Path $vs 'MSBuild\Current\Bin\MSBuild.exe'
-      Write-Host "##vso[task.setvariable variable=MSBuildPath]$msbuild"
-      Write-Host "MSBuild: $msbuild"
-    displayName: Locate MSBuild
-    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-
-  # Publish NativeAOT test project
-  - pwsh: |
-      New-Item -ItemType Directory -Force -Path '$(PublishDir)' | Out-Null
-      & '$(MSBuildPath)' `
-        '$(Build.SourcesDirectory)\cswinrt.slnx' `
-        -restore `
-        /t:Tests\UnitTest:Publish `
-        /p:Platform=$(BuildPlatform);Configuration=$(BuildConfiguration);RuntimeIdentifier=$(RuntimeIdentifier);GenerateTestProjection=true `
-        /p:SolutionDir='$(Build.SourcesDirectory)\' `
-        /p:AppBuildTFMs=net10.0 `
-        /p:PublishDir='$(PublishDir)\' `
-        /bl:'$(Build.ArtifactStagingDirectory)\publish.binlog'
-    displayName: Publish UnitTest (NativeAOT)
-    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
     
   - task: MSBuild@1
     displayName: Restore UnitTest
