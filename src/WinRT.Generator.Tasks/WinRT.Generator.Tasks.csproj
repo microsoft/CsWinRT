@@ -4,6 +4,17 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- Common metadata properties for publishing -->
+    <Description>C#/WinRT Generator Tasks v$(VersionString)</Description>
+    <AssemblyTitle>C#/WinRT Generator Tasks v$(VersionString)</AssemblyTitle>
+    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+    <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
+    <FileVersion>$(VersionNumber)</FileVersion>
+
+    <!-- Enable strong name signing -->
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\WinRT.Runtime2\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
