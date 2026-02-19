@@ -69,7 +69,7 @@ file abstract unsafe class IMemoryBufferReferenceComWrappersCallback : IWindowsR
                 iid: in WellKnownWindowsInterfaceIIDs.IID_IMemoryBufferReference,
                 wrapperFlags: out wrapperFlags);
 
-            wrapperObject = new WindowsRuntimeBuffer(objectReference); // TODO
+            wrapperObject = new WindowsRuntimeMemoryBufferReference(objectReference);
 
             return true;
         }
@@ -89,7 +89,7 @@ file abstract unsafe class IMemoryBufferReferenceComWrappersCallback : IWindowsR
             iid: in WellKnownWindowsInterfaceIIDs.IID_IMemoryBufferReference,
             wrapperFlags: out wrapperFlags);
 
-        return new WindowsRuntimeBuffer(objectReference); // TODO
+        return new WindowsRuntimeMemoryBufferReference(objectReference);
     }
 }
 
