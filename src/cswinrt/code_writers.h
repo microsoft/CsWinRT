@@ -4874,8 +4874,8 @@ R"(
 
         for_typedef(w, get_type_semantics(default_interface), [&](auto type)
         {
-            auto interface_name = bind<write_type_name>(type, typedef_name_type::CCW, false);
-            w.write("[WindowsRuntimeDefaultInterfaceAttribute(typeof(%))]\n", interface_name);
+            w.write("[WindowsRuntimeDefaultInterfaceAttribute(typeof(%))]\n",
+                bind<write_type_name>(type, typedef_name_type::CCW, false));
         });
     }
 
