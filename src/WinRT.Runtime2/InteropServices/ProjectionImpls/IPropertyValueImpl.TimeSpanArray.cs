@@ -111,7 +111,7 @@ file static unsafe class TimeSpanArrayPropertyValueImpl
         {
             TimeSpan[] thisObject = ComInterfaceDispatch.GetInstance<TimeSpan[]>((ComInterfaceDispatch*)thisPtr);
 
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToUnmanaged))]
             static extern void ConvertToUnmanaged(
                 [UnsafeAccessorType("ABI.System.<#corlib>TimeSpanArrayMarshaller, WinRT.Interop")] object? _,
                 TimeSpan[] source,

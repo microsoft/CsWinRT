@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -45,7 +46,50 @@ public static unsafe class IInputStreamMarshaller
     /// <inheritdoc cref="WindowsRuntimeDelegateMarshaller.ConvertToManaged"/>
     public static IInputStream? ConvertToManaged(void* value)
     {
-        return (IInputStream?)WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+        return (IInputStream?)WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<IInputStreamComWrappersCallback>(value);
+    }
+}
+
+/// <summary>
+/// A custom <see cref="IWindowsRuntimeUnsealedObjectComWrappersCallback"/> implementation for <see cref="IInputStream"/>.
+/// </summary>
+file abstract unsafe class IInputStreamComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
+{
+    /// <inheritdoc/>
+    public static bool TryCreateObject(
+        void* value,
+        ReadOnlySpan<char> runtimeClassName,
+        [NotNullWhen(true)] out object? wrapperObject,
+        out CreatedWrapperFlags wrapperFlags)
+    {
+        if (runtimeClassName.SequenceEqual("Windows.Storage.Streams.IInputStream"))
+        {
+            WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+                externalComObject: value,
+                iid: in WellKnownWindowsInterfaceIIDs.IID_IInputStream,
+                wrapperFlags: out wrapperFlags);
+
+            wrapperObject = new WindowsRuntimeInputStream(objectReference);
+
+            return true;
+        }
+
+        wrapperFlags = CreatedWrapperFlags.None;
+
+        wrapperObject = null;
+
+        return false;
+    }
+
+    /// <inheritdoc/>
+    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+            externalComObject: value,
+            iid: in WellKnownWindowsInterfaceIIDs.IID_IInputStream,
+            wrapperFlags: out wrapperFlags);
+
+        return new WindowsRuntimeInputStream(objectReference);
     }
 }
 
@@ -83,7 +127,7 @@ public static unsafe class IInputStreamMethods
 
         try
         {
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToManaged))]
             static extern IAsyncOperationWithProgress<IBuffer, uint>? ConvertToManaged(
                 [UnsafeAccessorType("ABI.Windows.Foundation.<#CsWinRT>IAsyncOperationWithProgress'2<<#CsWinRT>Windows.Storage.Streams.IBuffer|uint>Marshaller, WinRT.Interop")] object? _,
                 void* value);
@@ -164,7 +208,7 @@ public static unsafe class IInputStreamImpl
                 count: count,
                 options: options);
 
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToUnmanaged))]
             static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
                 [UnsafeAccessorType("ABI.Windows.Foundation.<#CsWinRT>IAsyncOperationWithProgress'2<<#CsWinRT>Windows.Storage.Streams.IBuffer|uint>Marshaller, WinRT.Interop")] object? _,
                 IAsyncOperationWithProgress<IBuffer, uint>? value);

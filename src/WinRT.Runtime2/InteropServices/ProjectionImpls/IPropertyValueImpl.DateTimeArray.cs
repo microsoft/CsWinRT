@@ -111,7 +111,7 @@ file static unsafe class DateTimeArrayPropertyValueImpl
         {
             DateTimeOffset[] thisObject = ComInterfaceDispatch.GetInstance<DateTimeOffset[]>((ComInterfaceDispatch*)thisPtr);
 
-            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToUnmanaged))]
             static extern void ConvertToUnmanaged(
                 [UnsafeAccessorType("ABI.System.<#corlib>DateTimeOffsetArrayMarshaller, WinRT.Interop")] object? _,
                 DateTimeOffset[] source,
