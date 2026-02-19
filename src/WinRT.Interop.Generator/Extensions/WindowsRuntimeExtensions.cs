@@ -257,6 +257,7 @@ internal static class WindowsRuntimeExtensions
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IStringable) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IBuffer) ||
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IMemoryBufferReference) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IInputStream) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IOutputStream) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IRandomAccessStream);
