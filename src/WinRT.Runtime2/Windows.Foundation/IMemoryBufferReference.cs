@@ -3,10 +3,10 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Windows.Foundation;
 using Windows.Foundation.Metadata;
+using WindowsRuntime;
 
-namespace WindowsRuntime.Windows.Foundation;
+namespace Windows.Foundation;
 
 /// <summary>
 /// Represents a reference to an <see href="https://learn.microsoft.com/uwp/api/windows.foundation.imemorybuffer"><c>IMemoryBuffer</c></see> object.
