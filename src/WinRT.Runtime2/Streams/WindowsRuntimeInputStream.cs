@@ -2,57 +2,54 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Windows.Foundation;
+using Windows.Storage.Streams;
 using WindowsRuntime.InteropServices;
 
 namespace WindowsRuntime;
 
 /// <summary>
-/// The implementation of the custom-mapped Windows Runtime readonly <see cref="IList"/> type.
+/// The implementation of the projected Windows Runtime <see cref="IInputStream"/> type.
 /// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevectorview"/>
-/// <remarks>
-/// There is no <c>IReadOnlyList</c> interface in .NET, so this type only implements <see cref="IEnumerable"/>.
-/// This still provides better performance when casting to that interface for enumeration than having to go through
-/// an opaque marshalled object and using <see cref="System.Runtime.InteropServices.IDynamicInterfaceCastable"/>.
-/// </remarks>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.storage.streams.iinputstream"/>
 [WindowsRuntimeManagedOnlyType]
-internal sealed class WindowsRuntimeReadOnlyList : WindowsRuntimeObject,
-    IEnumerable,
-    IWindowsRuntimeInterface<IEnumerable>
+internal sealed class WindowsRuntimeInputStream : WindowsRuntimeObject,
+    IInputStream,
+    IWindowsRuntimeInterface<IInputStream>,
+    IWindowsRuntimeInterface<IDisposable>
 {
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeReadOnlyList"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeInputStream"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeReadOnlyList(WindowsRuntimeObjectReference nativeObjectReference)
+    public WindowsRuntimeInputStream(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
 
     /// <summary>
-    /// Gets the lazy-loaded, cached object reference for <c>Windows.UI.Xaml.Interop.IBindableIterable</c> for the current object.
+    /// Gets the lazy-loaded, cached object reference for <see cref="IDisposable"/> for the current object.
     /// </summary>
-    private WindowsRuntimeObjectReference IBindableIterableObjectReference
+    private WindowsRuntimeObjectReference IClosableObjectReference
     {
         get
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            WindowsRuntimeObjectReference InitializeIIterableObjectReference()
+            WindowsRuntimeObjectReference InitializeIClosableObjectReference()
             {
                 _ = Interlocked.CompareExchange(
                     location1: ref field,
-                    value: NativeObjectReference.As(in WellKnownWindowsInterfaceIIDs.IID_IBindableIterable),
+                    value: NativeObjectReference.As(in WellKnownWindowsInterfaceIIDs.IID_IClosable),
                     comparand: null);
 
                 return field;
             }
 
-            return field ?? InitializeIIterableObjectReference();
+            return field ?? InitializeIClosableObjectReference();
         }
     }
 
@@ -64,15 +61,27 @@ internal sealed class WindowsRuntimeReadOnlyList : WindowsRuntimeObject,
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
-    public IEnumerator GetEnumerator()
+    public IAsyncOperationWithProgress<IBuffer, uint> ReadAsync(IBuffer buffer, uint count, InputStreamOptions options)
     {
-        return ABI.System.Collections.IEnumerableMethods.GetEnumerator(IBindableIterableObjectReference);
+        return ABI.Windows.Storage.Streams.IInputStreamMethods.ReadAsync(NativeObjectReference, buffer, count, options);
     }
 
     /// <inheritdoc/>
-    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IEnumerable>.GetInterface()
+    public void Dispose()
     {
-        return IBindableIterableObjectReference.AsValue();
+        ABI.System.IDisposableMethods.Dispose(IClosableObjectReference);
+    }
+
+    /// <inheritdoc/>
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IInputStream>.GetInterface()
+    {
+        return NativeObjectReference.AsValue();
+    }
+
+    /// <inheritdoc/>
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IDisposable>.GetInterface()
+    {
+        return IClosableObjectReference.AsValue();
     }
 
     /// <inheritdoc/>

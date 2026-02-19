@@ -2,25 +2,25 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections;
 using System.ComponentModel;
+using Windows.Storage.Streams;
 using WindowsRuntime.InteropServices;
 
 namespace WindowsRuntime;
 
 /// <summary>
-/// The implementation of the custom-mapped Windows Runtime <see cref="IEnumerable"/> type.
+/// The implementation of the projected Windows Runtime <see cref="IBuffer"/> type.
 /// </summary>
-/// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterable"/>
+/// <see href="https://learn.microsoft.com/uwp/api/windows.storage.streams.ibuffer"/>
 [WindowsRuntimeManagedOnlyType]
-internal sealed class WindowsRuntimeEnumerable : WindowsRuntimeObject, IEnumerable, IWindowsRuntimeInterface<IEnumerable>
+internal sealed class WindowsRuntimeBuffer : WindowsRuntimeObject, IBuffer, IWindowsRuntimeInterface<IBuffer>
 {
     /// <summary>
-    /// Creates a <see cref="WindowsRuntimeEnumerable"/> instance with the specified parameters.
+    /// Creates a <see cref="WindowsRuntimeBuffer"/> instance with the specified parameters.
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    public WindowsRuntimeEnumerable(WindowsRuntimeObjectReference nativeObjectReference)
+    public WindowsRuntimeBuffer(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
@@ -33,13 +33,17 @@ internal sealed class WindowsRuntimeEnumerable : WindowsRuntimeObject, IEnumerab
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
-    public IEnumerator GetEnumerator()
+    public uint Capacity => ABI.Windows.Storage.Streams.IBufferMethods.Capacity(NativeObjectReference);
+
+    /// <inheritdoc/>
+    public uint Length
     {
-        return ABI.System.Collections.IEnumerableMethods.GetEnumerator(NativeObjectReference);
+        get => ABI.Windows.Storage.Streams.IBufferMethods.Length(NativeObjectReference);
+        set => ABI.Windows.Storage.Streams.IBufferMethods.Length(NativeObjectReference, value);
     }
 
     /// <inheritdoc/>
-    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IEnumerable>.GetInterface()
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IBuffer>.GetInterface()
     {
         return NativeObjectReference.AsValue();
     }

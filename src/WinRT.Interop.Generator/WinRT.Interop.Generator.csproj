@@ -11,6 +11,13 @@
     <OptimizationPreference>Speed</OptimizationPreference>
     <StackTraceSupport>false</StackTraceSupport>
 
+    <!-- Common metadata properties for publishing -->
+    <Description>C#/WinRT Interop Generator v$(VersionString)</Description>
+    <AssemblyTitle>C#/WinRT Interop Generator v$(VersionString)</AssemblyTitle>
+    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+    <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
+    <FileVersion>$(VersionNumber)</FileVersion>
+
     <!-- Emit the '[module: SkipLocalsInit]' attribute (same as the runtime) -->
     <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
       

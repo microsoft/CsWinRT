@@ -13,7 +13,7 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime;
 
 /// <summary>
-/// The implementation of all projected Windows Runtime <see cref="IDictionary{TKey, TValue}"/> types.
+/// The implementation of all custom-mapped Windows Runtime <see cref="IDictionary{TKey, TValue}"/> types.
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
 /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>

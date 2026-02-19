@@ -12,7 +12,7 @@ using WindowsRuntime.InteropServices;
 namespace WindowsRuntime;
 
 /// <summary>
-/// The implementation of all projected Windows Runtime <see cref="IEnumerator"/> types.
+/// The implementation of the custom-mapped Windows Runtime <see cref="IEnumerator"/> type.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindableiterator"/>
 [WindowsRuntimeManagedOnlyType]
