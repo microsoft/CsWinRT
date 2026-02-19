@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(LibBuildTFMs)</TargetFrameworks>
+    <Platforms>x64;x86</Platforms>
+    <CsWinRTGenerateReferenceProjection>false</CsWinRTGenerateReferenceProjection>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WinAppSDK\WinAppSDK.csproj" />
+  </ItemGroup>
+
+</Project>

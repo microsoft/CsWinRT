@@ -590,8 +590,13 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <inheritdoc/>
     CustomQueryInterfaceResult ICustomQueryInterface.GetInterface(ref Guid iid, out nint ppv)
     {
-        // We explicitly don't handle overridable interfaces and 'IInspectable'
-        if (IsOverridableInterface(in iid) || WellKnownWindowsInterfaceIIDs.IID_IInspectable == iid || WellKnownWindowsInterfaceIIDs.IID_IWeakReference == iid)
+        // We explicitly don't handle overridable interfaces and 'IInspectable'.
+        // And when 'NativeObjectReference' is null which is during initialization,
+        // those calls are for outer from inner which we don't need to handle either.
+        if (IsOverridableInterface(in iid) ||
+            WellKnownWindowsInterfaceIIDs.IID_IInspectable == iid ||
+            WellKnownWindowsInterfaceIIDs.IID_IWeakReference == iid ||
+            NativeObjectReference is null)
         {
             ppv = default;
 
