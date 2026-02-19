@@ -18,7 +18,7 @@ namespace WindowsRuntime;
 [WindowsRuntimeManagedOnlyType]
 internal sealed class WindowsRuntimeMemoryBufferReference : WindowsRuntimeObject,
     IMemoryBufferReference,
-    IWindowsRuntimeInterface<IBuffer>,
+    IWindowsRuntimeInterface<IMemoryBufferReference>,
     IWindowsRuntimeInterface<IDisposable>
 {
     /// <inheritdoc/>
@@ -77,7 +77,7 @@ internal sealed class WindowsRuntimeMemoryBufferReference : WindowsRuntimeObject
     }
 
     /// <inheritdoc/>
-    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IBuffer>.GetInterface()
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IMemoryBufferReference>.GetInterface()
     {
         return NativeObjectReference.AsValue();
     }
