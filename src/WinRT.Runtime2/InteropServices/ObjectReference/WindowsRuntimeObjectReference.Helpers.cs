@@ -55,7 +55,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <returns>The COM object pointer for the requested interface.</returns>
     /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
     /// <exception cref="Exception">Thrown if the <c>QueryInterface</c> call fails for any reason.</exception>
-    public void* AsUnsafe(in Guid iid)
+    internal void* AsUnsafe(in Guid iid)
     {
         AsUnsafe(in iid, out void* pv);
 
@@ -69,13 +69,13 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <param name="ppv">The resulting COM object pointer to retrieve.</param>
     /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
     /// <exception cref="Exception">Thrown if the <c>QueryInterface</c> call fails for any reason.</exception>
-    public void AsUnsafe(in Guid iid, out void* ppv)
+    internal void AsUnsafe(in Guid iid, out void* ppv)
     {
         TryAsNative(in iid, out ppv).Assert();
     }
 
     /// <inheritdoc cref="AsUnsafe(in Guid, out void*)"/>
-    public void AsUnsafe(in Guid iid, out nint ppv)
+    internal void AsUnsafe(in Guid iid, out nint ppv)
     {
         TryAsNative(in iid, out ppv).Assert();
     }
@@ -87,7 +87,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <param name="objectReference">The resulting <see cref="WindowsRuntimeObjectReference"/> instance for the requested interface.</param>
     /// <returns>Whether the requested interface was retrieved successfully.</returns>
     /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
-    public bool TryAs(in Guid iid, [NotNullWhen(true)] out WindowsRuntimeObjectReference? objectReference)
+    internal bool TryAs(in Guid iid, [NotNullWhen(true)] out WindowsRuntimeObjectReference? objectReference)
     {
         HRESULT hresult = DerivedTryAsNative(in iid, out objectReference);
 
@@ -101,7 +101,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <param name="ppv">The resulting COM pointer for the requested interface.</param>
     /// <returns>Whether the requested interface was retrieved successfully.</returns>
     /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
-    public bool TryAsUnsafe(in Guid iid, out void* ppv)
+    internal bool TryAsUnsafe(in Guid iid, out void* ppv)
     {
         HRESULT hresult = TryAsNative(in iid, out ppv);
 
@@ -109,7 +109,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     }
 
     /// <inheritdoc cref="TryAsUnsafe(in Guid, out void*)"/>
-    public bool TryAsUnsafe(in Guid iid, out nint ppv)
+    internal bool TryAsUnsafe(in Guid iid, out nint ppv)
     {
         HRESULT hresult = TryAsNative(in iid, out ppv);
 
