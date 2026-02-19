@@ -2692,7 +2692,7 @@ private static WindowsRuntimeObjectReference %
             objrefname,
             objrefname,
             objrefname,
-            bind<write_type_name>(type, typedef_name_type::NonProjected, true));
+            bind<write_type_name>(classType, typedef_name_type::NonProjected, true));
     }
 
     void write_static_objref_definition(writer& w, TypeDef const& staticsType, TypeDef const& classType)
@@ -2733,7 +2733,7 @@ private static WindowsRuntimeObjectReference %
             objrefname,
             objrefname,
             objrefname,
-            bind<write_type_name>(type, typedef_name_type::NonProjected, true),
+            bind<write_type_name>(classType, typedef_name_type::NonProjected, true),
             bind<write_iid_guid>(staticsType));
     }
 
