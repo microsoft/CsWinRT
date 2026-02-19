@@ -258,7 +258,7 @@ public static unsafe class IMemoryBufferReferenceImpl
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToManaged))]
             static extern EventHandler<IMemoryBufferReference, object>? ConvertToManaged(
-                [UnsafeAccessorType("ABI.System.<#corlib>EventHandler'2<<#CsWinRT>ABI.Windows.Foundation.IMemoryBufferReference|object>Marshaller, WinRT.Interop")] object? _,
+                [UnsafeAccessorType("ABI.System.<#corlib>EventHandler'2<<#CsWinRT>Windows.Foundation.IMemoryBufferReference|object>Marshaller, WinRT.Interop")] object? _,
                 void* value);
 
             EventHandler<IMemoryBufferReference, object>? managedHandler = ConvertToManaged(null, handler);
