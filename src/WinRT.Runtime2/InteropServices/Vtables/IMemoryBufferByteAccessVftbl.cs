@@ -16,7 +16,7 @@ namespace WindowsRuntime.InteropServices;
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct IMemoryBufferByteAccessVftbl
 {
-    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
+    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
     public delegate* unmanaged[MemberFunction]<void*, byte**, uint*, HRESULT> GetBuffer;
