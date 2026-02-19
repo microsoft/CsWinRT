@@ -30,8 +30,6 @@ stages:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
       ob_artifactSuffix: $(BuildConfiguration)_$(BuildPlatform)
       StagingFolder: $(ob_outputDirectory)
-      PublishDir: '$(ob_outputDirectory)\aot-publish'
-      TestResultsDir: '$(ob_outputDirectory)\AOTUnitTestResults'
 
     steps:
     - checkout: self
