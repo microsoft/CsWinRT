@@ -20,15 +20,30 @@ namespace WindowsRuntime.InteropServices;
 public static unsafe class IMarshalImpl
 {
     /// <summary>
+    /// Gets a pointer to the managed <c>IMarshal</c> implementation.
+    /// </summary>
+    public static nint Vtable
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (nint)Unsafe.AsPointer(in FreeThreadedMarshalImpl.Vftbl);
+    }
+}
+
+/// <summary>
+/// The <c>IMarshal</c> implementation using <see cref="FreeThreadedMarshaler"/>.
+/// </summary>
+file static unsafe class FreeThreadedMarshalImpl
+{
+    /// <summary>
     /// The <see cref="IMarshalVftbl"/> value for the managed <c>IMarshal</c> implementation.
     /// </summary>
     [FixedAddressValueType]
-    private static readonly IMarshalVftbl Vftbl;
+    public static readonly IMarshalVftbl Vftbl;
 
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static IMarshalImpl()
+    static FreeThreadedMarshalImpl()
     {
         *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
 
@@ -38,15 +53,6 @@ public static unsafe class IMarshalImpl
         Vftbl.UnmarshalInterface = &UnmarshalInterface;
         Vftbl.ReleaseMarshalData = &ReleaseMarshalData;
         Vftbl.DisconnectObject = &DisconnectObject;
-    }
-
-    /// <summary>
-    /// Gets a pointer to the managed <c>IMarshal</c> implementation.
-    /// </summary>
-    public static nint Vtable
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(in Vftbl);
     }
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/objidl/nf-objidl-imarshal-getunmarshalclass"/>
