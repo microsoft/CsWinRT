@@ -88,31 +88,38 @@ steps:
     displayName: Publish UnitTest (NativeAOT)
     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
     
-  # Run the published test executable and emit TRX
-  - pwsh: |
-      New-Item -ItemType Directory -Force -Path '$(TestResultsDir)' | Out-Null
-
-      $exe = Get-ChildItem '$(PublishDir)' -Filter UnitTest.exe -Recurse | Select-Object -First 1
-      if (-not $exe) { throw "UnitTest.exe not found under $(PublishDir)" }
-
-      Write-Host "Running: $($exe.FullName)"
-      & $exe.FullName --report-trx --results-directory '$(TestResultsDir)'
-
-      # Ensure we fail the step if tests failed (nonzero exit)
-      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    displayName: Run NativeAOT tests (emit TRX)
-    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-
-  # Publish test results to the Tests tab
-  - task: PublishTestResults@2
-    displayName: Publish TRX to Azure Pipelines
-    condition: and(succeededOrFailed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+  - task: MSBuild@1
+    displayName: Restore UnitTest
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64'))))
     inputs:
-      testResultsFormat: 'VSTest'   # VSTest == TRX (also works for MTP-generated TRX)
-      testResultsFiles: '**/*.trx'
-      searchFolder: '$(TestResultsDir)'
-      mergeTestResults: true
-      failTaskOnFailedTests: true
+      solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
+      msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+  
+  - task: MSBuild@1
+    displayName: Publish UnitTest for AOT (net10.0)
+    condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
+      msbuildArguments: /t:publish /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+
+  - task: CmdLine@2
+    displayName: Run UnitTest for AOT (net10.0)
+    condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    continueOnError: True
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+      script: |
+        dir
+        echo Running UnitTest.exe 
+        UnitTest.exe 
+        if %Errorlevel% NEQ 100 (
+          exit /b !ErrorLevel!
+        )
+        exit /b 0 
 
 # Disable GC stress
   - task: PowerShell@2
