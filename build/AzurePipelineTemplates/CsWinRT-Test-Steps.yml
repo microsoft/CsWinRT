@@ -15,14 +15,22 @@ steps:
         Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0xC"
 
 # Run Unit Tests
-  - task: DotNetCoreCLI@2
+  # - task: DotNetCoreCLI@2
+  #   displayName: Run Unit Tests
+  #   condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+  #   inputs:
+  #     command: test
+  #     projects: 'src/Tests/UnitTest/UnitTest.csproj'
+  #     arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
+  #     testRunTitle: Unit Tests
+      
+  - task: VSTest@3
     displayName: Run Unit Tests
-    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    condition: succeeded()
     inputs:
-      command: test
-      projects: 'src/Tests/UnitTest/UnitTest.csproj'
-      arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
-      testRunTitle: Unit Tests
+      testAssemblyVer2: | 
+        **\UnitTest.dll
+      searchFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\x64\release\net10.0\win-x64\
 
 # Run Host Tests
   - task: CmdLine@2
