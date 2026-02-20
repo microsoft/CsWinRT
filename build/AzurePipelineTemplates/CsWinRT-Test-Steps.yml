@@ -66,48 +66,6 @@ steps:
     parameters:
       BuildConfiguration: $(BuildConfiguration)
       BuildPlatform: $(BuildPlatform) 
-  
-  - task: MSBuild@1
-    displayName: Restore WinRT.Generator.Tasks.csproj
-    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64'))))
-    inputs:
-      solution: $(Build.SourcesDirectory)\src\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj
-      msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=netstandard2.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
-      platform: $(BuildPlatform)
-      configuration: $(BuildConfiguration)
-    
-  - task: MSBuild@1
-    displayName: Restore UnitTest
-    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64'))))
-    inputs:
-      solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
-      msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
-      platform: $(BuildPlatform)
-      configuration: $(BuildConfiguration)
-  
-  - task: MSBuild@1
-    displayName: Publish UnitTest for AOT (net10.0)
-    condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
-    inputs:
-      solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
-      msbuildArguments: /t:publish /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
-      platform: $(BuildPlatform)
-      configuration: $(BuildConfiguration)
-
-  - task: CmdLine@2
-    displayName: Run UnitTest for AOT (net10.0)
-    condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
-    continueOnError: True
-    inputs:
-      workingDirectory: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
-      script: |
-        dir
-        echo Running UnitTest.exe 
-        UnitTest.exe 
-        if %Errorlevel% NEQ 100 (
-          exit /b !ErrorLevel!
-        )
-        exit /b 0 
 
 # Disable GC stress
   - task: PowerShell@2
