@@ -134,7 +134,7 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
     public static class DragDropManagerInterop
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.ApplicationModel.DataTransfer.DragDrop.Core.CoreDragDropManager.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDragDropManagerInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.ApplicationModel.DataTransfer.DragDrop.Core.CoreDragDropManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDragDropManagerInterop);
 #endif
 
         public static CoreDragDropManager GetForWindow(IntPtr appWindow)
@@ -170,7 +170,7 @@ namespace Windows.Graphics.Printing
         }
 
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.Graphics.Printing.PrintManager.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPrintManagerInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Graphics.Printing.PrintManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPrintManagerInterop);
 #endif
 
         public static PrintManager GetForWindow(IntPtr appWindow)
@@ -201,7 +201,7 @@ namespace Windows.Media
     public static class SystemMediaTransportControlsInterop
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.Media.SystemMediaTransportControls.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISystemMediaTransportControlsInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Media.SystemMediaTransportControls", global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISystemMediaTransportControlsInterop);
 #endif
 
         public static SystemMediaTransportControls GetForWindow(IntPtr appWindow)
@@ -223,7 +223,7 @@ namespace Windows.Media.PlayTo
     public static class PlayToManagerInterop
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.Media.PlayTo.PlayToManager.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPlayToManagerInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Media.PlayTo.PlayToManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPlayToManagerInterop);
 #endif
 
         public static PlayToManager GetForWindow(IntPtr appWindow)
@@ -267,7 +267,7 @@ namespace Windows.Security.Credentials.UI
         }
 
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.Security.Credentials.UI.UserConsentVerifier.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUserConsentVerifierInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Security.Credentials.UI.UserConsentVerifier", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUserConsentVerifierInterop);
 #endif
 
         public static IAsyncOperation<UserConsentVerificationResult> RequestVerificationForWindowAsync(IntPtr appWindow, string message)
@@ -302,7 +302,7 @@ namespace Windows.Security.Authentication.Web.Core
         }
 
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.Security.Authentication.Web.Core.WebAuthenticationCoreManager.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IWebAuthenticationCoreManagerInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Security.Authentication.Web.Core.WebAuthenticationCoreManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IWebAuthenticationCoreManagerInterop);
 #endif
 
         public static IAsyncOperation<WebTokenRequestResult> RequestTokenForWindowAsync(IntPtr appWindow, WebTokenRequest request)
@@ -333,7 +333,7 @@ namespace Windows.UI.ApplicationSettings
     public static class AccountsSettingsPaneInterop
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.UI.ApplicationSettings.AccountsSettingsPane.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IAccountsSettingsPaneInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.ApplicationSettings.AccountsSettingsPane", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IAccountsSettingsPaneInterop);
 #endif
 
         public static AccountsSettingsPane GetForWindow(IntPtr appWindow)
@@ -373,7 +373,7 @@ namespace Windows.UI.Input
     public static class RadialControllerConfigurationInterop
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.UI.Input.RadialControllerConfiguration.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerConfigurationInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.Input.RadialControllerConfiguration", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerConfigurationInterop);
 #endif
 
         public static RadialControllerConfiguration GetForWindow(IntPtr hwnd)
@@ -390,7 +390,7 @@ namespace Windows.UI.Input
     public static class RadialControllerInterop
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.UI.Input.RadialController.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.Input.RadialController", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerInterop);
 #endif
 
         public static RadialController CreateForWindow(IntPtr hwnd)
@@ -412,7 +412,7 @@ namespace Windows.UI.Input.Core
     public static class RadialControllerIndependentInputSourceInterop
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.UI.Input.Core.RadialControllerIndependentInputSource.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerIndependentInputSourceInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.Input.Core.RadialControllerIndependentInputSource", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerIndependentInputSourceInterop);
 #endif
 
         public static RadialControllerIndependentInputSource CreateForWindow(IntPtr hwnd)
@@ -434,7 +434,7 @@ namespace Windows.UI.Input.Spatial
     public static class SpatialInteractionManagerInterop
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.UI.Input.Spatial.SpatialInteractionManager.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISpatialInteractionManagerInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.Input.Spatial.SpatialInteractionManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISpatialInteractionManagerInterop);
 #endif
 
         public static SpatialInteractionManager GetForWindow(IntPtr window)
@@ -456,7 +456,7 @@ namespace Windows.UI.ViewManagement
     public static class InputPaneInterop
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.UI.ViewManagement.InputPane.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IInputPaneInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.ViewManagement.InputPane", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IInputPaneInterop);
 #endif
 
         public static InputPane GetForWindow(IntPtr appWindow)
@@ -473,7 +473,7 @@ namespace Windows.UI.ViewManagement
     public static class UIViewSettingsInterop
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.UI.ViewManagement.UIViewSettings.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUIViewSettingsInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.ViewManagement.UIViewSettings", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUIViewSettingsInterop);
 #endif
 
         public static UIViewSettings GetForWindow(IntPtr hwnd)
@@ -495,7 +495,7 @@ namespace Windows.Graphics.Display
     public static class DisplayInformationInterop
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.Graphics.Display.DisplayInformation.RuntimeClassName, global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDisplayInformationStaticsInterop);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Graphics.Display.DisplayInformation", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDisplayInformationStaticsInterop);
 #endif
 
         public static DisplayInformation GetForWindow(IntPtr window)
@@ -539,7 +539,7 @@ namespace Windows.ApplicationModel.DataTransfer
         }
 
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(ABI.Windows.ApplicationModel.DataTransfer.DataTransferManager.RuntimeClassName, IDataTransferManagerInteropMethods.IID);
+        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.ApplicationModel.DataTransfer.DataTransferManager", IDataTransferManagerInteropMethods.IID);
 #endif
 
         public static global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(global::System.IntPtr appWindow)
