@@ -14,6 +14,16 @@ steps:
       script: |
         Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0xC"
 
+  - task: UseDotNet@2
+    displayName: Use .NET Core SDK 10.0 x86
+    condition: eq(variables['BuildPlatform'], 'x86')
+    inputs:
+      packageType: sdk
+      version: 10.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
+    env:
+      PROCESSOR_ARCHITECTURE: x86
+
 # Run Unit Tests
   - task: DotNetCoreCLI@2
     displayName: Run Unit Tests
@@ -25,8 +35,6 @@ steps:
         /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
         --no-build
       testRunTitle: Unit Tests
-    env:
-      PROCESSOR_ARCHITECTURE: $(BuildPlatform)
 
 # Run Host Tests
   - task: CmdLine@2
