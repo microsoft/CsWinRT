@@ -151,20 +151,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Outputs="$(_CsWinRTGeneratorInteropAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
 
-    <ItemGroup>
-        <!--
-          Filter the reference assemblies to ones where the implementation
-          and reference assembly are different as is with our projection DLLs.
-          This also avoids passing the same DLLs in both such as with .NET Core
-          assemblies.
-         -->
-        <_ReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" />
-        <_ReferenceAssemblyPaths Remove="@(ReferencePath)" />
-    </ItemGroup>
-
     <!-- Invoke 'cswinrtinteropgen' -->
     <RunCsWinRTInteropGenerator
-      ReferenceAssemblyPaths="@(_ReferenceAssemblyPaths)"
+      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
       ImplementationAssemblyPaths="@(ReferencePath)"      
       OutputAssemblyPath="@(IntermediateAssembly)"
       WinRTProjectionAssemblyPath="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"

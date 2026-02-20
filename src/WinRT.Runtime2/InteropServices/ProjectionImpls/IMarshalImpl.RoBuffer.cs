@@ -2,37 +2,29 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
 
-/// <summary>
-/// The <c>IMarshal</c> implementation for managed types.
-/// </summary>
-/// <see href="https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-imarshal"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-public static unsafe partial class IMarshalImpl
+/// <inheritdoc cref="IMarshalImpl"/>
+public unsafe partial class IMarshalImpl
 {
     /// <summary>
-    /// Gets a pointer to the managed <c>IMarshal</c> implementation.
+    /// Gets a pointer to the managed <c>IMarshal</c> implementation using <see cref="RoBufferMarshaler"/>.
     /// </summary>
-    public static nint Vtable
+    internal static nint RoBufferVtable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (nint)Unsafe.AsPointer(in FreeThreadedMarshalImpl.Vftbl);
+        get => (nint)Unsafe.AsPointer(in RoBufferMarshalImpl.Vftbl);
     }
 }
 
 /// <summary>
-/// The <c>IMarshal</c> implementation using <see cref="FreeThreadedMarshaler"/>.
+/// The <c>IMarshal</c> implementation using <see cref="RoBufferMarshaler"/>.
 /// </summary>
-file static unsafe class FreeThreadedMarshalImpl
+file static unsafe class RoBufferMarshalImpl
 {
     /// <summary>
     /// The <see cref="IMarshalVftbl"/> value for the managed <c>IMarshal</c> implementation.
@@ -43,7 +35,7 @@ file static unsafe class FreeThreadedMarshalImpl
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static FreeThreadedMarshalImpl()
+    static RoBufferMarshalImpl()
     {
         *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
 
@@ -68,7 +60,7 @@ file static unsafe class FreeThreadedMarshalImpl
 
         try
         {
-            FreeThreadedMarshaler.InstanceForCurrentThread.GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid);
+            RoBufferMarshaler.InstanceForCurrentThread.GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -91,7 +83,7 @@ file static unsafe class FreeThreadedMarshalImpl
 
         try
         {
-            FreeThreadedMarshaler.InstanceForCurrentThread.GetMarshalSizeMax(riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
+            RoBufferMarshaler.InstanceForCurrentThread.GetMarshalSizeMax(riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -107,7 +99,7 @@ file static unsafe class FreeThreadedMarshalImpl
     {
         try
         {
-            FreeThreadedMarshaler.InstanceForCurrentThread.MarshalInterface(pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
+            RoBufferMarshaler.InstanceForCurrentThread.MarshalInterface(pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -130,7 +122,7 @@ file static unsafe class FreeThreadedMarshalImpl
 
         try
         {
-            FreeThreadedMarshaler.InstanceForCurrentThread.UnmarshalInterface(pStm, riid, ppv);
+            RoBufferMarshaler.InstanceForCurrentThread.UnmarshalInterface(pStm, riid, ppv);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -146,7 +138,7 @@ file static unsafe class FreeThreadedMarshalImpl
     {
         try
         {
-            FreeThreadedMarshaler.InstanceForCurrentThread.ReleaseMarshalData(pStm);
+            RoBufferMarshaler.InstanceForCurrentThread.ReleaseMarshalData(pStm);
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -162,7 +154,7 @@ file static unsafe class FreeThreadedMarshalImpl
     {
         try
         {
-            FreeThreadedMarshaler.InstanceForCurrentThread.DisconnectObject(dwReserved);
+            RoBufferMarshaler.InstanceForCurrentThread.DisconnectObject(dwReserved);
 
             return WellKnownErrorCodes.S_OK;
         }

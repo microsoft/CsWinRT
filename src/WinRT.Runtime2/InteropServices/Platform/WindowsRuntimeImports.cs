@@ -105,4 +105,8 @@ internal static unsafe partial class WindowsRuntimeImports
     /// <see href="https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-localfree"/>
     [LibraryImport("kernel32.dll")]
     public static partial void* LocalFree(void* hMem);
+
+    /// <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-rogetbuffermarshaler"/>
+    [LibraryImport("api-ms-win-core-winrt-robuffer-l1-1-0.dll")]
+    public static partial HRESULT RoGetBufferMarshaler(void** bufferMarshaler);
 }
