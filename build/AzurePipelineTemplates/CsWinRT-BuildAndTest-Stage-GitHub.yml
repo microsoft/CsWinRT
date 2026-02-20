@@ -157,7 +157,7 @@ stages:
       displayName: Publish UnitTests for AOT (net10.0)
       inputs:
         solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
-        msbuildArguments: /t:publish /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
+        msbuildArguments: /t:publish /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true,BuildToolArch=$(CsWinRTBuildToolsArch)
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 
