@@ -26,7 +26,7 @@ steps:
 
   - task: DotNetCoreCLI@2
     displayName: Run Unit Tests
-    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'))
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
     inputs:
       command: test
       projects: 'src/Tests/UnitTest/UnitTest.csproj'
