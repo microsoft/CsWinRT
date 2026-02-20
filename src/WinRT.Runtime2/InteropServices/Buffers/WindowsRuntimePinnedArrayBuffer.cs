@@ -113,4 +113,13 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => &((byte*)Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(_pinnedData)))[(uint)_offset];
     }
+
+    /// <summary>
+    /// Gets an <see cref="ArraySegment{T}"/> value for the underlying data in this buffer.
+    /// </summary>
+    /// <returns>The resulting <see cref="ArraySegment{T}"/> value.</returns>
+    internal ArraySegment<byte> GetArraySegment()
+    {
+        return new(_pinnedData, _offset, _length);
+    }
 }
