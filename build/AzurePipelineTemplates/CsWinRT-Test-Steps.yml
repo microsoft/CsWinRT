@@ -69,6 +69,13 @@ steps:
         dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin
         _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin\AuthoringWuxConsumptionTest.exe --gtest_output=xml:AUTHORINGWUXTEST-$(Build.BuildNumber).xml 
 
+  - task: UseDotNet@2
+    displayName: Use .NET Core SDK 10.0
+    inputs:
+      packageType: sdk
+      version: 10.x
+      installationPath: $(LocalAppData)\Microsoft\dotnet\
+
 # Run Functional Tests
   - template: CsWinRT-FunctionalTest-Steps.yml@self
     parameters:
