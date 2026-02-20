@@ -7,9 +7,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishAot>true</PublishAot>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <OptimizationPreference>Speed</OptimizationPreference>
-    <StackTraceSupport>false</StackTraceSupport>
 
     <!-- Common metadata properties for publishing -->
     <Description>C#/WinRT Impl Generator v$(VersionString)</Description>
@@ -27,7 +24,7 @@
     <!-- This project produces a CLI tool, so we want a nice short name for it -->
     <AssemblyName>cswinrtimplgen</AssemblyName>
       
-    <!-- Same settings as WinRT.Runtime -->
+    <!-- Same settings as 'WinRT.Runtime' -->
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
     <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
@@ -40,13 +37,17 @@
     <IsBuildTool>true</IsBuildTool>
     <RuntimeIdentifier Condition="'$(PublishBuildTool)' == 'true'">win-$(BuildToolArch)</RuntimeIdentifier>
     <SelfContained Condition="'$(PublishBuildTool)' == 'true'">true</SelfContained>
+  </PropertyGroup>
 
-    <!--
-      Workaround for: "CSC(0,0): Error AD0001: Analyzer 'ILLink.RoslynAnalyzer.DynamicallyAccessedMembersAnalyzer' threw
-      an exception of type 'System.InvalidCastException' with message 'Unable to cast object of type
-      'Microsoft.CodeAnalysis.CSharp.Symbols.PublicModel.NonErrorNamedTypeSymbol' to type 'Microsoft.CodeAnalysis.IMethodSymbol'.'.".
-    -->
-    <NoWarn>$(NoWarn);AD0001</NoWarn>
+  <!-- NativeAOT and optimization options (same as 'WinRT.Interop.Generator') -->
+  <PropertyGroup>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <OptimizationPreference>Speed</OptimizationPreference>
+    <StackTraceSupport Condition="'$(Configuration)' == 'Release'">false</StackTraceSupport>
+    <UseSystemResourceKeys Condition="'$(Configuration)' == 'Release'">true</UseSystemResourceKeys>
+    <ControlFlowGuard>Guard</ControlFlowGuard>
+    <IlcDehydrate>false</IlcDehydrate>
+    <IlcResilient>false</IlcResilient>
   </PropertyGroup>
 
   <ItemGroup>

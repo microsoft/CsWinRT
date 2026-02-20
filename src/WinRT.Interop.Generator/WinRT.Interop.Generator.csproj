@@ -7,9 +7,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishAot>true</PublishAot>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <OptimizationPreference>Speed</OptimizationPreference>
-    <StackTraceSupport>false</StackTraceSupport>
 
     <!-- Common metadata properties for publishing -->
     <Description>C#/WinRT Interop Generator v$(VersionString)</Description>
@@ -27,7 +24,7 @@
     <!-- This project produces a CLI tool, so we want a nice short name for it -->
     <AssemblyName>cswinrtinteropgen</AssemblyName>
       
-    <!-- Same settings as WinRT.Runtime -->
+    <!-- Same settings as 'WinRT.Runtime' -->
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
     <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
@@ -40,6 +37,43 @@
     <IsBuildTool>true</IsBuildTool>
     <RuntimeIdentifier Condition="'$(PublishBuildTool)' == 'true'">win-$(BuildToolArch)</RuntimeIdentifier>
     <SelfContained Condition="'$(PublishBuildTool)' == 'true'">true</SelfContained>
+  </PropertyGroup>
+
+  <!-- NativeAOT and optimization options -->
+  <PropertyGroup>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <OptimizationPreference>Speed</OptimizationPreference>
+    <StackTraceSupport Condition="'$(Configuration)' == 'Release'">false</StackTraceSupport>
+    <UseSystemResourceKeys Condition="'$(Configuration)' == 'Release'">true</UseSystemResourceKeys>
+
+    <!--
+      Enable CFG (Control Flow Guard), to make the resulting native binary more resilient to some exploit types.
+      Also see: https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/security#control-flow-guard.
+      And: https://learn.microsoft.com/en-us/windows/win32/secbp/control-flow-guard#how-does-cfg-really-work.
+    -->
+    <ControlFlowGuard>Guard</ControlFlowGuard>
+
+    <!--
+      "It disables data dehydration. This is something we primarily added for linux because our data structures have lots of pointers in them
+      (e.g. vtables point to the method bodies) and on linux each such pointers costs 24 bytes of bookkeeping in the linux exe file format.
+      So this generates data structures in a dehydrated form on disk to avoid the penalty. The executables get smaller (much smaller on linux),
+      but we need to rehydrate them when the process starts.
+      [...]
+      Rehydrated data affects the size of private working set.
+      [...]
+      Setting IlcDehydrate=false might reduce private working set by about 30 MB."
+      (suggested by Michal Strehovsky, @michals, Native AOT lead)
+
+      In local testing, this results in a small launch performance improvement, and a small memory use reduction as well.
+    -->
+    <IlcDehydrate>false</IlcDehydrate>
+
+    <!--
+      By default, NativeAOT will ignore issues where assemblies fail to be resolved (eg. due to incorrect package authoring).
+      For any references to them, it will silently replace them with throwing stubs instead, without emitting any warnings.
+      Disabling this property changes this behavior and ensures publish builds will fail instead if this case is hit.
+    -->
+    <IlcResilient>false</IlcResilient>
   </PropertyGroup>
 
   <ItemGroup>
