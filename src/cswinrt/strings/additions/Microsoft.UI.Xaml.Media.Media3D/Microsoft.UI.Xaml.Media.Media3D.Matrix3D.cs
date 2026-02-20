@@ -8,7 +8,6 @@ namespace Microsoft.UI.Xaml.Media.Media3D
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Media.Media3D.Matrix3D>")]
     [ABI.Microsoft.UI.Xaml.Media.Media3D.Matrix3DComWrappersMarshaller]
 #endif
-    [StructLayout(LayoutKind.Sequential)]
     public struct Matrix3D : IFormattable, IEquatable<Matrix3D>
     {
         // Assuming this matrix has fourth column of 0,0,0,1 and isn't identity this function:

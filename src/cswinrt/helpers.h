@@ -842,6 +842,7 @@ namespace cswinrt
                     { "IAsyncOperationWithProgress`2", "Windows.Foundation", "IAsyncOperationWithProgress`2" },
                     { "IAsyncOperation`1", "Windows.Foundation", "IAsyncOperation`1" },
                     { "IClosable", "System", "IDisposable", true, true },
+                    { "IMemoryBufferReference", "Windows.Foundation", "IMemoryBufferReference" },
                     { "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
                     { "IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true },
                     { "IReference`1", "System", "Nullable`1", true },

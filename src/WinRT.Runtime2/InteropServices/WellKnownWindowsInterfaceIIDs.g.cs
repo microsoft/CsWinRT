@@ -285,6 +285,31 @@ internal static class WellKnownWindowsInterfaceIIDs
         }
     }
 
+    /// <summary>The IID for <c>IMemoryBufferReference</c> (FBC4DD29-245B-11E4-AF98-689423260CF8).</summary>
+    public static ref readonly Guid IID_IMemoryBufferReference
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x29, 0xDD, 0xC4, 0xFB,
+                0x5B, 0x24,
+                0xE4, 0x11,
+                0xAF,
+                0x98,
+                0x68,
+                0x94,
+                0x23,
+                0x26,
+                0x0C,
+                0xF8
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
     /// <summary>The IID for <c>IMemoryBufferByteAccess</c> (5B0D3235-4DBA-4D44-865E-8F1D0E4FD04D).</summary>
     public static ref readonly Guid IID_IMemoryBufferByteAccess
     {

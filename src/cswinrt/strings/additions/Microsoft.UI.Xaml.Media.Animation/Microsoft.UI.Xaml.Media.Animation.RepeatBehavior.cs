@@ -8,7 +8,6 @@ namespace Microsoft.UI.Xaml.Media.Animation
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Media.Animation.RepeatBehavior>")]
     [ABI.Microsoft.UI.Xaml.Media.Animation.RepeatBehaviorComWrappersMarshaller]
 #endif
-    [StructLayout(LayoutKind.Sequential)]
     public struct RepeatBehavior : IFormattable, IEquatable<RepeatBehavior>
     {
         internal static bool IsFinite(double value)

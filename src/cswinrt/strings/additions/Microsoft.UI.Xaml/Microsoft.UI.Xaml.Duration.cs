@@ -8,7 +8,6 @@ namespace Microsoft.UI.Xaml
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Duration>")]
     [ABI.Microsoft.UI.Xaml.DurationComWrappersMarshaller]
 #endif
-    [StructLayout(LayoutKind.Sequential)]
     public readonly struct Duration : IEquatable<Duration>
     {
         private readonly TimeSpan _timeSpan;
