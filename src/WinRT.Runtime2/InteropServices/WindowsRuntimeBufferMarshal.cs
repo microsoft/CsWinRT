@@ -51,7 +51,7 @@ public static partial class WindowsRuntimeBufferMarshal
         // Also handle a managed instance of the pinned array buffer type from 'WinRT.Runtime.dll'
         if (buffer is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
         {
-            data = pinnedArrayBuffer.Buffer;
+            data = pinnedArrayBuffer.Buffer();
 
             return true;
         }

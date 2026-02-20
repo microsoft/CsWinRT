@@ -145,7 +145,7 @@ file static unsafe class WindowsRuntimePinnedArrayBufferByteAccessImpl
         {
             var thisObject = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.InteropServices.WindowsRuntimePinnedArrayBuffer>((ComInterfaceDispatch*)thisPtr);
 
-            *value = thisObject.Buffer;
+            *value = thisObject.Buffer();
 
             return WellKnownErrorCodes.S_OK;
         }

@@ -98,8 +98,6 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
                 throw ex;
             }
 
-            // Capacity is ensured to not exceed Int32.MaxValue, so Length is within this limit and this cast is safe:
-            Debug.Assert(Capacity <= int.MaxValue);
             _length = unchecked((int)value);
         }
     }
@@ -107,18 +105,19 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
     /// <summary>
     /// Gets the array of bytes in the buffer.
     /// </summary>
+    /// <returns>The byte array.</returns>
     /// <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"/>
-    internal unsafe byte* Buffer
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe byte* Buffer()
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => &((byte*)Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(_pinnedData)))[(uint)_offset];
+        return &((byte*)Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(_pinnedData)))[(uint)_offset];
     }
 
     /// <summary>
     /// Gets an <see cref="ArraySegment{T}"/> value for the underlying data in this buffer.
     /// </summary>
     /// <returns>The resulting <see cref="ArraySegment{T}"/> value.</returns>
-    internal ArraySegment<byte> GetArraySegment()
+    public ArraySegment<byte> GetArraySegment()
     {
         return new(_pinnedData, _offset, _length);
     }
