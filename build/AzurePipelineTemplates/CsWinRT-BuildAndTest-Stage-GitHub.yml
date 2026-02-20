@@ -82,6 +82,11 @@ stages:
   - job: Tests
     displayName: Run Tests
     dependsOn: []
+    pool:
+      type: windows
+      isCustom: true
+      name: 'Azure Pipelines'
+      vmImage: 'windows-2022'
     timeoutInMinutes: 120
     strategy:
       matrix:
