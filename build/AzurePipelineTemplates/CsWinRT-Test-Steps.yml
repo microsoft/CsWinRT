@@ -86,6 +86,48 @@ steps:
       version: 10.x
       installationPath: $(LocalAppData)\Microsoft\dotnet\
 
+  - task: MSBuild@1
+    displayName: Restore cswinrt.slnx 
+    condition: and(succeeded(), or(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
+      msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),RestorePackagesConfig=true,TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+  
+  - task: MSBuild@1
+    displayName: Restore WinRT.Generator.Tasks.csproj
+    condition: and(succeeded(), or(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj
+      msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=netstandard2.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+  
+  - task: MSBuild@1
+    displayName: Publish UnitTests for AOT (net10.0)
+    condition: and(succeeded(), or(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
+      msbuildArguments: /t:publish /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true,BuildToolArch=$(CsWinRTBuildToolsArch)
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+
+  - task: CmdLine@2
+    displayName: Run UnitTest for AOT (net10.0)
+    continueOnError: True
+    condition: and(succeeded(), or(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+      script: |
+        dir
+        echo Running UnitTest.exe 
+        UnitTest.exe 
+        if %Errorlevel% NEQ 100 (
+          exit /b !ErrorLevel!
+        )
+        exit /b 0 
+
 # Run Functional Tests
   - template: CsWinRT-FunctionalTest-Steps.yml@self
     parameters:
