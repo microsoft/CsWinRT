@@ -8,7 +8,6 @@ namespace Windows.UI.Xaml
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.CornerRadius>")]
     [ABI.Windows.UI.Xaml.CornerRadiusComWrappersMarshaller]
 #endif
-    [StructLayout(LayoutKind.Sequential)]
     public struct CornerRadius : IEquatable<CornerRadius>
     {
         private double _TopLeft;

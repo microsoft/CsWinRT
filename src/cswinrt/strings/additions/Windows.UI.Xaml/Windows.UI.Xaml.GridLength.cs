@@ -8,7 +8,6 @@ namespace Windows.UI.Xaml
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.GridLength>")]
     [ABI.Windows.UI.Xaml.GridLengthComWrappersMarshaller]
 #endif
-    [StructLayout(LayoutKind.Sequential)]
     public readonly struct GridLength : IEquatable<GridLength>
     {
         private readonly double _unitValue;
