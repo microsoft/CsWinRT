@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.ComponentModel;
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -15,6 +18,10 @@ namespace WindowsRuntime.InteropServices;
 /// The <typeparamref name="T"/> type must refer to a projected Windows Runtime interface.
 /// </para>
 /// </remarks>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public interface IWindowsRuntimeInterface<T>
     where T : class
 {
