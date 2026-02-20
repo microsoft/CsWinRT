@@ -34,17 +34,7 @@ steps:
       arguments: >
         /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
         --no-build
-        --report-trx
       testRunTitle: Unit Tests
-
-  - task: PublishTestResults@2
-    displayName: 'Publish test results'
-    inputs:
-      testResultsFormat: 'VSTest'
-      testResultsFiles: '**/*.trx'
-      mergeTestResults: true
-      failTaskOnFailedTests: true
-    condition: succeededOrFailed()
 
 # Run Host Tests
   - task: CmdLine@2
