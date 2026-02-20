@@ -48,7 +48,15 @@ public static partial class WindowsRuntimeBufferMarshal
             return true;
         }
 
-        // Also handle a managed instance of the pinned array buffer type from 'WinRT.Runtime.dll'
+        // Also handle a managed instance of the external array buffer type from 'WinRT.Runtime.dll'
+        if (buffer is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
+        {
+            data = externalArrayBuffer.Buffer();
+
+            return true;
+        }
+
+        // Same as above, but for pinned array buffers as well
         if (buffer is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
         {
             data = pinnedArrayBuffer.Buffer();
@@ -119,6 +127,14 @@ public static partial class WindowsRuntimeBufferMarshal
         }
 
         // If buffer is backed by a managed array, return it
+        if (buffer is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
+        {
+            array = externalArrayBuffer.GetArraySegment();
+
+            return true;
+        }
+
+        // Same as above for pinned arrays as well
         if (buffer is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
         {
             array = pinnedArrayBuffer.GetArraySegment();
