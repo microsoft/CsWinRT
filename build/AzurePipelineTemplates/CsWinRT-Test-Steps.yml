@@ -21,7 +21,7 @@ steps:
     inputs:
       command: test
       projects: 'src/Tests/UnitTest/UnitTest.csproj'
-      arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
+      arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --report-trx --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
       testRunTitle: Unit Tests
 
   - task: DotNetCoreCLI@2
@@ -30,7 +30,7 @@ steps:
     inputs:
       command: test
       projects: 'src/Tests/UnitTest/UnitTest.csproj'
-      arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
+      arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --report-trx --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
       testRunTitle: Unit Tests
     env:
       PROCESSOR_ARCHITECTURE: x86
