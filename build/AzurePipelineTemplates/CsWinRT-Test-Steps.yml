@@ -35,6 +35,15 @@ steps:
     env:
       PROCESSOR_ARCHITECTURE: x86
 
+  - task: PublishTestResults@2
+    displayName: 'Publish test results'
+    inputs:
+      testResultsFormat: 'VSTest'
+      testResultsFiles: '**/*.trx'
+      mergeTestResults: true
+      failTaskOnFailedTests: true
+    condition: succeededOrFailed()
+
 # Run Host Tests
   - task: CmdLine@2
     displayName: Run Host Tests
