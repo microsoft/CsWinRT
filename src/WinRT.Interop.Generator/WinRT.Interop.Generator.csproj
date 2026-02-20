@@ -70,9 +70,8 @@
 
     <!--
       By default, NativeAOT will ignore issues where assemblies fail to be resolved (eg. due to incorrect package authoring).
-      For any references to them, it will silently replace them with throwing stubs instead. For instance, #11933870 fixed
-      an issue where an incorrect package reference to CsWinRT was causing the entire app to crash at startup on NativeAOT.
-      However, ILC produced no warnings by default. Disabling this properly ensures publish builds will fail instead.
+      For any references to them, it will silently replace them with throwing stubs instead, without emitting any warnings.
+      Disabling this property changes this behavior and ensures publish builds will fail instead if this case is hit.
     -->
     <IlcResilient>false</IlcResilient>
   </PropertyGroup>
