@@ -33,7 +33,7 @@ extends:
     featureFlags:
       autoBaseline: false
     settings:
-      networkIsolationPolicy: NuGet
+      networkIsolationPolicy: Permissive,CFSClean,NuGet
     stages:
     - template: CsWinRT-BuildAndTest-Stage-GitHub.yml@self 
     - template: CsWinRT-PublishToNuGet-Stage-GitHub.yml@self
