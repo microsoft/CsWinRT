@@ -160,9 +160,6 @@
     <None Include="strings\ComInteropHelpers.cs">
       <Filter>strings</Filter>
     </None>
-    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferMarshal.cs">
-      <Filter>strings\additions\Windows.Storage.Streams</Filter>
-    </None>
     <None Include="strings\additions\Windows.UI.Xaml.Controls.Primitives\Windows.UI.Xaml.Controls.Primitives.GeneratorPosition.cs">
       <Filter>strings\additions\Windows.UI.Xaml.Controls.Primitives</Filter>
     </None>
