@@ -107,6 +107,14 @@ stages:
       BuildPlatform: 'x64' 
       BuildConfiguration: 'release'
     steps:
+    - checkout: self
+      clean: true
+      persistCredentials: true
+      path: 's'
+    - checkout: TestWinRT
+      path: 's\src\TestWinRT'
+      displayName: "Checkout TestWinRT"
+
     - task: MSBuild@1
       displayName: Restore WinRT.Generator.Tasks.csproj
       inputs:
