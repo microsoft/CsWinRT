@@ -32,7 +32,8 @@ extends:
         - repository: TestWinRT
     featureFlags:
       autoBaseline: false
-      disableNetworkIsolation: true
+    settings:
+      networkIsolationPolicy: NuGet
     stages:
     - template: CsWinRT-BuildAndTest-Stage-GitHub.yml@self 
     - template: CsWinRT-PublishToNuGet-Stage-GitHub.yml@self
