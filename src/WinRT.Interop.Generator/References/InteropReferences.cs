@@ -1490,6 +1490,11 @@ internal sealed class InteropReferences
     public TypeReference AsyncOperationWithProgressCompletedHandler2 => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "AsyncOperationWithProgressCompletedHandler`2"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.IMemoryBufferReference</c>.
+    /// </summary>
+    public TypeReference IMemoryBufferReference => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "IMemoryBufferReference"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Storage.Streams.IBuffer</c>.
     /// </summary>
     public TypeReference IBuffer => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Storage.Streams"u8, "IBuffer"u8);
