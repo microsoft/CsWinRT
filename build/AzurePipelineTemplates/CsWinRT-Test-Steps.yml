@@ -21,7 +21,9 @@ steps:
     inputs:
       command: test
       projects: 'src/Tests/UnitTest/UnitTest.csproj'
-      arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
       testRunTitle: Unit Tests
     env:
       PROCESSOR_ARCHITECTURE: $(BuildPlatform)
