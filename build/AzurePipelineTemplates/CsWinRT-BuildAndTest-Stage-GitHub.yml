@@ -124,17 +124,17 @@ stages:
         configuration: $(BuildConfiguration)
       
     - task: MSBuild@1
-      displayName: Restore UnitTest
+      displayName: Restore cswinrt.slnx 
       inputs:
-        solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
+        solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
         msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
     
     - task: MSBuild@1
-      displayName: Publish cswinrt.slnx for AOT (net10.0)
+      displayName: Publish UnitTests for AOT (net10.0)
       inputs:
-        solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
+        solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
         msbuildArguments: /t:publish /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
