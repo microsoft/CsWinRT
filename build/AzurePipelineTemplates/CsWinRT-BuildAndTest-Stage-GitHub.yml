@@ -49,8 +49,6 @@ stages:
 # Run Functional Tests
     - template: CsWinRT-FunctionalTest-Steps.yml@self
       parameters:
-        BuildConfiguration: $(BuildConfiguration)
-        BuildPlatform: $(BuildPlatform) 
         FunctionalTests:
         - JsonValueFunctionCalls
         - ClassActivation
@@ -64,9 +62,6 @@ stages:
         - TypeMarshaling
 
     - template: CsWinRT-Test-Steps.yml@self
-      parameters:
-        BuildConfiguration: $(BuildConfiguration)
-        BuildPlatform: $(BuildPlatform) 
 
     templateContext:
       outputs:
