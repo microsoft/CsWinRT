@@ -10,7 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// The <see cref="DispatcherQueueSynchronizationContext"/> type allows developers to await calls and get back onto
 /// the UI thread. It needs to be installed on the UI thread through <see cref="SynchronizationContext.SetSynchronizationContext"/>
-/// invoked on a wrapping <see cref="SynchronizationContext"/> managed object (which is generated in the a projection .dll).
+/// invoked on a wrapping <see cref="SynchronizationContext"/> managed object (which is generated in a projection .dll).
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
@@ -83,7 +83,7 @@ public readonly struct DispatcherQueueSynchronizationContext
         }
         finally
         {
-            // This call doesn not have a corresponding AddRef() invocation that is visible, and
+            // This call does not have a corresponding AddRef() invocation that is visible, and
             // that is because the static constructors for all existing custom handlers already
             // set the internal reference count to 1. Releasing the ref count here ensures the
             // object is always freed regardless of whether the dispatching was successful. If it

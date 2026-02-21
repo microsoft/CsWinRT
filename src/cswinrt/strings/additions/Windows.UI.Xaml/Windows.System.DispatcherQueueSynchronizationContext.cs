@@ -41,7 +41,7 @@ namespace Windows.System
         /// <inheritdoc/>
         public override void Send(global::System.Threading.SendOrPostCallback d, object? state)
         {
-            _innerContext._Send(d, state);
+            _innerContext.Send(d, state);
         }
 
         /// <inheritdoc/>
