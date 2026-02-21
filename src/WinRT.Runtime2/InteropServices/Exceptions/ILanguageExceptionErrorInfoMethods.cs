@@ -37,7 +37,7 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
         if (IUnknownVftbl.QueryInterfaceUnsafe(
             thisPtr: thisPtr,
             iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
-            pvObject: out void* languageErrorInfo2Ptr).Failed())
+            pvObject: out void* languageErrorInfo2Ptr).Failed)
         {
             exception = null;
 
@@ -47,7 +47,7 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
         void* currentLanguageExceptionErrorInfo2Ptr;
 
         // If we can't get the propagation context head, stop immediately
-        if (ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe(languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr).Failed())
+        if (ILanguageExceptionErrorInfo2Vftbl.GetPropagationContextHeadUnsafe(languageErrorInfo2Ptr, &currentLanguageExceptionErrorInfo2Ptr).Failed)
         {
             exception = null;
 
@@ -73,7 +73,7 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
                 // Try to get the previous language exception in the propagation chain
                 if (ILanguageExceptionErrorInfo2Vftbl.GetPreviousLanguageExceptionErrorInfoUnsafe(
                     thisPtr: currentLanguageExceptionErrorInfo2Ptr,
-                    previousLanguageExceptionErrorInfo: &previousLanguageExceptionErrorInfo2Ptr).Failed())
+                    previousLanguageExceptionErrorInfo: &previousLanguageExceptionErrorInfo2Ptr).Failed)
                 {
                     exception = null;
 
@@ -111,7 +111,7 @@ internal static unsafe class ILanguageExceptionErrorInfoMethods
         void* languageExceptionPtr;
 
         // If we fail to get the original language exception, stop here
-        if (ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(thisPtr, &languageExceptionPtr).Failed())
+        if (ILanguageExceptionErrorInfoVftbl.GetLanguageExceptionUnsafe(thisPtr, &languageExceptionPtr).Failed)
         {
             exception = null;
 

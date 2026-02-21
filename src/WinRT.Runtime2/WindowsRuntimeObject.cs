@@ -809,7 +809,7 @@ public abstract unsafe class WindowsRuntimeObject :
             // If the 'QueryInterface' call failed, we know the interface can't possibly be implemented.
             // Because the actual 'QueryInterface' failed, we also know there would be no point for the
             // rest of the 'IDynamicInterfaceCastable' logic to run, as the cast can never succeed.
-            if (hresult.Failed())
+            if (hresult.Failed)
             {
                 // Throw only if requested by callers
                 if (throwOnQueryInterfaceFailure)

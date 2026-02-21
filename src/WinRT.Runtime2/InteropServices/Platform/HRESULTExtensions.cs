@@ -10,37 +10,36 @@ using WindowsRuntime.InteropServices;
 /// </summary>
 internal static class HRESULTExtensions
 {
-    /// <summary>
-    /// Throws an exception if <paramref name="hresult"/> represents an error.
-    /// </summary>
     /// <param name="hresult">The input <see cref="HRESULT"/> to check.</param>
-    /// <exception cref="System.Exception">Thrown if <paramref name="hresult"/> represents an error.</exception>
-    /// <remarks>This method directly wraps <see cref="Marshal.ThrowExceptionForHR(int)"/>.</remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Assert(this HRESULT hresult)
+    extension(HRESULT hresult)
     {
-        Marshal.ThrowExceptionForHR(hresult);
-    }
+        /// <summary>
+        /// Checks whether a given <c>HRESULT</c> represents a success code.
+        /// </summary>
+        public bool Succeeded
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => hresult >= WellKnownErrorCodes.S_OK;
+        }
 
-    /// <summary>
-    /// Checks whether a given <c>HRESULT</c> represents a success code.
-    /// </summary>
-    /// <param name="hresult">The <c>HRESULT</c> to check.</param>
-    /// <returns>Whether <paramref name="hresult"/> represents a success code.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Succeeded(this HRESULT hresult)
-    {
-        return hresult >= WellKnownErrorCodes.S_OK;
-    }
+        /// <summary>
+        /// Checks whether a given <c>HRESULT</c> represents a failure code.
+        /// </summary>
+        public bool Failed
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => hresult < WellKnownErrorCodes.S_OK;
+        }
 
-    /// <summary>
-    /// Checks whether a given <c>HRESULT</c> represents a failure code.
-    /// </summary>
-    /// <param name="hresult">The <c>HRESULT</c> to check.</param>
-    /// <returns>Whether <paramref name="hresult"/> represents a failure code.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Failed(this HRESULT hresult)
-    {
-        return hresult < WellKnownErrorCodes.S_OK;
+        /// <summary>
+        /// Throws an exception if <paramref name="hresult"/> represents an error.
+        /// </summary>
+        /// <exception cref="System.Exception">Thrown if <paramref name="hresult"/> represents an error.</exception>
+        /// <remarks>This method directly wraps <see cref="Marshal.ThrowExceptionForHR(int)"/>.</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Assert()
+        {
+            Marshal.ThrowExceptionForHR(hresult);
+        }
     }
 }
