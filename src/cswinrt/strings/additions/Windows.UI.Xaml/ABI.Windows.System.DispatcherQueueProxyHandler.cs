@@ -5,6 +5,17 @@
 namespace ABI.Windows.System
 {
     /// <summary>
+    /// Binding type for <see cref="DispatcherQueueProxyHandler"/>.
+    /// </summary>
+    internal unsafe struct DispatcherQueueProxyHandlerVftbl
+    {
+        public delegate* unmanaged<DispatcherQueueProxyHandler*, Guid*, void**, int> QueryInterface;
+        public delegate* unmanaged<DispatcherQueueProxyHandler*, uint> AddRef;
+        public delegate* unmanaged<DispatcherQueueProxyHandler*, uint> Release;
+        public delegate* unmanaged<DispatcherQueueProxyHandler*, int> Invoke;
+    }
+
+    /// <summary>
     /// A custom <c>IDispatcherQueueHandler</c> object, that internally stores a captured <see cref="SendOrPostCallback"/> instance and the
     /// input captured state. This allows consumers to enqueue a state and a cached stateless delegate without any managed allocations.
     /// </summary>
@@ -13,33 +24,33 @@ namespace ABI.Windows.System
         /// <summary>
         /// The shared vtable pointer for <see cref="DispatcherQueueProxyHandler"/> instances.
         /// </summary>
-        private static readonly void** Vtbl = InitVtbl();
+        [FixedAddressValueType]
+        private static readonly DispatcherQueueProxyHandlerVftbl Vftbl;
 
         /// <summary>
-        /// Setups the vtable pointer for <see cref="DispatcherQueueProxyHandler"/>.
+        /// Initializes <see cref="Vftbl"/>.
         /// </summary>
-        /// <returns>The initialized vtable pointer for <see cref="DispatcherQueueProxyHandler"/>.</returns>
-        /// <remarks>
-        /// The vtable itself is allocated with <see cref="RuntimeHelpers.AllocateTypeAssociatedMemory(Type, int)"/>,
-        /// which allocates memory in the high frequency heap associated with the input runtime type. This will be
-        /// automatically cleaned up when the type is unloaded, so there is no need to ever manually free this memory.
-        /// </remarks>
-        private static void** InitVtbl()
+        static DispatcherQueueProxyHandler()
         {
-            void** vtbl = (void**)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(DispatcherQueueProxyHandler), sizeof(void*) * 4);
+            Vftbl.QueryInterface = &Impl.QueryInterface;
+            Vftbl.AddRef = &Impl.AddRef;
+            Vftbl.Release = &Impl.Release;
+            Vftbl.Invoke = &Impl.Invoke;
+        }
 
-            vtbl[0] = (delegate* unmanaged<DispatcherQueueProxyHandler*, Guid*, void**, int>)&Impl.QueryInterface;
-            vtbl[1] = (delegate* unmanaged<DispatcherQueueProxyHandler*, uint>)&Impl.AddRef;
-            vtbl[2] = (delegate* unmanaged<DispatcherQueueProxyHandler*, uint>)&Impl.Release;
-            vtbl[3] = (delegate* unmanaged<DispatcherQueueProxyHandler*, int>)&Impl.Invoke;
-
-            return vtbl;
+        /// <summary>
+        /// Gets a pointer to the managed <see cref="DispatcherQueueProxyHandler"/> implementation.
+        /// </summary>
+        public static nint Vtable
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (nint)Unsafe.AsPointer(in Vftbl);
         }
 
         /// <summary>
         /// The vtable pointer for the current instance.
         /// </summary>
-        private void** vtbl;
+        private nint vtbl;
 
         /// <summary>
         /// The <see cref="GCHandle"/> to the captured <see cref="global::System.Threading.SendOrPostCallback"/>.
@@ -66,7 +77,7 @@ namespace ABI.Windows.System
         {
             DispatcherQueueProxyHandler* @this = (DispatcherQueueProxyHandler*)NativeMemory.Alloc((nuint)sizeof(DispatcherQueueProxyHandler));
 
-            @this->vtbl = Vtbl;
+            @this->vtbl = Vtable;
             @this->callbackHandle = GCHandle.Alloc(handler);
             @this->stateHandle = state is not null ? GCHandle.Alloc(state) : default;
             @this->referenceCount = 1;
@@ -81,7 +92,7 @@ namespace ABI.Windows.System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public uint Release()
         {
-            uint referenceCount = Interlocked.Decrement(ref this.referenceCount);
+            uint referenceCount = global::System.Threading.Interlocked.Decrement(ref this.referenceCount);
 
             if (referenceCount == 0)
             {
@@ -149,7 +160,7 @@ namespace ABI.Windows.System
                     riid->Equals(WellKnownInterfaceIIDs.IID_IAgileObject) ||
                     riid->Equals(IID_IDispatcherQueueHandler))
                 {
-                    Interlocked.Increment(ref @this->referenceCount);
+                    global::System.Threading.Interlocked.Increment(ref @this->referenceCount);
 
                     *ppvObject = @this;
 
@@ -165,7 +176,7 @@ namespace ABI.Windows.System
             [UnmanagedCallersOnly]
             public static uint AddRef(DispatcherQueueProxyHandler* @this)
             {
-                return Interlocked.Increment(ref @this->referenceCount);
+                return global::System.Threading.Interlocked.Increment(ref @this->referenceCount);
             }
 
             /// <summary>
@@ -174,7 +185,7 @@ namespace ABI.Windows.System
             [UnmanagedCallersOnly]
             public static uint Release(DispatcherQueueProxyHandler* @this)
             {
-                uint referenceCount = Interlocked.Decrement(ref @this->referenceCount);
+                uint referenceCount = global::System.Threading.Interlocked.Decrement(ref @this->referenceCount);
 
                 if (referenceCount == 0)
                 {
