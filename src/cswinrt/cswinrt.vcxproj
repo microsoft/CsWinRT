@@ -86,7 +86,6 @@
     <None Include="strings\additions\Windows.Storage.Streams\StreamOperationsImplementation.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBuffer.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferExtensions.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferMarshal.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeStreamExtensions.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WinRtIOHelper.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WinRtToNetFxStreamAdapter.cs" />

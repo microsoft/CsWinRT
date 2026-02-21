@@ -8,7 +8,6 @@ namespace Windows.UI.Xaml.Media.Animation
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.Media.Animation.KeyTime>")]
     [ABI.Windows.UI.Xaml.Media.Animation.KeyTimeComWrappersMarshaller]
 #endif
-    [StructLayout(LayoutKind.Sequential)]
     public readonly struct KeyTime : IEquatable<KeyTime>
     {
         public static KeyTime FromTimeSpan(TimeSpan timeSpan)
