@@ -595,7 +595,8 @@ public abstract unsafe class WindowsRuntimeObject :
         // for a 'WeakReference' object. Lastly, we also need to not handle this 'QueryInterface' request when
         // 'NativeObjectReference' is 'null', which will be the case during initialization (because objects are
         // constructed entirely from this base 'WindowsRuntimeObject' type). In that case, 'QueryInterface' calls
-        // will be coming from the outer instance to the inner one, and they wouldn't need to be handled anyway.
+        // will be coming for the outer instance from the inner one, where the outer calls 'GetInterface' first,
+        // and they wouldn't need to be handled anyway.
         if (IsOverridableInterface(in iid) ||
             WellKnownWindowsInterfaceIIDs.IID_IInspectable == iid ||
             WellKnownWindowsInterfaceIIDs.IID_IWeakReference == iid ||
