@@ -32,7 +32,7 @@ internal static unsafe class DispatcherQueueProxyHandlerImpl
     }
 
     /// <summary>
-    /// Gets a pointer to the <see cref="WindowsRuntimePinnedArrayBuffer"/> implementation.
+    /// Gets a pointer to the <see cref="DispatcherQueueProxyHandler"/> implementation.
     /// </summary>
     public static nint Vtable
     {
