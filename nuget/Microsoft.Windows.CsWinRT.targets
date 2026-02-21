@@ -39,8 +39,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       target, because they are also needed in authoring scenarios (which will not run that target).
     -->
     <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">net8.0</CsWinRTExeTFM>
-    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
-    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(EffectiveTargetPlatformVersion)</CsWinRTWindowsMetadata>
 
     <!--
       Default to using the environment tools if in a Visual Studio Developer Command Prompt (or PowerShell).
@@ -183,6 +181,18 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
+  <Target Name="CsWinRTResolveWindowsMetadata" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences" Condition="'$(CsWinRTWindowsMetadata)' == ''">
+      <!-- From the Windows SDK projection binary referenced, determine the folder with the WinMDs in the targeting pack. -->
+      <ItemGroup>
+        <_WindowsSdkProjectionFolder Include="@(ReferencePath->'%(RootDir)%(Directory)..\..\winmd\')" Condition="'%(ReferencePath.FileName)%(ReferencePath.Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
+      </ItemGroup>
+      <PropertyGroup>
+        <CsWinRTWindowsMetadata>@(_WindowsSdkProjectionFolder)</CsWinRTWindowsMetadata>
+        <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
+        <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(EffectiveTargetPlatformVersion)</CsWinRTWindowsMetadata>
+      </PropertyGroup>
+  </Target>
+
   <Target Name="CsWinRTPrepareProjection" DependsOnTargets="$(CsWinRTPrepareProjectionDependsOn)" Outputs="$(CsWinRTGeneratedFilesDir)">
     <PropertyGroup>
       <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == '' and '$(GeneratedFilesDir)' != ''">$(GeneratedFilesDir)\CsWinRT\</CsWinRTGeneratedFilesDir>
@@ -196,7 +206,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <Target Name="CsWinRTGenerateProjection"
-          DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences"
+          DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences;CsWinRTResolveWindowsMetadata"
           Condition="'$(CsWinRTGenerateProjection)' == 'true'"
           Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExe)"
           Outputs="$(CsWinRTGeneratedFilesDir)cswinrt.rsp">
