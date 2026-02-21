@@ -91,8 +91,6 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
         {
             ArgumentOutOfRangeException.ThrowIfBufferLengthExceedsCapacity(value, Capacity);
 
-            // Capacity is ensured to not exceed Int32.MaxValue, so Length is within this limit and this cast is safe:
-            Debug.Assert(Capacity <= int.MaxValue);
             _length = unchecked((int)value);
         }
     }

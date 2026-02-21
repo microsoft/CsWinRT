@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using WindowsRuntime.InteropServices;
 
 namespace Windows.Foundation;
 
@@ -24,16 +25,16 @@ internal static class WindowsRuntimeExceptionExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ThrowIfTaskProviderReturnedNull([NotNull] Task? task)
         {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNullReferenceException()
+                => throw new NullReferenceException(SR.NullReference_TaskProviderReturnedNull);
+
             if (task is null)
             {
                 ThrowNullReferenceException();
             }
         }
-
-        [DoesNotReturn]
-        [StackTraceHidden]
-        private static void ThrowNullReferenceException()
-            => throw new NullReferenceException(SR.NullReference_TaskProviderReturnedNull);
     }
 
     extension(InvalidOperationException)
@@ -49,16 +50,16 @@ internal static class WindowsRuntimeExceptionExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ThrowIfTaskProviderReturnedUnstartedTask(Task task)
         {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowInvalidOperationException()
+                => throw new InvalidOperationException(SR.InvalidOperation_TaskProviderReturnedUnstartedTask);
+
             if (task.Status == TaskStatus.Created)
             {
-                ThrowTaskProviderReturnedUnstartedTask();
+                ThrowInvalidOperationException();
             }
         }
-
-        [DoesNotReturn]
-        [StackTraceHidden]
-        private static void ThrowTaskProviderReturnedUnstartedTask()
-            => throw new InvalidOperationException(SR.InvalidOperation_TaskProviderReturnedUnstartedTask);
 
         /// <summary>
         /// Throws an <see cref="InvalidOperationException"/> if the specified <paramref name="task"/> has not been started.
@@ -71,16 +72,16 @@ internal static class WindowsRuntimeExceptionExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ThrowIfUnstartedTaskSpecified(Task task)
         {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowInvalidOperationException()
+                => throw new InvalidOperationException(SR.InvalidOperation_UnstartedTaskSpecified);
+
             if (task.Status == TaskStatus.Created)
             {
-                ThrowUnstartedTaskSpecified();
+                ThrowInvalidOperationException();
             }
         }
-
-        [DoesNotReturn]
-        [StackTraceHidden]
-        private static void ThrowUnstartedTaskSpecified()
-            => throw new InvalidOperationException(SR.InvalidOperation_UnstartedTaskSpecified);
 
         /// <summary>
         /// Throws an <see cref="InvalidOperationException"/> indicating that an illegal state change was attempted.
@@ -92,7 +93,7 @@ internal static class WindowsRuntimeExceptionExtensions
         {
             InvalidOperationException exception = new(SR.InvalidOperation_IllegalStateChange)
             {
-                HResult = WindowsRuntime.InteropServices.WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE
+                HResult = WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE
             };
 
             throw exception;
@@ -108,7 +109,7 @@ internal static class WindowsRuntimeExceptionExtensions
         {
             InvalidOperationException exception = new(SR.InvalidOperation_CannotSetCompletionHanlderMoreThanOnce)
             {
-                HResult = WindowsRuntime.InteropServices.WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT
+                HResult = WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT
             };
 
             throw exception;
@@ -138,7 +139,7 @@ internal static class WindowsRuntimeExceptionExtensions
                 ? new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation)
                 : new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation, innerException);
 
-            exception.HResult = WindowsRuntime.InteropServices.WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
+            exception.HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
 
             return exception;
         }
@@ -154,22 +155,22 @@ internal static class WindowsRuntimeExceptionExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ThrowIfAsyncInfoIsClosed(bool isClosed)
         {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowObjectDisposedException()
+            {
+                ObjectDisposedException exception = new(SR.ObjectDisposed_AsyncInfoIsClosed)
+                {
+                    HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL
+                };
+
+                throw exception;
+            }
+
             if (isClosed)
             {
-                ThrowAsyncInfoIsClosed();
+                ThrowObjectDisposedException();
             }
-        }
-
-        [DoesNotReturn]
-        [StackTraceHidden]
-        private static void ThrowAsyncInfoIsClosed()
-        {
-            ObjectDisposedException ex = new(SR.ObjectDisposed_AsyncInfoIsClosed)
-            {
-                HResult = WindowsRuntime.InteropServices.WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL
-            };
-
-            throw ex;
         }
     }
 
@@ -185,22 +186,22 @@ internal static class WindowsRuntimeExceptionExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ThrowIfBufferLengthExceedsCapacity(uint length, uint capacity, [CallerArgumentExpression(nameof(length))] string? paramName = null)
         {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentOutOfRangeException(string? paramName)
+            {
+                ArgumentOutOfRangeException exception = new(paramName, SR.Argument_BufferLengthExceedsCapacity)
+                {
+                    HResult = WellKnownErrorCodes.E_BOUNDS
+                };
+
+                throw exception;
+            }
+
             if (length > capacity)
             {
-                ThrowBufferLengthExceedsCapacity(paramName);
+                ThrowArgumentOutOfRangeException(paramName);
             }
-        }
-
-        [DoesNotReturn]
-        [StackTraceHidden]
-        private static void ThrowBufferLengthExceedsCapacity(string? paramName)
-        {
-            ArgumentOutOfRangeException ex = new(paramName, SR.Argument_BufferLengthExceedsCapacity)
-            {
-                HResult = WindowsRuntime.InteropServices.WellKnownErrorCodes.E_BOUNDS
-            };
-
-            throw ex;
         }
     }
 }
