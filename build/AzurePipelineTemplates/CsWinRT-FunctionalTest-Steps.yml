@@ -25,24 +25,24 @@ steps:
         displayName: Restore ${{ functionalTest }}
         inputs:
           solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
-          msbuildArguments: /t:restore /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
-          platform: $(BuildPlatform)
-          configuration: $(BuildConfiguration)
+          msbuildArguments: /t:restore /p:CIBuildReason=CI,RuntimeIdentifier=win-${{ parameters.BuildPlatform }},solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+          platform: ${{ parameters.BuildPlatform }}
+          configuration: ${{ parameters.BuildConfiguration }}
 
     - ${{ if eq(parameters.BuildPlatform, 'x86') }}:
       - task: MSBuild@1
         displayName: Publish ${{ functionalTest }} trimmed (net10.0)
         inputs:
           solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
-          msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
-          platform: $(BuildPlatform)
-          configuration: $(BuildConfiguration)
+          msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-${{ parameters.BuildPlatform }},TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
+          platform: ${{ parameters.BuildPlatform }}
+          configuration: ${{ parameters.BuildConfiguration }}
 
       - task: CmdLine@2
         displayName: Run ${{ functionalTest }} trimmed (net10.0)
         continueOnError: True
         inputs:
-          workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+          workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\${{ parameters.BuildConfiguration }}\net10.0\win-${{ parameters.BuildPlatform }}\publish
           script: |
             dir
             echo Running ${{ functionalTest }}.exe 
@@ -56,7 +56,7 @@ steps:
         displayName: Copy ${{ functionalTest }} trimmed (net10.0)
         condition: eq(variables['_PublishFunctionalTests'], 'true')
         inputs:
-          SourceFolder: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+          SourceFolder: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\${{ parameters.BuildConfiguration }}\net10.0\win-${{ parameters.BuildPlatform }}\publish
           TargetFolder: $(StagingFolder)\FunctionalTests\${{ functionalTest }}\
 
     - ${{ if and(eq(parameters.BuildConfiguration, 'release'), eq(parameters.BuildPlatform, 'x64')) }}:
@@ -64,15 +64,15 @@ steps:
         displayName: Publish ${{ functionalTest }} for AOT (net10.0)
         inputs:
           solution: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\${{ functionalTest }}.csproj
-          msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
-          platform: $(BuildPlatform)
-          configuration: $(BuildConfiguration)
+          msbuildArguments: /t:publish /p:CIBuildReason=CI,RuntimeIdentifier=win-${{ parameters.BuildPlatform }},TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
+          platform: ${{ parameters.BuildPlatform }}
+          configuration: ${{ parameters.BuildConfiguration }}
 
       - task: CmdLine@2
         displayName: Run ${{ functionalTest }} for AOT (net10.0)
         continueOnError: True
         inputs:
-          workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+          workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\${{ parameters.BuildConfiguration }}\net10.0\win-${{ parameters.BuildPlatform }}\publish
           script: |
             dir
             echo Running ${{ functionalTest }}.exe 
@@ -86,5 +86,5 @@ steps:
         displayName: Copy ${{ functionalTest }} for AOT (net10.0)
         condition: eq(variables['_PublishFunctionalTests'], 'true')
         inputs:
-          SourceFolder: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+          SourceFolder: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\${{ parameters.BuildConfiguration }}\net10.0\win-${{ parameters.BuildPlatform }}\publish
           TargetFolder: $(StagingFolder)\FunctionalTests\${{ functionalTest }}\
