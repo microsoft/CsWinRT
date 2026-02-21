@@ -83,12 +83,12 @@ public readonly struct DispatcherQueueSynchronizationContext
         }
         finally
         {
-            // This call does not have a corresponding AddRef() invocation that is visible, and
+            // This call does not have a corresponding 'AddRef' invocation that is visible, and
             // that is because the static constructors for all existing custom handlers already
             // set the internal reference count to 1. Releasing the ref count here ensures the
             // object is always freed regardless of whether the dispatching was successful. If it
             // was, the ref count would be 2 at this point (the dispatcher queue increments it),
-            // so this Release() lowers it to 1 and allows the dispatcher queue to release it once
+            // so this 'Release' lowers it to 1 and allows the dispatcher queue to release it once
             // the callback has been invoked. If the dispatching failed instead, this call will
             // free the allocated handler immediately (as the ref count would still be 1 here).
             _ = proxyHandler->Release();
