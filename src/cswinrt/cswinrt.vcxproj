@@ -111,6 +111,8 @@
     <None Include="strings\additions\Windows.UI.Xaml.Media.Animation\Windows.UI.Xaml.Media.Animation.RepeatBehavior.cs" />
     <None Include="strings\additions\Windows.UI.Xaml.Media.Media3D\Windows.UI.Xaml.Media.Media3D.Matrix3D.cs" />
     <None Include="strings\additions\Windows.UI.Xaml.Media\Windows.UI.Xaml.Media.Matrix.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml\ABI.Windows.System.DispatcherQueueProxyHandler.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.System.DispatcherQueueSynchronizationContext.cs" />
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.CornerRadius.cs" />
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.Duration.cs" />
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.GridLength.cs" />
