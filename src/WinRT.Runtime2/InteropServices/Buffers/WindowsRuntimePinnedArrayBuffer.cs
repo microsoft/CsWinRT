@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Windows.Foundation;
 using Windows.Storage.Streams;
 
 namespace WindowsRuntime.InteropServices;
@@ -88,15 +89,7 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
         get => (uint)_length;
         set
         {
-            if (value > Capacity)
-            {
-                ArgumentOutOfRangeException ex = new(nameof(value), global::Windows.Foundation.SR.Argument_BufferLengthExceedsCapacity)
-                {
-                    HResult = WellKnownErrorCodes.E_BOUNDS
-                };
-
-                throw ex;
-            }
+            ArgumentOutOfRangeException.ThrowIfBufferLengthExceedsCapacity(value, Capacity);
 
             // Capacity is ensured to not exceed Int32.MaxValue, so Length is within this limit and this cast is safe:
             Debug.Assert(Capacity <= int.MaxValue);

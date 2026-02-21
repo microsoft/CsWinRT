@@ -276,19 +276,4 @@ internal partial class UniversalTaskAdapter<
         }
     }
 
-    /// <summary>
-    /// Creates an <see cref="InvalidOperationException"/> to indicate that results cannot be obtained.
-    /// </summary>
-    /// <param name="innerException">The inner exception, if available.</param>
-    /// <returns>The resulting <see cref="InvalidOperationException"/> instance.</returns>
-    private static InvalidOperationException CreateCannotGetResultsFromIncompleteOperationException(Exception? innerException)
-    {
-        InvalidOperationException exception = innerException is null
-            ? new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation)
-            : new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation, innerException);
-
-        exception.HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
-
-        return exception;
     }
-}
