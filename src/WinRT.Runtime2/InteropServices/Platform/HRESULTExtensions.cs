@@ -32,9 +32,9 @@ internal static class HRESULTExtensions
         }
 
         /// <summary>
-        /// Throws an exception if <paramref name="hresult"/> represents an error.
+        /// Throws an exception if a given <c>HRESULT</c> represents an error.
         /// </summary>
-        /// <exception cref="System.Exception">Thrown if <paramref name="hresult"/> represents an error.</exception>
+        /// <exception cref="System.Exception">Thrown if the input <c>HRESULT</c> represents an error.</exception>
         /// <remarks>This method directly wraps <see cref="Marshal.ThrowExceptionForHR(int)"/>.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Assert()
