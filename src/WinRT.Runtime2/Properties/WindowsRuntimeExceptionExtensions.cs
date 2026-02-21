@@ -8,10 +8,10 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using WindowsRuntime.InteropServices;
 
-namespace Windows.Foundation;
+namespace WindowsRuntime;
 
 /// <summary>
-/// Exception extensions for Windows Runtime exception checks using <see cref="SR"/> strings.
+/// Exception extensions for Windows Runtime exception checks using <see cref="WindowsRuntimeExceptionMessages"/> values.
 /// </summary>
 internal static class WindowsRuntimeExceptionExtensions
 {
@@ -28,7 +28,7 @@ internal static class WindowsRuntimeExceptionExtensions
             [DoesNotReturn]
             [StackTraceHidden]
             static void ThrowNullReferenceException()
-                => throw new NullReferenceException(SR.NullReference_TaskProviderReturnedNull);
+                => throw new NullReferenceException(WindowsRuntimeExceptionMessages.NullReference_TaskProviderReturnedNull);
 
             if (task is null)
             {
@@ -53,7 +53,7 @@ internal static class WindowsRuntimeExceptionExtensions
             [DoesNotReturn]
             [StackTraceHidden]
             static void ThrowInvalidOperationException()
-                => throw new InvalidOperationException(SR.InvalidOperation_TaskProviderReturnedUnstartedTask);
+                => throw new InvalidOperationException(WindowsRuntimeExceptionMessages.InvalidOperation_TaskProviderReturnedUnstartedTask);
 
             if (task.Status == TaskStatus.Created)
             {
@@ -75,7 +75,7 @@ internal static class WindowsRuntimeExceptionExtensions
             [DoesNotReturn]
             [StackTraceHidden]
             static void ThrowInvalidOperationException()
-                => throw new InvalidOperationException(SR.InvalidOperation_UnstartedTaskSpecified);
+                => throw new InvalidOperationException(WindowsRuntimeExceptionMessages.InvalidOperation_UnstartedTaskSpecified);
 
             if (task.Status == TaskStatus.Created)
             {
@@ -91,7 +91,7 @@ internal static class WindowsRuntimeExceptionExtensions
         [StackTraceHidden]
         public static void ThrowIllegalStateChange()
         {
-            InvalidOperationException exception = new(SR.InvalidOperation_IllegalStateChange)
+            InvalidOperationException exception = new(WindowsRuntimeExceptionMessages.InvalidOperation_IllegalStateChange)
             {
                 HResult = WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE
             };
@@ -107,7 +107,7 @@ internal static class WindowsRuntimeExceptionExtensions
         [StackTraceHidden]
         public static void ThrowCannotSetCompletionHandlerMoreThanOnce()
         {
-            InvalidOperationException exception = new(SR.InvalidOperation_CannotSetCompletionHanlderMoreThanOnce)
+            InvalidOperationException exception = new(WindowsRuntimeExceptionMessages.InvalidOperation_CannotSetCompletionHanlderMoreThanOnce)
             {
                 HResult = WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT
             };
@@ -136,8 +136,8 @@ internal static class WindowsRuntimeExceptionExtensions
         public static InvalidOperationException GetCannotGetResultsFromIncompleteOperationException(Exception? innerException = null)
         {
             InvalidOperationException exception = innerException is null
-                ? new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation)
-                : new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation, innerException);
+                ? new InvalidOperationException(WindowsRuntimeExceptionMessages.InvalidOperation_CannotGetResultsFromIncompleteOperation)
+                : new InvalidOperationException(WindowsRuntimeExceptionMessages.InvalidOperation_CannotGetResultsFromIncompleteOperation, innerException);
 
             exception.HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
 
@@ -159,7 +159,7 @@ internal static class WindowsRuntimeExceptionExtensions
             [StackTraceHidden]
             static void ThrowObjectDisposedException()
             {
-                ObjectDisposedException exception = new(SR.ObjectDisposed_AsyncInfoIsClosed)
+                ObjectDisposedException exception = new(WindowsRuntimeExceptionMessages.ObjectDisposed_AsyncInfoIsClosed)
                 {
                     HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL
                 };
@@ -190,7 +190,7 @@ internal static class WindowsRuntimeExceptionExtensions
             [StackTraceHidden]
             static void ThrowArgumentOutOfRangeException(string? paramName)
             {
-                ArgumentOutOfRangeException exception = new(paramName, SR.Argument_BufferLengthExceedsCapacity)
+                ArgumentOutOfRangeException exception = new(paramName, WindowsRuntimeExceptionMessages.Argument_BufferLengthExceedsCapacity)
                 {
                     HResult = WellKnownErrorCodes.E_BOUNDS
                 };

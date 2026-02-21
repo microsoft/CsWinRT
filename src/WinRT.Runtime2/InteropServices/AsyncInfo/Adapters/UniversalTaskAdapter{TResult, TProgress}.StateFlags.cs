@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Windows.Foundation;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -275,5 +273,4 @@ internal partial class UniversalTaskAdapter<
             prevState = Interlocked.CompareExchange(ref _state, newState, origState);
         }
     }
-
-    }
+}

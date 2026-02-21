@@ -74,7 +74,7 @@ internal partial class UniversalTaskAdapter<
             // an inexplicable 'NullReferenceException'.
             error = task.Exception is AggregateException aggregateException
                 ? aggregateException.InnerException ?? aggregateException
-                : new Exception(SR.WinRtCOM_Error) { HResult = WellKnownErrorCodes.E_FAIL };
+                : new Exception(WindowsRuntimeExceptionMessages.WinRtCOM_Error) { HResult = WellKnownErrorCodes.E_FAIL };
 
             // If '_error' was set concurrently, the previous value will be not 'null'. If we see that,
             // then we return that value, as it would be the first error that was set on this instance.

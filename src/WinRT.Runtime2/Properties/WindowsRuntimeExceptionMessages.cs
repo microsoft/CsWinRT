@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Windows.Foundation;
+namespace WindowsRuntime;
 
-// TODO: refactor these once all additions have been moved
-
-internal static class SR
+/// <summary>
+/// Exception messages for internal exceptions thrown by APIs within 'WinRT.Interop.dll'.
+/// </summary>
+internal static class WindowsRuntimeExceptionMessages
 {
     public const string Argument_BufferLengthExceedsCapacity = "The specified useful data length exceeds the capacity of this buffer.";
 

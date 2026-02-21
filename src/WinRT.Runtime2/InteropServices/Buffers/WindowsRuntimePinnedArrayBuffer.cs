@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Windows.Foundation;
 using Windows.Storage.Streams;
 
 namespace WindowsRuntime.InteropServices;
