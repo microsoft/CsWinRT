@@ -217,6 +217,10 @@ namespace ABI.Windows.System
                 }
                 catch (Exception e)
                 {
+                    // This method triggers the special exception serialization logic in Native AOT that
+                    // allows stacktraces from async crashes such as this to be correctly captured in crash dumps.
+                    global::System.Runtime.ExceptionServices.ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent(e);
+
                     // Register the exception with the global error handler. The failfast behavior
                     // is governed by the state of the 'UnhandledExceptionEventArgs.Handled' property.
                     // If 'Handled' is true the app continues running, else it failfasts.
