@@ -2,7 +2,7 @@
 
 #nullable enable
 
-namespace ABI.Windows.System
+namespace ABI.Microsoft.UI.Dispatching
 {
     /// <summary>
     /// Binding type for <see cref="DispatcherQueueProxyHandler"/>.
@@ -133,7 +133,7 @@ namespace ABI.Windows.System
             {
                 if (riid->Equals(WellKnownInterfaceIIDs.IID_IUnknown) ||
                     riid->Equals(WellKnownInterfaceIIDs.IID_IAgileObject) ||
-                    riid->Equals(global::ABI.InterfaceIIDs.IID_Windows_System_DispatcherQueueHandler))
+                    riid->Equals(global::ABI.InterfaceIIDs.IID_Microsoft_UI_Dispatching_DispatcherQueueHandler))
                 {
                     global::System.Threading.Interlocked.Increment(ref @this->referenceCount);
 
