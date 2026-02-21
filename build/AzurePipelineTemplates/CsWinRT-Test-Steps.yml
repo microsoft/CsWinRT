@@ -99,7 +99,7 @@ steps:
     condition: and(succeeded(), or(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
     inputs:
       solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
-      msbuildArguments: /t:publish /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true,BuildToolArch=$(CsWinRTBuildToolsArch)
+      msbuildArguments: /t:publish /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true,BuildToolArch=$(CsWinRTBuildToolsArch),VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
       platform: $(BuildPlatform)
       configuration: $(BuildConfiguration)
 
