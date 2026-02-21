@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -37,8 +38,13 @@ internal sealed class CSharpCodeFixTest<TAnalyzer, TCodeFixer> : CSharpCodeFixTe
     {
         this.languageVersion = languageVersion;
 
-        ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
-        TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ComWrappersSupport).Assembly.Location));
+        string winrtRuntimeAssemblyLocation = typeof(ComWrappersSupport).Assembly.Location;
+
+        // Given we use a different nuget feed, we pass nuget.config.
+        string nugetConfigFilePath = Path.Combine(Path.GetDirectoryName(winrtRuntimeAssemblyLocation), "nuget.config");
+
+        ReferenceAssemblies = ReferenceAssemblies.Net.Net80.WithNuGetConfigFilePath(nugetConfigFilePath);
+        TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(winrtRuntimeAssemblyLocation));
 
         // Add any editorconfig properties, if present
         if (editorconfig.Length > 0)
