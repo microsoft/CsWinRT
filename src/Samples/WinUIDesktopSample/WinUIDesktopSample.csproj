@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VCRTForwarders.140" />
-    <ProjectReference Include="..\..\Projections\Microsoft.WinUI.Dispatching\Microsoft.UI.Dispatching.csproj" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
     <!--
