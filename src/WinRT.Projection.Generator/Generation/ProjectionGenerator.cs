@@ -40,7 +40,7 @@ internal static partial class ProjectionGenerator
         // Process all .winmd references and create the .rsp file for 'cswinrt.exe'
         try
         {
-            ConsoleApp.Log($"Processing {args.WinMDPaths.Length + 1} .winmd references");
+            ConsoleApp.Log($"Processing {args.WinMDPaths.Length} .winmd references");
 
             processingState = ProcessReferences(args);
         }
