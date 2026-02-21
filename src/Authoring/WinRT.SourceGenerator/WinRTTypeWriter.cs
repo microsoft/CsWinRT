@@ -1552,7 +1552,9 @@ namespace Generator
 
         private void AddOverloadAttributeForInterfaceMethods(TypeDeclaration interfaceTypeDeclaration)
         {
-            // Generate unique names for any overloaded methods
+            // Generate unique names for any overloaded methods.
+            // If the user has applied [OverloadAttribute("name")] on a method, honor that name
+            // instead of auto-generating a sequential suffix.
             foreach (var methodName in interfaceTypeDeclaration.MethodsByName.Where(symbol => symbol.Value.Count > 1))
             {
                 var methodSymbols = methodName.Value.Where(symbol => symbol is IMethodSymbol);
@@ -1569,10 +1571,34 @@ namespace Generator
                         continue;
                     }
 
-                    string overloadedMethodName = methodName.Key + (++lastSuffix);
-                    while (interfaceTypeDeclaration.MethodsByName.ContainsKey(overloadedMethodName))
+                    // Check if the user explicitly applied [Windows.Foundation.Metadata.OverloadAttribute("...")]
+                    // and honor the user-specified name instead of auto-generating one.
+                    string overloadedMethodName = null;
+                    if (method is IMethodSymbol methodSymbol)
+                    {
+                        var userOverloadAttr = methodSymbol.GetAttributes()
+                            .FirstOrDefault(a =>
+                                a.AttributeClass?.ToDisplayString() == "Windows.Foundation.Metadata.OverloadAttribute");
+                        if (userOverloadAttr != null
+                            && userOverloadAttr.ConstructorArguments is { IsDefaultOrEmpty: false }
+                            && userOverloadAttr.ConstructorArguments[0].Value is string userSpecifiedName)
+                        {
+                            overloadedMethodName = userSpecifiedName;
+                            Logger.Log("Using user-specified overload name for " + methodSymbol.Name + ": " + overloadedMethodName);
+                        }
+                        else if (userOverloadAttr != null)
+                        {
+                            Logger.Log("warning: [OverloadAttribute] found on " + methodSymbol.Name + " but could not extract name; auto-generating");
+                        }
+                    }
+
+                    if (overloadedMethodName == null)
                     {
                         overloadedMethodName = methodName.Key + (++lastSuffix);
+                        while (interfaceTypeDeclaration.MethodsByName.ContainsKey(overloadedMethodName))
+                        {
+                            overloadedMethodName = methodName.Key + (++lastSuffix);
+                        }
                     }
 
                     Logger.Log("Overloading " + methodName.Key + " with " + overloadedMethodName);
@@ -1713,6 +1739,13 @@ namespace Generator
                 }
 
                 if (attributeType.ToString() == "System.Runtime.InteropServices.GuidAttribute")
+                {
+                    continue;
+                }
+
+                // OverloadAttribute is emitted by AddOverloadAttributeForInterfaceMethods;
+                // skip any user-applied instance to avoid duplicates in the winmd.
+                if (attributeType.ToString() == "Windows.Foundation.Metadata.OverloadAttribute")
                 {
                     continue;
                 }

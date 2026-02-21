@@ -1969,6 +1969,37 @@ namespace AuthoringTest
         public string HelloWorld() => "Hello World!";
     }
 
+    // Test that user-specified [OverloadAttribute] names are emitted in the winmd.
+    // The interface has 3 overloads of Lookup where the non-default ones carry custom ABI names.
+    public interface ICustomOverloadNames
+    {
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        string Lookup(string key);
+
+        [Windows.Foundation.Metadata.Overload("LookupByIndex")]
+        int Lookup(int index);
+
+        [Windows.Foundation.Metadata.Overload("LookupByFlag")]
+        bool Lookup(bool flag);
+    }
+
+    // Test a mix of user-specified and auto-generated OverloadAttribute names.
+    public sealed class CustomOverloadNamesClass : ICustomOverloadNames
+    {
+        public string Lookup(string key) => "found:" + key;
+        public int Lookup(int index) => index * 10;
+        public bool Lookup(bool flag) => !flag;
+
+        // Class-level overloads: first gets custom name, second auto-generated.
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        public string Transform(string input) => input.ToUpper();
+
+        [Windows.Foundation.Metadata.Overload("TransformNumber")]
+        public int Transform(int value) => value * 2;
+
+        public double Transform(double value) => value + 0.5;
+    }
+
     public sealed class NonActivatableType
     {
         private readonly string _text;
