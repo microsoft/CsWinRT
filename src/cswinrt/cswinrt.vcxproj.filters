@@ -178,9 +178,6 @@
     <None Include="strings\ReferenceInterfaceEntries.cs">
       <Filter>strings</Filter>
     </None>
-    <None Include="strings\additions\Windows.UI.Xaml\ABI.Windows.System.DispatcherQueueProxyHandler.cs">
-      <Filter>strings\additions\Windows.UI.Xaml</Filter>
-    </None>
     <None Include="strings\additions\Windows.UI.Xaml\Windows.System.DispatcherQueueSynchronizationContext.cs">
       <Filter>strings\additions\Windows.UI.Xaml</Filter>
     </None>
@@ -212,9 +209,6 @@
       <Filter>strings\additions\Microsoft.UI.Xaml.Media.Animation</Filter>
     </None>
     <None Include="strings\additions\Microsoft.UI.Dispatching\Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext.cs">
-      <Filter>strings\additions\Microsoft.UI.Dispatching</Filter>
-    </None>
-    <None Include="strings\additions\Microsoft.UI.Dispatching\ABI.Microsoft.UI.Dispatching.DispatcherQueueProxyHandler.cs">
       <Filter>strings\additions\Microsoft.UI.Dispatching</Filter>
     </None>
   </ItemGroup>

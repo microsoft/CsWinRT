@@ -9,9 +9,9 @@ namespace Windows.System;
 public sealed class DispatcherQueueSynchronizationContext : global::System.Threading.SynchronizationContext
 {
     /// <summary>
-    /// The <see cref="WindowsRuntimeObjectReference"/> instance for the target dispatcher queue.
+    /// The <see cref="WindowsRuntime.InteropServices.DispatcherQueueSynchronizationContext"/> instance to use.
     /// </summary>
-    private readonly WindowsRuntimeObjectReference _objectReference;
+    private readonly WindowsRuntime.InteropServices.DispatcherQueueSynchronizationContext _innerContext;
 
     /// <summary>
     /// Creates a new <see cref="DispatcherQueueSynchronizationContext"/> instance with the specified parameters.
@@ -20,65 +20,34 @@ public sealed class DispatcherQueueSynchronizationContext : global::System.Threa
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="dispatcherQueue"/> is <see langword="null"/>.</exception>
     public DispatcherQueueSynchronizationContext(global::Windows.System.DispatcherQueue dispatcherQueue)
     {
-        ArgumentNullException.ThrowIfNull(dispatcherQueue);
-
-        if (!WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(dispatcherQueue, out _objectReference!))
-        {
-            throw new ArgumentException(null, nameof(dispatcherQueue));
-        }
+        _innerContext = new WindowsRuntime.InteropServices.DispatcherQueueSynchronizationContext(dispatcherQueue);
     }
 
     /// <summary>
     /// Creates a new <see cref="DispatcherQueueSynchronizationContext"/> instance with the specified parameters.
     /// </summary>
-    /// <param name="objectReference">The <see cref="WindowsRuntimeObjectReference"/> instance for the target dispatcher queue.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="objectReference"/> is <see langword="null"/>.</exception>
-    private DispatcherQueueSynchronizationContext(WindowsRuntimeObjectReference objectReference)
+    /// <param name="innerContext">The <see cref="WindowsRuntime.InteropServices.DispatcherQueueSynchronizationContext"/> instance for the target dispatcher queue.</param>
+    private DispatcherQueueSynchronizationContext(WindowsRuntime.InteropServices.DispatcherQueueSynchronizationContext innerContext)
     {
-        ArgumentNullException.ThrowIfNull(objectReference);
-
-        _objectReference = objectReference;
+        _innerContext = innerContext;
     }
 
     /// <inheritdoc/>
-    public override unsafe void Post(global::System.Threading.SendOrPostCallback d, object? state)
+    public override void Post(global::System.Threading.SendOrPostCallback d, object? state)
     {
-        ArgumentNullException.ThrowIfNull(d);
-
-        global::ABI.Windows.System.DispatcherQueueProxyHandler* dispatcherQueueProxyHandler = global::ABI.Windows.System.DispatcherQueueProxyHandler.Create(d, state);
-        int hresult;
-
-        try
-        {
-            _objectReference.AddRefUnsafe();
-
-            void* thisPtr = _objectReference.GetThisPtrUnsafe();
-            bool success;
-
-            // Note: we're intentionally ignoring the retval for 'DispatcherQueue::TryEnqueue'.
-            // This matches the behavior for the equivalent type on WinUI 3 as well.
-            hresult = ((delegate* unmanaged<void*, void*, byte*, int>)(*(void***)thisPtr)[7])(thisPtr, dispatcherQueueProxyHandler, (byte*)&success);
-        }
-        finally
-        {
-            dispatcherQueueProxyHandler->Release();
-            _objectReference.ReleaseUnsafe();
-        }
-
-
-        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+        _innerContext.Post(d, state);
     }
 
     /// <inheritdoc/>
     public override void Send(global::System.Threading.SendOrPostCallback d, object? state)
     {
-        throw new NotSupportedException("'SynchronizationContext.Send' is not supported.");
+        _innerContext._Send(d, state);
     }
 
     /// <inheritdoc/>
     public override global::System.Threading.SynchronizationContext CreateCopy()
     {
-        return new DispatcherQueueSynchronizationContext(_objectReference);
+        return new DispatcherQueueSynchronizationContext(_innerContext);
     }
 }
 

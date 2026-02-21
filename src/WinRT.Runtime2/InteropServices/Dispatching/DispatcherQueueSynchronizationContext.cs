@@ -100,10 +100,4 @@ public readonly struct DispatcherQueueSynchronizationContext
     {
         throw new NotSupportedException("'SynchronizationContext.Send' is not supported.");
     }
-
-    /// <inheritdoc cref="SynchronizationContext.CreateCopy"/>
-    public DispatcherQueueSynchronizationContext CreateCopy()
-    {
-        return new(_objectReference);
-    }
 }
