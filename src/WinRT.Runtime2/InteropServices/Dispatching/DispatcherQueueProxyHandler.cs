@@ -23,12 +23,12 @@ internal unsafe struct DispatcherQueueProxyHandler
     /// <summary>
     /// The <see cref="GCHandle"/> to the captured <see cref="SendOrPostCallback"/>.
     /// </summary>
-    private GCHandle _callbackHandle;
+    private GCHandle<SendOrPostCallback> _callbackHandle;
 
     /// <summary>
     /// The <see cref="GCHandle"/> to the captured state (if present, or a <see langword="null"/> handle otherwise).
     /// </summary>
-    private GCHandle _stateHandle;
+    private GCHandle<object> _stateHandle;
 
     /// <summary>
     /// The current reference count for the object (from <c>IUnknown</c>).
@@ -46,8 +46,8 @@ internal unsafe struct DispatcherQueueProxyHandler
         DispatcherQueueProxyHandler* @this = (DispatcherQueueProxyHandler*)NativeMemory.Alloc((nuint)sizeof(DispatcherQueueProxyHandler));
 
         @this->_vftbl = (IDispatcherQueueHandlerVftbl*)ABI.WindowsRuntime.InteropServices.DispatcherQueueProxyHandlerImpl.Vtable;
-        @this->_callbackHandle = GCHandle.Alloc(handler);
-        @this->_stateHandle = state is not null ? GCHandle.Alloc(state) : default;
+        @this->_callbackHandle = new GCHandle<SendOrPostCallback>(handler);
+        @this->_stateHandle = state is not null ? new GCHandle<object>(state) : default;
         @this->_referenceCount = 1;
 
         return @this;
@@ -86,12 +86,8 @@ internal unsafe struct DispatcherQueueProxyHandler
 
         if (referenceCount == 0)
         {
-            _callbackHandle.Free();
-
-            if (_stateHandle.IsAllocated)
-            {
-                _stateHandle.Free();
-            }
+            _callbackHandle.Dispose();
+            _stateHandle.Dispose();
 
             NativeMemory.Free(Unsafe.AsPointer(ref this));
         }
@@ -105,9 +101,8 @@ internal unsafe struct DispatcherQueueProxyHandler
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void Invoke()
     {
-        object callback = _callbackHandle.Target!;
-        object? state = _stateHandle.IsAllocated ? _stateHandle.Target! : null;
+        object? state = _stateHandle.IsAllocated ? _stateHandle.Target : null;
 
-        Unsafe.As<SendOrPostCallback>(callback)(state);
+        _callbackHandle.Target(state);
     }
 }
