@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\Microsoft.Windows.WinMD.1.0.250131.1\build\native\Microsoft.Windows.WinMD.props" Condition="Exists('..\packages\Microsoft.Windows.WinMD.1.0.250131.1\build\native\Microsoft.Windows.WinMD.props')" />
   <Import Project="..\packages\Microsoft.Windows.MidlRT.2.0.200924.1\build\native\Microsoft.Windows.MidlRT.props" Condition="Exists('..\packages\Microsoft.Windows.MidlRT.2.0.200924.1\build\native\Microsoft.Windows.MidlRT.props')" />
@@ -48,11 +48,16 @@
     </Link>
     <ClCompile>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(OutDir)</AdditionalIncludeDirectories>
     </ClCompile>
+    <PreBuildEvent>
+      <Command>$(BuildOutDir)prebuild\bin\prebuild.exe strings $(OutDir)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="cmd_reader.h" />
     <ClInclude Include="code_writers.h" />
+    <ClInclude Include="concurrent_containers.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="settings.h" />
@@ -61,13 +66,16 @@
     <ClInclude Include="type_writers.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(OutDir)strings.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="version.rc" />
+    <ResourceCompile Include="$(OutDir)version.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Directory.Build.props" />

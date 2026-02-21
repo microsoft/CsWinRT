@@ -44,6 +44,7 @@ namespace Generator
             var i = new List<string>();
             string? o = null;
             string? sdkVersion = null;
+            string? windowsWinmd = null;
             bool? verbose = false;
             bool? nologo = false;
             string? a = null;
@@ -70,6 +71,11 @@ namespace Generator
                     idx++;
                     sdkVersion = args[idx];
                 }
+                else if (args[idx] == "-windowsWinmd")
+                {
+                    idx++;
+                    windowsWinmd = args[idx];
+                }
                 else if (args[idx] == "-verbose")
                 {
                     verbose = true;
@@ -80,7 +86,7 @@ namespace Generator
                 }
             }
 
-            DoMain(i.ToArray(), o!, a!, sdkVersion, verbose, nologo);
+            DoMain(i.ToArray(), o!, a!, sdkVersion, windowsWinmd, verbose, nologo);
         }
 
         /// <summary>
@@ -90,10 +96,11 @@ namespace Generator
         /// <param name="o">Output directory</param>
         /// <param name="a">Assembly name</param>
         /// <param name="sdkVersion">Optional sdk version</param>
+        /// <param name="windowsWinmd">Direct path to Windows.winmd (bypasses registry lookup, required on non-Windows)</param>
         /// <param name="verbose">Verbose logging</param>
         /// <param name="nologo">Don't print logo</param>
         /// Uses System.CommandLine.Dragonfruit
-        public static void DoMain(string[] i, string o, string a, string? sdkVersion, bool? verbose, bool? nologo)
+        public static void DoMain(string[] i, string o, string a, string? sdkVersion, string? windowsWinmd, bool? verbose, bool? nologo)
         {
             if (!nologo.HasValue || !nologo.Value)
             {
@@ -125,7 +132,7 @@ namespace Generator
 
                 var assemblyName = a;
 
-                var windows_winmd = GetWindowsWinMdPath(sdkVersion);
+                var windows_winmd = !string.IsNullOrEmpty(windowsWinmd) ? windowsWinmd : GetWindowsWinMdPath(sdkVersion);
                 var compilation = CSharpCompilation.Create(
                     assemblyName: assemblyName,
                     syntaxTrees: new[] { CSharpSyntaxTree.ParseText(inputText, new CSharpParseOptions(LanguageVersion.Preview), inputFile) },

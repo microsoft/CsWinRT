@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-linux-cross-cswinrt:
+    name: 'cross: Cross-build from Linux'
+    strategy:
+      matrix:
+        arch: [i686, x86_64]
+    runs-on: ubuntu-22.04
+    env:
+      CMAKE_COLOR_DIAGNOSTICS: 1
+      CLICOLOR_FORCE: 1
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install cross compiler
+        run: |
+          arch=${{ matrix.arch }}
+          sudo apt-get install g++-mingw-w64-${arch/_/-}
+          sudo update-alternatives --set "${{ matrix.arch }}-w64-mingw32-gcc" "/usr/bin/${{ matrix.arch }}-w64-mingw32-gcc-posix"
+          sudo update-alternatives --set "${{ matrix.arch }}-w64-mingw32-g++" "/usr/bin/${{ matrix.arch }}-w64-mingw32-g++-posix"
+
+      - name: Cross-build cswinrt
+        run: |
+          cmake -S src/cswinrt/ -B build/cross/ --toolchain cross-mingw-toolchain.cmake \
+            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.arch }} \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_CXX_FLAGS="-static" \
+            -DCMAKE_INSTALL_PREFIX=$PWD/install/
+          cmake --build build/cross/ --target install -j2
+
+      - name: Upload cswinrt.exe
+        uses: actions/upload-artifact@v6
+        with:
+          name: cross-build-${{ matrix.arch }}-bin
+          path: install/bin/cswinrt.exe
+
+  build-linux-native-cswinrt:
+    name: 'native: Build cswinrt for Linux'
+    runs-on: ubuntu-22.04
+    env:
+      CMAKE_COLOR_DIAGNOSTICS: 1
+      CLICOLOR_FORCE: 1
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build cswinrt (native Linux)
+        run: |
+          cmake -S src/cswinrt/ -B build/linux_native/ \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake --build build/linux_native/ -j2
+
+      - name: Smoke test
+        run: |
+          file build/linux_native/cswinrt
+          build/linux_native/cswinrt 2>&1 | head -3 || true
+
+      - name: Upload cswinrt
+        uses: actions/upload-artifact@v6
+        with:
+          name: native-linux-x64-bin
+          path: build/linux_native/cswinrt
+
+  build-linux-dotnet-tools:
+    name: 'dotnet: Build IIDOptimizer & CsWinMD on Linux'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build IIDOptimizer
+        run: |
+          dotnet build src/Perf/IIDOptimizer/IIDOptimizer.csproj \
+            -p:IsDotnetBuild=true -c Release
+
+      - name: Smoke test IIDOptimizer
+        run: dotnet src/Perf/IIDOptimizer/bin/Release/net8.0/IIDOptimizer.dll 2>&1 || true
+
+      - name: Build CsWinMD
+        run: |
+          dotnet build src/Authoring/cswinmd/CsWinMD.csproj \
+            -p:IsDotnetBuild=true \
+            -p:SolutionDir=${{ github.workspace }}/src/ \
+            -c Release
+
+      - name: Smoke test CsWinMD
+        run: dotnet src/Authoring/cswinmd/bin/Release/net8.0/CsWinMD.dll 2>&1 || true

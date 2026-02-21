@@ -1,0 +1,8 @@
+LIBRARY "XmlLite.dll"
+EXPORTS
+CreateXmlReader@12
+CreateXmlReaderInputWithEncodingCodePage@20
+CreateXmlReaderInputWithEncodingName@20
+CreateXmlWriter@12
+CreateXmlWriterOutputWithEncodingCodePage@12
+CreateXmlWriterOutputWithEncodingName@12

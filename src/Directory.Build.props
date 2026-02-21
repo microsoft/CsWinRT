@@ -124,7 +124,6 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
 
-  <Import Project="Strings.props" />
 
   <Import Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'" Project="..\nuget\Microsoft.Windows.CsWinRT.props" />
 

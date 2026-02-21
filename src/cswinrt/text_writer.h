@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace cswinrt
 {
@@ -127,7 +128,16 @@ namespace cswinrt
         void write_printf(char const* format, Args const&... args)
         {
             char buffer[256];
+#if defined(_WIN32) || defined(_WIN64)
             size_t const size = sprintf_s(buffer, format, args...);
+#else
+            size_t size = snprintf(buffer, sizeof(buffer), format, args...);
+            if (size > sizeof(buffer) - 1)
+            {
+                fprintf(stderr, "\n*** WARNING: writer_base::write_printf -- buffer too small\n");
+                size = sizeof(buffer) - 1;
+            }
+#endif
             write(std::string_view{ buffer, size });
         }
 

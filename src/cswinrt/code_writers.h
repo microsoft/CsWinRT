@@ -5,8 +5,8 @@
 #include <filesystem>
 #include <iostream>
 #include <regex>
-#include <concurrent_unordered_map.h>
-#include <concurrent_unordered_set.h>
+#include <cstring>
+#include "concurrent_containers.h"
 
 #define INSPECTABLE_METHOD_COUNT 6
 
@@ -36,7 +36,7 @@ namespace cswinrt
         {"string", "String"},
     };
 
-    static concurrency::concurrent_unordered_set<generic_type_instantiation> generic_type_instances;
+    static cswinrt::concurrent_unordered_set<generic_type_instantiation> generic_type_instances;
     generic_type_instance ConvertGenericTypeInstanceToConcreteType(writer& w, const generic_type_instance& generic_instance);
 
     auto to_csharp_type(fundamental_type type)
@@ -6296,7 +6296,7 @@ return (eventSource.Subscribe, eventSource.Unsubscribe);
     auto get_managed_marshalers(writer& w, method_signature const& signature, bool /*is_generic*/, bool is_generic_instantiation_class)
     {
         std::vector<managed_marshaler> marshalers;
-        concurrency::concurrent_unordered_set<generic_type_instantiation> generic_instantiations;
+        std::unordered_set<generic_type_instantiation> generic_instantiations;
 
         std::function<void(writer&, type_semantics const&, managed_marshaler&)> set_marshaler = 
             [&](writer& w, type_semantics const& semantics, managed_marshaler& m)
@@ -10363,7 +10363,7 @@ bind<write_event_invoke_args>(invokeMethodSig));
 });
     }
 
-    void write_temp_class_event_source_subclass(writer& w, TypeDef const& classType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToDefinitionMap)
+    void write_temp_class_event_source_subclass(writer& w, TypeDef const& classType, cswinrt::concurrent_unordered_map<std::string, std::string>& typeNameToDefinitionMap)
     {
         for (auto&& ii : classType.InterfaceImpl())
         {
@@ -10374,24 +10374,24 @@ bind<write_event_invoke_args>(invokeMethodSig));
                         auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
                         auto&& eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
                         auto&& eventClass = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
-                        typeNameToDefinitionMap[eventTypeCode] = eventClass;
+                        typeNameToDefinitionMap.insert_or_assign(eventTypeCode, eventClass);
                     }
                 });
         }
     }
 
-    void write_temp_interface_event_source_subclass(writer& w, TypeDef const& interfaceType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToDefinitionMap)
+    void write_temp_interface_event_source_subclass(writer& w, TypeDef const& interfaceType, cswinrt::concurrent_unordered_map<std::string, std::string>& typeNameToDefinitionMap)
     {
         for (auto&& eventObj : interfaceType.EventList())
         {
             auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
             auto&& eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
             auto&& eventClass = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
-            typeNameToDefinitionMap[eventTypeCode] = eventClass;
+            typeNameToDefinitionMap.insert_or_assign(eventTypeCode, eventClass);
         }
     }
 
-    void add_base_type_entry(TypeDef const& classType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToBaseTypeMap)
+    void add_base_type_entry(TypeDef const& classType, cswinrt::concurrent_unordered_map<std::string, std::string>& typeNameToBaseTypeMap)
     {
         writer w("");
         auto base_type = get_type_semantics(classType.Extends());
@@ -10401,11 +10401,11 @@ bind<write_event_invoke_args>(invokeMethodSig));
             int numChars = (int)strlen("global::");
             auto&& typeName = w.write_temp("%", bind<write_type_name>(classType, typedef_name_type::Projected, true)).substr(numChars);
             auto&& baseTypeName = w.write_temp("%", bind<write_type_name>(base_type, typedef_name_type::Projected, true)).substr(numChars);
-            typeNameToBaseTypeMap[typeName] = baseTypeName;
+            typeNameToBaseTypeMap.insert_or_assign(typeName, baseTypeName);
         }
     }
 
-    void add_metadata_type_entry(TypeDef const& type, concurrency::concurrent_unordered_map<std::string, std::string>& authoredTypeNameToMetadataTypeNameMap)
+    void add_metadata_type_entry(TypeDef const& type, cswinrt::concurrent_unordered_map<std::string, std::string>& authoredTypeNameToMetadataTypeNameMap)
     {
         if (settings.component)
         {
@@ -10418,7 +10418,7 @@ bind<write_event_invoke_args>(invokeMethodSig));
             writer w("");
             auto&& typeName = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, true));
             auto&& metadataTypeName = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::CCW, true));
-            authoredTypeNameToMetadataTypeNameMap[typeName] = metadataTypeName;
+            authoredTypeNameToMetadataTypeNameMap.insert_or_assign(typeName, metadataTypeName);
         }
     }
 
@@ -10453,7 +10453,7 @@ bind<write_event_invoke_args>(invokeMethodSig));
             });
     }
 
-    void add_abi_delegates_for_type(std::string_view typeNamespace, std::string_view typeName, std::vector<type_semantics> generics, concurrency::concurrent_unordered_set<generic_abi_delegate>& abiDelegateEntries)
+    void add_abi_delegates_for_type(std::string_view typeNamespace, std::string_view typeName, std::vector<type_semantics> generics, cswinrt::concurrent_unordered_set<generic_abi_delegate>& abiDelegateEntries)
     {
         writer w;
         if (typeNamespace == "Windows.Foundation" || typeNamespace == "Windows.Foundation.Collections")
@@ -10751,7 +10751,7 @@ bind<write_event_invoke_args>(invokeMethodSig));
         }
     }
 
-    void add_if_generic_type_reference(cswinrt::type_semantics const& typeSemantics, bool isArray, concurrency::concurrent_unordered_set<generic_abi_delegate>& abiDelegateEntries)
+    void add_if_generic_type_reference(cswinrt::type_semantics const& typeSemantics, bool isArray, cswinrt::concurrent_unordered_set<generic_abi_delegate>& abiDelegateEntries)
     {
         call(typeSemantics,
             [&](generic_type_instance const& type)
@@ -10800,7 +10800,7 @@ bind<write_event_invoke_args>(invokeMethodSig));
         );
     }
 
-    void add_generic_type_references_in_interface_type(TypeDef const& interfaceType, concurrency::concurrent_unordered_set<generic_abi_delegate>& abiDelegateEntries)
+    void add_generic_type_references_in_interface_type(TypeDef const& interfaceType, cswinrt::concurrent_unordered_set<generic_abi_delegate>& abiDelegateEntries)
     {
         for (auto&& method : interfaceType.MethodList())
         {
@@ -10835,7 +10835,7 @@ bind<write_event_invoke_args>(invokeMethodSig));
         }
     }
 
-    void add_generic_type_references_in_type(TypeDef const& type, concurrency::concurrent_unordered_set<generic_abi_delegate>& abiDelegateEntries)
+    void add_generic_type_references_in_type(TypeDef const& type, cswinrt::concurrent_unordered_set<generic_abi_delegate>& abiDelegateEntries)
     {
         switch (get_category(type))
         {
@@ -11050,20 +11050,18 @@ var ThisPtr = _obj.ThisPtr;
         // Go through all the generic types and write instantiation classes for them.
         // While writing them, their implementations might also reference generic types
         // which may also need instantiation classes if one hasn't been generated already.
-        concurrency::concurrent_unordered_set<generic_type_instantiation> written_generic_type_instances;
+        std::unordered_set<generic_type_instantiation> written_generic_type_instances;
         bool types_written = true;
         while (generic_type_instances.size() != 0 && types_written)
         {
             types_written = false;
-            concurrency::concurrent_unordered_set<generic_type_instantiation> current_generic_type_instances = generic_type_instances;
-            generic_type_instances = concurrency::concurrent_unordered_set<generic_type_instantiation>();
+            auto current_generic_type_instances = generic_type_instances.consume();
             for (auto& instance : current_generic_type_instances)
             {
-                if (written_generic_type_instances.find(instance) != written_generic_type_instances.end())
+                if (!written_generic_type_instances.insert(instance).second)
                 {
                     continue;
                 }
-                written_generic_type_instances.insert(instance);
                 types_written = true;
 
                 std::vector<std::string> rcwFunctions, vtableFunctions;
