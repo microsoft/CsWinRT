@@ -25,9 +25,6 @@
     <Filter Include="strings\additions">
       <UniqueIdentifier>{79a6595f-c96d-41c4-a90f-04033a23c979}</UniqueIdentifier>
     </Filter>
-    <Filter Include="strings\additions\Windows.Foundation">
-      <UniqueIdentifier>{4f770820-72c5-46d5-9944-7d76ca1fe60b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="strings\additions\Microsoft.UI.Xaml">
       <UniqueIdentifier>{8626e8bc-727e-4c4d-a7fa-fe90c02b3090}</UniqueIdentifier>
     </Filter>
@@ -67,12 +64,12 @@
     <Filter Include="strings\additions\Windows.UI.Xaml">
       <UniqueIdentifier>{03980bb6-f657-4c07-a456-5b4774de5773}</UniqueIdentifier>
     </Filter>
+    <Filter Include="strings\additions\Microsoft.UI.Dispatching">
+      <UniqueIdentifier>{e52998c7-e587-484e-8a46-cf3572d51956}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.CornerRadius.cs">
-      <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
-    </None>
     <None Include="strings\additions\Windows.Storage.Streams\NetFxToWinRtStreamAdapter.cs">
       <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
@@ -103,10 +100,10 @@
     <None Include="strings\additions\Windows.Storage.Streams\IBufferByteAccess.cs">
       <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
-	<None Include="strings\additions\Windows.Storage.Streams\IMemoryBufferByteAccess.cs">
-		<Filter>strings\additions\Windows.Storage.Streams</Filter>
-	</None>
-	<None Include="strings\additions\Windows.Storage\HANDLE_ACCESS_OPTIONS.cs">
+    <None Include="strings\additions\Windows.Storage.Streams\IMemoryBufferByteAccess.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage\HANDLE_ACCESS_OPTIONS.cs">
       <Filter>strings\additions\Windows.Storage</Filter>
     </None>
     <None Include="strings\additions\Windows.Storage\HANDLE_CREATION_OPTIONS.cs">
@@ -172,9 +169,6 @@
     <None Include="strings\additions\Windows.UI.Xaml.Media\Windows.UI.Xaml.Media.Matrix.cs">
       <Filter>strings\additions\Windows.UI.Xaml.Media</Filter>
     </None>
-    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.CornerRadius.cs">
-      <Filter>strings\additions\Windows.UI.Xaml</Filter>
-    </None>
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.SR.cs">
       <Filter>strings\additions\Windows.UI.Xaml</Filter>
     </None>
@@ -183,6 +177,15 @@
     </None>
     <None Include="strings\ReferenceInterfaceEntries.cs">
       <Filter>strings</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml\ABI.Windows.System.DispatcherQueueProxyHandler.cs">
+      <Filter>strings\additions\Windows.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.System.DispatcherQueueSynchronizationContext.cs">
+      <Filter>strings\additions\Windows.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.CornerRadius.cs">
+      <Filter>strings\additions\Windows.UI.Xaml</Filter>
     </None>
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.Duration.cs">
       <Filter>strings\additions\Windows.UI.Xaml</Filter>
@@ -207,6 +210,12 @@
     </None>
     <None Include="strings\additions\Microsoft.UI.Xaml.Media.Animation\Microsoft.UI.Xaml.Media.Animation.RepeatBehavior.cs">
       <Filter>strings\additions\Microsoft.UI.Xaml.Media.Animation</Filter>
+    </None>
+    <None Include="strings\additions\Microsoft.UI.Dispatching\Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext.cs">
+      <Filter>strings\additions\Microsoft.UI.Dispatching</Filter>
+    </None>
+    <None Include="strings\additions\Microsoft.UI.Dispatching\ABI.Microsoft.UI.Dispatching.DispatcherQueueProxyHandler.cs">
+      <Filter>strings\additions\Microsoft.UI.Dispatching</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
