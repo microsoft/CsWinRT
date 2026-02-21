@@ -38,7 +38,7 @@ public static unsafe class RestrictedErrorInfo
     private static Exception? GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
     {
         // If the 'HRESULT' indicates success, there is no exception to return
-        if (errorCode.Succeeded())
+        if (errorCode.Succeeded)
         {
             restoredExceptionFromGlobalState = false;
 
@@ -81,7 +81,7 @@ public static unsafe class RestrictedErrorInfo
                 if (IUnknownVftbl.QueryInterfaceUnsafe(
                     thisPtr: restrictedErrorInfoPtr,
                     iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo,
-                    pvObject: out void* languageErrorInfoPtr).Succeeded())
+                    pvObject: out void* languageErrorInfoPtr).Succeeded)
                 {
                     try
                     {
@@ -191,7 +191,7 @@ public static unsafe class RestrictedErrorInfo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowExceptionForHR(HRESULT errorCode)
     {
-        if (errorCode.Failed())
+        if (errorCode.Failed)
         {
             Throw(errorCode);
         }
@@ -274,7 +274,7 @@ public static unsafe class RestrictedErrorInfo
                     if (IUnknownVftbl.QueryInterfaceUnsafe(
                         thisPtr: restrictedErrorObject.GetThisPtrUnsafe(),
                         iid: in WellKnownWindowsInterfaceIIDs.IID_ILanguageExceptionErrorInfo2,
-                        pvObject: out void* languageErrorInfo2Ptr).Succeeded())
+                        pvObject: out void* languageErrorInfo2Ptr).Succeeded)
                     {
                         // If the error object supports 'ILanguageExceptionErrorInfo2', marshal the exception and pass it to 'CapturePropagationContext'
                         try
