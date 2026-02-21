@@ -24,6 +24,7 @@ var entries = new string[]
     "PropertyChangedEventArgs",
     "PropertyChangedEventArgsRuntimeClassFactory",
     "PropertyChangedEventHandler",
+    "DispatcherQueueHandler",
     "IReferenceOfPropertyChangedEventHandler",
     "IReferenceOfNotifyCollectionChangedAction",
     "IReferenceOfNotifyCollectionChangedEventHandler",
