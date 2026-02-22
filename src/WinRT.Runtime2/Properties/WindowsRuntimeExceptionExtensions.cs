@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -374,6 +375,21 @@ internal static class WindowsRuntimeExceptionExtensions
             {
                 ThrowArgumentException();
             }
+        }
+    }
+
+    extension(Win32Exception)
+    {
+        /// <summary>
+        /// Throws a <see cref="Win32Exception"/> with the last system error code.
+        /// </summary>
+        /// <exception cref="Win32Exception">Always thrown.</exception>
+        [DoesNotReturn]
+        [StackTraceHidden]
+        public static void ThrowLastWin32Error()
+        {
+            // The 'Win32Exception' constructor will automatically get the last system error
+            throw new Win32Exception();
         }
     }
 
