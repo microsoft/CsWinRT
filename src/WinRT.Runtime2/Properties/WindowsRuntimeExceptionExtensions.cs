@@ -255,15 +255,16 @@ internal static class WindowsRuntimeExceptionExtensions
         /// </summary>
         /// <param name="index">The index to check.</param>
         /// <param name="count">The size of the collection.</param>
+        /// <param name="paramName">The name of the parameter being checked.</param>
         /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="index"/> is out of range, with an HResult of <c>E_BOUNDS</c>.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ThrowIfIndexOutOfRange(uint index, int count)
+        public static void ThrowIfIndexLargerThanMaxValue(uint index, int count, [CallerArgumentExpression(nameof(index))] string? paramName = null)
         {
             [DoesNotReturn]
             [StackTraceHidden]
-            static void ThrowArgumentOutOfRangeException()
+            static void ThrowArgumentOutOfRangeException(string? paramName)
             {
-                ArgumentOutOfRangeException exception = new(nameof(index), WindowsRuntimeExceptionMessages.ArgumentOutOfRange_IndexLargerThanMaxValue)
+                ArgumentOutOfRangeException exception = new(paramName, WindowsRuntimeExceptionMessages.ArgumentOutOfRange_IndexLargerThanMaxValue)
                 {
                     HResult = WellKnownErrorCodes.E_BOUNDS
                 };
@@ -273,7 +274,7 @@ internal static class WindowsRuntimeExceptionExtensions
 
             if (index >= (uint)count)
             {
-                ThrowArgumentOutOfRangeException();
+                ThrowArgumentOutOfRangeException(paramName);
             }
         }
 

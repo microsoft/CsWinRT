@@ -22,7 +22,7 @@ internal static class BindableIListAdapter
     public static object? GetAt(IList list, uint index)
     {
         // The validation logic is the same as for 'IReadOnlyList<T>'
-        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count);
+        ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(index, list.Count);
 
         try
         {
@@ -90,7 +90,7 @@ internal static class BindableIListAdapter
     public static void SetAt(IList list, uint index, object? value)
     {
         // The validation logic is the same as for 'IReadOnlyList<T>'
-        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count);
+        ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(index, list.Count);
 
         try
         {
@@ -113,7 +113,7 @@ internal static class BindableIListAdapter
     {
         // Inserting at an index one past the end of the list is equivalent to appending,
         // a new item, so we need to ensure that we're within the [0, count + 1) range.
-        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count + 1);
+        ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(index, list.Count + 1);
 
         try
         {
@@ -136,7 +136,7 @@ internal static class BindableIListAdapter
     public static void RemoveAt(IList list, uint index)
     {
         // The validation logic is the same as for 'IReadOnlyList<T>'
-        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count);
+        ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(index, list.Count);
 
         try
         {
