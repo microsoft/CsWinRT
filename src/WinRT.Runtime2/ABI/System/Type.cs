@@ -103,7 +103,7 @@ public static unsafe class TypeMarshaller
 
         if (!WindowsRuntimeFeatureSwitches.EnableXamlTypeMarshalling)
         {
-            throw new NotSupportedException(TypeExceptions.NotSupportedExceptionForMarshallingDisabledExceptionMessage);
+            throw TypeExceptions.GetNotSupportedExceptionForMarshallingDisabled();
         }
 
         ManagedTypeReference typeReference = TypeNameCache.TypeToTypeNameMap.GetOrAdd(value, UncachedTypeMarshaller.ToManagedTypeReference);
@@ -120,7 +120,7 @@ public static unsafe class TypeMarshaller
     {
         if (!WindowsRuntimeFeatureSwitches.EnableXamlTypeMarshalling)
         {
-            throw new NotSupportedException(TypeExceptions.NotSupportedExceptionForMarshallingDisabledExceptionMessage);
+            throw TypeExceptions.GetNotSupportedExceptionForMarshallingDisabled();
         }
 
         ReadOnlySpan<char> typeName = HStringMarshaller.ConvertToManagedUnsafe(value.Name);
@@ -581,14 +581,18 @@ internal static unsafe class TypeExceptions
     }
 
     /// <summary>
-    /// <see cref="NotSupportedException"/> exception message for if marshalling support is disabled.
-    /// This is a message rather than a function throwing an exception to allow feature switch support
-    /// to work with AOT publishing.
+    /// Gets a <see cref="NotSupportedException"/> if marshalling support is disabled.
     /// </summary>
-    public const string NotSupportedExceptionForMarshallingDisabledExceptionMessage =
-        $"Support for marshalling 'System.Type' values is disabled (make sure that the 'CsWinRTEnableXamlTypeMarshalling' property is not set to 'false'). " +
-        $"In this configuration, marshalling a 'System.Type' value directly to native code or to managed will always fail. Additionally, marshalling a " +
-        $"boxed 'System.Type' object as an untyped parameter for a Windows Runtime API will result in the CCW using the same layout as for 'object'.";
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static NotSupportedException GetNotSupportedExceptionForMarshallingDisabled()
+    {
+        // We can't throw the exception from here like the other method above, because it causes
+        // a linker crash when publishing with Native AOT. We can update this once it's fixed.
+        return new(
+            $"Support for marshalling 'System.Type' values is disabled (make sure that the 'CsWinRTEnableXamlTypeMarshalling' property is not set to 'false'). " +
+            $"In this configuration, marshalling a 'System.Type' value directly to native code or to managed will always fail. Additionally, marshalling a " +
+            $"boxed 'System.Type' object as an untyped parameter for a Windows Runtime API will result in the CCW using the same layout as for 'object'.");
+    }
 }
 
 /// <summary>
