@@ -6,6 +6,8 @@
     <Platforms>x86;x64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
     <PublishProfileFullPath>$(MSBuildProjectDirectory)\..\PublishProfiles\win-$(Platform).pubxml</PublishProfileFullPath>
+
+     <!-- Test disabling type marshaling -->
     <CsWinRTEnableXamlTypeMarshalling>false</CsWinRTEnableXamlTypeMarshalling>
   </PropertyGroup>
 
