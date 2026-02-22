@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Windows.Foundation;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -274,21 +272,5 @@ internal partial class UniversalTaskAdapter<
             newState = (origState & newStateIgnoreMask) | newStateSetMask;
             prevState = Interlocked.CompareExchange(ref _state, newState, origState);
         }
-    }
-
-    /// <summary>
-    /// Creates an <see cref="InvalidOperationException"/> to indicate that results cannot be obtained.
-    /// </summary>
-    /// <param name="innerException">The inner exception, if available.</param>
-    /// <returns>The resulting <see cref="InvalidOperationException"/> instance.</returns>
-    private static InvalidOperationException CreateCannotGetResultsFromIncompleteOperationException(Exception? innerException)
-    {
-        InvalidOperationException exception = innerException is null
-            ? new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation)
-            : new InvalidOperationException(SR.InvalidOperation_CannotGetResultsFromIncompleteOperation, innerException);
-
-        exception.HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
-
-        return exception;
     }
 }

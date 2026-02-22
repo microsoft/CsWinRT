@@ -3,8 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -59,12 +57,7 @@ internal partial class WindowsRuntimeImports
 
         if (functionPtr is null)
         {
-            // The 'Win32Exception' constructor will automatically get the last system error
-            [DoesNotReturn]
-            [StackTraceHidden]
-            static void ThrowWin32Exception() => throw new Win32Exception();
-
-            ThrowWin32Exception();
+            Win32Exception.ThrowLastWin32Error();
         }
 
         return functionPtr;

@@ -87,12 +87,7 @@ internal sealed unsafe class WindowsRuntimeDllModule
 
         if ((_moduleHandle != (HANDLE)null) && WindowsRuntimeImports.FreeLibrary(_moduleHandle).Failed)
         {
-            // The 'Win32Exception' constructor will automatically get the last system error
-            [DoesNotReturn]
-            [StackTraceHidden]
-            static void ThrowWin32Exception() => throw new Win32Exception();
-
-            ThrowWin32Exception();
+            Win32Exception.ThrowLastWin32Error();
         }
     }
 

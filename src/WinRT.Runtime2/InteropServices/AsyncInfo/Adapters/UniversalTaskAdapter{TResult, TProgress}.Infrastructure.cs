@@ -46,9 +46,8 @@ internal partial class UniversalTaskAdapter<
         // 'IAsyncInfo' throws 'E_ILLEGAL_METHOD_CALL' when called in a state other than completed (successfully)
         if (!IsInRunToCompletionState)
         {
-            throw CreateCannotGetResultsFromIncompleteOperationException(null);
+            InvalidOperationException.ThrowCannotGetResultsFromIncompleteOperation();
         }
-
 
         // If this is a synchronous operation, use the cached result
         if (CompletedSynchronously)
@@ -78,7 +77,7 @@ internal partial class UniversalTaskAdapter<
         }
         catch (TaskCanceledException tcEx)
         {
-            throw CreateCannotGetResultsFromIncompleteOperationException(tcEx);
+            throw InvalidOperationException.GetCannotGetResultsFromIncompleteOperationException(tcEx);
         }
     }
 
@@ -357,17 +356,7 @@ internal partial class UniversalTaskAdapter<
     /// <exception cref="ObjectDisposedException">Thrown if the current instance is in the closed state.</exception>
     private void EnsureNotClosed()
     {
-        if (!IsInClosedState)
-        {
-            return;
-        }
-
-        ObjectDisposedException ex = new(SR.ObjectDisposed_AsyncInfoIsClosed)
-        {
-            HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL
-        };
-
-        throw ex;
+        ObjectDisposedException.ThrowIfAsyncInfoIsClosed(IsInClosedState);
     }
 
     /// <summary>

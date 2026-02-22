@@ -35,7 +35,7 @@ public static class IReadOnlyDictionaryMethods<TKey, TValue>
         }
         catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_BOUNDS)
         {
-            throw new KeyNotFoundException("Arg_KeyNotFoundWithKey", e);
+            throw KeyNotFoundException.GetKeyNotFoundException(e);
         }
     }
 

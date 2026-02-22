@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -23,14 +22,7 @@ public static class IReadOnlyListMethods
         uint count = IVectorViewMethods.Size(thisReference);
 
         // 'IVectorView<T>' uses 'uint' for the size, so we need to validate it's in the valid 'int' range
-        if (count > int.MaxValue)
-        {
-            [DoesNotReturn]
-            static void ThrowInvalidOperationException()
-                => throw new InvalidOperationException("InvalidOperation_CollectionBackingListTooLarge");
-
-            ThrowInvalidOperationException();
-        }
+        InvalidOperationException.ThrowIfCollectionBackingListTooLarge(count);
 
         return (int)count;
     }

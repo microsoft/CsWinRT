@@ -35,16 +35,7 @@ public static class IReadOnlyDictionaryAdapter<TKey, TValue>
         // exception if the lookup fails, adjusting the 'HRESUT', and re-throwing.
         if (!dictionary.TryGetValue(key, out TValue? value))
         {
-            [DoesNotReturn]
-            static void ThrowKeyNotFoundException()
-            {
-                throw new KeyNotFoundException("Arg_KeyNotFoundWithKey")
-                {
-                    HResult = WellKnownErrorCodes.E_BOUNDS
-                };
-            }
-
-            ThrowKeyNotFoundException();
+            KeyNotFoundException.ThrowKeyNotFound();
         }
 
         return value;

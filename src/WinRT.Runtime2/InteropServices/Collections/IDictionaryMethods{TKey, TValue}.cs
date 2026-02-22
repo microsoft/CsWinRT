@@ -35,7 +35,7 @@ public static class IDictionaryMethods<TKey, TValue>
         }
         catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_BOUNDS)
         {
-            throw new KeyNotFoundException("Arg_KeyNotFoundWithKey", e);
+            throw KeyNotFoundException.GetKeyNotFoundException(e);
         }
     }
 
@@ -62,7 +62,7 @@ public static class IDictionaryMethods<TKey, TValue>
         // Skip the insertion if the key already exists, just throw an exception directly
         if (ContainsKey<TMethods>(thisReference, key))
         {
-            throw new ArgumentException("Argument_AddingDuplicate");
+            ArgumentException.ThrowAddingDuplicate();
         }
 
         // We can ignore the result here too, as we expect the insertion to succeed
@@ -182,12 +182,12 @@ public static class IDictionaryMethods<TKey, TValue>
 
         if (array.Length <= arrayIndex && count > 0)
         {
-            throw new ArgumentException("Argument_IndexOutOfArrayBounds");
+            ArgumentException.ThrowIndexOutOfArrayBounds();
         }
 
         if (array.Length - arrayIndex < count)
         {
-            throw new ArgumentException("Argument_InsufficientSpaceToCopyCollection");
+            ArgumentException.ThrowInsufficientSpaceToCopyCollection();
         }
 
         using IEnumerator<KeyValuePair<TKey, TValue>> enumerator = TIIterableMethods.First(thisIIterableReference);
