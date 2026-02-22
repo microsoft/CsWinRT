@@ -4,7 +4,7 @@
 namespace WindowsRuntime;
 
 /// <summary>
-/// Exception messages for internal exceptions thrown by APIs within 'WinRT.Interop.dll'.
+/// Exception messages for internal exceptions thrown by APIs within 'WinRT.Runtime.dll'.
 /// </summary>
 internal static class WindowsRuntimeExceptionMessages
 {
