@@ -94,15 +94,7 @@ internal sealed unsafe class WindowsRuntimeExternalArrayBuffer : IBuffer
         get => (uint)_length;
         set
         {
-            if (value > Capacity)
-            {
-                ArgumentOutOfRangeException ex = new(nameof(value), global::Windows.Foundation.SR.Argument_BufferLengthExceedsCapacity)
-                {
-                    HResult = WellKnownErrorCodes.E_BOUNDS
-                };
-
-                throw ex;
-            }
+            ArgumentOutOfRangeException.ThrowIfBufferLengthExceedsCapacity(value, Capacity);
 
             _length = unchecked((int)value);
         }
