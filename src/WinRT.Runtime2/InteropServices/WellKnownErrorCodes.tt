@@ -1,4 +1,4 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ output extension=".g.cs"#>
@@ -19,6 +19,7 @@ var entries = new (string Name, uint Value, string Description)[]
     ("E_FAIL", 0x80004005, "Unspecified error."),
     ("E_NOINTERFACE", 0x80004002, "No such interface supported."),
     ("E_POINTER", 0x80004003, "Pointer that is not valid."),
+    ("E_NOT_VALID_STATE", 0x8007139F, "The group or resource is not in the correct state to perform the requested operation."),
     ("REGDB_E_CLASSNOTREG", 0x80040154, "Class not registered."),
     ("TYPE_E_TYPEMISMATCH", 0x80028CA0, "Type mismatch."),
     ("DISP_E_OVERFLOW", 0x8002000A, "Numeric overflow."),

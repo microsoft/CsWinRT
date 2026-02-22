@@ -590,9 +590,13 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <inheritdoc/>
     CustomQueryInterfaceResult ICustomQueryInterface.GetInterface(ref Guid iid, out nint ppv)
     {
-        // We explicitly don't handle overridable interfaces and 'IInspectable'.
-        // And when 'NativeObjectReference' is null which is during initialization,
-        // those calls are for outer from inner which we don't need to handle either.
+        // We explicitly don't handle overridable interfaces, as well as 'IInspectable' and 'IWeakReference'.
+        // This last one in particular must be ignored to avoid issues when an RCW object is used as a target
+        // for a 'WeakReference' object. Lastly, we also need to not handle this 'QueryInterface' request when
+        // 'NativeObjectReference' is 'null', which will be the case during initialization (because objects are
+        // constructed entirely from this base 'WindowsRuntimeObject' type). In that case, 'QueryInterface' calls
+        // will be coming for the outer instance from the inner one, where the outer calls 'GetInterface' first,
+        // and they wouldn't need to be handled anyway.
         if (IsOverridableInterface(in iid) ||
             WellKnownWindowsInterfaceIIDs.IID_IInspectable == iid ||
             WellKnownWindowsInterfaceIIDs.IID_IWeakReference == iid ||

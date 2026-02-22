@@ -76,7 +76,6 @@
     <None Include="packages.config" />
     <None Include="PreviousPlatforms.linq" />
     <None Include="strings\additions\Microsoft.UI.Dispatching\Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext.cs" />
-    <None Include="strings\additions\Microsoft.UI.Dispatching\ABI.Microsoft.UI.Dispatching.DispatcherQueueProxyHandler.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IBufferByteAccess.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IMarshal.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IMemoryBufferByteAccess.cs" />
@@ -112,7 +111,6 @@
     <None Include="strings\additions\Windows.UI.Xaml.Media.Animation\Windows.UI.Xaml.Media.Animation.RepeatBehavior.cs" />
     <None Include="strings\additions\Windows.UI.Xaml.Media.Media3D\Windows.UI.Xaml.Media.Media3D.Matrix3D.cs" />
     <None Include="strings\additions\Windows.UI.Xaml.Media\Windows.UI.Xaml.Media.Matrix.cs" />
-    <None Include="strings\additions\Windows.UI.Xaml\ABI.Windows.System.DispatcherQueueProxyHandler.cs" />
     <None Include="strings\additions\Windows.UI.Xaml\Windows.System.DispatcherQueueSynchronizationContext.cs" />
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.CornerRadius.cs" />
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.Duration.cs" />

@@ -153,23 +153,26 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <Target Name="CsWinRTRemoveWinMDReferences" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences">
     <ItemGroup>
-      <!--Move winmd references into private item group to prevent subsequent winmd reference errors-->
+
+      <!-- Move winmd references into private item group to prevent subsequent winmd reference errors -->
       <CsWinRTRemovedReferences Include="@(ReferencePath)" Condition="'%(ReferencePath.Extension)' == '.winmd'" />
       <CsWinRTInputs Include="@(CsWinRTRemovedReferences)"/>
 
-      <!--Prevent NETSDK1130 errors from winmd references-->
+      <!-- Prevent NETSDK1130 errors from winmd references -->
       <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.Extension)' == '.winmd'" />
       <ReferencePathWithRefAssemblies Remove="@(CsWinRTRemovedReferences)" 
         Condition="'%(CsWinRTRemovedReferences.Filename)%(CsWinRTRemovedReferences.Extension)' == '%(ReferencePathWithRefAssemblies.Filename)%(ReferencePathWithRefAssemblies.Extension)'" />
-      <!--Do not publish projection source winmds, but do include implementation dlls -->
+
+      <!-- Do not publish projection source winmds, but do include implementation dlls -->
       <ReferenceCopyLocalPaths Remove="@(CsWinRTRemovedReferences)" />
       <ReferenceCopyLocalPaths Include="@(CsWinRTRemovedReferences->'%(RootDir)%(Directory)%(DestinationSubDirectory)%(Implementation)')" 
                                Condition="'%(CsWinRTRemovedReferences.Implementation)' != '' AND Exists('%(CsWinRTRemovedReferences.RootDir)%(CsWinRTRemovedReferences.Directory)%(CsWinRTRemovedReferences.DestinationSubDirectory)%(CsWinRTRemovedReferences.Implementation)')" />
-      <!--Remove winmd references from deps.json to prevent CLR failing unit test execution-->
+
+      <!-- Remove winmd references from deps.json to prevent CLR failing unit test execution -->
       <ReferenceDependencyPaths Remove="@(ReferenceDependencyPaths)" Condition="%(ReferenceDependencyPaths.Extension) == '.winmd'"/>
 
-      <!-- ReferenceCopyLocalPaths above will cause the Implementation dlls to be copied from references to the output dir but
-           those copies aren't included in the VS UpToDate check, so add them manually. -->
+      <!-- ReferenceCopyLocalPaths above will cause the Implementation dlls to be copied from references to the
+           output dir but those copies aren't included in the VS UpToDate check, so add them manually. -->
       <_CsWinRT_CopyLocalImplementationDlls
           Include="@(CsWinRTInputs->'%(RootDir)%(Directory)%(DestinationSubDirectory)%(Implementation)')"
           Condition="'%(CsWinRTInputs.Implementation)'!=''" />
@@ -181,8 +184,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
+  <!-- From the Windows SDK projection binary referenced, determine the folder with the WinMDs in the targeting pack -->
   <Target Name="CsWinRTResolveWindowsMetadata" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences" Condition="'$(CsWinRTWindowsMetadata)' == ''">
-      <!-- From the Windows SDK projection binary referenced, determine the folder with the WinMDs in the targeting pack. -->
       <ItemGroup>
         <_WindowsSdkProjectionFolder Include="@(ReferencePath->'%(RootDir)%(Directory)..\..\winmd\')" Condition="'%(ReferencePath.FileName)%(ReferencePath.Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
       </ItemGroup>

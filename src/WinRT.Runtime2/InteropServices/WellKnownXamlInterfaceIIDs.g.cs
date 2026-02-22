@@ -98,6 +98,17 @@ internal static class WellKnownXamlInterfaceIIDs
     }
 
     /// <summary>
+    /// Gets the IID for <c>DispatcherQueueHandler</c>.
+    /// </summary>
+    public static ref readonly Guid IID_DispatcherQueueHandler
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref WindowsRuntimeFeatureSwitches.UseWindowsUIXamlProjections
+            ? ref WellKnownWindowsInterfaceIIDs.IID_WUX_DispatcherQueueHandler
+            : ref WellKnownWindowsInterfaceIIDs.IID_MUX_DispatcherQueueHandler;
+    }
+
+    /// <summary>
     /// Gets the IID for <c>IReferenceOfPropertyChangedEventHandler</c>.
     /// </summary>
     public static ref readonly Guid IID_IReferenceOfPropertyChangedEventHandler
