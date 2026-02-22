@@ -108,7 +108,7 @@ internal static class WindowsRuntimeExceptionExtensions
         [StackTraceHidden]
         public static void ThrowCannotSetCompletionHandlerMoreThanOnce()
         {
-            InvalidOperationException exception = new(WindowsRuntimeExceptionMessages.InvalidOperation_CannotSetCompletionHanlderMoreThanOnce)
+            InvalidOperationException exception = new(WindowsRuntimeExceptionMessages.InvalidOperation_CannotSetCompletionHandlerMoreThanOnce)
             {
                 HResult = WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT
             };

@@ -28,7 +28,7 @@ internal static class WindowsRuntimeExceptionMessages
 
     public const string InvalidOperation_CannotRemoveLastFromEmptyCollection = "Cannot remove the last element from an empty collection.";
 
-    public const string InvalidOperation_CannotSetCompletionHanlderMoreThanOnce = "The 'Completed' handler delegate cannot be set more than once, but this handler has already been set.";
+    public const string InvalidOperation_CannotSetCompletionHandlerMoreThanOnce = "The 'Completed' handler delegate cannot be set more than once, but this handler has already been set.";
 
     public const string InvalidOperation_CollectionBackingListTooLarge = "The backing list is too large to be used as a .NET collection.";
 
