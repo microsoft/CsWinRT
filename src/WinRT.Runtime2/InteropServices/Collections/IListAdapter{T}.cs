@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -191,19 +190,7 @@ public static class IListAdapter<T>
         int count = list.Count;
 
         // Check that the list isn't empty, as that would of course be invalid
-        if (count == 0)
-        {
-            [DoesNotReturn]
-            static void ThrowInvalidOperationException()
-            {
-                throw new InvalidOperationException("InvalidOperation_CannotRemoveLastFromEmptyCollection")
-                {
-                    HResult = WellKnownErrorCodes.E_BOUNDS
-                };
-            }
-
-            ThrowInvalidOperationException();
-        }
+        InvalidOperationException.ThrowIfCannotRemoveLastFromEmptyCollection(count);
 
         try
         {

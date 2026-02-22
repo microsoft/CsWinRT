@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
+#pragma warning disable IDE0046
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -93,10 +95,7 @@ public sealed class IReadOnlyDictionarySplitAdapter<TKey, TValue> : IReadOnlyDic
             // We don't need to adjust the 'HRESULT' here, it'll be done separately.
             if (!TryGetValue(key, out TValue? value))
             {
-                [DoesNotReturn]
-                static void ThrowKeyNotFoundException() => throw new KeyNotFoundException("Arg_KeyNotFoundWithKey");
-
-                ThrowKeyNotFoundException();
+                throw KeyNotFoundException.GetKeyNotFoundException();
             }
 
             return value;

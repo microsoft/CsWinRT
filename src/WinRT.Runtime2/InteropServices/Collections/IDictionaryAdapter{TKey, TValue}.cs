@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -37,16 +36,7 @@ public static class IDictionaryAdapter<TKey, TValue>
         // Same logic as in 'IReadOnlyDictionaryAdapter<TKey, TValue>.Lookup'
         if (!dictionary.TryGetValue(key, out TValue? value))
         {
-            [DoesNotReturn]
-            static void ThrowKeyNotFoundException()
-            {
-                throw new KeyNotFoundException("Arg_KeyNotFoundWithKey")
-                {
-                    HResult = WellKnownErrorCodes.E_BOUNDS
-                };
-            }
-
-            ThrowKeyNotFoundException();
+            KeyNotFoundException.ThrowKeyNotFound();
         }
 
         return value;
@@ -122,16 +112,7 @@ public static class IDictionaryAdapter<TKey, TValue>
 
         if (!removed)
         {
-            [DoesNotReturn]
-            static void ThrowKeyNotFoundException()
-            {
-                throw new KeyNotFoundException("Arg_KeyNotFoundWithKey")
-                {
-                    HResult = WellKnownErrorCodes.E_BOUNDS
-                };
-            }
-
-            ThrowKeyNotFoundException();
+            KeyNotFoundException.ThrowKeyNotFound();
         }
     }
 }

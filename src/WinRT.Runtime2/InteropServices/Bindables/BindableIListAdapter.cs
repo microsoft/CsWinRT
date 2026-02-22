@@ -30,7 +30,7 @@ internal static class BindableIListAdapter
         }
         catch (ArgumentOutOfRangeException e)
         {
-            throw new Exception("ArgumentOutOfRange_Index", e) { HResult = WellKnownErrorCodes.E_BOUNDS };
+            throw Exception.GetIndexOutOfRangeException(e);
         }
     }
 
@@ -98,7 +98,7 @@ internal static class BindableIListAdapter
         }
         catch (IndexOutOfRangeException e)
         {
-            throw new Exception("ArgumentOutOfRange_Index", e) { HResult = WellKnownErrorCodes.E_BOUNDS };
+            throw Exception.GetIndexOutOfRangeException(e);
         }
     }
 
@@ -168,10 +168,7 @@ internal static class BindableIListAdapter
     /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.ibindablevector.removeatend"/>
     public static void RemoveAtEnd(IList list)
     {
-        if (list.Count == 0)
-        {
-            throw new InvalidOperationException("InvalidOperation_CannotRemoveLastFromEmptyCollection") { HResult = WellKnownErrorCodes.E_BOUNDS };
-        }
+        InvalidOperationException.ThrowIfCannotRemoveLastFromEmptyCollection(list.Count);
 
         RemoveAt(list, (uint)list.Count - 1);
     }

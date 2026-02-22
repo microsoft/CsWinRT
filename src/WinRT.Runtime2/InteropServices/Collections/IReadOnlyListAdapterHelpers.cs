@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -22,18 +21,6 @@ internal static class IReadOnlyListAdapterHelpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureIndexInValidRange(uint index, int count)
     {
-        if (index >= (uint)count)
-        {
-            [DoesNotReturn]
-            static void ThrowArgumentOutOfRangeException()
-            {
-                throw new ArgumentOutOfRangeException(nameof(index), "ArgumentOutOfRange_IndexLargerThanMaxValue")
-                {
-                    HResult = WellKnownErrorCodes.E_BOUNDS
-                };
-            }
-
-            ThrowArgumentOutOfRangeException();
-        }
+        ArgumentOutOfRangeException.ThrowIfIndexOutOfRange(index, count);
     }
 }
