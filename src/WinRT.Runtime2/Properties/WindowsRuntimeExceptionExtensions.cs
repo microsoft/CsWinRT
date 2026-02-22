@@ -25,6 +25,7 @@ internal static class WindowsRuntimeExceptionExtensions
         /// <param name="task">The <see cref="Task"/> to check for <see langword="null"/>.</param>
         /// <exception cref="NullReferenceException">Thrown if <paramref name="task"/> is <see langword="null"/>.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
         public static void ThrowIfTaskProviderReturnedNull([NotNull] Task? task)
         {
             [DoesNotReturn]
@@ -50,6 +51,7 @@ internal static class WindowsRuntimeExceptionExtensions
         /// This method is used when the task is created by a task provider delegate.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
         public static void ThrowIfTaskProviderReturnedUnstartedTask(Task task)
         {
             [DoesNotReturn]
@@ -72,6 +74,7 @@ internal static class WindowsRuntimeExceptionExtensions
         /// This method is used when the task is directly provided (as opposed to being created by a task provider delegate).
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
         public static void ThrowIfUnstartedTaskSpecified(Task task)
         {
             [DoesNotReturn]
@@ -152,6 +155,7 @@ internal static class WindowsRuntimeExceptionExtensions
         /// <param name="size">The collection size to check.</param>
         /// <exception cref="InvalidOperationException">Thrown if <paramref name="size"/> exceeds <see cref="int.MaxValue"/>.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
         public static void ThrowIfCollectionBackingListTooLarge(uint size)
         {
             [DoesNotReturn]
@@ -171,6 +175,7 @@ internal static class WindowsRuntimeExceptionExtensions
         /// <param name="count">The collection count to check.</param>
         /// <exception cref="InvalidOperationException">Thrown if <paramref name="count"/> is zero, with an HResult of <c>E_BOUNDS</c>.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
         public static void ThrowIfCannotRemoveLastFromEmptyCollection(int count)
         {
             [DoesNotReturn]
@@ -200,6 +205,7 @@ internal static class WindowsRuntimeExceptionExtensions
         /// <param name="isClosed">Whether the async info is in the closed state.</param>
         /// <exception cref="ObjectDisposedException">Thrown if <paramref name="isClosed"/> is <see langword="true"/>.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
         public static void ThrowIfAsyncInfoIsClosed(bool isClosed)
         {
             [DoesNotReturn]
@@ -231,6 +237,7 @@ internal static class WindowsRuntimeExceptionExtensions
         /// <param name="paramName">The name of the parameter being checked.</param>
         /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="length"/> exceeds <paramref name="capacity"/>.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
         public static void ThrowIfBufferLengthExceedsCapacity(uint length, uint capacity, [CallerArgumentExpression(nameof(length))] string? paramName = null)
         {
             [DoesNotReturn]
@@ -259,6 +266,7 @@ internal static class WindowsRuntimeExceptionExtensions
         /// <param name="paramName">The name of the parameter being checked.</param>
         /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="index"/> is out of range, with an HResult of <c>E_BOUNDS</c>.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
         public static void ThrowIfIndexLargerThanMaxValue(uint index, int count, [CallerArgumentExpression(nameof(index))] string? paramName = null)
         {
             [DoesNotReturn]
@@ -364,6 +372,7 @@ internal static class WindowsRuntimeExceptionExtensions
         /// <param name="rank">The array rank to check.</param>
         /// <exception cref="ArgumentException">Thrown if <paramref name="rank"/> is not 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
         public static void ThrowIfRankMultiDimNotSupported(int rank)
         {
             [DoesNotReturn]
