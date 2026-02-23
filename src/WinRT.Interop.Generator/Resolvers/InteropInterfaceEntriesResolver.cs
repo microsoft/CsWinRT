@@ -134,14 +134,31 @@ internal static class InteropInterfaceEntriesResolver
             marshalInterfaceEntryInfo = new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable);
         }
 
+        // Only include the built-in 'IStringable' implementation (which just calls 'object.ToString()') if the user didn't explicitly implement the
+        // projected 'IStringable' interface. If that's the case (since we can only have one of the two), we give precedence to the explicit one.
+        if (!HasExplicitlyImplementedIStringableInterfaceImplementation(vtableTypes, interopReferences))
+        {
+            yield return new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable);
+        }
+
         // Prepare the set of all built-in native interface implementations. These always follow the vtable slots for
         // user-defined interfaces implemented by exposed types. 'IUnknown' in particular must always be the last one.
-        yield return new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable);
         yield return new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable);
         yield return marshalInterfaceEntryInfo;
         yield return new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable);
         yield return new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable);
         yield return new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable);
+    }
+
+    /// <summary>
+    /// Checks whether the input set of vtable types contains a user-implemented <c>IStringable</c> interface.
+    /// </summary>
+    /// <param name="vtableTypes">The vtable types to use as source.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>Whether <c>IStringable</c> was found.</returns>
+    private static bool HasExplicitlyImplementedIStringableInterfaceImplementation(TypeSignatureEquatableSet vtableTypes, InteropReferences interopReferences)
+    {
+        return vtableTypes.Contains(interopReferences.IStringable.ToReferenceTypeSignature());
     }
 
     /// <summary>
