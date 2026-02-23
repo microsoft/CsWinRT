@@ -31,7 +31,7 @@ public static unsafe class IStringableImpl
     /// </summary>
     static IStringableImpl()
     {
-        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IUnknownImpl.Vtable;
+        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
         Vftbl.ToString = &ToString;
     }
