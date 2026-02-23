@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -30,7 +29,7 @@ public static class IListAdapter<T>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.getat"/>
     public static T GetAt(IList<T> list, uint index)
     {
-        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count);
+        ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(index, list.Count);
 
         try
         {
@@ -117,7 +116,7 @@ public static class IListAdapter<T>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.setat"/>
     public static void SetAt(IList<T> list, uint index, T value)
     {
-        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count);
+        ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(index, list.Count);
 
         try
         {
@@ -142,7 +141,7 @@ public static class IListAdapter<T>
     {
         // Inserting at an index one past the end of the list is equivalent to just
         // appending an item, so we need to ensure that we're within '[0, count + 1)'.
-        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count + 1);
+        ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(index, list.Count + 1);
 
         try
         {
@@ -164,7 +163,7 @@ public static class IListAdapter<T>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.removeat"/>
     public static void RemoveAt(IList<T> list, uint index)
     {
-        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count);
+        ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(index, list.Count);
 
         try
         {
@@ -191,19 +190,7 @@ public static class IListAdapter<T>
         int count = list.Count;
 
         // Check that the list isn't empty, as that would of course be invalid
-        if (count == 0)
-        {
-            [DoesNotReturn]
-            static void ThrowInvalidOperationException()
-            {
-                throw new InvalidOperationException("InvalidOperation_CannotRemoveLastFromEmptyCollection")
-                {
-                    HResult = WellKnownErrorCodes.E_BOUNDS
-                };
-            }
-
-            ThrowInvalidOperationException();
-        }
+        InvalidOperationException.ThrowIfCannotRemoveLastFromEmptyCollection(count);
 
         try
         {

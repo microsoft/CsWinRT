@@ -88,18 +88,8 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
         get => (uint)_length;
         set
         {
-            if (value > Capacity)
-            {
-                ArgumentOutOfRangeException ex = new(nameof(value), global::Windows.Foundation.SR.Argument_BufferLengthExceedsCapacity)
-                {
-                    HResult = WellKnownErrorCodes.E_BOUNDS
-                };
+            ArgumentOutOfRangeException.ThrowIfBufferLengthExceedsCapacity(value, Capacity);
 
-                throw ex;
-            }
-
-            // Capacity is ensured to not exceed Int32.MaxValue, so Length is within this limit and this cast is safe:
-            Debug.Assert(Capacity <= int.MaxValue);
             _length = unchecked((int)value);
         }
     }
@@ -112,5 +102,14 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => &((byte*)Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(_pinnedData)))[(uint)_offset];
+    }
+
+    /// <summary>
+    /// Gets an <see cref="ArraySegment{T}"/> value for the underlying data in this buffer.
+    /// </summary>
+    /// <returns>The resulting <see cref="ArraySegment{T}"/> value.</returns>
+    internal ArraySegment<byte> GetArraySegment()
+    {
+        return new(_pinnedData, _offset, _length);
     }
 }

@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 #pragma warning disable IDE0045, IDE0046
@@ -64,16 +63,7 @@ public static class IReadOnlyDictionaryAdapterExtensions
             // Throw the correct exception if the lookup failed
             if (!found)
             {
-                [DoesNotReturn]
-                static void ThrowKeyNotFoundException()
-                {
-                    throw new KeyNotFoundException("Arg_KeyNotFoundWithKey")
-                    {
-                        HResult = WellKnownErrorCodes.E_BOUNDS
-                    };
-                }
-
-                ThrowKeyNotFoundException();
+                KeyNotFoundException.ThrowKeyNotFound();
             }
 
             return value!;

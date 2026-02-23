@@ -64,7 +64,7 @@ public static class IListAdapterExtensions
                 return 0;
             }
 
-            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+            ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(startIndex, count);
 
             // Zero-size arrays are supported, we just stop immediately
             if (itemsSize == 0)
@@ -110,7 +110,7 @@ public static class IListAdapterExtensions
                 return 0;
             }
 
-            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+            ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(startIndex, count);
 
             if (itemsSize == 0)
             {
@@ -155,7 +155,7 @@ public static class IListAdapterExtensions
                 return 0;
             }
 
-            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+            ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(startIndex, count);
 
             if (itemsSize == 0)
             {
@@ -187,7 +187,7 @@ public static class IListAdapterExtensions
                 return 0;
             }
 
-            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+            ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(startIndex, count);
 
             if (itemsSize == 0)
             {
@@ -245,7 +245,7 @@ public static class IListAdapterBlittableValueTypeExtensions
                 return 0;
             }
 
-            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+            ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(startIndex, count);
 
             if (itemsSize == 0)
             {
@@ -290,7 +290,7 @@ public static class IListAdapterUnmanagedValueTypeExtensions
                 return 0;
             }
 
-            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+            ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(startIndex, count);
 
             if (itemsSize == 0)
             {
@@ -335,7 +335,7 @@ public static class IListAdapterManagedValueTypeExtensions
                 return 0;
             }
 
-            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+            ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(startIndex, count);
 
             if (itemsSize == 0)
             {
@@ -393,7 +393,7 @@ public static class IListAdapterKeyValuePairTypeExtensions
                 return 0;
             }
 
-            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+            ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(startIndex, count);
 
             if (itemsSize == 0)
             {
@@ -452,7 +452,7 @@ public static class IListAdapterReferenceTypeExtensions
                 return 0;
             }
 
-            IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(startIndex, count);
+            ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(startIndex, count);
 
             if (itemsSize == 0)
             {

@@ -120,7 +120,7 @@ file static unsafe class WindowsRuntimePinnedArrayBufferByteAccessImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.get_Buffer = &get_Buffer;
+        Vftbl.Buffer = &Buffer;
     }
 
     /// <summary>
@@ -134,9 +134,9 @@ file static unsafe class WindowsRuntimePinnedArrayBufferByteAccessImpl
 
     /// <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT get_Buffer(void* thisPtr, byte** buffer)
+    private static HRESULT Buffer(void* thisPtr, byte** value)
     {
-        if (buffer is null)
+        if (value is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
@@ -145,7 +145,7 @@ file static unsafe class WindowsRuntimePinnedArrayBufferByteAccessImpl
         {
             var thisObject = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.InteropServices.WindowsRuntimePinnedArrayBuffer>((ComInterfaceDispatch*)thisPtr);
 
-            *buffer = thisObject.Buffer;
+            *value = thisObject.Buffer;
 
             return WellKnownErrorCodes.S_OK;
         }

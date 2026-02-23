@@ -206,7 +206,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
             state: this);
 
         // If the operation fails, just release without context as a best effort
-        if (hresult.Failed())
+        if (hresult.Failed)
         {
             base.NativeReleaseWithoutContextUnsafe();
         }
@@ -223,7 +223,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
         {
             HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(GetThisPtrUnsafe(), in iid, out void* targetObject);
 
-            if (hresult.Succeeded())
+            if (hresult.Succeeded)
             {
                 if (IsAggregated)
                 {

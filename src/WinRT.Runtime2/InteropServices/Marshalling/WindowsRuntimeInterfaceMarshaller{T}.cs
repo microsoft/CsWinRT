@@ -65,7 +65,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
             HRESULT hresult = windowsRuntimeObject.NativeObjectReference.TryAsNative(in iid, out void* interfacePtr);
 
             // This is unlikely to fail, since we'd only get here with an object that passed a cast to the interface type
-            if (hresult.Failed())
+            if (hresult.Failed)
             {
                 ThrowInvalidCastExceptionNative(value, in iid, hresult);
             }
@@ -88,7 +88,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
 
             // It is very unlikely for this 'QueryInterface' to fail (it means either a managed object has an invalid vtable,
             // or something else happened that is not really supported). Still, we can produce a nice error message for it.
-            if (hresult.Failed())
+            if (hresult.Failed)
             {
                 ThrowInvalidCastExceptionManaged(value, in iid, hresult);
             }
@@ -128,7 +128,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
         {
             HRESULT hresult = windowsRuntimeObject.NativeObjectReference.TryAsNative(in iid, out void* interfacePtr);
 
-            if (hresult.Failed())
+            if (hresult.Failed)
             {
                 ThrowInvalidCastExceptionNative(value, in iid, hresult);
             }
@@ -157,7 +157,7 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
             // Release the original 'IUnknown', same as the variant above
             _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
 
-            if (hresult.Failed())
+            if (hresult.Failed)
             {
                 ThrowInvalidCastExceptionManaged(value, in iid, hresult);
             }

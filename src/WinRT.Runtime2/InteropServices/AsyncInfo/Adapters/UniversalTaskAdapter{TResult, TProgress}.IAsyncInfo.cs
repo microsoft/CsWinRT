@@ -74,7 +74,7 @@ internal partial class UniversalTaskAdapter<
             // an inexplicable 'NullReferenceException'.
             error = task.Exception is AggregateException aggregateException
                 ? aggregateException.InnerException ?? aggregateException
-                : new Exception(SR.WinRtCOM_Error) { HResult = WellKnownErrorCodes.E_FAIL };
+                : new Exception(WindowsRuntimeExceptionMessages.WinRtCOM_Error) { HResult = WellKnownErrorCodes.E_FAIL };
 
             // If '_error' was set concurrently, the previous value will be not 'null'. If we see that,
             // then we return that value, as it would be the first error that was set on this instance.
@@ -117,12 +117,7 @@ internal partial class UniversalTaskAdapter<
             // In other words, we throw only if some async state is set correctly.
             if ((_state & STATEMASK_SELECT_ANY_ASYNC_STATE) != 0)
             {
-                InvalidOperationException exception = new(SR.InvalidOperation_IllegalStateChange)
-                {
-                    HResult = WellKnownErrorCodes.E_ILLEGAL_STATE_CHANGE
-                };
-
-                throw exception;
+                InvalidOperationException.ThrowIllegalStateChange();
             }
         }
 
@@ -162,14 +157,10 @@ internal partial class UniversalTaskAdapter<
             // not to do this, which gives more flexibility to users of this class.
             TCompletedHandler? handlerBefore = Interlocked.CompareExchange(ref _completedHandler, value, null);
 
+            // Ensure that the handler was 'null' before (this handler can only be set once to a non-'null' value)
             if (handlerBefore is not null)
             {
-                InvalidOperationException exception = new(SR.InvalidOperation_CannotSetCompletionHanlderMoreThanOnce)
-                {
-                    HResult = WellKnownErrorCodes.E_ILLEGAL_DELEGATE_ASSIGNMENT
-                };
-
-                throw exception;
+                InvalidOperationException.ThrowCannotSetCompletionHandlerMoreThanOnce();
             }
 
             // The handler was 'null' and it's being set to 'null' again, so nothing to do

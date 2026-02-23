@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace WindowsRuntime.InteropServices;
@@ -23,6 +23,9 @@ internal static class WellKnownErrorCodes
 
     /// <summary>Pointer that is not valid.</summary>
     public const HRESULT E_POINTER = unchecked((int)0x80004003);
+
+    /// <summary>The group or resource is not in the correct state to perform the requested operation.</summary>
+    public const HRESULT E_NOT_VALID_STATE = unchecked((int)0x8007139F);
 
     /// <summary>Class not registered.</summary>
     public const HRESULT REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);

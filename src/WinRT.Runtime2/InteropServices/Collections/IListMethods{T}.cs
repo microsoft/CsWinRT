@@ -3,7 +3,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable CS1573
 
@@ -34,7 +33,7 @@ public static class IListMethods<T>
         }
         catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_BOUNDS)
         {
-            throw new ArgumentOutOfRangeException(nameof(index));
+            throw ArgumentOutOfRangeException.GetArgumentOutOfRangeException(nameof(index));
         }
     }
 
@@ -54,7 +53,7 @@ public static class IListMethods<T>
         }
         catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_BOUNDS)
         {
-            throw new ArgumentOutOfRangeException(nameof(index));
+            throw ArgumentOutOfRangeException.GetArgumentOutOfRangeException(nameof(index));
         }
     }
 
@@ -89,12 +88,12 @@ public static class IListMethods<T>
 
         if (array.Length <= arrayIndex && count > 0)
         {
-            throw new ArgumentException("Argument_IndexOutOfArrayBounds");
+            ArgumentException.ThrowIndexOutOfArrayBounds();
         }
 
         if (array.Length - arrayIndex < count)
         {
-            throw new ArgumentException("Argument_InsufficientSpaceToCopyCollection");
+            ArgumentException.ThrowInsufficientSpaceToCopyCollection();
         }
 
         // Copy all items into the target array, at the specified starting offset
@@ -137,14 +136,7 @@ public static class IListMethods<T>
         }
 
         // Ensure the index is within the valid range for .NET collections
-        if (index > int.MaxValue)
-        {
-            [DoesNotReturn]
-            static void ThrowInvalidOperationException()
-                => throw new InvalidOperationException("InvalidOperation_CollectionBackingListTooLarge");
-
-            ThrowInvalidOperationException();
-        }
+        InvalidOperationException.ThrowIfCollectionBackingListTooLarge(index);
 
         return (int)index;
     }
@@ -164,7 +156,7 @@ public static class IListMethods<T>
         }
         catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_BOUNDS)
         {
-            throw new ArgumentOutOfRangeException(nameof(index));
+            throw ArgumentOutOfRangeException.GetArgumentOutOfRangeException(nameof(index));
         }
     }
 }

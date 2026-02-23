@@ -380,7 +380,7 @@ internal sealed unsafe class WindowsRuntimeComWrappers : ComWrappers
             // This should generally always succeed, but there are some cases where a public API
             // returns a non-projected object that implements a projected Windows Runtime interface,
             // without implementing 'GetRuntimeClassName' (e.g. 'MemoryBuffer.CreateReference').
-            if (IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className).Succeeded())
+            if (IInspectableVftbl.GetRuntimeClassNameUnsafe(interfacePointer, &className).Succeeded)
             {
                 try
                 {

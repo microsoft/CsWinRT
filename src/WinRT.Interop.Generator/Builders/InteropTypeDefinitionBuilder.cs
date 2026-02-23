@@ -431,7 +431,7 @@ internal static partial class InteropTypeDefinitionBuilder
         //
         // [FixedAddressValueType]
         // private static readonly <VTABLE_TYPE> Vftbl;
-        FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private | FieldAttributes.Static, vftblType.ToValueTypeSignature())
+        FieldDefinition vftblField = new("Vftbl"u8, FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, vftblType.ToValueTypeSignature())
         {
             CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor) }
         };
@@ -623,10 +623,10 @@ internal static partial class InteropTypeDefinitionBuilder
         // The interface entries field looks like this:
         //
         // [FixedAddressValueType]
-        // private static readonly <DelegateInterfaceEntries> Entries;
+        // private static readonly <INTERFACE_ENTRIES_TYPE> Entries;
         //
         // The '[FixedAddressValueType]' attribute allows ILC to pre-initialize the entire vtable (in .rdata).
-        FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private | FieldAttributes.Static, entriesFieldType.ToValueTypeSignature())
+        FieldDefinition entriesField = new("Entries"u8, FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, entriesFieldType.ToValueTypeSignature())
         {
             CustomAttributes = { new CustomAttribute(interopReferences.FixedAddressValueTypeAttribute_ctor) }
         };

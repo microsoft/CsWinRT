@@ -1085,6 +1085,56 @@ internal static class WellKnownWindowsInterfaceIIDs
         }
     }
 
+    /// <summary>The IID for <c>MUX_DispatcherQueueHandler</c> (2E0872A9-4E29-5F14-B688-FB96D5F9D5F8).</summary>
+    public static ref readonly Guid IID_MUX_DispatcherQueueHandler
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0xA9, 0x72, 0x08, 0x2E,
+                0x29, 0x4E,
+                0x14, 0x5F,
+                0xB6,
+                0x88,
+                0xFB,
+                0x96,
+                0xD5,
+                0xF9,
+                0xD5,
+                0xF8
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>WUX_DispatcherQueueHandler</c> (DFA2DC9C-1A2D-4917-98F2-939AF1D6E0C8).</summary>
+    public static ref readonly Guid IID_WUX_DispatcherQueueHandler
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x9C, 0xDC, 0xA2, 0xDF,
+                0x2D, 0x1A,
+                0x17, 0x49,
+                0x98,
+                0xF2,
+                0x93,
+                0x9A,
+                0xF1,
+                0xD6,
+                0xE0,
+                0xC8
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
     /// <summary>The IID for <c>DataErrorsChangedEventArgs</c> (D026DD64-5F26-5F15-A86A-0DEC8A431796).</summary>
     public static ref readonly Guid IID_DataErrorsChangedEventArgs
     {

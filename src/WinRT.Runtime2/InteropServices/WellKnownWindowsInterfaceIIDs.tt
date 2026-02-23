@@ -60,6 +60,8 @@ var entries = new (string Name, string IID)[]
     ("WUX_PropertyChangedEventArgsRuntimeClassFactory", "6DCC9C03-E0C7-4EEE-8EA9-37E3406EEB1C"),
     ("MUX_PropertyChangedEventHandler", "E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D"),
     ("WUX_PropertyChangedEventHandler", "50F19C16-0A22-4D8E-A089-1EA9951657D2"),
+    ("MUX_DispatcherQueueHandler", "2E0872A9-4E29-5F14-B688-FB96D5F9D5F8"),
+    ("WUX_DispatcherQueueHandler", "DFA2DC9C-1A2D-4917-98F2-939AF1D6E0C8"),
     ("DataErrorsChangedEventArgs", "D026DD64-5F26-5F15-A86A-0DEC8A431796"),
     ("DataErrorsChangedEventArgsRuntimeClassFactory", "62D0BD1E-B85F-5FCC-842A-7CB0DDA37FE5"),
     ("UriRuntimeClass", "9E365E57-48B2-4160-956F-C7385120BBFC"),

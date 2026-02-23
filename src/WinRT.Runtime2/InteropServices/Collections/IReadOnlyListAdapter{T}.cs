@@ -28,7 +28,7 @@ public static class IReadOnlyListAdapter<T>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1.getat"/>
     public static T GetAt(IReadOnlyList<T> list, uint index)
     {
-        IReadOnlyListAdapterHelpers.EnsureIndexInValidRange(index, list.Count);
+        ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(index, list.Count);
 
         try
         {

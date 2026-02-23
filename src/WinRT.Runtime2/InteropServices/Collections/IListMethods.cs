@@ -45,7 +45,7 @@ public static class IListMethods
         }
         catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_BOUNDS)
         {
-            throw new ArgumentOutOfRangeException(nameof(index));
+            throw ArgumentOutOfRangeException.GetArgumentOutOfRangeException(nameof(index));
         }
     }
 }

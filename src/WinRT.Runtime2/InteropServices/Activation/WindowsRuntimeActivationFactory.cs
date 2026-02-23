@@ -167,7 +167,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
     public static bool TryGetActivationFactoryUnsafe(string runtimeClassName, out void* activationFactory)
     {
-        return GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in *(Guid*)null, out activationFactory).Succeeded();
+        return GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in *(Guid*)null, out activationFactory).Succeeded;
     }
 
     /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to wrap in the returned object reference.</param>
@@ -175,7 +175,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
     public static bool TryGetActivationFactoryUnsafe(string runtimeClassName, in Guid iid, out void* activationFactory)
     {
-        return GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in iid, out activationFactory).Succeeded();
+        return GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in iid, out activationFactory).Succeeded;
     }
 
     /// <inheritdoc cref="TryGetActivationFactoryUnsafe(string, in Guid, out void*)"/>
@@ -191,7 +191,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         // Attempt activation with the activation handler, if any (1)
         HRESULT hresult = GetActivationFactoryFromActivationHandlerUnsafe(runtimeClassName, in defaultIid, out activationFactory);
 
-        if (hresult.Succeeded())
+        if (hresult.Succeeded)
         {
             return hresult;
         }
@@ -199,7 +199,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         // Attempt manifest-based activation using 'RoGetActivationFactory' (2)
         hresult = WindowsRuntimePlatformModule.Instance.GetActivationFactoryUnsafe(runtimeClassName, in defaultIid, out activationFactory);
 
-        if (hresult.Succeeded())
+        if (hresult.Succeeded)
         {
             return hresult;
         }
@@ -266,7 +266,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         // This is a fallback mechanism, and it is not as efficient as using 'RoGetActivationFactory'.
         // Consumers should prefer manifest-based Windows Runtime activation whenever possible. The
         // main reason this approach also exists is to provide a way for unpackaged apps to also work.
-        while (hresult.Failed())
+        while (hresult.Failed)
         {
             int lastSegmentIndex = moduleName.LastIndexOf('.');
 
@@ -308,7 +308,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         hresult = GetActivationFactoryFromDllUnsafe(runtimeClassName, hresult, out void* activationFactoryUnknown);
 
         // If the activation failed, we can't do anything else, just return that 'HRESULT'
-        if (hresult.Failed())
+        if (hresult.Failed)
         {
             return hresult;
         }
@@ -329,6 +329,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <param name="hresult">The <c>HRESULT</c> for the activation factory retrieval result.</param>
     /// <exception cref="NotSupportedException">Thrown if activation failed due to type not being registered, <c>CsWinRTEnableManifestFreeActivation</c> is disabled, and <c>CsWinRTManifestFreeActivationReportOriginalException</c> is not set.</exception>
     /// <exception cref="Exception">Thrown for any other failure case.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [StackTraceHidden]
     private static void ThrowIfActivationFailed(string runtimeClassName, HRESULT hresult)
     {
@@ -362,7 +363,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         static void ThrowException(string runtimeClassName, HRESULT hresult) => throw GetException(runtimeClassName, hresult);
 
         // If the activation failed, throw the appropriate exception
-        if (hresult.Failed())
+        if (hresult.Failed)
         {
             ThrowException(runtimeClassName, hresult);
         }
