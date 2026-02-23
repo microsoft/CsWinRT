@@ -29,6 +29,7 @@ steps:
       arguments: >
         /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
         --no-build
+        --report-trx
       testRunTitle: Unit Tests
 
 # Run Host Tests
