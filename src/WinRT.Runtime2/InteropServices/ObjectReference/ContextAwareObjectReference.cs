@@ -236,11 +236,11 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
                 objectReference = iid == WellKnownWindowsInterfaceIIDs.IID_IInspectable
                     ? new ContextAwareInspectableObjectReference(
                         thisPtr: targetObject,
-                        referenceTrackerPtr: GetReferenceTrackerPtrUnsafe(),
+                        referenceTrackerPtr: GetReferenceTrackerPtr(),
                         flags: CopyFlags(CreateObjectReferenceFlags.IsAggregated | CreateObjectReferenceFlags.PreventReleaseOnDispose))
                     : new ContextAwareInterfaceObjectReference(
                         thisPtr: targetObject,
-                        referenceTrackerPtr: GetReferenceTrackerPtrUnsafe(),
+                        referenceTrackerPtr: GetReferenceTrackerPtr(),
                         iid: in iid,
                         flags: CopyFlags(CreateObjectReferenceFlags.IsAggregated | CreateObjectReferenceFlags.PreventReleaseOnDispose));
             }

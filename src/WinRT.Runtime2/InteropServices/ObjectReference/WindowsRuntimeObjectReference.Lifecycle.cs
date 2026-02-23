@@ -105,6 +105,27 @@ public unsafe partial class WindowsRuntimeObjectReference
     }
 
     /// <summary>
+    /// Gets the pointer to the reference tracker object tied to the current instance and increments the reference count.
+    /// </summary>
+    /// <returns>The pointer to the reference tracker object tied to the current instance.</returns>
+    /// <remarks>
+    /// This method unlike 'GetReferenceTrackerPtrUnsafe' does increment the reference count.
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void* GetReferenceTrackerPtr()
+    {
+        void* referenceTrackerPtr = GetReferenceTrackerPtrUnsafe();
+
+        if (referenceTrackerPtr is not null)
+        {
+            _ = IUnknownVftbl.AddRefUnsafe(referenceTrackerPtr);
+            _ = IReferenceTrackerVftbl.AddRefFromTrackerSourceUnsafe(referenceTrackerPtr);
+        }
+
+        return referenceTrackerPtr;
+    }
+
+    /// <summary>
     /// Increments the managed reference count for the current <see cref="WindowsRuntimeObjectReference"/> instance.
     /// </summary>
     /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>

@@ -47,7 +47,7 @@ internal sealed unsafe class FreeThreadedObjectReference : WindowsRuntimeObjectR
 
                 objectReference = new FreeThreadedObjectReference(
                     thisPtr: targetObject,
-                    referenceTrackerPtr: GetReferenceTrackerPtrUnsafe(),
+                    referenceTrackerPtr: GetReferenceTrackerPtr(),
                     flags: CopyFlags(CreateObjectReferenceFlags.IsAggregated | CreateObjectReferenceFlags.PreventReleaseOnDispose));
             }
 
