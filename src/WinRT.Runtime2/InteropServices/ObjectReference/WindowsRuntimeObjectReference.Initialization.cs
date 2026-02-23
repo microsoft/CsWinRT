@@ -217,11 +217,6 @@ public unsafe partial class WindowsRuntimeObjectReference
                 // The runtime has already done 'AddRefFromTrackerSource' for this instance, so it would also handle doing
                 // 'ReleaseFromTrackerSource' upon finalization. Because of that, we prevent it in the object reference.
                 createObjectReferenceFlags |= CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose;
-
-                // If we're not in a COM aggregation scenario, we can release the reference tracker object. This is because
-                // it is already considered kept alive, even if we don't hold a reference to it, due to the fact that its
-                // implementation lives in the same object as the target COM object (it will be a native object).
-                _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
             }
 
             if (acquiredInnerInstanceUnknown is not null)
@@ -303,11 +298,6 @@ public unsafe partial class WindowsRuntimeObjectReference
             // If we have a reference tracker, we should report an 'AddRef' on it,
             // as we're wrapping the native object in a managed object reference.
             _ = IReferenceTrackerVftbl.AddRefFromTrackerSourceUnsafe(referenceTracker);
-
-            // We can release the reference tracker, as it's implemented on the same native object,
-            // meaning it will remain alive anyway as long as the main object is also kept alive.
-            // This matches the handling of non aggregation scenarios above.
-            _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
         }
 
         // We're going to store the input object, so increment its ref count
@@ -357,8 +347,6 @@ public unsafe partial class WindowsRuntimeObjectReference
         if (referenceTracker is not null)
         {
             _ = IReferenceTrackerVftbl.AddRefFromTrackerSourceUnsafe(referenceTracker);
-
-            _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
         }
 
         // Special case for free-threaded object references (see notes above)
