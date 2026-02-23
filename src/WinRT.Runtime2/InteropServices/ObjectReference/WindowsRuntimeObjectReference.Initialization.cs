@@ -70,7 +70,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         // That is, technically speaking we are ultimately going to create a 'WindowsRuntimeObjectReference'
         // object, which could throw 'OutOfMemoryException' in extreme circumstances. However, that is
         // considered an error state that cannot be recovered from, so that is not a concern here.
-        if (isFreeThreaded.Failed())
+        if (isFreeThreaded.Failed)
         {
             // Before proceeding, we need to increment the reference count on the inner instance, if we're doing
             // COM aggregation. This is part of a delicate balance of 'AddRef' and 'Release' calls on the input
@@ -343,7 +343,7 @@ public unsafe partial class WindowsRuntimeObjectReference
 
         // If the free-threaded check failed, make sure to release the interface pointer to avoid leaks.
         // This matches what we do in 'InitializeFromManagedTypeUnsafe' above too to avoid this issue.
-        if (isFreeThreaded.Failed())
+        if (isFreeThreaded.Failed)
         {
             _ = IUnknownVftbl.ReleaseUnsafe(acquiredExternalComObject);
 

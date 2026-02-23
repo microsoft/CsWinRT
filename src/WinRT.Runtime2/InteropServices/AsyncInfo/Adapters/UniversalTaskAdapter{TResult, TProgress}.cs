@@ -81,15 +81,8 @@ internal abstract partial class UniversalTaskAdapter<
         // Construct task from the specified provider
         Task? task = InvokeTaskFactory(factory);
 
-        if (task is null)
-        {
-            throw new NullReferenceException(SR.NullReference_TaskProviderReturnedNull);
-        }
-
-        if (task.Status == TaskStatus.Created)
-        {
-            throw new InvalidOperationException(SR.InvalidOperation_TaskProviderReturnedUnstartedTask);
-        }
+        NullReferenceException.ThrowIfTaskProviderReturnedNull(task);
+        InvalidOperationException.ThrowIfTaskProviderReturnedUnstartedTask(task);
 
         _dataContainer = task;
         _state = STATEFLAG_COMPLETION_HNDL_NOT_YET_INVOKED | STATE_STARTED;
@@ -112,10 +105,7 @@ internal abstract partial class UniversalTaskAdapter<
     protected UniversalTaskAdapter(Task task, CancellationTokenSource? cancellationTokenSource, Progress<TProgress>? progress)
     {
         // Throw 'InvalidOperation' and not 'ArgumentException' for parity with the constructor that takes a factory
-        if (task.Status == TaskStatus.Created)
-        {
-            throw new InvalidOperationException(SR.InvalidOperation_UnstartedTaskSpecified);
-        }
+        InvalidOperationException.ThrowIfUnstartedTaskSpecified(task);
 
         // We do not need to invoke any delegates to get the task, it is provided for us
         _dataContainer = task;

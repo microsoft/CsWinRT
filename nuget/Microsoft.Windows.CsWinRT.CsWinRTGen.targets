@@ -226,6 +226,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Outputs="$(_CsWinRTGeneratorForwarderAssemblyPath)"
     Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">
 
+    <!-- If delay signing, don't pass the key given it would be a public key. -->
+    <PropertyGroup>
+        <_AssemblyOriginatorKeyFile>$(AssemblyOriginatorKeyFile)</_AssemblyOriginatorKeyFile>
+        <_AssemblyOriginatorKeyFile Condition="'$(DelaySign)' == 'true'"></_AssemblyOriginatorKeyFile>
+    </PropertyGroup>
+
     <MakeDir Directories="$(CsWinRTGeneratorForwarderAssemblyDirectory)" />
       
     <!-- Invoke 'cswinrtimplgen' -->
@@ -233,7 +239,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       ReferenceAssemblyPaths="@(ReferencePath)"
       OutputAssemblyPath="@(IntermediateAssembly)"
       GeneratedAssemblyDirectory="$(CsWinRTGeneratorForwarderAssemblyDirectory)"
-      AssemblyOriginatorKeyFile="$(AssemblyOriginatorKeyFile)"
+      AssemblyOriginatorKeyFile="$(_AssemblyOriginatorKeyFile)"
       CsWinRTToolsDirectory="$(CsWinRTImplEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       TreatWarningsAsErrors="$(CsWinRTGeneratorTreatWarningsAsErrors)"

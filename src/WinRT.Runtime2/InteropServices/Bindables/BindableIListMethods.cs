@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable CS1573
 
@@ -20,14 +19,7 @@ internal static class BindableIListMethods
         uint count = IBindableVectorMethods.Size(thisReference);
 
         // Same validation as for 'IVectorView<T>'
-        if (count > int.MaxValue)
-        {
-            [DoesNotReturn]
-            static void ThrowInvalidOperationException()
-                => throw new InvalidOperationException("InvalidOperation_CollectionBackingListTooLarge");
-
-            ThrowInvalidOperationException();
-        }
+        InvalidOperationException.ThrowIfCollectionBackingListTooLarge(count);
 
         return (int)count;
     }
@@ -44,7 +36,7 @@ internal static class BindableIListMethods
         }
         catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_BOUNDS)
         {
-            throw new ArgumentOutOfRangeException(nameof(index));
+            throw ArgumentOutOfRangeException.GetArgumentOutOfRangeException(nameof(index));
         }
     }
 
@@ -62,7 +54,7 @@ internal static class BindableIListMethods
         }
         catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_BOUNDS)
         {
-            throw new ArgumentOutOfRangeException(nameof(index));
+            throw ArgumentOutOfRangeException.GetArgumentOutOfRangeException(nameof(index));
         }
     }
 
@@ -100,14 +92,7 @@ internal static class BindableIListMethods
         }
 
         // Same validation as for 'IVector<T>'
-        if (index > int.MaxValue)
-        {
-            [DoesNotReturn]
-            static void ThrowInvalidOperationException()
-                => throw new InvalidOperationException("InvalidOperation_CollectionBackingListTooLarge");
-
-            ThrowInvalidOperationException();
-        }
+        InvalidOperationException.ThrowIfCollectionBackingListTooLarge(index);
 
         return (int)index;
     }
@@ -125,7 +110,7 @@ internal static class BindableIListMethods
         }
         catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_BOUNDS)
         {
-            throw new ArgumentOutOfRangeException(nameof(index));
+            throw ArgumentOutOfRangeException.GetArgumentOutOfRangeException(nameof(index));
         }
     }
 
@@ -157,7 +142,7 @@ internal static class BindableIListMethods
         }
         catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_BOUNDS)
         {
-            throw new ArgumentOutOfRangeException(nameof(index));
+            throw ArgumentOutOfRangeException.GetArgumentOutOfRangeException(nameof(index));
         }
     }
 
@@ -168,14 +153,7 @@ internal static class BindableIListMethods
         ArgumentNullException.ThrowIfNull(array);
 
         // The destination array must be single-dimensional
-        if (array.Rank != 1)
-        {
-            [DoesNotReturn]
-            static void ThrowArgumentException()
-                => throw new ArgumentException("Arg_RankMultiDimNotSupported");
-
-            ThrowArgumentException();
-        }
+        ArgumentException.ThrowIfRankMultiDimNotSupported(array.Rank);
 
         ArgumentOutOfRangeException.ThrowIfNegative(index);
 
@@ -186,11 +164,7 @@ internal static class BindableIListMethods
         // The index must be in range with respect to the lower bound of the array
         if (index < arrayLowerBound)
         {
-            [DoesNotReturn]
-            static void ThrowArgumentOutOfRangeException()
-                => throw new ArgumentOutOfRangeException(nameof(index));
-
-            ThrowArgumentOutOfRangeException();
+            throw ArgumentOutOfRangeException.GetArgumentOutOfRangeException(nameof(index));
         }
 
         // Does the dimension in question have sufficient space to copy the expected number of entries?
@@ -206,20 +180,12 @@ internal static class BindableIListMethods
         // list.CopyTo(items, 0);
         if (sourceLength > (arrayLength - (index - arrayLowerBound)))
         {
-            [DoesNotReturn]
-            static void ThrowArgumentException()
-                => throw new ArgumentException("Argument_InsufficientSpaceToCopyCollection");
-
-            ThrowArgumentException();
+            ArgumentException.ThrowInsufficientSpaceToCopyCollection();
         }
 
         if (index - arrayLowerBound > arrayLength)
         {
-            [DoesNotReturn]
-            static void ThrowArgumentException()
-                => throw new ArgumentException("Argument_IndexOutOfArrayBounds");
-
-            ThrowArgumentException();
+            ArgumentException.ThrowIndexOutOfArrayBounds();
         }
 
         // We need to verify the index as we;

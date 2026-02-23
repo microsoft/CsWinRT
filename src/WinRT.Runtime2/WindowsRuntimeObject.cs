@@ -518,7 +518,7 @@ public abstract unsafe class WindowsRuntimeObject :
         // Fail immediately if the feature switch is disabled, to ensure all related code can be trimmed
         if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
         {
-            WindowsRuntimeObjectExceptions.ThrowNotSupportedException();
+            throw WindowsRuntimeObjectExceptions.GetNotSupportedException();
         }
 
         Type type = Type.GetTypeFromHandle(interfaceType)!;
@@ -552,7 +552,7 @@ public abstract unsafe class WindowsRuntimeObject :
             // more easily understand why a given runtime cast might be failing under different configurations.
             if (throwIfNotImplemented)
             {
-                WindowsRuntimeObjectExceptions.ThrowNotSupportedException();
+                throw WindowsRuntimeObjectExceptions.GetNotSupportedException();
             }
 
             return false;
@@ -590,8 +590,17 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <inheritdoc/>
     CustomQueryInterfaceResult ICustomQueryInterface.GetInterface(ref Guid iid, out nint ppv)
     {
-        // We explicitly don't handle overridable interfaces and 'IInspectable'
-        if (IsOverridableInterface(in iid) || WellKnownWindowsInterfaceIIDs.IID_IInspectable == iid || WellKnownWindowsInterfaceIIDs.IID_IWeakReference == iid)
+        // We explicitly don't handle overridable interfaces, as well as 'IInspectable' and 'IWeakReference'.
+        // This last one in particular must be ignored to avoid issues when an RCW object is used as a target
+        // for a 'WeakReference' object. Lastly, we also need to not handle this 'QueryInterface' request when
+        // 'NativeObjectReference' is 'null', which will be the case during initialization (because objects are
+        // constructed entirely from this base 'WindowsRuntimeObject' type). In that case, 'QueryInterface' calls
+        // will be coming for the outer instance from the inner one, where the outer calls 'GetInterface' first,
+        // and they wouldn't need to be handled anyway.
+        if (IsOverridableInterface(in iid) ||
+            WellKnownWindowsInterfaceIIDs.IID_IInspectable == iid ||
+            WellKnownWindowsInterfaceIIDs.IID_IWeakReference == iid ||
+            NativeObjectReference is null)
         {
             ppv = default;
 
@@ -809,7 +818,7 @@ public abstract unsafe class WindowsRuntimeObject :
             // If the 'QueryInterface' call failed, we know the interface can't possibly be implemented.
             // Because the actual 'QueryInterface' failed, we also know there would be no point for the
             // rest of the 'IDynamicInterfaceCastable' logic to run, as the cast can never succeed.
-            if (hresult.Failed())
+            if (hresult.Failed)
             {
                 // Throw only if requested by callers
                 if (throwOnQueryInterfaceFailure)
@@ -909,13 +918,14 @@ public abstract unsafe class WindowsRuntimeObject :
 file static class WindowsRuntimeObjectExceptions
 {
     /// <summary>
-    /// Throws a <see cref="NotSupportedException"/> if support for <see cref="IDynamicInterfaceCastable"/> is disabled.
+    /// Gets a <see cref="NotSupportedException"/> if support for <see cref="IDynamicInterfaceCastable"/> is disabled.
     /// </summary>
-    [DoesNotReturn]
-    [StackTraceHidden]
-    public static void ThrowNotSupportedException()
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static NotSupportedException GetNotSupportedException()
     {
-        throw new NotSupportedException(
+        // We can't throw the exception from here like the other method above, because it causes
+        // a linker crash when publishing with Native AOT. We can update this once it's fixed.
+        throw new(
             $"Support for 'IDynamicInterfaceCastable' is disabled (make sure that the 'CsWinRTEnableIDynamicInterfaceCastableSupport' property is not set to 'false'). " +
             $"In this configuration, runtime casts on Windows Runtime objects will only work if the managed object implements the target interface in metadata.");
     }

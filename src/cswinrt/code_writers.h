@@ -2683,7 +2683,7 @@ private static WindowsRuntimeObjectReference %
         {
             return __%;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName);
+        return field = WindowsRuntimeActivationFactory.GetActivationFactory("%");
     }
 }
 )",
@@ -2692,7 +2692,7 @@ private static WindowsRuntimeObjectReference %
             objrefname,
             objrefname,
             objrefname,
-            bind<write_type_name>(classType, typedef_name_type::ABI, true));
+            bind<write_type_name>(classType, typedef_name_type::NonProjected, true));
     }
 
     void write_static_objref_definition(writer& w, TypeDef const& staticsType, TypeDef const& classType)
@@ -2724,7 +2724,7 @@ private static WindowsRuntimeObjectReference %
         {
             return __%;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory(%.RuntimeClassName, %);
+        return field = WindowsRuntimeActivationFactory.GetActivationFactory("%", %);
     }
 }
 )",
@@ -2733,7 +2733,7 @@ private static WindowsRuntimeObjectReference %
             objrefname,
             objrefname,
             objrefname,
-            bind<write_type_name>(classType, typedef_name_type::ABI, true),
+            bind<write_type_name>(classType, typedef_name_type::NonProjected, true),
             bind<write_iid_guid>(staticsType));
     }
 
@@ -4485,8 +4485,7 @@ return %.AsValue();
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
 
         w.write(
-R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-public static unsafe class %Marshaller
+R"(public static unsafe class %Marshaller
 {
 )", type.TypeName());
         
@@ -4848,8 +4847,8 @@ R"(
             return;
         }
 
-        w.write("[WindowsRuntimeClassName(%.RuntimeClassName)]\n",
-            bind<write_type_name>(type, typedef_name_type::ABI, false));
+        w.write("[WindowsRuntimeClassName(\"%\")]\n",
+            bind<write_type_name>(type, typedef_name_type::NonProjected, true));
     }
 
     void write_comwrapper_marshaller_attribute(writer& w, TypeDef const& type)
@@ -8614,7 +8613,6 @@ public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
     void write_interface_impl(writer& w, TypeDef const& type)
     {
         w.write(R"(
-[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public static unsafe class %Impl
 {
 [FixedAddressValueType]
@@ -8706,7 +8704,6 @@ file interface % : %
         auto projected_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
         w.write(R"(
 #nullable enable
-[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public static unsafe class %Marshaller
 {
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
@@ -8752,12 +8749,21 @@ public static unsafe class %Marshaller
         bool has_base_class = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
         separator s{ w, " || " };
         w.write(R"(
+%protected override bool IsOverridableInterface(in Guid iid) => %%;
+)",
+            bind([&](writer& w)
+            {
+                if (settings.reference_projection)
+                {
+                     w.write(R"(
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-protected override bool IsOverridableInterface(in Guid iid) => %%;
-)",
+)");
+                     return;
+                }
+            }),
             bind_each([&](writer& w, InterfaceImpl const& iface)
             {
                 if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute"))
@@ -8911,23 +8917,24 @@ GC.RemoveMemoryPressure(%);
             },
             [&](writer& w)
             {
-                if (!type.Flags().Sealed())
+                if (settings.reference_projection)
                 {
                     w.write(R"(
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
+protected override bool HasUnwrappableNativeObjectReference => throw null;)");
+                }
+                else if (!type.Flags().Sealed())
+                {
+                    w.write(R"(
 protected override bool HasUnwrappableNativeObjectReference => GetType() == typeof(%);)",
                         type.TypeName());
                 }
                 else
                 {
                     w.write(R"(
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 protected override bool HasUnwrappableNativeObjectReference => true;)");
                 }
             },
@@ -8935,18 +8942,6 @@ protected override bool HasUnwrappableNativeObjectReference => true;)");
             bind<write_class_members>(type, false));
 
         // TODO: Fast ABI
-    }
-
-    void write_runtime_class_name_class(writer& w, TypeDef const& type)
-    {
-        w.write(R"(
-public static class %
-{
-public const string RuntimeClassName = "%";
-}
-)",
-            type.TypeName(),
-            bind<write_type_name>(type, typedef_name_type::NonProjected, true));
     }
 
     void write_class_marshaller(writer& w, TypeDef const& type)
@@ -9090,7 +9085,7 @@ public static unsafe bool TryCreateObject(
     [global::System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out object? wrapperObject,
     out CreatedWrapperFlags wrapperFlags)
 {
-if (runtimeClassName.Equals(%.RuntimeClassName.AsSpan(), StringComparison.Ordinal))
+if (runtimeClassName.SequenceEqual("%".AsSpan()))
 {
     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
         externalComObject: value,
@@ -9128,7 +9123,7 @@ return new %(valueReference);
                     });
                 }),
                 // TryCreateObject
-                bind<write_type_name>(type, typedef_name_type::ABI, false),
+                bind<write_type_name>(type, typedef_name_type::NonProjected, true),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 bind<write_type_name>(type, typedef_name_type::Projected, true),
                 // CreateObject
@@ -9139,8 +9134,6 @@ return new %(valueReference);
 
     void write_abi_class(writer& w, TypeDef const& type)
     {
-        write_runtime_class_name_class(w, type);
-
         if (is_static(type))
         {
             return;
@@ -9299,7 +9292,6 @@ R"(internal sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntime
 
         auto projected_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
         w.write(R"(
-[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public static unsafe class %Marshaller
 {
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
@@ -9538,7 +9530,7 @@ R"(
     {
         if (!is_type_blittable(type))
         {
-            w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\n%%% unsafe struct %\n{\n",
+            w.write("%%% unsafe struct %\n{\n",
                 bind<write_value_type_winrt_classname_attribute>(type),
                 bind<write_comwrapper_marshaller_attribute>(type),
                 internal_accessibility(),

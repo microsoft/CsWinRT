@@ -239,6 +239,7 @@ steps:
         Contents: |
           WinRT.Runtime.dll
           WinRT.Runtime.pdb
+          WinRT.Runtime.xml
         TargetFolder: $(StagingFolder)\net10.0
 
     # Stage WinRT.Host.Shim
