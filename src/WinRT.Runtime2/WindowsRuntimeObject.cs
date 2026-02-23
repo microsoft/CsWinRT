@@ -518,7 +518,7 @@ public abstract unsafe class WindowsRuntimeObject :
         // Fail immediately if the feature switch is disabled, to ensure all related code can be trimmed
         if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
         {
-            WindowsRuntimeObjectExceptions.ThrowNotSupportedException();
+            throw WindowsRuntimeObjectExceptions.GetNotSupportedException();
         }
 
         Type type = Type.GetTypeFromHandle(interfaceType)!;
@@ -552,7 +552,7 @@ public abstract unsafe class WindowsRuntimeObject :
             // more easily understand why a given runtime cast might be failing under different configurations.
             if (throwIfNotImplemented)
             {
-                WindowsRuntimeObjectExceptions.ThrowNotSupportedException();
+                throw WindowsRuntimeObjectExceptions.GetNotSupportedException();
             }
 
             return false;
@@ -918,13 +918,14 @@ public abstract unsafe class WindowsRuntimeObject :
 file static class WindowsRuntimeObjectExceptions
 {
     /// <summary>
-    /// Throws a <see cref="NotSupportedException"/> if support for <see cref="IDynamicInterfaceCastable"/> is disabled.
+    /// Gets a <see cref="NotSupportedException"/> if support for <see cref="IDynamicInterfaceCastable"/> is disabled.
     /// </summary>
-    [DoesNotReturn]
-    [StackTraceHidden]
-    public static void ThrowNotSupportedException()
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static NotSupportedException GetNotSupportedException()
     {
-        throw new NotSupportedException(
+        // We can't throw the exception from here like the other method above, because it causes
+        // a linker crash when publishing with Native AOT. We can update this once it's fixed.
+        throw new(
             $"Support for 'IDynamicInterfaceCastable' is disabled (make sure that the 'CsWinRTEnableIDynamicInterfaceCastableSupport' property is not set to 'false'). " +
             $"In this configuration, runtime casts on Windows Runtime objects will only work if the managed object implements the target interface in metadata.");
     }

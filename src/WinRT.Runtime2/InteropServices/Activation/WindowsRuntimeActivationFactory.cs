@@ -329,6 +329,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <param name="hresult">The <c>HRESULT</c> for the activation factory retrieval result.</param>
     /// <exception cref="NotSupportedException">Thrown if activation failed due to type not being registered, <c>CsWinRTEnableManifestFreeActivation</c> is disabled, and <c>CsWinRTManifestFreeActivationReportOriginalException</c> is not set.</exception>
     /// <exception cref="Exception">Thrown for any other failure case.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [StackTraceHidden]
     private static void ThrowIfActivationFailed(string runtimeClassName, HRESULT hresult)
     {
