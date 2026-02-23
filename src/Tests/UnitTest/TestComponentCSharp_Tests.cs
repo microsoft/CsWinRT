@@ -140,21 +140,21 @@ namespace UnitTest
 
             var expectedEnums = new EnumValue[] { EnumValue.One, EnumValue.Two };
             TestObject.EnumsProperty = expectedEnums;
-            Assert.IsTrue(expectedEnums.SequenceEqual(TestObject.EnumsProperty));
+            CollectionAssert.AreEqual(expectedEnums, TestObject.EnumsProperty);
             TestObject.CallForEnums(() => expectedEnums);
-            Assert.IsTrue(expectedEnums.SequenceEqual(TestObject.EnumsProperty));
+            CollectionAssert.AreEqual(expectedEnums, TestObject.EnumsProperty);
 
             TestObject.EnumsProperty = null;
-            Assert.IsTrue(TestObject.EnumsProperty.SequenceEqual(null));
+            CollectionAssert.AreEqual(TestObject.EnumsProperty, Array.Empty<EnumValue>());
 
             var expectedEnumStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two) };
             TestObject.EnumStructsProperty = expectedEnumStructs;
-            Assert.IsTrue(expectedEnumStructs.SequenceEqual(TestObject.EnumStructsProperty));
+            CollectionAssert.AreEqual(expectedEnumStructs, TestObject.EnumStructsProperty);
             TestObject.CallForEnumStructs(() => expectedEnumStructs);
-            Assert.IsTrue(expectedEnumStructs.SequenceEqual(TestObject.EnumStructsProperty));
+            CollectionAssert.AreEqual(expectedEnumStructs, TestObject.EnumStructsProperty);
 
             TestObject.EnumStructsProperty = null;
-            Assert.IsTrue(TestObject.EnumStructsProperty.SequenceEqual(null));
+            CollectionAssert.AreEqual(TestObject.EnumStructsProperty, Array.Empty<EnumStruct>());
 
             // Flags
             var expectedFlag = FlagValue.All;
@@ -177,15 +177,15 @@ namespace UnitTest
 
             var expectedFlags = new FlagValue[] { FlagValue.One, FlagValue.All };
             TestObject.FlagsProperty = expectedFlags;
-            Assert.IsTrue(expectedFlags.SequenceEqual(TestObject.FlagsProperty));
+            CollectionAssert.AreEqual(expectedFlags, TestObject.FlagsProperty);
             TestObject.CallForFlags(() => expectedFlags);
-            Assert.IsTrue(expectedFlags.SequenceEqual(TestObject.FlagsProperty));
+            CollectionAssert.AreEqual(expectedFlags, TestObject.FlagsProperty);
 
             var expectedFlagStructs = new FlagStruct[] { new FlagStruct(FlagValue.One), new FlagStruct(FlagValue.All) };
             TestObject.FlagStructsProperty = expectedFlagStructs;
-            Assert.IsTrue(expectedFlagStructs.SequenceEqual(TestObject.FlagStructsProperty));
+            CollectionAssert.AreEqual(expectedFlagStructs, TestObject.FlagStructsProperty);
             TestObject.CallForFlagStructs(() => expectedFlagStructs);
-            Assert.IsTrue(expectedFlagStructs.SequenceEqual(TestObject.FlagStructsProperty));
+            CollectionAssert.AreEqual(expectedFlagStructs, TestObject.FlagStructsProperty);
         }
 
         [TestMethod]
@@ -516,7 +516,7 @@ namespace UnitTest
                 Span<byte> buffSpan = new Span<byte>((byte*)dataPtr, (int)buf.Length);
 
                 byte[] arr2 = buffSpan.ToArray();
-                Assert.IsTrue(arr.SequenceEqual(arr2));
+                CollectionAssert.AreEqual(arr, arr2);
             }
 
             // Ensure buf doesn't get collected while we use the data pointer
@@ -733,7 +733,7 @@ namespace UnitTest
             var uriVector = vector.Cast<Uri>();
             var first = uriVector.First();
             // Assert the sequences are equivalent
-            Assert.IsTrue(vector.Cast<Uri>().SequenceEqual(uriVector)); // [2]
+            CollectionAssert.AreEqual(vector.Cast<Uri>().ToArray(), uriVector.ToArray()); // [2]
         }
 
         async Task LookupPorts()
@@ -812,7 +812,8 @@ namespace UnitTest
 
             byte[] read = new byte[256];
             await stream.ReadAsync(read, 0, read.Length);
-            Assert.IsTrue(read.SequenceEqual(data));
+            CollectionAssert.AreEqual(data, read);
+            CollectionAssert.AreEqual(read, data);
         }
 
 
@@ -989,7 +990,7 @@ namespace UnitTest
             TestObject.NestedEvent += (object sender, IList<int> arg0) =>
             {
                 events_received++;
-                Assert.IsTrue(arg0.SequenceEqual(ints));
+                CollectionAssert.AreEqual(arg0.ToArray(), ints);
             };
             TestObject.InvokeNestedEvent(TestObject, ints);
             events_expected++;
@@ -1007,8 +1008,8 @@ namespace UnitTest
             TestObject.CollectionEvent += (Class sender, IList<int> arg0, IDictionary<int, string> arg1) =>
             {
                 events_received++;
-                Assert.IsTrue(arg0.SequenceEqual(collection0));
-                Assert.IsTrue(arg1.SequenceEqual(collection1));
+                CollectionAssert.AreEqual(arg0.ToArray(), collection0);
+                CollectionAssert.AreEqual(arg1.ToArray(), collection1.ToArray());
             };
             TestObject.InvokeCollectionEvent(TestObject, collection0, collection1);
             events_expected++;
@@ -1568,10 +1569,10 @@ namespace UnitTest
         {
             int[] arr = new[] { 2, 4, 6, 8 };
             TestObject.SetInts(arr);
-            Assert.IsTrue(TestObject.GetInts().SequenceEqual(arr));
+            CollectionAssert.AreEqual(arr, TestObject.GetInts());
 
             TestObject.SetInts(null);
-            Assert.IsTrue(TestObject.GetInts().SequenceEqual(null));
+            CollectionAssert.AreEqual(Array.Empty<int>(), TestObject.GetInts());
         }
 
         [ComImport]
@@ -1724,7 +1725,7 @@ namespace UnitTest
             var ints_in = new int[] { 0, 1, 2 };
             TestObject.SetIntIterable(ints_in);
             var ints_out = TestObject.GetIntIterable();
-            Assert.IsTrue(ints_in.SequenceEqual(ints_out));
+            CollectionAssert.AreEqual(ints_in, ints_out.ToArray());
         }
 
         class ManagedBindableObservable : IBindableObservableVector
@@ -1817,14 +1818,14 @@ namespace UnitTest
             Assert.AreEqual(expected, TestObject.BindableIterableProperty);
             TestObject.CallForBindableIterable(() => expected);
             TestObject.BindableIterablePropertyChanged +=
-                (object sender, IEnumerable value) => Assert.IsTrue(expected.SequenceEqual(value.Cast<int>()));
+                (object sender, IEnumerable value) => CollectionAssert.AreEqual(expected, value.Cast<int>().ToArray());
             TestObject.RaiseBindableIterableChanged();
 
             TestObject.BindableVectorProperty = expected;
-            Assert.IsTrue(expected.SequenceEqual(TestObject.BindableVectorProperty.Cast<int>()));
+            CollectionAssert.AreEqual(expected, TestObject.BindableVectorProperty.Cast<int>().ToArray());
             TestObject.CallForBindableVector(() => expected);
             TestObject.BindableVectorPropertyChanged +=
-                (object sender, IList value) => Assert.IsTrue(expected.SequenceEqual(value.Cast<int>()) );
+                (object sender, IList value) => CollectionAssert.AreEqual(expected, value.Cast<int>().ToArray());
             TestObject.RaiseBindableVectorChanged();
 
             var observable = new ManagedBindableObservable(expected);
@@ -2948,13 +2949,13 @@ namespace UnitTest
         public void TestArrayBoxing()
         {
             int[] i = new[] { 42, 1, 4, 50, 0, -23 };
-            Assert.IsTrue(i.SequenceEqual(Class.UnboxInt32Array(i)));
+            CollectionAssert.AreEqual(i, Class.UnboxInt32Array(i));
 
             bool[] b = new[] { true, false, true, true, false };
-            Assert.IsTrue(b.SequenceEqual(Class.UnboxBooleanArray(b)));
+            CollectionAssert.AreEqual(b, Class.UnboxBooleanArray(b));
 
             string[] s = new[] { "Hello World!", "WinRT", "C#", "Boxing" };
-            Assert.IsTrue(s.SequenceEqual(Class.UnboxStringArray(s)));
+            CollectionAssert.AreEqual(s, Class.UnboxStringArray(s));
         }
 
         [TestMethod]
@@ -2964,7 +2965,7 @@ namespace UnitTest
 
             var obj = PropertyValue.CreateInt32Array(i);
             Assert.IsInstanceOfType<int[]>(obj);
-            Assert.IsTrue(i.SequenceEqual((IEnumerable<int>)obj));
+            CollectionAssert.AreEqual(i, (int[])obj);
         }
 
         [TestMethod]
@@ -2991,13 +2992,13 @@ namespace UnitTest
             Assert.AreEqual(rect, Class.UnboxRectUsingPropertyValue(rect));
 
             int[] iArr = new[] { 42, 0, -23 };
-            Assert.IsTrue(iArr.SequenceEqual((IEnumerable<int>)Class.UnboxInt32ArrayUsingPropertyValue(iArr)));
+            CollectionAssert.AreEqual(iArr, Class.UnboxInt32ArrayUsingPropertyValue(iArr));
 
             bool[] bArr = new[] { true, false, false };
-            Assert.IsTrue(Class.UnboxBooleanArrayUsingPropertyValue(bArr).SequenceEqual((IEnumerable<bool>)bArr));
+            CollectionAssert.AreEqual(Class.UnboxBooleanArrayUsingPropertyValue(bArr), bArr);
 
             Point[] pArr = new[] { new Point(1, 3), new Point(2, 4) };
-            Assert.IsTrue(Class.UnboxPointArrayUsingPropertyValue(pArr).SequenceEqual((IEnumerable<Point>)pArr));
+            CollectionAssert.AreEqual(Class.UnboxPointArrayUsingPropertyValue(pArr), pArr);
         }
 
         [TestMethod]
@@ -3444,7 +3445,7 @@ namespace UnitTest
                 new List<Point>{ new Point(3, 1), new Point(3, 2), new Point(3, 3) }
             };
             TestObject.IterableOfPointIterablesProperty = listOfListOfPoints;
-            Assert.IsTrue(TestObject.IterableOfPointIterablesProperty.SequenceEqual(listOfListOfPoints));
+            CollectionAssert.AreEqual(TestObject.IterableOfPointIterablesProperty.ToArray(), listOfListOfPoints.ToArray());
 
             var listOfListOfUris = new List<List<Uri>>() {
                 new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") },
@@ -3452,7 +3453,7 @@ namespace UnitTest
                 new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://microsoft.com") }
             };
             TestObject.IterableOfObjectIterablesProperty = listOfListOfUris;
-            Assert.IsTrue(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
+            CollectionAssert.AreEqual(TestObject.IterableOfObjectIterablesProperty.ToArray(), listOfListOfUris.ToArray());
         }
 
         (System.WeakReference<Class>, System.WeakReference<EventHandlerClass>) TestEventDelegateCleanup()
@@ -4066,7 +4067,7 @@ namespace UnitTest
             timeSpanDict.Clear();
 
             Assert.IsFalse(timeSpanDict.ContainsKey(TimeSpan.FromSeconds(6)));
-            Assert.IsTrue(timeSpanDict.Keys.SequenceEqual(Enumerable.Empty<TimeSpan>()));
+            CollectionAssert.AreEqual(timeSpanDict.Keys.ToArray(), Array.Empty<TimeSpan>());
 
             // Key - value entries are 1 minute apart as it is used for validation later.
             timeSpanDict.Add(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(2));
