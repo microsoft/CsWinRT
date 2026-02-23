@@ -19,9 +19,7 @@ namespace UnitTest
 
             if (CultureInfo.CurrentUICulture.Name == "en-US")
             {
-                Assert.AreEqual(
-                    "The application called an interface that was marshalled for a different thread. (0x8001010E)",
-                    exception.Message);
+                Assert.AreEqual("The application called an interface that was marshalled for a different thread. (0x8001010E)", exception.Message);
             }
         }
     }

@@ -17,14 +17,6 @@ namespace UnitTest
     {
         public ITests Tests { get; private set; } = TestRunner.MakeTests();
 
-        // TestInitialize does not work with AOT
-        // See https://devblogs.microsoft.com/dotnet/testing-your-native-aot-dotnet-apps/
-        // [TestInitialize]
-        // public void Initialize()
-        // {
-        //     Tests = TestRunner.MakeTests();
-        // }
-
         public static bool AllEqual<T>(T x, params T[] list) =>
             list.All(y => x.Equals(y));
 
