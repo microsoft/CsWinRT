@@ -2,135 +2,164 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
-string msbuildPath = FindMSBuild();
+return BuildDeterminismRunner.Run();
 
-string config =
+internal sealed class BuildDeterminismRunner
+{
+    private const string OutputDllName = "WinRT.Interop.dll";
+    private const string TargetFramework = "net10.0";
+
+    private readonly string _msbuildPath;
+    private readonly string _projectPath;
+    private readonly string _config;
+    private readonly string _platform;
+
+    private BuildDeterminismRunner(string msbuildPath, string projectPath, string config, string platform)
+    {
+        _msbuildPath = msbuildPath;
+        _projectPath = projectPath;
+        _config = config;
+        _platform = platform;
+    }
+
+    internal static int Run()
+    {
+        string config =
 #if DEBUG
-    "Debug";
+            "Debug";
 #else
-    "Release";
+            "Release";
 #endif
 
-string platform = RuntimeInformation.ProcessArchitecture switch
-{
-    Architecture.X86 => "x86",
-    Architecture.X64 => "x64",
-    _ => "x64"
-};
+        string platform = RuntimeInformation.ProcessArchitecture switch
+        {
+            Architecture.X86 => "x86",
+            Architecture.X64 => "x64",
+            _ => "x64"
+        };
 
-// Find the BuildDeterminism project directory by walking up from working directory
-string projectDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-string targetProject = Path.Combine(projectDir, "BuildDeterminismComponent", "BuildDeterminismComponent.csproj");
+        string projectDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        string projectPath = Path.Combine(projectDir, "BuildDeterminismComponent", "BuildDeterminismComponent.csproj");
 
-if (!File.Exists(targetProject))
-{
-    Console.Error.WriteLine($"Target project not found: {targetProject}");
-    return 1;
-}
+        if (!File.Exists(projectPath))
+        {
+            Console.Error.WriteLine($"Target project not found: {projectPath}");
+            return 1;
+        }
 
-Console.WriteLine($"Target project: {targetProject}");
-Console.WriteLine($"Configuration: {config}, Platform: {platform}");
+        var runner = new BuildDeterminismRunner(FindMSBuild(), projectPath, config, platform);
 
-// First build
-Console.WriteLine("Cleaning...");
-RunMSBuild($"\"{targetProject}\" -t:Clean", msbuildPath);
-Console.WriteLine("Building (first pass)...");
-string hash1 = BuildAndHash(targetProject, config, platform, msbuildPath);
-Console.WriteLine($"First build SHA256: {hash1}");
+        Console.WriteLine($"Target project: {projectPath}");
+        Console.WriteLine($"Configuration: {config}, Platform: {platform}");
 
-// Second build
-Console.WriteLine("Cleaning...");
-RunMSBuild($"\"{targetProject}\" -t:Clean", msbuildPath);
-Console.WriteLine("Building (second pass)...");
-string hash2 = BuildAndHash(targetProject, config, platform, msbuildPath);
-Console.WriteLine($"Second build SHA256: {hash2}");
+        string hash1 = runner.CleanBuildAndHash("first");
+        string hash2 = runner.CleanBuildAndHash("second");
 
-if (hash1 == hash2)
-{
-    Console.WriteLine("Build is deterministic!");
-    return 0;
-}
-else
-{
-    Console.Error.WriteLine("Build is NOT deterministic!");
-    return 1;
-}
+        if (hash1 == hash2)
+        {
+            Console.WriteLine("Build is deterministic!");
+            return 0;
+        }
 
-static string BuildAndHash(string projectPath, string config, string platform, string msbuildPath)
-{
-    RunMSBuild($"\"{projectPath}\" -p:Platform={platform},Configuration={config}", msbuildPath);
-
-    string outputDir = Path.Combine(
-        Path.GetDirectoryName(projectPath)!,
-        "bin", platform, config, "net10.0");
-
-    string dllPath = Path.Combine(outputDir, "WinRT.Interop.dll");
-    if (!File.Exists(dllPath))
-    {
-        throw new FileNotFoundException($"Output DLL not found: {dllPath}");
+        Console.Error.WriteLine("Build is NOT deterministic!");
+        return 1;
     }
 
-    byte[] fileBytes = File.ReadAllBytes(dllPath);
-    byte[] hashBytes = SHA256.HashData(fileBytes);
-    return Convert.ToHexString(hashBytes);
-}
-
-static string FindMSBuild()
-{
-    string vswhere = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-        "Microsoft Visual Studio", "Installer", "vswhere.exe");
-
-    var psi = new ProcessStartInfo
+    private string CleanBuildAndHash(string passLabel)
     {
-        FileName = vswhere,
-        Arguments = "-latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe",
-        RedirectStandardOutput = true,
-        UseShellExecute = false
-    };
+        Console.WriteLine("Cleaning...");
+        RunMSBuild($"\"{_projectPath}\" -t:Clean");
 
-    using var process = Process.Start(psi)!;
-    string path = process.StandardOutput.ReadLine()!;
-    process.WaitForExit();
-    return path;
-}
+        // MSBuild Clean doesn't remove the bin/obj folders, so delete them explicitly.
+        string projectFolder = Path.GetDirectoryName(_projectPath)!;
+        foreach (string dir in new[] { "bin" })
+        {
+            string path = Path.Combine(projectFolder, dir);
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, recursive: true);
+                Console.WriteLine($"Deleted {path}");
+            }
+        }
 
-static void RunMSBuild(string arguments, string msbuildPath)
-{
-    var psi = new ProcessStartInfo
-    {
-        FileName = msbuildPath,
-        Arguments = arguments,
-        RedirectStandardOutput = true,
-        RedirectStandardError = true,
-        UseShellExecute = false
-    };
+        Console.WriteLine("Restoring...");
+        RunMSBuild($"\"{_projectPath}\" -t:Restore");
 
-    using var process = Process.Start(psi)!;
+        Console.WriteLine($"Building ({passLabel} pass)...");
+        RunMSBuild($"\"{_projectPath}\" -p:Platform={_platform},Configuration={_config}");
 
-    // Read stderr asynchronously to avoid deadlock when both buffers fill.
-    process.ErrorDataReceived += (sender, e) =>
-    {
-        if (e.Data != null)
-            Console.Error.WriteLine(e.Data);
-    };
-    process.BeginErrorReadLine();
+        string outputDir = Path.Combine(
+            Path.GetDirectoryName(_projectPath)!,
+            "bin", _platform, _config, TargetFramework);
 
-    // Stream stdout line-by-line so progress is visible.
-    string? line;
-    while ((line = process.StandardOutput.ReadLine()) != null)
-    {
-        Console.WriteLine(line);
+        string dllPath = Path.Combine(outputDir, OutputDllName);
+        if (!File.Exists(dllPath))
+        {
+            throw new FileNotFoundException($"Output DLL not found: {dllPath}");
+        }
+
+        string hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(dllPath)));
+        Console.WriteLine($"{passLabel} build SHA256: {hash}");
+
+        return hash;
     }
 
-    process.WaitForExit();
-
-    if (process.ExitCode != 0)
+    private void RunMSBuild(string arguments)
     {
-        throw new Exception($"'msbuild {arguments}' failed with exit code {process.ExitCode}");
+        var psi = new ProcessStartInfo
+        {
+            FileName = _msbuildPath,
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+
+        using var process = Process.Start(psi)!;
+
+        // Read stderr asynchronously to avoid deadlock when both buffers fill.
+        process.ErrorDataReceived += (sender, e) =>
+        {
+            if (e.Data != null)
+                Console.Error.WriteLine(e.Data);
+        };
+        process.BeginErrorReadLine();
+
+        // Stream stdout line-by-line so progress is visible.
+        string? line;
+        while ((line = process.StandardOutput.ReadLine()) != null)
+        {
+            Console.WriteLine(line);
+        }
+
+        process.WaitForExit();
+
+        if (process.ExitCode != 0)
+        {
+            throw new Exception($"'msbuild {arguments}' failed with exit code {process.ExitCode}");
+        }
+    }
+
+    private static string FindMSBuild()
+    {
+        string vswhere = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            "Microsoft Visual Studio", "Installer", "vswhere.exe");
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = vswhere,
+            Arguments = "-latest -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe",
+            RedirectStandardOutput = true,
+            UseShellExecute = false
+        };
+
+        using var process = Process.Start(psi)!;
+        string path = process.StandardOutput.ReadLine()!;
+        process.WaitForExit();
+        return path;
     }
 }
