@@ -67,6 +67,14 @@ internal static class InteropInterfaceEntriesResolver
             else if (typeSignature.IsCustomMappedWindowsRuntimeInterfaceType(interopReferences) ||
                      typeSignature.IsManuallyProjectedWindowsRuntimeInterfaceType(interopReferences))
             {
+                // If the user explicitly implemented 'IStringable', we skip it here. We want to always emit it
+                // at the end of the list of entries, to have consistent ordering with the built-in interfaces.
+                if (SignatureComparer.IgnoreVersion.Equals(typeSignature, interopReferences.IStringable))
+                {
+                    continue;
+                }
+
+                // For all other cases, we just emit the entry in the same order we found it, same as above
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetCustomMappedOrManuallyProjectedTypeImpl(
                     type: typeSignature,
                     interopReferences: interopReferences,
@@ -125,6 +133,16 @@ internal static class InteropInterfaceEntriesResolver
         TypeSignatureEquatableSet vtableTypes,
         InteropReferences interopReferences)
     {
+        // Only include the built-in 'IStringable' implementation (which just calls 'object.ToString()') if the user didn't explicitly implement the
+        // projected 'IStringable' interface. If that's the case (since we can only have one of the two), we give precedence to the explicit one.
+        if (!TryGetUserDefinedIStringableInterfaceImplementation(
+            vtableTypes: vtableTypes,
+            interopReferences: interopReferences,
+            interfaceEntryInfo: out InteropInterfaceEntryInfo? stringableInterfaceEntryInfo))
+        {
+            stringableInterfaceEntryInfo = new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable);
+        }
+
         // Get the entry info for 'IMarshal', either user-provided or the built-in one
         if (!TryGetUserDefinedIMarshalInterfaceImplementation(
             vtableTypes: vtableTypes,
@@ -136,12 +154,47 @@ internal static class InteropInterfaceEntriesResolver
 
         // Prepare the set of all built-in native interface implementations. These always follow the vtable slots for
         // user-defined interfaces implemented by exposed types. 'IUnknown' in particular must always be the last one.
-        yield return new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable);
+        yield return stringableInterfaceEntryInfo;
         yield return new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable);
         yield return marshalInterfaceEntryInfo;
         yield return new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable);
         yield return new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable);
         yield return new WindowsRuntimeInterfaceEntryInfo(interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable);
+    }
+
+    /// <summary>
+    /// Tries to get the <see cref="InteropInterfaceEntryInfo"/> value for a user-defined <c>IStringable</c> interface.
+    /// </summary>
+    /// <param name="vtableTypes">The vtable types to use as source.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="interfaceEntryInfo">The resulting <see cref="InteropInterfaceEntryInfo"/> value for <c>IStringable</c>, if found.</param>
+    /// <returns>Whether <paramref name="interfaceEntryInfo"/> was found.</returns>
+    private static bool TryGetUserDefinedIStringableInterfaceImplementation(
+        TypeSignatureEquatableSet vtableTypes,
+        InteropReferences interopReferences,
+        [NotNullWhen(true)] out InteropInterfaceEntryInfo? interfaceEntryInfo)
+    {
+        TypeSignature typeSignature = interopReferences.IStringable.ToReferenceTypeSignature();
+
+        if (vtableTypes.Contains(typeSignature))
+        {
+            // Get the implementation for the manually-projected 'IStringable' interface. Note that
+            // we're always specifying 'Microsoft.UI.Xaml' projections to be used, but this doesn't
+            // matter here since 'IStringable' is not a XAML interface. We're hardcoding this here
+            // to simplify callsites, and allow them to not have to pass this parameter through.
+            (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetCustomMappedOrManuallyProjectedTypeImpl(
+                type: typeSignature,
+                interopReferences: interopReferences,
+                useWindowsUIXamlProjections: false);
+
+            interfaceEntryInfo = new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
+
+            return true;
+        }
+
+        interfaceEntryInfo = null;
+
+        return false;
     }
 
     /// <summary>

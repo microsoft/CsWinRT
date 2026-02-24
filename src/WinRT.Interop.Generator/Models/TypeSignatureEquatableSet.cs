@@ -14,9 +14,9 @@ namespace WindowsRuntime.InteropGenerator.Models;
 /// An immutable, equatable set of <see cref="TypeSignature"/> values.
 /// </summary>
 internal sealed partial class TypeSignatureEquatableSet :
+    IReadOnlySet<TypeSignature>,
     IEquatable<TypeSignatureEquatableSet>,
-    IComparable<TypeSignatureEquatableSet>,
-    IEnumerable<TypeSignature>
+    IComparable<TypeSignatureEquatableSet>
 {
     /// <summary>
     /// The comparer for the <see cref="TypeSignature"/> set.
@@ -107,6 +107,48 @@ internal sealed partial class TypeSignatureEquatableSet :
         }
 
         return hashCode.ToHashCode();
+    }
+
+    /// <inheritdoc/>
+    public bool Contains(TypeSignature item)
+    {
+        return _set.Contains(item);
+    }
+
+    /// <inheritdoc/>
+    public bool IsProperSubsetOf(IEnumerable<TypeSignature> other)
+    {
+        return _set.IsProperSubsetOf(other);
+    }
+
+    /// <inheritdoc/>
+    public bool IsProperSupersetOf(IEnumerable<TypeSignature> other)
+    {
+        return _set.IsProperSupersetOf(other);
+    }
+
+    /// <inheritdoc/>
+    public bool IsSubsetOf(IEnumerable<TypeSignature> other)
+    {
+        return _set.IsSubsetOf(other);
+    }
+
+    /// <inheritdoc/>
+    public bool IsSupersetOf(IEnumerable<TypeSignature> other)
+    {
+        return _set.IsSupersetOf(other);
+    }
+
+    /// <inheritdoc/>
+    public bool Overlaps(IEnumerable<TypeSignature> other)
+    {
+        return _set.Overlaps(other);
+    }
+
+    /// <inheritdoc/>
+    public bool SetEquals(IEnumerable<TypeSignature> other)
+    {
+        return _set.SetEquals(other);
     }
 
     /// <inheritdoc/>
