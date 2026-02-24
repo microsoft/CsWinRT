@@ -320,8 +320,6 @@ public unsafe partial class WindowsRuntimeObjectReference
             }
         }
 
-        NativeReleaseTrackerSourceUnsafe();
-
         GC.RemoveMemoryPressure(GCPressureBaseInBytes);
     }
 
@@ -348,7 +346,8 @@ public unsafe partial class WindowsRuntimeObjectReference
     private protected abstract void NativeReleaseWithContextUnsafe();
 
     /// <summary>
-    /// Releases the reference from the tracker source.
+    /// Releases the reference from the tracker source, if <see cref="CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose"/>
+    /// is not set.
     /// </summary>
     /// <remarks>
     /// This method does not check for disposal before releasing the reference.
@@ -360,36 +359,12 @@ public unsafe partial class WindowsRuntimeObjectReference
 
         if (referenceTrackerPtr is not null)
         {
-            _ = IReferenceTrackerVftbl.ReleaseFromTrackerSourceUnsafe(referenceTrackerPtr);
-        }
-    }
-
-    /// <summary>
-    /// Releases the reference from the tracker source, if <see cref="CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose"/>
-    /// is not set, and then the reference tracker itself.
-    /// </summary>
-    /// <remarks>
-    /// This method does not check for disposal before releasing the reference.
-    /// This allows it to be used from <see cref="NativeDisposeUnsafe"/>.
-    /// </remarks>
-    private void NativeReleaseTrackerSourceUnsafe()
-    {
-        void* referenceTrackerPtr = GetReferenceTrackerPtrUnsafe();
-
-        if (referenceTrackerPtr is not null)
-        {
             // Unless we want to prevent the release from the tracker source (used in some XAML scenarios),
-            // here we're releasing the reference from the tracker source for a second time, other than the
-            // one in 'NativeReleaseFromTrackerSourceUnsafe()'. This is intentional, and not an oversight.
-            // The reason is that there can be up to two 'QueryInterface' calls done on the wrapped objects:
-            // one for 'thisPtr', and one for 'referenceTrackerPtr'. Each of those needs to have an associated
-            // 'AddRefFromTrackerSource' call on the reference tracker, so that's up to two in total.
+            // here we're releasing the reference from the tracker source.
             if (!PreventReleaseFromTrackerSourceOnDispose)
             {
                 _ = IReferenceTrackerVftbl.ReleaseFromTrackerSourceUnsafe(referenceTrackerPtr);
             }
-
-            _ = IUnknownVftbl.ReleaseUnsafe(referenceTrackerPtr);
         }
     }
 }
