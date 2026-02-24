@@ -65,8 +65,8 @@ steps:
     inputs:
       workingDirectory: $(Build.SourcesDirectory)\src
       script: |
-        dir _build\$(BuildPlatform)\$(BuildConfiguration)\BuildDeterminismTest\bin
-        _build\$(BuildPlatform)\$(BuildConfiguration)\BuildDeterminismTest\bin\BuildDeterminismTest.exe
+        dir Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0
+        Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\BuildDeterminismTest.exe
 
 # # Run Functional Tests
 #   - template: CsWinRT-FunctionalTest-Steps.yml@self
