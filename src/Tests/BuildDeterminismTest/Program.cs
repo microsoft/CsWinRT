@@ -70,10 +70,7 @@ internal sealed class BuildDeterminismRunner
 
     private string CleanBuildAndHash(string passLabel)
     {
-        Console.WriteLine("Cleaning...");
-        RunMSBuild($"\"{_projectPath}\" -t:Clean");
-
-        // MSBuild Clean doesn't remove the bin/obj folders, so delete them explicitly.
+        // MSBuild Clean doesn't remove the bin folders, so delete them explicitly.
         string projectFolder = Path.GetDirectoryName(_projectPath)!;
         foreach (string dir in new[] { "bin" })
         {
