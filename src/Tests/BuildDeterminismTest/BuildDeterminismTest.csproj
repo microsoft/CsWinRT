@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>$(FunctionalTestsBuildTFMs)</TargetFrameworks>
+    <Platforms>x86;x64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+    <PublishProfileFullPath>$(MSBuildProjectDirectory)\..\PublishProfiles\win-$(Platform).pubxml</PublishProfileFullPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="BuildDeterminismComponent\**" />
+    <None Remove="BuildDeterminismComponent\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+
+</Project>
