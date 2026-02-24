@@ -185,15 +185,22 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!-- From the Windows SDK projection binary referenced, determine the folder with the WinMDs in the targeting pack -->
-  <Target Name="CsWinRTResolveWindowsMetadata" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences" Condition="'$(CsWinRTWindowsMetadata)' == ''">
-      <ItemGroup>
-        <_WindowsSdkProjectionFolder Include="@(ReferencePath->'%(RootDir)%(Directory)..\..\winmd\')" Condition="'%(ReferencePath.FileName)%(ReferencePath.Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
-      </ItemGroup>
-      <PropertyGroup>
-        <CsWinRTWindowsMetadata>@(_WindowsSdkProjectionFolder)</CsWinRTWindowsMetadata>
-        <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
-        <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(EffectiveTargetPlatformVersion)</CsWinRTWindowsMetadata>
-      </PropertyGroup>
+  <Target Name="CsWinRTResolveWindowsMetadata" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences" Condition="'$(CsWinRTResolveWindowsMetadata)' != 'false' AND '$(CsWinRTWindowsMetadata)' == ''">
+    <!-- Based on the Windows SDK projection profile used, the winmds are in a different folder. -->
+    <PropertyGroup>
+      <_CsWinRTMetadataSubFolder>windows</_CsWinRTMetadataSubFolder>
+      <_CsWinRTMetadataSubFolder Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">xaml</_CsWinRTMetadataSubFolder>
+    </PropertyGroup>
+      
+    <ItemGroup>
+      <_WindowsSdkProjectionFolder Include="@(ReferencePath->'%(RootDir)%(Directory)..\..\winmd\$(_CsWinRTMetadataSubFolder)\')" Condition="'%(ReferencePath.FileName)%(ReferencePath.Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
+    </ItemGroup>
+      
+    <PropertyGroup>
+      <CsWinRTWindowsMetadata>@(_WindowsSdkProjectionFolder)</CsWinRTWindowsMetadata>
+      <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
+      <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(EffectiveTargetPlatformVersion)</CsWinRTWindowsMetadata>
+    </PropertyGroup>
   </Target>
 
   <Target Name="CsWinRTPrepareProjection" DependsOnTargets="$(CsWinRTPrepareProjectionDependsOn)" Outputs="$(CsWinRTGeneratedFilesDir)">
