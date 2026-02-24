@@ -346,8 +346,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     private protected abstract void NativeReleaseWithContextUnsafe();
 
     /// <summary>
-    /// Releases the reference from the tracker source, if <see cref="CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose"/>
-    /// is not set.
+    /// Releases the reference from the tracker source, if <see cref="CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose"/> is not set.
     /// </summary>
     /// <remarks>
     /// This method does not check for disposal before releasing the reference.
@@ -355,16 +354,20 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// </remarks>
     private void NativeReleaseFromTrackerSourceUnsafe()
     {
+        // If we want to prevent the release from the tracker source (used in some XAML scenarios),
+        // then stop here without even checking if we have a reference tracker pointer at all.
+        if (PreventReleaseFromTrackerSourceOnDispose)
+        {
+            return;
+        }
+
         void* referenceTrackerPtr = GetReferenceTrackerPtrUnsafe();
 
+        // If we do have a reference tracker pointer, then release the reference from the tracker source.
+        // Otherwise, we don't need to do anything (this is true for basically all non-XAML objects).
         if (referenceTrackerPtr is not null)
         {
-            // Unless we want to prevent the release from the tracker source (used in some XAML scenarios),
-            // here we're releasing the reference from the tracker source.
-            if (!PreventReleaseFromTrackerSourceOnDispose)
-            {
-                _ = IReferenceTrackerVftbl.ReleaseFromTrackerSourceUnsafe(referenceTrackerPtr);
-            }
+            _ = IReferenceTrackerVftbl.ReleaseFromTrackerSourceUnsafe(referenceTrackerPtr);
         }
     }
 }
