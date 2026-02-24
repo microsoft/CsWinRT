@@ -95,24 +95,17 @@ public unsafe partial class WindowsRuntimeObjectReference
                 // considered an error state that cannot be recovered from, so that is not a concern here.
                 if (hresult.Failed)
                 {
-                    // Before proceeding, we need to increment the reference count on the inner instance, if we're doing
-                    // COM aggregation. This is part of a delicate balance of 'AddRef' and 'Release' calls on the input
-                    // object, which varies based on whether we're aggregating. We basically have two possible scenarios:
-                    //
-                    //   1) COM aggregation: we would need to do an 'AddRef' on the inner instance (for the object reference),
-                    //      and then callers of this method would do a 'Release' from a 'finally' block. We can skip that
-                    //      entire pair of 'AddRef'/'Release' on the inner object in the successful case.
-                    //   2) Not aggregation: we would need to do an 'AddRef' on the new instance (for the object reference),
-                    //      but then we'd do an unconditional 'Release' at the end of this method. This is because the
-                    //      runtime (ie. 'ComWrappers') would already be holding its own 'AddRef' on this same object, as
-                    //      that is the one that will be passed to 'GetOrRegisterObjectForComInstance' below. Which means
-                    //      we can skip this entire pair of 'AddRef'/'Release' calls on the new instance as well.
-                    //
-                    // To ensure things don't fall out of balance in the failure case, we just need to release the inner
-                    // instance if we're about to return early. That's because by doing so, we wouldn't have had time to
-                    // transfer the ownership to the returned object reference, which would handle releases later on.
-                    // This applies to both when doing aggregation or not. That is, regardless of how the lifetime of
-                    // the inner instance would've been extended, if we fail, we just need to ensure we release that object.
+                    // To ensure things don't fall out of balance in the failure case, we just need to release both instances
+                    // if we're about to return early. That's because by returning here, we have already transferred ownership,
+                    // so we're responsible to make sure we don't accidentally keep references alive (or that would leak).
+                    // This applies to both when doing aggregation or not. That is, regardless of how the lifetime of the
+                    // inner instance would've been extended, if we fail, we just need to ensure we release that object.
+                    if (acquiredNewInstanceUnknown is not null)
+                    {
+                        _ = IUnknownVftbl.ReleaseUnsafe(acquiredNewInstanceUnknown);
+                    }
+
+                    // Do the same for the inner instance as well, if we have it
                     if (acquiredInnerInstanceUnknown is not null)
                     {
                         _ = IUnknownVftbl.ReleaseUnsafe(acquiredInnerInstanceUnknown);
@@ -128,6 +121,22 @@ public unsafe partial class WindowsRuntimeObjectReference
             }
         }
 
+        // Before proceeding, we need to increment the reference count on the inner instance, if we're doing
+        // COM aggregation. This is part of a delicate balance of 'AddRef' and 'Release' calls on the input
+        // object, which varies based on whether we're aggregating. We basically have two possible scenarios:
+        //
+        //   1) COM aggregation: we would need to do an 'AddRef' on the inner instance (for the object reference),
+        //      and then callers of this method would do a 'Release' from a 'finally' block. We can skip that
+        //      entire pair of 'AddRef'/'Release' on the inner object in the successful case.
+        //   2) Not aggregation: we would need to do an 'AddRef' on the new instance (for the object reference),
+        //      but then we'd do an unconditional 'Release' at the end of this method. This is because the
+        //      runtime (ie. 'ComWrappers') would already be holding its own 'AddRef' on this same object, as
+        //      that is the one that will be passed to 'GetOrRegisterObjectForComInstance' below. Which means
+        //      we can skip this entire pair of 'AddRef'/'Release' calls on the new instance as well.
+        //
+        // So in practice, applying all of these optimizations together, we don't need to perform any 'AddRef' calls
+        // at all (in either scenario), and we only possibly need one 'Release' call at the end, if not aggregating.
+        //
         // Next, determine if the instance supports 'IReferenceTracker' (eg. for XAML scenarios).
         // Acquiring this interface is useful for:
         //
