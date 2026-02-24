@@ -159,14 +159,14 @@ public unsafe partial class WindowsRuntimeObjectReference
             // Indicate the scenario is COM aggregation
             createObjectFlags |= CreateObjectFlags.Aggregation;
 
-            // Create the RCW by Here we just need to pass the inner object to 'ComWrappers' in this case.
-            // The reason why we only do so in this case is that if we don't have a reference tracker, it means
-            // that we're not in a XAML scenario where we need the .NET runtime to manage the inner lifetime.
+            // Here we pass both the aggregated instance and inner to 'ComWrappers'.
+            // This allows 'ComWrappers' to manage the inner lifetime based on whether this is a
+            // XAML reference tracker scenario or not.
             _ = WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance((nint)acquiredNewInstanceUnknown, createObjectFlags, thisInstance, (nint)acquiredInnerInstanceUnknown);
         }
         else
         {
-            // Same registration as for COM aggregation without reference tracker support (see above)
+            // Same registration as for COM aggregation without reference tracker support for inner (see above)
             _ = WindowsRuntimeComWrappers.Default.GetOrRegisterObjectForComInstance((nint)acquiredNewInstanceUnknown, createObjectFlags, thisInstance);
         }
 
