@@ -13,6 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" />
-    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime2.csproj" />
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj" />
   </ItemGroup>
 </Project>
