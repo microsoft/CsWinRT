@@ -3,6 +3,9 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Windows.Storage.Streams;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
@@ -81,6 +84,7 @@ public static class WindowsRuntimeBufferExtensions
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="destination"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">Thrown if <paramref name="destination"/> does not have enough capacity for the copy operation.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static void CopyTo(this ReadOnlySpan<byte> source, IBuffer destination)
     {
         CopyTo(source, destination, destinationIndex: 0);
@@ -102,6 +106,7 @@ public static class WindowsRuntimeBufferExtensions
     /// Thrown if <paramref name="destinationIndex"/> exceeds the value of the <see cref="IBuffer.Capacity"/> property for <paramref name="destination"/>,
     /// or if the remaining space starting at the specified index is not enough for the copy operation.
     /// </exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static void CopyTo(this ReadOnlySpan<byte> source, IBuffer destination, uint destinationIndex)
     {
         ArgumentNullException.ThrowIfNull(destination);
@@ -144,6 +149,7 @@ public static class WindowsRuntimeBufferExtensions
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="destination"/> are <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">Thrown if <paramref name="destination"/> does not have enough capacity for the copy operation.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static void CopyTo(this byte[] source, IBuffer destination)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -173,6 +179,7 @@ public static class WindowsRuntimeBufferExtensions
     /// Thrown if <paramref name="destinationIndex"/> exceeds the value of the <see cref="IBuffer.Capacity"/> property for <paramref name="destination"/>,
     /// or if the remaining space starting at the specified index is not enough for the copy operation.
     /// </exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static void CopyTo(this byte[] source, int sourceIndex, IBuffer destination, uint destinationIndex, int count)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -187,6 +194,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <param name="destination">The destination <see cref="Span{T}"/> value to copy data to.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">Thrown if <paramref name="destination"/> does not have enough capacity for the copy operation.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static void CopyTo(this IBuffer source, Span<byte> destination)
     {
         CopyTo(source, sourceIndex: 0, destination, count: checked((int)source.Length));
@@ -205,6 +213,7 @@ public static class WindowsRuntimeBufferExtensions
     /// or if <paramref name="count"/> exceeds the length of <paramref name="destination"/>.
     /// </exception>
     /// <exception cref="ArgumentException">Thrown if the remaining space starting at the specified index is not enough for the copy operation.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static void CopyTo(this IBuffer source, uint sourceIndex, Span<byte> destination, int count)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -235,6 +244,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <param name="destination">The destination byte array to copy data to.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="destination"/> are <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">Thrown if <paramref name="destination"/> does not have enough capacity for the copy operation.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static void CopyTo(this IBuffer source, byte[] destination)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -257,6 +267,7 @@ public static class WindowsRuntimeBufferExtensions
     /// or if <paramref name="count"/> exceeds the length of <paramref name="destination"/>.
     /// </exception>
     /// <exception cref="ArgumentException">Thrown if the remaining space starting at the specified index is not enough for the copy operation.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static void CopyTo(this IBuffer source, uint sourceIndex, byte[] destination, int destinationIndex, int count)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -272,6 +283,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <param name="destination">The destination <see cref="IBuffer"/> instance to copy data to.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="destination"/> are <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">Thrown if <paramref name="destination"/> does not have enough capacity for the copy operation.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on either input buffer fails.</exception>
     public static void CopyTo(this IBuffer source, IBuffer destination)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -293,6 +305,7 @@ public static class WindowsRuntimeBufferExtensions
     /// if <paramref name="destinationIndex"/> exceeds the value of the <see cref="IBuffer.Capacity"/> property for <paramref name="destination"/>,
     /// or if the remaining space starting at the specified index is not enough for the copy operation.
     /// </exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on either input buffer fails.</exception>
     public static void CopyTo(this IBuffer source, uint sourceIndex, IBuffer destination, uint destinationIndex, uint count)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -335,6 +348,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <returns>A byte array that contains the bytes in <paramref name="source"/>, beginning at offset <c>0</c>.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if the length of <paramref name="source"/> exceeds <see cref="Array.MaxLength"/>.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static byte[] ToArray(this IBuffer source)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -357,6 +371,7 @@ public static class WindowsRuntimeBufferExtensions
     /// Thrown if <paramref name="sourceIndex"/> exceeds the value of the <see cref="IBuffer.Capacity"/> property for <paramref name="source"/>,
     /// or if the remaining space starting at the specified index is not enough for the copy operation.
     /// </exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static byte[] ToArray(this IBuffer source, uint sourceIndex, int count)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -378,6 +393,85 @@ public static class WindowsRuntimeBufferExtensions
     }
 
     /// <summary>
+    /// Checks if the underlying memory backing two <see cref="IBuffer"/> instances is actually the same memory.
+    /// </summary>
+    /// <param name="buffer">The first <see cref="IBuffer"/> instance.</param>
+    /// <param name="otherBuffer">The second <see cref="IBuffer"/> instance.</param>
+    /// <returns>Whether the underlying memory pointer is the same for both specified <see cref="IBuffer"/> instances (i.e. if they're backed by the same memory).</returns>
+    /// <remarks>
+    /// <para>
+    /// When applied to <see cref="IBuffer"/> instances backed by managed arrays, this method is preferable to a naive comparison
+    /// (such as via <see cref="WindowsRuntimeBufferMarshal.TryGetDataUnsafe(IBuffer?, out byte*)"/>), because it avoids pinning
+    /// the backing array which would be necessary if trying to retrieve a native memory pointer.
+    /// </para>
+    /// <para>
+    /// This method will not take the <see cref="IBuffer.Length"/> and <see cref="IBuffer.Capacity"/> properties into account.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="buffer"/> is <see langword="null"/>.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on either input buffer fails.</exception>
+    public static unsafe bool IsSameData(this IBuffer buffer, [NotNullWhen(true)] IBuffer? otherBuffer)
+    {
+        ArgumentNullException.ThrowIfNull(buffer);
+
+        if (otherBuffer is null)
+        {
+            return false;
+        }
+
+        if (buffer == otherBuffer)
+        {
+            return true;
+        }
+
+        bool bufferIsManaged = TryGetManagedSpanForCapacity(buffer, out Span<byte> span);
+        bool otherBufferIsManaged = TryGetManagedSpanForCapacity(otherBuffer, out Span<byte> otherSpan);
+
+        // If only one of the two input buffers is backed by managed memory, they can't possibly be equal
+        if (bufferIsManaged != otherBufferIsManaged)
+        {
+            return false;
+        }
+
+        // If both buffers are backed by managed memory, check whether they're pointing to the same area. Note that this could return 'true'
+        // even if the actual managed buffer types are different. For instance, one could be a 'WindowsRuntimePinnedArrayBuffer', which the
+        // user then unwrapped via 'WindowsRuntimeBufferMarshal.TryGetArray', and then used to create a separate managed buffer instance,
+        // by calling one of the 'AsBuffer' extensions defined above. So the only thing we can do is to compare the actual memory address.
+        if (bufferIsManaged)
+        {
+            return Unsafe.AreSame(
+                left: in MemoryMarshal.GetReference(span),
+                right: in MemoryMarshal.GetReference(otherSpan));
+        }
+
+        // Lastly, check whether they're both native buffer objects that point to the same memory. Here we're intentionally not reusing
+        // the 'TryGetNativeSpanForCapacity', because that method also does a range check for the 'Capacity' property. For the purposes
+        // of this method, we actually don't want that. Two buffers should just compare as equal even if their capacity exceeds the limit
+        // for managed spans. That is fine here, given we're not actually passing that span anywhere (and this method shouldn't throw).
+        if (buffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject &&
+            otherBuffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } otherBufferObject)
+        {
+            using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IBufferByteAccess);
+            using WindowsRuntimeObjectReferenceValue otherBufferByteAccessValue = otherBufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IBufferByteAccess);
+
+            byte* bufferPtr;
+            byte* otherBufferPtr;
+
+            HRESULT hresult = IBufferByteAccessVftbl.BufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), &bufferPtr);
+
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+
+            hresult = IBufferByteAccessVftbl.BufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), &otherBufferPtr);
+
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+
+            return bufferPtr == otherBufferPtr;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Gets a <see cref="Span{T}"/> value for the underlying data in the specified buffer.
     /// </summary>
     /// <param name="buffer">The input <see cref="IBuffer"/> instance.</param>
@@ -385,7 +479,26 @@ public static class WindowsRuntimeBufferExtensions
     /// <remarks>
     /// The returned <see cref="Span{T}"/> value has a length equal to <see cref="IBuffer.Capacity"/>, not <see cref="IBuffer.Length"/>.
     /// </remarks>
-    private static unsafe Span<byte> GetSpanForCapacity(IBuffer buffer)
+    private static Span<byte> GetSpanForCapacity(IBuffer buffer)
+    {
+        if (TryGetNativeSpanForCapacity(buffer, out Span<byte> span) || TryGetManagedSpanForCapacity(buffer, out span))
+        {
+            return span;
+        }
+
+        throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InvalidIBufferInstance);
+    }
+
+    /// <summary>
+    /// Tries to get a <see cref="Span{T}"/> value for the underlying data in the specified buffer, only if backed by native memory.
+    /// </summary>
+    /// <param name="buffer">The input <see cref="IBuffer"/> instance.</param>
+    /// <param name="span">The resulting <see cref="Span{T}"/> value, if retrieved.</param>
+    /// <returns>Whether <paramref name="span"/> could be retrieved.</returns>
+    /// <remarks>
+    /// The returned <see cref="Span{T}"/> value has a length equal to <see cref="IBuffer.Capacity"/>, not <see cref="IBuffer.Length"/>.
+    /// </remarks>
+    private static unsafe bool TryGetNativeSpanForCapacity(IBuffer buffer, out Span<byte> span)
     {
         // Equivalent logic as 'WindowsRuntimeBufferMarshal.TryGetDataUnsafe', but returning a 'Span<byte>' instead
         if (buffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
@@ -398,21 +511,45 @@ public static class WindowsRuntimeBufferExtensions
 
             RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
-            return new(bufferPtr, checked((int)buffer.Capacity));
+            span = new(bufferPtr, checked((int)buffer.Capacity));
+
+            return true;
         }
 
+        span = default;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to get a <see cref="Span{T}"/> value for the underlying data in the specified buffer, only if backed by a managed array.
+    /// </summary>
+    /// <param name="buffer">The input <see cref="IBuffer"/> instance.</param>
+    /// <param name="span">The resulting <see cref="Span{T}"/> value, if retrieved.</param>
+    /// <returns>Whether <paramref name="span"/> could be retrieved.</returns>
+    /// <remarks>
+    /// The returned <see cref="Span{T}"/> value has a length equal to <see cref="IBuffer.Capacity"/>, not <see cref="IBuffer.Length"/>.
+    /// </remarks>
+    private static bool TryGetManagedSpanForCapacity(IBuffer buffer, out Span<byte> span)
+    {
         // If buffer is backed by a managed array, return it
         if (buffer is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
         {
-            return externalArrayBuffer.GetSpanForCapacity();
+            span = externalArrayBuffer.GetSpanForCapacity();
+
+            return true;
         }
 
         // Same as above for pinned arrays as well
         if (buffer is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
         {
-            return pinnedArrayBuffer.GetSpanForCapacity();
+            span = pinnedArrayBuffer.GetSpanForCapacity();
+
+            return true;
         }
 
-        throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InvalidIBufferInstance);
+        span = default;
+
+        return false;
     }
 }
