@@ -55,7 +55,7 @@
     <PackageVersion Include="MSTest.Analyzers" Version="4.1.0" />
     <PackageVersion Include="MSTest.Engine" Version="1.0.0-alpha.24163.4" />
     <PackageVersion Include="MSTest.SourceGeneration" Version="1.0.0-alpha.24163.4" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="1.0.2" />
-    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="1.0.2" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.1.0" />
+    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.1.0" />
   </ItemGroup>
 </Project>
