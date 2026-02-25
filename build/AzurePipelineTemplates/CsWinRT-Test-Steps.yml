@@ -8,7 +8,7 @@ steps:
 # # Enable GC stress
 #   - task: PowerShell@2
 #     displayName: Enable GC Stress
-#     condition: and(eq(variables['_RunGCStress'], 'true'))
+#     condition: and(succeeded(), eq(variables['_RunGCStress'], 'true'))
 #     inputs:
 #       targetType: inline
 #       script: |
@@ -17,7 +17,7 @@ steps:
 # # Run Unit Tests
 #   - task: DotNetCoreCLI@2
 #     displayName: Run Unit Tests
-#     condition: and(or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+#     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
 #     inputs:
 #       command: test
 #       projects: 'src/Tests/UnitTest/UnitTest.csproj'
@@ -27,7 +27,7 @@ steps:
 # # Run Host Tests
 #   - task: CmdLine@2
 #     displayName: Run Host Tests
-#     condition: and(or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+#     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
 #     continueOnError: True
 #     inputs:
 #       workingDirectory: $(Build.SourcesDirectory)\src
@@ -38,7 +38,7 @@ steps:
 # # Run Source Generator Tests  
 #   - task: CmdLine@2
 #     displayName: Run Source Generator Tests
-#     condition: and(or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+#     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
 #     continueOnError: True
 #     inputs:
 #       workingDirectory: $(Build.SourcesDirectory)\src
@@ -49,7 +49,7 @@ steps:
 # # Run WUX Tests
 #   - task: CmdLine@2
 #     displayName: Run WUX Tests
-#     condition: and(or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+#     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
 #     continueOnError: True
 #     inputs:
 #       workingDirectory: $(Build.SourcesDirectory)\src
@@ -60,7 +60,7 @@ steps:
 # Run Build Determinism Test
   - task: CmdLine@2
     displayName: Run Build Determinism Test
-    condition: and(or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
     continueOnError: True
     inputs:
       workingDirectory: $(Build.SourcesDirectory)\src
@@ -77,7 +77,7 @@ steps:
 # # Disable GC stress
 #   - task: PowerShell@2
 #     displayName: Disable GC Stress
-#     condition: and(eq(variables['_RunGCStress'], 'true'))
+#     condition: and(succeeded(), eq(variables['_RunGCStress'], 'true'))
 #     inputs:
 #       targetType: inline
 #       script: |
