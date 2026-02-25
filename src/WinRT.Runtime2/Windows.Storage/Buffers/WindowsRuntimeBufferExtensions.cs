@@ -6,6 +6,8 @@ using Windows.Storage.Streams;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 
+#pragma warning disable IDE0057
+
 namespace Windows.Storage.Buffers;
 
 /// <summary>
@@ -111,7 +113,7 @@ public static class WindowsRuntimeBufferExtensions
             return;
         }
 
-        Span<byte> destinationSpan = GetSpanForCapacity(destination)[(int)destinationIndex..];
+        Span<byte> destinationSpan = GetSpanForCapacity(destination).Slice(start: (int)destinationIndex);
 
         source.CopyTo(destinationSpan);
 
@@ -147,7 +149,7 @@ public static class WindowsRuntimeBufferExtensions
     }
 
     /// <summary>
-    /// Copies range of bytes in the specified byte array to a target <see cref="IBuffer"/> instance.
+    /// Copies a range of bytes in the specified byte array to a target <see cref="IBuffer"/> instance.
     /// </summary>
     /// <param name="source">The byte array to copy from.</param>
     /// <param name="sourceIndex">The index in <paramref name="source"/> to begin copying data from.</param>
@@ -162,7 +164,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="destination"/> are <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown if <paramref name="sourceIndex"/> is less than <c>0</c>, if it exceeds the length of <paramref name="source"/>,
-    /// or if <paramref name="count"/> exceeds the length of <paramref name="source"/>.
+    /// or if <paramref name="count"/> exceeds the capacity of <paramref name="destination"/>.
     /// </exception>
     /// <exception cref="ArgumentException">
     /// Thrown if <paramref name="destinationIndex"/> exceeds the value of the <see cref="IBuffer.Capacity"/> property for <paramref name="destination"/>,
@@ -173,6 +175,52 @@ public static class WindowsRuntimeBufferExtensions
         ArgumentNullException.ThrowIfNull(source);
 
         CopyTo(source.AsSpan(start: sourceIndex, length: count), destination, destinationIndex: destinationIndex);
+    }
+
+    /// <summary>
+    /// Copies the contents of a given <see cref="IBuffer"/> instance to a target byte array.
+    /// </summary>
+    /// <param name="source">The <see cref="IBuffer"/> instance to copy from.</param>
+    /// <param name="destination">The destination <see cref="Span{T}"/> value to copy data to.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="destination"/> does not have enough capacity for the copy operation.</exception>
+    public static void CopyTo(this IBuffer source, Span<byte> destination)
+    {
+        CopyTo(source, sourceIndex: 0, destination, count: checked((int)source.Length));
+    }
+
+    /// <summary>
+    /// Copies a range of bytes of a given <see cref="IBuffer"/> instance to a target <see cref="Span{T}"/> value.
+    /// </summary>
+    /// <param name="source">The <see cref="IBuffer"/> instance to copy from.</param>
+    /// <param name="sourceIndex">The index in <paramref name="source"/> to begin copying data from.</param>
+    /// <param name="destination">The destination <see cref="Span{T}"/> value to copy data to.</param>
+    /// <param name="count">The number of bytes to copy.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown if <paramref name="count"/> is less than <c>0</c>, if it exceeds the length of <paramref name="source"/>,
+    /// or if <paramref name="count"/> exceeds the length of <paramref name="destination"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">Thrown if the remaining space starting at the specified index is not enough for the copy operation.</exception>
+    public static void CopyTo(this IBuffer source, uint sourceIndex, Span<byte> destination, int count)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        //if (source.Length < sourceIndex) throw new ArgumentException("The specified buffer index is not within the buffer length.");
+        //if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
+        //if (destination.Length < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+
+        // If there are no values to copy, just stop here immediately and skip all overhead of preparing the target range
+        if (count == 0)
+        {
+            return;
+        }
+
+        Span<byte> sourceSpan = GetSpanForCapacity(source).Slice(start: (int)sourceIndex, length: count);
+
+        sourceSpan.CopyTo(destination);
+
+        GC.KeepAlive(source);
     }
 
     /// <summary>
