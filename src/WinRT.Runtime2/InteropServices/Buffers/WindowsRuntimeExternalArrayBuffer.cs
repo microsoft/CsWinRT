@@ -175,7 +175,7 @@ internal sealed unsafe class WindowsRuntimeExternalArrayBuffer : IBuffer
             else
             {
                 // If we have a race with another thread also trying to pin the array, and that thread is the
-                // first one to assign the pinned data pointer, than just stop and dispose the pinned GC handle
+                // first one to assign the pinned data pointer, then just stop and dispose the pinned GC handle
                 // we just created. It's not needed anyway, as the one from the other thread will remain active.
                 pinnedHandle.Dispose();
             }

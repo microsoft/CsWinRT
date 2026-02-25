@@ -139,7 +139,7 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
         ref byte pinnedData = ref MemoryMarshal.GetArrayDataReference(_pinnedData);
 
         // All parameters have been validated before constructing this object,
-        // so we can avoid the overhead of checking the offset and capaciity.
+        // so we can avoid the overhead of checking the offset and capacity.
         return MemoryMarshal.CreateSpan(ref Unsafe.Add(ref pinnedData, _offset), _capacity);
     }
 }
