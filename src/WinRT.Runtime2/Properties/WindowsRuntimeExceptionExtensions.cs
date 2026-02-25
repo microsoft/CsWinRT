@@ -504,7 +504,7 @@ internal static class WindowsRuntimeExceptionExtensions
             [DoesNotReturn]
             [StackTraceHidden]
             static void ThrowArgumentException()
-                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_BufferIndexExceedsLength);
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_BufferOffsetExceedsLength);
 
             if (offset >= length)
             {

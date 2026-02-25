@@ -18,6 +18,8 @@ internal static class WindowsRuntimeExceptionMessages
 
     public const string Argument_BufferIndexExceedsLength = "The specified buffer index exceeds the buffer length.";
 
+    public const string Argument_BufferOffsetExceedsLength = "The specified buffer offset exceeds the buffer length.";
+
     public const string Argument_BufferLengthExceedsCapacity = "The specified useful data length exceeds the capacity of this buffer.";
 
     public const string Argument_IndexOutOfArrayBounds = "The specified index is out of bounds of the specified array.";
