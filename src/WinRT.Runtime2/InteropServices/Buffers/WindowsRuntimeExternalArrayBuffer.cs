@@ -124,9 +124,9 @@ internal sealed unsafe class WindowsRuntimeExternalArrayBuffer : IBuffer
         return new(_data, _offset, _length);
     }
 
-    /// <inheritdoc cref="WindowsRuntimePinnedArrayBuffer.GetSpan"/>
+    /// <inheritdoc cref="WindowsRuntimePinnedArrayBuffer.GetSpanForCapacity"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<byte> GetSpan()
+    public ReadOnlySpan<byte> GetSpanForCapacity()
     {
         ref byte pinnedData = ref MemoryMarshal.GetArrayDataReference(_data);
 

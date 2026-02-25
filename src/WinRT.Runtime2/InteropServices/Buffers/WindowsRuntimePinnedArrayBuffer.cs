@@ -118,8 +118,11 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
     /// Gets a <see cref="ReadOnlySpan{T}"/> value for the underlying data in this buffer.
     /// </summary>
     /// <returns>The resulting <see cref="ReadOnlySpan{T}"/> value.</returns>
+    /// <remarks>
+    /// The returned <see cref="ReadOnlySpan{T}"/> value has a length equal to <see cref="Capacity"/>, not <see cref="Length"/>.
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<byte> GetSpan()
+    public ReadOnlySpan<byte> GetSpanForCapacity()
     {
         ref byte pinnedData = ref MemoryMarshal.GetArrayDataReference(_pinnedData);
 
