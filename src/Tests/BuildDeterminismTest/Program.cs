@@ -5,7 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
-return BuildDeterminismRunner.Run();
+return BuildDeterminismRunner.Run(args);
 
 internal sealed class BuildDeterminismRunner
 {
@@ -16,17 +16,20 @@ internal sealed class BuildDeterminismRunner
     private readonly string _projectPath;
     private readonly string _config;
     private readonly string _platform;
+    private readonly string _msbuildArgs;
 
-    private BuildDeterminismRunner(string msbuildPath, string projectPath, string config, string platform)
+    private BuildDeterminismRunner(string msbuildPath, string projectPath, string config, string platform, string msbuildArgs)
     {
         _msbuildPath = msbuildPath;
         _projectPath = projectPath;
         _config = config;
         _platform = platform;
+        _msbuildArgs = msbuildArgs;
     }
 
-    internal static int Run()
+    internal static int Run(string[] args)
     {
+        string msbuildArgs = args.Length > 0 ? string.Join(" ", args) : "";
         string config =
 #if DEBUG
             "Debug";
@@ -50,7 +53,7 @@ internal sealed class BuildDeterminismRunner
             return 1;
         }
 
-        var runner = new BuildDeterminismRunner(FindMSBuild(), projectPath, config, platform);
+        var runner = new BuildDeterminismRunner(FindMSBuild(), projectPath, config, platform, msbuildArgs);
 
         Console.WriteLine($"Target project: {projectPath}");
         Console.WriteLine($"Configuration: {config}, Platform: {platform}");
@@ -86,7 +89,7 @@ internal sealed class BuildDeterminismRunner
         RunMSBuild($"\"{_projectPath}\" -t:Restore");
 
         Console.WriteLine($"Building ({passLabel} pass)...");
-        RunMSBuild($"\"{_projectPath}\" -p:Platform={_platform},Configuration={_config}");
+        RunMSBuild($"\"{_projectPath}\" -p:Platform={_platform},Configuration={_config} {_msbuildArgs}".TrimEnd());
 
         string outputDir = Path.Combine(
             Path.GetDirectoryName(_projectPath)!,
