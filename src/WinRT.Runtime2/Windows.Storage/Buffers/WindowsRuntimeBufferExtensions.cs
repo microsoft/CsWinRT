@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Storage.Streams;
@@ -472,6 +473,138 @@ public static class WindowsRuntimeBufferExtensions
     }
 
     /// <summary>
+    /// Creates a new <see cref="IBuffer"/> instance backed by the same memory as the specified <see cref="MemoryStream"/> instance.
+    /// </summary>
+    /// <param name="stream">The <see cref="MemoryStream"/> to use to share the data memory with the buffer being created.</param>
+    /// <returns>A new <see cref="IBuffer"/> instance backed by the same memory as <paramref name="stream"/>.</returns>
+    /// <remarks>
+    /// The <see cref="MemoryStream"/> instance may re-sized in future, which would cause that stream to be backed by a different memory region.
+    /// In that scenario, the buffer created by this method will remain backed by the memory behind the stream at the time the buffer was created.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="stream"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ObjectDisposedException">Thrown if <paramref name="stream"/> has been disposed.</exception>
+    /// <exception cref="UnauthorizedAccessException">Thrown if the underlying array that <paramref name="stream"/> is used can't be accessed.</exception>
+    public static IBuffer GetWindowsRuntimeBuffer(this MemoryStream stream)
+    {
+        // Note: the naming inconsistency with 'byte[].AsBuffer' is intentional. This extension method will appear on
+        // 'MemoryStream', so consistency with method names on 'MemoryStream' is more important. There we already have
+        // an API called 'GetBuffer,' which returns the underlying array.
+
+        ArgumentNullException.ThrowIfNull(stream);
+
+        // Try to extract the underlying buffer from the provided stream. We can only construct a Windows Runtime
+        // buffer instance if this succeeds. Otherwise, there's no way to actually get the memory area we need.
+        if (!stream.TryGetBuffer(out ArraySegment<byte> arraySegment))
+        {
+            //throw new UnauthorizedAccessException(global::Windows.Storage.Streams.SR.UnauthorizedAccess_InternalBuffer);
+        }
+
+        Debug.Assert(stream.Length <= int.MaxValue);
+        Debug.Assert(stream.Capacity <= int.MaxValue);
+
+        return new WindowsRuntimeExternalArrayBuffer(arraySegment.Array!, arraySegment.Offset, (int)stream.Length, stream.Capacity);
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="IBuffer"/> instance backed by the same memory as the specified <see cref="MemoryStream"/> instance.
+    /// </summary>
+    /// <param name="stream">The <see cref="MemoryStream"/> to use to share the data memory with the buffer being created.</param>
+    /// <param name="position">The position of the shared memory region.</param>
+    /// <param name="length">The maximum size of the shared memory region.</param>
+    /// <returns>A new <see cref="IBuffer"/> instance backed by the same memory as <paramref name="stream"/>.</returns>
+    /// <remarks>
+    /// <para>
+    /// The <see cref="MemoryStream"/> instance may re-sized in future, which would cause that stream to be backed by a different memory region.
+    /// In that scenario, the buffer created by this method will remain backed by the memory behind the stream at the time the buffer was created.
+    /// </para>
+    /// <para>
+    /// The created buffer begins at the specified position in the stream, and extends over up to <paramref name="length"/> bytes.
+    /// If the stream has less than <paramref name="length"/> bytes after the specified starting position, the created buffer covers
+    /// only as many bytes as available in the stream. In either case, the <see cref="Stream.Length"/> and the <see cref="MemoryStream.Capacity"/>
+    /// properties of the created buffer are set accordingly:
+    /// <list type="bullet">
+    ///   <item>
+    ///     <see cref="MemoryStream.Capacity"/>: number of bytes between <paramref name="position"/>
+    ///     and the stream capacity end, but not more than <paramref name="length"/>.
+    ///   </item>
+    ///   <item>
+    ///     <see cref="Stream.Length"/>: number of bytes between <paramref name="position"/> and the stream length end,
+    ///     or zero if <paramref name="position"/> is beyond stream length end, but not more than <paramref name="length"/>.
+    ///   </item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="stream"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="position"/> or <paramref name="length"/> are less than <c>0</c>.</exception>
+    /// <exception cref="ObjectDisposedException">Thrown if <paramref name="stream"/> has been disposed.</exception>
+    /// <exception cref="UnauthorizedAccessException">Thrown if the underlying array that <paramref name="stream"/> is used can't be accessed.</exception>
+    public static IBuffer GetWindowsRuntimeBuffer(this MemoryStream stream, int position, int length)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        ArgumentOutOfRangeException.ThrowIfNegative(position);
+        ArgumentOutOfRangeException.ThrowIfNegative(length);
+        //if (stream.Length < position) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_StreamPositionBeyondEOS);
+
+        // Extract the underlying buffer from the stream (same as above)
+        if (!stream.TryGetBuffer(out ArraySegment<byte> arraySegment))
+        {
+            //throw new UnauthorizedAccessException(global::Windows.Storage.Streams.SR.UnauthorizedAccess_InternalBuffer);
+        }
+
+        int bufferOffset = arraySegment.Offset + position;
+        int bufferCapacity = Math.Min(length, stream.Capacity - position);
+        int bufferLength = Math.Max(0, Math.Min(length, (int)stream.Length - position));
+
+        return new WindowsRuntimeExternalArrayBuffer(arraySegment.Array!, bufferOffset, bufferLength, bufferCapacity);
+    }
+
+    /// <summary>
+    /// Returns a <see cref="Stream"/> object that represents the same memory that the specified <see cref="IBuffer"/> instance represents.
+    /// </summary>
+    /// <param name="source">The <see cref="IBuffer"/> instance to wrap as a stream.</param>
+    /// <returns>A stream that represents the same memory that the specified <see cref="IBuffer"/> instance represents.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="source"/> is not a valid <see cref="IBuffer"/> implementation.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on either input buffer fails.</exception>
+    public static unsafe Stream AsStream(this IBuffer source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        // If buffer is backed by a managed array, unwrap it and use it for the stream
+        if (source is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
+        {
+            byte[] array = externalArrayBuffer.GetArray(out int offset);
+
+            return new WindowsRuntimeBufferMemoryStream(source, array, offset);
+        }
+
+        // Same as above for pinned arrays as well
+        if (source is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
+        {
+            byte[] array = pinnedArrayBuffer.GetArray(out int offset);
+
+            return new WindowsRuntimeBufferMemoryStream(source, array, offset);
+        }
+
+        // At this point the buffer must be a native object wrapper, so validate that it is the case
+        if (source is not WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
+        {
+            throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InvalidIBufferInstance);
+        }
+
+        // Equivalent logic as 'WindowsRuntimeBufferMarshal.TryGetDataUnsafe', just tweaked for this method
+        using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IBufferByteAccess);
+
+        byte* bufferPtr;
+
+        HRESULT hresult = IBufferByteAccessVftbl.BufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), &bufferPtr);
+
+        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+
+        return new WindowsRuntimeBufferUnmanagedMemoryStream(source, bufferPtr);
+    }
+
+    /// <summary>
     /// Returns the byte at the specified offset in the specified <see cref="IBuffer"/> instance.
     /// </summary>
     /// <param name="source">The <see cref="IBuffer"/> instance to get the byte from.</param>
@@ -504,12 +637,12 @@ public static class WindowsRuntimeBufferExtensions
     /// </remarks>
     private static Span<byte> GetSpanForCapacity(IBuffer buffer)
     {
-        if (TryGetNativeSpanForCapacity(buffer, out Span<byte> span) || TryGetManagedSpanForCapacity(buffer, out span))
+        if (!TryGetNativeSpanForCapacity(buffer, out Span<byte> span) && !TryGetManagedSpanForCapacity(buffer, out span))
         {
-            return span;
+            throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InvalidIBufferInstance);
         }
 
-        throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InvalidIBufferInstance);
+        return span;
     }
 
     /// <summary>

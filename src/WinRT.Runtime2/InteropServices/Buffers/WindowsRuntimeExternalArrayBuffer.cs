@@ -118,6 +118,14 @@ internal sealed unsafe class WindowsRuntimeExternalArrayBuffer : IBuffer
         return PinData();
     }
 
+    /// <inheritdoc cref="WindowsRuntimePinnedArrayBuffer.GetArray"/>
+    public byte[] GetArray(out int offset)
+    {
+        offset = _offset;
+
+        return _data;
+    }
+
     /// <inheritdoc cref="WindowsRuntimePinnedArrayBuffer.GetArraySegment"/>
     public ArraySegment<byte> GetArraySegment()
     {

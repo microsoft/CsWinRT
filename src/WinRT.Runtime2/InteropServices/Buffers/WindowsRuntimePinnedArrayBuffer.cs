@@ -106,6 +106,18 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
     }
 
     /// <summary>
+    /// Gets the underlying array for this buffer.
+    /// </summary>
+    /// <param name="offset">The offset in the returned array.</param>
+    /// <returns>The underlying array.</returns>
+    public byte[] GetArray(out int offset)
+    {
+        offset = _offset;
+
+        return _pinnedData;
+    }
+
+    /// <summary>
     /// Gets an <see cref="ArraySegment{T}"/> value for the underlying data in this buffer.
     /// </summary>
     /// <returns>The resulting <see cref="ArraySegment{T}"/> value.</returns>
