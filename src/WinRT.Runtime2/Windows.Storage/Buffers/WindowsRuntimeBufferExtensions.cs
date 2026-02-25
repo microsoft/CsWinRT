@@ -67,7 +67,7 @@ public static class WindowsRuntimeBufferExtensions
     }
 
     /// <summary>
-    /// Copies the contents of a given <see cref="ReadOnlySpan{T}"/> of values to a target <see cref="IBuffer"/> instance.
+    /// Copies the contents of a given <see cref="ReadOnlySpan{T}"/> value to a target <see cref="IBuffer"/> instance.
     /// </summary>
     /// <param name="source">The <see cref="ReadOnlySpan{T}"/> value to copy from.</param>
     /// <param name="destination">The destination <see cref="IBuffer"/> instance to copy data to.</param>
@@ -76,13 +76,15 @@ public static class WindowsRuntimeBufferExtensions
     /// exceeds the current value of that property (but still falls within the bounds of <see cref="IBuffer.Capacity"/>). If the
     /// data being copied fits within the current value of <see cref="IBuffer.Length"/>, its value is not modified.
     /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="destination"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="destination"/> does not have enough capacity for the copy operation.</exception>
     public static void CopyTo(this ReadOnlySpan<byte> source, IBuffer destination)
     {
         CopyTo(source, destination, destinationIndex: 0);
     }
 
     /// <summary>
-    /// Copies the contents of a given <see cref="ReadOnlySpan{T}"/> of values to a target <see cref="IBuffer"/> instance.
+    /// Copies the contents of a given <see cref="ReadOnlySpan{T}"/> value to a target <see cref="IBuffer"/> instance.
     /// </summary>
     /// <param name="source">The <see cref="ReadOnlySpan{T}"/> value to copy from.</param>
     /// <param name="destination">The destination <see cref="IBuffer"/> instance to copy data to.</param>
@@ -92,6 +94,11 @@ public static class WindowsRuntimeBufferExtensions
     /// exceeds the current value of that property (but still falls within the bounds of <see cref="IBuffer.Capacity"/>). If the
     /// data being copied fits within the current value of <see cref="IBuffer.Length"/>, its value is not modified.
     /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="destination"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if <paramref name="destinationIndex"/> exceeds the value of the <see cref="IBuffer.Capacity"/> property for <paramref name="destination"/>,
+    /// or if the remaining space starting at the specified index is not enough for the copy operation.
+    /// </exception>
     public static void CopyTo(this ReadOnlySpan<byte> source, IBuffer destination, uint destinationIndex)
     {
         ArgumentNullException.ThrowIfNull(destination);
@@ -118,6 +125,54 @@ public static class WindowsRuntimeBufferExtensions
         {
             destination.Length = destinationIndex + (uint)source.Length;
         }
+    }
+
+    /// <summary>
+    /// Copies the contents of a given byte array to a target <see cref="IBuffer"/> instance.
+    /// </summary>
+    /// <param name="source">The byte array to copy from.</param>
+    /// <param name="destination">The destination <see cref="IBuffer"/> instance to copy data to.</param>
+    /// <remarks>
+    /// This method will update the <see cref="IBuffer.Length"/> property of <paramref name="destination"/> if copying the data
+    /// exceeds the current value of that property (but still falls within the bounds of <see cref="IBuffer.Capacity"/>). If the
+    /// data being copied fits within the current value of <see cref="IBuffer.Length"/>, its value is not modified.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="destination"/> are <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="destination"/> does not have enough capacity for the copy operation.</exception>
+    public static void CopyTo(this byte[] source, IBuffer destination)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        CopyTo(source.AsSpan(), destination, destinationIndex: 0);
+    }
+
+    /// <summary>
+    /// Copies range of bytes in the specified byte array to a target <see cref="IBuffer"/> instance.
+    /// </summary>
+    /// <param name="source">The byte array to copy from.</param>
+    /// <param name="sourceIndex">The index in <paramref name="source"/> to begin copying data from.</param>
+    /// <param name="destination">The destination <see cref="IBuffer"/> instance to copy data to.</param>
+    /// <param name="destinationIndex">The index within <paramref name="destination"/> from which to start copying data to.</param>
+    /// <param name="count">The number of bytes to copy.</param>
+    /// <remarks>
+    /// This method will update the <see cref="IBuffer.Length"/> property of <paramref name="destination"/> if copying the data
+    /// exceeds the current value of that property (but still falls within the bounds of <see cref="IBuffer.Capacity"/>). If the
+    /// data being copied fits within the current value of <see cref="IBuffer.Length"/>, its value is not modified.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="destination"/> are <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown if <paramref name="sourceIndex"/> is less than <c>0</c>, if it exceeds the length of <paramref name="source"/>,
+    /// or if <paramref name="count"/> exceeds the length of <paramref name="source"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if <paramref name="destinationIndex"/> exceeds the value of the <see cref="IBuffer.Capacity"/> property for <paramref name="destination"/>,
+    /// or if the remaining space starting at the specified index is not enough for the copy operation.
+    /// </exception>
+    public static void CopyTo(this byte[] source, int sourceIndex, IBuffer destination, uint destinationIndex, int count)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        CopyTo(source.AsSpan(start: sourceIndex, length: count), destination, destinationIndex: destinationIndex);
     }
 
     /// <summary>
