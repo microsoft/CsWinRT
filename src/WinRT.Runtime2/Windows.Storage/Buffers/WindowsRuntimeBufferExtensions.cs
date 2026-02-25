@@ -66,9 +66,9 @@ public static class WindowsRuntimeBufferExtensions
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
-        //if (source.Length - offset < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
-        //if (source.Length - offset < capacity) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
-        //if (capacity < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientBufferCapacity);
+        ArgumentException.ThrowIfInsufficientArrayElementsAfterOffset(source.Length, offset, length);
+        ArgumentException.ThrowIfInsufficientArrayElementsAfterOffset(source.Length, offset, capacity);
+        ArgumentException.ThrowIfInsufficientBufferCapacity(capacity, length);
 
         return new WindowsRuntimeExternalArrayBuffer(source, offset, length, capacity);
     }
@@ -111,8 +111,8 @@ public static class WindowsRuntimeBufferExtensions
     public static void CopyTo(this ReadOnlySpan<byte> source, IBuffer destination, uint destinationIndex)
     {
         ArgumentNullException.ThrowIfNull(destination);
-        //if (destination.Capacity < destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
-        //if (destination.Capacity - destinationIndex < source.Length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
+        ArgumentException.ThrowIfBufferIndexExceedsCapacity(destinationIndex, destination.Capacity);
+        ArgumentException.ThrowIfInsufficientSpaceInTargetBuffer(destination.Capacity, destinationIndex, (uint)source.Length);
 
         // If the source span is empty, just stop here immediately and skip all overhead of preparing the target range
         if (source.IsEmpty)
@@ -219,9 +219,9 @@ public static class WindowsRuntimeBufferExtensions
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
-        //if (source.Length < sourceIndex) throw new ArgumentException("The specified buffer index is not within the buffer length.");
-        //if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
-        //if (destination.Length < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+        ArgumentException.ThrowIfBufferIndexExceedsLength(sourceIndex, source.Length);
+        ArgumentException.ThrowIfInsufficientSpaceInSourceBuffer(source.Length, sourceIndex, (uint)count);
+        ArgumentException.ThrowIfInsufficientArrayElementsAfterOffset(destination.Length, 0, count);
 
         // If there are no values to copy, just stop here immediately and skip all overhead of preparing the target range
         if (count == 0)
@@ -311,10 +311,10 @@ public static class WindowsRuntimeBufferExtensions
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(destination);
-        //if (source.Length < sourceIndex) throw new ArgumentException("The specified buffer index is not within the buffer length.");
-        //if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
-        //if (destination.Capacity < destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
-        //if (destination.Capacity - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
+        ArgumentException.ThrowIfBufferIndexExceedsLength(sourceIndex, source.Length);
+        ArgumentException.ThrowIfInsufficientSpaceInSourceBuffer(source.Length, sourceIndex, count);
+        ArgumentException.ThrowIfBufferIndexExceedsCapacity(destinationIndex, destination.Capacity);
+        ArgumentException.ThrowIfInsufficientSpaceInTargetBuffer(destination.Capacity, destinationIndex, count);
 
         // If there are no values to copy, just stop here immediately and skip all overhead of preparing the target range
         if (count == 0)
@@ -353,7 +353,7 @@ public static class WindowsRuntimeBufferExtensions
     public static byte[] ToArray(this IBuffer source)
     {
         ArgumentNullException.ThrowIfNull(source);
-        // if (source.Length > Array.MaxLength) throw new ArgumentOutOfRangeException("The specified buffer has a length that exceeds the maximum array length.");
+        ArgumentOutOfRangeException.ThrowIfBufferLengthExceedsArrayMaxLength(source.Length);
 
         return ToArray(source, sourceIndex: 0, count: (int)source.Length);
     }
@@ -377,8 +377,8 @@ public static class WindowsRuntimeBufferExtensions
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
-        //if (source.Length < sourceIndex) throw new ArgumentException("The specified buffer index is not within the buffer length.");
-        //if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
+        ArgumentException.ThrowIfBufferIndexExceedsLength(sourceIndex, source.Length);
+        ArgumentException.ThrowIfInsufficientSpaceInSourceBuffer(source.Length, sourceIndex, (uint)count);
 
         // If the specified length is just '0', we can return a cached empty array
         if (count == 0)
@@ -496,7 +496,7 @@ public static class WindowsRuntimeBufferExtensions
         // buffer instance if this succeeds. Otherwise, there's no way to actually get the memory area we need.
         if (!stream.TryGetBuffer(out ArraySegment<byte> arraySegment))
         {
-            //throw new UnauthorizedAccessException(global::Windows.Storage.Streams.SR.UnauthorizedAccess_InternalBuffer);
+            UnauthorizedAccessException.ThrowInternalBufferAccess();
         }
 
         Debug.Assert(stream.Length <= int.MaxValue);
@@ -543,12 +543,12 @@ public static class WindowsRuntimeBufferExtensions
         ArgumentNullException.ThrowIfNull(stream);
         ArgumentOutOfRangeException.ThrowIfNegative(position);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
-        //if (stream.Length < position) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_StreamPositionBeyondEOS);
+        ArgumentException.ThrowIfStreamPositionBeyondEndOfStream(stream.Length, position);
 
         // Extract the underlying buffer from the stream (same as above)
         if (!stream.TryGetBuffer(out ArraySegment<byte> arraySegment))
         {
-            //throw new UnauthorizedAccessException(global::Windows.Storage.Streams.SR.UnauthorizedAccess_InternalBuffer);
+            UnauthorizedAccessException.ThrowInternalBufferAccess();
         }
 
         int bufferOffset = arraySegment.Offset + position;
@@ -589,7 +589,7 @@ public static class WindowsRuntimeBufferExtensions
         // At this point the buffer must be a native object wrapper, so validate that it is the case
         if (source is not WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
         {
-            throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InvalidIBufferInstance);
+            throw ArgumentException.GetInvalidIBufferInstanceException();
         }
 
         // Equivalent logic as 'WindowsRuntimeBufferMarshal.TryGetDataUnsafe', just tweaked for this method
@@ -616,7 +616,7 @@ public static class WindowsRuntimeBufferExtensions
     public static byte GetByte(this IBuffer source, uint byteOffset)
     {
         ArgumentNullException.ThrowIfNull(source);
-        //if (source.Length <= byteOffset) throw new ArgumentException("The specified buffer offset is not within the buffer length.");
+        ArgumentException.ThrowIfBufferOffsetOutOfRange(byteOffset, source.Length);
 
         Span<byte> span = GetSpanForCapacity(source);
 
@@ -639,7 +639,7 @@ public static class WindowsRuntimeBufferExtensions
     {
         if (!TryGetNativeSpanForCapacity(buffer, out Span<byte> span) && !TryGetManagedSpanForCapacity(buffer, out span))
         {
-            throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InvalidIBufferInstance);
+            ArgumentException.ThrowInvalidIBufferInstance();
         }
 
         return span;
