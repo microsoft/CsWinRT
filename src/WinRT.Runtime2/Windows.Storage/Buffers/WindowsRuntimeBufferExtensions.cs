@@ -462,7 +462,7 @@ public static class WindowsRuntimeBufferExtensions
 
             RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
-            hresult = IBufferByteAccessVftbl.BufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), &otherBufferPtr);
+            hresult = IBufferByteAccessVftbl.BufferUnsafe(otherBufferByteAccessValue.GetThisPtrUnsafe(), &otherBufferPtr);
 
             RestrictedErrorInfo.ThrowExceptionForHR(hresult);
 
