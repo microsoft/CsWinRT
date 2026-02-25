@@ -10,7 +10,6 @@
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <OutputType>exe</OutputType>
     <PublishAot>true</PublishAot>
-    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == 'x86'">
@@ -32,7 +31,8 @@
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
 
-    <PackageReference Include="MSTest.TestAdapter" />
+    <PackageReference Include="MSTest.Engine" />
+    <PackageReference Include="MSTest.SourceGeneration" />
     
     <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
     <ProjectReference Include="..\..\Projections\TestSubset\TestSubset.csproj" />

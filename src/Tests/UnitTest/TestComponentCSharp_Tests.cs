@@ -211,7 +211,7 @@ namespace UnitTest
 
             arrayLen3.CopyTo(1, buffLen4, 0, 1); // copy just the second element of the array to the beginning of the buffer 
             Assert.IsTrue(buffLen4.Length == 4);
-            Assert.ThrowsExactly<ArgumentException>(() => buffLen4.GetByte(5)); // shouldn't have a 5th element
+            Assert.ThrowsException<ArgumentException>(() => buffLen4.GetByte(5)); // shouldn't have a 5th element
             Assert.IsTrue(buffLen4.GetByte(0) == 0x02); // make sure we got the 2nd element of the array
 
             arrayLen3.CopyTo(buffLen4); // Array to Buffer copying
@@ -358,7 +358,7 @@ namespace UnitTest
             var buffer = array.AsBuffer();
             var biggerBuffer = new Windows.Storage.Streams.Buffer(5);
             buffer.CopyTo(biggerBuffer);
-            Assert.ThrowsExactly<ArgumentException>(() => biggerBuffer.ToArray(4, 2));
+            Assert.ThrowsException<ArgumentException>(() => biggerBuffer.ToArray(4, 2));
         }
 
         [TestMethod]
@@ -368,7 +368,7 @@ namespace UnitTest
             var buffer = array.AsBuffer();
             var biggerBuffer = new Windows.Storage.Streams.Buffer(5);
             buffer.CopyTo(biggerBuffer);
-            Assert.ThrowsExactly<ArgumentException>(() => biggerBuffer.ToArray(2, 2));
+            Assert.ThrowsException<ArgumentException>(() => biggerBuffer.ToArray(2, 2));
         }
 
         [TestMethod]
@@ -376,7 +376,7 @@ namespace UnitTest
         {
             var array = new byte[] { 0x01, 0x02, 0x03 };
             var buffer = array.AsBuffer();
-            Assert.ThrowsExactly<ArgumentException>(() => buffer.GetByte(4));
+            Assert.ThrowsException<ArgumentException>(() => buffer.GetByte(4));
         }
 
         [TestMethod]
@@ -836,7 +836,7 @@ namespace UnitTest
         [TestMethod]
         public void TestDynamicInterfaceCastingOnInvalidInterface()
         {
-            Assert.ThrowsExactly<System.InvalidCastException>(() => (IStringableInterop)(WindowsRuntimeObject)TestObject);
+            Assert.ThrowsException<System.InvalidCastException>(() => (IStringableInterop)(WindowsRuntimeObject)TestObject);
         }
 
         [TestMethod]
@@ -2037,11 +2037,11 @@ namespace UnitTest
         {
             var exceptionToThrow = new ArgumentNullException("foo");
             var properties = new ThrowingManagedProperties(exceptionToThrow);
-            var ex = Assert.ThrowsExactly<ArgumentNullException>(() => TestObject.CopyProperties(properties));
+            var ex = Assert.ThrowsException<ArgumentNullException>(() => TestObject.CopyProperties(properties));
             Assert.AreEqual("foo", ex.ParamName);
 
             var properties2 = new ThrowingManagedProperties2(TestObject);
-            var ex2 = Assert.ThrowsExactly<ArgumentNullException>(() => TestObject.CopyProperties(properties2));
+            var ex2 = Assert.ThrowsException<ArgumentNullException>(() => TestObject.CopyProperties(properties2));
             Assert.AreEqual("foo", ex2.ParamName);
         }
 
@@ -2179,7 +2179,7 @@ namespace UnitTest
             task = InvokeDoitAsync();
             Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.AreEqual(E_FAIL, e.InnerException.HResult);
             Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
@@ -2187,7 +2187,7 @@ namespace UnitTest
             task = TestObject.DoitAsync().AsTask(src.Token);
             Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.IsTrue(e.InnerException is TaskCanceledException);
             Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
@@ -2202,13 +2202,13 @@ namespace UnitTest
 
             asyncAction = TestObject.DoitAsync();
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.ThrowsExactly<AggregateException>(() => asyncAction.AsTask().Wait());
+            var e = Assert.ThrowsException<AggregateException>(() => asyncAction.AsTask().Wait());
             Assert.AreEqual(E_FAIL, e.InnerException.HResult);
             Assert.AreEqual(AsyncStatus.Error, asyncAction.Status);
 
             asyncAction = TestObject.DoitAsync();
             asyncAction.Cancel();
-            e = Assert.ThrowsExactly<AggregateException>(() => asyncAction.AsTask().Wait());
+            e = Assert.ThrowsException<AggregateException>(() => asyncAction.AsTask().Wait());
             Assert.IsTrue(e.InnerException is TaskCanceledException);
             Assert.AreEqual(AsyncStatus.Canceled, asyncAction.Status);
         }
@@ -2225,7 +2225,7 @@ namespace UnitTest
             task = InvokeDoitAsync().AsAsyncAction().AsTask();
             Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.AreEqual(E_FAIL, e.InnerException.HResult);
             Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
@@ -2233,7 +2233,7 @@ namespace UnitTest
             task = InvokeDoitAsync().AsAsyncAction().AsTask(src.Token);
             Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.IsTrue(e.InnerException is TaskCanceledException);
             Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
@@ -2267,7 +2267,7 @@ namespace UnitTest
 
             task = InvokeDoitAsyncWithProgress();
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.AreEqual(E_FAIL, e.InnerException.HResult);
             Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
@@ -2275,7 +2275,7 @@ namespace UnitTest
             task = TestObject.DoitAsyncWithProgress().AsTask(src.Token);
             Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.IsTrue(e.InnerException is TaskCanceledException);
             Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
@@ -2290,13 +2290,13 @@ namespace UnitTest
 
             asyncAction = TestObject.DoitAsyncWithProgress();
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.ThrowsExactly<AggregateException>(() => asyncAction.AsTask().Wait());
+            var e = Assert.ThrowsException<AggregateException>(() => asyncAction.AsTask().Wait());
             Assert.AreEqual(E_FAIL, e.InnerException.HResult);
             Assert.AreEqual(AsyncStatus.Error, asyncAction.Status);
 
             asyncAction = TestObject.DoitAsyncWithProgress();
             asyncAction.Cancel();
-            e = Assert.ThrowsExactly<AggregateException>(() => asyncAction.AsTask().Wait());
+            e = Assert.ThrowsException<AggregateException>(() => asyncAction.AsTask().Wait());
             Assert.IsTrue(e.InnerException is TaskCanceledException);
             Assert.AreEqual(AsyncStatus.Canceled, asyncAction.Status);
         }
@@ -2319,7 +2319,7 @@ namespace UnitTest
             task = InvokeAddAsync(0, 0);
             Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.AreEqual(E_FAIL, e.InnerException.HResult);
             Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
@@ -2327,7 +2327,7 @@ namespace UnitTest
             task = TestObject.AddAsync(0, 0).AsTask(src.Token);
             Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.IsTrue(e.InnerException is TaskCanceledException);
             Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
@@ -2342,13 +2342,13 @@ namespace UnitTest
 
             asyncOperation = TestObject.AddAsync(42, 8);
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.ThrowsExactly<AggregateException>(() => asyncOperation.AsTask().Wait());
+            var e = Assert.ThrowsException<AggregateException>(() => asyncOperation.AsTask().Wait());
             Assert.AreEqual(E_FAIL, e.InnerException.HResult);
             Assert.AreEqual(AsyncStatus.Error, asyncOperation.Status);
 
             asyncOperation = TestObject.AddAsync(42, 8);
             asyncOperation.Cancel();
-            e = Assert.ThrowsExactly<AggregateException>(() => asyncOperation.AsTask().Wait());
+            e = Assert.ThrowsException<AggregateException>(() => asyncOperation.AsTask().Wait());
             Assert.IsTrue(e.InnerException is TaskCanceledException);
             Assert.AreEqual(AsyncStatus.Canceled, asyncOperation.Status);
         }
@@ -2367,7 +2367,7 @@ namespace UnitTest
             task = InvokeAddAsync(0, 0).AsAsyncOperation().AsTask();
             Assert.IsFalse(task.Wait(25));
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.AreEqual(E_FAIL, e.InnerException.HResult);
             Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
@@ -2375,7 +2375,7 @@ namespace UnitTest
             task = InvokeAddAsync(0, 0).AsAsyncOperation().AsTask(src.Token);
             Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.IsTrue(e.InnerException is TaskCanceledException);
             Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
@@ -2410,7 +2410,7 @@ namespace UnitTest
 
             task = InvokeAddAsyncWithProgress(0, 0);
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            var e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.AreEqual(E_FAIL, e.InnerException.HResult);
             Assert.AreEqual(TaskStatus.Faulted, task.Status);
 
@@ -2418,7 +2418,7 @@ namespace UnitTest
             task = TestObject.AddAsyncWithProgress(0, 0).AsTask(src.Token);
             Assert.IsFalse(task.Wait(25));
             src.Cancel();
-            e = Assert.ThrowsExactly<AggregateException>(() => task.Wait(5000));
+            e = Assert.ThrowsException<AggregateException>(() => task.Wait(5000));
             Assert.IsTrue(e.InnerException is TaskCanceledException);
             Assert.AreEqual(TaskStatus.Canceled, task.Status);
         }
@@ -2433,13 +2433,13 @@ namespace UnitTest
 
             asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
             TestObject.CompleteAsync(E_FAIL);
-            var e = Assert.ThrowsExactly<AggregateException>(() => asyncOperation.AsTask().Wait());
+            var e = Assert.ThrowsException<AggregateException>(() => asyncOperation.AsTask().Wait());
             Assert.AreEqual(E_FAIL, e.InnerException.HResult);
             Assert.AreEqual(AsyncStatus.Error, asyncOperation.Status);
 
             asyncOperation = TestObject.AddAsyncWithProgress(42, 8);
             asyncOperation.Cancel();
-            e = Assert.ThrowsExactly<AggregateException>(() => asyncOperation.AsTask().Wait());
+            e = Assert.ThrowsException<AggregateException>(() => asyncOperation.AsTask().Wait());
             Assert.IsTrue(e.InnerException is TaskCanceledException);
             Assert.AreEqual(AsyncStatus.Canceled, asyncOperation.Status);
         }
@@ -2986,7 +2986,7 @@ namespace UnitTest
             Guid guid = new("36AA48DD-ACBB-4570-B12A-86BF71D09A12");
             Assert.AreEqual("36AA48DD-ACBB-4570-B12A-86BF71D09A12", Class.UnboxStringUsingPropertyValue(guid), true);
 
-            Assert.ThrowsExactly<InvalidCastException>(() => Class.UnboxInt32UsingPropertyValue(s));
+            Assert.ThrowsException<InvalidCastException>(() => Class.UnboxInt32UsingPropertyValue(s));
 
             Rect rect = new Rect(1, 2, 3, 4);
             Assert.AreEqual(rect, Class.UnboxRectUsingPropertyValue(rect));
@@ -3208,7 +3208,7 @@ namespace UnitTest
                 nonAgileObject = new Windows.UI.Popups.PopupMenu();
                 nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test"));
                 nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test2"));
-                Assert.ThrowsExactly<System.Exception>(() => nonAgileObject.As<IAgileObject>());
+                Assert.ThrowsException<System.Exception>(() => nonAgileObject.As<IAgileObject>());
 
                 agileReference = nonAgileObject.AsAgile();
                 objectAcquired.Set();
@@ -3238,7 +3238,7 @@ namespace UnitTest
             {
                 // Call to a proxy object which we internally use an agile reference
                 // to resolve after the apartment is gone should throw.
-                Assert.ThrowsExactly<System.Exception>(() => proxyObject.Commands);
+                Assert.ThrowsException<System.Exception>(() => proxyObject.Commands);
             }
 
             public void NonAgileClass_Event(object sender, object e)

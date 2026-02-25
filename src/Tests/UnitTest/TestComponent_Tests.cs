@@ -656,7 +656,7 @@ namespace UnitTest
             Assert.AreEqual(5, pairs.Length);
 
             c.Remove("kiwi");
-            Assert.ThrowsExactly<KeyNotFoundException>(() => c["kiwi"]);
+            Assert.ThrowsException<KeyNotFoundException>(() => c["kiwi"]);
             Assert.IsFalse(c.TryGetValue("kiwi", out var _));
 
             Assert.IsTrue(c.TryGetValue("apples", out var keyVal));
@@ -666,7 +666,7 @@ namespace UnitTest
             Assert.AreEqual(4, c.Values.Count());
 
             c.Remove(new KeyValuePair<string, string>("apples", "1"));
-            Assert.ThrowsExactly<KeyNotFoundException>(() => c["apples"]);
+            Assert.ThrowsException<KeyNotFoundException>(() => c["apples"]);
 
             c.Clear();
             Assert.AreEqual(0, c.Count);
