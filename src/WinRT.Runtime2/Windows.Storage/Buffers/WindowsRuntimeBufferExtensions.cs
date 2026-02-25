@@ -178,7 +178,7 @@ public static class WindowsRuntimeBufferExtensions
     }
 
     /// <summary>
-    /// Copies the contents of a given <see cref="IBuffer"/> instance to a target byte array.
+    /// Copies the contents of a given <see cref="IBuffer"/> instance to a target <see cref="Span{T}"/> value.
     /// </summary>
     /// <param name="source">The <see cref="IBuffer"/> instance to copy from.</param>
     /// <param name="destination">The destination <see cref="Span{T}"/> value to copy data to.</param>
@@ -221,6 +221,43 @@ public static class WindowsRuntimeBufferExtensions
         sourceSpan.CopyTo(destination);
 
         GC.KeepAlive(source);
+    }
+
+    /// <summary>
+    /// Copies the contents of a given <see cref="IBuffer"/> instance to a target byte array.
+    /// </summary>
+    /// <param name="source">The <see cref="IBuffer"/> instance to copy from.</param>
+    /// <param name="destination">The destination byte array to copy data to.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="destination"/> are <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="destination"/> does not have enough capacity for the copy operation.</exception>
+    public static void CopyTo(this IBuffer source, byte[] destination)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(destination);
+
+        CopyTo(source, destination.AsSpan());
+    }
+
+    /// <summary>
+    /// Copies a range of bytes of a given <see cref="IBuffer"/> instance to a target byte array.
+    /// </summary>
+    /// <param name="source">The <see cref="IBuffer"/> instance to copy from.</param>
+    /// <param name="sourceIndex">The index in <paramref name="source"/> to begin copying data from.</param>
+    /// <param name="destination">The destination byte array to copy data to.</param>
+    /// <param name="destinationIndex">The index within <paramref name="destination"/> from which to start copying data to.</param>
+    /// <param name="count">The number of bytes to copy.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="destination"/> are <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown if <paramref name="count"/> is less than <c>0</c>, if it exceeds the length of <paramref name="source"/>,
+    /// or if <paramref name="count"/> exceeds the length of <paramref name="destination"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">Thrown if the remaining space starting at the specified index is not enough for the copy operation.</exception>
+    public static void CopyTo(this IBuffer source, uint sourceIndex, byte[] destination, int destinationIndex, int count)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(destination);
+
+        CopyTo(source, sourceIndex: sourceIndex, destination.AsSpan(destinationIndex, count), count: count);
     }
 
     /// <summary>
