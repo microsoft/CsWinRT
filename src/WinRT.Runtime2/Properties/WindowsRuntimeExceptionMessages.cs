@@ -20,6 +20,8 @@ internal static class WindowsRuntimeExceptionMessages
 
     public const string Argument_InsufficientSpaceToCopyCollection = "Insufficient space in the target array to copy the collection.";
 
+    public const string Argument_InvalidIBufferInstance = "The provided 'IBuffer' instance is not valid, and retrieving its underlying data failed.";
+
     public const string ArgumentOutOfRange_Index = "Index was out of range.";
 
     public const string ArgumentOutOfRange_IndexLargerThanMaxValue = "The specified index is larger than the maximum allowed value.";

@@ -126,12 +126,12 @@ internal sealed unsafe class WindowsRuntimeExternalArrayBuffer : IBuffer
 
     /// <inheritdoc cref="WindowsRuntimePinnedArrayBuffer.GetSpanForCapacity"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<byte> GetSpanForCapacity()
+    public Span<byte> GetSpanForCapacity()
     {
         ref byte pinnedData = ref MemoryMarshal.GetArrayDataReference(_data);
 
         // See notes in 'WindowsRuntimePinnedArrayBuffer.GetSpan' for why skipping checks here is valid
-        return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.Add(ref pinnedData, _offset), _capacity);
+        return MemoryMarshal.CreateSpan(ref Unsafe.Add(ref pinnedData, _offset), _capacity);
     }
 
     /// <summary>
