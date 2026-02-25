@@ -65,41 +65,41 @@ namespace UnitTest
         [TestMethod]
         public void TestAccountsSettingsPane()
         {
-            Assert.ThrowsException<COMException>(() => AccountsSettingsPaneInterop.GetForWindow(new IntPtr(0)));
-            Assert.ThrowsException<COMException>(() => AccountsSettingsPaneInterop.ShowAddAccountForWindowAsync(new IntPtr(0)));
-            Assert.ThrowsException<COMException>(() => AccountsSettingsPaneInterop.ShowManageAccountsForWindowAsync(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => AccountsSettingsPaneInterop.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => AccountsSettingsPaneInterop.ShowAddAccountForWindowAsync(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => AccountsSettingsPaneInterop.ShowManageAccountsForWindowAsync(new IntPtr(0)));
         }
 
         [TestMethod]
         public void TestDragDropManager()
         {
-            Assert.ThrowsException<COMException>(() => DragDropManagerInterop.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => DragDropManagerInterop.GetForWindow(new IntPtr(0)));
         }
 
         [TestMethod]
         public void TestInputPane()
         {
-            Assert.ThrowsException<TypeInitializationException>(() => InputPaneInterop.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<TypeInitializationException>(() => InputPaneInterop.GetForWindow(new IntPtr(0)));
         }
 
         [TestMethod]
         public void TestPlayToManager()
         {
-            Assert.ThrowsException<COMException>(() => PlayToManagerInterop.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => PlayToManagerInterop.GetForWindow(new IntPtr(0)));
             PlayToManagerInterop.ShowPlayToUIForWindow(new IntPtr(0));
         }
 
         [TestMethod]
         public void TestPrintManager()
         {
-            Assert.ThrowsException<COMException>(() => PrintManagerInterop.GetForWindow(new IntPtr(0)));
-            Assert.ThrowsException<COMException>(() => PrintManagerInterop.ShowPrintUIForWindowAsync(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => PrintManagerInterop.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => PrintManagerInterop.ShowPrintUIForWindowAsync(new IntPtr(0)));
         }
 
         [TestMethod]
         public void TestRadialControllerConfiguration()
         {
-            Assert.ThrowsException<COMException>(() => RadialControllerConfigurationInterop.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => RadialControllerConfigurationInterop.GetForWindow(new IntPtr(0)));
         }
 
         // Skipping this test as it causes a hang
@@ -128,7 +128,7 @@ namespace UnitTest
         [Ignore("Compile-time only interop test")]
         public void TestSpatialInteractionManager()
         {
-            Assert.ThrowsException<COMException>(() => SpatialInteractionManagerInterop.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => SpatialInteractionManagerInterop.GetForWindow(new IntPtr(0)));
         }
 
         // Skipping this test as it raises non-catchable 'System.AccessViolationException' occurred in Windows.dll
@@ -136,13 +136,13 @@ namespace UnitTest
         [Ignore("Compile-time only interop test")]
         public void TestSystemMediaTransportControls()
         {
-            Assert.ThrowsException<COMException>(() => SystemMediaTransportControlsInterop.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => SystemMediaTransportControlsInterop.GetForWindow(new IntPtr(0)));
         }
 
         [TestMethod]
         public void TestUIViewSettings()
         {
-            Assert.ThrowsException<COMException>(() => UIViewSettingsInterop.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => UIViewSettingsInterop.GetForWindow(new IntPtr(0)));
         }
 
         [TestMethod]
@@ -158,12 +158,12 @@ namespace UnitTest
             WebAccountProvider provider = new WebAccountProvider("id", "name", null);
             WebTokenRequest webTokenRequest = new WebTokenRequest(provider);
 
-            Assert.ThrowsException<ArgumentException>(() =>
+            Assert.ThrowsExactly<ArgumentException>(() =>
                 WebAuthenticationCoreManagerInterop.RequestTokenForWindowAsync(new IntPtr(0), webTokenRequest));
 
             var webAccount = new WebAccount(provider, "user name", 0);
 
-            Assert.ThrowsException<ArgumentException>(() =>
+            Assert.ThrowsExactly<ArgumentException>(() =>
                 WebAuthenticationCoreManagerInterop.RequestTokenWithWebAccountForWindowAsync(
                     new IntPtr(0), webTokenRequest, webAccount));
         }
@@ -173,15 +173,15 @@ namespace UnitTest
         [Ignore("Compile-time only interop test")]
         public void TestDisplayInformation()
         {
-            Assert.ThrowsException<COMException>(() => DisplayInformationInterop.GetForWindow(new IntPtr(0)));
-            Assert.ThrowsException<COMException>(() => DisplayInformationInterop.GetForMonitor(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => DisplayInformationInterop.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => DisplayInformationInterop.GetForMonitor(new IntPtr(0)));
         }
 
         [TestMethod]
         public void TestDataTransferManager()
         {
-            Assert.ThrowsException<COMException>(() => DataTransferManagerInterop.GetForWindow(new IntPtr(0)));
-            Assert.ThrowsException<COMException>(() => DataTransferManagerInterop.ShowShareUIForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => DataTransferManagerInterop.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => DataTransferManagerInterop.ShowShareUIForWindow(new IntPtr(0)));
         }
     }
 }
