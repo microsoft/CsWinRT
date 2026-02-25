@@ -10,9 +10,9 @@ using Windows.Storage.Streams;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// A <see cref="MemoryStream"/> implementation backed by a managed <see cref="IBuffer"/> instance.
+/// A <see cref="MemoryStream"/> implementation backed by a native <see cref="IBuffer"/> instance.
 /// </summary>
-internal sealed class WindowsRuntimeBufferMemoryStream : MemoryStream
+internal sealed class WindowsRuntimeBufferUnmanagedMemoryStream : UnmanagedMemoryStream
 {
     /// <summary>
     /// The <see cref="IBuffer"/> instance to back the stream.
@@ -23,15 +23,12 @@ internal sealed class WindowsRuntimeBufferMemoryStream : MemoryStream
     /// Creates a new <see cref="WindowsRuntimeBufferMemoryStream"/> instance with the specified parameters.
     /// </summary>
     /// <param name="buffer">The <see cref="IBuffer"/> instance to back the stream.</param>
-    /// <param name="array">The byte array to use as the underlying storage.</param>
-    /// <param name="offset">The offset in the byte array where the stream starts.</param>
+    /// <param name="data">The native memory to use as the underlying storage.</param>
     /// <remarks>This constructor doesn't validate any of its parameters.</remarks>
-    public WindowsRuntimeBufferMemoryStream(IBuffer buffer, byte[] array, int offset)
-        : base(array, offset, (int)buffer.Capacity, writable: true)
+    public unsafe WindowsRuntimeBufferUnmanagedMemoryStream(IBuffer buffer, byte* data)
+        : base(data, buffer.Length, buffer.Capacity, FileAccess.ReadWrite)
     {
         _buffer = buffer;
-
-        SetLength(buffer.Length);
     }
 
     /// <inheritdoc/>
@@ -62,7 +59,7 @@ internal sealed class WindowsRuntimeBufferMemoryStream : MemoryStream
     /// <inheritdoc/>
     public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
-        await base.WriteAsync(buffer, offset, count, cancellationToken);
+        await base.WriteAsync(buffer.AsMemory(offset, count), cancellationToken);
 
         _buffer.Length = (uint)Length;
     }
