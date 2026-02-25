@@ -91,7 +91,7 @@ internal static partial class InteropGenerator
         // exceptions that can reach that path to have our custom formatting implementation there.
         try
         {
-            ConsoleApp.Log($"Processing {args.ReferenceAssemblyPaths.Length + args.ImplementationAssemblyPaths.Length + 1} modules");
+            ConsoleApp.Log($"Processing {args.ReferenceAssemblyPaths.Length + args.ImplementationAssemblyPaths.Length + 1} module(s)");
 
             discoveryState = Discover(args);
         }
