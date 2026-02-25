@@ -472,6 +472,29 @@ public static class WindowsRuntimeBufferExtensions
     }
 
     /// <summary>
+    /// Returns the byte at the specified offset in the specified <see cref="IBuffer"/> instance.
+    /// </summary>
+    /// <param name="source">The <see cref="IBuffer"/> instance to get the byte from.</param>
+    /// <param name="byteOffset">The offset of the byte.</param>
+    /// <returns>The byte at the specified offset.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="byteOffset"/> is not in a valid range for <paramref name="source"/>.</exception>
+    /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on either input buffer fails.</exception>
+    public static byte GetByte(this IBuffer source, uint byteOffset)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        //if (source.Length <= byteOffset) throw new ArgumentException("The specified buffer offset is not within the buffer length.");
+
+        Span<byte> span = GetSpanForCapacity(source);
+
+        byte value = span[(int)byteOffset];
+
+        GC.KeepAlive(source);
+
+        return value;
+    }
+
+    /// <summary>
     /// Gets a <see cref="Span{T}"/> value for the underlying data in the specified buffer.
     /// </summary>
     /// <param name="buffer">The input <see cref="IBuffer"/> instance.</param>
