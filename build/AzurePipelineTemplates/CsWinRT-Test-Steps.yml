@@ -66,7 +66,7 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)\src
       script: |
         dir Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0
-        Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\BuildDeterminismTest.exe /p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config",PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
+        Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\BuildDeterminismTest.exe -p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
 
 # # Run Functional Tests
 #   - template: CsWinRT-FunctionalTest-Steps.yml@self
