@@ -328,6 +328,56 @@ public static class WindowsRuntimeBufferExtensions
     }
 
     /// <summary>
+    /// Returns a new array that is created from the contents of the specified <see cref="IBuffer"/> instance.
+    /// The size of the array is the value of the <see cref="IBuffer.Length"/> property of the input buffer.
+    /// </summary>
+    /// <param name="source">The <see cref="IBuffer"/> instance whose contents will be used to populate the new array.</param>
+    /// <returns>A byte array that contains the bytes in <paramref name="source"/>, beginning at offset <c>0</c>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if the length of <paramref name="source"/> exceeds <see cref="Array.MaxLength"/>.</exception>
+    public static byte[] ToArray(this IBuffer source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        // if (source.Length > Array.MaxLength) throw new ArgumentOutOfRangeException("The specified buffer has a length that exceeds the maximum array length.");
+
+        return ToArray(source, sourceIndex: 0, count: (int)source.Length);
+    }
+
+    /// <summary>
+    /// Returns a new array that is created from the contents of the specified <see cref="IBuffer"/>
+    /// instance, starting at a specified offset and including a specified number of bytes.
+    /// </summary>
+    /// <param name="source">The <see cref="IBuffer"/> instance whose contents will be used to populate the new array.</param>
+    /// <param name="sourceIndex">The index in <paramref name="source"/> to begin copying data from.</param>
+    /// <param name="count">The number of bytes to copy.</param>
+    /// <returns>A byte array that contains the specified range of bytes.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="count"/> is less than <c>0</c>.</exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if <paramref name="sourceIndex"/> exceeds the value of the <see cref="IBuffer.Capacity"/> property for <paramref name="source"/>,
+    /// or if the remaining space starting at the specified index is not enough for the copy operation.
+    /// </exception>
+    public static byte[] ToArray(this IBuffer source, uint sourceIndex, int count)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        //if (source.Length < sourceIndex) throw new ArgumentException("The specified buffer index is not within the buffer length.");
+        //if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
+
+        // If the specified length is just '0', we can return a cached empty array
+        if (count == 0)
+        {
+            return [];
+        }
+
+        byte[] destination = GC.AllocateUninitializedArray<byte>(count);
+
+        source.CopyTo(sourceIndex: sourceIndex, destination, destinationIndex: 0, count: count);
+
+        return destination;
+    }
+
+    /// <summary>
     /// Gets a <see cref="Span{T}"/> value for the underlying data in the specified buffer.
     /// </summary>
     /// <param name="buffer">The input <see cref="IBuffer"/> instance.</param>
