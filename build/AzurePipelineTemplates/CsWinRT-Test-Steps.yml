@@ -107,11 +107,20 @@ steps:
       script: |
         dir
         echo Running UnitTest.exe 
-        UnitTest.exe 
+        UnitTest.exe --report-trx --report-trx-filename UNITTEST-AOT-$(Build.BuildNumber).trx
         if %Errorlevel% NEQ 100 (
           exit /b !ErrorLevel!
         )
         exit /b 0 
+
+  - task: PublishTestResults@2
+    displayName: Publish UnitTest AOT (net10.0) Results
+    condition: and(always(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '**/UNITTEST-AOT-$(Build.BuildNumber).trx'
+      searchFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish\TestResults
+      testRunTitle: Unit Tests AOT (net10.0)
 
 # Run Functional Tests
   - template: CsWinRT-FunctionalTest-Steps.yml@self
