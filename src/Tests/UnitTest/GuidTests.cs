@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using WFC = Windows.Foundation.Collections;
 using Windows.Foundation;
@@ -13,7 +13,6 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Media3D;
 
-
 using TestComponentCSharp;
 using WindowsRuntime.InteropServices;
 
@@ -22,17 +21,17 @@ namespace UnitTest
     using A = IEnumerable<IStringable>;
     using B = KeyValuePair<string, IAsyncOperationWithProgress</*A*/IEnumerable<IStringable>, float>>;
 
+    [TestClass]
     public class TestGuids
     {
-
         /* TODO
         private static void AssertGuid<T>(string expected)
         {
             var actual = GuidGenerator.CreateIID(typeof(T));
-            Assert.Equal(new Guid(expected), actual);
+            Assert.AreEqual(new Guid(expected), actual);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestGenerics()
         {
             AssertGuid<IStringable>("96369f54-8eb6-48f0-abce-c1b211e627c3");
@@ -120,6 +119,5 @@ namespace UnitTest
             AssertGuid<IList<Point>>("c0d513a9-ec4a-5a5d-b6d5-b707defdb9f7");
         }
         */
-
     }
 }

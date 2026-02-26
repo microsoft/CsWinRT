@@ -1,23 +1,25 @@
 using System;
 using System.Globalization;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using WindowsRuntime.InteropServices;
-using Xunit;
 
 namespace UnitTest
 {
+    [TestClass]
     public class ExceptionTests
     {
-        [Fact]
+        [TestMethod]
         public void TestGetExceptionForHR_WithValidHResult_ReturnsSystemFormattedException()
         {
             const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
 
             Exception exception = RestrictedErrorInfo.GetExceptionForHR(RPC_E_WRONG_THREAD);
-            Assert.NotNull(exception);
-            Assert.False(string.IsNullOrWhiteSpace(exception.Message));
+            Assert.IsNotNull(exception);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(exception.Message));
+
             if (CultureInfo.CurrentUICulture.Name == "en-US")
             {
-                Assert.Equal("The application called an interface that was marshalled for a different thread. (0x8001010E)", exception.Message);
+                Assert.AreEqual("The application called an interface that was marshalled for a different thread. (0x8001010E)", exception.Message);
             }
         }
     }
