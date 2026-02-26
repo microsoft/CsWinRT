@@ -7,10 +7,11 @@ namespace Windows.Storage.Streams
 {
     using global::System.Diagnostics;
     using global::System.IO;
-    using global::System.Runtime.ExceptionServices;
-    
+    using global::System.Runtime.ExceptionServices;    
     using global::System.Runtime.InteropServices;
     using global::System.Runtime.InteropServices.WindowsRuntime;
+    using Windows.Storage.Buffers;
+
     internal static class WinRtIOHelper
     {
         internal const int DefaultIOBufferSize = 0x3000;  // = 12 KBytes = 12288 Bytes

@@ -6,13 +6,12 @@
 namespace Windows.Storage.Streams
 {
     using global::System.Diagnostics;
-    using global::System.IO;
-    
+    using global::System.IO;    
     using global::System.Runtime.InteropServices;
     using global::System.Threading.Tasks;
     using global::System.Threading;
-    using global::System.Runtime.InteropServices.WindowsRuntime;
     using Windows.Foundation;
+    using Windows.Storage.Buffers;
 
     /// <summary>Depending on the concrete type of the stream managed by a <c>NetFxToWinRtStreamAdapter</c>,
     /// we want the <c>ReadAsync</c> / <c>WriteAsync</c> / <c>FlushAsync</c> / etc. operation to be implemented
