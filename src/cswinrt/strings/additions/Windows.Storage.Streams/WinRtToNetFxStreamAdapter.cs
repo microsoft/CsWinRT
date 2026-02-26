@@ -10,7 +10,6 @@ namespace Windows.Storage.Streams
     using global::System.Diagnostics.Contracts;
     using global::System.IO;
     using global::System.Runtime.InteropServices;
-    using global::System.Runtime.InteropServices.WindowsRuntime;
     using global::System.Threading.Tasks;
     using global::System.Threading;
     using Windows.Foundation;

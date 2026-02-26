@@ -9,7 +9,6 @@ namespace Windows.Storage.Streams
     using global::System.IO;
     using global::System.Runtime.ExceptionServices;    
     using global::System.Runtime.InteropServices;
-    using global::System.Runtime.InteropServices.WindowsRuntime;
     using Windows.Storage.Buffers;
 
     internal static class WinRtIOHelper
