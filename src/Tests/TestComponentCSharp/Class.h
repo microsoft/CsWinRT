@@ -351,6 +351,8 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::IAsyncOperation<int32_t> AddAsync(int32_t lhs, int32_t rhs);
         Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> AddAsyncWithProgress(int32_t lhs, int32_t rhs);
 
+        void SetFailingCompletedHandler(Windows::Foundation::IAsyncAction const& action);
+
         Windows::Foundation::Point PointProperty();
         void PointProperty(Windows::Foundation::Point const& value);
         Windows::Foundation::Rect RectProperty();
