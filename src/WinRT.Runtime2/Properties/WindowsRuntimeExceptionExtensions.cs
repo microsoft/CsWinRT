@@ -578,17 +578,6 @@ internal static class WindowsRuntimeExceptionExtensions
         }
 
         /// <summary>
-        /// Throws an <see cref="ArgumentException"/> indicating that the provided <c>IBuffer</c> instance is not valid.
-        /// </summary>
-        /// <exception cref="ArgumentException">Always thrown.</exception>
-        [DoesNotReturn]
-        [StackTraceHidden]
-        public static void ThrowInvalidIBufferInstance()
-        {
-            throw GetInvalidIBufferInstanceException();
-        }
-
-        /// <summary>
         /// Creates an <see cref="ArgumentException"/> indicating that the provided <c>IBuffer</c> instance is not valid.
         /// </summary>
         /// <returns>The resulting <see cref="ArgumentException"/> instance.</returns>

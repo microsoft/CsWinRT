@@ -425,8 +425,8 @@ public static class WindowsRuntimeBufferExtensions
             return true;
         }
 
-        bool bufferIsManaged = TryGetManagedSpanForCapacity(buffer, out Span<byte> span);
-        bool otherBufferIsManaged = TryGetManagedSpanForCapacity(otherBuffer, out Span<byte> otherSpan);
+        bool bufferIsManaged = TryGetArray(buffer, out byte[]? array, out int offset);
+        bool otherBufferIsManaged = TryGetArray(otherBuffer, out byte[]? otherArray, out int otherOffset);
 
         // If only one of the two input buffers is backed by managed memory, they can't possibly be equal
         if (bufferIsManaged != otherBufferIsManaged)
@@ -437,38 +437,23 @@ public static class WindowsRuntimeBufferExtensions
         // If both buffers are backed by managed memory, check whether they're pointing to the same area. Note that this could return 'true'
         // even if the actual managed buffer types are different. For instance, one could be a 'WindowsRuntimePinnedArrayBuffer', which the
         // user then unwrapped via 'WindowsRuntimeBufferMarshal.TryGetArray', and then used to create a separate managed buffer instance,
-        // by calling one of the 'AsBuffer' extensions defined above. So the only thing we can do is to compare the actual memory address.
+        // by calling one of the 'AsBuffer' extensions defined above. So the only thing we can do is to compare the actual array ranges.
         if (bufferIsManaged)
         {
-            return Unsafe.AreSame(
-                left: in MemoryMarshal.GetReference(span),
-                right: in MemoryMarshal.GetReference(otherSpan));
+            return (array == otherArray) && (offset == otherOffset);
         }
 
         // Lastly, check whether they're both native buffer objects that point to the same memory. Here we're intentionally not reusing
         // the 'TryGetNativeSpanForCapacity', because that method also does a range check for the 'Capacity' property. For the purposes
         // of this method, we actually don't want that. Two buffers should just compare as equal even if their capacity exceeds the limit
         // for managed spans. That is fine here, given we're not actually passing that span anywhere (and this method shouldn't throw).
-        if (buffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject &&
-            otherBuffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } otherBufferObject)
+        if (TryGetData(buffer, out byte* data) && TryGetData(otherBuffer, out byte* otherData))
         {
-            using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IBufferByteAccess);
-            using WindowsRuntimeObjectReferenceValue otherBufferByteAccessValue = otherBufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IBufferByteAccess);
-
-            byte* bufferPtr;
-            byte* otherBufferPtr;
-
-            HRESULT hresult = IBufferByteAccessVftbl.BufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), &bufferPtr);
-
-            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
-
-            hresult = IBufferByteAccessVftbl.BufferUnsafe(otherBufferByteAccessValue.GetThisPtrUnsafe(), &otherBufferPtr);
-
-            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
-
-            return bufferPtr == otherBufferPtr;
+            return data == otherData;
         }
 
+        // If we got here, it means the buffer is some unrecognized instance we don't know how to unwrap.
+        // Since we're just interested in checking whether the data is the same, we don't need to throw.
         return false;
     }
 
@@ -570,38 +555,20 @@ public static class WindowsRuntimeBufferExtensions
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        // If buffer is backed by a managed array, unwrap it and use it for the stream
-        if (source is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
+        // If the buffer is backed by a managed array, create a stream around it
+        if (TryGetArray(source, out byte[]? array, out int offset))
         {
-            byte[] array = externalArrayBuffer.GetArray(out int offset);
-
-            return new WindowsRuntimeBufferMemoryStream(source, array, offset);
-        }
-
-        // Same as above for pinned arrays as well
-        if (source is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
-        {
-            byte[] array = pinnedArrayBuffer.GetArray(out int offset);
-
             return new WindowsRuntimeBufferMemoryStream(source, array, offset);
         }
 
         // At this point the buffer must be a native object wrapper, so validate that it is the case
-        if (source is not WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
+        if (TryGetData(source, out byte* data))
         {
-            throw ArgumentException.GetInvalidIBufferInstanceException();
+            return new WindowsRuntimeBufferUnmanagedMemoryStream(source, data);
         }
 
-        // Equivalent logic as 'WindowsRuntimeBufferMarshal.TryGetDataUnsafe', just tweaked for this method
-        using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IBufferByteAccess);
-
-        byte* bufferPtr;
-
-        HRESULT hresult = IBufferByteAccessVftbl.BufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), &bufferPtr);
-
-        RestrictedErrorInfo.ThrowExceptionForHR(hresult);
-
-        return new WindowsRuntimeBufferUnmanagedMemoryStream(source, bufferPtr);
+        // The buffer is not one we can wrap in a stream
+        throw ArgumentException.GetInvalidIBufferInstanceException();
     }
 
     /// <summary>
@@ -635,46 +602,23 @@ public static class WindowsRuntimeBufferExtensions
     /// <remarks>
     /// The returned <see cref="Span{T}"/> value has a length equal to <see cref="IBuffer.Capacity"/>, not <see cref="IBuffer.Length"/>.
     /// </remarks>
-    private static Span<byte> GetSpanForCapacity(IBuffer buffer)
+    private static unsafe Span<byte> GetSpanForCapacity(IBuffer buffer)
     {
-        if (!TryGetNativeSpanForCapacity(buffer, out Span<byte> span) && !TryGetManagedSpanForCapacity(buffer, out span))
+        // Check for managed buffers first
+        if (TryGetManagedSpanForCapacity(buffer, out Span<byte> span))
         {
-            ArgumentException.ThrowInvalidIBufferInstance();
+            return span;
         }
 
-        return span;
-    }
-
-    /// <summary>
-    /// Tries to get a <see cref="Span{T}"/> value for the underlying data in the specified buffer, only if backed by native memory.
-    /// </summary>
-    /// <param name="buffer">The input <see cref="IBuffer"/> instance.</param>
-    /// <param name="span">The resulting <see cref="Span{T}"/> value, if retrieved.</param>
-    /// <returns>Whether <paramref name="span"/> could be retrieved.</returns>
-    /// <remarks>
-    /// The returned <see cref="Span{T}"/> value has a length equal to <see cref="IBuffer.Capacity"/>, not <see cref="IBuffer.Length"/>.
-    /// </remarks>
-    private static unsafe bool TryGetNativeSpanForCapacity(IBuffer buffer, out Span<byte> span)
-    {
-        // Equivalent logic as 'WindowsRuntimeBufferMarshal.TryGetDataUnsafe', but returning a 'Span<byte>' instead
-        if (buffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
+        // Check for native buffers next
+        if (TryGetData(buffer, out byte* data))
         {
-            using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IBufferByteAccess);
-
-            byte* bufferPtr;
-
-            HRESULT hresult = IBufferByteAccessVftbl.BufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), &bufferPtr);
-
-            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
-
-            span = new(bufferPtr, checked((int)buffer.Capacity));
-
-            return true;
+            return new(data, checked((int)buffer.Capacity));
         }
 
-        span = default;
-
-        return false;
+        // If we got here, it means we don't recognize the input buffer instance.
+        // There is nothing we can do, but also this shouldn't really happen.
+        throw ArgumentException.GetInvalidIBufferInstanceException();
     }
 
     /// <summary>
@@ -688,7 +632,7 @@ public static class WindowsRuntimeBufferExtensions
     /// </remarks>
     private static bool TryGetManagedSpanForCapacity(IBuffer buffer, out Span<byte> span)
     {
-        // If buffer is backed by a managed array, return it
+        // If the buffer is backed by a managed array, return it
         if (buffer is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
         {
             span = externalArrayBuffer.GetSpanForCapacity();
@@ -705,6 +649,65 @@ public static class WindowsRuntimeBufferExtensions
         }
 
         span = default;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to get the underlying data for the specified buffer, only if backed by native memory.
+    /// </summary>
+    /// <param name="buffer">The input <see cref="IBuffer"/> instance.</param>
+    /// <param name="data">The underlying data, if retrieved.</param>
+    /// <returns>Whether <paramref name="data"/> could be retrieved.</returns>
+    private static unsafe bool TryGetData(IBuffer buffer, out byte* data)
+    {
+        // Equivalent logic as 'WindowsRuntimeBufferMarshal.TryGetDataUnsafe', just optimized to only check for this
+        if (buffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
+        {
+            using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IBufferByteAccess);
+
+            fixed (byte** dataPtr = &data)
+            {
+                HRESULT hresult = IBufferByteAccessVftbl.BufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), dataPtr);
+
+                RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+            }
+
+            return true;
+        }
+
+        data = null;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to get the underlying array for the specified buffer, only if backed by a managed array.
+    /// </summary>
+    /// <param name="buffer">The input <see cref="IBuffer"/> instance.</param>
+    /// <param name="array">The underlying array, if retrieved.</param>
+    /// <param name="offset">The offset in the returned array.</param>
+    /// <returns>Whether <paramref name="array"/> could be retrieved.</returns>
+    private static bool TryGetArray(IBuffer buffer, [NotNullWhen(true)] out byte[]? array, out int offset)
+    {
+        // If the buffer is backed by a managed array, unwrap it
+        if (buffer is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
+        {
+            array = externalArrayBuffer.GetArray(out offset);
+
+            return true;
+        }
+
+        // Same as above for pinned arrays as well
+        if (buffer is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
+        {
+            array = pinnedArrayBuffer.GetArray(out offset);
+
+            return true;
+        }
+
+        array = null;
+        offset = 0;
 
         return false;
     }
