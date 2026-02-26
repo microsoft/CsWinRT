@@ -732,8 +732,7 @@ namespace UnitTest
             var vector = TestObject.GetUriVectorAsIInspectableVector();
             var uriVector = vector.Cast<Uri>();
             var first = uriVector.First();
-            // Assert the sequences are equivalent
-            CollectionAssert.AreEqual(vector.Cast<Uri>().ToArray(), uriVector.ToArray()); // [2]
+            CollectionAssert.AreEqual(vector.Cast<Uri>().ToArray(), uriVector.ToArray());
         }
 
         async Task LookupPorts()
