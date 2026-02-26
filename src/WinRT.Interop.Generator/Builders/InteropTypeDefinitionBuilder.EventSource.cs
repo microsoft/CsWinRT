@@ -123,10 +123,13 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition eventSourceType)
         {
+            TypeSignature keyType = delegateType.TypeArguments[0];
+            TypeSignature valueType = delegateType.TypeArguments[1];
+
             DerivedEventSource(
                 delegateType: delegateType,
                 baseEventSourceType: interopReferences.MapChangedEventHandler2EventSource,
-                baseEventSource_ctor: interopReferences.MapChangedEventHandler2EventSource_ctor,
+                baseEventSource_ctor: interopReferences.MapChangedEventHandler2EventSource_ctor(keyType, valueType),
                 marshallerType: marshallerType,
                 interopReferences: interopReferences,
                 module: module,
