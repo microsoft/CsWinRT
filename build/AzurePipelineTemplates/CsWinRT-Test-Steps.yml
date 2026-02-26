@@ -59,6 +59,12 @@ steps:
 
 # Run Build Determinism Test
   - task: CmdLine@2
+    displayName: Create Build Determinism Debug Repro Directory
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      script: mkdir "$(Build.SourcesDirectory)\src\Tests\BuildDeterminismTest\BuildDeterminismComponent\DebugRepro"
+
+  - task: CmdLine@2
     displayName: Run Build Determinism Test
     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
     continueOnError: True
