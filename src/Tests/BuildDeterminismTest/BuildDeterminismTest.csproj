@@ -18,4 +18,8 @@
     <Compile Include="Program.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AsmResolver.DotNet" />
+  </ItemGroup>
+
 </Project>

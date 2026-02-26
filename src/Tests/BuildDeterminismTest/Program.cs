@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using AsmResolver.DotNet;
 
 // Entry point: forwards command-line args (e.g., MSBuild properties from CI) to the runner.
 return BuildDeterminismRunner.Run(args);
@@ -100,7 +101,14 @@ internal sealed class BuildDeterminismRunner
             if (Directory.Exists(path))
             {
                 Directory.Delete(path, recursive: true);
-                Console.WriteLine($"Deleted {path}");
+                if (Directory.Exists(path))
+                {
+                    Console.WriteLine($"WARNING: Directory still exists after deletion: {path}");
+                }
+                else
+                {
+                    Console.WriteLine($"Deleted {path}");
+                }
             }
         }
 
@@ -125,6 +133,10 @@ internal sealed class BuildDeterminismRunner
         string hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(dllPath)));
         Console.WriteLine($"Checking SHA256 of file {dllPath}");
         Console.WriteLine($"{passLabel} build SHA256: {hash}");
+
+        // Print MVID for debugging non-deterministic builds.
+        var moduleDef = ModuleDefinition.FromFile(dllPath);
+        Console.WriteLine($"{passLabel} build MVID: {moduleDef.Mvid}");
 
         return hash;
     }
