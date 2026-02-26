@@ -20,21 +20,15 @@ steps:
       PROCESSOR_ARCHITECTURE: x86
 
 # Run Unit Tests
-  - task: CmdLine@2
+  - task: DotNetCoreCLI@2
     displayName: Run Unit Tests
     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
     inputs:
-      workingDirectory: $(Build.SourcesDirectory)\src
-      script: |
-        Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\UnitTest.exe --report-trx --results-directory $(Common.TestResultsDirectory)
-  
-  - task: PublishTestResults@2
-    displayName: Publish Unit Test Results
-    condition: and(always(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-    inputs:
-      testResultsFormat: VSTest
-      testResultsFiles: '**/*.trx'
-      searchFolder: $(Common.TestResultsDirectory)
+      command: test
+      projects: 'src/Tests/UnitTest/UnitTest.csproj'
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
       testRunTitle: Unit Tests
 
 # Run Host Tests
