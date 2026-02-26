@@ -66,7 +66,15 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)\src
       script: |
         dir Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0
-        Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\BuildDeterminismTest.exe -p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
+        Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\BuildDeterminismTest.exe -p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch),CsWinRTGeneratorDebugReproDirectory=$(Build.SourcesDirectory)\src\Tests\BuildDeterminismTest\BuildDeterminismComponent\DebugRepro
+
+  - task: CopyFiles@2
+    displayName: Copy Build Determinism Debug Repro
+    condition: and(always(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      SourceFolder: $(Build.SourcesDirectory)\src\Tests\BuildDeterminismTest\BuildDeterminismComponent\DebugRepro
+      Contents: '**'
+      TargetFolder: $(ob_outputDirectory)\BuildDeterminismDebugRepro
 
 # # Run Functional Tests
 #   - template: CsWinRT-FunctionalTest-Steps.yml@self
