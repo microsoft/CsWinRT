@@ -5136,5 +5136,24 @@ namespace UnitTest
             Assert.IsTrue(repeatableUsage.AllowMultiple);
             Assert.IsFalse(singleUsage.AllowMultiple);
         }
+
+        [TestMethod]
+        public async Task TestFailingCompletionHandlerCrashesProcess()
+        {
+            // Create an IAsyncAction from a C# task that completes after 2 seconds.
+            var asyncAction = AsyncInfo.Run(_ => Task.Delay(TimeSpan.FromSeconds(2)));
+
+            // Pass it to native code which sets a Completed handler that throws.
+            var instance = new Class();
+            instance.SetFailingCompletedHandler(asyncAction);
+
+            // Wait long enough for the async action to complete and the native
+            // completion handler to fire. If the throwing handler crashes the
+            // process, we will never reach the assertion below.
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
+            // If we get here, the process survived the throwing completion handler.
+            Assert.IsTrue(true, "Process survived the throwing native completion handler.");
+        }
     }
 }
