@@ -5,6 +5,8 @@
 // See: https://github.com/Sergio0694/ComputeSharp/blob/main/src/ComputeSharp.SourceGeneration/Helpers/IndentedTextWriter.cs.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace WindowsRuntime.SourceGenerator;
 
@@ -53,6 +55,76 @@ internal static class IndentedTextWriterExtensions
             {
                 writer.WriteLine($$"""[DebuggerNonUserCode]""");
                 writer.WriteLine($$"""[ExcludeFromCodeCoverage]""");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Writes a sequence of using directives, sorted correctly.
+    /// </summary>
+    /// <param name="writer">The <see cref="IndentedTextWriter"/> instance to write into.</param>
+    /// <param name="usingDirectives">The sequence of using directives to write.</param>
+    public static void WriteSortedUsingDirectives(this ref IndentedTextWriter writer, IEnumerable<string> usingDirectives)
+    {
+        // Add the System directives first, in the correct order
+        foreach (string usingDirective in usingDirectives.Where(static name => name.StartsWith("global::System", StringComparison.InvariantCulture)).OrderBy(static name => name))
+        {
+            writer.WriteLine($"using {usingDirective};");
+        }
+
+        // Add the other directives, also sorted in the correct order
+        foreach (string usingDirective in usingDirectives.Where(static name => !name.StartsWith("global::System", StringComparison.InvariantCulture)).OrderBy(static name => name))
+        {
+            writer.WriteLine($"using {usingDirective};");
+        }
+
+        // Leave a trailing blank line if at least one using directive has been written.
+        // This is so that any members will correctly have a leading blank line before.
+        writer.WriteLineIf(usingDirectives.Any());
+    }
+
+    /// <summary>
+    /// Writes a series of members separated by one line between each of them.
+    /// </summary>
+    /// <typeparam name="T">The type of input items to process.</typeparam>
+    /// <param name="writer">The <see cref="IndentedTextWriter"/> instance to write into.</param>
+    /// <param name="items">The input items to process.</param>
+    /// <param name="callback">The <see cref="IndentedTextWriter.Callback{T}"/> instance to invoke for each item.</param>
+    public static void WriteLineSeparatedMembers<T>(
+        this ref IndentedTextWriter writer,
+        ReadOnlySpan<T> items,
+        IndentedTextWriter.Callback<T> callback)
+    {
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (i > 0)
+            {
+                writer.WriteLine();
+            }
+
+            callback(items[i], writer);
+        }
+    }
+
+    /// <summary>
+    /// Writes a series of initialization expressions separated by a comma between each of them.
+    /// </summary>
+    /// <typeparam name="T">The type of input items to process.</typeparam>
+    /// <param name="writer">The <see cref="IndentedTextWriter"/> instance to write into.</param>
+    /// <param name="items">The input items to process.</param>
+    /// <param name="callback">The <see cref="IndentedTextWriter.Callback{T}"/> instance to invoke for each item.</param>
+    public static void WriteInitializationExpressions<T>(
+        this ref IndentedTextWriter writer,
+        ReadOnlySpan<T> items,
+        IndentedTextWriter.Callback<T> callback)
+    {
+        for (int i = 0; i < items.Length; i++)
+        {
+            callback(items[i], writer);
+
+            if (i < items.Length - 1)
+            {
+                writer.WriteLine(",");
             }
         }
     }

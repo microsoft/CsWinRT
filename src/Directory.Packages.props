@@ -17,8 +17,8 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.2" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.2" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="4.11.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.12.0-3.final" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="5.0.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0" />
     <PackageVersion Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="1.1.0-beta2-25565-01" />
     <PackageVersion Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20560.3" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -35,6 +35,7 @@
     <PackageVersion Include="Microsoft.WindowsAppSDK.InteractiveExperiences" Version="$(MicrosoftWinAppSDKIxpVersion)" />
     <PackageVersion Include="Microsoft.WindowsAppSDK.WinUI" Version="$(MicrosoftWinAppSDKWinUIVersion)" />
     <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
+    <PackageVersion Include="MSTest" Version="4.0.2" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.10.1" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.10.1" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />

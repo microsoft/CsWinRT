@@ -12,7 +12,9 @@ using TestComponentCSharp;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Tasks;
+using Windows.UI.Xaml.Data;
 using WindowsRuntime.InteropServices;
+using WindowsRuntime.Xaml;
 
 CustomDisposableTest customDisposableTest = new();
 customDisposableTest.Dispose();
@@ -180,6 +182,25 @@ unsafe
     }
 }
 
+TestCustomPropertyProvider testCustomPropertyProvider = new();
+
+unsafe
+{
+    void* testCustomPropertyProviderUnknownPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(testCustomPropertyProvider);
+
+    try
+    {
+        // We should be able to get an 'ICustomPropertyProvider' interface pointer
+        ComHelpers.EnsureQueryInterface(
+            unknownPtr: testCustomPropertyProviderUnknownPtr,
+            iids: [new Guid("7C925755-3E48-42B4-8677-76372267033F")]);
+    }
+    finally
+    {
+        WindowsRuntimeMarshal.Free(testCustomPropertyProviderUnknownPtr);
+    }
+}
+
 sealed class TestComposable : Composable
 {
 }
@@ -193,6 +214,13 @@ sealed class TestMixedComClass : IClassicComAction, IDisposable
     public void Dispose()
     {
     }
+}
+
+[Guid("3C832AA5-5F7E-46EE-B1BF-7FE03AE866AF")]
+[GeneratedComInterface]
+partial interface IClassicComAction
+{
+    void Invoke();
 }
 
 class GenericBaseType<T> : IEnumerable<T>, IDisposable
@@ -262,6 +290,22 @@ class GenericType<T1, T2> : IEnumerable<T1>, IReadOnlyDictionary<T1, T2>, IMapCh
     }
 }
 
+[GeneratedCustomPropertyProvider]
+sealed partial class TestCustomPropertyProvider : ICustomPropertyProvider
+{
+    public string Text => "Hello";
+
+    public int Number { get; set; }
+
+    public int this[string key]
+    {
+        get => 0;
+        set { }
+    }
+
+    public static string Info { get; set; }
+}
+
 class GenericFactory
 {
     // This method is caling a generic one, which then constructs a generic type.
@@ -289,13 +333,6 @@ class GenericFactory
     {
         return AsyncInfo.Run(token => Task.FromResult(default(TimeSpan)));
     }
-}
-
-[Guid("3C832AA5-5F7E-46EE-B1BF-7FE03AE866AF")]
-[GeneratedComInterface]
-partial interface IClassicComAction
-{
-    void Invoke();
 }
 
 file static class ComHelpers
