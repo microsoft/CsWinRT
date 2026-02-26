@@ -102,7 +102,7 @@ public sealed class EventRegistrationTokenTable<T>
             do
             {
                 // Iterate on TryAdd, which allows skipping the extra lookup on
-                // the last iteration (as the handler is added rigth away instead).
+                // the last iteration (as the handler is added right away instead).
                 //
                 // We're doing this do-while loop here and incrementing 'm_low32Bits' on every failed insertion to work
                 // around one possible (theoretical) performance problem. Suppose the candidate token was somehow already

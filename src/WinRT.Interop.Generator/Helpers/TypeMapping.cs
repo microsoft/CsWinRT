@@ -169,7 +169,7 @@ internal static class TypeMapping
     /// </summary>
     /// <param name="fullName">The full name of the type.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
-    /// <param name="signature">The resulting mapped type signatre, if found.</param>
+    /// <param name="signature">The resulting mapped type signature, if found.</param>
     /// <returns>Whether <paramref name="signature"/> was retrieved successfully.</returns>
     public static bool TryFindMappedTypeSignature(
         ReadOnlySpan<char> fullName,
@@ -200,7 +200,7 @@ internal static class TypeMapping
 
             // All entries here will always have a signature, if their corresponding entries
             // in the global table of type mappings also have signatures. If that's not the
-            // case, then it means an entry in the second lokup is just malformed
+            // case, then it means an entry in the second lookup is just malformed
             signature = mappedType.Signature!;
 
             return true;
