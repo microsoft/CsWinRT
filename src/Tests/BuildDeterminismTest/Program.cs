@@ -123,6 +123,7 @@ internal sealed class BuildDeterminismRunner
 
         // Hash the output DLL to compare across builds.
         string hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(dllPath)));
+        Console.WriteLine($"Checking SHA256 of file {dllPath}");
         Console.WriteLine($"{passLabel} build SHA256: {hash}");
 
         return hash;
