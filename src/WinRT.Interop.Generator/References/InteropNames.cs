@@ -11,17 +11,22 @@ namespace WindowsRuntime.InteropGenerator.References;
 internal static class InteropNames
 {
     /// <summary>
-    /// The name of the generated interop .dll  (i.e. <c>WinRT.Interop.dll</c>).
+    /// The name of the generated interop .dll (i.e. <c>WinRT.Interop.dll</c>).
     /// </summary>
     public const string WindowsRuntimeInteropDllName = "WinRT.Interop.dll";
 
     /// <summary>
-    /// The name of the generated projection .dll  (i.e. <c>WinRT.Projection.dll</c>).
+    /// The name of the precompiled projection .dll for the Windows SDK (i.e. <c>WinRT.Sdk.Projection.dll</c>).
+    /// </summary>
+    public const string WindowsRuntimeSdkProjectionDllName = "WinRT.Sdk.Projection.dll";
+
+    /// <summary>
+    /// The name of the generated projection .dll (i.e. <c>WinRT.Projection.dll</c>).
     /// </summary>
     public const string WindowsRuntimeProjectionDllName = "WinRT.Projection.dll";
 
     /// <summary>
-    /// The name of the generated component .dll  (i.e. <c>WinRT.Component.dll</c>).
+    /// The name of the generated component .dll (i.e. <c>WinRT.Component.dll</c>).
     /// </summary>
     public const string WindowsRuntimeComponentDllName = "WinRT.Component.dll";
 

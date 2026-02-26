@@ -68,8 +68,13 @@ internal static class InteropMarshallerTypeResolver
         }
         else
         {
-            // In all other cases, the marshaller type will be in the merged projection.
-            ITypeDefOrRef marshallerType = interopReferences.WinRTProjection.CreateTypeReference(
+            // Determine the right assembly reference for this projected type
+            AssemblyReference projectionAssembly = type.IsProjectedWindowsSdkType
+                ? interopReferences.WinRTSdkProjection
+                : interopReferences.WinRTProjection;
+
+            // In all other cases, the marshaller type will be in the right merged projection
+            ITypeDefOrRef marshallerType = projectionAssembly.CreateTypeReference(
                 ns: $"ABI.{type.Namespace}",
                 name: $"{type.Name}Marshaller");
 
