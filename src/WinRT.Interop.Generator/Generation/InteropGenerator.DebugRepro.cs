@@ -226,8 +226,8 @@ internal partial class InteropGenerator
 
         // Hash and copy the well known assemblies we use as input
         string outputAssemblyHashedName = CopyHashedFileToDirectory(args.OutputAssemblyPath, tempDirectory, originalImplementationDllPaths, args.Token);
-        string winRTProjectionAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTProjectionAssemblyPath, tempDirectory, originalImplementationDllPaths, args.Token);
-        string? winRTComponentAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTComponentAssemblyPath, tempDirectory, originalImplementationDllPaths, args.Token);
+        string winRTProjectionAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTProjectionAssemblyPath, implementationDirectory, originalImplementationDllPaths, args.Token);
+        string? winRTComponentAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTComponentAssemblyPath, implementationDirectory, originalImplementationDllPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
 
