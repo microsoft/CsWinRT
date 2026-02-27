@@ -49,6 +49,44 @@ internal static class MethodDefinitionExtensions
 #pragma warning restore
 
         /// <summary>
+        /// Creates a new public constructor for a type that is executed when its declaring type is loaded by the CLR.
+        /// </summary>
+        /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use to resolve fundamental type signatures.</param>
+        /// <param name="constructorMethod">The <see cref="MemberReference"/> for the base constructor to invoke.</param>
+        /// <param name="parameterTypes">An ordered list of types the parameters of the constructor should have.</param>
+        /// <returns>The constructor.</returns>
+        public static MethodDefinition CreateConstructor(
+            CorLibTypeFactory corLibTypeFactory,
+            MemberReference constructorMethod,
+            params TypeSignature[] parameterTypes)
+        {
+            MethodDefinition ctor = new(
+                name: ".ctor",
+                attributes: MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
+                signature: MethodSignature.CreateInstance(corLibTypeFactory.Void, parameterTypes));
+
+            for (int i = 0; i < parameterTypes.Length; i++)
+            {
+                ctor.ParameterDefinitions.Add(new ParameterDefinition(null));
+            }
+
+            // Load the implicit 'this' parameter first
+            ctor.CilMethodBody = new CilMethodBody { Instructions = { Ldarg_0 } };
+
+            // Load all the input parameters (the indices start at '1', because '0' is used for 'this')
+            for (int i = 0; i < parameterTypes.Length; i++)
+            {
+                ctor.CilMethodBody.Instructions.Add(CilInstruction.CreateLdarg(i + 1));
+            }
+
+            // Call the base constructor forwarding the input parameters
+            _ = ctor.CilMethodBody.Instructions.Add(Call, constructorMethod);
+            _ = ctor.CilMethodBody.Instructions.Add(Ret);
+
+            return ctor;
+        }
+
+        /// <summary>
         /// Creates a new default constructor for a type that is executed when its declaring type is loaded by the CLR.
         /// </summary>
         /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use to resolve fundamental type signatures.</param>
@@ -76,7 +114,7 @@ internal static class MethodDefinitionExtensions
             return new(
                 name: ".ctor"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
-                MethodSignature.CreateInstance(corLibTypeFactory.Void))
+                signature: MethodSignature.CreateInstance(corLibTypeFactory.Void))
             {
                 CilInstructions =
                 {
