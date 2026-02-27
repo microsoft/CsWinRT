@@ -106,13 +106,10 @@ internal static partial class InteropTypeDefinitionBuilder
         // Define the constructor
         MethodDefinition ctor = MethodDefinition.CreateConstructor(
             corLibTypeFactory: interopReferences.CorLibTypeFactory,
+            constructorMethod: interopReferences.WindowsRuntimeNativeObjectBaseType_ctor(nativeObjectBaseType),
             parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]);
 
         nativeObjectType.Methods.Add(ctor);
-
-        _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-        _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
-        _ = ctor.CilMethodBody!.Instructions.Insert(2, Call, interopReferences.WindowsRuntimeNativeObjectBaseType_ctor(nativeObjectBaseType));
     }
 
     /// <summary>
@@ -275,12 +272,11 @@ internal static partial class InteropTypeDefinitionBuilder
         module.TopLevelTypes.Add(marshallerType);
 
         // Define the constructor
-        MethodDefinition ctor = MethodDefinition.CreateConstructor(interopReferences.CorLibTypeFactory);
+        MethodDefinition ctor = MethodDefinition.CreateConstructor(
+            corLibTypeFactory: interopReferences.CorLibTypeFactory,
+            constructorMethod: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
         marshallerType.Methods.Add(ctor);
-
-        _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-        _ = ctor.CilMethodBody!.Instructions.Insert(1, Call, interopReferences.WindowsRuntimeComWrappersMarshallerAttribute_ctor);
 
         // Define the 'CreateObject' method as follows:
         //
