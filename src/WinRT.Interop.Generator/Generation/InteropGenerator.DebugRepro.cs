@@ -106,8 +106,13 @@ internal partial class InteropGenerator
                     ? implementationDllDirectory
                     : tempDirectory);
 
+            // Make sure the debug repro is well-formed and contains the mapping for this entry
+            if (!originalDllPaths.TryGetValue(dllEntry.Name, out string? originalPath))
+            {
+                throw WellKnownInteropExceptions.DebugReproMissingFileEntryMapping(dllEntry.FullName);
+            }
+
             // Construct the path in the temporary subfolder with the original .dll name
-            string originalPath = originalDllPaths[dllEntry.Name];
             string originalName = Path.GetFileName(Path.Normalize(originalPath));
             string destinationPath = Path.Combine(destinationFolder, originalName);
 

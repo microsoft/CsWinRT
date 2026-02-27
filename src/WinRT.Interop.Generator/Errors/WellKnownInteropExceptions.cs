@@ -747,11 +747,19 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// The debug repro contains a file entry that has no mapping.
+    /// </summary>
+    public static WellKnownInteropException DebugReproMissingFileEntryMapping(string path)
+    {
+        return Exception(88, $"The debug repro file entry with path '{path}' is missing its assembly path mapping.");
+    }
+
+    /// <summary>
     /// The debug repro contains a file entry that was not recognized.
     /// </summary>
     public static WellKnownInteropException DebugReproUnrecognizedFileEntry(string path)
     {
-        return Exception(88, $"The debug repro file entry with path '{path}' was not recognized.");
+        return Exception(89, $"The debug repro file entry with path '{path}' was not recognized.");
     }
 
     /// <summary>
