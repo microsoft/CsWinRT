@@ -67,7 +67,7 @@ internal partial class InteropGenerator
 
         token.ThrowIfCancellationRequested();
 
-        // Load the mappins with all the original file paths for both reference and implementation .dll-s
+        // Load the mappings with all the original file paths for both reference and implementation .dll-s
         Dictionary<string, string> originalReferenceDllPaths = ExtractPathMapToDirectory(originalReferenceDllPathsEntry);
         Dictionary<string, string> originalImplementationDllPaths = ExtractPathMapToDirectory(originalImplementationDllPathsEntry);
 
