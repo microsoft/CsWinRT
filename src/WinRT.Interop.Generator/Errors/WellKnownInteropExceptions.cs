@@ -747,6 +747,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// The debug repro contains a file entry that was not recognized.
+    /// </summary>
+    public static WellKnownInteropException DebugReproUnrecognizedFileEntry(string path)
+    {
+        return Exception(88, $"The debug repro file entry with path '{path}' was not recognized.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

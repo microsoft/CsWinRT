@@ -22,6 +22,16 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 internal partial class InteropGenerator
 {
     /// <summary>
+    /// The file name for the original names of the reference .dll-s.
+    /// </summary>
+    private const string ReferencePathMapFileName = "original-reference-paths.json";
+
+    /// <summary>
+    /// The file name for the original names of the implementation .dll-s.
+    /// </summary>
+    private const string ImplementationPathMapFileName = "original-implementation-paths.json";
+
+    /// <summary>
     /// Runs the debug repro unpack logic for the generator.
     /// </summary>
     /// <param name="path">The path to the debug repro file to unpack.</param>
@@ -41,7 +51,8 @@ internal partial class InteropGenerator
 
         // Get all entries of interest
         ZipArchiveEntry responseFileEntry = archive.Entries.Single(entry => entry.Name == "cswinrtinteropgen.rsp");
-        ZipArchiveEntry originalPathsEntry = archive.Entries.Single(entry => entry.Name == "original-paths.json");
+        ZipArchiveEntry originalReferenceDllPathsEntry = archive.Entries.Single(entry => entry.Name == ReferencePathMapFileName);
+        ZipArchiveEntry originalImplementationDllPathsEntry = archive.Entries.Single(entry => entry.Name == ImplementationPathMapFileName);
         ZipArchiveEntry[] dllEntries = [.. archive.Entries.Where(entry => Path.GetExtension(Path.Normalize(entry.Name)) == ".dll")];
 
         token.ThrowIfCancellationRequested();
@@ -56,36 +67,47 @@ internal partial class InteropGenerator
 
         token.ThrowIfCancellationRequested();
 
-        Dictionary<string, string> originalPaths;
-
-        // Load the mapping with all the original file paths for the included .dll-s
-        using (Stream stream = originalPathsEntry.Open())
-        {
-            originalPaths = JsonSerializer.Deserialize(stream, InteropGeneratorJsonSerializerContext.Default.DictionaryStringString)!;
-        }
+        // Load the mappins with all the original file paths for both reference and implementation .dll-s
+        Dictionary<string, string> originalReferenceDllPaths = ExtractPathMapToDirectory(originalReferenceDllPathsEntry);
+        Dictionary<string, string> originalImplementationDllPaths = ExtractPathMapToDirectory(originalImplementationDllPathsEntry);
 
         token.ThrowIfCancellationRequested();
 
         List<string> referencePaths = [];
         List<string> implementationPaths = [];
         string? outputAssemblyPath = null;
-        string? winRTProjectionAssemblyHashedName = null;
-        string? winRTComponentAssemblyHashedName = null;
+        string? winRTProjectionAssemblyPath = null;
+        string? winRTComponentAssemblyPath = null;
 
-        // Create another subdirectory for all the input assembly paths. We don't put these in the top level
+        // Define two subdirectories for all the input assembly paths. We don't put these in the top level
         // temporary folder so that the number of files there remains very small. The reason is just to
         // make inspecting the resulting .dll easier, without having to scroll past hundreds of folders.
-        string assembliesDirectory = Path.Combine(tempDirectory, "in");
+        // Also, this makes it possible to directly inspect the two sets of input assembly paths.
+        string referenceDllDirectory = Path.Combine(tempDirectory, "reference");
+        string implementationDllDirectory = Path.Combine(tempDirectory, "implementation");
+
+        // Create the directories too in advance, so that we can directly extract the .dll-s there
+        _ = Directory.CreateDirectory(referenceDllDirectory);
+        _ = Directory.CreateDirectory(implementationDllDirectory);
 
         // Extract all .dll-s, one per directory, so we can ensure there's no name conflicts
         foreach ((int index, ZipArchiveEntry dllEntry) in dllEntries.Index())
         {
-            string destinationFolder = Path.Combine(assembliesDirectory, index.ToString("000"));
+            bool isReferenceDll = Path.IsWithinDirectoryName(dllEntry.FullName, "reference");
+            bool isImplementationDll = Path.IsWithinDirectoryName(dllEntry.FullName, "implementation");
 
-            _ = Directory.CreateDirectory(destinationFolder);
+            // Select the right mapping (we have two, as we might have .dll-s with the same name in both sets)
+            Dictionary<string, string> originalDllPaths = isReferenceDll ? originalReferenceDllPaths : originalImplementationDllPaths;
+
+            // Also select the right destination folder (the output .dll will just go directly in the temporary directory)
+            string destinationFolder = isReferenceDll
+                ? referenceDllDirectory
+                : (isImplementationDll
+                    ? implementationDllDirectory
+                    : tempDirectory);
 
             // Construct the path in the temporary subfolder with the original .dll name
-            string originalPath = originalPaths[dllEntry.Name];
+            string originalPath = originalDllPaths[dllEntry.Name];
             string originalName = Path.GetFileName(Path.Normalize(originalPath));
             string destinationPath = Path.Combine(destinationFolder, originalName);
 
@@ -99,23 +121,29 @@ internal partial class InteropGenerator
             {
                 outputAssemblyPath = destinationPath;
             }
-            else if (Path.IsWithinDirectoryName(dllEntry.FullName, "references"))
+            else if (isReferenceDll)
             {
                 referencePaths.Add(destinationPath);
             }
-            else
+            else if (isImplementationDll)
             {
                 implementationPaths.Add(destinationPath);
+            }
+            else
+            {
+                // We should never hit this case, so throw to validate that the debug repro is valid. Entries
+                // should always be either reference .dll-s, implementation .dll-s, or the output assembly.
+                throw WellKnownInteropExceptions.DebugReproUnrecognizedFileEntry(dllEntry.FullName);
             }
 
             // Also track the private implementation detail .dll-s (these are also in the set of references)
             if (dllEntry.Name == args.WinRTProjectionAssemblyPath)
             {
-                winRTProjectionAssemblyHashedName = destinationPath;
+                winRTProjectionAssemblyPath = destinationPath;
             }
             else if (args.WinRTComponentAssemblyPath is not null && dllEntry.Name == args.WinRTComponentAssemblyPath)
             {
-                winRTComponentAssemblyHashedName = destinationPath;
+                winRTComponentAssemblyPath = destinationPath;
             }
         }
 
@@ -127,8 +155,8 @@ internal partial class InteropGenerator
             ReferenceAssemblyPaths = [.. referencePaths],
             ImplementationAssemblyPaths = [.. implementationPaths],
             OutputAssemblyPath = outputAssemblyPath!,
-            WinRTProjectionAssemblyPath = winRTProjectionAssemblyHashedName!,
-            WinRTComponentAssemblyPath = winRTComponentAssemblyHashedName,
+            WinRTProjectionAssemblyPath = winRTProjectionAssemblyPath!,
+            WinRTComponentAssemblyPath = winRTComponentAssemblyPath,
             GeneratedAssemblyDirectory = tempDirectory,
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
             ValidateWinRTRuntimeAssemblyVersion = args.ValidateWinRTRuntimeAssemblyVersion,
@@ -173,27 +201,28 @@ internal partial class InteropGenerator
         // Create a temporary directory to stage files for the ZIP
         string tempFolderName = $"cswinrtinteropgen-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";
         string tempDirectory = Path.Combine(Path.GetTempPath(), tempFolderName);
-        string referencesDirectory = Path.Combine(tempDirectory, "references");
+        string referenceDirectory = Path.Combine(tempDirectory, "reference");
         string implementationDirectory = Path.Combine(tempDirectory, "implementation");
 
         _ = Directory.CreateDirectory(tempDirectory);
-        _ = Directory.CreateDirectory(referencesDirectory);
+        _ = Directory.CreateDirectory(referenceDirectory);
         _ = Directory.CreateDirectory(implementationDirectory);
 
-        // Map with all the original paths
-        Dictionary<string, string> originalPaths = new(args.ReferenceAssemblyPaths.Length + 1);
+        // Maps with all the original paths
+        Dictionary<string, string> originalReferenceDllPaths = new(args.ReferenceAssemblyPaths.Length + 1);
+        Dictionary<string, string> originalImplementationDllPaths = new(args.ImplementationAssemblyPaths.Length + 1);
 
         // Add all reference and implementation paths with hashed names to the respective subdirectories under the
         // temporary directory, and store them with the updated names in a list to use to build the .rsp file.
-        List<string> updatedReferenceDllNames = CopyHashedFilesToDirectory(args.ReferenceAssemblyPaths, referencesDirectory, originalPaths, args.Token);
-        List<string> updatedImplementationDllNames = CopyHashedFilesToDirectory(args.ImplementationAssemblyPaths, implementationDirectory, originalPaths, args.Token);
+        List<string> updatedReferenceDllNames = CopyHashedFilesToDirectory(args.ReferenceAssemblyPaths, referenceDirectory, originalReferenceDllPaths, args.Token);
+        List<string> updatedImplementationDllNames = CopyHashedFilesToDirectory(args.ImplementationAssemblyPaths, implementationDirectory, originalImplementationDllPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Hash and copy the well known assemblies we use as input
-        string outputAssemblyHashedName = CopyHashedFileToDirectory(args.OutputAssemblyPath, tempDirectory, originalPaths, args.Token);
-        string winRTProjectionAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTProjectionAssemblyPath, tempDirectory, originalPaths, args.Token);
-        string? winRTComponentAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTComponentAssemblyPath, tempDirectory, originalPaths, args.Token);
+        string outputAssemblyHashedName = CopyHashedFileToDirectory(args.OutputAssemblyPath, tempDirectory, originalImplementationDllPaths, args.Token);
+        string winRTProjectionAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTProjectionAssemblyPath, tempDirectory, originalImplementationDllPaths, args.Token);
+        string? winRTComponentAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTComponentAssemblyPath, tempDirectory, originalImplementationDllPaths, args.Token);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -223,14 +252,13 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Create the .json file with the original paths
-        string jsonFilePath = Path.Combine(tempDirectory, "original-paths.json");
+        // Create the .json file with the reference path map
+        CopyPathMapToDirectory(originalReferenceDllPaths, tempDirectory, ReferencePathMapFileName);
 
-        // Serialize the original paths
-        using (Stream jsonStream = File.Create(jsonFilePath))
-        {
-            JsonSerializer.Serialize(jsonStream, originalPaths, InteropGeneratorJsonSerializerContext.Default.DictionaryStringString);
-        }
+        args.Token.ThrowIfCancellationRequested();
+
+        // Do the same for the implementation path map
+        CopyPathMapToDirectory(originalImplementationDllPaths, tempDirectory, ImplementationPathMapFileName);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -345,5 +373,40 @@ internal partial class InteropGenerator
         originalPaths.Add(hashedName, assemblyPath);
 
         return hashedName;
+    }
+
+    /// <summary>
+    /// Copies an input path map to a target directory, as a serialized JSON file.
+    /// </summary>
+    /// <param name="pathMap">The input path map.</param>
+    /// <param name="destinationDirectory">The target directory to copy the assemblies to.</param>
+    /// <param name="fileName">The name to use for the file with the serialized path map.</param>
+    private static void CopyPathMapToDirectory(
+        Dictionary<string, string> pathMap,
+        string destinationDirectory,
+        string fileName)
+    {
+        // Create the .json file with the input path map
+        string jsonFilePath = Path.Combine(destinationDirectory, fileName);
+
+        using Stream jsonStream = File.Create(jsonFilePath);
+
+        // Serialize the path map to the target file
+        JsonSerializer.Serialize(jsonStream, pathMap, InteropGeneratorJsonSerializerContext.Default.DictionaryStringString);
+    }
+
+    /// <summary>
+    /// Extracts an input path from a .zip archive entry.
+    /// </summary>
+    /// <param name="pathMapEntry">The input path map entry.</param>
+    /// <remarks>
+    /// The <paramref name="pathMapEntry"/> value is expected to have the content produced by calls to <see cref="CopyPathMapToDirectory"/>.
+    /// </remarks>
+    private static Dictionary<string, string> ExtractPathMapToDirectory(ZipArchiveEntry pathMapEntry)
+    {
+        using Stream stream = pathMapEntry.Open();
+
+        // Load the mapping with all the original file paths for the included .dll-s
+        return JsonSerializer.Deserialize(stream, InteropGeneratorJsonSerializerContext.Default.DictionaryStringString)!;
     }
 }
