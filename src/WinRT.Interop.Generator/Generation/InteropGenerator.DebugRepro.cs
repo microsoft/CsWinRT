@@ -91,7 +91,7 @@ internal partial class InteropGenerator
         _ = Directory.CreateDirectory(implementationDllDirectory);
 
         // Extract all .dll-s, one per directory, so we can ensure there's no name conflicts
-        foreach ((int index, ZipArchiveEntry dllEntry) in dllEntries.Index())
+        foreach (ZipArchiveEntry dllEntry in dllEntries)
         {
             bool isReferenceDll = Path.IsWithinDirectoryName(dllEntry.FullName, "reference");
             bool isImplementationDll = Path.IsWithinDirectoryName(dllEntry.FullName, "implementation");
