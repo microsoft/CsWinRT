@@ -43,6 +43,15 @@ internal partial class WellKnownTypeDefinitionFactory
 
         IgnoresAccessChecksToType.Methods.Add(ctor);
 
+        // Here we're manually emitting the constructor body, as we need it to be the following:
+        //
+        // public IgnoresAccessChecksToAttribute(string assemblyName)
+        // {
+        //     _assemblyName = assemblyName;
+        //     base..ctor();
+        // }
+        //
+        // Because of this we can't reuse the common extension just forwarding parameters to the base constructor.
         _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
         _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
         _ = ctor.CilMethodBody!.Instructions.Insert(2, Stfld, assemblyNameField);
