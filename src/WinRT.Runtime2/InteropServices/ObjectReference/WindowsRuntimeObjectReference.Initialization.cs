@@ -108,10 +108,13 @@ public unsafe partial class WindowsRuntimeObjectReference
         // will have the 'IReferenceTracker' implementation. Otherwise, the new instance will be used. Since the
         // inner was composed, it should answer immediately without going through the outer. Either way, the
         // reference count will go to the new instance.
-        if (IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker).Failed)
+        HRESULT isReferenceTracker = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
+
+        // We have seen scenarios where 'QueryInterface' is not set to 'null' on failure (for instance, both UWP XAML
+        // and WinUI 3 objects don't do this), so if the call failed we manually set the resulting pointer to 'null'.
+        // This allows the following code to rely on the pointer value to determine how to handle reference tracking.
+        if (isReferenceTracker.Failed)
         {
-            // We have seen scenarios where QueryInterface is not set to null on failure,
-            // so handle that here given we use it whether or not the QI succeeded.
             referenceTracker = null;
         }
 
@@ -301,9 +304,9 @@ public unsafe partial class WindowsRuntimeObjectReference
         Marshal.ThrowExceptionForHR(isFreeThreaded);
 
         // Try to resolve an 'IReferenceTracker' pointer (see detailed notes above)
-        HRESULT isReferenceTrackerImplemented = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
+        HRESULT isReferenceTracker = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
 
-        if (isReferenceTrackerImplemented.Succeeded)
+        if (isReferenceTracker.Succeeded)
         {
             // If we have a reference tracker, we should report an 'AddRef' on it,
             // as we're wrapping the native object in a managed object reference.
@@ -316,8 +319,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         }
         else
         {
-            // We have seen scenarios where QueryInterface is not set to null on failure,
-            // so handle that here given we use it whether or not the QI succeeded.
+            // Ensure the 'IReferenceTracker' pointer is 'null' in case of failure (see notes above)
             referenceTracker = null;
         }
 
@@ -362,10 +364,10 @@ public unsafe partial class WindowsRuntimeObjectReference
         }
 
         // Try to resolve an 'IReferenceTracker' pointer (see detailed notes above)
-        HRESULT isReferenceTrackerImplemented = IUnknownVftbl.QueryInterfaceUnsafe(acquiredExternalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
+        HRESULT isReferenceTracker = IUnknownVftbl.QueryInterfaceUnsafe(acquiredExternalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
 
         // If we resolved a reference tracker, set it up (see notes above)
-        if (isReferenceTrackerImplemented.Succeeded)
+        if (isReferenceTracker.Succeeded)
         {
             _ = IReferenceTrackerVftbl.AddRefFromTrackerSourceUnsafe(referenceTracker);
 
@@ -373,8 +375,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         }
         else
         {
-            // We have seen scenarios where QueryInterface is not set to null on failure,
-            // so handle that here given we use it whether or not the QI succeeded.
+            // Ensure the 'IReferenceTracker' pointer is 'null' in case of failure (see notes above)
             referenceTracker = null;
         }
 
