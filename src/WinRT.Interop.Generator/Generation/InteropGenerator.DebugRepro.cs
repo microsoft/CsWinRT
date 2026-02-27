@@ -68,8 +68,8 @@ internal partial class InteropGenerator
         token.ThrowIfCancellationRequested();
 
         // Load the mappings with all the original file paths for both reference and implementation .dll-s
-        Dictionary<string, string> originalReferenceDllPaths = ExtractPathMapToDirectory(originalReferenceDllPathsEntry);
-        Dictionary<string, string> originalImplementationDllPaths = ExtractPathMapToDirectory(originalImplementationDllPathsEntry);
+        Dictionary<string, string> originalReferenceDllPaths = ExtractPathMap(originalReferenceDllPathsEntry);
+        Dictionary<string, string> originalImplementationDllPaths = ExtractPathMap(originalImplementationDllPathsEntry);
 
         token.ThrowIfCancellationRequested();
 
@@ -402,7 +402,7 @@ internal partial class InteropGenerator
     /// <remarks>
     /// The <paramref name="pathMapEntry"/> value is expected to have the content produced by calls to <see cref="CopyPathMapToDirectory"/>.
     /// </remarks>
-    private static Dictionary<string, string> ExtractPathMapToDirectory(ZipArchiveEntry pathMapEntry)
+    private static Dictionary<string, string> ExtractPathMap(ZipArchiveEntry pathMapEntry)
     {
         using Stream stream = pathMapEntry.Open();
 
