@@ -743,7 +743,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException ReservedDllOriginalPathMismatchFromDebugRepro(string dllName)
     {
-        return Exception(87, $"The reserved '{dllName}' assembly has a mismatching path with the item supplied via '$(ReferencePath)': the debug repro canot be generated.");
+        return Exception(87, $"The reserved '{dllName}' assembly has a mismatching path with the item supplied via '$(ReferencePath)': the debug repro cannot be generated.");
     }
 
     /// <summary>
