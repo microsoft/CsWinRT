@@ -93,7 +93,7 @@ internal partial class UniversalTaskAdapter<
             conditionBitMask: STATE_STARTED,
             conditionFailed: out bool stateWasNotStarted);
 
-        // If the state was different than 'STATE_STARTED'
+        // If the state was 'STATE_STARTED' (i.e. the condition did not fail)
         if (!stateWasNotStarted)
         {
             _cancelTokenSource?.Cancel();

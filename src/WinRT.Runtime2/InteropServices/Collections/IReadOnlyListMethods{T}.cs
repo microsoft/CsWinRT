@@ -30,7 +30,7 @@ public static class IReadOnlyListMethods<T>
         {
             // The native implementation will perform the bounds check, so we avoid doing an
             // extra native call just to get the size of the collection. If the call fails
-            // because the index is not valid, we translate the exception to the rigth one.
+            // because the index is not valid, we translate the exception to the right one.
             return TMethods.GetAt(thisReference, (uint)index);
         }
         catch (Exception e) when (e.HResult == WellKnownErrorCodes.E_BOUNDS)

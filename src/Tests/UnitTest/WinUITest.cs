@@ -1,9 +1,9 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Xunit;
 
 namespace UnitTest;
 
+[TestClass]
 public class TestWinUI
 {
     public TestWinUI()
@@ -20,7 +20,7 @@ public class TestWinUI
     [TemplatePart(Name = "PartGrid", Type = typeof(Grid))]
     public class TestAllowMultipleAttributes { };
 
-    [Fact]
+    [TestMethod]
     public void TestApp()
     {
         // TODO: load up some MUX!

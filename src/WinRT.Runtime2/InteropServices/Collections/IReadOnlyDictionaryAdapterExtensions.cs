@@ -78,7 +78,7 @@ public static class IReadOnlyDictionaryAdapterExtensions
         /// <remarks>
         /// This overload can be used to avoid a <see cref="string"/> allocation on the caller side.
         /// </remarks>
-        /// /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.imapview-2.haskey"/>
+        /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.imapview-2.haskey"/>
         public static bool HasKey(IReadOnlyDictionary<string, TValue> dictionary, ReadOnlySpan<char> key)
         {
             // Same logic as in 'Lookup' above for trying to avoid materializing the 'string' key

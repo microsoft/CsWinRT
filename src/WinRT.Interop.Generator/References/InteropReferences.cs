@@ -155,6 +155,16 @@ internal sealed class InteropReferences
         publicKeyOrToken: WellKnownPublicKeyTokens.SystemNumericsVectors).Import(_corLibTypeFactory.CorLibScope);
 
     /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>System.Threading.dll</c>.
+    /// </summary>
+    /// <remarks><inheritdoc cref="SystemThreading" path="/remarks/node()"/></remarks>
+    public AssemblyReference SystemThreading => field ??= new AssemblyReference(
+        name: "System.Threading"u8,
+        version: new Version(10, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemThreading).Import(_corLibTypeFactory.CorLibScope);
+
+    /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Projection.dll</c>.
     /// </summary>
     /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
@@ -517,7 +527,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Threading.Interlocked"/>.
     /// </summary>
-    public TypeReference Interlocked => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Threading"u8, "Interlocked"u8);
+    public TypeReference Interlocked => field ??= SystemThreading.CreateTypeReference("System.Threading"u8, "Interlocked"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.MemoryMarshal"/>.
@@ -2303,13 +2313,6 @@ internal sealed class InteropReferences
     public MemberReference WindowsRuntimeComWrappersMarshallerAttribute_ctor => field ??= WindowsRuntimeComWrappersMarshallerAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="MapChangedEventHandler2EventSource"/>'s constructor.
-    /// </summary>
-    public MemberReference MapChangedEventHandler2EventSource_ctor => field ??= MapChangedEventHandler2EventSource.CreateConstructorReference(
-        corLibTypeFactory: _corLibTypeFactory,
-        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.GetOrCreateComInterfaceForObject(object)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttributeGetOrCreateComInterfaceForObject => field ??= WindowsRuntimeComWrappersMarshallerAttribute
@@ -3625,6 +3628,20 @@ internal sealed class InteropReferences
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
     }
 
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="MapChangedEventHandler2EventSource"/>'s constructor.
+    /// </summary>
+    /// <param name="keyType">The type of keys in the observable map.</param>
+    /// <param name="valueType">The type of values in the observable map.</param>
+    public MemberReference MapChangedEventHandler2EventSource_ctor(TypeSignature keyType, TypeSignature valueType)
+    {
+        return MapChangedEventHandler2EventSource
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
+    }
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given nullable value type.

@@ -27,4 +27,9 @@ internal static class WellKnownPublicKeyTokens
     /// The public key data for <c>System.Numerics.Vectors.dll</c>.
     /// </summary>
     public static readonly byte[] SystemNumericsVectors = [0xB0, 0x3F, 0x5F, 0x7F, 0x11, 0xD5, 0x0A, 0x3A];
+
+    /// <summary>
+    /// The public key data for <c>System.Threading.dll</c>.
+    /// </summary>
+    public static readonly byte[] SystemThreading = [0xB0, 0x3F, 0x5F, 0x7F, 0x11, 0xD5, 0x0A, 0x3A];
 }

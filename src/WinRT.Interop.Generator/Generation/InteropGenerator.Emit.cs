@@ -1517,7 +1517,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.Marshaller(
                     typeSignature: typeSignature,
-                    interfaceComWrappersCallbackType: comWrappersMarshallerType,
+                    interfaceComWrappersCallbackType: comWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1635,7 +1635,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.Marshaller(
                     typeSignature: typeSignature,
-                    interfaceComWrappersCallbackType: comWrappersMarshallerType,
+                    interfaceComWrappersCallbackType: comWrappersCallbackType,
                     get_IidMethod: get_IidMethod,
                     interopReferences: interopReferences,
                     emitState: emitState,

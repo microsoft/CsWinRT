@@ -743,7 +743,23 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException ReservedDllOriginalPathMismatchFromDebugRepro(string dllName)
     {
-        return Exception(87, $"The reserved '{dllName}' assembly has a mismatching path with the item supplied via '$(ReferencePath)': the debug repro canot be generated.");
+        return Exception(87, $"The reserved '{dllName}' assembly has a mismatching path with the item supplied via '$(ReferencePath)': the debug repro cannot be generated.");
+    }
+
+    /// <summary>
+    /// The debug repro contains a file entry that has no mapping.
+    /// </summary>
+    public static WellKnownInteropException DebugReproMissingFileEntryMapping(string path)
+    {
+        return Exception(88, $"The debug repro file entry with path '{path}' is missing its assembly path mapping.");
+    }
+
+    /// <summary>
+    /// The debug repro contains a file entry that was not recognized.
+    /// </summary>
+    public static WellKnownInteropException DebugReproUnrecognizedFileEntry(string path)
+    {
+        return Exception(89, $"The debug repro file entry with path '{path}' was not recognized.");
     }
 
     /// <summary>
