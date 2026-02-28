@@ -297,6 +297,26 @@ internal static class WindowsRuntimeExceptionExtensions
         {
             return new ArgumentOutOfRangeException(paramName);
         }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentOutOfRangeException"/> if the specified buffer <paramref name="length"/> exceeds <see cref="Array.MaxLength"/>.
+        /// </summary>
+        /// <param name="length">The buffer length to check.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="length"/> exceeds <see cref="Array.MaxLength"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfBufferLengthExceedsArrayMaxLength(uint length)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentOutOfRangeException()
+                => throw new ArgumentOutOfRangeException(null, WindowsRuntimeExceptionMessages.ArgumentOutOfRange_BufferLengthExceedsArrayMaxLength);
+
+            if (length > Array.MaxLength)
+            {
+                ThrowArgumentOutOfRangeException();
+            }
+        }
     }
 
     extension(KeyNotFoundException)
@@ -384,6 +404,201 @@ internal static class WindowsRuntimeExceptionExtensions
             {
                 ThrowArgumentException();
             }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if the array does not have enough elements after the specified <paramref name="offset"/>.
+        /// </summary>
+        /// <param name="totalLength">The total length of the array.</param>
+        /// <param name="offset">The offset into the array.</param>
+        /// <param name="required">The number of required elements after the offset.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="totalLength"/> minus <paramref name="offset"/> is less than <paramref name="required"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfInsufficientArrayElementsAfterOffset(int totalLength, int offset, int required)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InsufficientArrayElementsAfterOffset);
+
+            if (totalLength - offset < required)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if the buffer capacity is insufficient for the specified length.
+        /// </summary>
+        /// <param name="capacity">The buffer capacity.</param>
+        /// <param name="length">The required length.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="capacity"/> is less than <paramref name="length"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfInsufficientBufferCapacity(int capacity, int length)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InsufficientBufferCapacity);
+
+            if (capacity < length)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if the specified buffer <paramref name="index"/> exceeds the buffer <paramref name="capacity"/>.
+        /// </summary>
+        /// <param name="index">The buffer index to check.</param>
+        /// <param name="capacity">The buffer capacity.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="index"/> is greater than <paramref name="capacity"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfBufferIndexExceedsCapacity(uint index, uint capacity)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_BufferIndexExceedsCapacity);
+
+            if (index > capacity)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if the specified buffer <paramref name="index"/> exceeds the buffer <paramref name="length"/>.
+        /// </summary>
+        /// <param name="index">The buffer index to check.</param>
+        /// <param name="length">The buffer length.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="index"/> is greater than <paramref name="length"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfBufferIndexExceedsLength(uint index, uint length)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_BufferIndexExceedsLength);
+
+            if (index > length)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if the specified buffer <paramref name="offset"/> is not within the buffer <paramref name="length"/>.
+        /// </summary>
+        /// <param name="offset">The buffer offset to check.</param>
+        /// <param name="length">The buffer length.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="offset"/> is greater than or equal to <paramref name="length"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfBufferOffsetOutOfRange(uint offset, uint length)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_BufferOffsetExceedsLength);
+
+            if (offset >= length)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if there is insufficient space in the target buffer.
+        /// </summary>
+        /// <param name="capacity">The total capacity of the target buffer.</param>
+        /// <param name="index">The starting index in the target buffer.</param>
+        /// <param name="required">The number of elements to write.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="capacity"/> minus <paramref name="index"/> is less than <paramref name="required"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfInsufficientSpaceInTargetBuffer(uint capacity, uint index, uint required)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InsufficientSpaceInTargetBuffer);
+
+            if (capacity - index < required)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if there is insufficient space in the source buffer.
+        /// </summary>
+        /// <param name="length">The total length of the source buffer.</param>
+        /// <param name="index">The starting index in the source buffer.</param>
+        /// <param name="required">The number of elements to read.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="length"/> minus <paramref name="index"/> is less than <paramref name="required"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfInsufficientSpaceInSourceBuffer(uint length, uint index, uint required)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InsufficientSpaceInSourceBuffer);
+
+            if (length - index < required)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if the specified stream position is beyond the end of the stream.
+        /// </summary>
+        /// <param name="streamLength">The length of the stream.</param>
+        /// <param name="position">The position to check.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="streamLength"/> is less than <paramref name="position"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamPositionBeyondEndOfStream(long streamLength, int position)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_StreamPositionBeyondEndOfStream);
+
+            if (streamLength < position)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ArgumentException"/> indicating that the provided <c>IBuffer</c> instance is not valid.
+        /// </summary>
+        /// <returns>The resulting <see cref="ArgumentException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ArgumentException GetInvalidIBufferInstanceException()
+        {
+            return new(WindowsRuntimeExceptionMessages.Argument_InvalidIBufferInstance);
+        }
+    }
+
+    extension(UnauthorizedAccessException)
+    {
+        /// <summary>
+        /// Throws an <see cref="UnauthorizedAccessException"/> indicating that the internal buffer of a <see cref="System.IO.MemoryStream"/> cannot be accessed.
+        /// </summary>
+        /// <exception cref="UnauthorizedAccessException">Always thrown.</exception>
+        [DoesNotReturn]
+        [StackTraceHidden]
+        public static void ThrowInternalBufferAccess()
+        {
+            throw new UnauthorizedAccessException(WindowsRuntimeExceptionMessages.UnauthorizedAccess_InternalBuffer);
         }
     }
 

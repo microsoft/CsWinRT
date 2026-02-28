@@ -6,14 +6,15 @@
 namespace Windows.Storage.Streams
 {
     using global::System.Diagnostics;
+    using global::System.Diagnostics.CodeAnalysis;
     using global::System.Diagnostics.Contracts;
     using global::System.IO;
     using global::System.Runtime.InteropServices;
-    using global::System.Runtime.InteropServices.WindowsRuntime;
     using global::System.Threading.Tasks;
     using global::System.Threading;
     using Windows.Foundation;
-    using global::System.Diagnostics.CodeAnalysis;
+    using Windows.Storage.Buffers;
+
     /// <summary>
     /// A <code>Stream</code> used to wrap a Windows Runtime stream to expose it as a managed steam.
     /// </summary>

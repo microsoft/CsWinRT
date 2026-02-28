@@ -314,16 +314,6 @@ Where <spec> is one or more of:
                                     break;
                                 }
                             }
-
-                            // Attributes need to be written at the start, so handling this addition separately.
-                            if (ns == "Windows.Storage.Streams" && settings.addition_filter.includes(ns))
-                            {
-                                w.write(R"(
-[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
-    typeof(global::System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBuffer),
-    typeof(global::ABI.System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBuffer))]
-)");
-                            }
                         }
 
                         currentType = "";

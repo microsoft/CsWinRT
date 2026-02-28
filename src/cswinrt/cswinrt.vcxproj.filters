@@ -88,21 +88,6 @@
     <None Include="strings\additions\Windows.Storage.Streams\WinRtToNetFxStreamAdapter.cs">
       <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
-    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBuffer.cs">
-      <Filter>strings\additions\Windows.Storage.Streams</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferExtensions.cs">
-      <Filter>strings\additions\Windows.Storage.Streams</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Storage.Streams\IMarshal.cs">
-      <Filter>strings\additions\Windows.Storage.Streams</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Storage.Streams\IBufferByteAccess.cs">
-      <Filter>strings\additions\Windows.Storage.Streams</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Storage.Streams\IMemoryBufferByteAccess.cs">
-      <Filter>strings\additions\Windows.Storage.Streams</Filter>
-    </None>
     <None Include="strings\additions\Windows.Storage\HANDLE_ACCESS_OPTIONS.cs">
       <Filter>strings\additions\Windows.Storage</Filter>
     </None>

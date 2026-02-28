@@ -97,19 +97,49 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
     /// <summary>
     /// Gets the array of bytes in the buffer.
     /// </summary>
+    /// <returns>The byte array.</returns>
     /// <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"/>
-    internal unsafe byte* Buffer
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe byte* Buffer()
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => &((byte*)Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(_pinnedData)))[(uint)_offset];
+        return &((byte*)Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(_pinnedData)))[(uint)_offset];
+    }
+
+    /// <summary>
+    /// Gets the underlying array for this buffer.
+    /// </summary>
+    /// <param name="offset">The offset in the returned array.</param>
+    /// <returns>The underlying array.</returns>
+    public byte[] GetArray(out int offset)
+    {
+        offset = _offset;
+
+        return _pinnedData;
     }
 
     /// <summary>
     /// Gets an <see cref="ArraySegment{T}"/> value for the underlying data in this buffer.
     /// </summary>
     /// <returns>The resulting <see cref="ArraySegment{T}"/> value.</returns>
-    internal ArraySegment<byte> GetArraySegment()
+    public ArraySegment<byte> GetArraySegment()
     {
         return new(_pinnedData, _offset, _length);
+    }
+
+    /// <summary>
+    /// Gets a <see cref="Span{T}"/> value for the underlying data in this buffer.
+    /// </summary>
+    /// <returns>The resulting <see cref="Span{T}"/> value.</returns>
+    /// <remarks>
+    /// The returned <see cref="Span{T}"/> value has a length equal to <see cref="Capacity"/>, not <see cref="Length"/>.
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<byte> GetSpanForCapacity()
+    {
+        ref byte pinnedData = ref MemoryMarshal.GetArrayDataReference(_pinnedData);
+
+        // All parameters have been validated before constructing this object,
+        // so we can avoid the overhead of checking the offset and capacity.
+        return MemoryMarshal.CreateSpan(ref Unsafe.Add(ref pinnedData, _offset), _capacity);
     }
 }
