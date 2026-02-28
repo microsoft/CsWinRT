@@ -15,14 +15,13 @@ namespace WindowsRuntime.InteropServices;
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IObservableMapMethodsImpl<TKey, TValue>
+public interface IObservableMapEventSourceFactory<TKey, TValue>
 {
     /// <summary>
-    /// Returns the <see cref="EventSource{T}"/> instance associated with <see cref="Windows.Foundation.Collections.IObservableMap{K, V}.MapChanged"/>.
+    /// Creates a new <see cref="EventSource{T}"/> instance to be used with <see cref="Windows.Foundation.Collections.IObservableMap{K, V}.MapChanged"/>.
     /// </summary>
-    /// <param name="thisObject">The <see cref="WindowsRuntimeObject"/> instance to use.</param>
     /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance to use to invoke the native method.</param>
-    /// <returns>The <see cref="EventSource{T}"/> instance associated with <see cref="Windows.Foundation.Collections.IObservableMap{K, V}.MapChanged"/>.</returns>
+    /// <returns>The <see cref="EventSource{T}"/> instance to be used with <see cref="Windows.Foundation.Collections.IObservableMap{K, V}.MapChanged"/>.</returns>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablemap-2.mapchanged"/>
-    static abstract ABI.Windows.Foundation.Collections.MapChangedEventHandlerEventSource<TKey, TValue> MapChanged(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference);
+    static abstract ABI.Windows.Foundation.Collections.MapChangedEventHandlerEventSource<TKey, TValue> MapChanged(WindowsRuntimeObjectReference thisReference);
 }

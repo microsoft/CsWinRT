@@ -21,8 +21,8 @@ namespace ABI.Windows.Foundation.Collections;
 public abstract unsafe class MapChangedEventHandlerEventSource<K, V> : EventSource<MapChangedEventHandler<K, V>>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>
-    protected MapChangedEventHandlerEventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)
-        : base(nativeObjectReference, index)
+    protected MapChangedEventHandlerEventSource(WindowsRuntimeObjectReference nativeObjectReference)
+        : base(nativeObjectReference, index: 6)
     {
     }
 
