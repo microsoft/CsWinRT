@@ -22,7 +22,7 @@ namespace WindowsRuntime;
 /// <typeparam name="TIIterableMethods">The <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> implementation type.</typeparam>
 /// <typeparam name="TIVector">The <c>Windows.Foundation.Collections.IVector&lt;T&gt;</c> interface type.</typeparam>
 /// <typeparam name="TIVectorMethods">The <c>Windows.Foundation.Collections.IVector&lt;T&gt;</c> implementation type.</typeparam>
-/// <typeparam name="TIObservableVectorMethods">The <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> implementation type.</typeparam>
+/// <typeparam name="TIObservableVectorEventSourceFactory">The <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> factory type for event source objects.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablevector-1"/>
 [WindowsRuntimeManagedOnlyType]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
@@ -35,7 +35,7 @@ public abstract class WindowsRuntimeObservableVector<
     TIIterableMethods,
     TIVector,
     TIVectorMethods,
-    TIObservableVectorMethods> : WindowsRuntimeObject,
+    TIObservableVectorEventSourceFactory> : WindowsRuntimeObject,
     IObservableVector<T>,
     IList<T>,
     IReadOnlyList<T>,
@@ -46,7 +46,7 @@ public abstract class WindowsRuntimeObservableVector<
     where TIIterableMethods : IIterableMethodsImpl<T>
     where TIVector : IWindowsRuntimeInterface
     where TIVectorMethods : IVectorMethodsImpl<T>
-    where TIObservableVectorMethods : IObservableVectorMethodsImpl<T>
+    where TIObservableVectorEventSourceFactory : IObservableVectorEventSourceFactory<T>
 {
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeObservableVector{T, TIIterable, TIIterableMethods, TIVector, TIVectorMethods, TIObservableVectorMethods}"/> instance with the specified parameters.
@@ -100,11 +100,33 @@ public abstract class WindowsRuntimeObservableVector<
         }
     }
 
+    /// <summary>
+    /// Gets the lazy-loaded <see cref="ABI.Windows.Foundation.Collections.VectorChangedEventHandlerEventSource{T}"/> instance for the current object.
+    /// </summary>
+    private ABI.Windows.Foundation.Collections.VectorChangedEventHandlerEventSource<T> VectorChangedEventSource
+    {
+        get
+        {
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            ABI.Windows.Foundation.Collections.VectorChangedEventHandlerEventSource<T> InitializeVectorChangedEventSource()
+            {
+                _ = Interlocked.CompareExchange(
+                    location1: ref field,
+                    value: TIObservableVectorEventSourceFactory.VectorChanged(NativeObjectReference),
+                    comparand: null);
+
+                return field;
+            }
+
+            return field ?? InitializeVectorChangedEventSource();
+        }
+    }
+
     /// <inheritdoc/>
     public event VectorChangedEventHandler<T>? VectorChanged
     {
-        add => TIObservableVectorMethods.VectorChanged(this, NativeObjectReference).Subscribe(value);
-        remove => TIObservableVectorMethods.VectorChanged(this, NativeObjectReference).Unsubscribe(value);
+        add => VectorChangedEventSource.Subscribe(value);
+        remove => VectorChangedEventSource.Unsubscribe(value);
     }
 
     /// <inheritdoc/>
