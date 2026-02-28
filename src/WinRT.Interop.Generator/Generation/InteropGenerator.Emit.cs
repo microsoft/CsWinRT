@@ -1476,16 +1476,16 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
 
-                InteropTypeDefinitionBuilder.IObservableVector1.EventSourceFactory(
+                InteropTypeDefinitionBuilder.IObservableVector1.EventSourceCallback(
                     vectorType: typeSignature,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
-                    factoryType: out TypeDefinition factoryType);
+                    callbackType: out TypeDefinition callbackType);
 
                 InteropTypeDefinitionBuilder.IObservableVector1.Methods(
                     vectorType: typeSignature,
-                    eventSourceFactoryType: factoryType,
+                    eventSourceCallbackType: callbackType,
                     interopReferences: interopReferences,
                     module: module,
                     methodsType: out TypeDefinition methodsType);
@@ -1594,12 +1594,12 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
 
-                InteropTypeDefinitionBuilder.IObservableMap2.EventSourceFactory(
+                InteropTypeDefinitionBuilder.IObservableMap2.EventSourceCallback(
                     mapType: typeSignature,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
-                    factoryType: out TypeDefinition factoryType);
+                    callbackType: out TypeDefinition factoryType);
 
                 InteropTypeDefinitionBuilder.IObservableMap2.Methods(
                     mapType: typeSignature,
