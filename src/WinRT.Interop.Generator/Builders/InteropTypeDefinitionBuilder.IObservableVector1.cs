@@ -22,7 +22,66 @@ internal partial class InteropTypeDefinitionBuilder
     public static class IObservableVector1
     {
         /// <summary>
-        /// Creates the cached callback type for the property for the event args for the vector.
+        /// Creates a new type definition for the event source factory for an <c>IObservableVector&lt;T&gt;</c> interface.
+        /// </summary>
+        /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="factoryType">The resulting factory type.</param>
+        public static void EventSourceFactory(
+            GenericInstanceTypeSignature vectorType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition factoryType)
+        {
+            TypeSignature elementType = vectorType.TypeArguments[0];
+
+            // We're declaring an 'internal abstract class' type
+            factoryType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
+                name: InteropUtf8NameFactory.TypeName(vectorType, "EventSourceFactory"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: interopReferences.Object.ToTypeDefOrRef())
+            {
+                Interfaces = { new InterfaceImplementation(interopReferences.IObservableVectorEventSourceFactory1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
+            };
+
+            module.TopLevelTypes.Add(factoryType);
+
+            // The key for the lookup below is the associated handler type (which we need to construct), not the interface type
+            TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
+
+            // Get the constructor for the generic event source type
+            MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
+                comparer: SignatureComparer.IgnoreVersion,
+                parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()])!;
+
+            // Create the 'VectorChanged' method
+            MethodDefinition vectorChangedMethod = new(
+                name: "VectorChanged"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType),
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_1 },
+                    { Newobj, eventSourceConstructor },
+                    { Ret }
+                }
+            };
+
+            // Add and implement the 'IObservableVectorEventSourceFactory<T>.VectorChanged' method
+            factoryType.AddMethodImplementation(
+                declaration: interopReferences.IObservableVectorEventSourceFactory1VectorChanged(elementType),
+                method: vectorChangedMethod);
+        }
+
+        /// <summary>
+        /// Creates the cached callback type for an <c>IObservableVector&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
@@ -62,10 +121,10 @@ internal partial class InteropTypeDefinitionBuilder
             // Add the parameterless constructor
             callbackType.Methods.Add(MethodDefinition.CreateDefaultConstructor(interopReferences.CorLibTypeFactory));
 
-            // The key for the lookup below is the associated handler type (which we need to construct), not the interface type
+            // Get the handler type to use as key (same as above)
             TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
 
-            // Get the constructor for the generic event source type
+            // Get the constructor for the generic event source type (same as above)
             MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
                 comparer: SignatureComparer.IgnoreVersion,
                 parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()])!;
@@ -127,15 +186,12 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature elementType = vectorType.TypeArguments[0];
 
-            // We're declaring an 'internal abstract class' type
+            // We're declaring an 'internal static class' type
             methodsType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
                 name: InteropUtf8NameFactory.TypeName(vectorType, "Methods"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.Object.ToTypeDefOrRef())
-            {
-                Interfaces = { new InterfaceImplementation(interopReferences.IObservableVectorMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
-            };
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(methodsType);
 
@@ -189,24 +245,21 @@ internal partial class InteropTypeDefinitionBuilder
                 }
             };
 
-            // Add and implement the 'IObservableVectorMethodsImpl<T>.VectorChanged' method
-            methodsType.AddMethodImplementation(
-                declaration: interopReferences.IObservableVectorMethodsImpl1VectorChanged(elementType),
-                method: vectorChangedMethod);
+            methodsType.Methods.Add(vectorChangedMethod);
         }
 
         /// <summary>
         /// Creates a new type definition for the native object for an <c>IObservableVector&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="vectorType">The <see cref="GenericInstanceTypeSignature"/> for the vector type.</param>
-        /// <param name="vectorMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="factoryType">The <see cref="TypeDefinition"/> instance returned by <see cref="EventSourceFactory"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="nativeObjectType">The resulting native object type.</param>
         public static void NativeObject(
             GenericInstanceTypeSignature vectorType,
-            TypeDefinition vectorMethodsType,
+            TypeDefinition factoryType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -225,7 +278,7 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(listType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(listType, "IVectorMethods").ToReferenceTypeSignature(),
-                vectorMethodsType.ToReferenceTypeSignature());
+                factoryType.ToReferenceTypeSignature());
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: vectorType,

@@ -1476,6 +1476,13 @@ internal partial class InteropGenerator
                     module: module,
                     implType: out _);
 
+                InteropTypeDefinitionBuilder.IObservableVector1.EventSourceFactory(
+                    vectorType: typeSignature,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    factoryType: out TypeDefinition factoryType);
+
                 InteropTypeDefinitionBuilder.IObservableVector1.EventSourceCallback(
                     vectorType: typeSignature,
                     interopReferences: interopReferences,
@@ -1492,7 +1499,7 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.IObservableVector1.NativeObject(
                     vectorType: typeSignature,
-                    vectorMethodsType: methodsType,
+                    factoryType: factoryType,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
