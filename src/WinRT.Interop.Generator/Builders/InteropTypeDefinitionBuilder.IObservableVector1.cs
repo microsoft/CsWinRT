@@ -68,7 +68,7 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 CilInstructions =
                 {
-                    { Ldarg_1 },
+                    { Ldarg_0 },
                     { Newobj, eventSourceConstructor },
                     { Ret }
                 }
