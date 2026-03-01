@@ -22,6 +22,66 @@ internal partial class InteropTypeDefinitionBuilder
     public static class IObservableMap2
     {
         /// <summary>
+        /// Creates a new type definition for the event source factory for an <c>IObservableMap&lt;K, V&gt;</c> interface.
+        /// </summary>
+        /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The interop module being built.</param>
+        /// <param name="factoryType">The resulting factory type.</param>
+        public static void EventSourceFactory(
+            GenericInstanceTypeSignature mapType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition factoryType)
+        {
+            TypeSignature keyType = mapType.TypeArguments[0];
+            TypeSignature valueType = mapType.TypeArguments[1];
+
+            // We're declaring an 'internal abstract class' type
+            factoryType = new(
+                ns: InteropUtf8NameFactory.TypeNamespace(mapType),
+                name: InteropUtf8NameFactory.TypeName(mapType, "EventSourceFactory"),
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: interopReferences.Object.ToTypeDefOrRef())
+            {
+                Interfaces = { new InterfaceImplementation(interopReferences.IObservableMapEventSourceFactory2.MakeGenericReferenceType(keyType, valueType).ToTypeDefOrRef()) }
+            };
+
+            module.TopLevelTypes.Add(factoryType);
+
+            // The key for the lookup below is the associated handler type (which we need to construct), not the interface type
+            TypeSignature handlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType(keyType, valueType);
+
+            // Get the constructor for the generic event source type
+            MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
+                comparer: SignatureComparer.IgnoreVersion,
+                parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()])!;
+
+            // Create the 'MapChanged' method
+            MethodDefinition mapChangedMethod = new(
+                name: "MapChanged"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType(keyType, valueType),
+                    parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Newobj, eventSourceConstructor },
+                    { Ret }
+                }
+            };
+
+            // Add and implement the 'IObservableMapEventSourceFactory<K, V>.MapChanged' method
+            factoryType.AddMethodImplementation(
+                declaration: interopReferences.IObservableMapEventSourceFactory2MapChanged(keyType, valueType),
+                method: mapChangedMethod);
+        }
+
+        /// <summary>
         /// Creates the cached callback type for the property for the event args for the map.
         /// </summary>
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
@@ -63,13 +123,13 @@ internal partial class InteropTypeDefinitionBuilder
             // Add the parameterless constructor
             callbackType.Methods.Add(MethodDefinition.CreateDefaultConstructor(interopReferences.CorLibTypeFactory));
 
-            // The key for the lookup below is the associated handler type (which we need to construct), not the interface type
+            // Get the handler type to use as key (same as above)
             TypeSignature handlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType(keyType, valueType);
 
-            // Get the constructor for the generic event source type
+            // Get the constructor for the generic event source type (same as above)
             MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
                 comparer: SignatureComparer.IgnoreVersion,
-                parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(), interopReferences.CorLibTypeFactory.Int32])!;
+                parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()])!;
 
             // Define the 'Create' method as follows:
             //
@@ -86,7 +146,6 @@ internal partial class InteropTypeDefinitionBuilder
                 CilInstructions =
                 {
                     { Ldarg_2 },
-                    { Ldc_I4_6 },
                     { Newobj, eventSourceConstructor },
                     { Ret }
                 }
@@ -116,13 +175,13 @@ internal partial class InteropTypeDefinitionBuilder
         /// Creates a new type definition for the methods for an <c>IObservableMap&lt;K, V&gt;</c> interface.
         /// </summary>
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
-        /// <param name="eventSourceFactoryType">The type returned by <see cref="EventSourceCallback"/>.</param>
+        /// <param name="eventSourceCallbackType">The type returned by <see cref="EventSourceCallback"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="methodsType">The resulting methods type.</param>
         public static void Methods(
             GenericInstanceTypeSignature mapType,
-            TypeDefinition eventSourceFactoryType,
+            TypeDefinition eventSourceCallbackType,
             InteropReferences interopReferences,
             ModuleDefinition module,
             out TypeDefinition methodsType)
@@ -130,15 +189,12 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature keyType = mapType.TypeArguments[0];
             TypeSignature valueType = mapType.TypeArguments[1];
 
-            // We're declaring an 'internal abstract class' type
+            // We're declaring an 'internal static class' type
             methodsType = new(
                 ns: InteropUtf8NameFactory.TypeNamespace(mapType),
                 name: InteropUtf8NameFactory.TypeName(mapType, "Methods"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.Object.ToTypeDefOrRef())
-            {
-                Interfaces = { new InterfaceImplementation(interopReferences.IObservableMapMethodsImpl2.MakeGenericReferenceType(keyType, valueType).ToTypeDefOrRef()) }
-            };
+                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+                baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(methodsType);
 
@@ -185,31 +241,28 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     { Call, get_MapChangedTableMethod },
                     { Ldarg_0 },
-                    { Ldsfld, eventSourceFactoryType.GetField("Value"u8) },
+                    { Ldsfld, eventSourceCallbackType.GetField("Value"u8) },
                     { Ldarg_1 },
                     { Callvirt, conditionalWeakTableGetOrAddMethod },
                     { Ret }
                 }
             };
 
-            // Add and implement the 'IObservableMapMethodsImpl<TKey, TValue>.MapChanged' method
-            methodsType.AddMethodImplementation(
-                declaration: interopReferences.IObservableMapMethodsImpl2MapChanged(keyType, valueType),
-                method: mapChangedMethod);
+            methodsType.Methods.Add(mapChangedMethod);
         }
 
         /// <summary>
         /// Creates a new type definition for the native object for an <c>IObservableMap&lt;K, V&gt;</c> interface.
         /// </summary>
         /// <param name="mapType">The <see cref="GenericInstanceTypeSignature"/> for the map type.</param>
-        /// <param name="mapMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
+        /// <param name="factoryType">The <see cref="TypeDefinition"/> instance returned by <see cref="EventSourceFactory"/>.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The interop module being built.</param>
         /// <param name="nativeObjectType">The resulting native object type.</param>
         public static void NativeObject(
             GenericInstanceTypeSignature mapType,
-            TypeDefinition mapMethodsType,
+            TypeDefinition factoryType,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
@@ -231,7 +284,7 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(dictionaryType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(dictionaryType, "IMapMethods").ToReferenceTypeSignature(),
-                mapMethodsType.ToReferenceTypeSignature());
+                factoryType.ToReferenceTypeSignature());
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: mapType,
