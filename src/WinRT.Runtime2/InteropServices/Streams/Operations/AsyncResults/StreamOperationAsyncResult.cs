@@ -1,7 +1,7 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
+#pragma warning disable IDE0032
 
 namespace System.IO
 {
@@ -15,168 +15,148 @@ namespace System.IO
     using global::Windows.Storage.Streams;
     using System.Diagnostics.CodeAnalysis;
     using WindowsRuntime.InteropServices;
-    #region class StreamOperationAsyncResult
 
     internal abstract class StreamOperationAsyncResult : IAsyncResult
     {
-        private readonly AsyncCallback _userCompletionCallback = null;
-        private readonly object _userAsyncStateInfo = null;
+        private readonly AsyncCallback? _userCompletionCallback;
+        private readonly object? _userAsyncStateInfo;
+        private readonly bool _processCompletedOperationInCallback;
 
-        private IAsyncInfo _asyncStreamOperation = null;
+        private IAsyncInfo? _asyncStreamOperation;
 
-        private volatile bool _completed = false;
-        private volatile bool _callbackInvoked = false;
-        private volatile ManualResetEvent _waitHandle = null;
+        private volatile bool _completed;
+        private volatile bool _callbackInvoked;
+        private volatile ManualResetEvent? _waitHandle;
 
         private long _bytesCompleted = 0;
 
-        private ExceptionDispatchInfo _errorInfo = null;
+        private ExceptionDispatchInfo? _errorInfo;
+        private IAsyncInfo? _completedOperation;
 
-        private readonly bool _processCompletedOperationInCallback;
-        private IAsyncInfo _completedOperation = null;
-
-
-        protected internal StreamOperationAsyncResult(IAsyncInfo asyncStreamOperation,
-                                                      AsyncCallback userCompletionCallback, object userAsyncStateInfo,
-                                                      bool processCompletedOperationInCallback)
+        protected StreamOperationAsyncResult(
+            IAsyncInfo asyncStreamOperation,
+            AsyncCallback? userCompletionCallback,
+            object? userAsyncStateInfo,
+            bool processCompletedOperationInCallback)
         {
-            if (asyncStreamOperation == null)
-                throw new ArgumentNullException(nameof(asyncStreamOperation));
-
             _userCompletionCallback = userCompletionCallback;
             _userAsyncStateInfo = userAsyncStateInfo;
-
-            _asyncStreamOperation = asyncStreamOperation;
-
-            _completed = false;
-            _callbackInvoked = false;
-
-            _bytesCompleted = 0;
-
-            _errorInfo = null;
-
             _processCompletedOperationInCallback = processCompletedOperationInCallback;
+            _asyncStreamOperation = asyncStreamOperation;
         }
 
-
-        public object AsyncState
+        /// <summary>
+        /// Finalizes the current operation object.
+        /// </summary>
+        ~StreamOperationAsyncResult()
         {
-            get { return _userAsyncStateInfo; }
+            // This finalisation is not critical (we're not directly responsible for any unmanaged resources),
+            // but we can still make an effort to notify the underlying Windows Runtime stream object that we
+            // are not any longer interested in the results of the operation.
+            _ = CancelStreamOperation();
         }
 
+        /// <inheritdoc/>
+        public object? AsyncState => _userAsyncStateInfo;
 
-        internal bool ProcessCompletedOperationInCallback
-        {
-            get { return _processCompletedOperationInCallback; }
-        }
-
-
+        /// <inheritdoc/>
         public WaitHandle AsyncWaitHandle
         {
             get
             {
-                ManualResetEvent wh = _waitHandle;
-                if (wh != null)
-                    return wh;
+                ManualResetEvent? waitHandle = _waitHandle;
 
-                // What if someone calls this public property and decides to wait on it?
-                // > Use 'completed' in the ctor - this way the handle wait will return as appropriate.
-                wh = new ManualResetEvent(_completed);
-
-                ManualResetEvent otherHandle = Interlocked.CompareExchange(ref _waitHandle, wh, null);
-
-                // We lost the race. Dispose OUR handle and return OTHER handle:
-                if (otherHandle != null)
+                // Just return the existing handle if we have already created one
+                if (waitHandle is not null)
                 {
-                    wh.Dispose();
+                    return waitHandle;
+                }
+
+                // Create a new wait handle passing the flag indicating whether the current operation
+                // has completed. This ensures things will work fine if someone will retrieve this
+                // wait handle through the public property and then wait on it. That is, if the task
+                // is already completed, the wait handle will also already be in the signaled state.
+                waitHandle = new ManualResetEvent(_completed);
+
+                // Try to atomically set the new wait handle
+                ManualResetEvent? otherHandle = Interlocked.CompareExchange(ref _waitHandle, waitHandle, null);
+
+                // If the original value was not 'null', it means we raced against another thread
+                // and lost. In that case, we can just dispose this handle and return the other one.
+                if (otherHandle is not null)
+                {
+                    waitHandle.Dispose();
+
                     return otherHandle;
                 }
 
-                // We won the race. Return OUR new handle:
-                return wh;
+                // If we got here, we won the race, so we can directly return our local wait handle
+                return waitHandle;
             }
         }
 
-        public bool CompletedSynchronously
-        {
-            get { return false; }
-        }
+        /// <inheritdoc/>
+        public bool CompletedSynchronously => false;
 
+        /// <inheritdoc/>
+        public bool IsCompleted => _completed;
 
-        public bool IsCompleted
-        {
-            get { return _completed; }
-        }
+        /// <inheritdoc/>
+        public bool ProcessCompletedOperationInCallback => _processCompletedOperationInCallback;
 
+        public long BytesCompleted => _bytesCompleted;
 
-        internal void Wait()
+        [MemberNotNullWhen(true, nameof(_errorInfo))]
+        public bool HasError => _errorInfo != null;
+
+        public void Wait()
         {
             if (_completed)
+            {
                 return;
+            }
 
             WaitHandle wh = AsyncWaitHandle;
 
-            while (_completed == false)
-                wh.WaitOne();
+            // Keep waiting on the handle until the current task reaches the completed state
+            while (!_completed)
+            {
+                _ = wh.WaitOne();
+            }
         }
 
-
-        internal long BytesCompleted
+        public void ThrowCachedError()
         {
-            get { return _bytesCompleted; }
+            _errorInfo?.Throw();
         }
 
-
-        internal bool HasError
+        public void CloseStreamOperation()
         {
-            get { return _errorInfo != null; }
+            try
+            {
+                _asyncStreamOperation?.Close();
+            }
+            catch
+            {
+            }
+
+            _asyncStreamOperation = null;
         }
 
-
-        internal void ThrowCachedError()
-        {
-            if (_errorInfo == null)
-                return;
-
-            _errorInfo.Throw();
-        }
-
-
-        internal bool CancelStreamOperation()
+        private bool CancelStreamOperation()
         {
             if (_callbackInvoked)
-                return false;
-
-            if (_asyncStreamOperation != null)
             {
-                _asyncStreamOperation.Cancel();
-                _asyncStreamOperation = null;
+                return false;
             }
+
+            _asyncStreamOperation?.Cancel();
+            _asyncStreamOperation = null;
 
             return true;
         }
 
-        internal void CloseStreamOperation()
-        {
-            try
-            {
-                if (_asyncStreamOperation != null)
-                    _asyncStreamOperation.Close();
-            }
-            catch { }
-            _asyncStreamOperation = null;
-        }
-
-
-        ~StreamOperationAsyncResult()
-        {
-            // This finalisation is not critical, but we can still make an effort to notify the underlying WinRT stream
-            // that we are not any longer interested in the results:
-            CancelStreamOperation();
-        }
-
-
-        internal abstract void ProcessConcreteCompletedOperation(IAsyncInfo completedOperation, out long bytesCompleted);
+        protected abstract void ProcessCompletedOperation(IAsyncInfo completedOperation, out long numberOfBytesProcessed);
 
         private static void ProcessCompletedOperation_InvalidOperationThrowHelper(ExceptionDispatchInfo errInfo, string errMsg)
         {
@@ -233,9 +213,8 @@ namespace System.IO
                 ThrowWithIOExceptionDispatchInfo(_completedOperation.ErrorCode);
             }
 
-            ProcessConcreteCompletedOperation(_completedOperation, out _bytesCompleted);
+            ProcessCompletedOperation(_completedOperation, out _bytesCompleted);
         }
-
 
         internal void StreamOperationCompletedCallback(IAsyncInfo completedOperation, AsyncStatus unusedCompletionStatus)
         {
@@ -287,105 +266,97 @@ namespace System.IO
         {
             WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(RestrictedErrorInfo.AttachErrorInfo(_completedOperation.ErrorCode)).Throw();
         }
-    }  // class StreamOperationAsyncResult
-
-    #endregion class StreamOperationAsyncResult
-
-
-    #region class StreamReadAsyncResult
+    }
 
     internal sealed class StreamReadAsyncResult : StreamOperationAsyncResult
     {
+        /// <summary>
+        /// The user-provided <see cref="IBuffer"/> instance to use for the read operation.
+        /// </summary>
         private readonly IBuffer _userBuffer;
 
-        internal StreamReadAsyncResult(IAsyncOperationWithProgress<IBuffer, uint> asyncStreamReadOperation, IBuffer buffer,
-                                       AsyncCallback userCompletionCallback, object userAsyncStateInfo,
-                                       bool processCompletedOperationInCallback)
-
+        public StreamReadAsyncResult(
+            IAsyncOperationWithProgress<IBuffer, uint> asyncStreamReadOperation,
+            IBuffer buffer,
+            AsyncCallback userCompletionCallback,
+            object userAsyncStateInfo,
+            bool processCompletedOperationInCallback)
             : base(asyncStreamReadOperation, userCompletionCallback, userAsyncStateInfo, processCompletedOperationInCallback)
         {
-            if (buffer == null)
-                throw new ArgumentNullException(nameof(buffer));
+            Debug.Assert(asyncStreamReadOperation is not null);
 
             _userBuffer = buffer;
-            asyncStreamReadOperation.Completed = this.StreamOperationCompletedCallback;
+
+            asyncStreamReadOperation.Completed = StreamOperationCompletedCallback;
         }
 
-
-        internal override void ProcessConcreteCompletedOperation(IAsyncInfo completedOperation, out long bytesCompleted)
+        /// <inheritdoc/>
+        protected override void ProcessCompletedOperation(IAsyncInfo completedOperation, out long numberOfBytesProcessed)
         {
-            ProcessConcreteCompletedOperation((IAsyncOperationWithProgress<IBuffer, uint>)completedOperation, out bytesCompleted);
+            // Helper taking an exact 'IAsyncOperationWithProgress<IBuffer, uint>' instance
+            void ProcessCompletedOperation(IAsyncOperationWithProgress<IBuffer, uint> completedOperation, out long bytesCompleted)
+            {
+                IBuffer resultBuffer = completedOperation.GetResults();
+
+                Debug.Assert(resultBuffer is not null);
+
+                WindowsRuntimeIOHelpers.EnsureResultsInUserBuffer(_userBuffer, resultBuffer);
+
+                bytesCompleted = _userBuffer.Length;
+            }
+
+            ProcessCompletedOperation((IAsyncOperationWithProgress<IBuffer, uint>)completedOperation, out numberOfBytesProcessed);
         }
-
-
-        private void ProcessConcreteCompletedOperation(IAsyncOperationWithProgress<IBuffer, uint> completedOperation, out long bytesCompleted)
-        {
-            IBuffer resultBuffer = completedOperation.GetResults();
-            Debug.Assert(resultBuffer != null);
-
-            WindowsRuntimeIOHelpers.EnsureResultsInUserBuffer(_userBuffer!, resultBuffer);
-            bytesCompleted = _userBuffer!.Length;
-        }
-    }  // class StreamReadAsyncResult
-
-    #endregion class StreamReadAsyncResult
-
-
-    #region class StreamWriteAsyncResult
+    }
 
     internal sealed class StreamWriteAsyncResult : StreamOperationAsyncResult
     {
-        internal StreamWriteAsyncResult(IAsyncOperationWithProgress<uint, uint> asyncStreamWriteOperation,
-                                        AsyncCallback userCompletionCallback, object userAsyncStateInfo,
-                                        bool processCompletedOperationInCallback)
-
+        internal StreamWriteAsyncResult(
+            IAsyncOperationWithProgress<uint, uint> asyncStreamWriteOperation,
+            AsyncCallback userCompletionCallback,
+            object userAsyncStateInfo,
+            bool processCompletedOperationInCallback)
             : base(asyncStreamWriteOperation, userCompletionCallback, userAsyncStateInfo, processCompletedOperationInCallback)
         {
-            asyncStreamWriteOperation.Completed = this.StreamOperationCompletedCallback;
+            asyncStreamWriteOperation.Completed = StreamOperationCompletedCallback;
         }
 
-
-        internal override void ProcessConcreteCompletedOperation(IAsyncInfo completedOperation, out long bytesCompleted)
+        /// <inheritdoc/>
+        protected override void ProcessCompletedOperation(IAsyncInfo completedOperation, out long numberOfBytesProcessed)
         {
-            ProcessConcreteCompletedOperation((IAsyncOperationWithProgress<uint, uint>)completedOperation, out bytesCompleted);
+            // Helper taking an exact 'IAsyncOperationWithProgress<uint, uint>' instance
+            static void ProcessCompletedOperation(IAsyncOperationWithProgress<uint, uint> completedOperation, out long numberOfBytesProcessed)
+            {
+                uint numberOfBytesWritten = completedOperation.GetResults();
+
+                numberOfBytesProcessed = numberOfBytesWritten;
+            }
+
+            ProcessCompletedOperation((IAsyncOperationWithProgress<uint, uint>)completedOperation, out numberOfBytesProcessed);
         }
-
-
-        private void ProcessConcreteCompletedOperation(IAsyncOperationWithProgress<uint, uint> completedOperation, out long bytesCompleted)
-        {
-            uint bytesWritten = completedOperation.GetResults();
-            bytesCompleted = bytesWritten;
-        }
-    }  // class StreamWriteAsyncResult
-
-    #endregion class StreamWriteAsyncResult
-
-
-    #region class StreamFlushAsyncResult
+    }
 
     internal sealed class StreamFlushAsyncResult : StreamOperationAsyncResult
     {
         internal StreamFlushAsyncResult(IAsyncOperation<bool> asyncStreamFlushOperation, bool processCompletedOperationInCallback)
-
             : base(asyncStreamFlushOperation, null, null, processCompletedOperationInCallback)
         {
-            asyncStreamFlushOperation.Completed = this.StreamOperationCompletedCallback;
+            asyncStreamFlushOperation.Completed = StreamOperationCompletedCallback;
         }
 
-
-        internal override void ProcessConcreteCompletedOperation(IAsyncInfo completedOperation, out long bytesCompleted)
+        /// <inheritdoc/>
+        protected override void ProcessCompletedOperation(IAsyncInfo completedOperation, out long numberOfBytesProcessed)
         {
-            ProcessConcreteCompletedOperation((IAsyncOperation<bool>)completedOperation, out bytesCompleted);
+            // Helper taking an exact 'IAsyncOperation<bool>' instance
+            static void ProcessCompletedOperation(IAsyncOperation<bool> completedOperation, out long numberOfBytesProcessed)
+            {
+                bool success = completedOperation.GetResults();
+
+                // We return '0' or '-1' as placeholders to forward the 'bool' result from the flush operation
+                numberOfBytesProcessed = success ? 0 : -1;
+            }
+
+            ProcessCompletedOperation((IAsyncOperation<bool>)completedOperation, out numberOfBytesProcessed);
         }
-
-
-        private void ProcessConcreteCompletedOperation(IAsyncOperation<bool> completedOperation, out long bytesCompleted)
-        {
-            bool success = completedOperation.GetResults();
-            bytesCompleted = (success ? 0 : -1);
-        }
-    }  // class StreamFlushAsyncResult
-    #endregion class StreamFlushAsyncResult
-}  // namespace
-
-// StreamOperationAsyncResult.cs
+    }
+}
