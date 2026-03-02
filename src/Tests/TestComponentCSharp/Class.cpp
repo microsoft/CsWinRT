@@ -860,6 +860,20 @@ namespace winrt::TestComponentCSharp::implementation
         uriHandler.AddUriHandler(handler);
     }
 
+    void Class::InvokeHandlers(TestComponentCSharp::IChangedHandlers handlers)
+    {
+        EventHandler<bool> boolHandler = [](auto&&...) {};
+        ProvideInt intHandler = [] { return 42; };
+        TypedEventHandler<TestComponentCSharp::IChangedHandlers, hstring> stringHandler = [](IChangedHandlers instance, hstring str) { };
+        EventHandler<IBoolChanged> iBoolInterfaceHandler = [](IInspectable instance, IBoolChanged boolChanged) {};
+
+        handlers.BoolChanged(boolHandler);
+        handlers.IntChanged(intHandler);
+        handlers.StringChanged(stringHandler);
+        handlers.UriChanged([] { return Windows::Foundation::Uri(L"http://microsoft.com"); });
+        handlers.IBoolInterfaceChanged(iBoolInterfaceHandler);
+    }
+
     BlittableStruct Class::BlittableStructProperty()
     {
         return _blittableStruct.blittable;

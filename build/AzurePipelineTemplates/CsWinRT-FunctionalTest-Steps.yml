@@ -12,6 +12,7 @@ parameters:
     - DerivedClassActivation
     - DerivedClassAsBaseClass
     - CCW
+    - TypeMarshaling
 
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:

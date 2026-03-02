@@ -46,21 +46,6 @@ stages:
         BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: $(BuildPlatform) 
 
-# Run Functional Tests
-    - template: CsWinRT-FunctionalTest-Steps.yml@self
-      parameters:
-        FunctionalTests:
-        - JsonValueFunctionCalls
-        - ClassActivation
-        - Structs
-        - Events
-        - DynamicInterfaceCasting
-        - Async
-        - DerivedClassActivation
-        - DerivedClassAsBaseClass
-        - CCW
-        - TypeMarshaling
-
     - template: CsWinRT-Test-Steps.yml@self
 
     templateContext:

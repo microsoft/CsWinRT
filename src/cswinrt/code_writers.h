@@ -7902,7 +7902,7 @@ return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
                 if (generic_event_type)
                 {
                     w.write(R"(
-[UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
 static extern % ConvertToManaged([UnsafeAccessorType("%, WinRT.Interop")] object _, void* value);
 
 var __handler = ConvertToManaged(null, %);
