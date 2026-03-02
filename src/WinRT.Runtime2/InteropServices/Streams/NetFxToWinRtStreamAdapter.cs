@@ -259,11 +259,11 @@ namespace System.IO
             switch (_readOptimization)
             {
                 case StreamReadOperationOptimization.MemoryStream:
-                    readAsyncOperation = StreamOperationsImplementation.ReadAsync_MemoryStream(str, buffer, count);
+                    readAsyncOperation = StreamOperationsImplementation.MemoryStream.ReadAsync(str, buffer, count);
                     break;
 
                 case StreamReadOperationOptimization.AbstractStream:
-                    readAsyncOperation = StreamOperationsImplementation.ReadAsync_AbstractStream(str, buffer, count, options);
+                    readAsyncOperation = StreamOperationsImplementation.ReadAsync(str, buffer, count, options);
                     break;
 
                 // Use this pattern to add more optimisation options if necessary:
@@ -302,14 +302,14 @@ namespace System.IO
             }
 
             Stream str = EnsureNotDisposed();
-            return StreamOperationsImplementation.WriteAsync_AbstractStream(str, buffer);
+            return StreamOperationsImplementation.WriteAsync(str, buffer);
         }
 
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public IAsyncOperation<bool> FlushAsync()
         {
             Stream str = EnsureNotDisposed();
-            return StreamOperationsImplementation.FlushAsync_AbstractStream(str);
+            return StreamOperationsImplementation.FlushAsync(str);
         }
 
         #endregion IOutputStream public interface

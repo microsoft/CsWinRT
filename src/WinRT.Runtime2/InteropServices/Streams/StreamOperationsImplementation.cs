@@ -29,43 +29,49 @@ namespace Windows.Storage.Streams;
 [SupportedOSPlatform("windows10.0.10240.0")]
 internal static class StreamOperationsImplementation
 {
-    /// <inheritdoc cref="IInputStream.ReadAsync"/>
-    /// <param name="stream">The underlying managed <see cref="Stream"/> instance to read data from.</param>
-    /// <remarks>
-    /// This method is specialized for <paramref name="stream"/> being a <see cref="MemoryStream"/> instance.
-    /// </remarks>
-    public static IAsyncOperationWithProgress<IBuffer, uint> ReadAsync_MemoryStream(Stream stream, IBuffer buffer, uint count)
+    /// <summary>
+    /// Specialized methods for <see cref="MemoryStream"/>.
+    /// </summary>
+    public static class MemoryStream
     {
-        Debug.Assert(stream is not null);
-        Debug.Assert(stream is MemoryStream);
-        Debug.Assert(stream.CanRead);
-        Debug.Assert(stream.CanSeek);
-        Debug.Assert(buffer is not null);
-        Debug.Assert(count >= 0);
-        Debug.Assert(count <= int.MaxValue);
-        Debug.Assert(count <= buffer.Capacity);
-
-        // We will return a different buffer to the user, backed directly by the input 'MemoryStream' object (avoids a memory copy).
-        // This is permitted by the Windows Runtime 'IInputStream' contract. The user specified buffer will not have any data put
-        // into it, so we can just reset the length of that buffer to '0'.
-        buffer.Length = 0;
-
-        MemoryStream memoryStream = (MemoryStream)stream;
-
-        try
+        /// <inheritdoc cref="IInputStream.ReadAsync"/>
+        /// <param name="stream">The underlying managed <see cref="Stream"/> instance to read data from.</param>
+        /// <remarks>
+        /// This method is specialized for <paramref name="stream"/> being a <see cref="System.IO.MemoryStream"/> instance.
+        /// </remarks>
+        public static IAsyncOperationWithProgress<IBuffer, uint> ReadAsync(Stream stream, IBuffer buffer, uint count)
         {
-            IBuffer dataBuffer = memoryStream.GetWindowsRuntimeBuffer((int)memoryStream.Position, (int)count);
+            Debug.Assert(stream is not null);
+            Debug.Assert(stream is System.IO.MemoryStream);
+            Debug.Assert(stream.CanRead);
+            Debug.Assert(stream.CanSeek);
+            Debug.Assert(buffer is not null);
+            Debug.Assert(count >= 0);
+            Debug.Assert(count <= int.MaxValue);
+            Debug.Assert(count <= buffer.Capacity);
 
-            if (dataBuffer.Length > 0)
+            // We will return a different buffer to the user, backed directly by the input 'MemoryStream' object (avoids a memory copy).
+            // This is permitted by the Windows Runtime 'IInputStream' contract. The user specified buffer will not have any data put
+            // into it, so we can just reset the length of that buffer to '0'.
+            buffer.Length = 0;
+
+            System.IO.MemoryStream memoryStream = (System.IO.MemoryStream)stream;
+
+            try
             {
-                _ = memoryStream.Seek(dataBuffer.Length, SeekOrigin.Current);
-            }
+                IBuffer dataBuffer = memoryStream.GetWindowsRuntimeBuffer((int)memoryStream.Position, (int)count);
 
-            return AsyncInfo.FromResultWithProgress<IBuffer, uint>(dataBuffer);
-        }
-        catch (Exception ex)
-        {
-            return AsyncInfo.FromExceptionWithProgress<IBuffer, uint>(ex);
+                if (dataBuffer.Length > 0)
+                {
+                    _ = memoryStream.Seek(dataBuffer.Length, SeekOrigin.Current);
+                }
+
+                return AsyncInfo.FromResultWithProgress<IBuffer, uint>(dataBuffer);
+            }
+            catch (Exception ex)
+            {
+                return AsyncInfo.FromExceptionWithProgress<IBuffer, uint>(ex);
+            }
         }
     }
 
@@ -74,7 +80,7 @@ internal static class StreamOperationsImplementation
     /// <remarks>
     /// This method works with <paramref name="stream"/> being of any type.
     /// </remarks>
-    public static IAsyncOperationWithProgress<IBuffer, uint> ReadAsync_AbstractStream(
+    public static IAsyncOperationWithProgress<IBuffer, uint> ReadAsync(
         Stream stream,
         IBuffer buffer,
         uint count,
@@ -178,7 +184,7 @@ internal static class StreamOperationsImplementation
 
     /// <inheritdoc cref="IOutputStream.WriteAsync"/>
     /// <param name="stream">The underlying managed <see cref="Stream"/> instance to write data to.</param>
-    public static IAsyncOperationWithProgress<uint, uint> WriteAsync_AbstractStream(Stream stream, IBuffer buffer)
+    public static IAsyncOperationWithProgress<uint, uint> WriteAsync(Stream stream, IBuffer buffer)
     {
         Debug.Assert(stream is not null);
         Debug.Assert(stream.CanWrite);
@@ -256,7 +262,7 @@ internal static class StreamOperationsImplementation
 
     /// <inheritdoc cref="IOutputStream.FlushAsync"/>
     /// <param name="stream">The underlying managed <see cref="Stream"/> instance to flush.</param>
-    public static IAsyncOperation<bool> FlushAsync_AbstractStream(Stream stream)
+    public static IAsyncOperation<bool> FlushAsync(Stream stream)
     {
         Debug.Assert(stream is not null);
         Debug.Assert(stream.CanWrite);
