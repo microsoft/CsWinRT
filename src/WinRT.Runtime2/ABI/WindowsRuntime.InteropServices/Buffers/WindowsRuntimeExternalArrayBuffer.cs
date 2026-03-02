@@ -13,22 +13,22 @@ using static System.Runtime.InteropServices.ComWrappers;
 #pragma warning disable CS0723, IDE0008, IDE0046, IDE1006
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
-    source: typeof(WindowsRuntimePinnedArrayBuffer),
-    proxy: typeof(ABI.WindowsRuntime.InteropServices.WindowsRuntimePinnedArrayBuffer))]
+    source: typeof(WindowsRuntimeExternalArrayBuffer),
+    proxy: typeof(ABI.WindowsRuntime.InteropServices.WindowsRuntimeExternalArrayBuffer))]
 
 namespace ABI.WindowsRuntime.InteropServices;
 
 /// <summary>
-/// ABI type for <see cref="WindowsRuntimePinnedArrayBuffer"/>.
+/// ABI type for <see cref="WindowsRuntimeExternalArrayBuffer"/>.
 /// </summary>
 [WindowsRuntimeClassName("Windows.Storage.Streams.IBuffer")]
-[WindowsRuntimePinnedArrayBufferComWrappersMarshaller]
-file static class WindowsRuntimePinnedArrayBuffer;
+[WindowsRuntimeExternalArrayBufferComWrappersMarshaller]
+file static class WindowsRuntimeExternalArrayBuffer;
 
 /// <summary>
-/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="WindowsRuntimePinnedArrayBuffer"/>.
+/// The set of <see cref="ComInterfaceEntry"/> values for <see cref="WindowsRuntimeExternalArrayBuffer"/>.
 /// </summary>
-file struct WindowsRuntimePinnedArrayBufferInterfaceEntries
+file struct WindowsRuntimeExternalArrayBufferInterfaceEntries
 {
     public ComInterfaceEntry IBuffer;
     public ComInterfaceEntry IBufferByteAccess;
@@ -41,25 +41,25 @@ file struct WindowsRuntimePinnedArrayBufferInterfaceEntries
 }
 
 /// <summary>
-/// The implementation of <see cref="WindowsRuntimePinnedArrayBufferInterfaceEntries"/>.
+/// The implementation of <see cref="WindowsRuntimeExternalArrayBufferInterfaceEntries"/>.
 /// </summary>
-file static class WindowsRuntimePinnedArrayBufferInterfaceEntriesImpl
+file static class WindowsRuntimeExternalArrayBufferInterfaceEntriesImpl
 {
     /// <summary>
-    /// The <see cref="WindowsRuntimePinnedArrayBufferInterfaceEntries"/> value for <see cref="WindowsRuntimePinnedArrayBuffer"/>.
+    /// The <see cref="WindowsRuntimeExternalArrayBufferInterfaceEntries"/> value for <see cref="WindowsRuntimeExternalArrayBuffer"/>.
     /// </summary>
     [FixedAddressValueType]
-    public static readonly WindowsRuntimePinnedArrayBufferInterfaceEntries Entries;
+    public static readonly WindowsRuntimeExternalArrayBufferInterfaceEntries Entries;
 
     /// <summary>
     /// Initializes <see cref="Entries"/>.
     /// </summary>
-    static WindowsRuntimePinnedArrayBufferInterfaceEntriesImpl()
+    static WindowsRuntimeExternalArrayBufferInterfaceEntriesImpl()
     {
         Entries.IBuffer.IID = WellKnownWindowsInterfaceIIDs.IID_IBuffer;
         Entries.IBuffer.Vtable = Windows.Storage.Streams.IBufferImpl.Vtable;
         Entries.IBufferByteAccess.IID = WellKnownWindowsInterfaceIIDs.IID_IBufferByteAccess;
-        Entries.IBufferByteAccess.Vtable = WindowsRuntimePinnedArrayBufferByteAccessImpl.Vtable;
+        Entries.IBufferByteAccess.Vtable = WindowsRuntimeExternalArrayBufferByteAccessImpl.Vtable;
         Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
@@ -76,39 +76,37 @@ file static class WindowsRuntimePinnedArrayBufferInterfaceEntriesImpl
 }
 
 /// <summary>
-/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="WindowsRuntimePinnedArrayBuffer"/>.
+/// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="WindowsRuntimeExternalArrayBuffer"/>.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed unsafe class WindowsRuntimePinnedArrayBufferComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
+public sealed unsafe class WindowsRuntimeExternalArrayBufferComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>
     public override void* GetOrCreateComInterfaceForObject(object value)
     {
-        // Note that specifically for 'WindowsRuntimePinnedArrayBuffer', we can optimize the flags to say we don't
-        // need tracker support. This is because while this object wraps a managed object (a 'byte[]' array), the
-        // array itself can't possibly create a cycle (since it can have no outstanding references), so this is ok.
+        // No reference tracking is needed, see notes in the marshaller attribute for 'WindowsRuntimePinnedArrayBuffer'
         return (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
     }
 
     /// <inheritdoc/>
     public override ComInterfaceEntry* ComputeVtables(out int count)
     {
-        count = sizeof(WindowsRuntimePinnedArrayBufferInterfaceEntries) / sizeof(ComInterfaceEntry);
+        count = sizeof(WindowsRuntimeExternalArrayBufferInterfaceEntries) / sizeof(ComInterfaceEntry);
 
-        return (ComInterfaceEntry*)Unsafe.AsPointer(in WindowsRuntimePinnedArrayBufferInterfaceEntriesImpl.Entries);
+        return (ComInterfaceEntry*)Unsafe.AsPointer(in WindowsRuntimeExternalArrayBufferInterfaceEntriesImpl.Entries);
     }
 }
 
 /// <summary>
-/// The native implementation of <c>IBufferByteAccess</c> for <see cref="WindowsRuntimePinnedArrayBuffer"/>.
+/// The native implementation of <c>IBufferByteAccess</c> for <see cref="WindowsRuntimeExternalArrayBuffer"/>.
 /// </summary>
-file static unsafe class WindowsRuntimePinnedArrayBufferByteAccessImpl
+file static unsafe class WindowsRuntimeExternalArrayBufferByteAccessImpl
 {
     /// <summary>
-    /// The <see cref="IBufferByteAccessVftbl"/> value for the <see cref="WindowsRuntimePinnedArrayBuffer"/> implementation.
+    /// The <see cref="IBufferByteAccessVftbl"/> value for the <see cref="WindowsRuntimeExternalArrayBuffer"/> implementation.
     /// </summary>
     [FixedAddressValueType]
     private static readonly IBufferByteAccessVftbl Vftbl;
@@ -116,7 +114,7 @@ file static unsafe class WindowsRuntimePinnedArrayBufferByteAccessImpl
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static WindowsRuntimePinnedArrayBufferByteAccessImpl()
+    static WindowsRuntimeExternalArrayBufferByteAccessImpl()
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
@@ -124,7 +122,7 @@ file static unsafe class WindowsRuntimePinnedArrayBufferByteAccessImpl
     }
 
     /// <summary>
-    /// Gets a pointer to the <see cref="WindowsRuntimePinnedArrayBuffer"/> implementation.
+    /// Gets a pointer to the <see cref="WindowsRuntimeExternalArrayBuffer"/> implementation.
     /// </summary>
     public static nint Vtable
     {
@@ -143,7 +141,7 @@ file static unsafe class WindowsRuntimePinnedArrayBufferByteAccessImpl
 
         try
         {
-            var thisObject = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.InteropServices.WindowsRuntimePinnedArrayBuffer>((ComInterfaceDispatch*)thisPtr);
+            var thisObject = ComInterfaceDispatch.GetInstance<global::WindowsRuntime.InteropServices.WindowsRuntimeExternalArrayBuffer>((ComInterfaceDispatch*)thisPtr);
 
             *value = thisObject.Buffer();
 

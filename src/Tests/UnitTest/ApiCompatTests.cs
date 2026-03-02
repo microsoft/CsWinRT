@@ -21,11 +21,11 @@ using Windows.Devices.Enumeration;
 using Windows.Data.Json;
 
 using Windows.Storage;
+using Windows.Storage.Buffers;
 using Windows.Storage.Streams;
 using Windows.Storage.FileProperties;
 
 using System.Diagnostics;
-using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace UnitTest
 {

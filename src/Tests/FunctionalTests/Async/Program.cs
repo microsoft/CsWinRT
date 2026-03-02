@@ -1,11 +1,11 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using TestComponentCSharp;
 using Windows.Foundation;
 using Windows.Foundation.Tasks;
+using Windows.Storage.Buffers;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
 using WindowsRuntime.InteropServices;

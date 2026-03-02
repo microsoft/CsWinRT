@@ -6,13 +6,12 @@
 namespace Windows.Storage.Streams
 {
     using global::System.Diagnostics;
-    using global::System.IO;
-    
+    using global::System.IO;    
     using global::System.Runtime.InteropServices;
     using global::System.Threading.Tasks;
     using global::System.Threading;
-    using global::System.Runtime.InteropServices.WindowsRuntime;
     using Windows.Foundation;
+    using Windows.Storage.Buffers;
 
     /// <summary>Depending on the concrete type of the stream managed by a <c>NetFxToWinRtStreamAdapter</c>,
     /// we want the <c>ReadAsync</c> / <c>WriteAsync</c> / <c>FlushAsync</c> / etc. operation to be implemented
@@ -82,7 +81,7 @@ namespace Windows.Storage.Streams
             //         Note: the allocation costs we are paying for the new buffer are unavoidable anyway, as we would need to create
             //         an array to read into either way.
 
-            IBuffer dataBuffer = buffer as WindowsRuntimeBuffer;
+            IBuffer dataBuffer = null; // buffer as WindowsRuntimeBuffer; // TODO
 
             if (dataBuffer == null)
                 dataBuffer = WindowsRuntimeBuffer.Create((int)Math.Min((uint)int.MaxValue, buffer.Capacity));
@@ -94,10 +93,10 @@ namespace Windows.Storage.Streams
                 dataBuffer.Length = 0;
 
                 // Get the buffer backing array:
-                byte[] data;
-                int offset;
-                bool managedBufferAssert = dataBuffer.TryGetUnderlyingData(out data, out offset);
-                Debug.Assert(managedBufferAssert);
+                byte[] data = []; // TODO
+                int offset = 0; // TODO
+                //bool managedBufferAssert = dataBuffer.TryGetUnderlyingData(out data, out offset); TODO
+                //Debug.Assert(managedBufferAssert);
 
                 // Init tracking values:
                 bool done = cancelToken.IsCancellationRequested;
@@ -166,11 +165,12 @@ namespace Windows.Storage.Streams
 
             // Choose the optimal writing strategy for the kind of buffer supplied:
             Func<CancellationToken, IProgress<uint>, Task<uint>> writeOperation;
-            byte[] data;
-            int offset;
+            byte[] data = []; // TODO
+            int offset = 0; // TODO
 
             // If buffer is backed by a managed array:
-            if (buffer.TryGetUnderlyingData(out data, out offset))
+            //if (buffer.TryGetUnderlyingData(out data, out offset)) TODO
+            if (false)
             {
                 writeOperation = async (cancelToken, progressListener) =>
                 {

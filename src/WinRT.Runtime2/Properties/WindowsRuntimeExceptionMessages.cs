@@ -14,11 +14,31 @@ internal static class WindowsRuntimeExceptionMessages
 
     public const string Argument_AddingDuplicate = "An item with the same key has already been added.";
 
+    public const string Argument_BufferIndexExceedsCapacity = "The specified buffer index exceeds the buffer capacity.";
+
+    public const string Argument_BufferIndexExceedsLength = "The specified buffer index exceeds the buffer length.";
+
+    public const string Argument_BufferOffsetExceedsLength = "The specified buffer offset exceeds the buffer length.";
+
     public const string Argument_BufferLengthExceedsCapacity = "The specified useful data length exceeds the capacity of this buffer.";
 
     public const string Argument_IndexOutOfArrayBounds = "The specified index is out of bounds of the specified array.";
 
+    public const string Argument_InsufficientArrayElementsAfterOffset = "The specified array does not contain the specified number of elements starting at the specified offset.";
+
+    public const string Argument_InsufficientBufferCapacity = "The buffer capacity is insufficient for the specified length.";
+
     public const string Argument_InsufficientSpaceToCopyCollection = "Insufficient space in the target array to copy the collection.";
+
+    public const string Argument_InsufficientSpaceInSourceBuffer = "Insufficient space in the source buffer.";
+
+    public const string Argument_InsufficientSpaceInTargetBuffer = "Insufficient space in the target buffer.";
+
+    public const string Argument_InvalidIBufferInstance = "The provided 'IBuffer' instance is not valid, and retrieving its underlying data failed.";
+
+    public const string Argument_StreamPositionBeyondEndOfStream = "The specified position is beyond the end of the stream.";
+
+    public const string ArgumentOutOfRange_BufferLengthExceedsArrayMaxLength = "The specified buffer length exceeds the maximum array length.";
 
     public const string ArgumentOutOfRange_Index = "Index was out of range.";
 
@@ -41,6 +61,8 @@ internal static class WindowsRuntimeExceptionMessages
     public const string NullReference_TaskProviderReturnedNull = "The task provider delegate used to create this asynchronous operation returned 'null', but a valid 'Task' object was expected.";
 
     public const string ObjectDisposed_AsyncInfoIsClosed = "The requested invocation is not permitted because this 'IAsyncInfo' instance has already been closed.";
+
+    public const string UnauthorizedAccess_InternalBuffer = "The underlying buffer of the 'MemoryStream' cannot be accessed.";
 
     public const string WinRtCOM_Error = "An error has occurred.";
 }
