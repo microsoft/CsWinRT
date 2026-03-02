@@ -14,6 +14,8 @@ namespace System.IO
     using global::Windows.Foundation;
     using global::Windows.Storage.Streams;
     using System.Diagnostics.CodeAnalysis;
+    using WindowsRuntime.InteropServices;
+
     /// <summary>
     /// An <code>wrapper</code> for a managed stream that implements all WinRT stream operations.
     /// This class must not implement any WinRT stream interfaces directly.
@@ -23,10 +25,6 @@ namespace System.IO
     /// </summary>
     internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
     {
-        private const int E_ILLEGAL_METHOD_CALL = unchecked((int)0x8000000E);
-        private const int RO_E_CLOSED = unchecked((int)0x80000013);
-        private const int E_NOTIMPL = unchecked((int)0x80004001);
-        private const int E_INVALIDARG = unchecked((int)0x80070057);
         #region Construction
 
         #region Interface adapters
@@ -194,7 +192,7 @@ namespace System.IO
             if (str == null)
             {
                 ObjectDisposedException ex = new ObjectDisposedException(global::Windows.Storage.Streams.SR.ObjectDisposed_CannotPerformOperation);
-                ex.HResult = RO_E_CLOSED;
+                ex.HResult = WellKnownErrorCodes.RO_E_CLOSED;
                 throw ex;
             }
 
@@ -236,14 +234,14 @@ namespace System.IO
             if (count < 0 || int.MaxValue < count)
             {
                 ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(count));
-                ex.HResult = E_INVALIDARG;
+                ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
                 throw ex;
             }
 
             if (buffer.Capacity < count)
             {
                 ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientBufferCapacity);
-                ex.HResult = E_INVALIDARG;
+                ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
                 throw ex;
             }
 
@@ -251,7 +249,7 @@ namespace System.IO
             {
                 ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(options),
                                                                                  global::Windows.Storage.Streams.SR.ArgumentOutOfRange_InvalidInputStreamOptionsEnumValue);
-                ex.HResult = E_INVALIDARG;
+                ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
                 throw ex;
             }
 
@@ -299,7 +297,7 @@ namespace System.IO
             if (buffer.Capacity < buffer.Length)
             {
                 ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferLengthExceedsCapacity);
-                ex.HResult = E_INVALIDARG;
+                ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
                 throw ex;
             }
 
@@ -327,7 +325,7 @@ namespace System.IO
             if (position > long.MaxValue)
             {
                 ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
-                ex.HResult = E_INVALIDARG;
+                ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
                 throw ex;
             }
 
@@ -385,7 +383,7 @@ namespace System.IO
                 if (value > long.MaxValue)
                 {
                     ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.IO_CannotSetSizeBeyondInt64MaxValue);
-                    ex.HResult = E_INVALIDARG;
+                    ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
                     throw ex;
                 }
 
@@ -394,7 +392,7 @@ namespace System.IO
                 if (!str.CanWrite)
                 {
                     InvalidOperationException ex = new InvalidOperationException(global::Windows.Storage.Streams.SR.InvalidOperation_CannotSetStreamSizeCannotWrite);
-                    ex.HResult = E_ILLEGAL_METHOD_CALL;
+                    ex.HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
                     throw ex;
                 }
 
@@ -422,7 +420,7 @@ namespace System.IO
         private static void ThrowCloningNotSupported(string methodName)
         {
             NotSupportedException nse = new NotSupportedException(string.Format(global::Windows.Storage.Streams.SR.NotSupported_CloningNotSupported, methodName));
-            nse.HResult = E_NOTIMPL;
+            nse.HResult = WellKnownErrorCodes.E_NOTIMPL;
             throw nse;
         }
 
