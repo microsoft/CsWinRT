@@ -285,7 +285,7 @@ namespace System.IO
 
         private void ThrowWithIOExceptionDispatchInfo(Exception e)
         {
-            WinRtIOHelper.NativeExceptionToIOExceptionInfo(RestrictedErrorInfo.AttachErrorInfo(_completedOperation.ErrorCode)).Throw();
+            WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(RestrictedErrorInfo.AttachErrorInfo(_completedOperation.ErrorCode)).Throw();
         }
     }  // class StreamOperationAsyncResult
 
@@ -323,7 +323,7 @@ namespace System.IO
             IBuffer resultBuffer = completedOperation.GetResults();
             Debug.Assert(resultBuffer != null);
 
-            WinRtIOHelper.EnsureResultsInUserBuffer(_userBuffer!, resultBuffer);
+            WindowsRuntimeIOHelpers.EnsureResultsInUserBuffer(_userBuffer!, resultBuffer);
             bytesCompleted = _userBuffer!.Length;
         }
     }  // class StreamReadAsyncResult

@@ -786,7 +786,7 @@ namespace Windows.Storage.Streams
                 if (resultBuffer == null)
                     return 0;
 
-                WinRtIOHelper.EnsureResultsInUserBuffer(userBuffer, resultBuffer);
+                WindowsRuntimeIOHelpers.EnsureResultsInUserBuffer(userBuffer, resultBuffer);
 
                 Debug.Assert(resultBuffer.Length <= unchecked((uint)int.MaxValue));
                 return (int)resultBuffer.Length;
@@ -795,7 +795,7 @@ namespace Windows.Storage.Streams
             {
                 // If the interop layer gave us an Exception, we assume that it hit a general/unknown case and wrap it into
                 // an IOException as this is what Stream users expect.
-                WinRtIOHelper.NativeExceptionToIOExceptionInfo(ex).Throw();
+                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
                 return 0;
             }
         }
