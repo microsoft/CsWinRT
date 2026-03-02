@@ -1816,6 +1816,29 @@ remove => %;
         return w.write_temp("%", bind<write_platform_attribute>(type.CustomAttribute()));
     }
 
+    template <typename T>
+    void write_obsolete_attribute(writer& w, T const& row)
+    {
+        if (is_deprecated_not_removed(row))
+        {
+            auto msg = get_deprecated_message(row);
+            if (!msg.empty())
+            {
+                w.write("[global::System.Obsolete(\"%\")]\n", msg);
+            }
+            else
+            {
+                w.write("[global::System.Obsolete]\n");
+            }
+        }
+    }
+
+    template <typename T>
+    std::string write_obsolete_attribute_temp(writer& w, T const& row)
+    {
+        return w.write_temp("%", bind<write_obsolete_attribute>(row));
+    }
+
     void write_custom_attributes(writer& w, std::pair<CustomAttribute, CustomAttribute> const& custom_attributes, bool enable_platform_attrib)
     {
         std::map<std::string, std::vector<std::string>> attributes;
@@ -1876,6 +1899,7 @@ remove => %;
     void write_type_custom_attributes(writer& w, TypeDef const& type, bool enable_platform_attrib)
     {
         write_custom_attributes(w, type.CustomAttribute(), enable_platform_attrib);
+        write_obsolete_attribute(w, type);
     }
 
     struct attributed_type
@@ -5026,6 +5050,7 @@ remove => %.Unsubscribe(value);
             {
                 continue;
             }
+            write_obsolete_attribute(w, method);
             method_signature signature{ method };
             auto [invoke_target, is_generic] = get_invoke_info(w, method);
             w.write(R"(
@@ -5058,6 +5083,7 @@ remove => %.Unsubscribe(value);
             {
                 continue;
             }
+            write_obsolete_attribute(w, prop);
             auto [getter, setter] = get_property_methods(prop);
             w.write(R"(
 %unsafe % %%
@@ -5123,6 +5149,7 @@ return %;
                 index++;
                 continue;
             }
+            write_obsolete_attribute(w, evt);
             auto event_source = w.write_temp(settings.netstandard_compat ? "_%" : "Get_%2()", evt.Name());
             w.write(R"(
 %event % %%
@@ -9744,6 +9771,7 @@ return true;
                     {
                         continue;
                     }
+                    write_obsolete_attribute(w, field);
                     w.write("%% = unchecked((%)%),\n", 
                         bind<write_platform_attribute>(field.CustomAttribute()),
                         field.Name(), enum_underlying_type, bind<write_constant>(constant));

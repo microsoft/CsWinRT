@@ -80,6 +80,12 @@ namespace cswinrt
         return false;
     }
 
+    template <typename T>
+    bool is_deprecated_not_removed(T const& row)
+    {
+        return is_deprecated(row) && !is_removed(row);
+    }
+
     bool is_exclusive_to(TypeDef const& type)
     {
         return get_category(type) == category::interface_type && has_attribute(type, "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv);
