@@ -28,7 +28,7 @@
     <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\$(BenchmarkTargetFramework)\Benchmark.dll" Condition="$(UseWinmd) == false And $(IsDotnetBuild) == true"></Reference>
     <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\$(BenchmarkTargetFramework)\WinRT.Runtime.dll" Condition="$(UseWinmd) == false And $(IsDotnetBuild) == true"></Reference>
     
-    <ReferencePath Include="$(MSBuildThisFileDirectory)bin\x64\Release\$(BenchmarkTargetFramework)\WinRT.Projection.dll" Condition="$(UseWinmd) == false And $(IsDotnetBuild) == true"></ReferencePath>
+    <Reference Include="$(MSBuildThisFileDirectory)bin\x64\Release\$(BenchmarkTargetFramework)\WinRT.Projection.dll" Condition="$(UseWinmd) == false And $(IsDotnetBuild) == true"></Reference>
     <ReferencePath Include="$(MSBuildThisFileDirectory)bin\x64\Release\$(BenchmarkTargetFramework)\WinRT.Interop.dll" Condition="$(UseWinmd) == false And $(IsDotnetBuild) == true"></ReferencePath>
 
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" Condition="$(UseWinmd) == false And $(IsDotnetBuild) == false" />
