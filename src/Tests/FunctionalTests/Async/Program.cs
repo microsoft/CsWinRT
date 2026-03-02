@@ -124,6 +124,8 @@ unsafe
         return 113;
     }
 
+    // TODO: Enable after ReadAsync porting
+    /*
     var asyncOperation = randomAccessStream.ReadAsync(buffer, 50, InputStreamOptions.Partial);
     ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(asyncOperation);
     if (ptr is null)
@@ -147,6 +149,7 @@ unsafe
         // TODO: Stream implementation needs to move to WinRT.Runtime
         // return 116;
     }
+    */
 }
 
 bool progressCalledWithExpectedResults = false;
