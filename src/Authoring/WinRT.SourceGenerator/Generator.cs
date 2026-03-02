@@ -361,10 +361,8 @@ namespace Generator
 
                                 return S_OK;
                             }
-                            catch (Exception e)
+                            catch (Exception e) when (ExceptionHelpers.CaptureErrorInfo(e))
                             {
-                                ExceptionHelpers.SetErrorInfo(e);
-
                                 return ExceptionHelpers.GetHRForException(e);
                             }
                 """);

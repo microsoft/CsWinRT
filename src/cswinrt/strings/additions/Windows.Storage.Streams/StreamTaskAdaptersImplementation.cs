@@ -123,9 +123,8 @@ namespace Windows.Storage.Streams
                     ____return_value__ = global::ABI.Windows.Foundation.IAsyncOperationWithProgressMethods<uint, uint>.Do_Abi_GetResults_4(thisPtr);
                     *__return_value__ = ____return_value__;
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -141,9 +140,8 @@ namespace Windows.Storage.Streams
                         thisPtr,
                         global::ABI.Windows.Foundation.AsyncOperationProgressHandler<uint, uint>.FromAbi(handler));
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -163,9 +161,8 @@ namespace Windows.Storage.Streams
                     *__return_value__ = global::ABI.Windows.Foundation.AsyncOperationProgressHandler<uint, uint>.FromManaged(____return_value__);
 
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -181,9 +178,8 @@ namespace Windows.Storage.Streams
                         thisPtr,
                         global::ABI.Windows.Foundation.AsyncOperationWithProgressCompletedHandler<uint, uint>.FromAbi(handler));
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -202,9 +198,8 @@ namespace Windows.Storage.Streams
                     ____return_value__ = global::ABI.Windows.Foundation.IAsyncOperationWithProgressMethods<uint, uint>.Do_Abi_get_Completed_3(thisPtr);
                     *__return_value__ = global::ABI.Windows.Foundation.AsyncOperationWithProgressCompletedHandler<uint, uint>.FromManaged(____return_value__);
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -233,9 +228,8 @@ namespace Windows.Storage.Streams
                         MarshalInterface<global::Windows.Foundation.IAsyncOperationWithProgress<uint, uint>>.FromAbi(asyncInfo),
                         progressInfo);
                 }
-                catch (global::System.Exception __exception__)
+                catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -288,9 +282,8 @@ namespace Windows.Storage.Streams
                         MarshalInterface<global::Windows.Foundation.IAsyncOperationWithProgress<uint, uint>>.FromAbi(asyncInfo),
                         asyncStatus);
                 }
-                catch (global::System.Exception __exception__)
+                catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -326,9 +319,8 @@ namespace Windows.Storage.Streams
                         Do_Abi_GetResults_4(thisPtr);
                     *__return_value__ = MarshalInterface<Windows.Storage.Streams.IBuffer>.FromManaged(____return_value__);
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -344,9 +336,8 @@ namespace Windows.Storage.Streams
                         thisPtr,
                         global::ABI.Windows.Foundation.AsyncOperationProgressHandler<Windows.Storage.Streams.IBuffer, uint>.FromAbi(handler));
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -366,9 +357,8 @@ namespace Windows.Storage.Streams
                     *__return_value__ = global::ABI.Windows.Foundation.AsyncOperationProgressHandler<Windows.Storage.Streams.IBuffer, uint>.FromManaged(____return_value__);
 
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -384,9 +374,8 @@ namespace Windows.Storage.Streams
                         thisPtr,
                         global::ABI.Windows.Foundation.AsyncOperationWithProgressCompletedHandler<Windows.Storage.Streams.IBuffer, uint>.FromAbi(handler));
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -405,9 +394,8 @@ namespace Windows.Storage.Streams
                     ____return_value__ = global::ABI.Windows.Foundation.IAsyncOperationWithProgressMethods<Windows.Storage.Streams.IBuffer, uint>.Do_Abi_get_Completed_3(thisPtr);
                     *__return_value__ = global::ABI.Windows.Foundation.AsyncOperationWithProgressCompletedHandler<Windows.Storage.Streams.IBuffer, uint>.FromManaged(____return_value__);
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -436,9 +424,8 @@ namespace Windows.Storage.Streams
                         MarshalInterface<global::Windows.Foundation.IAsyncOperationWithProgress<Windows.Storage.Streams.IBuffer, uint>>.FromAbi(asyncInfo),
                         progressInfo);
                 }
-                catch (global::System.Exception __exception__)
+                catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -494,9 +481,8 @@ namespace Windows.Storage.Streams
                         MarshalInterface<global::Windows.Foundation.IAsyncOperationWithProgress<Windows.Storage.Streams.IBuffer, uint>>.FromAbi(asyncInfo),
                         asyncStatus);
                 }
-                catch (global::System.Exception __exception__)
+                catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -529,9 +515,8 @@ namespace Windows.Storage.Streams
                     ____return_value__ = global::ABI.Windows.Foundation.IAsyncOperationMethods<bool>.Do_Abi_GetResults_2(thisPtr);
                     *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -545,9 +530,8 @@ namespace Windows.Storage.Streams
                 {
                     global::ABI.Windows.Foundation.IAsyncOperationMethods<bool>.Do_Abi_put_Completed_0(thisPtr, global::ABI.Windows.Foundation.AsyncOperationCompletedHandler<bool>.FromAbi(handler));
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -566,9 +550,8 @@ namespace Windows.Storage.Streams
                     ____return_value__ = global::ABI.Windows.Foundation.IAsyncOperationMethods<bool>.Do_Abi_get_Completed_1(thisPtr);
                     *__return_value__ = global::ABI.Windows.Foundation.AsyncOperationCompletedHandler<bool>.FromManaged(____return_value__);
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -597,9 +580,8 @@ namespace Windows.Storage.Streams
                         MarshalInterface<global::Windows.Foundation.IAsyncOperation<bool>>.FromAbi(asyncInfo),
                         asyncStatus);
                 }
-                catch (global::System.Exception __exception__)
+                catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;

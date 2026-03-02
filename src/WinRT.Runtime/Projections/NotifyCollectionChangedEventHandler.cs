@@ -161,9 +161,8 @@ namespace ABI.System.Collections.Specialized
                 });
 #endif
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;

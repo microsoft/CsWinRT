@@ -48,9 +48,8 @@ namespace ABI.Windows.Foundation
                 ____return_value__ = (T[])global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
                 (*____return_value__Size, *__return_value__) = FromManagedArray(____return_value__);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;

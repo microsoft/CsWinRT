@@ -104,9 +104,8 @@ namespace ABI.WinRT.Interop
             {
                 *guid = ComWrappersSupport.FindObject<ManagedExceptionErrorInfo>(thisPtr).GetGuid();
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ExceptionHelpers.CaptureErrorInfo(ex))
             {
-                ExceptionHelpers.SetErrorInfo(ex);
                 return ExceptionHelpers.GetHRForException(ex);
             }
             return 0;
@@ -219,9 +218,8 @@ namespace ABI.WinRT.Interop
             {
                 return global::WinRT.ComWrappersSupport.FindObject<ManagedExceptionErrorInfo>(thisPtr).InterfaceSupportsErrorInfo(*guid) ? 0 : 1;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ExceptionHelpers.CaptureErrorInfo(ex))
             {
-                ExceptionHelpers.SetErrorInfo(ex);
                 return ExceptionHelpers.GetHRForException(ex);
             }
         }

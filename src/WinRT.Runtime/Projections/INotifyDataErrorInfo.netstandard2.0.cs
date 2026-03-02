@@ -80,9 +80,8 @@ namespace ABI.System.ComponentModel
                     *result = global::ABI.System.Collections.Generic.IEnumerable<object>.FromManaged(__result);
 
                 }
-                catch (global::System.Exception __exception__)
+                catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
@@ -103,9 +102,8 @@ namespace ABI.System.ComponentModel
                     *value = (byte)(__value ? 1 : 0);
 
                 }
-                catch (global::System.Exception __exception__)
+                catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                 {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;

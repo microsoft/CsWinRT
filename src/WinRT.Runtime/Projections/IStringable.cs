@@ -49,9 +49,8 @@ namespace ABI.Windows.Foundation
                 string __value = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr).ToString();
                 *value = MarshalString.FromManaged(__value);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;

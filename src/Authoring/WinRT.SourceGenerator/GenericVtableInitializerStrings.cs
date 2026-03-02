@@ -222,9 +222,8 @@ namespace Generator
                          *__return_value__ = MarshalInterface<global::System.Collections.Generic.IEnumerator<{{genericType}}>>.
                             FromManaged(global::ABI.System.Collections.Generic.IEnumerableMethods<{{genericType}}>.Abi_First_0(thisPtr));
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -264,9 +263,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IEnumeratorMethods<{{genericType}}>.Abi_MoveNext_2(thisPtr);
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -286,9 +284,8 @@ namespace Generator
                          {{GeneratorHelper.GetCopyManagedArrayMarshaler(genericType, abiType, typeKind, typeFlags)}}.CopyManagedArray(__items, items);
                          *__return_value__ = ____return_value__;
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -306,9 +303,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IEnumeratorMethods<{{genericType}}>.Abi_get_Current_0(thisPtr);
                          *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericType, abiType, typeKind, "____return_value__")}};
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -326,9 +322,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IEnumeratorMethods<{{genericType}}>.Abi_get_HasCurrent_1(thisPtr);
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -374,9 +369,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_GetAt_0(thisPtr, index);
                          *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericType, abiType, typeKind, "____return_value__")}};
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -393,9 +387,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_GetView_2(thisPtr);
                          *__return_value__ = MarshalInterface<global::System.Collections.Generic.IReadOnlyList<{{genericType}}>>.FromManaged(____return_value__);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -416,9 +409,8 @@ namespace Generator
                          *index = __index;
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -431,9 +423,8 @@ namespace Generator
                      {
                          global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_SetAt_4(thisPtr, index, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind, "value")}});
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -446,9 +437,8 @@ namespace Generator
                      {
                          global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_InsertAt_5(thisPtr, index, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind, "value")}});
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -461,9 +451,8 @@ namespace Generator
                      {
                          global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_RemoveAt_6(thisPtr, index);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -476,9 +465,8 @@ namespace Generator
                      {
                          global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_Append_7(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind, "value")}});
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -491,9 +479,8 @@ namespace Generator
                      {
                          global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_RemoveAtEnd_8(thisPtr);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -506,9 +493,8 @@ namespace Generator
                      {
                          global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_Clear_9(thisPtr);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -528,9 +514,8 @@ namespace Generator
                          {{GeneratorHelper.GetCopyManagedArrayMarshaler(genericType, abiType, typeKind, typeFlags)}}.CopyManagedArray(__items, items);
                          *__return_value__ = ____return_value__;
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -543,9 +528,8 @@ namespace Generator
                      {
                          global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_ReplaceAll_11(thisPtr, {{GeneratorHelper.GetMarshalerClass(genericType, abiType, typeKind, true)}}.FromAbiArray((__itemsSize, items)));
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -563,9 +547,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IListMethods<{{genericType}}>.Abi_get_Size_1(thisPtr);
                          *__return_value__ = ____return_value__;
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -603,9 +586,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyListMethods<{{genericType}}>.Abi_GetAt_0(thisPtr, index);
                          *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericType, abiType, typeKind, "____return_value__")}};
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -626,9 +608,8 @@ namespace Generator
                          *index = __index;
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -648,9 +629,8 @@ namespace Generator
                          {{GeneratorHelper.GetCopyManagedArrayMarshaler(genericType, abiType, typeKind, typeFlags)}}.CopyManagedArray(__items, items);
                          *__return_value__ = ____return_value__;
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -668,9 +648,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyListMethods<{{genericType}}>.Abi_get_Size_1(thisPtr);
                          *__return_value__ = ____return_value__;
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -713,9 +692,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Lookup_0(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}});
                          *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericValueType, abiValueType, valueTypeKind, "____return_value__")}};
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -733,9 +711,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_HasKey_2(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}});
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -753,9 +730,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_GetView_3(thisPtr);
                          *__return_value__ = MarshalInterface<global::System.Collections.Generic.IReadOnlyDictionary<{{genericKeyType}}, {{genericValueType}}>>.FromManaged(____return_value__);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -773,9 +749,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Insert_4(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}}, {{GeneratorHelper.GetFromAbiMarshaler(genericValueType, abiValueType, valueTypeKind, "value")}});
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -788,9 +763,8 @@ namespace Generator
                      {
                          global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Remove_5(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}});
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -803,9 +777,8 @@ namespace Generator
                      {
                          global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Clear_6(thisPtr);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -823,9 +796,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_get_Size_1(thisPtr);
                          *__return_value__ = ____return_value__;
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -865,9 +837,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_Lookup_0(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}});
                          *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericValueType, abiValueType, valueTypeKind, "____return_value__")}};
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -885,9 +856,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_HasKey_2(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericKeyType, abiKeyType, keyTypeKind, "key")}});
                          *__return_value__ = (byte)(____return_value__ ? 1 : 0);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -907,9 +877,8 @@ namespace Generator
                          *first = __first;
                          *second = __second;
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -927,9 +896,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_get_Size_1(thisPtr);
                          *__return_value__ = ____return_value__;
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -965,9 +933,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.KeyValuePairMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_get_Key_0(thisPtr);
                          *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericKeyType, abiKeyType, keyTypeKind, "____return_value__")}};
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -983,9 +950,8 @@ namespace Generator
                          ____return_value__ = global::ABI.System.Collections.Generic.KeyValuePairMethods<{{genericKeyType}}, {{genericValueType}}>.Abi_get_Value_1(thisPtr);
                          *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericValueType, abiValueType, valueTypeKind, "____return_value__")}};
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1022,9 +988,8 @@ namespace Generator
                      {
                          global::ABI.System.EventHandlerMethods<{{genericType}}, {{abiType}}>.Abi_Invoke(thisPtr, MarshalInspectable<object>.FromAbi(sender), {{GeneratorHelper.GetFromAbiMarshaler(genericType, abiType, typeKind, "args")}});
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1081,9 +1046,8 @@ namespace Generator
                      {
                          {{staticMethodsClass}}.Abi_Invoke(thisPtr, {{GeneratorHelper.GetFromAbiMarshaler(genericParameters[0], "sender")}}, {{GeneratorHelper.GetFromAbiMarshaler(genericParameters[1], "args")}});
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1136,9 +1100,8 @@ namespace Generator
                      {
                          {{staticMethodsClass}}.Abi_Invoke(thisPtr, MarshalInterface<{{interfaceWithGeneric}}>.FromAbi(asyncInfo), asyncStatus);
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1171,9 +1134,8 @@ namespace Generator
                      {
                          {{staticMethodsClass}}.Abi_Invoke(thisPtr, MarshalInterface<{{senderInterface}}>.FromAbi(sender), MarshalInterface<{{changedEventArgsInterface}}>.FromAbi(@event));
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1213,9 +1175,8 @@ namespace Generator
                      {
                          {{staticMethodsClass}}.Abi_Invoke(thisPtr, MarshalInterface<{{asyncInfoInterfaceWithGeneric}}>.FromAbi(asyncInfo), {{GeneratorHelper.GetFromAbiMarshaler(progressParameter.ProjectedType, progressParameter.AbiType, progressParameter.TypeKind, "progressInfo")}});
                      }
-                     catch (global::System.Exception __exception__)
+                     catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1273,9 +1234,8 @@ namespace Generator
                      {
                         {{staticMethodsClass}}.Do_Abi_GetResults_4(thisPtr);
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1289,9 +1249,8 @@ namespace Generator
                      {
                          {{staticMethodsClass}}.Do_Abi_put_Progress_0(thisPtr, global::ABI.Windows.Foundation.AsyncActionProgressHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(handler));
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1311,9 +1270,8 @@ namespace Generator
                          *__return_value__ = global::ABI.Windows.Foundation.AsyncActionProgressHandler<{{genericParameters[0].ProjectedType}}>.FromManaged(____return_value__);
 
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1327,9 +1285,8 @@ namespace Generator
                      {
                          {{staticMethodsClass}}.Do_Abi_put_Completed_2(thisPtr, global::ABI.Windows.Foundation.AsyncActionWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(handler));
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1348,9 +1305,8 @@ namespace Generator
                          ____return_value__ = {{staticMethodsClass}}.Do_Abi_get_Completed_3(thisPtr);
                          *__return_value__ = global::ABI.Windows.Foundation.AsyncActionWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}>.FromManaged(____return_value__);
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1393,9 +1349,8 @@ namespace Generator
                          ____return_value__ = {{staticMethodsClass}}.Do_Abi_GetResults_4(thisPtr);
                          *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0], "____return_value__")}};
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1409,9 +1364,8 @@ namespace Generator
                      {
                          {{staticMethodsClass}}.Do_Abi_put_Progress_0(thisPtr, global::ABI.Windows.Foundation.AsyncOperationProgressHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromAbi(handler));
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1431,9 +1385,8 @@ namespace Generator
                          *__return_value__ = global::ABI.Windows.Foundation.AsyncOperationProgressHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromManaged(____return_value__);
              
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1447,9 +1400,8 @@ namespace Generator
                      {
                          {{staticMethodsClass}}.Do_Abi_put_Completed_2(thisPtr, global::ABI.Windows.Foundation.AsyncOperationWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromAbi(handler));
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1468,9 +1420,8 @@ namespace Generator
                          ____return_value__ = {{staticMethodsClass}}.Do_Abi_get_Completed_3(thisPtr);
                          *__return_value__ = global::ABI.Windows.Foundation.AsyncOperationWithProgressCompletedHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromManaged(____return_value__);
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1511,9 +1462,8 @@ namespace Generator
                          ____return_value__ = {{staticMethodsClass}}.Do_Abi_GetResults_2(thisPtr);
                          *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0], "____return_value__")}};
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1527,9 +1477,8 @@ namespace Generator
                      {
                          {{staticMethodsClass}}.Do_Abi_put_Completed_0(thisPtr, global::ABI.Windows.Foundation.AsyncOperationCompletedHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(handler));
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1548,9 +1497,8 @@ namespace Generator
                          ____return_value__ = {{staticMethodsClass}}.Do_Abi_get_Completed_1(thisPtr);
                          *__return_value__ = global::ABI.Windows.Foundation.AsyncOperationCompletedHandler<{{genericParameters[0].ProjectedType}}>.FromManaged(____return_value__);
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1587,9 +1535,8 @@ namespace Generator
                      {
                          *__return_value__ = {{staticMethodsClass}}.Do_Abi_get_CollectionChange_0(thisPtr);
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1607,9 +1554,8 @@ namespace Generator
                          ____return_value__ = {{staticMethodsClass}}.Do_Abi_get_Key_1(thisPtr);
                          *__return_value__ = {{GeneratorHelper.GetFromManagedMarshaler(genericParameters[0], "____return_value__")}};
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1646,9 +1592,8 @@ namespace Generator
                      {
                          *__return_value__ = {{staticMethodsClass}}.Do_Abi_add_MapChanged_0(thisPtr, global::ABI.Windows.Foundation.Collections.MapChangedEventHandler<{{genericParameters[0].ProjectedType}}, {{genericParameters[1].ProjectedType}}>.FromAbi(vhnd));
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1661,9 +1606,8 @@ namespace Generator
                      {
                          {{staticMethodsClass}}.Do_Abi_remove_MapChanged_1(thisPtr, token);
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1700,9 +1644,8 @@ namespace Generator
                      {
                          *__return_value__ = {{staticMethodsClass}}.Do_Abi_add_VectorChanged_0(thisPtr, global::ABI.Windows.Foundation.Collections.VectorChangedEventHandler<{{genericParameters[0].ProjectedType}}>.FromAbi(vhnd));
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;
@@ -1715,9 +1658,8 @@ namespace Generator
                      {
                          {{staticMethodsClass}}.Do_Abi_remove_VectorChanged_1(thisPtr, token);
                      }
-                     catch (Exception __exception__)
+                     catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
                      {
-                         global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                          return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                      }
                      return 0;

@@ -15,4 +15,5 @@ MembersMustExist : Member 'protected void ABI.WinRT.Interop.EventSource<TDelegat
 MembersMustExist : Member 'public void ABI.WinRT.Interop.EventHandlerEventSource<T>..ctor(WinRT.IObjectReference, System.Int32)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.WinRT.Interop.EventHandlerEventSource..ctor(WinRT.IObjectReference, System.Int32)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void ABI.System.Type.CopyManagedArray(System.Type[], System.IntPtr)' does not exist in the reference but it does exist in the implementation.
-Total Issues: 16
+MembersMustExist : Member 'public System.Boolean WinRT.ExceptionHelpers.CaptureErrorInfo(System.Exception)' does not exist in the reference but it does exist in the implementation.
+Total Issues: 17

@@ -68,9 +68,8 @@ namespace ABI.System
                 __result = global::WinRT.ComWrappersSupport.FindObject<global::System.IServiceProvider>(thisPtr).GetService(global::ABI.System.Type.FromAbi(type));
                 *result = MarshalInspectable<object>.FromManaged(__result);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;

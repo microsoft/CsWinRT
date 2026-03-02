@@ -97,9 +97,8 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableIterator>(thisPtr).MoveNext();
                 *result = (byte)(__result ? 1 : 0);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -115,9 +114,8 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 // Should never be called.
                 throw new NotImplementedException();
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
         }
@@ -132,9 +130,8 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableIterator>(thisPtr).Current;
                 *value = MarshalInspectable<object>.FromManaged(__value);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -150,9 +147,8 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableIterator>(thisPtr).HasCurrent;
                 *value = (byte)(__value ? 1 : 0);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -245,9 +241,8 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 *result = MarshalInspectable<object>.FromManaged(__result);
 
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -269,9 +264,8 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 *returnValue = (byte)(__returnValue ? 1 : 0);
 
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -290,9 +284,8 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 *value = __value;
 
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -563,9 +556,8 @@ namespace ABI.System.Collections
                 var iterator = ToAbiHelper.MakeBindableIterator(__this.GetEnumerator());
                 *result = MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.FromManaged(iterator);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1123,9 +1115,8 @@ namespace ABI.System.Collections
                 *result = MarshalInspectable<object>.FromManaged(__result);
 
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1141,9 +1132,8 @@ namespace ABI.System.Collections
                 __result = FindAdapter(thisPtr).GetView();
                 *result = MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.FromManaged(__result);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1162,9 +1152,8 @@ namespace ABI.System.Collections
                 *index = __index;
                 *returnValue = (byte)(__returnValue ? 1 : 0);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1177,9 +1166,8 @@ namespace ABI.System.Collections
             {
                 FindAdapter(thisPtr).SetAt(index, MarshalInspectable<object>.FromAbi(value));
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1192,9 +1180,8 @@ namespace ABI.System.Collections
             {
                 FindAdapter(thisPtr).InsertAt(index, MarshalInspectable<object>.FromAbi(value));
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1207,9 +1194,8 @@ namespace ABI.System.Collections
             {
                 FindAdapter(thisPtr).RemoveAt(index);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1222,9 +1208,8 @@ namespace ABI.System.Collections
             {
                 FindAdapter(thisPtr).Append(MarshalInspectable<object>.FromAbi(value));
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1237,9 +1222,8 @@ namespace ABI.System.Collections
             {
                 FindAdapter(thisPtr).RemoveAtEnd();
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1252,9 +1236,8 @@ namespace ABI.System.Collections
             {
                 FindAdapter(thisPtr).Clear();
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1272,9 +1255,8 @@ namespace ABI.System.Collections
                 __value = FindAdapter(thisPtr).Size;
                 *value = __value;
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;

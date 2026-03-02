@@ -330,9 +330,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = CoerceValue<byte>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -347,9 +346,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = CoerceValue<short>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -364,9 +362,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = CoerceValue<ushort>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -381,9 +378,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = CoerceValue<int>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -398,9 +394,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = CoerceValue<uint>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -415,9 +410,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = CoerceValue<long>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -432,9 +426,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = CoerceValue<ulong>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -449,9 +442,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = CoerceValue<float>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -466,9 +458,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = CoerceValue<double>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -484,9 +475,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = (ushort)CoerceValue<char>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -502,9 +492,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = (byte)(CoerceValue<bool>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr)) ? 1 : 0);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -520,9 +509,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = MarshalString.FromManaged(CoerceValue<string>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr)));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -538,9 +526,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = CoerceValue<Guid>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -556,9 +543,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = ABI.System.DateTimeOffset.FromManaged(CoerceValue<global::System.DateTimeOffset>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr)));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -574,9 +560,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = ABI.System.TimeSpan.FromManaged(CoerceValue<global::System.TimeSpan>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr)));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -592,9 +577,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = UnboxValue<global::Windows.Foundation.Point>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -610,9 +594,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = UnboxValue<global::Windows.Foundation.Size>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -628,9 +611,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = UnboxValue<global::Windows.Foundation.Rect>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -648,9 +630,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<byte>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalBlittable<byte>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -671,9 +652,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<short>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalBlittable<short>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -694,9 +674,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<ushort>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalBlittable<ushort>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -717,9 +696,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<int>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalBlittable<int>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -740,9 +718,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<uint>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalBlittable<uint>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -763,9 +740,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<long>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalBlittable<long>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -786,9 +762,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<ulong>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalBlittable<ulong>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -809,9 +784,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<float>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalBlittable<float>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -832,9 +806,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<double>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalBlittable<double>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -855,9 +828,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<char>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalNonBlittable<char>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -878,9 +850,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<bool>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalNonBlittable<bool>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -902,9 +873,8 @@ namespace ABI.Windows.Foundation
                 (*__valueSize, *value) = MarshalString.FromManagedArray(__value);
 
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -925,9 +895,8 @@ namespace ABI.Windows.Foundation
                 __value = CoerceArray<object>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
                 (*__valueSize, *value) = MarshalInspectable<object>.FromManagedArray(__value);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -949,9 +918,8 @@ namespace ABI.Windows.Foundation
                 (*__valueSize, *value) = MarshalBlittable<Guid>.FromManagedArray(__value);
 
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -973,9 +941,8 @@ namespace ABI.Windows.Foundation
                 (*__valueSize, *value) = MarshalNonBlittable<global::System.DateTimeOffset>.FromManagedArray(__value);
 
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -997,9 +964,8 @@ namespace ABI.Windows.Foundation
                 (*__valueSize, *value) = MarshalNonBlittable<global::System.TimeSpan>.FromManagedArray(__value);
 
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1021,9 +987,8 @@ namespace ABI.Windows.Foundation
                 (*__valueSize, *value) = MarshalBlittable<global::Windows.Foundation.Point>.FromManagedArray(__value);
 
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1045,9 +1010,8 @@ namespace ABI.Windows.Foundation
                 (*__valueSize, *value) = MarshalBlittable<global::Windows.Foundation.Size>.FromManagedArray(__value);
 
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1069,9 +1033,8 @@ namespace ABI.Windows.Foundation
                 (*__valueSize, *value) = MarshalBlittable<global::Windows.Foundation.Rect>.FromManagedArray(__value);
 
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1087,9 +1050,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = (byte)(NumericScalarTypes.TryGetValue(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr).GetType(), out _) ? 1 : 0);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
@@ -1105,9 +1067,8 @@ namespace ABI.Windows.Foundation
             {
                 *value = GetPropertyTypeOfObject(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.CaptureErrorInfo(__exception__))
             {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;

@@ -550,6 +550,12 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
             }
         }
 
+        public static unsafe bool CaptureErrorInfo(Exception ex)
+        {
+            SetErrorInfo(ex);
+            return true;
+        }
+
         public static void ReportUnhandledError(Exception ex)
         {
             SetErrorInfo(ex);
