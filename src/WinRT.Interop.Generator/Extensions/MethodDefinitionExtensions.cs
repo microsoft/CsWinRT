@@ -49,7 +49,7 @@ internal static class MethodDefinitionExtensions
 #pragma warning restore
 
         /// <summary>
-        /// Creates a new public constructor for a type that is executed when its declaring type is loaded by the CLR.
+        /// Creates a new public constructor for a type that is executed when an instance of this type is allocated by the CLR.
         /// </summary>
         /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use to resolve fundamental type signatures.</param>
         /// <param name="constructorMethod">The <see cref="MemberReference"/> for the base constructor to invoke.</param>
@@ -87,7 +87,7 @@ internal static class MethodDefinitionExtensions
         }
 
         /// <summary>
-        /// Creates a new default constructor for a type that is executed when its declaring type is loaded by the CLR.
+        /// Creates a new default constructor for a type that is executed when an instance of this type is allocated by the CLR.
         /// </summary>
         /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use to resolve fundamental type signatures.</param>
         /// <returns>The constructor.</returns>
@@ -103,7 +103,7 @@ internal static class MethodDefinitionExtensions
         }
 
         /// <summary>
-        /// Creates a new default constructor for a type that is executed when its declaring type is loaded by the CLR.
+        /// Creates a new default constructor for a type that is executed when an instance of this type is allocated by the CLR.
         /// </summary>
         /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use to resolve fundamental type signatures.</param>
         /// <param name="constructorMethod">The <see cref="MemberReference"/> for the base constructor to invoke.</param>
