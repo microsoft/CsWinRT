@@ -1,0 +1,104 @@
+// Test IDL for verifying deprecated and removed API support
+// Contains types with DeprecationType.Deprecate (0) and DeprecationType.Remove (1)
+import "Windows.Foundation.idl";
+
+namespace DeprecatedRemovedTest
+{
+    // Fully removed enum - should NOT appear in projection
+    [deprecated("RemovedEnum has been removed.", remove, 2)]
+    enum RemovedEnum
+    {
+        Alpha = 0,
+        Beta = 1
+    };
+
+    // Partially removed enum - Hidden value should be absent
+    enum PartiallyRemovedEnum
+    {
+        Visible = 0,
+        [deprecated("Hidden value has been removed.", remove, 2)]
+        Hidden = 1,
+        AlsoVisible = 2
+    };
+
+    // Deprecated enum - should have [Obsolete] but still be present
+    [deprecated("DeprecatedEnum is deprecated for testing.", deprecate, 1)]
+    enum DeprecatedEnum
+    {
+        First = 0,
+        Second = 1
+    };
+
+    // Normal enum for comparison
+    enum NormalEnum
+    {
+        One = 0,
+        Two = 1
+    };
+
+    // Interface with mix of normal, deprecated, and removed methods
+    interface IVtableTest
+    {
+        void NormalMethod();
+        [deprecated("DeprecatedMethod is deprecated.", deprecate, 1)]
+        void DeprecatedMethod();
+        [deprecated("RemovedMethod is gone.", remove, 2)]
+        void RemovedMethod();
+        void AnotherNormalMethod();
+    };
+
+    // Deprecated delegate
+    [deprecated("DeprecatedDelegate is deprecated.", deprecate, 1)]
+    delegate void DeprecatedDelegate();
+
+    // Removed delegate - should NOT appear in projection
+    [deprecated("RemovedDelegate is gone.", remove, 2)]
+    delegate void RemovedDelegate();
+
+    // Normal delegate for comparison
+    delegate void NormalDelegate();
+
+    // Class with mix of active and removed methods
+    runtimeclass TestClass
+    {
+        TestClass();
+        void ActiveMethod();
+        [deprecated("RemovedMethod has been removed.", remove, 2)]
+        void RemovedMethod();
+        [deprecated("DeprecatedMethod is deprecated.", deprecate, 1)]
+        void DeprecatedMethod();
+        static void ActiveStaticMethod();
+        [deprecated("RemovedStaticMethod has been removed.", remove, 2)]
+        static void RemovedStaticMethod();
+    }
+
+    // Fully deprecated class
+    [deprecated("DeprecatedClass is deprecated.", deprecate, 1)]
+    runtimeclass DeprecatedClass
+    {
+        DeprecatedClass();
+        void Method();
+    }
+
+    // Fully removed class - should NOT appear in projection
+    [deprecated("RemovedClass has been removed.", remove, 2)]
+    runtimeclass RemovedClass
+    {
+        RemovedClass();
+        void Method();
+    }
+
+    // Deprecated struct
+    [deprecated("DeprecatedStruct is deprecated.", deprecate, 1)]
+    struct DeprecatedStruct
+    {
+        Int32 Value;
+    };
+
+    // Removed struct - should NOT appear in projection
+    [deprecated("RemovedStruct has been removed.", remove, 2)]
+    struct RemovedStruct
+    {
+        Int32 Value;
+    };
+}
