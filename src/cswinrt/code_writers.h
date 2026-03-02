@@ -5022,6 +5022,10 @@ remove => %.Unsubscribe(value);
             {
                 continue;
             }
+            if (is_removed(method))
+            {
+                continue;
+            }
             method_signature signature{ method };
             auto [invoke_target, is_generic] = get_invoke_info(w, method);
             w.write(R"(
@@ -5050,6 +5054,10 @@ remove => %.Unsubscribe(value);
 
         for (auto&& prop : type.PropertyList())
         {
+            if (is_removed(prop))
+            {
+                continue;
+            }
             auto [getter, setter] = get_property_methods(prop);
             w.write(R"(
 %unsafe % %%
@@ -5110,7 +5118,11 @@ return %;
         int index = 0;
         for (auto&& evt : type.EventList())
         {
-            auto semantics = get_type_semantics(evt.EventType());
+            if (is_removed(evt))
+            {
+                index++;
+                continue;
+            }
             auto event_source = w.write_temp(settings.netstandard_compat ? "_%" : "Get_%2()", evt.Name());
             w.write(R"(
 %event % %%
@@ -8642,6 +8654,11 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
     
     void write_class(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         writer::write_platform_guard guard{ w };
 
         if (settings.component)
@@ -9004,6 +9021,11 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%
 
     void write_delegate(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         if (settings.component)
         {
             write_authoring_metadata_type(w, type);
@@ -9687,6 +9709,11 @@ return true;
 
     void write_enum(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         if (settings.component)
         {
             write_authoring_metadata_type(w, type);
@@ -9713,6 +9740,10 @@ return true;
             {
                 if (auto constant = field.Constant())
                 {
+                    if (is_removed(field))
+                    {
+                        continue;
+                    }
                     w.write("%% = unchecked((%)%),\n", 
                         bind<write_platform_attribute>(field.CustomAttribute()),
                         field.Name(), enum_underlying_type, bind<write_constant>(constant));
@@ -9724,6 +9755,11 @@ return true;
 
     void write_struct(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         if (settings.component)
         {
             write_authoring_metadata_type(w, type);

@@ -34,6 +34,52 @@ namespace cswinrt
         return has_attribute(prop, "Windows.Foundation.Metadata", "NoExceptionAttribute");
     }
 
+    template <typename T>
+    bool is_deprecated(T const& row)
+    {
+        return has_attribute(row, "Windows.Foundation.Metadata", "DeprecatedAttribute");
+    }
+
+    template <typename T>
+    auto get_deprecated_message(T const& row)
+    {
+        auto attr = get_attribute(row, "Windows.Foundation.Metadata", "DeprecatedAttribute");
+        if (attr)
+        {
+            auto sig = attr.Value();
+            auto const& fixedArgs = sig.FixedArgs();
+            if (fixedArgs.size() >= 1)
+            {
+                auto const& elemSig = std::get<ElemSig>(fixedArgs[0].value);
+                if (std::holds_alternative<std::string_view>(elemSig.value))
+                {
+                    return std::string(std::get<std::string_view>(elemSig.value));
+                }
+            }
+        }
+        return std::string{};
+    }
+
+    template <typename T>
+    bool is_removed(T const& row)
+    {
+        auto attr = get_attribute(row, "Windows.Foundation.Metadata", "DeprecatedAttribute");
+        if (!attr)
+        {
+            return false;
+        }
+        auto sig = attr.Value();
+        auto const& fixedArgs = sig.FixedArgs();
+        if (fixedArgs.size() >= 2)
+        {
+            // DeprecationType enum: Deprecate=0, Remove=1
+            auto const& elemSig = std::get<ElemSig>(fixedArgs[1].value);
+            auto const& enumVal = std::get<ElemSig::EnumValue>(elemSig.value);
+            return std::visit([](auto v) -> bool { return static_cast<int32_t>(v) == 1; }, enumVal.value);
+        }
+        return false;
+    }
+
     bool is_exclusive_to(TypeDef const& type)
     {
         return get_category(type) == category::interface_type && has_attribute(type, "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv);
