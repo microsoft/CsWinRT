@@ -1,7 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 using System;
 using System.Diagnostics;
@@ -20,10 +18,6 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
 {
-    #region Construction
-
-    #region Interface adapters
-
     // Instances of private types defined in this section will be returned from NetFxToWinRtStreamAdapter.Create(..).
     // Depending on the capabilities of the .NET stream for which we need to construct the adapter, we need to return
     // an object that can be QIed (COM speak for "cast") to a well-defined set of ifaces.
@@ -34,43 +28,7 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
     //   - We can use the runtime's ability to do that for us, based on the ifaces the concrete class implements (or does not).
     // The latter is much more elegant, and likely also faster.
 
-
-    private sealed partial class InputStream : NetFxToWinRtStreamAdapter, IInputStream, IDisposable
-    {
-        internal InputStream(Stream stream, StreamReadOperationOptimization readOptimization)
-            : base(stream, readOptimization)
-        {
-        }
-    }
-
-
-    private sealed partial class OutputStream : NetFxToWinRtStreamAdapter, IOutputStream, IDisposable
-    {
-        internal OutputStream(Stream stream, StreamReadOperationOptimization readOptimization)
-            : base(stream, readOptimization)
-        {
-        }
-    }
-
-
-    private sealed partial class RandomAccessStream : NetFxToWinRtStreamAdapter, IRandomAccessStream, IInputStream, IOutputStream, IDisposable
-    {
-        internal RandomAccessStream(Stream stream, StreamReadOperationOptimization readOptimization)
-            : base(stream, readOptimization)
-        {
-        }
-    }
-
-
-    private sealed partial class InputOutputStream : NetFxToWinRtStreamAdapter, IInputStream, IOutputStream, IDisposable
-    {
-        internal InputOutputStream(Stream stream, StreamReadOperationOptimization readOptimization)
-            : base(stream, readOptimization)
-        {
-        }
-    }
-
-    #endregion Interface adapters
+    #region Construction
 
     // We may want to define different behaviour for different types of streams.
     // For instance, ReadAsync treats MemoryStream special for performance reasons.
@@ -134,7 +92,11 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
         return memStream.TryGetBuffer(out arrSeg);
     }
 
-
+    /// <summary>
+    /// Creates a new <see cref="NetFxToWinRtStreamAdapter"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="stream">The <see cref="Stream"/> instance to wrap.</param>
+    /// <param name="readOptimization">The <see cref="StreamReadOperationOptimization"/> value to use.</param>
     private NetFxToWinRtStreamAdapter(Stream stream, StreamReadOperationOptimization readOptimization)
     {
         Debug.Assert(stream != null);
