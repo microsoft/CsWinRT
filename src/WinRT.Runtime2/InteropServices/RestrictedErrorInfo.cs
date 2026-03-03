@@ -341,7 +341,7 @@ public static unsafe class RestrictedErrorInfo
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to attach the error info to.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is <see langword="null"/>.</exception>
-    internal static void AttachErrorInfo(Exception exception)
+    public static Exception AttachErrorInfo(Exception exception) // TODO: make internal after streams are ported
     {
         ArgumentNullException.ThrowIfNull(exception);
 
@@ -359,13 +359,13 @@ public static unsafe class RestrictedErrorInfo
         // That also means that if we failed to retrieve the original error, then for sure it's unrelated.
         if (hresult.Failed)
         {
-            return;
+            return exception; // TODO: return void this after streams are ported
         }
 
         // Also just return the exception if the call succeeded but there was no previous error info
         if (restrictedErrorInfoPtr is null)
         {
-            return;
+            return exception; // TODO: return void this after streams are ported
         }
 
         try
@@ -413,6 +413,8 @@ public static unsafe class RestrictedErrorInfo
         {
             WindowsRuntimeUnknownMarshaller.Free(restrictedErrorInfoPtr);
         }
+
+        return exception; // TODO: return void this after streams are ported
     }
 
     /// <summary>
