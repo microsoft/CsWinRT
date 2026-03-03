@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Tasks;
 using Windows.Storage.Buffers;
-using WindowsRuntime.InteropServices;
+using Windows.Storage.Streams;
 
 #pragma warning disable CS1573
 
-namespace Windows.Storage.Streams;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Provides methods that encapsulate specialized logic to handle <see cref="Stream"/> operations when exposed to the Windows Runtime.
@@ -108,7 +108,7 @@ internal static class StreamOperationsImplementation
         // TODO: optimize this for external buffers too by using a custom 'Memory<byte>' implementation
         IBuffer dataBuffer = buffer is WindowsRuntimePinnedArrayBuffer or WindowsRuntimeExternalArrayBuffer
             ? buffer
-            : WindowsRuntimeBuffer.Create((int)uint.Min(buffer.Capacity, (uint)Array.MaxLength));
+            : Windows.Storage.Buffers.WindowsRuntimeBuffer.Create((int)uint.Min(buffer.Capacity, (uint)Array.MaxLength));
 
         // Helper with the core read operation logic, that will run inside the returned 'IAsyncOperationWithProgress<IBuffer, uint>' instance
         async Task<IBuffer> ReadCoreAsync(CancellationToken token, IProgress<uint> progress)

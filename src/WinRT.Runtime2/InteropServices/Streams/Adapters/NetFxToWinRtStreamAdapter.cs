@@ -3,7 +3,9 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.Versioning;
 using Windows.Foundation;
 using Windows.Storage.Streams;
 
@@ -18,68 +20,20 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
 {
-    // Instances of private types defined in this section will be returned from NetFxToWinRtStreamAdapter.Create(..).
-    // Depending on the capabilities of the .NET stream for which we need to construct the adapter, we need to return
-    // an object that can be QIed (COM speak for "cast") to a well-defined set of ifaces.
-    // E.g, if the specified stream CanRead, but not CanSeek and not CanWrite, then we *must* return an object that
-    // can be QIed to IInputStream, but *not* IRandomAccessStream and *not* IOutputStream.
-    // There are two ways to do that:
-    //   - We could explicitly implement ICustomQueryInterface and respond to QI requests by analyzing the stream capabilities
-    //   - We can use the runtime's ability to do that for us, based on the ifaces the concrete class implements (or does not).
-    // The latter is much more elegant, and likely also faster.
+    /// <summary>
+    /// The <see cref="StreamReadOperationOptimization"/> value to use for <see cref="_managedStream"/>.
+    /// </summary>
+    private readonly StreamReadOperationOptimization _readOptimization;
 
-    #region Construction
+    /// <summary>
+    /// The wrapped <see cref="Stream"/> instance.
+    /// </summary>
+    private Stream? _managedStream;
 
-    internal static NetFxToWinRtStreamAdapter Create(Stream stream)
-    {
-        if (stream == null)
-            throw new ArgumentNullException(nameof(stream));
-
-        StreamReadOperationOptimization readOptimization = StreamReadOperationOptimization.AbstractStream;
-        if (stream.CanRead)
-            readOptimization = DetermineStreamReadOptimization(stream);
-
-        NetFxToWinRtStreamAdapter adapter;
-
-        if (stream.CanSeek)
-            adapter = new RandomAccessStream(stream, readOptimization);
-
-        else if (stream.CanRead && stream.CanWrite)
-            adapter = new InputOutputStream(stream, readOptimization);
-
-        else if (stream.CanRead)
-            adapter = new InputStream(stream, readOptimization);
-
-        else if (stream.CanWrite)
-            adapter = new OutputStream(stream, readOptimization);
-
-        else
-            throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_NotSufficientCapabilitiesToConvertToWinRtStream);
-
-        return adapter;
-    }
-
-
-    private static StreamReadOperationOptimization DetermineStreamReadOptimization(Stream stream)
-    {
-        Debug.Assert(stream != null);
-
-        if (CanApplyReadMemoryStreamOptimization(stream))
-            return StreamReadOperationOptimization.MemoryStream;
-
-        return StreamReadOperationOptimization.AbstractStream;
-    }
-
-
-    private static bool CanApplyReadMemoryStreamOptimization(Stream stream)
-    {
-        MemoryStream memStream = stream as MemoryStream;
-        if (memStream == null)
-            return false;
-
-        ArraySegment<byte> arrSeg;
-        return memStream.TryGetBuffer(out arrSeg);
-    }
+    /// <summary>
+    /// Indicates whether to dispose <see cref="_managedStream"/> when <see cref="IDisposable.Dispose"/> is called.
+    /// </summary>
+    private bool _disposeManagedStream;
 
     /// <summary>
     /// Creates a new <see cref="NetFxToWinRtStreamAdapter"/> instance with the specified parameters.
@@ -98,17 +52,33 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
         _managedStream = stream;
     }
 
-    #endregion Construction
+    /// <summary>
+    /// Creates a new <see cref="NetFxToWinRtStreamAdapter"/> instance specialized for the a given <see cref="Stream"/> object.
+    /// </summary>
+    /// <param name="stream">The <see cref="Stream"/> instance to wrap.</param>
+    /// <returns>The resulting <see cref="NetFxToWinRtStreamAdapter"/> instance wrapping <paramref name="stream"/>.</returns>
+    public static NetFxToWinRtStreamAdapter Create(Stream stream)
+    {
+        Debug.Assert(stream is not null);
 
+        StreamReadOperationOptimization readOptimization = StreamReadOperationOptimization.Determine(stream);
 
-    #region Instance variables
-
-    private Stream _managedStream = null;
-    private bool _leaveUnderlyingStreamOpen = true;
-    private readonly StreamReadOperationOptimization _readOptimization;
-
-    #endregion Instance variables
-
+        // Depending on the capabilities of the .NET 'Stream' object for which we need to construct the adapter, we
+        // need to return an object that implements a well-known set of Windows Runtime interfaces (so that those
+        // interfaces will be in the set of COM interface entries for the CCW of that object). E.g. if the specified
+        // stream object reports 'CanRead', but not 'CanSeek' and not 'CanWrite', then we must return an object that
+        // implements 'IInputStream', but not 'IRandomAccessStream' and not 'IOutputStream'. So we just use different
+        // derived types implementing the various combinations of interfaces, and rely on 'cswinrtinteropgen' to produce
+        // all necessary marshalling code for when instances of these types are passed to native callers as CCWs.
+        return stream switch
+        {
+            { CanSeek: true } => new RandomAccessStream(stream, readOptimization),
+            { CanRead: true, CanWrite: true } => new InputOutputStream(stream, readOptimization),
+            { CanRead: true } => new InputStream(stream, readOptimization),
+            { CanWrite: true } => new OutputStream(stream, readOptimization),
+            _ => throw new ArgumentException(SR.Argument_NotSufficientCapabilitiesToConvertToWinRtStream)
+        };
+    }
 
     #region Tools and Helpers
 
@@ -119,65 +89,69 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
     /// finalized, they do not dispose the underlying stream. To ensure that, we must call this method on the winner to notify it that it is safe to
     /// dispose the underlying stream.
     /// </summary>
-    internal void SetWonInitializationRace()
+    public void SetWonInitializationRace()
     {
-        _leaveUnderlyingStreamOpen = false;
+        _disposeManagedStream = true;
     }
 
-
-    public Stream GetManagedStream()
+    public Stream? GetManagedStream()
     {
         return _managedStream;
     }
 
-
+    [MemberNotNull(nameof(_managedStream))]
     private Stream EnsureNotDisposed()
     {
-        Stream str = _managedStream;
+        Stream? managedStream = _managedStream;
 
-        if (str == null)
+        if (managedStream is null)
         {
-            ObjectDisposedException ex = new ObjectDisposedException(global::Windows.Storage.Streams.SR.ObjectDisposed_CannotPerformOperation);
+            ObjectDisposedException ex = new ObjectDisposedException(SR.ObjectDisposed_CannotPerformOperation);
             ex.HResult = WellKnownErrorCodes.RO_E_CLOSED;
             throw ex;
         }
 
-        return str;
+        // This method throws if the stream is 'null', meaning it will only ever return if
+        // '_managedStream' is not 'null'. Roslyn's flow analysis can't properly follow this
+        // logic, so here we're manually suppressing this warning at the end of the method.
+#pragma warning disable CS8774
+        return managedStream;
+#pragma warning restore CS8774
     }
 
     #endregion Tools and Helpers
 
-
     #region Common public interface
 
-    /// <summary>Implements IDisposable.Dispose (IClosable.Close in WinRT)</summary>
-    void IDisposable.Dispose()
+    /// <inheritdoc/>
+    public void Dispose()
     {
-        Stream str = _managedStream;
-        if (str == null)
+        Stream? managedStream = _managedStream;
+
+        if (managedStream is null)
+        {
             return;
+        }
 
         _managedStream = null;
 
-        if (!_leaveUnderlyingStreamOpen)
-            str.Dispose();
+        if (_disposeManagedStream)
+        {
+            managedStream.Dispose();
+        }
     }
 
     #endregion Common public interface
 
-
     #region IInputStream public interface
 
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+    /// <inheritdoc cref="IInputStream.ReadAsync"/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public IAsyncOperationWithProgress<IBuffer, uint> ReadAsync(IBuffer buffer, uint count, InputStreamOptions options)
     {
-        if (buffer == null)
-        {
-            // Mapped to E_POINTER.
-            throw new ArgumentNullException(nameof(buffer));
-        }
+        ArgumentNullException.ThrowIfNull(buffer);
 
-        if (count < 0 || int.MaxValue < count)
+        if (count is < 0 or > int.MaxValue)
         {
             ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(count));
             ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
@@ -186,44 +160,29 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
 
         if (buffer.Capacity < count)
         {
-            ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientBufferCapacity);
+            ArgumentException ex = new ArgumentException(SR.Argument_InsufficientBufferCapacity);
             ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
             throw ex;
         }
 
         if (!(options == InputStreamOptions.None || options == InputStreamOptions.Partial || options == InputStreamOptions.ReadAhead))
         {
-            ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(options),
-                                                                             global::Windows.Storage.Streams.SR.ArgumentOutOfRange_InvalidInputStreamOptionsEnumValue);
+            ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(options), SR.ArgumentOutOfRange_InvalidInputStreamOptionsEnumValue);
             ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
             throw ex;
         }
 
-        Stream str = EnsureNotDisposed();
+        Stream managedStream = EnsureNotDisposed();
 
-        IAsyncOperationWithProgress<IBuffer, uint> readAsyncOperation;
-        switch (_readOptimization)
+        // We can use this pattern to add more optimization options if necessary:
+        //
+        // StreamReadOperationOptimization.XxxxStream => StreamOperationsImplementation.Xxxx,ReadAsync(managedStream, buffer, count, options);
+        return _readOptimization switch
         {
-            case StreamReadOperationOptimization.MemoryStream:
-                readAsyncOperation = StreamOperationsImplementation.MemoryStream.ReadAsync(str, buffer, count);
-                break;
-
-            case StreamReadOperationOptimization.AbstractStream:
-                readAsyncOperation = StreamOperationsImplementation.ReadAsync(str, buffer, count, options);
-                break;
-
-            // Use this pattern to add more optimisation options if necessary:
-            //case StreamReadOperationOptimization.XxxxStream:
-            //    readAsyncOperation = StreamOperationsImplementation.ReadAsync_XxxxStream(str, buffer, count, options);
-            //    break;
-
-            default:
-                Debug.Fail("We should never get here. Someone forgot to handle an input stream optimisation option.");
-                readAsyncOperation = null;
-                break;
-        }
-
-        return readAsyncOperation;
+            StreamReadOperationOptimization.MemoryStream => StreamOperationsImplementation.MemoryStream.ReadAsync(managedStream, buffer, count),
+            StreamReadOperationOptimization.AbstractStream => StreamOperationsImplementation.ReadAsync(managedStream, buffer, count, options),
+            _ => throw new NotSupportedException(SR.NotSupported_UnrecognizedStreamReadOptimization)
+        };
     }
 
     #endregion IInputStream public interface
@@ -231,31 +190,31 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
 
     #region IOutputStream public interface
 
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+    /// <inheritdoc cref="IOutputStream.WriteAsync"/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public IAsyncOperationWithProgress<uint, uint> WriteAsync(IBuffer buffer)
     {
-        if (buffer == null)
-        {
-            // Mapped to E_POINTER.
-            throw new ArgumentNullException(nameof(buffer));
-        }
+        ArgumentNullException.ThrowIfNull(buffer);
 
         if (buffer.Capacity < buffer.Length)
         {
-            ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferLengthExceedsCapacity);
+            ArgumentException ex = new ArgumentException(SR.Argument_BufferLengthExceedsCapacity);
             ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
             throw ex;
         }
 
-        Stream str = EnsureNotDisposed();
-        return StreamOperationsImplementation.WriteAsync(str, buffer);
+        Stream managedStream = EnsureNotDisposed();
+
+        return StreamOperationsImplementation.WriteAsync(managedStream, buffer);
     }
 
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+    /// <inheritdoc cref="IOutputStream.FlushAsync"/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public IAsyncOperation<bool> FlushAsync()
     {
-        Stream str = EnsureNotDisposed();
-        return StreamOperationsImplementation.FlushAsync(str);
+        Stream managedStream = EnsureNotDisposed();
+
+        return StreamOperationsImplementation.FlushAsync(managedStream);
     }
 
     #endregion IOutputStream public interface
@@ -266,89 +225,88 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
 
     #region IRandomAccessStream public interface: Not cloning related
 
+    /// <inheritdoc cref="IRandomAccessStream.Seek"/>
     public void Seek(ulong position)
     {
         if (position > long.MaxValue)
         {
-            ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
+            ArgumentException ex = new ArgumentException(SR.IO_CannotSeekBeyondInt64MaxValue);
             ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
             throw ex;
         }
 
-        Stream str = EnsureNotDisposed();
-        long pos = unchecked((long)position);
+        Stream managedStream = EnsureNotDisposed();
 
-        Debug.Assert(str != null);
-        Debug.Assert(str.CanSeek, "The underlying str is expected to support Seek, but it does not.");
-        Debug.Assert(0 <= pos, "Unexpected pos=" + pos + ".");
+        Debug.Assert(managedStream.CanSeek);
+        Debug.Assert(position <= long.MaxValue);
 
-        str.Seek(pos, SeekOrigin.Begin);
+        _ = managedStream.Seek(unchecked((long)position), SeekOrigin.Begin);
     }
 
-
+    /// <inheritdoc cref="IRandomAccessStream.CanRead"/>
     public bool CanRead
     {
         get
         {
-            Stream str = EnsureNotDisposed();
-            return str.CanRead;
+            Stream managedStream = EnsureNotDisposed();
+
+            return managedStream.CanRead;
         }
     }
 
-
+    /// <inheritdoc cref="IRandomAccessStream.CanWrite"/>
     public bool CanWrite
     {
         get
         {
-            Stream str = EnsureNotDisposed();
-            return str.CanWrite;
+            Stream managedStream = EnsureNotDisposed();
+
+            return managedStream.CanWrite;
         }
     }
 
-
+    /// <inheritdoc cref="IRandomAccessStream.Position"/>
     public ulong Position
     {
         get
         {
-            Stream str = EnsureNotDisposed();
-            return (ulong)str.Position;
+            Stream managedStream = EnsureNotDisposed();
+
+            return (ulong)managedStream.Position;
         }
     }
 
-
+    /// <inheritdoc cref="IRandomAccessStream.Size"/>
     public ulong Size
     {
         get
         {
-            Stream str = EnsureNotDisposed();
-            return (ulong)str.Length;
-        }
+            Stream managedStream = EnsureNotDisposed();
 
+            return (ulong)managedStream.Length;
+        }
         set
         {
             if (value > long.MaxValue)
             {
-                ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.IO_CannotSetSizeBeyondInt64MaxValue);
+                ArgumentException ex = new ArgumentException(SR.IO_CannotSetSizeBeyondInt64MaxValue);
                 ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
                 throw ex;
             }
 
-            Stream str = EnsureNotDisposed();
+            Stream managedStream = EnsureNotDisposed();
 
-            if (!str.CanWrite)
+            if (!managedStream.CanWrite)
             {
-                InvalidOperationException ex = new InvalidOperationException(global::Windows.Storage.Streams.SR.InvalidOperation_CannotSetStreamSizeCannotWrite);
+                InvalidOperationException ex = new InvalidOperationException(SR.InvalidOperation_CannotSetStreamSizeCannotWrite);
                 ex.HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
                 throw ex;
             }
 
-            long val = unchecked((long)value);
+            Debug.Assert(managedStream.CanSeek);
+            Debug.Assert(value <= long.MaxValue);
 
-            Debug.Assert(str != null);
-            Debug.Assert(str.CanSeek, "The underlying str is expected to support Seek, but it does not.");
-            Debug.Assert(0 <= val, "Unexpected val=" + val + ".");
-
-            str.SetLength(val);
+            managedStream.SetLength(unchecked((long)value));
         }
     }
 
@@ -365,7 +323,7 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
     // to support it correctly for generic streams.
     private static void ThrowCloningNotSupported(string methodName)
     {
-        NotSupportedException nse = new NotSupportedException(string.Format(global::Windows.Storage.Streams.SR.NotSupported_CloningNotSupported, methodName));
+        NotSupportedException nse = new NotSupportedException(string.Format(SR.NotSupported_CloningNotSupported, methodName));
         nse.HResult = WellKnownErrorCodes.E_NOTIMPL;
         throw nse;
     }
@@ -394,7 +352,4 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
 
     #endregion IRandomAccessStream public interface
 
-}  // class NetFxToWinRtStreamAdapter
-// namespace
-
-// NetFxToWinRtStreamAdapter.cs
+}

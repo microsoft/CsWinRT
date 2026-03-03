@@ -96,6 +96,8 @@ namespace Windows.Storage.Streams
 
         public const string NotSupported_CannotWriteToStream = "This stream does not support write access.";
 
+        public const string NotSupported_UnrecognizedStreamReadOptimization = "This stream is using a read optimization mode that was not recognized.";
+
         public const string NotSupported_CloningNotSupported = "This IRandomAccessStream does not support the {0} method because it requires cloning and this stream does not support cloning.";
 
         public const string ArgumentNullReference_IOCompletionCallbackCannotProcessNullAsyncInfo = "The Windows Runtime stream that underlies this 'System.IO.Stream' object has invoked an I/O completion callback and specified 'null' for the 'IAsyncInfo' instance that describes the completed IO operation. This behavior is not supported, because results cannot be retrieved from a 'null' operation. Either the underlying Windows Runtime stream has a faulty implementation, or the Windows Runtime object in being used in an unsupported runtime environment.";

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.IO;
 using Windows.Foundation;
 
 #pragma warning disable CS1573
