@@ -16,6 +16,7 @@ namespace Windows.Storage.Streams
     using Windows.Storage.Buffers;
     using System;
     using Windows.Foundation.Tasks;
+    using WindowsRuntime.InteropServices;
 
     /// <summary>
     /// A <code>Stream</code> used to wrap a Windows Runtime stream to expose it as a managed steam.
@@ -457,8 +458,7 @@ namespace Windows.Storage.Streams
 
         public override int EndRead(IAsyncResult asyncResult)
         {
-            if (asyncResult == null)
-                throw new ArgumentNullException(nameof(asyncResult));
+            ArgumentNullException.ThrowIfNull(asyncResult);
 
             EnsureNotDisposed();
             EnsureCanRead();
@@ -487,7 +487,7 @@ namespace Windows.Storage.Streams
 
                 // Done:
 
-                long bytesCompleted = streamAsyncResult.BytesCompleted;
+                long bytesCompleted = streamAsyncResult.NumberOfBytesProcessed;
                 Debug.Assert(bytesCompleted <= unchecked((long)int.MaxValue));
 
                 return (int)bytesCompleted;
@@ -707,7 +707,7 @@ namespace Windows.Storage.Streams
             Debug.Assert(wrtStr != null);
 
             IAsyncOperation<bool> asyncFlushOperation = wrtStr.FlushAsync();
-            StreamFlushAsyncResult asyncResult = new StreamFlushAsyncResult(asyncFlushOperation, processCompletedOperationInCallback: false);
+            StreamFlushAsyncResult asyncResult = new StreamFlushAsyncResult(asyncFlushOperation);
 
             asyncResult.Wait();
 

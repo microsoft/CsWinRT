@@ -1,362 +1,394 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#pragma warning disable IDE0032
+using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.ExceptionServices;
+using System.Runtime.Versioning;
+using System.Threading;
+using Windows.Foundation;
+using Windows.Storage.Streams;
 
-namespace System.IO
+#pragma warning disable IDE0032, IDE0270
+
+namespace WindowsRuntime.InteropServices;
+
+/// <summary>
+/// A base class providing support for implementing <see cref="IAsyncResult"/> for asynchronous Windows Runtime stream operations.
+/// </summary>
+[SupportedOSPlatform("windows10.0.10240.0")]
+internal abstract class StreamOperationAsyncResult : IAsyncResult
 {
-    using System.Diagnostics;
-    using System.Runtime.ExceptionServices;
-    
-    using System.Runtime.InteropServices;
-    using System.Threading.Tasks;
-    using System.Threading;
-    using global::Windows.Foundation;
-    using global::Windows.Storage.Streams;
-    using System.Diagnostics.CodeAnalysis;
-    using WindowsRuntime.InteropServices;
+    /// <summary>
+    /// The user-provided completion callback, if available.
+    /// </summary>
+    private readonly AsyncCallback? _userCompletionCallback;
 
-    internal abstract class StreamOperationAsyncResult : IAsyncResult
+    /// <summary>
+    /// The user-provided state object, if available.
+    /// </summary>
+    private readonly object? _userAsyncStateInfo;
+
+    /// <summary>
+    /// Indicates whether to process the completed operation in the callback.
+    /// </summary>
+    private readonly bool _processCompletedOperationInCallback;
+
+    /// <summary>
+    /// The asynchronous operation to wrap.
+    /// </summary>
+    /// <remarks>
+    /// This will be set to <see langword="null"/> when the operation is closed or canceled.
+    /// </remarks>
+    private IAsyncInfo? _asyncStreamOperation;
+
+    /// <summary>
+    /// Indicates whether the operation is completed.
+    /// </summary>
+    private volatile bool _completed;
+
+    /// <summary>
+    /// Indicates whether <see cref="_userCompletionCallback"/> has been invoked.
+    /// </summary>
+    private volatile bool _callbackInvoked;
+
+    /// <summary>
+    /// The wait handle to use to implement <see cref="IAsyncResult.AsyncWaitHandle"/>.
+    /// </summary>
+    private volatile ManualResetEvent? _waitHandle;
+
+    /// <summary>
+    /// The number of bytes processed (by calling <see cref="ProcessCompletedOperation()"/>.
+    /// </summary>
+    private long _numberOfBytesProcessed;
+
+    /// <summary>
+    /// The cached <see cref="ExceptionDispatchInfo"/> instance, if the operation failed.
+    /// </summary>
+    private ExceptionDispatchInfo? _errorInfo;
+
+    /// <summary>
+    /// The completed operation to wrap.
+    /// </summary>
+    /// <remarks>
+    /// This will be the same instance as <see cref="_asyncStreamOperation"/>, but only set upon completion.
+    /// </remarks>
+    private IAsyncInfo? _completedOperation;
+
+    /// <summary>
+    /// Creates a new <see cref="StreamOperationAsyncResult"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="asyncOperation">The asynchronous operation to wrap.</param>
+    /// <param name="userCompletionCallback">The user-provided completion callback, if available.</param>
+    /// <param name="userAsyncStateInfo">The user-provided state object, if available.</param>
+    /// <param name="processCompletedOperationInCallback">Indicates whether to process the completed operation in the callback.</param>
+    protected StreamOperationAsyncResult(
+        IAsyncInfo asyncOperation,
+        AsyncCallback? userCompletionCallback,
+        object? userAsyncStateInfo,
+        bool processCompletedOperationInCallback)
     {
-        private readonly AsyncCallback? _userCompletionCallback;
-        private readonly object? _userAsyncStateInfo;
-        private readonly bool _processCompletedOperationInCallback;
+        Debug.Assert(!processCompletedOperationInCallback || userCompletionCallback is not null);
 
-        private IAsyncInfo? _asyncStreamOperation;
+        _userCompletionCallback = userCompletionCallback;
+        _userAsyncStateInfo = userAsyncStateInfo;
+        _processCompletedOperationInCallback = processCompletedOperationInCallback;
+        _asyncStreamOperation = asyncOperation;
+    }
 
-        private volatile bool _completed;
-        private volatile bool _callbackInvoked;
-        private volatile ManualResetEvent? _waitHandle;
+    /// <summary>
+    /// Finalizes the current operation object.
+    /// </summary>
+    ~StreamOperationAsyncResult()
+    {
+        // This finalisation is not critical (we're not directly responsible for any unmanaged resources),
+        // but we can still make an effort to notify the underlying Windows Runtime stream object that we
+        // are not any longer interested in the results of the operation.
+        CancelStreamOperation();
+    }
 
-        private long _bytesCompleted = 0;
+    /// <inheritdoc/>
+    public object? AsyncState => _userAsyncStateInfo;
 
-        private ExceptionDispatchInfo? _errorInfo;
-        private IAsyncInfo? _completedOperation;
-
-        protected StreamOperationAsyncResult(
-            IAsyncInfo asyncStreamOperation,
-            AsyncCallback? userCompletionCallback,
-            object? userAsyncStateInfo,
-            bool processCompletedOperationInCallback)
+    /// <inheritdoc/>
+    public WaitHandle AsyncWaitHandle
+    {
+        get
         {
-            _userCompletionCallback = userCompletionCallback;
-            _userAsyncStateInfo = userAsyncStateInfo;
-            _processCompletedOperationInCallback = processCompletedOperationInCallback;
-            _asyncStreamOperation = asyncStreamOperation;
-        }
+            ManualResetEvent? waitHandle = _waitHandle;
 
-        /// <summary>
-        /// Finalizes the current operation object.
-        /// </summary>
-        ~StreamOperationAsyncResult()
-        {
-            // This finalisation is not critical (we're not directly responsible for any unmanaged resources),
-            // but we can still make an effort to notify the underlying Windows Runtime stream object that we
-            // are not any longer interested in the results of the operation.
-            _ = CancelStreamOperation();
-        }
-
-        /// <inheritdoc/>
-        public object? AsyncState => _userAsyncStateInfo;
-
-        /// <inheritdoc/>
-        public WaitHandle AsyncWaitHandle
-        {
-            get
+            // Just return the existing handle if we have already created one
+            if (waitHandle is not null)
             {
-                ManualResetEvent? waitHandle = _waitHandle;
-
-                // Just return the existing handle if we have already created one
-                if (waitHandle is not null)
-                {
-                    return waitHandle;
-                }
-
-                // Create a new wait handle passing the flag indicating whether the current operation
-                // has completed. This ensures things will work fine if someone will retrieve this
-                // wait handle through the public property and then wait on it. That is, if the task
-                // is already completed, the wait handle will also already be in the signaled state.
-                waitHandle = new ManualResetEvent(_completed);
-
-                // Try to atomically set the new wait handle
-                ManualResetEvent? otherHandle = Interlocked.CompareExchange(ref _waitHandle, waitHandle, null);
-
-                // If the original value was not 'null', it means we raced against another thread
-                // and lost. In that case, we can just dispose this handle and return the other one.
-                if (otherHandle is not null)
-                {
-                    waitHandle.Dispose();
-
-                    return otherHandle;
-                }
-
-                // If we got here, we won the race, so we can directly return our local wait handle
                 return waitHandle;
             }
-        }
 
-        /// <inheritdoc/>
-        public bool CompletedSynchronously => false;
+            // Create a new wait handle passing the flag indicating whether the current operation
+            // has completed. This ensures things will work fine if someone will retrieve this
+            // wait handle through the public property and then wait on it. That is, if the task
+            // is already completed, the wait handle will also already be in the signaled state.
+            waitHandle = new ManualResetEvent(_completed);
 
-        /// <inheritdoc/>
-        public bool IsCompleted => _completed;
+            // Try to atomically set the new wait handle
+            ManualResetEvent? otherHandle = Interlocked.CompareExchange(ref _waitHandle, waitHandle, null);
 
-        /// <inheritdoc/>
-        public bool ProcessCompletedOperationInCallback => _processCompletedOperationInCallback;
-
-        public long BytesCompleted => _bytesCompleted;
-
-        [MemberNotNullWhen(true, nameof(_errorInfo))]
-        public bool HasError => _errorInfo != null;
-
-        public void Wait()
-        {
-            if (_completed)
+            // If the original value was not 'null', it means we raced against another thread
+            // and lost. In that case, we can just dispose this handle and return the other one.
+            if (otherHandle is not null)
             {
-                return;
+                waitHandle.Dispose();
+
+                return otherHandle;
             }
 
-            WaitHandle wh = AsyncWaitHandle;
+            // If we got here, we won the race, so we can directly return our local wait handle
+            return waitHandle;
+        }
+    }
 
-            // Keep waiting on the handle until the current task reaches the completed state
-            while (!_completed)
+    /// <inheritdoc/>
+    public bool CompletedSynchronously => false;
+
+    /// <inheritdoc/>
+    public bool IsCompleted => _completed;
+
+    /// <inheritdoc/>
+    public bool ProcessCompletedOperationInCallback => _processCompletedOperationInCallback;
+
+    /// <summary>
+    /// Gets the number of bytes processed after a completed operation.
+    /// </summary>
+    /// <remarks>
+    /// This property is updated by calling <see cref="ProcessCompletedOperation()"/>.
+    /// </remarks>
+    public long NumberOfBytesProcessed => _numberOfBytesProcessed;
+
+    /// <summary>
+    /// Gets whether the current asynchronous result failed with some error.
+    /// </summary>
+    [MemberNotNullWhen(true, nameof(_errorInfo))]
+    public bool HasError => _errorInfo is not null;
+
+    /// <summary>
+    /// Synchronusly waits for the operation to be completed.
+    /// </summary>
+    public void Wait()
+    {
+        if (_completed)
+        {
+            return;
+        }
+
+        WaitHandle waitHandle = AsyncWaitHandle;
+
+        // Keep waiting on the handle until the current task reaches the completed state
+        while (!_completed)
+        {
+            _ = waitHandle.WaitOne();
+        }
+    }
+
+    /// <summary>
+    /// Processes a completed operation and updates the internal state accordingly.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if the wrapped operation is not in the completed state, or if this method has been called already.</exception>
+    /// <remarks>
+    /// Callers should only invoke this method after checking that <see cref="ProcessCompletedOperationInCallback"/> is <see langword="false"/>.
+    /// </remarks>
+    public void ProcessCompletedOperation()
+    {
+        // The error handling is slightly tricky here. Before processing the I/O results, we are verifying some basic
+        // assumptions. If they do not hold, we are throwing an 'InvalidOperationException'. However, by the time this
+        // method is called, we might have already stored something into '_errorInfo', e.g. if an error occurred in
+        // '_userCompletionCallback'. If that is the case, then that previous exception might include some important
+        // info relevant for detecting the problem. So, we take that previous exception and attach it as the inner
+        // exception to the 'InvalidOperationException' being thrown. In cases where we have a good understanding of
+        // the previously saved error info, and we know for sure that it is the immediate reason for the state validation
+        // to fail, we can avoid throwing the 'InvalidOperationException' altogether and only rethrow the error info.
+
+        // Check that the 'Completed' handler has been set, meaning the wrapped operation has completed. This is set from
+        // 'OnStreamOperationCompleted', which is set by each derived type as the completion handler upon construction.
+        if (!_callbackInvoked)
+        {
+            ProcessCompletedOperation_InvalidOperationThrowHelper(SR.InvalidOperation_CannotCallThisMethodInCurrentState);
+        }
+
+        // Check that the the completion handler has actually ran to completion already (it might run concurrently)
+        if (!_processCompletedOperationInCallback && !_completed)
+        {
+            ProcessCompletedOperation_InvalidOperationThrowHelper(SR.InvalidOperation_CannotCallThisMethodInCurrentState);
+        }
+
+        // If we don't have a completed operation, then we are in an invalid state and can't proceed
+        if (_completedOperation is null)
+        {
+            ExceptionDispatchInfo? errorInfo = _errorInfo;
+
+            // See if the error info is set because we observed a 'null' completed async operation previously.
+            // We're explicitly checking that the message is an exact match to avoid any false positives here.
+            if (errorInfo is { SourceException: ArgumentNullException { Message: SR.ArgumentNullReference_IOCompletionCallbackCannotProcessNullAsyncInfo } })
             {
-                _ = wh.WaitOne();
+                errorInfo.Throw();
+            }
+            else
+            {
+                throw new InvalidOperationException(SR.InvalidOperation_CannotCallThisMethodInCurrentState);
             }
         }
 
-        public void ThrowCachedError()
+        // Ensure that the completed operation matches the one that we're currently wrapping
+        if (_completedOperation.Id != _asyncStreamOperation!.Id)
         {
-            _errorInfo?.Throw();
+            ProcessCompletedOperation_InvalidOperationThrowHelper(SR.InvalidOperation_UnexpectedAsyncOperationID);
         }
 
-        public void CloseStreamOperation()
+        // If the completed operation is in an error state, we also can't proceed
+        if (_completedOperation.Status is AsyncStatus.Error)
         {
-            try
-            {
-                _asyncStreamOperation?.Close();
-            }
-            catch
-            {
-            }
+            _numberOfBytesProcessed = 0;
 
-            _asyncStreamOperation = null;
+            ThrowWithIOExceptionDispatchInfo(_completedOperation.ErrorCode!);
         }
 
-        private bool CancelStreamOperation()
+        // The state is valid, so we can delegate to the derived implementation calling 'GetResults()'
+        ProcessCompletedOperation(_completedOperation, out _numberOfBytesProcessed);
+    }
+
+    /// <summary>
+    /// Closes the current operation.
+    /// </summary>
+    public void CloseStreamOperation()
+    {
+        try
         {
+            _asyncStreamOperation?.Close();
+        }
+        catch
+        {
+        }
+
+        _asyncStreamOperation = null;
+    }
+
+    /// <summary>
+    /// Cancels the current operation.
+    /// </summary>
+    public void CancelStreamOperation()
+    {
+        if (_callbackInvoked)
+        {
+            return;
+        }
+
+        _asyncStreamOperation?.Cancel();
+        _asyncStreamOperation = null;
+    }
+
+    /// <summary>
+    /// Throws the appropriate exception for a failed operation.
+    /// </summary>
+    /// <remarks>
+    /// Callers should only invoke this method after checking <see cref="HasError"/>.
+    /// </remarks>
+    public void ThrowCachedError()
+    {
+        _errorInfo?.Throw();
+    }
+
+    /// <summary>
+    /// Processes a completed operation and returns the number of bytes being processed.
+    /// </summary>
+    /// <param name="completedOperation">The completed asynchronous operation.</param>
+    /// <param name="numberOfBytesProcessed">The number of bytes processed by the operation.</param>
+    protected abstract void ProcessCompletedOperation(IAsyncInfo completedOperation, out long numberOfBytesProcessed);
+
+    /// <summary>
+    /// Notifies the current instance that the wrapped operation has completed, and processes the completion accordingly.
+    /// </summary>
+    /// <param name="asyncInfo"><inheritdoc cref="AsyncActionCompletedHandler" path="/param[@name='asyncInfo']/node()"/></param>
+    /// <param name="asyncStatus"><inheritdoc cref="AsyncActionCompletedHandler" path="/param[@name='asyncStatus']/node()"/></param>
+    /// <remarks>This method is meant to be set to <see cref="IAsyncAction.Completed"/> (and equivalent properties) upon construction.</remarks>
+    [SuppressMessage("Style", "IDE0060", Justification = "The 'asyncStatus' parameter is required, as this method is used as a completion handler.")]
+    protected void OnStreamOperationCompleted(IAsyncInfo asyncInfo, AsyncStatus asyncStatus)
+    {
+        try
+        {
+            // Ensure that this is the first time this callback is being invoked
             if (_callbackInvoked)
             {
-                return false;
+                throw new InvalidOperationException(SR.InvalidOperation_MultipleIOCompletionCallbackInvocation);
             }
 
-            _asyncStreamOperation?.Cancel();
-            _asyncStreamOperation = null;
+            _callbackInvoked = true;
 
-            return true;
+            // This happens in rare stress cases in 'Console' mode, and the Windows Runtime team said this is unlikely to be fixed.
+            // Moreover, this can also happen if the underlying Windows Runtime stream just has a faulty user implementation. If we
+            // did not do this check, we would either get the same exception without the explanation message when dereferencing the
+            // input operation later, or we would get an 'InvalidOperationException' when processing the operation. With the check,
+            // a much more useful exception will be reported to the user, to inform them of exactly what went wrong and why.
+            if (asyncInfo is null)
+            {
+                throw new ArgumentNullException(nameof(asyncInfo), SR.ArgumentNullReference_IOCompletionCallbackCannotProcessNullAsyncInfo);
+            }
+
+            _completedOperation = asyncInfo;
+
+            // If '_processCompletedOperationInCallback' is not set, that indicates that the stream is doing a blocking wait on the
+            // wait handle of this 'IAsyncResult' instance. In that case, calls on the completed operation object may deadlock if
+            // the native object is not free threaded. By setting '_processCompletedOperationInCallback' to 'false' the stream that
+            // created this 'IAsyncResult' instance indicated that it will call 'ProcessCompletedOperation' after the wait handle
+            // is signalled to manually fetch the results, which avoids the risk of deadlocks.
+            if (_processCompletedOperationInCallback)
+            {
+                ProcessCompletedOperation();
+            }
         }
-
-        protected abstract void ProcessCompletedOperation(IAsyncInfo completedOperation, out long numberOfBytesProcessed);
-
-        private static void ProcessCompletedOperation_InvalidOperationThrowHelper(ExceptionDispatchInfo errInfo, string errMsg)
+        catch (Exception ex)
         {
-            Exception errInfosrc = (errInfo == null) ? null : errInfo.SourceException;
-
-            if (errInfosrc == null)
-                throw new InvalidOperationException(errMsg);
-            else
-                throw new InvalidOperationException(errMsg, errInfosrc);
+            _numberOfBytesProcessed = 0;
+            _errorInfo = ExceptionDispatchInfo.Capture(ex);
         }
-
-
-        internal void ProcessCompletedOperation()
+        finally
         {
-            // The error handling is slightly tricky here:
-            // Before processing the IO results, we are verifying some basic assumptions and if they do not hold, we are
-            // throwing InvalidOperation. However, by the time this method is called, we might have already stored something
-            // into errorInfo, e.g. if an error occurred in StreamOperationCompletedCallback. If that is the case, then that
-            // previous exception might include some important info relevant for detecting the problem. So, we take that
-            // previous exception and attach it as the inner exception to the InvalidOperationException being thrown.
-            // In cases where we have a good understanding of the previously saved errorInfo, and we know for sure that it
-            // the immediate reason for the state validation to fail, we can avoid throwing InvalidOperation altogether
-            // and only rethrow the errorInfo.
+            _completed = true;
 
-            if (!_callbackInvoked)
-                ProcessCompletedOperation_InvalidOperationThrowHelper(_errorInfo, global::Windows.Storage.Streams.SR.InvalidOperation_CannotCallThisMethodInCurrentState);
+            Interlocked.MemoryBarrier();
 
-            if (!_processCompletedOperationInCallback && !_completed)
-                ProcessCompletedOperation_InvalidOperationThrowHelper(_errorInfo, global::Windows.Storage.Streams.SR.InvalidOperation_CannotCallThisMethodInCurrentState);
-
-            if (_completedOperation == null)
-            {
-                ExceptionDispatchInfo errInfo = _errorInfo;
-                Exception errInfosrc = (errInfo == null) ? null : errInfo.SourceException;
-
-                // See if errorInfo is set because we observed completedOperation == null previously (being slow is Ok on error path):
-                if (errInfosrc != null && errInfosrc is NullReferenceException
-                        && global::Windows.Storage.Streams.SR.NullReference_IOCompletionCallbackCannotProcessNullAsyncInfo.Equals(errInfosrc.Message))
-                {
-                    errInfo!.Throw();
-                }
-                else
-                {
-                    throw new InvalidOperationException(global::Windows.Storage.Streams.SR.InvalidOperation_CannotCallThisMethodInCurrentState);
-                }
-            }
-
-            if (_completedOperation.Id != _asyncStreamOperation!.Id)
-                ProcessCompletedOperation_InvalidOperationThrowHelper(_errorInfo, global::Windows.Storage.Streams.SR.InvalidOperation_UnexpectedAsyncOperationID);
-
-            if (_completedOperation.Status == AsyncStatus.Error)
-            {
-                _bytesCompleted = 0;
-                ThrowWithIOExceptionDispatchInfo(_completedOperation.ErrorCode);
-            }
-
-            ProcessCompletedOperation(_completedOperation, out _bytesCompleted);
+            // From this point on, trying to access 'AsyncWaitHandle' would create a handle that is already signaled as
+            // completed (because that property checks the value of '_completed'), so we do not need to check if it is
+            // being produced asynchronously. That is, we can signal it if it already exists (i.e. if someone tried to
+            // access 'AsyncWaitHandle' before). If it doesn't exist yet, it will be auto-signaled on creation anyway.
+            _ = _waitHandle?.Set();
         }
 
-        internal void StreamOperationCompletedCallback(IAsyncInfo completedOperation, AsyncStatus unusedCompletionStatus)
-        {
-            try
-            {
-                if (_callbackInvoked)
-                    throw new InvalidOperationException(global::Windows.Storage.Streams.SR.InvalidOperation_MultipleIOCompletionCallbackInvocation);
-
-                _callbackInvoked = true;
-
-                // This happens in rare stress cases in Console mode and the WinRT folks said they are unlikely to fix this in Dev11.
-                // Moreover, this can happen if the underlying WinRT stream has a faulty user implementation.
-                // If we did not do this check, we would either get the same exception without the explaining message when dereferencing
-                // completedOperation later, or we will get an InvalidOperation when processing the Op. With the check, they will be
-                // aggregated and the user will know what went wrong.
-                if (completedOperation == null)
-                    throw new NullReferenceException(global::Windows.Storage.Streams.SR.NullReference_IOCompletionCallbackCannotProcessNullAsyncInfo);
-
-                _completedOperation = completedOperation;
-
-                // processCompletedOperationInCallback == false indicates that the stream is doing a blocking wait on the waitHandle of this IAsyncResult.
-                // In that case calls on completedOperation may deadlock if completedOperation is not free threaded.
-                // By setting processCompletedOperationInCallback to false the stream that created this IAsyncResult indicated that it
-                // will call ProcessCompletedOperation after the waitHandle is signalled to fetch the results.
-
-                if (_processCompletedOperationInCallback)
-                    ProcessCompletedOperation();
-            }
-            catch (Exception ex)
-            {
-                _bytesCompleted = 0;
-                _errorInfo = ExceptionDispatchInfo.Capture(ex);
-            }
-            finally
-            {
-                _completed = true;
-                Interlocked.MemoryBarrier();
-                // From this point on, AsyncWaitHandle would create a handle that is readily set,
-                // so we do not need to check if it is being produced asynchronously.
-                if (_waitHandle != null)
-                    _waitHandle.Set();
-            }
-
-            if (_userCompletionCallback != null)
-                _userCompletionCallback(this);
-        }
-
-        private void ThrowWithIOExceptionDispatchInfo(Exception e)
-        {
-            WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(RestrictedErrorInfo.AttachErrorInfo(_completedOperation.ErrorCode)).Throw();
-        }
+        // Finally invoke the user-provided callback, now that all other state has been updated
+        _userCompletionCallback?.Invoke(this);
     }
 
-    internal sealed class StreamReadAsyncResult : StreamOperationAsyncResult
+    [DoesNotReturn]
+    [StackTraceHidden]
+    private void ProcessCompletedOperation_InvalidOperationThrowHelper(string errorMessage)
     {
-        /// <summary>
-        /// The user-provided <see cref="IBuffer"/> instance to use for the read operation.
-        /// </summary>
-        private readonly IBuffer _userBuffer;
+        Exception? errorInfoSourceException = _errorInfo?.SourceException;
 
-        public StreamReadAsyncResult(
-            IAsyncOperationWithProgress<IBuffer, uint> asyncStreamReadOperation,
-            IBuffer buffer,
-            AsyncCallback userCompletionCallback,
-            object userAsyncStateInfo,
-            bool processCompletedOperationInCallback)
-            : base(asyncStreamReadOperation, userCompletionCallback, userAsyncStateInfo, processCompletedOperationInCallback)
+        // If we don't have an exception from the error info, just throw a generic 'InvalidOperationException' with the input message
+        if (errorInfoSourceException is null)
         {
-            Debug.Assert(asyncStreamReadOperation is not null);
-
-            _userBuffer = buffer;
-
-            asyncStreamReadOperation.Completed = StreamOperationCompletedCallback;
+            throw new InvalidOperationException(errorMessage);
         }
 
-        /// <inheritdoc/>
-        protected override void ProcessCompletedOperation(IAsyncInfo completedOperation, out long numberOfBytesProcessed)
-        {
-            // Helper taking an exact 'IAsyncOperationWithProgress<IBuffer, uint>' instance
-            void ProcessCompletedOperation(IAsyncOperationWithProgress<IBuffer, uint> completedOperation, out long bytesCompleted)
-            {
-                IBuffer resultBuffer = completedOperation.GetResults();
-
-                Debug.Assert(resultBuffer is not null);
-
-                WindowsRuntimeIOHelpers.EnsureResultsInUserBuffer(_userBuffer, resultBuffer);
-
-                bytesCompleted = _userBuffer.Length;
-            }
-
-            ProcessCompletedOperation((IAsyncOperationWithProgress<IBuffer, uint>)completedOperation, out numberOfBytesProcessed);
-        }
+        // Otherwise, we can wrap the original exception as inner to provide better context for the failure.
+        // We still actually throw an 'InvalidOperationException' here, so the exeption type is consistent.
+        throw new InvalidOperationException(errorMessage, errorInfoSourceException);
     }
 
-    internal sealed class StreamWriteAsyncResult : StreamOperationAsyncResult
+    [DoesNotReturn]
+    [StackTraceHidden]
+    private static void ThrowWithIOExceptionDispatchInfo(Exception exception)
     {
-        internal StreamWriteAsyncResult(
-            IAsyncOperationWithProgress<uint, uint> asyncStreamWriteOperation,
-            AsyncCallback userCompletionCallback,
-            object userAsyncStateInfo,
-            bool processCompletedOperationInCallback)
-            : base(asyncStreamWriteOperation, userCompletionCallback, userAsyncStateInfo, processCompletedOperationInCallback)
-        {
-            asyncStreamWriteOperation.Completed = StreamOperationCompletedCallback;
-        }
+        RestrictedErrorInfo.AttachErrorInfo(exception);
 
-        /// <inheritdoc/>
-        protected override void ProcessCompletedOperation(IAsyncInfo completedOperation, out long numberOfBytesProcessed)
-        {
-            // Helper taking an exact 'IAsyncOperationWithProgress<uint, uint>' instance
-            static void ProcessCompletedOperation(IAsyncOperationWithProgress<uint, uint> completedOperation, out long numberOfBytesProcessed)
-            {
-                uint numberOfBytesWritten = completedOperation.GetResults();
-
-                numberOfBytesProcessed = numberOfBytesWritten;
-            }
-
-            ProcessCompletedOperation((IAsyncOperationWithProgress<uint, uint>)completedOperation, out numberOfBytesProcessed);
-        }
-    }
-
-    internal sealed class StreamFlushAsyncResult : StreamOperationAsyncResult
-    {
-        internal StreamFlushAsyncResult(IAsyncOperation<bool> asyncStreamFlushOperation, bool processCompletedOperationInCallback)
-            : base(asyncStreamFlushOperation, null, null, processCompletedOperationInCallback)
-        {
-            asyncStreamFlushOperation.Completed = StreamOperationCompletedCallback;
-        }
-
-        /// <inheritdoc/>
-        protected override void ProcessCompletedOperation(IAsyncInfo completedOperation, out long numberOfBytesProcessed)
-        {
-            // Helper taking an exact 'IAsyncOperation<bool>' instance
-            static void ProcessCompletedOperation(IAsyncOperation<bool> completedOperation, out long numberOfBytesProcessed)
-            {
-                bool success = completedOperation.GetResults();
-
-                // We return '0' or '-1' as placeholders to forward the 'bool' result from the flush operation
-                numberOfBytesProcessed = success ? 0 : -1;
-            }
-
-            ProcessCompletedOperation((IAsyncOperation<bool>)completedOperation, out numberOfBytesProcessed);
-        }
+        WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(exception).Throw();
     }
 }
