@@ -3,7 +3,7 @@
 
 using System;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,90 +19,121 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 {
-    #region Construction
-
-    internal static WinRtToNetFxStreamAdapter Create(object windowsruntimeStream)
+    /// <summary>
+    /// Creates a new <see cref="WinRtToNetFxStreamAdapter"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="windowsRuntimeStream">The Windows Runtime stream instance to wrap.</param>
+    /// <param name="canRead">Indicates whether <paramref name="windowsRuntimeStream"/> is a readable stream.</param>
+    /// <param name="canWrite">Indicates whether <paramref name="windowsRuntimeStream"/> is a writeable stream.</param>
+    /// <param name="canSeek">Indicates whether <paramref name="windowsRuntimeStream"/> is a stream supporting seeking.</param>
+    private WinRtToNetFxStreamAdapter(object windowsRuntimeStream, bool canRead, bool canWrite, bool canSeek)
     {
-        if (windowsruntimeStream == null)
-            throw new ArgumentNullException(nameof(windowsruntimeStream));
+        Debug.Assert(windowsRuntimeStream is not null);
+        Debug.Assert(windowsRuntimeStream is IInputStream or IOutputStream or IRandomAccessStream);
+        Debug.Assert(canSeek == (windowsRuntimeStream is IRandomAccessStream));
 
-        bool canRead = windowsruntimeStream is IInputStream;
-        bool canWrite = windowsruntimeStream is IOutputStream;
-        bool canSeek = windowsruntimeStream is IRandomAccessStream;
+        // If a stream is readable, it must be an 'IInputStream', or if not it must either not be one, or explicitly have 'CanRead' be 'false'
+        Debug.Assert((canRead && (windowsRuntimeStream is IInputStream)) ||
+                     (!canRead && (windowsRuntimeStream is not IInputStream or IRandomAccessStream { CanRead: false })));
 
-        if (!canRead && !canWrite && !canSeek)
-            throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_ObjectMustBeWinRtStreamToConvertToNetFxStream);
+        // If a stream is writeable, it must be an 'IOutputStream', or if not it must either not be one, or explicitly have 'CanWrite' be 'false'
+        Debug.Assert((canWrite && (windowsRuntimeStream is IOutputStream)) ||
+                     (!canWrite && (windowsRuntimeStream is not IOutputStream or IRandomAccessStream { CanWrite: false })));
 
-        // Proactively guard against a non-conforming curstomer implementations:
-        if (canSeek)
-        {
-            IRandomAccessStream iras = (IRandomAccessStream)windowsruntimeStream;
-
-            if (!canRead && iras.CanRead)
-                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InstancesImplementingIRASThatCanReadMustImplementIIS);
-
-            if (!canWrite && iras.CanWrite)
-                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InstancesImplementingIRASThatCanWriteMustImplementIOS);
-
-            if (!iras.CanRead)
-                canRead = false;
-
-            if (!iras.CanWrite)
-                canWrite = false;
-        }
-
-        if (!canRead && !canWrite)
-            throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_WinRtStreamCannotReadOrWrite);
-
-        return new WinRtToNetFxStreamAdapter(windowsruntimeStream, canRead, canWrite, canSeek);
-    }
-
-
-    private WinRtToNetFxStreamAdapter(object winRtStream, bool canRead, bool canWrite, bool canSeek)
-    {
-        Debug.Assert(winRtStream != null);
-        Debug.Assert(winRtStream is IInputStream || winRtStream is IOutputStream || winRtStream is IRandomAccessStream);
-
-        Debug.Assert((canSeek && (winRtStream is IRandomAccessStream)) || (!canSeek && !(winRtStream is IRandomAccessStream)));
-
-        Debug.Assert((canRead && (winRtStream is IInputStream))
-                             ||
-                           (!canRead && (
-                                !(winRtStream is IInputStream)
-                                    ||
-                                (winRtStream is IRandomAccessStream && !((IRandomAccessStream)winRtStream).CanRead)
-                           ))
-                         );
-
-        Debug.Assert((canWrite && (winRtStream is IOutputStream))
-                             ||
-                           (!canWrite && (
-                                !(winRtStream is IOutputStream)
-                                    ||
-                                (winRtStream is IRandomAccessStream && !((IRandomAccessStream)winRtStream).CanWrite)
-                           ))
-                         );
-
-        _winRtStream = winRtStream;
+        _windowsRuntimeStream = windowsRuntimeStream;
         _canRead = canRead;
         _canWrite = canWrite;
         _canSeek = canSeek;
     }
 
-    #endregion Construction
+    /// <summary>
+    /// Creates a new <see cref="WinRtToNetFxStreamAdapter"/> instance with the specified parameters.
+    /// </summary>
+    /// <param name="windowsRuntimeStream">The Windows Runtime stream instance to wrap.</param>
+    /// <remarks>
+    /// The <paramref name="windowsRuntimeStream"/> object must implement at least one of the following Windows Runtime
+    /// interfaces: <see cref="IInputStream"/>, <see cref="IOutputStream"/>, or <see cref="IRandomAccessStream"/>.
+    /// </remarks>
+    public static WinRtToNetFxStreamAdapter Create(object windowsRuntimeStream)
+    {
+        Debug.Assert(windowsRuntimeStream is not null);
 
+        bool canRead = windowsRuntimeStream is IInputStream;
+        bool canWrite = windowsRuntimeStream is IOutputStream;
+        bool canSeek = windowsRuntimeStream is IRandomAccessStream;
 
-    #region Instance variables
+        // If we can't perform any operations on the input stream, then it's invalid
+        if (!canRead && !canWrite && !canSeek)
+        {
+            throw new ArgumentException(SR.Argument_ObjectMustBeWinRtStreamToConvertToNetFxStream);
+        }
 
-    private byte[] _oneByteBuffer = null;
-    private bool _leaveUnderlyingStreamOpen = true;
+        // Proactively guard against a non-conforming implementations
+        if (canSeek)
+        {
+            IRandomAccessStream randomAccessStream = (IRandomAccessStream)windowsRuntimeStream;
 
-    private object _winRtStream;
+            if (!canRead && randomAccessStream.CanRead)
+            {
+                throw new ArgumentException(SR.Argument_InstancesImplementingIRASThatCanReadMustImplementIIS);
+            }
+
+            if (!canWrite && randomAccessStream.CanWrite)
+            {
+                throw new ArgumentException(SR.Argument_InstancesImplementingIRASThatCanWriteMustImplementIOS);
+            }
+
+            // If we have an 'IRandomAccessStream' instance, its 'CanRead' property takes precedence here.
+            // This is because the stream would also implement 'IInputStream' (because it's a base interface
+            // of 'IRandomAccessStream'), but it doesn't mean it can actually be read from in this case.
+            if (!randomAccessStream.CanRead)
+            {
+                canRead = false;
+            }
+
+            if (!randomAccessStream.CanWrite)
+            {
+                canWrite = false;
+            }
+        }
+
+        // Check again that we can perform some useful operations. We repeat this check here
+        // in case we have an 'IRandomAccessStream' that specifies it can't do any of these.
+        if (!canRead && !canWrite)
+        {
+            throw new ArgumentException(SR.Argument_WinRtStreamCannotReadOrWrite);
+        }
+
+        // Create the managed wrapper implementation around the input Windows Runtime stream
+        return new WinRtToNetFxStreamAdapter(windowsRuntimeStream, canRead, canWrite, canSeek);
+    }
+
+    /// <summary>
+    /// The Windows Runtime stream being wrapped
+    /// </summary>
+    private object? _windowsRuntimeStream;
+
+    /// <summary>
+    /// Indicates whether <see cref="_windowsRuntimeStream"/> is a readable stream.
+    /// </summary>
     private readonly bool _canRead;
+
+    /// <summary>
+    /// Indicates whether <see cref="_windowsRuntimeStream"/> is a writeable stream.
+    /// </summary>
     private readonly bool _canWrite;
+
+    /// <summary>
+    /// Indicates whether <see cref="_windowsRuntimeStream"/> is a stream supporting seeking.
+    /// </summary>
     private readonly bool _canSeek;
 
-    #endregion Instance variables
+    /// <summary>
+    /// Indicates whether to dispose <see cref="_windowsRuntimeStream"/> when <see cref="IDisposable.Dispose"/> is called.
+    /// </summary>
+    private bool _disposeNativeStream;
+
+    private byte[]? _oneByteBuffer;
 
 
     #region Tools and Helpers
@@ -116,13 +147,13 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     /// </summary>
     internal void SetWonInitializationRace()
     {
-        _leaveUnderlyingStreamOpen = false;
+        _disposeNativeStream = true;
     }
 
 
     public TWinRtStream GetWindowsRuntimeStream<TWinRtStream>() where TWinRtStream : class
     {
-        object wrtStr = _winRtStream;
+        object wrtStr = _windowsRuntimeStream;
 
         if (wrtStr == null)
             return null;
@@ -146,35 +177,38 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         }
     }
 
-    private TWinRtStream EnsureNotDisposed<TWinRtStream>() where TWinRtStream : class
+    /// <summary>
+    /// Ensures that the current instance has not been disposed and returns a valid stream instance.
+    /// </summary>
+    /// <returns>The underlying Windows Runtime stream if the current instance has not been disposed.</returns>
+    /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
+    [MemberNotNull(nameof(_windowsRuntimeStream))]
+    private object EnsureNotDisposed()
     {
-        object wrtStr = _winRtStream;
+        object? windowsRuntimeStream = _windowsRuntimeStream;
 
-        if (wrtStr == null)
-            throw new ObjectDisposedException(global::Windows.Storage.Streams.SR.ObjectDisposed_CannotPerformOperation);
+        if (windowsRuntimeStream is null)
+        {
+            throw new ObjectDisposedException(SR.ObjectDisposed_CannotPerformOperation);
+        }
 
-        return (wrtStr as TWinRtStream);
+        // Same suppression as in 'NetFxToWinRtStreamAdapter.EnsureNotDisposed'
+#pragma warning disable CS8774
+        return windowsRuntimeStream;
+#pragma warning restore CS8774
     }
-
-
-    private void EnsureNotDisposed()
-    {
-        if (_winRtStream == null)
-            throw new ObjectDisposedException(global::Windows.Storage.Streams.SR.ObjectDisposed_CannotPerformOperation);
-    }
-
 
     private void EnsureCanRead()
     {
         if (!_canRead)
-            throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotReadFromStream);
+            throw new NotSupportedException(SR.NotSupported_CannotReadFromStream);
     }
 
 
     private void EnsureCanWrite()
     {
         if (!_canWrite)
-            throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotWriteToStream);
+            throw new NotSupportedException(SR.NotSupported_CannotWriteToStream);
     }
 
     #endregion Tools and Helpers
@@ -182,43 +216,31 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
     #region Simple overrides
 
+    /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
-        // WinRT streams should implement IDisposable (IClosable in WinRT), but let's be defensive:
-        if (disposing && _winRtStream != null && !_leaveUnderlyingStreamOpen)
+        // Dispose the underlying native stream, if needed
+        if (disposing && _windowsRuntimeStream is not null && _disposeNativeStream)
         {
-            IDisposable disposableWinRtStream = _winRtStream as IDisposable;  // benign race on winRtStream
-            if (disposableWinRtStream != null)
-                disposableWinRtStream.Dispose();
+            // All Windows Runtime streams should implement 'IDisposable', but let's be defensive
+            IDisposable? disposable = _windowsRuntimeStream as IDisposable;
+
+            disposable?.Dispose();
         }
 
-        _winRtStream = null;
+        _windowsRuntimeStream = null;
+
         base.Dispose(disposing);
     }
 
+    /// <inheritdoc/>
+    public override bool CanRead => _canRead && _windowsRuntimeStream is not null;
 
-    public override bool CanRead
-    {
-        [Pure]
-        get
-        { return (_canRead && _winRtStream != null); }
-    }
+    /// <inheritdoc/>
+    public override bool CanWrite => _canWrite && _windowsRuntimeStream is not null;
 
-
-    public override bool CanWrite
-    {
-        [Pure]
-        get
-        { return (_canWrite && _winRtStream != null); }
-    }
-
-
-    public override bool CanSeek
-    {
-        [Pure]
-        get
-        { return (_canSeek && _winRtStream != null); }
-    }
+    /// <inheritdoc/>
+    public override bool CanSeek => _canSeek && _windowsRuntimeStream is not null;
 
     #endregion Simple overrides
 
@@ -229,10 +251,10 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     {
         get
         {
-            IRandomAccessStream wrtStr = EnsureNotDisposed<IRandomAccessStream>();
+            IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
             if (!_canSeek)
-                throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotUseLength_StreamNotSeekable);
+                throw new NotSupportedException(SR.NotSupported_CannotUseLength_StreamNotSeekable);
 
             Debug.Assert(wrtStr != null);
 
@@ -240,7 +262,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
             // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
             if (size > (ulong)long.MaxValue)
-                throw new IOException(global::Windows.Storage.Streams.SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+                throw new IOException(SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
 
             return unchecked((long)size);
         }
@@ -251,10 +273,10 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     {
         get
         {
-            IRandomAccessStream wrtStr = EnsureNotDisposed<IRandomAccessStream>();
+            IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
             if (!_canSeek)
-                throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotUsePosition_StreamNotSeekable);
+                throw new NotSupportedException(SR.NotSupported_CannotUsePosition_StreamNotSeekable);
 
             Debug.Assert(wrtStr != null);
 
@@ -262,7 +284,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
             // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
             if (pos > (ulong)long.MaxValue)
-                throw new IOException(global::Windows.Storage.Streams.SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+                throw new IOException(SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
 
             return unchecked((long)pos);
         }
@@ -270,12 +292,12 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         set
         {
             if (value < 0)
-                throw new ArgumentOutOfRangeException(nameof(Position), global::Windows.Storage.Streams.SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+                throw new ArgumentOutOfRangeException(nameof(Position), SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
 
-            IRandomAccessStream wrtStr = EnsureNotDisposed<IRandomAccessStream>();
+            IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
             if (!_canSeek)
-                throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotUsePosition_StreamNotSeekable);
+                throw new NotSupportedException(SR.NotSupported_CannotUsePosition_StreamNotSeekable);
 
             Debug.Assert(wrtStr != null);
 
@@ -286,10 +308,10 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
     public override long Seek(long offset, SeekOrigin origin)
     {
-        IRandomAccessStream wrtStr = EnsureNotDisposed<IRandomAccessStream>();
+        IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
         if (!_canSeek)
-            throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotSeekInStream);
+            throw new NotSupportedException(SR.NotSupported_CannotSeekInStream);
 
         Debug.Assert(wrtStr != null);
 
@@ -306,12 +328,12 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
                     long curPos = Position;
 
                     if (long.MaxValue - curPos < offset)
-                        throw new IOException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
+                        throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
 
                     long newPos = curPos + offset;
 
                     if (newPos < 0)
-                        throw new IOException(global::Windows.Storage.Streams.SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+                        throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
 
                     Position = newPos;
                     return newPos;
@@ -325,7 +347,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
                     if (size > (ulong)long.MaxValue)
                     {
                         if (offset >= 0)
-                            throw new IOException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
+                            throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
 
                         Debug.Assert(offset < 0);
 
@@ -334,7 +356,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
                         ulong np = size - absOffset;
                         if (np > (ulong)long.MaxValue)
-                            throw new IOException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
+                            throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
 
                         newPos = (long)np;
                     }
@@ -345,12 +367,12 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
                         long s = unchecked((long)size);
 
                         if (long.MaxValue - s < offset)
-                            throw new IOException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
+                            throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
 
                         newPos = s + offset;
 
                         if (newPos < 0)
-                            throw new IOException(global::Windows.Storage.Streams.SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+                            throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
                     }
 
                     Position = newPos;
@@ -359,7 +381,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
             default:
                 {
-                    throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InvalidSeekOrigin, nameof(origin));
+                    throw new ArgumentException(SR.Argument_InvalidSeekOrigin, nameof(origin));
                 }
         }
     }
@@ -368,12 +390,12 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     public override void SetLength(long value)
     {
         if (value < 0)
-            throw new ArgumentOutOfRangeException(nameof(value), global::Windows.Storage.Streams.SR.ArgumentOutOfRange_CannotResizeStreamToNegative);
+            throw new ArgumentOutOfRangeException(nameof(value), SR.ArgumentOutOfRange_CannotResizeStreamToNegative);
 
-        IRandomAccessStream wrtStr = EnsureNotDisposed<IRandomAccessStream>();
+        IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
         if (!_canSeek)
-            throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotSeekInStream);
+            throw new NotSupportedException(SR.NotSupported_CannotSeekInStream);
 
         EnsureCanWrite();
 
@@ -428,9 +450,9 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             throw new ArgumentOutOfRangeException(nameof(count));
 
         if (buffer.Length - offset < count)
-            throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
+            throw new ArgumentException(SR.Argument_InsufficientSpaceInTargetBuffer);
 
-        IInputStream wrtStr = EnsureNotDisposed<IInputStream>();
+        IInputStream wrtStr = (IInputStream)EnsureNotDisposed();
         EnsureCanRead();
 
         Debug.Assert(wrtStr != null);
@@ -461,7 +483,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
         StreamOperationAsyncResult streamAsyncResult = asyncResult as StreamOperationAsyncResult;
         if (streamAsyncResult == null)
-            throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
+            throw new ArgumentException(SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
 
         streamAsyncResult.Wait();
 
@@ -508,7 +530,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             throw new ArgumentOutOfRangeException(nameof(count));
 
         if (buffer.Length - offset < count)
-            throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
+            throw new ArgumentException(SR.Argument_InsufficientSpaceInTargetBuffer);
 
         EnsureNotDisposed();
         EnsureCanRead();
@@ -570,9 +592,9 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             throw new ArgumentOutOfRangeException(nameof(count));
 
         if (buffer.Length - offset < count)
-            throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+            throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
 
-        IOutputStream wrtStr = EnsureNotDisposed<IOutputStream>();
+        IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
         EnsureCanWrite();
 
         Debug.Assert(wrtStr != null);
@@ -603,7 +625,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
         StreamOperationAsyncResult streamAsyncResult = asyncResult as StreamOperationAsyncResult;
         if (streamAsyncResult == null)
-            throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
+            throw new ArgumentException(SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
 
         streamAsyncResult.Wait();
 
@@ -643,9 +665,9 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             throw new ArgumentOutOfRangeException(nameof(count));
 
         if (buffer.Length - offset < count)
-            throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+            throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
 
-        IOutputStream wrtStr = EnsureNotDisposed<IOutputStream>();
+        IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
         EnsureCanWrite();
 
         Debug.Assert(wrtStr != null);
@@ -694,7 +716,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         // See the large comment in BeginRead about why we are not using this.FlushAsync,
         // and instead using a custom implementation of IAsyncResult.
 
-        IOutputStream wrtStr = EnsureNotDisposed<IOutputStream>();
+        IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
 
         // Calling Flush in a non-writable stream is a no-op, not an error:
         if (!_canWrite)
@@ -730,7 +752,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
     public override Task FlushAsync(CancellationToken cancellationToken)
     {
-        IOutputStream wrtStr = EnsureNotDisposed<IOutputStream>();
+        IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
 
         // Calling Flush in a non-writable stream is a no-op, not an error:
         if (!_canWrite)
@@ -761,9 +783,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         Debug.Assert(buffer.Length - offset >= count);
         Debug.Assert(_canRead);
 
-        IInputStream wrtStr = EnsureNotDisposed<IInputStream>();
-
-        Debug.Assert(wrtStr != null);
+        IInputStream wrtStr = (IInputStream)EnsureNotDisposed();
 
         try
         {
