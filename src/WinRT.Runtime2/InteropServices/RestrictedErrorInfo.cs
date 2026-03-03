@@ -47,7 +47,7 @@ public static unsafe class RestrictedErrorInfo
 
         string? description = null;
         string? restrictedDescription = null;
-        string? restrictedErrorReference = null;
+        string? restrictedReference = null;
         string? restrictedCapabilitySid = null;
         string? errorMessage = null;
         Exception? exception;
@@ -112,7 +112,7 @@ public static unsafe class RestrictedErrorInfo
                     restrictedDescription: out restrictedDescription,
                     capabilitySid: out restrictedCapabilitySid);
 
-                restrictedErrorReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoPtr);
+                restrictedReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoPtr);
 
                 // For cross language Windows Runtime exceptions, general information will be available in the description,
                 // which is populated from 'IRestrictedErrorInfo.GetErrorDetails', and more specific information will be
@@ -166,11 +166,11 @@ public static unsafe class RestrictedErrorInfo
             exception,
             description,
             restrictedDescription,
-            restrictedErrorReference,
+            restrictedReference,
             restrictedCapabilitySid,
             restrictedErrorInfoToSave,
-            false,
-            internalGetGlobalErrorStateException);
+            hasRestrictedLanguageErrorObject: false,
+            internalGetGlobalErrorStateException: internalGetGlobalErrorStateException);
 
         restoredExceptionFromGlobalState = false;
 
@@ -256,7 +256,7 @@ public static unsafe class RestrictedErrorInfo
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to store.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is <see langword="null"/>.</exception>
-    public static void SetErrorInfo(Exception exception)
+    internal static void SetErrorInfo(Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
 
@@ -340,11 +340,81 @@ public static unsafe class RestrictedErrorInfo
     /// Attaches the error info stored by the <c>IRestrictedErrorInfo</c> infrastructure to the input exception.
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to attach the error info to.</param>
-    /// <returns>The input <see cref="Exception"/> instance with attached error info.</returns>
-    public static Exception AttachErrorInfo(Exception exception)
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is <see langword="null"/>.</exception>
+    public static Exception AttachErrorInfo(Exception exception) // TODO: make internal after streams are ported
     {
-        // TODO
-        return exception;
+        ArgumentNullException.ThrowIfNull(exception);
+
+        void* restrictedErrorInfoPtr = null;
+
+        // Get the restricted error info for this thread and see if it may correlate to the current
+        // exception object. Note that in general the thread's 'IRestrictedErrorInfo' is not meant
+        // for exceptions that are marshaled as 'Windows.Foundation.HResult' values, and instead are
+        // intended for 'HRESULT' ABI return values. However, in many cases asynchronous APIs will set
+        // the thread's restricted error info as a convention in order to provide extended debugging
+        // information for their 'ErrorCode' property.
+        HRESULT hresult = WindowsRuntimeImports.GetRestrictedErrorInfo(&restrictedErrorInfoPtr);
+
+        // If we fail to get the restricted error info, we continue on reporting the original exception.
+        // That also means that if we failed to retrieve the original error, then for sure it's unrelated.
+        if (hresult.Failed)
+        {
+            return exception; // TODO: return void this after streams are ported
+        }
+
+        // Also just stop here if the call succeeded but there was no previous error info
+        if (restrictedErrorInfoPtr is null)
+        {
+            return exception; // TODO: return void this after streams are ported
+        }
+
+        try
+        {
+            IRestrictedErrorInfoMethods.GetErrorDetails(
+                thisPtr: restrictedErrorInfoPtr,
+                description: out string? description,
+                error: out HRESULT restrictedError,
+                restrictedDescription: out string? restrictedDescription,
+                capabilitySid: out string? restrictedCapabilitySid);
+
+            // Since this is a special case where by convention there may be a correlation, there is not a
+            // guarantee that the restricted error info does belong to the async error code. In order to
+            // reduce the risk that we associate incorrect information with the exception object, we need
+            // to apply a heuristic, where we attempt to match the current exception's 'HRESULT' with the
+            // 'HRESULT' associated with the 'IRestrictedErrorInfo' instance we retrieved. If it is a match,
+            // we will assume association for the 'IAsyncInfo' case.
+            if (exception.HResult == restrictedError)
+            {
+                string? restrictedReference = IRestrictedErrorInfoMethods.GetReference(restrictedErrorInfoPtr);
+
+                // Initialize an object reference for the global 'IRestrictedErrorInfo' object we retrieved
+                WindowsRuntimeObjectReference restrictedErrorInfoToSave = WindowsRuntimeObjectReference.CreateUnsafe(
+                    thisPtr: restrictedErrorInfoPtr,
+                    iid: WellKnownWindowsInterfaceIIDs.IID_IRestrictedErrorInfo)!;
+
+                // Store the additional error info in the input 'Exception' instance
+                RestrictedErrorInfoHelpers.AddExceptionData(
+                    exception,
+                    description,
+                    restrictedDescription,
+                    restrictedReference,
+                    restrictedCapabilitySid,
+                    restrictedErrorInfoToSave,
+                    hasRestrictedLanguageErrorObject: false,
+                    internalGetGlobalErrorStateException: null);
+            }
+        }
+        catch
+        {
+            // Ignore any errors we might encounter while trying to attach the error info,
+            // as we don't want to interfere with the original exception in that case.
+        }
+        finally
+        {
+            WindowsRuntimeUnknownMarshaller.Free(restrictedErrorInfoPtr);
+        }
+
+        return exception; // TODO: return void this after streams are ported
     }
 
     /// <summary>
@@ -359,7 +429,7 @@ public static unsafe class RestrictedErrorInfo
     /// it is recommended to also call <see cref="ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent"/> right before
     /// calling this method, so that the correct stacktrace will also be captured in crash reports for later inspection.
     /// </remarks>
-    public static void ReportUnhandledError(Exception exception)
+    internal static void ReportUnhandledError(Exception exception)
     {
         SetErrorInfo(exception);
 
