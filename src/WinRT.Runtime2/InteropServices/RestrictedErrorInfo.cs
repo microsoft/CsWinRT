@@ -362,7 +362,7 @@ public static unsafe class RestrictedErrorInfo
             return exception; // TODO: return void this after streams are ported
         }
 
-        // Also just return the exception if the call succeeded but there was no previous error info
+        // Also just stop here if the call succeeded but there was no previous error info
         if (restrictedErrorInfoPtr is null)
         {
             return exception; // TODO: return void this after streams are ported
