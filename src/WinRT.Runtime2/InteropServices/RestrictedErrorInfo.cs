@@ -169,8 +169,8 @@ public static unsafe class RestrictedErrorInfo
             restrictedReference,
             restrictedCapabilitySid,
             restrictedErrorInfoToSave,
-            false,
-            internalGetGlobalErrorStateException);
+            hasRestrictedLanguageErrorObject: false,
+            internalGetGlobalErrorStateException: internalGetGlobalErrorStateException);
 
         restoredExceptionFromGlobalState = false;
 
