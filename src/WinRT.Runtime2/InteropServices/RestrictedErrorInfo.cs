@@ -256,7 +256,7 @@ public static unsafe class RestrictedErrorInfo
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to store.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is <see langword="null"/>.</exception>
-    public static void SetErrorInfo(Exception exception)
+    internal static void SetErrorInfo(Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
 
@@ -341,7 +341,7 @@ public static unsafe class RestrictedErrorInfo
     /// </summary>
     /// <param name="exception">The input <see cref="Exception"/> instance to attach the error info to.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is <see langword="null"/>.</exception>
-    public static void AttachErrorInfo(Exception exception)
+    internal static void AttachErrorInfo(Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
 
@@ -427,7 +427,7 @@ public static unsafe class RestrictedErrorInfo
     /// it is recommended to also call <see cref="ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent"/> right before
     /// calling this method, so that the correct stacktrace will also be captured in crash reports for later inspection.
     /// </remarks>
-    public static void ReportUnhandledError(Exception exception)
+    internal static void ReportUnhandledError(Exception exception)
     {
         SetErrorInfo(exception);
 
