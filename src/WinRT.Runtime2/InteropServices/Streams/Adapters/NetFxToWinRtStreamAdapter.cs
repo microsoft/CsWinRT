@@ -30,17 +30,6 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
 
     #region Construction
 
-    // We may want to define different behaviour for different types of streams.
-    // For instance, ReadAsync treats MemoryStream special for performance reasons.
-    // The enum 'StreamReadOperationOptimization' describes the read optimization to employ for a
-    // given NetFxToWinRtStreamAdapter instance. In future, we might define other enums to follow a
-    // similar pattern, e.g. 'StreamWriteOperationOptimization' or 'StreamFlushOperationOptimization'.
-    private enum StreamReadOperationOptimization
-    {
-        AbstractStream = 0, MemoryStream
-    }
-
-
     internal static NetFxToWinRtStreamAdapter Create(Stream stream)
     {
         if (stream == null)
