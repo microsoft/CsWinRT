@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -19,6 +20,31 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 {
+    /// <summary>
+    /// The Windows Runtime stream being wrapped
+    /// </summary>
+    private object? _windowsRuntimeStream;
+
+    /// <summary>
+    /// Indicates whether <see cref="_windowsRuntimeStream"/> is a readable stream.
+    /// </summary>
+    private readonly bool _canRead;
+
+    /// <summary>
+    /// Indicates whether <see cref="_windowsRuntimeStream"/> is a writeable stream.
+    /// </summary>
+    private readonly bool _canWrite;
+
+    /// <summary>
+    /// Indicates whether <see cref="_windowsRuntimeStream"/> is a stream supporting seeking.
+    /// </summary>
+    private readonly bool _canSeek;
+
+    /// <summary>
+    /// Indicates whether to dispose <see cref="_windowsRuntimeStream"/> when <see cref="IDisposable.Dispose"/> is called.
+    /// </summary>
+    private bool _disposeNativeStream;
+
     /// <summary>
     /// Creates a new <see cref="WinRtToNetFxStreamAdapter"/> instance with the specified parameters.
     /// </summary>
@@ -108,58 +134,21 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         return new WinRtToNetFxStreamAdapter(windowsRuntimeStream, canRead, canWrite, canSeek);
     }
 
-    /// <summary>
-    /// The Windows Runtime stream being wrapped
-    /// </summary>
-    private object? _windowsRuntimeStream;
-
-    /// <summary>
-    /// Indicates whether <see cref="_windowsRuntimeStream"/> is a readable stream.
-    /// </summary>
-    private readonly bool _canRead;
-
-    /// <summary>
-    /// Indicates whether <see cref="_windowsRuntimeStream"/> is a writeable stream.
-    /// </summary>
-    private readonly bool _canWrite;
-
-    /// <summary>
-    /// Indicates whether <see cref="_windowsRuntimeStream"/> is a stream supporting seeking.
-    /// </summary>
-    private readonly bool _canSeek;
-
-    /// <summary>
-    /// Indicates whether to dispose <see cref="_windowsRuntimeStream"/> when <see cref="IDisposable.Dispose"/> is called.
-    /// </summary>
-    private bool _disposeNativeStream;
-
     #region Tools and Helpers
 
-    /// <summary>
-    /// We keep tables for mappings between managed and WinRT streams to make sure to always return the same adapter for a given underlying stream.
-    /// However, in order to avoid global locks on those tables, several instances of this type may be created and then can race to be entered
-    /// into the appropriate map table. All except for the winning instances will be thrown away. However, we must ensure that when the losers  are
-    /// finalized, the do not dispose the underlying stream. To ensure that, we must call this method on the winner to notify it that it is safe to
-    /// dispose the underlying stream.
-    /// </summary>
-    internal void SetWonInitializationRace()
+    /// <inheritdoc cref="NetFxToWinRtStreamAdapter.SetWonInitializationRace"/>
+    public void SetWonInitializationRace()
     {
         _disposeNativeStream = true;
     }
 
-
-    public TWinRtStream GetWindowsRuntimeStream<TWinRtStream>() where TWinRtStream : class
+    /// <summary>
+    /// Gets the underlying Windows Runtime stream, if the current instance has not been disposed.
+    /// </summary>
+    /// <returns>The underlying Windows Runtime stream, if available.</returns>
+    public object? GetWindowsRuntimeStream()
     {
-        object wrtStr = _windowsRuntimeStream;
-
-        if (wrtStr == null)
-            return null;
-
-        Debug.Assert(wrtStr is TWinRtStream,
-            $"Attempted to get the underlying WinRT stream typed as \"{typeof(TWinRtStream)}\", " +
-            $"but the underlying WinRT stream cannot be cast to that type. Its actual type is \"{wrtStr.GetType()}\".");
-
-        return wrtStr as TWinRtStream;
+        return _windowsRuntimeStream;
     }
 
     /// <summary>
@@ -186,14 +175,17 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     private void EnsureCanRead()
     {
         if (!_canRead)
+        {
             throw new NotSupportedException(SR.NotSupported_CannotReadFromStream);
+        }
     }
-
 
     private void EnsureCanWrite()
     {
         if (!_canWrite)
+        {
             throw new NotSupportedException(SR.NotSupported_CannotWriteToStream);
+        }
     }
 
     #endregion Tools and Helpers
@@ -232,6 +224,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
     #region Length and Position functions
 
+    /// <inheritdoc/>
     public override long Length
     {
         get
@@ -239,21 +232,25 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
             if (!_canSeek)
+            {
                 throw new NotSupportedException(SR.NotSupported_CannotUseLength_StreamNotSeekable);
+            }
 
             Debug.Assert(wrtStr != null);
 
             ulong size = wrtStr.Size;
 
             // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
-            if (size > (ulong)long.MaxValue)
+            if (size > long.MaxValue)
+            {
                 throw new IOException(SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+            }
 
             return unchecked((long)size);
         }
     }
 
-
+    /// <inheritdoc/>
     public override long Position
     {
         get
@@ -261,28 +258,35 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
             if (!_canSeek)
+            {
                 throw new NotSupportedException(SR.NotSupported_CannotUsePosition_StreamNotSeekable);
+            }
 
             Debug.Assert(wrtStr != null);
 
             ulong pos = wrtStr.Position;
 
             // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
-            if (pos > (ulong)long.MaxValue)
+            if (pos > long.MaxValue)
+            {
                 throw new IOException(SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+            }
 
             return unchecked((long)pos);
         }
-
         set
         {
             if (value < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(Position), SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+            }
 
             IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
             if (!_canSeek)
+            {
                 throw new NotSupportedException(SR.NotSupported_CannotUsePosition_StreamNotSeekable);
+            }
 
             Debug.Assert(wrtStr != null);
 
@@ -290,13 +294,15 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         }
     }
 
-
+    /// <inheritdoc/>
     public override long Seek(long offset, SeekOrigin origin)
     {
         IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
         if (!_canSeek)
+        {
             throw new NotSupportedException(SR.NotSupported_CannotSeekInStream);
+        }
 
         Debug.Assert(wrtStr != null);
 
@@ -313,12 +319,16 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
                     long curPos = Position;
 
                     if (long.MaxValue - curPos < offset)
+                    {
                         throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                    }
 
                     long newPos = curPos + offset;
 
                     if (newPos < 0)
+                    {
                         throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+                    }
 
                     Position = newPos;
                     return newPos;
@@ -329,10 +339,12 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
                     ulong size = wrtStr.Size;
                     long newPos;
 
-                    if (size > (ulong)long.MaxValue)
+                    if (size > long.MaxValue)
                     {
                         if (offset >= 0)
+                        {
                             throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                        }
 
                         Debug.Assert(offset < 0);
 
@@ -340,24 +352,30 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
                         Debug.Assert(absOffset <= size);
 
                         ulong np = size - absOffset;
-                        if (np > (ulong)long.MaxValue)
+                        if (np > long.MaxValue)
+                        {
                             throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                        }
 
                         newPos = (long)np;
                     }
                     else
                     {
-                        Debug.Assert(size <= (ulong)long.MaxValue);
+                        Debug.Assert(size <= long.MaxValue);
 
                         long s = unchecked((long)size);
 
                         if (long.MaxValue - s < offset)
+                        {
                             throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                        }
 
                         newPos = s + offset;
 
                         if (newPos < 0)
+                        {
                             throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+                        }
                     }
 
                     Position = newPos;
@@ -371,16 +389,20 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         }
     }
 
-
+    /// <inheritdoc/>
     public override void SetLength(long value)
     {
         if (value < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(value), SR.ArgumentOutOfRange_CannotResizeStreamToNegative);
+        }
 
         IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
         if (!_canSeek)
+        {
             throw new NotSupportedException(SR.NotSupported_CannotSeekInStream);
+        }
 
         EnsureCanWrite();
 
@@ -391,7 +413,9 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         // If the length is set to a value < that the current position, then we need to set the position to that value
         // Because we can't directly set the position, we are going to seek to it.
         if (wrtStr.Size < wrtStr.Position)
+        {
             wrtStr.Seek(unchecked((ulong)value));
+        }
     }
 
     #endregion Length and Position functions
@@ -399,7 +423,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
     #region Reading
 
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+    [SupportedOSPlatform("windows10.0.10240.0")]
     private IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state, bool usedByBlockingWrapper)
     {
         // This method is somewhat tricky: We could consider just calling ReadAsync (recall that Task implements IAsyncResult).
@@ -425,17 +449,14 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         // and our own completion handler which can behave differently according to whether it is being used by a blocking IO
         // operation wrapping a BeginRead/EndRead pair, or by an actual async operation based on the old Begin/End pattern.
 
-        if (buffer == null)
-            throw new ArgumentNullException(nameof(buffer));
-
-        if (offset < 0)
-            throw new ArgumentOutOfRangeException(nameof(offset));
-
-        if (count < 0)
-            throw new ArgumentOutOfRangeException(nameof(count));
+        ArgumentNullException.ThrowIfNull(buffer);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
 
         if (buffer.Length - offset < count)
+        {
             throw new ArgumentException(SR.Argument_InsufficientSpaceInTargetBuffer);
+        }
 
         IInputStream wrtStr = (IInputStream)EnsureNotDisposed();
         EnsureCanRead();
@@ -459,6 +480,8 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         return asyncResult;
     }
 
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public override int EndRead(IAsyncResult asyncResult)
     {
         ArgumentNullException.ThrowIfNull(asyncResult);
@@ -468,7 +491,9 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
         StreamOperationAsyncResult streamAsyncResult = asyncResult as StreamOperationAsyncResult;
         if (streamAsyncResult == null)
+        {
             throw new ArgumentException(SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
+        }
 
         streamAsyncResult.Wait();
 
@@ -479,7 +504,9 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             // See the big comment in BeginRead for details.
 
             if (!streamAsyncResult.ProcessCompletedOperationInCallback)
+            {
                 streamAsyncResult.ProcessCompletedOperation();
+            }
 
             // Rethrow errors caught in the completion callback, if any:
             if (streamAsyncResult.HasError)
@@ -491,7 +518,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             // Done:
 
             long bytesCompleted = streamAsyncResult.NumberOfBytesProcessed;
-            Debug.Assert(bytesCompleted <= unchecked((long)int.MaxValue));
+            Debug.Assert(bytesCompleted <= unchecked(int.MaxValue));
 
             return (int)bytesCompleted;
         }
@@ -502,20 +529,18 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         }
     }
 
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
-        if (buffer == null)
-            throw new ArgumentNullException(nameof(buffer));
-
-        if (offset < 0)
-            throw new ArgumentOutOfRangeException(nameof(offset));
-
-        if (count < 0)
-            throw new ArgumentOutOfRangeException(nameof(count));
+        ArgumentNullException.ThrowIfNull(buffer);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
 
         if (buffer.Length - offset < count)
+        {
             throw new ArgumentException(SR.Argument_InsufficientSpaceInTargetBuffer);
+        }
 
         EnsureNotDisposed();
         EnsureCanRead();
@@ -527,6 +552,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         return ReadAsyncInternal(buffer, offset, count, cancellationToken);
     }
 
+    /// <inheritdoc/>
     public override int Read(byte[] buffer, int offset, int count)
     {
         // Arguments validation and not-disposed validation are done in BeginRead.
@@ -551,28 +577,28 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
     #region Writing
 
-
-    public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
     {
         return BeginWrite(buffer, offset, count, callback, state, usedByBlockingWrapper: false);
     }
 
-    private IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state, bool usedByBlockingWrapper)
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    private StreamWriteAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
     {
         // See the large comment in BeginRead about why we are not using this.WriteAsync,
         // and instead using a custom implementation of IAsyncResult.
 
-        if (buffer == null)
-            throw new ArgumentNullException(nameof(buffer));
-
-        if (offset < 0)
-            throw new ArgumentOutOfRangeException(nameof(offset));
-
-        if (count < 0)
-            throw new ArgumentOutOfRangeException(nameof(count));
+        ArgumentNullException.ThrowIfNull(buffer);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
 
         if (buffer.Length - offset < count)
+        {
             throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
+        }
 
         IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
         EnsureCanWrite();
@@ -583,7 +609,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
         IAsyncOperationWithProgress<uint, uint> asyncWriteOperation = wrtStr.WriteAsync(asyncWriteBuffer);
 
-        StreamWriteAsyncResult asyncResult = new StreamWriteAsyncResult(asyncWriteOperation, callback, state,
+        StreamWriteAsyncResult asyncResult = new(asyncWriteOperation, callback, state,
                                                                         processCompletedOperationInCallback: !usedByBlockingWrapper);
 
         // The StreamReadAsyncResult will set a private instance method to act as a Completed handler for asyncOperation.
@@ -595,17 +621,23 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         return asyncResult;
     }
 
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public override void EndWrite(IAsyncResult asyncResult)
     {
         if (asyncResult == null)
+        {
             throw new ArgumentNullException(nameof(asyncResult));
+        }
 
         EnsureNotDisposed();
         EnsureCanWrite();
 
         StreamOperationAsyncResult streamAsyncResult = asyncResult as StreamOperationAsyncResult;
         if (streamAsyncResult == null)
+        {
             throw new ArgumentException(SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
+        }
 
         streamAsyncResult.Wait();
 
@@ -616,7 +648,9 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             // See the big comment in BeginWrite for details.
 
             if (!streamAsyncResult.ProcessCompletedOperationInCallback)
+            {
                 streamAsyncResult.ProcessCompletedOperation();
+            }
 
             // Rethrow errors caught in the completion callback, if any:
             if (streamAsyncResult.HasError)
@@ -632,20 +666,29 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         }
     }
 
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         if (buffer == null)
+        {
             throw new ArgumentNullException(nameof(buffer));
+        }
 
         if (offset < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(offset));
+        }
 
         if (count < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(count));
+        }
 
         if (buffer.Length - offset < count)
+        {
             throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
+        }
 
         IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
         EnsureCanWrite();
@@ -666,7 +709,8 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         return asyncWriteTask;
     }
 
-
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public override void Write(byte[] buffer, int offset, int count)
     {
         // Arguments validation and not-disposed validation are done in BeginWrite.
@@ -687,6 +731,8 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
     #region Flushing
 
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public override void Flush()
     {
         // See the large comment in BeginRead about why we are not using this.FlushAsync,
@@ -696,12 +742,14 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
         // Calling Flush in a non-writable stream is a no-op, not an error:
         if (!_canWrite)
+        {
             return;
+        }
 
         Debug.Assert(wrtStr != null);
 
         IAsyncOperation<bool> asyncFlushOperation = wrtStr.FlushAsync();
-        StreamFlushAsyncResult asyncResult = new StreamFlushAsyncResult(asyncFlushOperation);
+        StreamFlushAsyncResult asyncResult = new(asyncFlushOperation);
 
         asyncResult.Wait();
 
@@ -725,14 +773,17 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         }
     }
 
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public override Task FlushAsync(CancellationToken cancellationToken)
     {
         IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
 
         // Calling Flush in a non-writable stream is a no-op, not an error:
         if (!_canWrite)
+        {
             return Task.CompletedTask;
+        }
 
         Debug.Assert(wrtStr != null);
 
@@ -750,7 +801,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     // Moved it to the end while using Dev10 VS because it does not understand async and everything that follows looses intellisense.
     // Should move this code into the Reading regios once using Dev11 VS becomes the norm.
 
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+    [SupportedOSPlatform("windows10.0.10240.0")]
     private async Task<int> ReadAsyncInternal(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         Debug.Assert(buffer != null);
@@ -776,11 +827,13 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             // the entire task to complete as well. This is ok as the continuation is very lightweight:
 
             if (resultBuffer == null)
+            {
                 return 0;
+            }
 
             WindowsRuntimeIOHelpers.EnsureResultsInUserBuffer(userBuffer, resultBuffer);
 
-            Debug.Assert(resultBuffer.Length <= unchecked((uint)int.MaxValue));
+            Debug.Assert(resultBuffer.Length <= unchecked(int.MaxValue));
             return (int)resultBuffer.Length;
         }
         catch (Exception ex)
@@ -793,7 +846,4 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     }
     #endregion ReadAsyncInternal implementation
 
-}  // class WinRtToNetFxStreamAdapter
-// namespace
-
-// WinRtToNetFxStreamAdapter.cs
+}

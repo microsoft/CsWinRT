@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.Versioning;
 using Windows.Foundation;
 
 namespace WindowsRuntime.InteropServices;
@@ -8,6 +9,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// A specialized <see cref="StreamOperationAsyncResult"/> implementation for <see cref="Windows.Storage.Streams.IOutputStream.FlushAsync"/>.
 /// </summary>
+[SupportedOSPlatform("windows10.0.10240.0")]
 internal sealed class StreamFlushAsyncResult : StreamOperationAsyncResult
 {
     /// <summary>

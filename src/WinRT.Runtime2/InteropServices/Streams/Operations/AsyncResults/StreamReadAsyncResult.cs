@@ -3,7 +3,7 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
+using System.Runtime.Versioning;
 using Windows.Foundation;
 using Windows.Storage.Streams;
 
@@ -14,6 +14,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// A specialized <see cref="StreamOperationAsyncResult"/> implementation for <see cref="IInputStream.ReadAsync"/>.
 /// </summary>
+[SupportedOSPlatform("windows10.0.10240.0")]
 internal sealed class StreamReadAsyncResult : StreamOperationAsyncResult
 {
     /// <summary>
@@ -30,8 +31,8 @@ internal sealed class StreamReadAsyncResult : StreamOperationAsyncResult
     public StreamReadAsyncResult(
         IAsyncOperationWithProgress<IBuffer, uint> readAsyncOperation,
         IBuffer buffer,
-        AsyncCallback userCompletionCallback,
-        object userAsyncStateInfo,
+        AsyncCallback? userCompletionCallback,
+        object? userAsyncStateInfo,
         bool processCompletedOperationInCallback)
         : base(readAsyncOperation, userCompletionCallback, userAsyncStateInfo, processCompletedOperationInCallback)
     {
