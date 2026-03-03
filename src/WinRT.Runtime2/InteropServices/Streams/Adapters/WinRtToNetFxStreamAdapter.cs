@@ -133,9 +133,6 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     /// </summary>
     private bool _disposeNativeStream;
 
-    private byte[]? _oneByteBuffer;
-
-
     #region Tools and Helpers
 
     /// <summary>
@@ -163,18 +160,6 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             $"but the underlying WinRT stream cannot be cast to that type. Its actual type is \"{wrtStr.GetType()}\".");
 
         return wrtStr as TWinRtStream;
-    }
-
-
-    private byte[] OneByteBuffer
-    {
-        get
-        {
-            byte[] obb = _oneByteBuffer;
-            if (obb == null)  // benign race for multiple init
-                _oneByteBuffer = obb = new byte[1];
-            return obb;
-        }
     }
 
     /// <summary>
@@ -542,7 +527,6 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         return ReadAsyncInternal(buffer, offset, count, cancellationToken);
     }
 
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
     public override int Read(byte[] buffer, int offset, int count)
     {
         // Arguments validation and not-disposed validation are done in BeginRead.
@@ -552,18 +536,14 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         return bytesread;
     }
 
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+    /// <inheritdoc/>
     public override int ReadByte()
     {
-        // EnsureNotDisposed will be called in Read->BeginRead.
+        byte result = 0;
 
-        byte[] oneByteArray = OneByteBuffer;
-
-        if (0 == Read(oneByteArray, 0, 1))
-            return -1;
-
-        int value = oneByteArray[0];
-        return value;
+        // We don't need to call 'EnsureNotDisposed' here, as it will
+        // be will be called from the 'Read' -> 'BeginRead' call chain.
+        return Read(new Span<byte>(ref result)) == 0 ? -1 : result;
     }
 
     #endregion Reading
@@ -695,15 +675,11 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         EndWrite(asyncResult);
     }
 
-
+    /// <inheritdoc/>
     public override void WriteByte(byte value)
     {
-        // EnsureNotDisposed will be called in Write->BeginWrite.
-
-        byte[] oneByteArray = OneByteBuffer;
-        oneByteArray[0] = value;
-
-        Write(oneByteArray, 0, 1);
+        // We don't need to call 'EnsureNotDisposed', see notes in 'ReadByte'
+        Write(new ReadOnlySpan<byte>(in value));
     }
 
     #endregion Writing
