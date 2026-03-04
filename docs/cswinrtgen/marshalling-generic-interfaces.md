@@ -24,83 +24,68 @@ We will use `IEnumerator<T>` (`IIterator<T>`) as reference to document all of th
 The starting point for RCW scenarios is an RCW class that can be used to marshal interfaces to native. The Windows Runtime interfaces are mapped to different interfaces in the .NET world (eg. `IIterator<T>` -> `IEnumerator<T>`), and sometimes there might be subtle semantic differences, which CsWinRT takes care of hiding. Here is the API surface for the `IEnumerator<T>` RCW:
 
 ```csharp
-public abstract class WindowsRuntimeEnumerator<T> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
+public abstract class WindowsRuntimeEnumerator<T, TIIteratorMethods> : WindowsRuntimeObject, IEnumerator<T>, IWindowsRuntimeInterface<IEnumerator<T>>
+    where TIIteratorMethods : IIteratorMethodsImpl<T>
 {
-    public WindowsRuntimeEnumerator(WindowsRuntimeObjectReference nativeObjectReference);
+    protected WindowsRuntimeEnumerator(WindowsRuntimeObjectReference nativeObjectReference);
 
+    protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
     protected sealed override bool IsOverridableInterface(in Guid iid);
 
-    // These will be implemented to invoke the underlying 'IIterator<T>' methods directly
-    protected abstract T CurrentNative { get; }
-    protected abstract bool HasCurrentNative { get; }
-    protected abstract bool MoveNextNative();
-
-    // These will implement the managed 'IEnumerator<T>' interface, with the expected .NET semantics
+    // These implement the managed 'IEnumerator<T>' interface, with the expected .NET semantics
     public T Current { get; }
     object IEnumerator.Current { get; }
     public bool MoveNext();
     public void Dispose();
     public void Reset();
 
-    public WindowsRuntimeObjectReferenceValue GetInterface();
+    WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<IEnumerator<T>>.GetInterface();
 }
 ```
 
-This type derives from `WindowsRuntimeObject`, which provides all the usual support for IDIC, generated COM interfaces, and more. If needed, these RCW types (one per generic interface) can also contain additional state necessary to properly map the Windows Runtime interface behavior to the managed one. This is the case for `IEnumerator<T>`, which is slightly different than `IIterator<T>`, for instance.
+This type derives from `WindowsRuntimeObject`, which provides all the usual support for IDIC, generated COM interfaces, and more. The key design here is that the RCW base type is generic on both the element type `T` and a `TIIteratorMethods` implementation. The `TIIteratorMethods` type parameter is constrained to `IIteratorMethodsImpl<T>`, and is used to invoke the type-specific `Current` method. The base class itself handles the state management necessary to properly map the `IIterator<T>` behavior to the `IEnumerator<T>` semantics (eg. `IIterator<T>` starts at index 0, while `IEnumerator<T>` starts before the first element).
 
-Next, an interface is needed for each "Methods" implementation, for each generic interface. For `IIterator<T>`, it looks like this:
+Next, we have two separate "Methods" building blocks. First, an interface for the type-specific `Current` method:
 
 ```csharp
-public interface IIteratorMethods<T>
+public interface IIteratorMethodsImpl<T>
 {
-    static abstract T Current(WindowsRuntimeObjectReference objectReference);
-
-    static abstract bool HasCurrent(WindowsRuntimeObjectReference objectReference);
-
-    static abstract bool MoveNext(WindowsRuntimeObjectReference obj);
-
-    static abstract uint GetMany(WindowsRuntimeObjectReference obj, Span<T> items);
+    static abstract T Current(WindowsRuntimeObjectReference thisReference);
 }
 ```
 
-This exactly matches the shape that any "Methods" type would have for any given projected interface.
+This is a static abstract interface that each generic instantiation will implement to provide the type-specific logic to retrieve the current item (including any necessary marshalling). Only the `Current` method is part of this interface because it requires type-specific marshalling.
 
-To pair each of these "Methods" interfaces, we have a "Methods" type for the mapped .NET interface type. For instance:
+For the non-type-specific methods (`HasCurrent` and `MoveNext`), there is a shared non-generic static class:
 
 ```csharp
-public static class IEnumeratorMethods<T>
+public static class IIteratorMethods
 {
-    public static T Current<TMethods>(WindowsRuntimeObjectReference objectReference)
-        where TMethods : IIteratorMethods<T>
-    {
-        return TMethods.Current(objectReference);
-    }
-
-    public static bool HasCurrent<TMethods>(WindowsRuntimeObjectReference objectReference)
-        where TMethods : IIteratorMethods<T>
-    {
-        return TMethods.HasCurrent(objectReference);
-    }
-
-    // Other methods...
+    public static bool HasCurrent(WindowsRuntimeObjectReference thisReference);
+    public static bool MoveNext(WindowsRuntimeObjectReference thisReference);
 }
 ```
 
-These methods are also generic on a given "Methods" interface implementation, and can implement the mapped functionality on top of the underlying Windows Runtime interface logic, where needed. For `IEnumerator<T>`, the implementation is trivial, but for other interfaces (eg. `IList<T>`) there is a fair amount of additional "semantics adjustments" that is required, that can all be done here. This also allows CsWinRT to be versioned easily in this area, as all this logic on top of the underlying APIs is just in `WinRT.Runtime.dll`.
+These methods are shared across all `IIterator<T>` instantiations because they don't require type-specific marshalling. They invoke the underlying `IIterator<T>` vtable methods directly.
+
+The `WindowsRuntimeEnumerator<T, TIIteratorMethods>` base class uses both of these to implement the full `IEnumerator<T>` interface. The `MoveNext` method uses `IIteratorMethods.HasCurrent` and `IIteratorMethods.MoveNext` for control flow, and `TIIteratorMethods.Current` to retrieve and cache the current value when a valid item is available.
 
 Lastly, we also need to introduce some additional building blocks to wire things up at marshalling time. First, a new interface:
 
 ```csharp
-public interface IWindowsRuntimeUnsealedComWrappersCallback
+public interface IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
     static abstract bool TryCreateObject(
         void* value,
         ReadOnlySpan<char> runtimeClassName,
-        [NotNullWhen(true)] out object? result);
+        [NotNullWhen(true)] out object? wrapperObject,
+        out CreatedWrapperFlags wrapperFlags);
+
+    static abstract object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags);
 }
 ```
 
-This is conceptually similar to `IWindowsRuntimeComWrappersCallback` (which is used for delegates and sealed runtime class names), with the main difference being that it is specialized for unsealed types (and interfaces). In this case, implementations need to know the runtime class name of the native object, to determine whether they can marshal it via the fast path using a statically visible RCW type (see below), or whether they should fallback to the logic to marshal arbitrary opaque object that is used when no static type information is available (which involves going through the interop type lookup to get the marshalling info, etc.).
+This is conceptually similar to `IWindowsRuntimeObjectComWrappersCallback` (which is used for delegates and sealed runtime class names), with the main difference being that it is specialized for unsealed types (and interfaces). In this case, implementations need to know the runtime class name of the native object, to determine whether they can marshal it via the fast path using a statically visible RCW type (see below), or whether they should fallback to the logic to marshal arbitrary opaque object that is used when no static type information is available (which involves going through the interop type lookup to get the marshalling info, etc.). The `CreateObject` method provides a fallback path if `TryCreateObject` fails but no more specific RCW type could be resolved (or if `GetRuntimeClassName` fails). Both methods also return `CreatedWrapperFlags` to provide additional information about the created wrapper.
 
 And lastly, a new marshaller type to support this interface:
 
@@ -108,50 +93,43 @@ And lastly, a new marshaller type to support this interface:
 public static class WindowsRuntimeUnsealedObjectMarshaller
 {
     public static object? ConvertToManaged<TCallback>(void* value)
-        where TCallback : IWindowsRuntimeUnsealedComWrappersCallback, allows ref struct;
+        where TCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback, allows ref struct;
 }
 ```
 
-This is conceptually very similar to `WindowsRuntimeDelegateMarshaller`, which uses `IWindowsRuntimeComWrappersCallback`.
+This is conceptually very similar to `WindowsRuntimeDelegateMarshaller`, which uses `IWindowsRuntimeObjectComWrappersCallback`.
 
 ## RCW (in `WinRT.Interop.dll`)
 
-Moving on to `WinRT.Interop.dll`, the first generated type is an implementation for the "Methods" interface above:
+Moving on to `WinRT.Interop.dll`, the first generated type is an implementation for the `IIteratorMethodsImpl<T>` interface above:
 
 ```csharp
-public abstract class IIterator_stringMethods : IIteratorMethods<string>
+public abstract class IIterator_stringMethods : IIteratorMethodsImpl<string>
 {
     public static string Current(WindowsRuntimeObjectReference objectReference)
     {
         throw new NotImplementedException();
     }
-
-    public static bool HasCurrent(WindowsRuntimeObjectReference objectReference)
-    {
-        throw new NotImplementedException();
-    }
-
-    // Other methods...
 }
 ```
 
-This is where all the specialized invocation and marshalling logic will live, for each constructed generic interface.
+This is where the specialized invocation and marshalling logic for the `Current` method lives, for each constructed generic interface. Note that only `Current` needs to be type-specific — `HasCurrent` and `MoveNext` are handled by the shared non-generic `IIteratorMethods` class in the runtime.
 
-To pair this "Methods" interface implementation, a "stub" non-generic implementation for associated the "Methods" type is also used:
+To pair this "Methods" interface implementation, a non-generic "Methods" type is also generated for the mapped .NET interface:
 
 ```csharp
 public static class IEnumerator_stringMethods
 {
     public static string Current(WindowsRuntimeObjectReference objectReference)
     {
-        return IEnumeratorMethods<string>.Current<IIterator_stringMethods>(objectReference);
+        return IIterator_stringMethods.Current(objectReference);
     }
 
-    // Other methods...
+    // Other forwarding methods for HasCurrent, MoveNext (via IIteratorMethods)...
 }
 ```
 
-This is simply calling all interface methods through the mapped "Methods" type, with the generated "Methods" interface implementation as type argument. This is used by all actual consumers of this interface on the RCW side (eg. by projection code in any projection assembly), via `[UnsafeAccessor]` calls on this generated "Methods" type. Keeping these types non-generic makes invocations simpler too, as it avoids the additional complexity of handling generic type arguments of inaccessible types, which would require proxy types at each callsite.
+This is simply calling the `Current` method through the generated `IIteratorMethodsImpl<T>` implementation. This is used by all actual consumers of this interface on the RCW side (eg. by projection code in any projection assembly), via `[UnsafeAccessor]` calls on this generated "Methods" type. Keeping these types non-generic makes invocations simpler too, as it avoids the additional complexity of handling generic type arguments of inaccessible types, which would require proxy types at each callsite.
 
 For instance, here's an example of what a callsite from a projection assembly can look like, when needing to use any of these methods:
 
@@ -162,55 +140,59 @@ public static extern string Current(
     WindowsRuntimeObjectReference objectReference);
 ```
 
-With all these set up, we can now also generate the "NativeObject" type, which is the RCW implementation of the abstract type:
+With all these set up, we can now also generate the "NativeObject" type, which is the RCW implementation:
 
 ```csharp
-public sealed class IEnumerator_stringNativeObject : WindowsRuntimeEnumerator<string>
+public sealed class IEnumerator_stringNativeObject : WindowsRuntimeEnumerator<string, IIterator_stringMethods>
 {
     public IEnumerator_stringNativeObject(WindowsRuntimeObjectReference nativeObjectReference)
         : base(nativeObjectReference)
     {
     }
-
-    protected override string CurrentNative => IEnumerator_stringMethods.Current(NativeObjectReference);
-
-    protected override bool HasCurrentNative => IIterator_stringMethods.HasCurrent(NativeObjectReference);
-
-    protected override bool MoveNextNative()
-    {
-        return IIterator_stringMethods.MoveNext(NativeObjectReference);
-    }
-
-    // Other methods...
 }
 ```
 
-This implements all "Native" methods forwarding the underlying implementation on the Windows Runtime interface, that the base type will use to implement the "semantics adjustment" for each given managed .NET interface. Of course, the exact methods will vary for each interface.
+This derives from `WindowsRuntimeEnumerator<T, TIIteratorMethods>` with the generated `IIterator_stringMethods` as the type argument. The base class handles all the `IEnumerator<T>` semantics, using `IIteratorMethods.HasCurrent`/`MoveNext` for control flow and `IIterator_stringMethods.Current` (via the `TIIteratorMethods` type parameter) for retrieving the current element. No abstract methods need to be overridden.
 
-With this, we can now introduce the `IWindowsRuntimeUnsealedComWrappersCallback` implementation for this generic type instantiation:
+With this, we can now introduce the `IWindowsRuntimeUnsealedObjectComWrappersCallback` implementation for this generic type instantiation:
 
 ```csharp
-public abstract unsafe class IEnumerator_stringComWrappersCallback : IWindowsRuntimeUnsealedComWrappersCallback
+public abstract unsafe class IEnumerator_stringComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback
 {
-    public static bool TryCreateObject(void* value, ReadOnlySpan<char> runtimeClassName, [NotNullWhen(true)] out object? result)
+    public static bool TryCreateObject(
+        void* value,
+        ReadOnlySpan<char> runtimeClassName,
+        [NotNullWhen(true)] out object? wrapperObject,
+        out CreatedWrapperFlags wrapperFlags)
     {
         if (runtimeClassName.SequenceEqual("Windows.Foundation.Collections.IIterator`1<String>"))
         {
             WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in IEnumerator_stringImpl.IID)!;
 
-            result = new IEnumerator_stringNativeObject(objectReference);
+            wrapperObject = new IEnumerator_stringNativeObject(objectReference);
+            wrapperFlags = default;
 
             return true;
         }
 
-        result = null;
+        wrapperObject = null;
+        wrapperFlags = default;
 
         return false;
+    }
+
+    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.AsUnsafe(value, in IEnumerator_stringImpl.IID)!;
+
+        wrapperFlags = default;
+
+        return new IEnumerator_stringNativeObject(objectReference);
     }
 }
 ```
 
-This provides the RCW marshalling with a fast path when the runtime class name is an exact match. Note that when this is used, the internal `ComWrappers` implementation can still do several optimizations, such as flowing the initial interface pointer through, so that no additional `QueryInterface` call is needed if the fast path is taken, and only calling `GetRuntimeClassName` once, and reusing it even in case the fast path fails and the fallback logic has to be used (as the runtime class name cannot change for a given object).
+This provides the RCW marshalling with a fast path when the runtime class name is an exact match via `TryCreateObject`. Note that when this is used, the internal `ComWrappers` implementation can still do several optimizations, such as flowing the initial interface pointer through, so that no additional `QueryInterface` call is needed if the fast path is taken, and only calling `GetRuntimeClassName` once, and reusing it even in case the fast path fails and the fallback logic has to be used (as the runtime class name cannot change for a given object). The `CreateObject` fallback is called if `TryCreateObject` fails but no more specific RCW type could be resolved.
 
 Of course, this can only be used when static type information is available. We'll need an attribute when that is not the case:
 
@@ -222,9 +204,11 @@ public sealed unsafe class IEnumerator_stringComWrappersMarshallerAttribute : Wi
         throw new UnreachableException();
     }
 
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
         WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.AsUnsafe(value, in IEnumerator_stringImpl.IID)!;
+
+        wrapperFlags = default;
 
         return new IEnumerator_stringNativeObject(objectReference);
     }
@@ -268,41 +252,30 @@ Where `DynamicInterfaceCastableImplementationTypeMapGroup` is the type map group
 
 ## CCW
 
-To marshal managed objects to native, we might also need some additional state to correctly adapt the semantics of the managed interfaces to the native ones. This might not be needed for all generic interfaces, but for those that do need additional state (such as `IEnumerator<T>`), this is what the adapter type would look like:
+To marshal managed objects to native, CsWinRT uses pre-built adapter types in the runtime to correctly adapt the semantics of the managed interfaces to the native ones. For `IEnumerator<T>`, the adapter type is defined in `WinRT.Runtime.dll`:
 
 ```csharp
-public sealed class IEnumerator_stringAdapterImpl
+public sealed class IEnumeratorAdapter<T> : IEnumerator<T>
 {
-    public IEnumerator_stringAdapterImpl(IEnumerator<string> value)
-    {
-    }
+    internal IEnumeratorAdapter(IEnumerator<T> enumerator);
 
-    public bool MoveNext()
-    {
-        // Adapted implementation
-    }
+    public static IEnumeratorAdapter<T> GetInstance(IEnumerator<T> enumerator);
 
-    // Other methods...
+    // These implement the 'IIterator<T>' methods with the adapted semantics
+    public T Current { get; }
+    public bool HasCurrent { get; }
+    public bool MoveNext();
 }
 ```
 
-This is a simple thing wrapper around a given interface instance, with additional state, and implementations of all necessary methods. It is not required for this wrapper to actually implement the interface itself, nor to implement all interface methods. Only the ones that require additional semantics modifications have to be implemented, the other methods can just be called directly by the marshalled CCWs. Also note that this adapter type would be implementing the native Windows Runtime interface (which is not projected), not the managed .NET interface.
+This adapter wraps an `IEnumerator<T>` instance and provides `IIterator<T>` semantics on top of it. For example, it handles the difference that `IIterator<T>` starts at index 0, while `IEnumerator<T>` starts before the first element. It maps `E_BOUNDS` and `E_CHANGED_STATE` error codes as appropriate.
 
-Next, we need a table to associate these adapters to each managed object instance:
+The `GetInstance` method efficiently retrieves or creates adapter instances using a `ConditionalWeakTable<IEnumerator<T>, IEnumeratorAdapter<T>>` that lives in a `file`-scoped companion type. It also has a fast path that checks if the input is already an `IEnumeratorAdapter<T>` instance to avoid redundant wrapping.
 
-```csharp
-public static class IEnumerator_stringAdapterImplTable
-{
-    private static readonly ConditionalWeakTable<IEnumerator<string>, IEnumerator_stringAdapterImpl> Table = [];
+> [!NOTE]
+> Unlike the previous design, the adapter types and their associated tables are not generated per generic instantiation. Instead, they are generic types defined in `WinRT.Runtime.dll` and are shared across all instantiations. The generated CCW vtable methods in `WinRT.Interop.dll` call into these pre-built adapters directly.
 
-    public static IEnumerator_stringAdapterImpl GetAdapterImpl(IEnumerator<string> value)
-    {
-        return Table.GetValue(value, static value => new IEnumerator_stringAdapterImpl(value));
-    }
-}
-```
-
-This provides an efficient way to get or create adapters tied to each CCW target.
+For the `GetMany` method and other type-specific operations, extension methods on `IEnumeratorAdapter<T>` are provided in the runtime, with specialized overloads for different element type categories (blittable value types, managed value types, unmanaged value types, key-value pairs, reference types, strings, objects, etc.).
 
 We can now move on to the actual CCW implementation. As with all interfaces, we'll need a vtable:
 
@@ -371,13 +344,14 @@ public static unsafe class IEnumerator_stringImpl
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT get_Current(void* thisPtr, bool* result)
+    private static HRESULT get_Current(void* thisPtr, HSTRING* result)
     {
         try
         {
             var unboxedValue = ComInterfaceDispatch.GetInstance<IEnumerator<string>>((ComInterfaceDispatch*)thisPtr);
+            var adapter = IEnumeratorAdapter<string>.GetInstance(unboxedValue);
 
-            *result = IEnumerator_stringImplAdapterTable.GetAdapterImpl(unboxedValue).Current();
+            *result = /* marshal adapter.Current to HSTRING */;
 
             return WellKnownErrorCodes.S_OK;
         }
@@ -387,14 +361,15 @@ public static unsafe class IEnumerator_stringImpl
         }
     }
 
-    // Other methods...
+    // Other methods (get_HasCurrent, MoveNext, GetMany) follow the same pattern,
+    // all calling through the IEnumeratorAdapter<T> instance.
 }
 ```
 
-This will either invoke methods directly on the CCW target, if no additional adapter logic is needed, or invoke them on the adapter instance retrieved via the generated table. This will allow tracking any additional state per-CCW, like mentioned above (which is eg. required for properly marshalling `IEnumerator<T>` to native).
+The CCW vtable methods retrieve the managed `IEnumerator<T>` from the CCW dispatch, then obtain the corresponding `IEnumeratorAdapter<T>` instance via `GetInstance`. This adapter handles the semantics adjustments needed for native callers. For instance, `get_HasCurrent` calls `adapter.HasCurrent`, `MoveNext` calls `adapter.MoveNext()`, and `GetMany` calls the appropriate type-specific extension method.
 
 > [!NOTE]
-> For interfaces that do not need additional state for adapting CCWs for native consumers, the "AdapterImpl" and "AdapterImplTable" types can be completely emitted. Rather, the CCW vtable methods would directly call the stateless adapter APIs via the generated "Methods" types.
+> For interfaces that do not need additional state for adapting CCWs for native consumers, the adapter types are not used. Rather, the CCW vtable methods would directly invoke the managed interface methods on the unwrapped CCW target.
 
 ## Marshalling
 
@@ -405,7 +380,7 @@ public static unsafe class IEnumerator_stringMarshaller
 {
     public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(IEnumerator<string>? value)
     {
-        return WindowsRuntimeInterfaceMarshaller.ConvertToUnmanaged(value, in IEnumerator_stringImpl.IID);
+        return WindowsRuntimeInterfaceMarshaller<IEnumerator<string>>.ConvertToUnmanaged(value, in IEnumerator_stringImpl.IID);
     }
 
     public static IEnumerator<string>? ConvertToManaged(void* value)
@@ -415,6 +390,8 @@ public static unsafe class IEnumerator_stringMarshaller
 }
 ```
 
+Note that `WindowsRuntimeInterfaceMarshaller<T>` is now a generic type, where the type parameter `T` is the interface type being marshalled. This enables the marshaller to leverage `IWindowsRuntimeInterface<T>` for fast path optimizations and to provide better diagnostic messages in case of failures.
+
 And along with this, also a proxy type to support opaque object marshalling scenarios:
 
 ```csharp
@@ -423,4 +400,4 @@ And along with this, also a proxy type to support opaque object marshalling scen
 public static class IEnumerator_string;
 ```
 
-This code ensures that all scenarios mentioned at the start of the document can be supported, while also providing high performance, trim/AOT support, and allowing ILC to fully fold and pre-initialize vtables for all constructed interfaces, and all `ComInterfaceEntry` arrays for CCWs implementing any of these interfaces 🚀 
+This code ensures that all scenarios mentioned at the start of the document can be supported, while also providing high performance, trim/AOT support, and allowing ILC to fully fold and pre-initialize vtables for all constructed interfaces, and all `ComInterfaceEntry` arrays for CCWs implementing any of these interfaces 🚀
