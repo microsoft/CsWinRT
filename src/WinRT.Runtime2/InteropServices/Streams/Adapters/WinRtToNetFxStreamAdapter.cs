@@ -152,6 +152,20 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     }
 
     /// <summary>
+    /// Asserts that the current instance has not been disposed, and fails if it was.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
+    private void AssertNotDisposed()
+    {
+        object? windowsRuntimeStream = _windowsRuntimeStream;
+
+        if (windowsRuntimeStream is null)
+        {
+            throw new ObjectDisposedException(SR.ObjectDisposed_CannotPerformOperation);
+        }
+    }
+
+    /// <summary>
     /// Ensures that the current instance has not been disposed and returns a valid stream instance.
     /// </summary>
     /// <returns>The underlying Windows Runtime stream if the current instance has not been disposed.</returns>
@@ -304,8 +318,6 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             throw new NotSupportedException(SR.NotSupported_CannotSeekInStream);
         }
 
-        Debug.Assert(wrtStr != null);
-
         switch (origin)
         {
             case SeekOrigin.Begin:
@@ -424,7 +436,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     #region Reading
 
     [SupportedOSPlatform("windows10.0.10240.0")]
-    private IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state, bool usedByBlockingWrapper)
+    private StreamReadAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
     {
         // This method is somewhat tricky: We could consider just calling ReadAsync (recall that Task implements IAsyncResult).
         // It would be OK for cases where BeginRead is invoked directly by the public user.
@@ -468,16 +480,17 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
                                                                                            unchecked((uint)count),
                                                                                            InputStreamOptions.Partial);
 
-        StreamReadAsyncResult asyncResult = new StreamReadAsyncResult(asyncReadOperation, userBuffer, callback, state,
-                                                                      processCompletedOperationInCallback: !usedByBlockingWrapper);
-
         // The StreamReadAsyncResult will set a private instance method to act as a Completed handler for asyncOperation.
         // This will cause a CCW to be created for the delegate and the delegate has a reference to its target, i.e. to
         // asyncResult, so asyncResult will not be collected. If we loose the entire AppDomain, then asyncResult and its CCW
         // will be collected but the stub will remain and the callback will fail gracefully. The underlying buffer is the only
         // item to which we expose a direct pointer and this is properly pinned using a mechanism similar to Overlapped.
-
-        return asyncResult;
+        return new StreamReadAsyncResult(
+            asyncReadOperation,
+            userBuffer,
+            callback,
+            state,
+            processCompletedOperationInCallback: !usedByBlockingWrapper);
     }
 
     /// <inheritdoc/>
@@ -486,7 +499,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     {
         ArgumentNullException.ThrowIfNull(asyncResult);
 
-        EnsureNotDisposed();
+        AssertNotDisposed();
         EnsureCanRead();
 
         StreamOperationAsyncResult streamAsyncResult = asyncResult as StreamOperationAsyncResult;
@@ -542,7 +555,7 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             throw new ArgumentException(SR.Argument_InsufficientSpaceInTargetBuffer);
         }
 
-        EnsureNotDisposed();
+        AssertNotDisposed();
         EnsureCanRead();
 
         // If already cancelled, bail early:
@@ -625,12 +638,9 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     [SupportedOSPlatform("windows10.0.10240.0")]
     public override void EndWrite(IAsyncResult asyncResult)
     {
-        if (asyncResult == null)
-        {
-            throw new ArgumentNullException(nameof(asyncResult));
-        }
+        ArgumentNullException.ThrowIfNull(asyncResult);
 
-        EnsureNotDisposed();
+        AssertNotDisposed();
         EnsureCanWrite();
 
         StreamOperationAsyncResult streamAsyncResult = asyncResult as StreamOperationAsyncResult;
@@ -670,20 +680,9 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     [SupportedOSPlatform("windows10.0.10240.0")]
     public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
-        if (buffer == null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
-
-        if (offset < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        if (count < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
+        ArgumentNullException.ThrowIfNull(buffer);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
 
         if (buffer.Length - offset < count)
         {
@@ -692,8 +691,6 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
 
         IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
         EnsureCanWrite();
-
-        Debug.Assert(wrtStr != null);
 
         // If already cancelled, bail early:
         cancellationToken.ThrowIfCancellationRequested();
@@ -746,8 +743,6 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             return;
         }
 
-        Debug.Assert(wrtStr != null);
-
         IAsyncOperation<bool> asyncFlushOperation = wrtStr.FlushAsync();
         StreamFlushAsyncResult asyncResult = new(asyncFlushOperation);
 
@@ -784,8 +779,6 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
         {
             return Task.CompletedTask;
         }
-
-        Debug.Assert(wrtStr != null);
 
         cancellationToken.ThrowIfCancellationRequested();
 
