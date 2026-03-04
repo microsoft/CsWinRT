@@ -183,7 +183,7 @@ public abstract unsafe class IEnumerator_stringComWrappersCallback : IWindowsRun
 
     public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.AsUnsafe(value, in IEnumerator_stringImpl.IID)!;
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in IEnumerator_stringImpl.IID)!;
 
         wrapperFlags = default;
 
@@ -206,7 +206,7 @@ public sealed unsafe class IEnumerator_stringComWrappersMarshallerAttribute : Wi
 
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.AsUnsafe(value, in IEnumerator_stringImpl.IID)!;
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in IEnumerator_stringImpl.IID)!;
 
         wrapperFlags = default;
 
@@ -215,7 +215,7 @@ public sealed unsafe class IEnumerator_stringComWrappersMarshallerAttribute : Wi
 }
 ```
 
-This provides a similar implementation, with the main difference being the use of `AsUnsafe`, which performs a `QueryInterface` instead of wrapping the input interface pointer directly. This is because in this scenario we cannot make any assumption on which exact interface pointer we will receive (and can therefore not leverage the fast path we can use when static type information is available).
+This provides a similar implementation, with the main difference being the use of `CreateUnsafe`, which performs a `QueryInterface` instead of wrapping the input interface pointer directly. This is because in this scenario we cannot make any assumption on which exact interface pointer we will receive (and can therefore not leverage the fast path we can use when static type information is available).
 
 ### IDIC
 
@@ -351,7 +351,7 @@ public static unsafe class IEnumerator_stringImpl
             var unboxedValue = ComInterfaceDispatch.GetInstance<IEnumerator<string>>((ComInterfaceDispatch*)thisPtr);
             var adapter = IEnumeratorAdapter<string>.GetInstance(unboxedValue);
 
-            *result = /* marshal adapter.Current to HSTRING */;
+            *result = HStringMarshaller.ConvertToUnmanaged(adapter.Current);
 
             return WellKnownErrorCodes.S_OK;
         }
