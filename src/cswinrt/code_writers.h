@@ -3700,6 +3700,11 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
     void write_winrt_exposed_type_class(writer& w, TypeDef const& type, bool isFactory)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         if (should_write_winrt_exposed_type_attribute(type, isFactory))
         {
             if (get_category(type) == category::class_type && isFactory)
@@ -7466,6 +7471,11 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     void write_interface(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
 
@@ -7488,6 +7498,11 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     bool write_abi_interface_netstandard(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return false;
+        }
+
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
         auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
@@ -7704,6 +7719,11 @@ private IObjectReference % => __% ?? Make__%();
 
     void write_static_abi_classes(writer& w, TypeDef const& iface)
     {
+        if (is_removed(iface))
+        {
+            return;
+        }
+
         auto fast_abi_class_val = get_fast_abi_class_for_interface(iface);
         if (fast_abi_class_val.has_value())
         {
@@ -8178,6 +8198,11 @@ NativeMemory.Free((void*)abiToProjectionVftablePtr);
 
     bool write_abi_interface(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return false;
+        }
+
         bool is_generic = distance(type.GenericParam()) > 0;
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
@@ -8997,6 +9022,11 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
             return;
         }
 
+        if (is_removed(type))
+        {
+            return;
+        }
+
         w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 internal sealed class %RcwFactoryAttribute : global::WinRT.WinRTImplementationTypeRcwFactoryAttribute
 {
@@ -9010,6 +9040,11 @@ internal sealed class %RcwFactoryAttribute : global::WinRT.WinRTImplementationTy
     void write_abi_class(writer& w, TypeDef const& type)
     {
         if (is_static(type))
+        {
+            return;
+        }
+
+        if (is_removed(type))
         {
             return;
         }
@@ -9129,6 +9164,11 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%
 
     void write_abi_delegate(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
+
         auto method = get_delegate_invoke(type);
         method_signature signature{ method };
         auto type_name = write_type_name_temp(w, type);
@@ -9936,6 +9976,11 @@ public override int GetHashCode() => %;
     void write_abi_struct(writer& w, TypeDef const& type)
     {
         if (is_type_blittable(type))
+        {
+            return;
+        }
+
+        if (is_removed(type))
         {
             return;
         }
