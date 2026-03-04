@@ -199,14 +199,9 @@ Of course, this can only be used when static type information is available. We'l
 ```csharp
 public sealed unsafe class IEnumerator_stringComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
-    public override unsafe ComInterfaceEntry* ComputeVtables(out int count)
-    {
-        throw new UnreachableException();
-    }
-
     public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.CreateUnsafe(value, in IEnumerator_stringImpl.IID)!;
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.Create(value, in IEnumerator_stringImpl.IID)!;
 
         wrapperFlags = default;
 
@@ -215,7 +210,7 @@ public sealed unsafe class IEnumerator_stringComWrappersMarshallerAttribute : Wi
 }
 ```
 
-This provides a similar implementation, with the main difference being the use of `CreateUnsafe`, which performs a `QueryInterface` instead of wrapping the input interface pointer directly. This is because in this scenario we cannot make any assumption on which exact interface pointer we will receive (and can therefore not leverage the fast path we can use when static type information is available).
+This provides a similar implementation to the `ComWrappersCallback` above, but using `Create` instead of `CreateUnsafe`. The difference between the two is that `Create` performs a `QueryInterface` call on the input pointer to retrieve the requested interface pointer, whereas `CreateUnsafe` assumes the input pointer already points to the correct interface and simply increments its reference count. The `ComWrappersMarshallerAttribute.CreateObject` method receives an opaque `IInspectable` pointer (not a specific interface pointer), so it must use `Create` to resolve the correct interface. In contrast, the `TryCreateObject` fast path in the `ComWrappersCallback` can use `CreateUnsafe` because the `ComWrappers` infrastructure ensures the input pointer is already the exact interface pointer that was statically visible at the marshalling callsite.
 
 ### IDIC
 
