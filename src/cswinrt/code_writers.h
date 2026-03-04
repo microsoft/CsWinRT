@@ -1545,7 +1545,9 @@ remove => %;
 
     void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute = ""sv, std::optional<type_semantics> call_static_method = {})
     {
-        if (is_removed(event))
+        auto [add, remove] = get_event_methods(event);
+        // MIDL places DeprecatedAttribute on the add method, not the Event row
+        if (is_removed(add))
         {
             return;
         }
@@ -1562,11 +1564,10 @@ remove => %;
             visibility = "protected virtual ";
         }
 
-        auto [add, _] = get_event_methods(event);
         bool is_private = is_implemented_as_private_method(w, class_type, add);
         if (!is_private)
         {
-            write_obsolete_attribute(w, event);
+            write_obsolete_attribute(w, add);
             write_event(w, event.Name(), event,
                 call_static_method.has_value() ? w.write_temp("%", bind<write_objref_type_name>(call_static_method.value())) : interface_member, 
                 visibility, ""sv, platform_attribute, call_static_method.has_value() ? std::optional(std::tuple(call_static_method.value(), event, false)) : std::nullopt);
@@ -3317,7 +3318,7 @@ visibility, self, objref_name);
     {
         std::set<TypeDef> writtenInterfaces;
         std::map<std::string, std::tuple<std::string, std::string, std::string, std::string, std::string, bool, bool, bool, std::optional<std::pair<type_semantics, Property>>, std::optional<std::pair<type_semantics, Property>>>> properties;
-        std::map<std::string, Property> property_deprecation;
+        std::map<std::string, MethodDef> property_deprecation;
         auto fast_abi_class_val = get_fast_abi_class_for_class(type);
 
         auto write_class_interface = [&](TypeDef const& interface_type, bool is_default_interface, bool is_overridable_interface, bool is_protected_interface, type_semantics semantics)
@@ -3372,12 +3373,13 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
             // Merge property getters/setters, since such may be defined across interfaces
             for (auto&& prop : interface_type.PropertyList())
             {
-                if (is_removed(prop))
+                MethodDef getter, setter;
+                std::tie(getter, setter) = get_property_methods(prop);
+                // MIDL places DeprecatedAttribute on the getter method, not the Property row
+                if (getter && is_removed(getter))
                 {
                     continue;
                 }
-                MethodDef getter, setter;
-                std::tie(getter, setter) = get_property_methods(prop);
                 auto prop_type = write_prop_type(w, prop);
                 auto is_private = getter && is_implemented_as_private_method(w, type, getter);  // for explicitly implemented interfaces, assume there is always a get.
                 auto property_name = is_private ? w.write_temp("%.%", interface_name, prop.Name()) : std::string(prop.Name());
@@ -3395,7 +3397,12 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                 );
                 if (inserted)
                 {
-                    property_deprecation.try_emplace(property_name, prop);
+                    // Store the getter MethodDef for deprecation checking
+                    // (MIDL places DeprecatedAttribute on getter, not Property row)
+                    if (getter)
+                    {
+                        property_deprecation.try_emplace(property_name, getter);
+                    }
                 }
                 if (!inserted)
                 {
@@ -3988,17 +3995,18 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<obje
 
         for (auto&& prop : type.PropertyList())
         {
-            if (is_removed(prop))
+            auto [getter, setter] = get_property_methods(prop);
+            // MIDL places DeprecatedAttribute on the getter method, not the Property row
+            if (getter && is_removed(getter))
             {
                 continue;
             }
-            auto [getter, setter] = get_property_methods(prop);
             // "new" required if overriding a getter in a base interface
             auto new_keyword = (!getter && setter && find_property_interface(w, type, prop.Name()).second) ? "new " : "";
-            if (is_deprecated_not_removed(prop))
+            if (getter && is_deprecated_not_removed(getter))
             {
                 w.write("\n");
-                write_obsolete_attribute(w, prop);
+                write_obsolete_attribute(w, getter);
             }
             w.write(R"(
 %% % {%% })",
@@ -4012,14 +4020,16 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<obje
 
         for (auto&& evt : type.EventList())
         {
-            if (is_removed(evt))
+            auto [add, remove] = get_event_methods(evt);
+            // MIDL places DeprecatedAttribute on the add method, not the Event row
+            if (is_removed(add))
             {
                 continue;
             }
-            if (is_deprecated_not_removed(evt))
+            if (is_deprecated_not_removed(add))
             {
                 w.write("\n");
-                write_obsolete_attribute(w, evt);
+                write_obsolete_attribute(w, add);
             }
             w.write(R"(
 event % %;)",
