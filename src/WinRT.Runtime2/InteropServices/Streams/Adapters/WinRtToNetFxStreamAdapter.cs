@@ -318,87 +318,89 @@ internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
             throw new NotSupportedException(SR.NotSupported_CannotSeekInStream);
         }
 
-        switch (origin)
+        // Helper for seeking from the start of the stream
+        static long ComputeBeginSeek(long offset) => offset;
+
+        // Helper for seeking relative to the current position in the stream
+        long ComputeCurrentSeek(long offset)
         {
-            case SeekOrigin.Begin:
-                {
-                    Position = offset;
-                    return offset;
-                }
+            long currentPosition = Position;
 
-            case SeekOrigin.Current:
-                {
-                    long curPos = Position;
+            if (long.MaxValue - currentPosition < offset)
+            {
+                throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+            }
 
-                    if (long.MaxValue - curPos < offset)
-                    {
-                        throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
-                    }
+            long newPosition = currentPosition + offset;
 
-                    long newPos = curPos + offset;
+            if (newPosition < 0)
+            {
+                throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+            }
 
-                    if (newPos < 0)
-                    {
-                        throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
-                    }
-
-                    Position = newPos;
-                    return newPos;
-                }
-
-            case SeekOrigin.End:
-                {
-                    ulong size = wrtStr.Size;
-                    long newPos;
-
-                    if (size > long.MaxValue)
-                    {
-                        if (offset >= 0)
-                        {
-                            throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
-                        }
-
-                        Debug.Assert(offset < 0);
-
-                        ulong absOffset = (offset == long.MinValue) ? ((ulong)long.MaxValue) + 1 : (ulong)(-offset);
-                        Debug.Assert(absOffset <= size);
-
-                        ulong np = size - absOffset;
-                        if (np > long.MaxValue)
-                        {
-                            throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
-                        }
-
-                        newPos = (long)np;
-                    }
-                    else
-                    {
-                        Debug.Assert(size <= long.MaxValue);
-
-                        long s = unchecked((long)size);
-
-                        if (long.MaxValue - s < offset)
-                        {
-                            throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
-                        }
-
-                        newPos = s + offset;
-
-                        if (newPos < 0)
-                        {
-                            throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
-                        }
-                    }
-
-                    Position = newPos;
-                    return newPos;
-                }
-
-            default:
-                {
-                    throw new ArgumentException(SR.Argument_InvalidSeekOrigin, nameof(origin));
-                }
+            return newPosition;
         }
+
+        // Helper for seeking from the end of the stream
+        long ComputeEndSeek(long offset, IRandomAccessStream windowsRuntimeStream)
+        {
+            ulong sizeNative = windowsRuntimeStream.Size;
+            long newPosition;
+
+            // If the current size exceeds 'long.MaxValue', then we can only seek when the input offset
+            // is negative, because that way there's a chance the final position might still be valid.
+            if (sizeNative > long.MaxValue)
+            {
+                if (offset >= 0)
+                {
+                    throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                }
+
+                ulong absoluteOffset = (offset == long.MinValue) ? ((ulong)long.MaxValue) + 1 : (ulong)-offset;
+
+                Debug.Assert(absoluteOffset <= sizeNative);
+
+                ulong newPositionNative = sizeNative - absoluteOffset;
+
+                if (newPositionNative > long.MaxValue)
+                {
+                    throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                }
+
+                newPosition = (long)newPositionNative;
+            }
+            else
+            {
+                // Otherwise, we just need to update the position makin sure we don't overflow
+                long size = unchecked((long)sizeNative);
+
+                if (long.MaxValue - size < offset)
+                {
+                    throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                }
+
+                newPosition = size + offset;
+
+                if (newPosition < 0)
+                {
+                    throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+                }
+            }
+
+            return newPosition;
+        }
+
+        long position = origin switch
+        {
+            SeekOrigin.Begin => ComputeBeginSeek(offset),
+            SeekOrigin.Current => ComputeCurrentSeek(offset),
+            SeekOrigin.End => ComputeEndSeek(offset, wrtStr),
+            _ => throw new ArgumentException(SR.Argument_InvalidSeekOrigin, nameof(origin))
+        };
+
+        Position = position;
+
+        return position;
     }
 
     /// <inheritdoc/>
