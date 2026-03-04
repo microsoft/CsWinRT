@@ -99,7 +99,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// the current object. Callers must call <see cref="AddRefUnsafe"/> and <see cref="ReleaseUnsafe"/>.
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void* GetReferenceTrackerPtrUnsafe()
+    internal void* GetReferenceTrackerPtrUnsafe()
     {
         return _referenceTrackerPtr;
     }
@@ -109,7 +109,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// </summary>
     /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddRefUnsafe()
+    internal void AddRefUnsafe()
     {
         ObjectDisposedException.ThrowIf(!TryAddRefUnsafe(), this);
     }
@@ -119,7 +119,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// </summary>
     /// <returns>Whether the managed reference count has been increased successfully.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryAddRefUnsafe()
+    internal bool TryAddRefUnsafe()
     {
         bool success = true;
 
@@ -220,7 +220,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <remarks>
     /// Calls to <see cref="ReleaseUnsafe"/> should always exactly match calls to <see cref="AddRefUnsafe"/>.
     /// </remarks>
-    public void ReleaseUnsafe()
+    internal void ReleaseUnsafe()
     {
         // To release, we can simply do an interlocked decrement on the reference tracking
         // mask. Each caller is guaranteed to only call this method once (the contract states to only
