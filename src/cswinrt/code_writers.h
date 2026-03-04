@@ -14,6 +14,9 @@ namespace cswinrt
 {
     using namespace winmd::reader;
 
+    template <typename T>
+    void write_obsolete_attribute(writer& w, T const& row);
+
     static const struct
     {
         char const* csharp;
@@ -1206,6 +1209,11 @@ namespace cswinrt
             return;
         }
 
+        if (is_removed(method))
+        {
+            return;
+        }
+
         auto access_spec = is_protected || is_overridable ? "protected " : "public ";
         std::string method_spec = "";
 
@@ -1261,6 +1269,7 @@ namespace cswinrt
         auto static_method_params = call_static_method.has_value() ? std::optional(std::pair(call_static_method.value(), method)) : std::nullopt;
         if (!is_private)
         {
+            write_obsolete_attribute(w, method);
             write_method(w, signature, method.Name(), return_type, 
                 static_method_params.has_value() ? w.write_temp("%", bind<write_objref_type_name>(static_method_params.value().first)) : interface_member, 
                 access_spec, method_spec, platform_attribute, static_method_params);
@@ -1536,6 +1545,11 @@ remove => %;
 
     void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute = ""sv, std::optional<type_semantics> call_static_method = {})
     {
+        if (is_removed(event))
+        {
+            return;
+        }
+
         auto visibility = "public ";
 
         if (is_protected)
@@ -1552,6 +1566,7 @@ remove => %;
         bool is_private = is_implemented_as_private_method(w, class_type, add);
         if (!is_private)
         {
+            write_obsolete_attribute(w, event);
             write_event(w, event.Name(), event,
                 call_static_method.has_value() ? w.write_temp("%", bind<write_objref_type_name>(call_static_method.value())) : interface_member, 
                 visibility, ""sv, platform_attribute, call_static_method.has_value() ? std::optional(std::tuple(call_static_method.value(), event, false)) : std::nullopt);
@@ -3302,6 +3317,7 @@ visibility, self, objref_name);
     {
         std::set<TypeDef> writtenInterfaces;
         std::map<std::string, std::tuple<std::string, std::string, std::string, std::string, std::string, bool, bool, bool, std::optional<std::pair<type_semantics, Property>>, std::optional<std::pair<type_semantics, Property>>>> properties;
+        std::map<std::string, Property> property_deprecation;
         auto fast_abi_class_val = get_fast_abi_class_for_class(type);
 
         auto write_class_interface = [&](TypeDef const& interface_type, bool is_default_interface, bool is_overridable_interface, bool is_protected_interface, type_semantics semantics)
@@ -3356,6 +3372,10 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
             // Merge property getters/setters, since such may be defined across interfaces
             for (auto&& prop : interface_type.PropertyList())
             {
+                if (is_removed(prop))
+                {
+                    continue;
+                }
                 MethodDef getter, setter;
                 std::tie(getter, setter) = get_property_methods(prop);
                 auto prop_type = write_prop_type(w, prop);
@@ -3373,6 +3393,10 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                     call_static_method && getter ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt,
                     call_static_method && setter ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt
                 );
+                if (inserted)
+                {
+                    property_deprecation.try_emplace(property_name, prop);
+                }
                 if (!inserted)
                 {
                     auto& [property_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, _, getter_prop, setter_prop] = prop_targets->second;
@@ -3488,6 +3512,10 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         {
             auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, is_private, getter_prop, setter_prop] = prop_data;
             if (is_private) continue;
+            if (auto it = property_deprecation.find(prop_name); it != property_deprecation.end())
+            {
+                write_obsolete_attribute(w, it->second);
+            }
             std::string_view access_spec = is_public ? "public "sv : "protected "sv;
             std::string_view method_spec = is_overridable ? "virtual "sv : ""sv;
             write_property(w, prop_name, prop_name, prop_type, 
@@ -3933,7 +3961,16 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<obje
             {
                 continue;
             }
+            if (is_removed(method))
+            {
+                continue;
+            }
 
+            if (is_deprecated_not_removed(method))
+            {
+                w.write("\n");
+                write_obsolete_attribute(w, method);
+            }
             method_signature signature{ method };
             w.write(R"(
 %% %(%);)",
@@ -3946,9 +3983,18 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<obje
 
         for (auto&& prop : type.PropertyList())
         {
+            if (is_removed(prop))
+            {
+                continue;
+            }
             auto [getter, setter] = get_property_methods(prop);
             // "new" required if overriding a getter in a base interface
             auto new_keyword = (!getter && setter && find_property_interface(w, type, prop.Name()).second) ? "new " : "";
+            if (is_deprecated_not_removed(prop))
+            {
+                w.write("\n");
+                write_obsolete_attribute(w, prop);
+            }
             w.write(R"(
 %% % {%% })",
                 new_keyword,
@@ -3961,6 +4007,15 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<obje
 
         for (auto&& evt : type.EventList())
         {
+            if (is_removed(evt))
+            {
+                continue;
+            }
+            if (is_deprecated_not_removed(evt))
+            {
+                w.write("\n");
+                write_obsolete_attribute(w, evt);
+            }
             w.write(R"(
 event % %;)",
                 bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
