@@ -544,28 +544,27 @@ namespace UnitTest
             GC.KeepAlive(reference);
         }
 
-        // TODO: Reenable
-        //[TestMethod]
-        //public void TestBufferTryGetArray()
-        //{
-        //    byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-        //    var buffer = arr.AsBuffer();
+        [TestMethod]
+        public void TestBufferTryGetArray()
+        {
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = arr.AsBuffer();
 
-        //    Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
-        //    Assert.AreEqual(arr, array.Array);
-        //}
+            Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.AreEqual(arr, array.Array);
+        }
 
-        //[TestMethod]
-        //public void TestBufferTryGetArraySubset()
-        //{
-        //    var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
-        //    var buffer = arr.AsBuffer(1, 2);
+        [TestMethod]
+        public void TestBufferTryGetArraySubset()
+        {
+            var arr = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+            var buffer = arr.AsBuffer(1, 2);
 
-        //    Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
-        //    Assert.AreEqual(arr, array.Array);
-        //    Assert.AreEqual(1, array.Offset);
-        //    Assert.AreEqual(2, array.Count);
-        //}
+            Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
+            Assert.AreEqual(arr, array.Array);
+            Assert.AreEqual(1, array.Offset);
+            Assert.AreEqual(2, array.Count);
+        }
 
         [TestMethod]
         // Mapped System.* Types Primitive Types
@@ -766,12 +765,11 @@ namespace UnitTest
             await stream.WriteAsync(data, data.Length, 0);
         }
         
-        // Enable once Stream bug is fixed
-        // [TestMethod]
-        // public void TestStreamWriteZeroByte()
-        // {
-        //     Assert.IsTrue(InvokeStreamWriteZeroBytes().Wait(1000));
-        // }
+        [TestMethod]
+        public void TestStreamWriteZeroByte()
+        {
+            Assert.IsTrue(InvokeStreamWriteZeroBytes().Wait(1000));
+        }
 
         async Task InvokeStreamWriteAsync()
         {
@@ -790,15 +788,14 @@ namespace UnitTest
             Assert.IsTrue(InvokeStreamWriteAsync().Wait(1000));
         }
         
-        // Enable once Stream bug is fixed
-        // [TestMethod]
-        // public void TestAsStream()
-        // {
-        //     using InMemoryRandomAccessStream winrtStream = new InMemoryRandomAccessStream();
-        //     using Stream normalStream = winrtStream.AsStream();
-        //     using var memoryStream = new MemoryStream();
-        //     normalStream.CopyTo(memoryStream);
-        // }
+        [TestMethod]
+        public void TestAsStream()
+        {
+            using InMemoryRandomAccessStream winrtStream = new InMemoryRandomAccessStream();
+            using Stream normalStream = winrtStream.AsStream();
+            using var memoryStream = new MemoryStream();
+            normalStream.CopyTo(memoryStream);
+        }
 
         async Task InvokeStreamWriteAndReadAsync()
         {
@@ -816,22 +813,18 @@ namespace UnitTest
             CollectionAssert.AreEqual(read, data);
         }
 
+        [TestMethod]
+        public void TestStreamWriteAndRead()
+        {
+            Assert.IsTrue(InvokeStreamWriteAndReadAsync().Wait(1000));
+        }
 
-        // TODO: Enable once Stream bug is fixed
-        // [TestMethod]
-        // public void TestStreamWriteAndRead()
-        // {
-        //     Assert.IsTrue(InvokeStreamWriteAndReadAsync().Wait(1000));
-        // }
-
-
-        //[TestMethod]
-        //public void TestDynamicInterfaceCastingOnValidInterface()
-        //{
-        //    var agileObject = (IAgileObject)(IWinRTObject)TestObject;
-        //    Assert.IsNotNull(agileObject);
-        //}
-
+        [TestMethod]
+        public void TestDynamicInterfaceCastingOnValidInterface()
+        {
+            var agileObject = (IAgileObject)(IWinRTObject)TestObject;
+            Assert.IsNotNull(agileObject);
+        }
 
         [TestMethod]
         public void TestDynamicInterfaceCastingOnInvalidInterface()
@@ -889,12 +882,11 @@ namespace UnitTest
             await stream.WriteAsync(buffer);
         }
         
-        // TODO: Enable once Stream bug is fixed
-        // [TestMethod]
-        // public void TestWriteBuffer()
-        // {
-        //     Assert.IsTrue(InvokeWriteBufferAsync().Wait(1000));
-        // }
+        [TestMethod]
+        public void TestWriteBuffer()
+        {
+            Assert.IsTrue(InvokeWriteBufferAsync().Wait(1000));
+        }
 
         [TestMethod]
         public unsafe void TestUri()
@@ -1871,13 +1863,11 @@ namespace UnitTest
             Assert.AreNotEqual(IntPtr.Zero, marshalCCW2);
         }
 
-#if NET
-        // Enable once Stream bug is fixed
-        // [TestMethod]
-        // public void TestDelegateCCWMarshaler()
-        // {
-        //     CreateAndValidateStreamedFile().Wait();
-        // }
+        [TestMethod]
+        public void TestDelegateCCWMarshaler()
+        {
+            CreateAndValidateStreamedFile().Wait();
+        }
 
         private async Task CreateAndValidateStreamedFile()
         {
@@ -1907,7 +1897,6 @@ namespace UnitTest
                 request.FailAndClose(StreamedFileFailureMode.Incomplete);
             }
         }
-#endif
 
         [TestMethod]
         public void TestWeakReference()
