@@ -38,7 +38,7 @@ public static unsafe class IStorageItemHandleAccessMethods
             return null;
         }
 
-        if (!storageItem.NativeObjectReference.TryAsUnsafe(WellKnownWindowsInterfaceIIDs.IID_IStorageItemHandleAccess, out void* thisPtr))
+        if (!storageItem.NativeObjectReference.TryAsUnsafe(in WellKnownWindowsInterfaceIIDs.IID_IStorageItemHandleAccess, out void* thisPtr))
         {
             return null;
         }

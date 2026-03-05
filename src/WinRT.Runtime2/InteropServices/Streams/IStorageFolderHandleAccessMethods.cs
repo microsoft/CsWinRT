@@ -42,7 +42,7 @@ public static unsafe class IStorageFolderHandleAccessMethods
             return null;
         }
 
-        if (!storageFolder.NativeObjectReference.TryAsUnsafe(WellKnownWindowsInterfaceIIDs.IID_IStorageFolderHandleAccess, out void* thisPtr))
+        if (!storageFolder.NativeObjectReference.TryAsUnsafe(in WellKnownWindowsInterfaceIIDs.IID_IStorageFolderHandleAccess, out void* thisPtr))
         {
             return null;
         }
