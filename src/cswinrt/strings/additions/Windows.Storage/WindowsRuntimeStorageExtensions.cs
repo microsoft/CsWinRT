@@ -41,7 +41,7 @@ namespace Windows.Storage.IO
             catch (Exception ex)
             {
                 // From this API, managed dev expect IO exceptions for "something wrong":
-                WinRtIOHelper.NativeExceptionToIOExceptionInfo(ex).Throw();
+                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
                 return null;
             }
         }
@@ -71,7 +71,7 @@ namespace Windows.Storage.IO
             catch (Exception ex)
             {
                 // From this API, managed dev expect IO exceptions for "something wrong":
-                WinRtIOHelper.NativeExceptionToIOExceptionInfo(ex).Throw();
+                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
                 return null;
             }
         }
@@ -105,7 +105,7 @@ namespace Windows.Storage.IO
             catch (Exception ex)
             {
                 // From this API, managed dev expect IO exceptions for "something wrong":
-                WinRtIOHelper.NativeExceptionToIOExceptionInfo(ex).Throw();
+                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
                 return null;
             }
         }
@@ -167,7 +167,7 @@ namespace Windows.Storage.IO
             catch (Exception ex)
             {
                 // From this API, managed dev expect IO exceptions for "something wrong":
-                WinRtIOHelper.NativeExceptionToIOExceptionInfo(ex).Throw();
+                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
                 return null;
             }
         }

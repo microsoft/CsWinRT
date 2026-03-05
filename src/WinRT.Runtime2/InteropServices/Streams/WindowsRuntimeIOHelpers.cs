@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.ExceptionServices;
@@ -13,7 +14,11 @@ namespace Windows.Storage.Streams;
 /// <summary>
 /// Helpers for working with Windows Runtime I/O operations.
 /// </summary>
-internal static class WindowsRuntimeIOHelpers
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class WindowsRuntimeIOHelpers
 {
     /// <summary>
     /// The default buffer size for stream adapters (16 KB).
