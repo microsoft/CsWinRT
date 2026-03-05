@@ -89,8 +89,6 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
         object? userAsyncStateInfo,
         bool processCompletedOperationInCallback)
     {
-        Debug.Assert(!processCompletedOperationInCallback || userCompletionCallback is not null);
-
         _userCompletionCallback = userCompletionCallback;
         _userAsyncStateInfo = userAsyncStateInfo;
         _processCompletedOperationInCallback = processCompletedOperationInCallback;
