@@ -34,10 +34,7 @@ internal partial class WinRtToNetFxStreamAdapter
             ulong size = wrtStr.Size;
 
             // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
-            if (size > long.MaxValue)
-            {
-                throw IOException.GetUnderlyingWinRTStreamTooLongException();
-            }
+            IOException.ThrowIfUnderlyingWinRTStreamTooLong(size);
 
             return unchecked((long)size);
         }
@@ -57,10 +54,7 @@ internal partial class WinRtToNetFxStreamAdapter
             ulong pos = wrtStr.Position;
 
             // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
-            if (pos > long.MaxValue)
-            {
-                throw IOException.GetUnderlyingWinRTStreamTooLongException();
-            }
+            IOException.ThrowIfUnderlyingWinRTStreamTooLong(pos);
 
             return unchecked((long)pos);
         }

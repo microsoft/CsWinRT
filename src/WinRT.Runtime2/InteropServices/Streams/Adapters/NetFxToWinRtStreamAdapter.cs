@@ -7,6 +7,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Windows.Storage.Streams;
 
+#pragma warning disable IDE0270
+
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>

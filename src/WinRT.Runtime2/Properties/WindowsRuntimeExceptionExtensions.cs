@@ -1216,13 +1216,24 @@ internal static class WindowsRuntimeExceptionExtensions
         }
 
         /// <summary>
-        /// Creates an <see cref="IOException"/> indicating that the underlying Windows Runtime stream is too long.
+        /// Throws an <see cref="IOException"/> if the specified <paramref name="value"/> exceeds <see cref="long.MaxValue"/>,
+        /// indicating that the underlying Windows Runtime stream is too long to use length or position operations.
         /// </summary>
-        /// <returns>The resulting <see cref="IOException"/> instance.</returns>
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static IOException GetUnderlyingWinRTStreamTooLongException()
+        /// <param name="value">The stream size or position value to check.</param>
+        /// <exception cref="IOException">Thrown if <paramref name="value"/> exceeds <see cref="long.MaxValue"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfUnderlyingWinRTStreamTooLong(ulong value)
         {
-            return new(WindowsRuntimeExceptionMessages.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowUnderlyingWinRTStreamTooLong()
+                => throw new IOException(WindowsRuntimeExceptionMessages.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+
+            if (value > long.MaxValue)
+            {
+                ThrowUnderlyingWinRTStreamTooLong();
+            }
         }
 
         /// <summary>
