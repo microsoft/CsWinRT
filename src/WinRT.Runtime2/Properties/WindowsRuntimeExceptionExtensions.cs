@@ -10,6 +10,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
+using Windows.Storage.Streams;
 using WindowsRuntime.InteropServices;
 
 namespace WindowsRuntime;
@@ -439,7 +440,7 @@ internal static class WindowsRuntimeExceptionExtensions
         }
 
         /// <summary>
-        /// Throws an <see cref="ArgumentOutOfRangeException"/> if the specified <see cref="Windows.Storage.Streams.InputStreamOptions"/> value is not valid.
+        /// Throws an <see cref="ArgumentOutOfRangeException"/> if the specified <see cref="InputStreamOptions"/> value is not valid.
         /// </summary>
         /// <param name="options">The options value to check.</param>
         /// <param name="paramName">The name of the parameter being checked.</param>
@@ -447,7 +448,7 @@ internal static class WindowsRuntimeExceptionExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [StackTraceHidden]
         [SupportedOSPlatform("windows10.0.10240.0")]
-        public static void ThrowIfInvalidInputStreamOptions(Windows.Storage.Streams.InputStreamOptions options, [CallerArgumentExpression(nameof(options))] string? paramName = null)
+        public static void ThrowIfInvalidInputStreamOptions(InputStreamOptions options, [CallerArgumentExpression(nameof(options))] string? paramName = null)
         {
             [DoesNotReturn]
             [StackTraceHidden]
@@ -461,7 +462,7 @@ internal static class WindowsRuntimeExceptionExtensions
                 throw exception;
             }
 
-            if (options is not (Windows.Storage.Streams.InputStreamOptions.None or Windows.Storage.Streams.InputStreamOptions.Partial or Windows.Storage.Streams.InputStreamOptions.ReadAhead))
+            if (options is not (InputStreamOptions.None or InputStreamOptions.Partial or InputStreamOptions.ReadAhead))
             {
                 ThrowArgumentOutOfRangeException(paramName);
             }
@@ -1203,21 +1204,16 @@ internal static class WindowsRuntimeExceptionExtensions
         [StackTraceHidden]
         public static void ThrowIfSeekResultNegative(long position)
         {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowCannotSeekToNegativePosition()
+                => throw new IOException(WindowsRuntimeExceptionMessages.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+
             if (position < 0)
             {
                 ThrowCannotSeekToNegativePosition();
             }
         }
-
-        [DoesNotReturn]
-        [StackTraceHidden]
-        private static void ThrowCannotSeekBeyondInt64MaxValue()
-            => throw new IOException(WindowsRuntimeExceptionMessages.IO_CannotSeekBeyondInt64MaxValue);
-
-        [DoesNotReturn]
-        [StackTraceHidden]
-        private static void ThrowCannotSeekToNegativePosition()
-            => throw new IOException(WindowsRuntimeExceptionMessages.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
 
         /// <summary>
         /// Creates an <see cref="IOException"/> indicating that the underlying Windows Runtime stream is too long.
@@ -1227,6 +1223,16 @@ internal static class WindowsRuntimeExceptionExtensions
         public static IOException GetUnderlyingWinRTStreamTooLongException()
         {
             return new(WindowsRuntimeExceptionMessages.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+        }
+
+        /// <summary>
+        /// Throw helper for <see cref="ThrowIfSeekPositionExceedsInt64MaxValue"/>.
+        /// </summary>
+        [DoesNotReturn]
+        [StackTraceHidden]
+        private static void ThrowCannotSeekBeyondInt64MaxValue()
+        {
+            throw new IOException(WindowsRuntimeExceptionMessages.IO_CannotSeekBeyondInt64MaxValue);
         }
     }
 
