@@ -180,15 +180,15 @@ namespace Windows.Storage.IO
         {
             ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
-            global::WindowsRuntime.InteropServices.HandleAccessOptions accessOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access);
-            global::WindowsRuntime.InteropServices.HandleSharingOptions sharingOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share);
-            global::WindowsRuntime.InteropServices.HandleOptions handleOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options);
+            uint accessOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access);
+            uint sharingOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share);
+            uint handleOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options);
 
             return global::WindowsRuntime.InteropServices.IStorageItemHandleAccessMethods.Create(
                 (global::WindowsRuntime.WindowsRuntimeObject)windowsRuntimeFile,
-                (uint)accessOptions,
-                (uint)sharingOptions,
-                (uint)handleOptions,
+                accessOptions,
+                sharingOptions,
+                handleOptions,
                 IntPtr.Zero);
         }
 
@@ -211,18 +211,18 @@ namespace Windows.Storage.IO
             ArgumentNullException.ThrowIfNull(rootDirectory);
             ArgumentNullException.ThrowIfNull(relativePath);
 
-            global::WindowsRuntime.InteropServices.HandleCreationOptions creationOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileModeToHandleCreationOptions(mode);
-            global::WindowsRuntime.InteropServices.HandleAccessOptions accessOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access);
-            global::WindowsRuntime.InteropServices.HandleSharingOptions sharingOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share);
-            global::WindowsRuntime.InteropServices.HandleOptions handleOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options);
+            uint creationOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileModeToHandleCreationOptions(mode);
+            uint accessOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access);
+            uint sharingOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share);
+            uint handleOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options);
 
             return global::WindowsRuntime.InteropServices.IStorageFolderHandleAccessMethods.Create(
                 (global::WindowsRuntime.WindowsRuntimeObject)rootDirectory,
                 relativePath,
-                (uint)creationOptions,
-                (uint)accessOptions,
-                (uint)sharingOptions,
-                (uint)handleOptions,
+                creationOptions,
+                accessOptions,
+                sharingOptions,
+                handleOptions,
                 IntPtr.Zero);
         }
     }

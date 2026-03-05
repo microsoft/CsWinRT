@@ -17,91 +17,81 @@ namespace WindowsRuntime.InteropServices;
 public static class WindowsRuntimeStorageHelpers
 {
     /// <summary>
-    /// Converts a <see cref="FileAccess"/> value to a <see cref="HandleAccessOptions"/> value.
+    /// Converts a <see cref="FileAccess"/> value to a <see cref="HANDLE_ACCESS_OPTIONS"/> value.
     /// </summary>
     /// <param name="access">The <see cref="FileAccess"/> value to convert.</param>
-    /// <returns>The corresponding <see cref="HandleAccessOptions"/> value.</returns>
+    /// <returns>The corresponding <see cref="HANDLE_ACCESS_OPTIONS"/> value.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="access"/> is not a valid value.</exception>
-    public static HandleAccessOptions FileAccessToHandleAccessOptions(FileAccess access)
+    public static uint FileAccessToHandleAccessOptions(FileAccess access)
     {
         return access switch
         {
-            FileAccess.ReadWrite => HandleAccessOptions.Read | HandleAccessOptions.Write,
-            FileAccess.Read => HandleAccessOptions.Read,
-            FileAccess.Write => HandleAccessOptions.Write,
+            FileAccess.ReadWrite => (uint)(HANDLE_ACCESS_OPTIONS.HAO_READ | HANDLE_ACCESS_OPTIONS.HAO_WRITE),
+            FileAccess.Read => (uint)HANDLE_ACCESS_OPTIONS.HAO_READ,
+            FileAccess.Write => (uint)HANDLE_ACCESS_OPTIONS.HAO_WRITE,
             _ => throw new ArgumentOutOfRangeException(nameof(access), access, null),
         };
     }
 
     /// <summary>
-    /// Converts a <see cref="FileShare"/> value to a <see cref="HandleSharingOptions"/> value.
+    /// Converts a <see cref="FileShare"/> value to a <see cref="HANDLE_SHARING_OPTIONS"/> value.
     /// </summary>
     /// <param name="share">The <see cref="FileShare"/> value to convert.</param>
-    /// <returns>The corresponding <see cref="HandleSharingOptions"/> value.</returns>
+    /// <returns>The corresponding <see cref="HANDLE_SHARING_OPTIONS"/> value.</returns>
     /// <exception cref="NotSupportedException">Thrown if <paramref name="share"/> has the <see cref="FileShare.Inheritable"/> flag.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="share"/> is not a valid combination of flags.</exception>
-    public static HandleSharingOptions FileShareToHandleSharingOptions(FileShare share)
+    public static uint FileShareToHandleSharingOptions(FileShare share)
     {
-        if ((share & FileShare.Inheritable) != 0)
-        {
-            throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_InheritableIsNotSupportedOption);
-        }
+        NotSupportedException.ThrowIfFileShareIsInheritable(share);
+        ArgumentOutOfRangeException.ThrowIfFileShareOutOfRange(share);
 
-        if (share is < FileShare.None or > (FileShare.ReadWrite | FileShare.Delete))
-        {
-            throw new ArgumentOutOfRangeException(nameof(share), share, null);
-        }
-
-        HandleSharingOptions sharingOptions = HandleSharingOptions.ShareNone;
+        HANDLE_SHARING_OPTIONS sharingOptions = HANDLE_SHARING_OPTIONS.HSO_SHARE_NONE;
 
         if ((share & FileShare.Read) != 0)
         {
-            sharingOptions |= HandleSharingOptions.ShareRead;
+            sharingOptions |= HANDLE_SHARING_OPTIONS.HSO_SHARE_READ;
         }
 
         if ((share & FileShare.Write) != 0)
         {
-            sharingOptions |= HandleSharingOptions.ShareWrite;
+            sharingOptions |= HANDLE_SHARING_OPTIONS.HSO_SHARE_WRITE;
         }
 
         if ((share & FileShare.Delete) != 0)
         {
-            sharingOptions |= HandleSharingOptions.ShareDelete;
+            sharingOptions |= HANDLE_SHARING_OPTIONS.HSO_SHARE_DELETE;
         }
 
-        return sharingOptions;
+        return (uint)sharingOptions;
     }
 
     /// <summary>
-    /// Converts a <see cref="FileOptions"/> value to a <see cref="HandleOptions"/> value.
+    /// Converts a <see cref="FileOptions"/> value to a <see cref="HANDLE_OPTIONS"/> value.
     /// </summary>
     /// <param name="options">The <see cref="FileOptions"/> value to convert.</param>
-    /// <returns>The corresponding <see cref="HandleOptions"/> value.</returns>
+    /// <returns>The corresponding <see cref="HANDLE_OPTIONS"/> value.</returns>
     /// <exception cref="NotSupportedException">Thrown if <paramref name="options"/> has the <see cref="FileOptions.Encrypted"/> flag.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="options"/> contains unsupported flags.</exception>
-    public static HandleOptions FileOptionsToHandleOptions(FileOptions options)
+    public static uint FileOptionsToHandleOptions(FileOptions options)
     {
-        return (options & FileOptions.Encrypted) != 0
-            ? throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_EncryptedIsNotSupportedOption)
-            : options != FileOptions.None && (options &
-                ~(FileOptions.WriteThrough | FileOptions.Asynchronous | FileOptions.RandomAccess | FileOptions.DeleteOnClose |
-                  FileOptions.SequentialScan | (FileOptions)0x20000000 /* NoBuffering */)) != 0
-                ? throw new ArgumentOutOfRangeException(nameof(options), options, null)
-                : (HandleOptions)(uint)options;
+        NotSupportedException.ThrowIfFileOptionsAreEncrypted(options);
+        ArgumentOutOfRangeException.ThrowIfFileOptionsOutOfRange(options);
+
+        return (uint)options;
     }
 
     /// <summary>
-    /// Converts a <see cref="FileMode"/> value to a <see cref="HandleCreationOptions"/> value.
+    /// Converts a <see cref="FileMode"/> value to a <see cref="HANDLE_CREATION_OPTIONS"/> value.
     /// </summary>
     /// <param name="mode">The <see cref="FileMode"/> value to convert.</param>
-    /// <returns>The corresponding <see cref="HandleCreationOptions"/> value.</returns>
+    /// <returns>The corresponding <see cref="HANDLE_CREATION_OPTIONS"/> value.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="mode"/> is not a valid value.</exception>
-    public static HandleCreationOptions FileModeToHandleCreationOptions(FileMode mode)
+    public static uint FileModeToHandleCreationOptions(FileMode mode)
     {
-        return mode is < FileMode.CreateNew or > FileMode.Append
-            ? throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
-            : mode == FileMode.Append
-                ? HandleCreationOptions.CreateAlways
-                : (HandleCreationOptions)(uint)mode;
+        ArgumentOutOfRangeException.ThrowIfFileModeOutOfRange(mode);
+
+        return mode == FileMode.Append
+            ? (uint)HANDLE_CREATION_OPTIONS.HCO_CREATE_ALWAYS
+            : (uint)mode;
     }
 }

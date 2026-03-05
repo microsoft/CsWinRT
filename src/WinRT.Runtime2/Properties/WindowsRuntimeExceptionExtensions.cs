@@ -531,6 +531,71 @@ internal static class WindowsRuntimeExceptionExtensions
                 ThrowArgumentOutOfRangeException(paramName);
             }
         }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentOutOfRangeException"/> if the specified <see cref="FileShare"/> value is out of the valid range.
+        /// </summary>
+        /// <param name="share">The <see cref="FileShare"/> value to check.</param>
+        /// <param name="paramName">The name of the parameter being checked.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="share"/> is not a valid combination of flags.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfFileShareOutOfRange(FileShare share, [CallerArgumentExpression(nameof(share))] string? paramName = null)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentOutOfRangeException(string? paramName, FileShare share)
+                => throw new ArgumentOutOfRangeException(paramName, share, null);
+
+            if (share is < FileShare.None or > (FileShare.ReadWrite | FileShare.Delete))
+            {
+                ThrowArgumentOutOfRangeException(paramName, share);
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentOutOfRangeException"/> if the specified <see cref="FileOptions"/> value contains unsupported flags.
+        /// </summary>
+        /// <param name="options">The <see cref="FileOptions"/> value to check.</param>
+        /// <param name="paramName">The name of the parameter being checked.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="options"/> contains unsupported flags.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfFileOptionsOutOfRange(FileOptions options, [CallerArgumentExpression(nameof(options))] string? paramName = null)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentOutOfRangeException(string? paramName, FileOptions options)
+                => throw new ArgumentOutOfRangeException(paramName, options, null);
+
+            if (options != FileOptions.None && (options &
+                ~(FileOptions.WriteThrough | FileOptions.Asynchronous | FileOptions.RandomAccess | FileOptions.DeleteOnClose |
+                  FileOptions.SequentialScan | (FileOptions)0x20000000 /* NoBuffering */)) != 0)
+            {
+                ThrowArgumentOutOfRangeException(paramName, options);
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentOutOfRangeException"/> if the specified <see cref="FileMode"/> value is out of the valid range.
+        /// </summary>
+        /// <param name="mode">The <see cref="FileMode"/> value to check.</param>
+        /// <param name="paramName">The name of the parameter being checked.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="mode"/> is not a valid value.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfFileModeOutOfRange(FileMode mode, [CallerArgumentExpression(nameof(mode))] string? paramName = null)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentOutOfRangeException(string? paramName, FileMode mode)
+                => throw new ArgumentOutOfRangeException(paramName, mode, null);
+
+            if (mode is < FileMode.CreateNew or > FileMode.Append)
+            {
+                ThrowArgumentOutOfRangeException(paramName, mode);
+            }
+        }
     }
 
     extension(KeyNotFoundException)
@@ -1226,6 +1291,46 @@ internal static class WindowsRuntimeExceptionExtensions
             {
                 HResult = WellKnownErrorCodes.E_NOTIMPL
             };
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the specified <paramref name="share"/> value has the <see cref="FileShare.Inheritable"/> flag.
+        /// </summary>
+        /// <param name="share">The <see cref="FileShare"/> value to check.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="share"/> has the <see cref="FileShare.Inheritable"/> flag.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfFileShareIsInheritable(FileShare share)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_InheritableIsNotSupportedOption);
+
+            if ((share & FileShare.Inheritable) != 0)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the specified <paramref name="options"/> value has the <see cref="FileOptions.Encrypted"/> flag.
+        /// </summary>
+        /// <param name="options">The <see cref="FileOptions"/> value to check.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="options"/> has the <see cref="FileOptions.Encrypted"/> flag.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfFileOptionsAreEncrypted(FileOptions options)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_EncryptedIsNotSupportedOption);
+
+            if ((options & FileOptions.Encrypted) != 0)
+            {
+                ThrowNotSupportedException();
+            }
         }
     }
 
