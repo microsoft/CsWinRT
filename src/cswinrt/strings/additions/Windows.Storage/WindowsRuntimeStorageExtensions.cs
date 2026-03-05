@@ -21,8 +21,7 @@ namespace Windows.Storage.IO
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFile windowsRuntimeFile)
         {
-            if (windowsRuntimeFile == null)
-                throw new ArgumentNullException(nameof(windowsRuntimeFile));
+            ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
             return OpenStreamForReadAsyncCore(windowsRuntimeFile);
         }
@@ -50,8 +49,7 @@ namespace Windows.Storage.IO
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFile windowsRuntimeFile)
         {
-            if (windowsRuntimeFile == null)
-                throw new ArgumentNullException(nameof(windowsRuntimeFile));
+            ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
             return OpenStreamForWriteAsyncCore(windowsRuntimeFile, 0);
         }
@@ -81,11 +79,8 @@ namespace Windows.Storage.IO
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFolder rootDirectory, string relativePath)
         {
-            if (rootDirectory == null)
-                throw new ArgumentNullException(nameof(rootDirectory));
-
-            if (relativePath == null)
-                throw new ArgumentNullException(nameof(relativePath));
+            ArgumentNullException.ThrowIfNull(rootDirectory);
+            ArgumentNullException.ThrowIfNull(relativePath);
 
             if (string.IsNullOrWhiteSpace(relativePath))
                 throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
@@ -119,11 +114,8 @@ namespace Windows.Storage.IO
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFolder rootDirectory, string relativePath,
                                                            CreationCollisionOption creationCollisionOption)
         {
-            if (rootDirectory == null)
-                throw new ArgumentNullException(nameof(rootDirectory));
-
-            if (relativePath == null)
-                throw new ArgumentNullException(nameof(relativePath));
+            ArgumentNullException.ThrowIfNull(rootDirectory);
+            ArgumentNullException.ThrowIfNull(relativePath);
 
             if (string.IsNullOrWhiteSpace(relativePath))
                 throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
@@ -186,8 +178,7 @@ namespace Windows.Storage.IO
             FileShare share = FileShare.Read,
             FileOptions options = FileOptions.None)
         {
-            if (windowsRuntimeFile == null)
-                throw new ArgumentNullException(nameof(windowsRuntimeFile));
+            ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
             HANDLE_ACCESS_OPTIONS accessOptions = FileAccessToHandleAccessOptions(access);
             HANDLE_SHARING_OPTIONS sharingOptions = FileShareToHandleSharingOptions(share);
@@ -217,10 +208,8 @@ namespace Windows.Storage.IO
             FileShare share = FileShare.Read,
             FileOptions options = FileOptions.None)
         {
-            if (rootDirectory == null)
-                throw new ArgumentNullException(nameof(rootDirectory));
-            if (relativePath == null)
-                throw new ArgumentNullException(nameof(relativePath));
+            ArgumentNullException.ThrowIfNull(rootDirectory);
+            ArgumentNullException.ThrowIfNull(relativePath);
 
             HANDLE_CREATION_OPTIONS creationOptions = FileModeToCreationOptions(mode);
             HANDLE_ACCESS_OPTIONS accessOptions = FileAccessToHandleAccessOptions(access);
