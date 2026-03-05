@@ -36,6 +36,7 @@ using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 using Windows.Storage;
 using Windows.Storage.Buffers;
+using Windows.Storage.IO;
 using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Notifications;

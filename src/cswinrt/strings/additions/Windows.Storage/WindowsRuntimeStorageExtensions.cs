@@ -2,15 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.IO
+namespace Windows.Storage.IO
 {
     using System.Diagnostics;
+    using System.IO;
+    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using Microsoft.Win32.SafeHandles;
     using global::Windows.Storage;
     using global::Windows.Storage.FileProperties;
     using global::Windows.Storage.Streams;
-    using System.Runtime.InteropServices;
 
     /// <summary>
     /// Contains extension methods that provide convenience helpers for WinRT IO.

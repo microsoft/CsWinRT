@@ -6,6 +6,7 @@ using TestComponentCSharp;
 using Windows.Foundation;
 using Windows.Foundation.Tasks;
 using Windows.Storage.Buffers;
+using Windows.Storage.IO;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
 using WindowsRuntime.InteropServices;
