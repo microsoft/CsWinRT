@@ -10,6 +10,7 @@
     <CsWinRTEnabled>false</CsWinRTEnabled>
     <OutputType>exe</OutputType>
     <PublishAot>true</PublishAot>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == 'x86'">
