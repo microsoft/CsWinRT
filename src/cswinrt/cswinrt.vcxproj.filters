@@ -70,24 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="strings\additions\Windows.Storage\HANDLE_ACCESS_OPTIONS.cs">
-      <Filter>strings\additions\Windows.Storage</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Storage\HANDLE_CREATION_OPTIONS.cs">
-      <Filter>strings\additions\Windows.Storage</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Storage\HANDLE_OPTIONS.cs">
-      <Filter>strings\additions\Windows.Storage</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Storage\HANDLE_SHARING_OPTION.cs">
-      <Filter>strings\additions\Windows.Storage</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Storage\IStorageFolderHandleAccess.cs">
-      <Filter>strings\additions\Windows.Storage</Filter>
-    </None>
-    <None Include="strings\additions\Windows.Storage\IStorageItemHandleAccess.cs">
-      <Filter>strings\additions\Windows.Storage</Filter>
-    </None>
     <None Include="strings\additions\Windows.Storage\WindowsRuntimeStorageExtensions.cs">
       <Filter>strings\additions\Windows.Storage</Filter>
     </None>
