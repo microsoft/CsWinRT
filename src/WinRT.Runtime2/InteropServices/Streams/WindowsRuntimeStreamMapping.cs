@@ -3,7 +3,9 @@
 
 using System;
 using System.Diagnostics;
+#if DEBUG
 using System.Diagnostics.CodeAnalysis;
+#endif
 using System.IO;
 using System.Runtime.CompilerServices;
 
