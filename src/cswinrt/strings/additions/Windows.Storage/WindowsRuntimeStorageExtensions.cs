@@ -4,11 +4,11 @@
 
 namespace Windows.Storage.IO
 {
-    using System.Diagnostics;
-    using System.IO;
-    using System.Runtime.InteropServices;
-    using System.Threading.Tasks;
-    using Microsoft.Win32.SafeHandles;
+    using global::System.Diagnostics;
+    using global::System.IO;
+    using global::System.Runtime.InteropServices;
+    using global::System.Threading.Tasks;
+    using global::Microsoft.Win32.SafeHandles;
     using global::Windows.Storage;
     using global::Windows.Storage.FileProperties;
     using global::Windows.Storage.Streams;
