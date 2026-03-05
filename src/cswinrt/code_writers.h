@@ -6649,6 +6649,23 @@ return 0;)",
         bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
             [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
 
+        // For removed methods, generate a stub that returns E_NOTIMPL.
+        // The vtable slot must exist for ABI compatibility, but the method
+        // is no longer on the projected interface so we can't call it.
+        if (is_removed(method))
+        {
+            w.write(R"(
+%
+private static unsafe int Do_Abi_%%
+{
+return unchecked((int)0x80004001); // E_NOTIMPL
+})",
+                !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+                vmethod_name,
+                bind<write_abi_signature>(method));
+            return;
+        }
+
         w.write(R"(
 %
 private static unsafe int Do_Abi_%%
@@ -6695,6 +6712,40 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
     void write_property_abi_invoke(writer& w, Property const& prop)
     {
         auto [getter, setter] = get_property_methods(prop);
+        // MIDL places DeprecatedAttribute on getter, not Property row
+        if (getter && is_removed(getter))
+        {
+            // Property is removed from the projected interface, but the vtable slot
+            // must still exist for ABI compatibility. Generate E_NOTIMPL stubs.
+            auto generic_type = distance(prop.Parent().GenericParam()) > 0;
+            if (setter)
+            {
+                auto vmethod_name = get_vmethod_name(w, setter.Parent(), setter);
+                w.write(R"(
+%
+private static unsafe int Do_Abi_%%
+{
+return unchecked((int)0x80004001); // E_NOTIMPL
+})",
+                    !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+                    vmethod_name,
+                    bind<write_abi_signature>(setter));
+            }
+            if (getter)
+            {
+                auto vmethod_name = get_vmethod_name(w, getter.Parent(), getter);
+                w.write(R"(
+%
+private static unsafe int Do_Abi_%%
+{
+return unchecked((int)0x80004001); // E_NOTIMPL
+})",
+                    !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+                    vmethod_name,
+                    bind<write_abi_signature>(getter));
+            }
+            return;
+        }
         auto type_name = write_type_name_temp(w, prop.Parent());
         auto generic_type = distance(prop.Parent().GenericParam()) > 0;
         if (setter)
@@ -6806,10 +6857,37 @@ prop.Name());
 
     void write_event_abi_invoke(writer& w, Event const& evt)
     {
+        auto [add_method, remove_method] = get_event_methods(evt);
+        // MIDL places DeprecatedAttribute on add method, not Event row
+        if (is_removed(add_method))
+        {
+            // Event is removed from the projected interface, but the vtable slots
+            // must still exist for ABI compatibility. Generate E_NOTIMPL stubs.
+            auto generic_type = distance(evt.Parent().GenericParam()) > 0;
+            auto add_vmethod_name = get_vmethod_name(w, add_method.Parent(), add_method);
+            auto remove_vmethod_name = get_vmethod_name(w, remove_method.Parent(), remove_method);
+            w.write(R"(
+%
+private static unsafe int Do_Abi_%%
+{
+return unchecked((int)0x80004001); // E_NOTIMPL
+}
+%
+private static unsafe int Do_Abi_%%
+{
+return unchecked((int)0x80004001); // E_NOTIMPL
+})",
+                !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+                add_vmethod_name,
+                bind<write_abi_signature>(add_method),
+                !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+                remove_vmethod_name,
+                bind<write_abi_signature>(remove_method));
+            return;
+        }
         auto type_name = write_type_name_temp(w, evt.Parent());
         auto generic_type = distance(evt.Parent().GenericParam()) > 0;
         auto semantics = get_type_semantics(evt.EventType());
-        auto [add_method, remove_method] = get_event_methods(evt);
         auto add_signature = method_signature{ add_method };
 
         auto handler_parameter_name = add_signature.params().back().first.Name();
