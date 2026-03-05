@@ -22,7 +22,7 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeStream"/> is <see langword="null"/>.</exception>
     public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream)
     {
-        return WindowsRuntimeStreamMapping.AsStreamInternal(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStreamForRead), forceBufferSize: false);
+        return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStreamForRead), forceBufferSize: false);
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="bufferSize"/> is negative.</exception>
     public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream, int bufferSize)
     {
-        return WindowsRuntimeStreamMapping.AsStreamInternal(windowsRuntimeStream, bufferSize, nameof(AsStreamForRead), forceBufferSize: true);
+        return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, bufferSize, nameof(AsStreamForRead), forceBufferSize: true);
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeStream"/> is <see langword="null"/>.</exception>
     public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream)
     {
-        return WindowsRuntimeStreamMapping.AsStreamInternal(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStreamForWrite), forceBufferSize: false);
+        return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStreamForWrite), forceBufferSize: false);
     }
 
     /// <summary>
@@ -59,7 +59,7 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="bufferSize"/> is negative.</exception>
     public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream, int bufferSize)
     {
-        return WindowsRuntimeStreamMapping.AsStreamInternal(windowsRuntimeStream, bufferSize, nameof(AsStreamForWrite), forceBufferSize: true);
+        return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, bufferSize, nameof(AsStreamForWrite), forceBufferSize: true);
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeStream"/> is <see langword="null"/>.</exception>
     public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream)
     {
-        return WindowsRuntimeStreamMapping.AsStreamInternal(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStream), forceBufferSize: false);
+        return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStream), forceBufferSize: false);
     }
 
     /// <summary>
@@ -83,7 +83,7 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="bufferSize"/> is negative.</exception>
     public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream, int bufferSize)
     {
-        return WindowsRuntimeStreamMapping.AsStreamInternal(windowsRuntimeStream, bufferSize, nameof(AsStream), forceBufferSize: true);
+        return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, bufferSize, nameof(AsStream), forceBufferSize: true);
     }
 
     /// <summary>
@@ -98,7 +98,7 @@ public static class WindowsRuntimeStreamExtensions
         ArgumentNullException.ThrowIfNull(stream);
         NotSupportedException.ThrowIfStreamCannotConvertToInputStream(stream.CanRead);
 
-        return (IInputStream)WindowsRuntimeStreamMapping.AsWindowsRuntimeStreamInternal(stream);
+        return (IInputStream)WindowsRuntimeStreamMapping.AsNativeStream(stream);
     }
 
     /// <summary>
@@ -113,7 +113,7 @@ public static class WindowsRuntimeStreamExtensions
         ArgumentNullException.ThrowIfNull(stream);
         NotSupportedException.ThrowIfStreamCannotConvertToOutputStream(stream.CanWrite);
 
-        return (IOutputStream)WindowsRuntimeStreamMapping.AsWindowsRuntimeStreamInternal(stream);
+        return (IOutputStream)WindowsRuntimeStreamMapping.AsNativeStream(stream);
     }
 
     /// <summary>
@@ -128,6 +128,6 @@ public static class WindowsRuntimeStreamExtensions
         ArgumentNullException.ThrowIfNull(stream);
         NotSupportedException.ThrowIfStreamCannotConvertToRandomAccessStream(stream.CanSeek);
 
-        return (IRandomAccessStream)WindowsRuntimeStreamMapping.AsWindowsRuntimeStreamInternal(stream);
+        return (IRandomAccessStream)WindowsRuntimeStreamMapping.AsNativeStream(stream);
     }
 }

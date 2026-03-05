@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
-using Windows.Storage.Streams;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -34,7 +33,7 @@ internal static class WindowsRuntimeStreamMapping
     /// <returns>A managed <see cref="Stream"/> wrapping the specified Windows Runtime stream.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeStream"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="bufferSize"/> is negative.</exception>
-    public static Stream AsStreamInternal(object windowsRuntimeStream, int bufferSize, string invokedMethodName, bool forceBufferSize)
+    public static Stream AsManagedStream(object windowsRuntimeStream, int bufferSize, string invokedMethodName, bool forceBufferSize)
     {
         ArgumentNullException.ThrowIfNull(windowsRuntimeStream);
         ArgumentOutOfRangeException.ThrowIfNegative(bufferSize);
@@ -70,7 +69,7 @@ internal static class WindowsRuntimeStreamMapping
         // We do not have an adapter for this Windows Runtime stream yet and we need to create one. We do that in
         // a thread-safe manner in a separate method, such that we only have to pay for the compiler allocating
         // the required closure if this code path is actually hit.
-        return AsStreamInternalFactoryHelper(windowsRuntimeStream, bufferSize, invokedMethodName, forceBufferSize);
+        return AsManagedStreamCore(windowsRuntimeStream, bufferSize, invokedMethodName, forceBufferSize);
     }
 
     /// <summary>
@@ -78,7 +77,7 @@ internal static class WindowsRuntimeStreamMapping
     /// </summary>
     /// <param name="stream">The managed stream to convert.</param>
     /// <returns>The Windows Runtime stream object wrapping the specified managed stream.</returns>
-    public static object AsWindowsRuntimeStreamInternal(Stream stream)
+    public static object AsNativeStream(Stream stream)
     {
         // Check if the managed stream is actually a wrapper of a Windows Runtime stream.
         // It can be either an adapter directly, or an adapter wrapped in a BufferedStream.
@@ -108,7 +107,7 @@ internal static class WindowsRuntimeStreamMapping
 
         // We do not have an adapter for this managed stream yet: create one. This is done in a separate method
         // so we only pay for the closure allocation if this code path is actually hit (same as above).
-        return AsWindowsRuntimeStreamInternalFactoryHelper(stream);
+        return AsNativeStreamCore(stream);
     }
 
     /// <summary>
@@ -119,7 +118,7 @@ internal static class WindowsRuntimeStreamMapping
     /// <param name="invokedMethodName">The name of the public method that initiated the conversion.</param>
     /// <param name="forceBufferSize">Whether to enforce the specified buffer size on the adapter.</param>
     /// <returns>A managed <see cref="Stream"/> adapter for the specified Windows Runtime stream.</returns>
-    private static Stream AsStreamInternalFactoryHelper(object windowsRuntimeStream, int bufferSize, string invokedMethodName, bool forceBufferSize)
+    private static Stream AsManagedStreamCore(object windowsRuntimeStream, int bufferSize, string invokedMethodName, bool forceBufferSize)
     {
         Debug.Assert(windowsRuntimeStream is not null);
         Debug.Assert(bufferSize >= 0);
@@ -166,6 +165,29 @@ internal static class WindowsRuntimeStreamMapping
     }
 
     /// <summary>
+    /// Creates a <see cref="WindowsRuntimeNativeStreamAdapter"/> for the specified managed <see cref="Stream"/>.
+    /// </summary>
+    /// <param name="stream">The managed stream to create an adapter for.</param>
+    /// <returns>The <see cref="WindowsRuntimeNativeStreamAdapter"/> wrapping the specified managed stream.</returns>
+    private static WindowsRuntimeNativeStreamAdapter AsNativeStreamCore(Stream stream)
+    {
+        Debug.Assert(stream is not null);
+
+        // Get the adapter for this managed stream again (it may have been
+        // created concurrently). If none exists yet, create a new one.
+        WindowsRuntimeNativeStreamAdapter adapter = managedToWindowsRuntimeAdapterMap.GetOrAdd(
+            key: stream,
+            valueFactory: WindowsRuntimeNativeStreamAdapter.Create);
+
+        Debug.Assert(adapter is not null);
+
+        // Mark the instance we're returning as the one having won the race
+        adapter.SetWonInitializationRace();
+
+        return adapter;
+    }
+
+    /// <summary>
     /// Validates that the buffer size of an existing adapter matches the required buffer size.
     /// </summary>
     /// <param name="adapter">The adapter <see cref="Stream"/> to validate.</param>
@@ -190,28 +212,5 @@ internal static class WindowsRuntimeStreamMapping
                 ? InvalidOperationException.GetCannotChangeBufferSizeOfStreamAdapterToZeroException(methodName)
                 : InvalidOperationException.GetCannotChangeBufferSizeOfStreamAdapterException(methodName);
         }
-    }
-
-    /// <summary>
-    /// Creates a <see cref="WindowsRuntimeNativeStreamAdapter"/> for the specified managed <see cref="Stream"/>.
-    /// </summary>
-    /// <param name="stream">The managed stream to create an adapter for.</param>
-    /// <returns>The <see cref="WindowsRuntimeNativeStreamAdapter"/> wrapping the specified managed stream.</returns>
-    private static WindowsRuntimeNativeStreamAdapter AsWindowsRuntimeStreamInternalFactoryHelper(Stream stream)
-    {
-        Debug.Assert(stream is not null);
-
-        // Get the adapter for this managed stream again (it may have been
-        // created concurrently). If none exists yet, create a new one.
-        WindowsRuntimeNativeStreamAdapter adapter = managedToWindowsRuntimeAdapterMap.GetOrAdd(
-            key: stream,
-            valueFactory: WindowsRuntimeNativeStreamAdapter.Create);
-
-        Debug.Assert(adapter is not null);
-
-        // Mark the instance we're returning as the one having won the race
-        adapter.SetWonInitializationRace();
-
-        return adapter;
     }
 }
