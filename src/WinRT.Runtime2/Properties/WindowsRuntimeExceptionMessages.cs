@@ -80,7 +80,7 @@ internal static class WindowsRuntimeExceptionMessages
 
     public const string Argument_WinRtStreamCannotReadOrWrite = "The specified Windows Runtime stream does not support reading nor writing. Windows Runtime streams with such capabilities cannot be converted to managed Stream objects. Use a Windows Runtime stream that can support reading, writing or both.";
 
-    public const string ArgumentNullReference_IOCompletionCallbackCannotProcessNullAsyncInfo = "The Windows Runtime stream that underlies this 'System.IO.Stream' object has invoked an I/O completion callback and specified 'null' for the 'IAsyncInfo' instance that describes the completed IO operation. This behavior is not supported, because results cannot be retrieved from a 'null' operation. Either the underlying Windows Runtime stream has a faulty implementation, or the Windows Runtime object in being used in an unsupported runtime environment.";
+    public const string ArgumentNullReference_IOCompletionCallbackCannotProcessNullAsyncInfo = "The Windows Runtime stream that underlies this 'System.IO.Stream' object has invoked an I/O completion callback and specified 'null' for the 'IAsyncInfo' instance that describes the completed IO operation. This behavior is not supported, because results cannot be retrieved from a 'null' operation. Either the underlying Windows Runtime stream has a faulty implementation, or the Windows Runtime object is being used in an unsupported runtime environment.";
 
     public const string ArgumentOutOfRange_CannotResizeStreamToNegative = "Cannot set the length of a stream to a negative value.";
 

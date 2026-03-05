@@ -27,7 +27,7 @@ internal sealed partial class WindowsRuntimeManagedStreamAdapter : Stream
     private readonly bool _canRead;
 
     /// <summary>
-    /// Indicates whether <see cref="_windowsRuntimeStream"/> is a writeable stream.
+    /// Indicates whether <see cref="_windowsRuntimeStream"/> is a writable stream.
     /// </summary>
     private readonly bool _canWrite;
 
@@ -46,7 +46,7 @@ internal sealed partial class WindowsRuntimeManagedStreamAdapter : Stream
     /// </summary>
     /// <param name="windowsRuntimeStream">The Windows Runtime stream instance to wrap.</param>
     /// <param name="canRead">Indicates whether <paramref name="windowsRuntimeStream"/> is a readable stream.</param>
-    /// <param name="canWrite">Indicates whether <paramref name="windowsRuntimeStream"/> is a writeable stream.</param>
+    /// <param name="canWrite">Indicates whether <paramref name="windowsRuntimeStream"/> is a writable stream.</param>
     /// <param name="canSeek">Indicates whether <paramref name="windowsRuntimeStream"/> is a stream supporting seeking.</param>
     private WindowsRuntimeManagedStreamAdapter(object windowsRuntimeStream, bool canRead, bool canWrite, bool canSeek)
     {
@@ -58,7 +58,7 @@ internal sealed partial class WindowsRuntimeManagedStreamAdapter : Stream
         Debug.Assert((canRead && (windowsRuntimeStream is IInputStream)) ||
                      (!canRead && (windowsRuntimeStream is not IInputStream or IRandomAccessStream { CanRead: false })));
 
-        // If a stream is writeable, it must be an 'IOutputStream', or if not it must either not be one, or explicitly have 'CanWrite' be 'false'
+        // If a stream is writable, it must be an 'IOutputStream', or if not it must either not be one, or explicitly have 'CanWrite' be 'false'
         Debug.Assert((canWrite && (windowsRuntimeStream is IOutputStream)) ||
                      (!canWrite && (windowsRuntimeStream is not IOutputStream or IRandomAccessStream { CanWrite: false })));
 
@@ -160,7 +160,7 @@ internal sealed partial class WindowsRuntimeManagedStreamAdapter : Stream
             throw ObjectDisposedException.GetStreamIsDisposedException();
         }
 
-        // Same suppression as in 'NetFxToWinRtStreamAdapter.EnsureNotDisposed'
+        // Same suppression as in 'WindowsRuntimeNativeStreamAdapter.EnsureNotDisposed'
 #pragma warning disable CS8774
         return windowsRuntimeStream;
 #pragma warning restore CS8774

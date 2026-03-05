@@ -134,7 +134,7 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     {
         IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
-        // Calling 'Flush' in a non-writeable stream is a no-op, not an error
+        // Calling 'Flush' in a non-writable stream is a no-op, not an error
         if (!_canWrite)
         {
             return;
@@ -174,7 +174,7 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     {
         IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
-        // Calling Flush in a non-writeable stream is a no-op, not an error
+        // Calling Flush in a non-writable stream is a no-op, not an error
         if (!_canWrite)
         {
             return Task.CompletedTask;

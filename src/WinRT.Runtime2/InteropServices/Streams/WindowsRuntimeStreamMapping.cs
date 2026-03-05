@@ -46,7 +46,7 @@ internal static class WindowsRuntimeStreamMapping
         // If the Windows Runtime stream is actually a wrapped managed stream, unwrap it and return the original.
         // In that case we do not need to put the wrapper into the map. We currently do capability-based adapter
         // selection for Windows Runtime to .NET, but not vice versa (due to time constraints). Once we added the
-        // reverse direction, we will be able replce this entire section with just a few lines.
+        // reverse direction, we will be able to replace this entire section with just a few lines.
         if (windowsRuntimeStream is WindowsRuntimeNativeStreamAdapter nativeAdapter)
         {
             Stream? wrappedManagedStream = nativeAdapter.GetManagedStream();
@@ -122,7 +122,7 @@ internal static class WindowsRuntimeStreamMapping
             return wrappedWindowsRuntimeStream;
         }
 
-        // This is a real managed stream, so we need ot check if it already has an adapter
+        // This is a real managed stream, so we need to check if it already has an adapter
         if (managedToWindowsRuntimeAdapterMap.TryGetValue(stream, out WindowsRuntimeNativeStreamAdapter? adapter))
         {
             return adapter;
