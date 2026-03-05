@@ -245,6 +245,28 @@ internal static class WindowsRuntimeExceptionExtensions
         {
             return new(WindowsRuntimeExceptionMessages.InvalidOperation_MultipleIOCompletionCallbackInvocation);
         }
+
+        /// <summary>
+        /// Creates an <see cref="InvalidOperationException"/> indicating that the buffer size of a stream adapter cannot be changed.
+        /// </summary>
+        /// <param name="methodName">The name of the method being called.</param>
+        /// <returns>The resulting <see cref="InvalidOperationException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static InvalidOperationException GetCannotChangeBufferSizeOfStreamAdapterException(string methodName)
+        {
+            return new(string.Format(WindowsRuntimeExceptionMessages.InvalidOperation_CannotChangeBufferSizeOfStreamAdapter, methodName));
+        }
+
+        /// <summary>
+        /// Creates an <see cref="InvalidOperationException"/> indicating that the buffer size of a stream adapter cannot be changed to zero.
+        /// </summary>
+        /// <param name="methodName">The name of the method being called.</param>
+        /// <returns>The resulting <see cref="InvalidOperationException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static InvalidOperationException GetCannotChangeBufferSizeOfStreamAdapterToZeroException(string methodName)
+        {
+            return new(string.Format(WindowsRuntimeExceptionMessages.InvalidOperation_CannotChangeBufferSizeOfStreamAdapterToZero, methodName));
+        }
     }
 
     extension(ObjectDisposedException)
@@ -1125,6 +1147,66 @@ internal static class WindowsRuntimeExceptionExtensions
             [StackTraceHidden]
             static void ThrowNotSupportedException()
                 => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotSeekInStream);
+
+            if (!canSeek)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the stream does not support reading for conversion to an <see cref="IInputStream"/>.
+        /// </summary>
+        /// <param name="canRead">Whether the stream supports reading.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="canRead"/> is <see langword="false"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotConvertToInputStream(bool canRead)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotConvertNotReadableStreamToInputStream);
+
+            if (!canRead)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the stream does not support writing for conversion to an <see cref="IOutputStream"/>.
+        /// </summary>
+        /// <param name="canWrite">Whether the stream supports writing.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="canWrite"/> is <see langword="false"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotConvertToOutputStream(bool canWrite)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotConvertNotWritableStreamToOutputStream);
+
+            if (!canWrite)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the stream does not support seeking for conversion to an <see cref="IRandomAccessStream"/>.
+        /// </summary>
+        /// <param name="canSeek">Whether the stream supports seeking.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="canSeek"/> is <see langword="false"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotConvertToRandomAccessStream(bool canSeek)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotConvertNotSeekableStreamToRandomAccessStream);
 
             if (!canSeek)
             {

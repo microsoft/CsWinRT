@@ -16,6 +16,11 @@ namespace Windows.Storage.Streams;
 internal static class WindowsRuntimeIOHelpers
 {
     /// <summary>
+    /// The default buffer size for stream adapters (16 KB).
+    /// </summary>
+    public const int DefaultBufferSize = 16384;
+
+    /// <summary>
     /// Gets the best possible <see cref="ExceptionDispatchInfo"/> info from a given I/O exception.
     /// </summary>
     /// <param name="exception">The input exception to use as source.</param>

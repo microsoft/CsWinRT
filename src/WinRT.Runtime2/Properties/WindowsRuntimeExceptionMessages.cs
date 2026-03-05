@@ -90,6 +90,10 @@ internal static class WindowsRuntimeExceptionMessages
 
     public const string InvalidOperation_CannotCallThisMethodInCurrentState = "The state of this object does not permit invoking this method.";
 
+    public const string InvalidOperation_CannotChangeBufferSizeOfStreamAdapter = "Cannot convert the specified Windows Runtime stream to a managed System.IO.Stream object with the specified buffer size because this Windows Runtime stream has been previously converted to a managed Stream object with a different buffer size. Ensure that the 'bufferSize' argument matches the existing buffer or use the '{0}'-overload without the 'bufferSize' argument to convert the specified Windows Runtime stream to a Stream object with the same buffer size as previously.";
+
+    public const string InvalidOperation_CannotChangeBufferSizeOfStreamAdapterToZero = "Cannot convert the specified Windows Runtime stream to a managed System.IO.Stream object without a buffer because this Windows Runtime stream has been previously converted to a managed Stream object with a buffer. Ensure that the 'bufferSize' argument matches the existing buffer or use the '{0}'-overload without the 'bufferSize' argument to convert the specified Windows Runtime stream to a Stream object with the same buffer size as previously.";
+
     public const string InvalidOperation_CannotSetStreamSizeCannotWrite = "Cannot set the size of this stream because it cannot be written to.";
 
     public const string InvalidOperation_MultipleIOCompletionCallbackInvocation = "A callback for the same asynchronous IO operation was invoked more than once.";
@@ -103,6 +107,12 @@ internal static class WindowsRuntimeExceptionMessages
     public const string IO_General = "An IO error occurred in the Windows runtime system.";
 
     public const string IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition = "This Stream is backed by a Windows Runtime stream with a length that exceeds 2^63 - 1 bytes. Operations related to the stream's length or position cannot be performed on streams when the length exceeds 2^63 - 1 bytes. (2^63 - 1 = 0x7FFFFFFFFFFFFFFF = Int64.MaxValue = approx. 8000 PetaBytes.)";
+
+    public const string NotSupported_CannotConvertNotReadableStreamToInputStream = "Cannot use the specified Stream as a Windows Runtime IInputStream because this Stream is not readable.";
+
+    public const string NotSupported_CannotConvertNotSeekableStreamToRandomAccessStream = "Cannot use the specified Stream as a Windows Runtime IRandomAccessStream because this Stream does not support seeking.";
+
+    public const string NotSupported_CannotConvertNotWritableStreamToOutputStream = "Cannot use the specified Stream as a Windows Runtime IOutputStream because this Stream is not writable.";
 
     public const string NotSupported_CannotReadFromStream = "This stream does not support read access.";
 
