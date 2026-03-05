@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.IO;
 using Microsoft.Win32.SafeHandles;
 
 namespace WindowsRuntime.InteropServices;
@@ -22,13 +23,43 @@ public static unsafe class IStorageFolderHandleAccessMethods
     /// </summary>
     /// <param name="storageFolder">The storage folder to create the handle in.</param>
     /// <param name="fileName">The name of the file to create the handle for.</param>
+    /// <param name="mode">The file mode for the handle.</param>
+    /// <param name="access">The file access mode for the handle.</param>
+    /// <param name="share">The file share mode for the handle.</param>
+    /// <param name="options">The file options for the handle.</param>
+    /// <returns>A <see cref="SafeFileHandle"/> for the file, or <see langword="null"/> if the operation failed.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="mode"/> or <paramref name="access"/> are not valid values.</exception>
+    /// <exception cref="NotSupportedException">Thrown if <paramref name="share"/> or <paramref name="options"/> contain unsupported flags.</exception>
+    public static SafeFileHandle? Create(
+        WindowsRuntimeObject storageFolder,
+        string fileName,
+        FileMode mode,
+        FileAccess access,
+        FileShare share,
+        FileOptions options)
+    {
+        return Create(
+            storageFolder,
+            fileName,
+            WindowsRuntimeStorageHelpers.FileModeToHandleCreationOptions(mode),
+            WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access),
+            WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share),
+            WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options),
+            0);
+    }
+
+    /// <summary>
+    /// Creates a <see cref="SafeFileHandle"/> for a file within the specified storage folder.
+    /// </summary>
+    /// <param name="storageFolder">The storage folder to create the handle in.</param>
+    /// <param name="fileName">The name of the file to create the handle for.</param>
     /// <param name="creationOptions">The creation options for the handle.</param>
     /// <param name="accessOptions">The access options for the handle.</param>
     /// <param name="sharingOptions">The sharing options for the handle.</param>
     /// <param name="options">The handle options.</param>
     /// <param name="oplockBreakingHandler">The oplock breaking handler.</param>
     /// <returns>A <see cref="SafeFileHandle"/> for the file, or <see langword="null"/> if the operation failed.</returns>
-    public static SafeFileHandle? Create(
+    private static SafeFileHandle? Create(
         WindowsRuntimeObject storageFolder,
         string fileName,
         uint creationOptions,

@@ -180,16 +180,11 @@ namespace Windows.Storage.IO
         {
             ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
-            uint accessOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access);
-            uint sharingOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share);
-            uint handleOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options);
-
             return global::WindowsRuntime.InteropServices.IStorageItemHandleAccessMethods.Create(
                 (global::WindowsRuntime.WindowsRuntimeObject)windowsRuntimeFile,
-                accessOptions,
-                sharingOptions,
-                handleOptions,
-                IntPtr.Zero);
+                access,
+                share,
+                options);
         }
 
         public static SafeFileHandle CreateSafeFileHandle(
@@ -211,19 +206,13 @@ namespace Windows.Storage.IO
             ArgumentNullException.ThrowIfNull(rootDirectory);
             ArgumentNullException.ThrowIfNull(relativePath);
 
-            uint creationOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileModeToHandleCreationOptions(mode);
-            uint accessOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access);
-            uint sharingOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share);
-            uint handleOptions = global::WindowsRuntime.InteropServices.WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options);
-
             return global::WindowsRuntime.InteropServices.IStorageFolderHandleAccessMethods.Create(
                 (global::WindowsRuntime.WindowsRuntimeObject)rootDirectory,
                 relativePath,
-                creationOptions,
-                accessOptions,
-                sharingOptions,
-                handleOptions,
-                IntPtr.Zero);
+                mode,
+                access,
+                share,
+                options);
         }
     }
 }

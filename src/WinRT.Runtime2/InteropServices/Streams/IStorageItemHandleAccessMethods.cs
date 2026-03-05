@@ -3,6 +3,7 @@
 
 using System;
 using System.ComponentModel;
+using System.IO;
 using Microsoft.Win32.SafeHandles;
 
 namespace WindowsRuntime.InteropServices;
@@ -21,12 +22,36 @@ public static unsafe class IStorageItemHandleAccessMethods
     /// Creates a <see cref="SafeFileHandle"/> for the specified storage item.
     /// </summary>
     /// <param name="storageItem">The storage item to create the handle for.</param>
+    /// <param name="access">The file access mode for the handle.</param>
+    /// <param name="share">The file share mode for the handle.</param>
+    /// <param name="options">The file options for the handle.</param>
+    /// <returns>A <see cref="SafeFileHandle"/> for the storage item, or <see langword="null"/> if the operation failed.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="access"/> is not a valid value.</exception>
+    /// <exception cref="NotSupportedException">Thrown if <paramref name="share"/> or <paramref name="options"/> contain unsupported flags.</exception>
+    public static SafeFileHandle? Create(
+        WindowsRuntimeObject storageItem,
+        FileAccess access,
+        FileShare share,
+        FileOptions options)
+    {
+        return Create(
+            storageItem,
+            WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access),
+            WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share),
+            WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options),
+            0);
+    }
+
+    /// <summary>
+    /// Creates a <see cref="SafeFileHandle"/> for the specified storage item.
+    /// </summary>
+    /// <param name="storageItem">The storage item to create the handle for.</param>
     /// <param name="accessOptions">The access options for the handle.</param>
     /// <param name="sharingOptions">The sharing options for the handle.</param>
     /// <param name="options">The handle options.</param>
     /// <param name="oplockBreakingHandler">The oplock breaking handler.</param>
     /// <returns>A <see cref="SafeFileHandle"/> for the storage item, or <see langword="null"/> if the operation failed.</returns>
-    public static SafeFileHandle? Create(
+    private static SafeFileHandle? Create(
         WindowsRuntimeObject storageItem,
         uint accessOptions,
         uint sharingOptions,

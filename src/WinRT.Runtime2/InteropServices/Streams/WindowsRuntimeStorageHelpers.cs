@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.IO;
 
 namespace WindowsRuntime.InteropServices;
@@ -10,11 +9,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Provides helpers for converting between <see cref="System.IO"/> types and Windows Runtime handle option types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-public static class WindowsRuntimeStorageHelpers
+internal static class WindowsRuntimeStorageHelpers
 {
     /// <summary>
     /// Converts a <see cref="FileAccess"/> value to a <see cref="HANDLE_ACCESS_OPTIONS"/> value.
