@@ -123,6 +123,12 @@ namespace DeprecatedRemovedTest
     {
         TestClass();
 
+        [deprecated("Constructor with name is deprecated.", deprecate, 1)]
+        TestClass(String name);
+
+        [deprecated("Constructor with name and config has been removed.", remove, 2)]
+        TestClass(String name, Int32 config);
+
         // --- Methods ---
         void ActiveMethod();
         [deprecated("RemovedMethod has been removed.", remove, 2)]
@@ -139,6 +145,20 @@ namespace DeprecatedRemovedTest
         String DeprecatedProp { get; };
         [deprecated("RemovedProp has been removed.", remove, 2)]
         String RemovedProp { get; };
+
+        // --- Read-write properties ---
+        String WritableProp;
+        [deprecated("WritableDeprecatedProp is deprecated.", deprecate, 1)]
+        String WritableDeprecatedProp;
+        [deprecated("WritableRemovedProp has been removed.", remove, 2)]
+        String WritableRemovedProp;
+
+        // --- Static properties ---
+        static String StaticProp { get; };
+        [deprecated("StaticDeprecatedProp is deprecated.", deprecate, 1)]
+        static String StaticDeprecatedProp { get; };
+        [deprecated("StaticRemovedProp has been removed.", remove, 2)]
+        static String StaticRemovedProp { get; };
 
         // --- Events (Gap: MIDL puts DeprecatedAttr on add method, not Event row) ---
         event TestEventHandler NormalEvent;

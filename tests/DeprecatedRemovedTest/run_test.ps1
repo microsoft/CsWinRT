@@ -274,10 +274,81 @@ Test-Result ($content -notmatch 'RemovedClassRcwFactoryAttribute') `
     "No RcwFactoryAttribute for RemovedClass"
 
 # ============================================================================
-# Step 13: Compile generated C# code
+# Step 13: Read-write property deprecation/removal
+# ============================================================================
+Write-Host "`n=== Step 13: Read-write property deprecation/removal ===" -ForegroundColor Cyan
+
+Test-Result ($content -match '(?m)public string WritableProp\b') `
+    "WritableProp is present on projected TestClass"
+
+Test-Result ($content -match 'Obsolete.*WritableDeprecatedProp is deprecated') `
+    "WritableDeprecatedProp has [Obsolete] on projected TestClass"
+
+$hasWritableRemovedProp = $content -match '(?m)public string WritableRemovedProp\b'
+Test-Result (-not $hasWritableRemovedProp) `
+    "WritableRemovedProp excluded from projected TestClass"
+
+# Check setter exists for writable prop
+Test-Result ($content -match 'set_WritableProp') `
+    "WritableProp setter path exists in ABI"
+
+# ============================================================================
+# Step 14: Static property deprecation/removal
+# ============================================================================
+Write-Host "`n=== Step 14: Static property deprecation/removal ===" -ForegroundColor Cyan
+
+Test-Result ($content -match '(?m)(public )?static string StaticProp\b') `
+    "StaticProp is present on projected TestClass"
+
+Test-Result ($content -match 'Obsolete.*StaticDeprecatedProp is deprecated') `
+    "StaticDeprecatedProp has [Obsolete] on projected TestClass"
+
+$hasStaticRemovedProp = $content -match '(?m)(public )?static string StaticRemovedProp\b'
+Test-Result (-not $hasStaticRemovedProp) `
+    "StaticRemovedProp excluded from projected TestClass"
+
+# ============================================================================
+# Step 15: Constructor deprecation/removal
+# ============================================================================
+Write-Host "`n=== Step 15: Constructor deprecation/removal ===" -ForegroundColor Cyan
+
+# Default constructor should be present
+Test-Result ($content -match 'TestClass\(\)') `
+    "Default constructor TestClass() is present"
+
+# Deprecated constructor should have [Obsolete]
+Test-Result ($content -match 'Obsolete.*Constructor with name is deprecated') `
+    "Deprecated constructor has [Obsolete] annotation"
+
+# Removed constructor should NOT be present in user-facing code
+$hasRemovedCtor = $content -match 'Obsolete.*Constructor with name and config has been removed'
+$hasRemovedCtorDef = $content -match 'TestClass\(string\s+\w+,\s*int\s+\w+\)'
+Test-Result (-not $hasRemovedCtor -and -not $hasRemovedCtorDef) `
+    "Removed constructor excluded from projected TestClass"
+
+# ============================================================================
+# Step 16: Interface checks for new constructs
+# ============================================================================
+Write-Host "`n=== Step 16: Interface checks for new constructs ===" -ForegroundColor Cyan
+
+if ($ifaceBody) {
+    Test-Result ($ifaceBody -notmatch 'WritableRemovedProp') `
+        "ITestClass interface excludes WritableRemovedProp"
+
+    Test-Result ($ifaceBody -match 'Obsolete.*WritableDeprecatedProp') `
+        "ITestClass interface has [Obsolete] on WritableDeprecatedProp"
+
+    Test-Result ($ifaceBody -match 'WritableProp') `
+        "ITestClass interface has WritableProp"
+} else {
+    Write-Host "  SKIP: ITestClass not found for new construct checks" -ForegroundColor Yellow
+}
+
+# ============================================================================
+# Step 17: Compile generated C# code
 # (Ultimate regression test — catches any ABI reference to missing types)
 # ============================================================================
-Write-Host "`n=== Step 13: Compile generated C# code ===" -ForegroundColor Cyan
+Write-Host "`n=== Step 17: Compile generated C# code ===" -ForegroundColor Cyan
 
 $compileDir = "$testDir\compile_test"
 if (Test-Path $compileDir) { Remove-Item $compileDir -Recurse -Force }

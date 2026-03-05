@@ -2144,6 +2144,10 @@ private static class _%
             auto platform_attribute = write_platform_attribute_temp(w, factory_type);
             for (auto&& method : factory_type.MethodList())
             {
+                if (is_removed(method))
+                {
+                    continue;
+                }
                 method_signature signature{ method };
                 if (settings.netstandard_compat)
                 {
@@ -2491,6 +2495,10 @@ Marshal.Release(inner);
         {
             return;
         }
+        if (is_removed(method))
+        {
+            return;
+        }
         method_signature signature{ method };
         auto return_type = w.write_temp("%", [&](writer& w) {
             write_projection_return_type(w, signature);
@@ -2538,6 +2546,11 @@ Marshal.Release(inner);
                 for (auto&& prop : factory.type.PropertyList())
                 {
                     auto [getter, setter] = get_property_methods(prop);
+                    // MIDL places DeprecatedAttribute on getter method, not Property row
+                    if (getter && is_removed(getter))
+                    {
+                        continue;
+                    }
                     auto prop_type = write_prop_type(w, prop);
 
                     auto [prop_targets, inserted] = properties.try_emplace(std::string(prop.Name()),
