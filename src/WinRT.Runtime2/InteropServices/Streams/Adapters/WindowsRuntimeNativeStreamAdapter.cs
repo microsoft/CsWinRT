@@ -12,11 +12,7 @@ using Windows.Storage.Streams;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// An <code>wrapper</code> for a managed stream that implements all WinRT stream operations.
-/// This class must not implement any WinRT stream interfaces directly.
-/// We never create instances of this class directly; instead we use classes defined in
-/// the region Interface adapters to implement WinRT ifaces and create instances of those types.
-/// See comment in that region for technical details.
+/// An adapter to wrap a managed <see cref="Stream"/> object and expose it as a native Windows Runtime stream.
 /// </summary>
 internal abstract partial class WindowsRuntimeNativeStreamAdapter : IDisposable
 {

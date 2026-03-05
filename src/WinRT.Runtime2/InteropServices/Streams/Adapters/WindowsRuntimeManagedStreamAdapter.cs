@@ -12,7 +12,7 @@ using Windows.Storage.Streams;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// A <code>Stream</code> used to wrap a Windows Runtime stream to expose it as a managed steam.
+/// An adapter to wrap a native Windows Runtime stream object and expose it as a managed <see cref="Stream"/>.
 /// </summary>
 internal sealed partial class WindowsRuntimeManagedStreamAdapter : Stream
 {
