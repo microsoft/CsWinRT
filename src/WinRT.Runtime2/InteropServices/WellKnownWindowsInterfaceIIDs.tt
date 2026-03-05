@@ -145,7 +145,9 @@ var entries = new (string Name, string IID)[]
     ("MUX_IReferenceOfNotifyCollectionChangedEventHandler", "779D5A21-0E7d-5476-BB90-27FA3B4B8DE5"),
     ("WUX_IReferenceOfNotifyCollectionChangedEventHandler", "A4FD5C6E-6549-59A9-86EF-5A490A1875D9"),
     ("MUX_IReferenceOfNotifyCollectionChangedAction", "5F754C9D-BC42-56EA-96C0-70113DBD62A4"),
-    ("WUX_IReferenceOfNotifyCollectionChangedAction", "0FFB101A-BC7D-50C3-8193-55CDF7448FA2")
+    ("WUX_IReferenceOfNotifyCollectionChangedAction", "0FFB101A-BC7D-50C3-8193-55CDF7448FA2"),
+    ("IStorageItemHandleAccess", "5CA296B2-2C25-4D22-B785-B885C8201E6A"),
+    ("IStorageFolderHandleAccess", "DF19938F-5462-48A0-BE65-D2A3271A08D6")
 };
 
 for (int i = 0; i < entries.Length; i++)

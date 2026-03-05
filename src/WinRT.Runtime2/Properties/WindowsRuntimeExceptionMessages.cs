@@ -126,6 +126,10 @@ internal static class WindowsRuntimeExceptionMessages
 
     public const string NotSupported_CloningNotSupported = "This IRandomAccessStream does not support the {0} method because it requires cloning and this stream does not support cloning.";
 
+    public const string NotSupported_EncryptedIsNotSupportedOption = "Encrypted is not a supported option.";
+
+    public const string NotSupported_InheritableIsNotSupportedOption = "Inheritable is not a supported option.";
+
     public const string NotSupported_UnrecognizedStreamReadOptimization = "This stream is using a read optimization mode that was not recognized.";
 
     public const string ObjectDisposed_CannotPerformOperationOnDisposedStream = "The requested operation cannot be performed because this stream has already been disposed.";
