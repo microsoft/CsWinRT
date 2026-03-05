@@ -1318,6 +1318,7 @@ internal static class WindowsRuntimeExceptionExtensions
             }
         }
 
+#pragma warning disable IDE0051 // TODO: remove this once Roslyn bug is fixed
         /// <summary>
         /// Throw helper for <see cref="ThrowIfSeekPositionExceedsInt64MaxValue"/>.
         /// </summary>
@@ -1327,6 +1328,7 @@ internal static class WindowsRuntimeExceptionExtensions
         {
             throw new IOException(WindowsRuntimeExceptionMessages.IO_CannotSeekBeyondInt64MaxValue);
         }
+#pragma warning restore IDE0051
     }
 
     extension(ArgumentNullException)
