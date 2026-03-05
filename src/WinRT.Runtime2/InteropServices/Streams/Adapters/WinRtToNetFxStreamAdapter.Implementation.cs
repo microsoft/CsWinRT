@@ -115,17 +115,11 @@ internal partial class WinRtToNetFxStreamAdapter
         {
             long currentPosition = Position;
 
-            if (long.MaxValue - currentPosition < offset)
-            {
-                throw IOException.GetCannotSeekBeyondInt64MaxValueException();
-            }
+            IOException.ThrowIfSeekWouldExceedMaxPosition(currentPosition, offset);
 
             long newPosition = currentPosition + offset;
 
-            if (newPosition < 0)
-            {
-                throw IOException.GetCannotSeekToNegativePositionException();
-            }
+            IOException.ThrowIfSeekResultNegative(newPosition);
 
             return newPosition;
         }
@@ -140,10 +134,7 @@ internal partial class WinRtToNetFxStreamAdapter
             // is negative, because that way there's a chance the final position might still be valid.
             if (sizeNative > long.MaxValue)
             {
-                if (offset >= 0)
-                {
-                    throw IOException.GetCannotSeekBeyondInt64MaxValueException();
-                }
+                IOException.ThrowIfNonNegativeOffsetForOversizedStream(offset);
 
                 ulong absoluteOffset = (offset == long.MinValue) ? ((ulong)long.MaxValue) + 1 : (ulong)-offset;
 
@@ -151,10 +142,7 @@ internal partial class WinRtToNetFxStreamAdapter
 
                 ulong newPositionNative = sizeNative - absoluteOffset;
 
-                if (newPositionNative > long.MaxValue)
-                {
-                    throw IOException.GetCannotSeekBeyondInt64MaxValueException();
-                }
+                IOException.ThrowIfSeekPositionExceedsInt64MaxValue(newPositionNative);
 
                 newPosition = (long)newPositionNative;
             }
@@ -163,17 +151,11 @@ internal partial class WinRtToNetFxStreamAdapter
                 // Otherwise, we just need to update the position makin sure we don't overflow
                 long size = unchecked((long)sizeNative);
 
-                if (long.MaxValue - size < offset)
-                {
-                    throw IOException.GetCannotSeekBeyondInt64MaxValueException();
-                }
+                IOException.ThrowIfSeekWouldExceedMaxPosition(size, offset);
 
                 newPosition = size + offset;
 
-                if (newPosition < 0)
-                {
-                    throw IOException.GetCannotSeekToNegativePositionException();
-                }
+                IOException.ThrowIfSeekResultNegative(newPosition);
             }
 
             return newPosition;

@@ -201,11 +201,11 @@ internal static class WindowsRuntimeExceptionExtensions
         /// <summary>
         /// Throws an <see cref="InvalidOperationException"/> if the stream does not support writing for a resize operation.
         /// </summary>
-        /// <param name="canWrite">Whether the stream supports writing.</param>
-        /// <exception cref="InvalidOperationException">Thrown if <paramref name="canWrite"/> is <see langword="false"/>, with an HResult of <c>E_ILLEGAL_METHOD_CALL</c>.</exception>
+        /// <param name="stream">The stream to check.</param>
+        /// <exception cref="InvalidOperationException">Thrown if <paramref name="stream"/> does not support writing, with an HResult of <c>E_ILLEGAL_METHOD_CALL</c>.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [StackTraceHidden]
-        public static void ThrowIfStreamCannotWriteForResize(bool canWrite)
+        public static void ThrowIfStreamCannotWriteForResize(Stream stream)
         {
             [DoesNotReturn]
             [StackTraceHidden]
@@ -219,7 +219,7 @@ internal static class WindowsRuntimeExceptionExtensions
                 throw exception;
             }
 
-            if (!canWrite)
+            if (!stream.CanWrite)
             {
                 ThrowInvalidOperationException();
             }
@@ -276,20 +276,20 @@ internal static class WindowsRuntimeExceptionExtensions
         }
 
         /// <summary>
-        /// Throws an <see cref="ObjectDisposedException"/> if the stream has been disposed.
+        /// Throws an <see cref="ObjectDisposedException"/> if the stream has been disposed (ie. the stream reference is <see langword="null"/>).
         /// </summary>
-        /// <param name="isDisposed">Whether the stream has been disposed.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if <paramref name="isDisposed"/> is <see langword="true"/>.</exception>
+        /// <param name="stream">The stream reference to check.</param>
+        /// <exception cref="ObjectDisposedException">Thrown if <paramref name="stream"/> is <see langword="null"/>.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [StackTraceHidden]
-        public static void ThrowIfStreamIsDisposed(bool isDisposed)
+        public static void ThrowIfStreamIsDisposed([NotNull] object? stream)
         {
             [DoesNotReturn]
             [StackTraceHidden]
             static void ThrowObjectDisposedException()
                 => throw new ObjectDisposedException(WindowsRuntimeExceptionMessages.ObjectDisposed_CannotPerformOperationOnDisposedStream);
 
-            if (isDisposed)
+            if (stream is null)
             {
                 ThrowObjectDisposedException();
             }
@@ -1149,24 +1149,75 @@ internal static class WindowsRuntimeExceptionExtensions
     extension(IOException)
     {
         /// <summary>
-        /// Creates an <see cref="IOException"/> indicating that seeking beyond <see cref="long.MaxValue"/> is not supported.
+        /// Throws an <see cref="IOException"/> if the sum of <paramref name="basePosition"/> and <paramref name="offset"/> would exceed <see cref="long.MaxValue"/>.
         /// </summary>
-        /// <returns>The resulting <see cref="IOException"/> instance.</returns>
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static IOException GetCannotSeekBeyondInt64MaxValueException()
+        /// <param name="basePosition">The base position value.</param>
+        /// <param name="offset">The offset value.</param>
+        /// <exception cref="IOException">Thrown if <paramref name="basePosition"/> + <paramref name="offset"/> would exceed <see cref="long.MaxValue"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfSeekWouldExceedMaxPosition(long basePosition, long offset)
         {
-            return new(WindowsRuntimeExceptionMessages.IO_CannotSeekBeyondInt64MaxValue);
+            if (long.MaxValue - basePosition < offset)
+            {
+                ThrowCannotSeekBeyondInt64MaxValue();
+            }
         }
 
         /// <summary>
-        /// Creates an <see cref="IOException"/> indicating that seeking to a negative position is not supported.
+        /// Throws an <see cref="IOException"/> if the specified <paramref name="offset"/> is non-negative (indicating a forward seek from an oversized stream).
         /// </summary>
-        /// <returns>The resulting <see cref="IOException"/> instance.</returns>
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static IOException GetCannotSeekToNegativePositionException()
+        /// <param name="offset">The seek offset value.</param>
+        /// <exception cref="IOException">Thrown if <paramref name="offset"/> is greater than or equal to zero.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfNonNegativeOffsetForOversizedStream(long offset)
         {
-            return new(WindowsRuntimeExceptionMessages.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+            if (offset >= 0)
+            {
+                ThrowCannotSeekBeyondInt64MaxValue();
+            }
         }
+
+        /// <summary>
+        /// Throws an <see cref="IOException"/> if the specified <paramref name="position"/> exceeds <see cref="long.MaxValue"/>.
+        /// </summary>
+        /// <param name="position">The position value to check.</param>
+        /// <exception cref="IOException">Thrown if <paramref name="position"/> exceeds <see cref="long.MaxValue"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfSeekPositionExceedsInt64MaxValue(ulong position)
+        {
+            if (position > long.MaxValue)
+            {
+                ThrowCannotSeekBeyondInt64MaxValue();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="IOException"/> if the specified <paramref name="position"/> is negative.
+        /// </summary>
+        /// <param name="position">The position value to check.</param>
+        /// <exception cref="IOException">Thrown if <paramref name="position"/> is negative.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfSeekResultNegative(long position)
+        {
+            if (position < 0)
+            {
+                ThrowCannotSeekToNegativePosition();
+            }
+        }
+
+        [DoesNotReturn]
+        [StackTraceHidden]
+        private static void ThrowCannotSeekBeyondInt64MaxValue()
+            => throw new IOException(WindowsRuntimeExceptionMessages.IO_CannotSeekBeyondInt64MaxValue);
+
+        [DoesNotReturn]
+        [StackTraceHidden]
+        private static void ThrowCannotSeekToNegativePosition()
+            => throw new IOException(WindowsRuntimeExceptionMessages.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
 
         /// <summary>
         /// Creates an <see cref="IOException"/> indicating that the underlying Windows Runtime stream is too long.

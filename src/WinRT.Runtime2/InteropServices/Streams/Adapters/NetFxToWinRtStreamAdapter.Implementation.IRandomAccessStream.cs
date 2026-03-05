@@ -60,7 +60,7 @@ internal partial class NetFxToWinRtStreamAdapter
 
             Stream managedStream = EnsureNotDisposed();
 
-            InvalidOperationException.ThrowIfStreamCannotWriteForResize(managedStream.CanWrite);
+            InvalidOperationException.ThrowIfStreamCannotWriteForResize(managedStream);
 
             Debug.Assert(managedStream.CanSeek);
             Debug.Assert(value <= long.MaxValue);

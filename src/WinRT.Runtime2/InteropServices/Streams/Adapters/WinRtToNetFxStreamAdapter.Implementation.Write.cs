@@ -62,7 +62,7 @@ internal partial class WinRtToNetFxStreamAdapter
     {
         ArgumentNullException.ThrowIfNull(asyncResult);
 
-        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream is null);
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
         NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
         // We can only perform this operation if we have our own async result instance

@@ -22,7 +22,7 @@ internal partial class WinRtToNetFxStreamAdapter
     {
         ArgumentNullException.ThrowIfNull(asyncResult);
 
-        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream is null);
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
         NotSupportedException.ThrowIfStreamCannotRead(_canRead);
 
         // We can only perform this operation if we have our own async result instance
@@ -73,7 +73,7 @@ internal partial class WinRtToNetFxStreamAdapter
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentException.ThrowIfInsufficientSpaceInTargetBuffer(buffer.Length, offset, count);
-        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream is null);
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
         NotSupportedException.ThrowIfStreamCannotRead(_canRead);
 
         // If already cancelled, bail early:
@@ -131,7 +131,7 @@ internal partial class WinRtToNetFxStreamAdapter
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentException.ThrowIfInsufficientSpaceInTargetBuffer(buffer.Length, offset, count);
-        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream is null);
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
         NotSupportedException.ThrowIfStreamCannotRead(_canRead);
 
         StreamReadAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
