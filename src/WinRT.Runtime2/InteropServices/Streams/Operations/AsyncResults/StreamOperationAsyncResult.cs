@@ -211,13 +211,13 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
         // 'OnStreamOperationCompleted', which is set by each derived type as the completion handler upon construction.
         if (!_callbackInvoked)
         {
-            ProcessCompletedOperation_InvalidOperationThrowHelper(WindowsRuntimeExceptionMessages.InvalidOperation_CannotCallThisMethodInCurrentState);
+            ThrowInvalidOperationExceptionOnProcessCompletedOperation(WindowsRuntimeExceptionMessages.InvalidOperation_CannotCallThisMethodInCurrentState);
         }
 
         // Check that the the completion handler has actually ran to completion already (it might run concurrently)
         if (!_processCompletedOperationInCallback && !_completed)
         {
-            ProcessCompletedOperation_InvalidOperationThrowHelper(WindowsRuntimeExceptionMessages.InvalidOperation_CannotCallThisMethodInCurrentState);
+            ThrowInvalidOperationExceptionOnProcessCompletedOperation(WindowsRuntimeExceptionMessages.InvalidOperation_CannotCallThisMethodInCurrentState);
         }
 
         // If we don't have a completed operation, then we are in an invalid state and can't proceed
@@ -240,7 +240,7 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
         // Ensure that the completed operation matches the one that we're currently wrapping
         if (_completedOperation.Id != _asyncStreamOperation!.Id)
         {
-            ProcessCompletedOperation_InvalidOperationThrowHelper(WindowsRuntimeExceptionMessages.InvalidOperation_UnexpectedAsyncOperationID);
+            ThrowInvalidOperationExceptionOnProcessCompletedOperation(WindowsRuntimeExceptionMessages.InvalidOperation_UnexpectedAsyncOperationID);
         }
 
         // If the completed operation is in an error state, we also can't proceed
@@ -248,7 +248,7 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
         {
             _numberOfBytesProcessed = 0;
 
-            ThrowWithIOExceptionDispatchInfo(_completedOperation.ErrorCode!);
+            ThrowIOExceptionWithExceptionDispatchInfo(_completedOperation.ErrorCode!);
         }
 
         // The state is valid, so we can delegate to the derived implementation calling 'GetResults()'
@@ -366,9 +366,13 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
         _userCompletionCallback?.Invoke(this);
     }
 
+    /// <summary>
+    /// Throws an <see cref="InvalidOperationException"/> when <see cref="ProcessCompletedOperation()"/> is invoked in an invalid state.
+    /// </summary>
+    /// <param name="errorMessage">The error message to include in the exception.</param>
     [DoesNotReturn]
     [StackTraceHidden]
-    private void ProcessCompletedOperation_InvalidOperationThrowHelper(string errorMessage)
+    private void ThrowInvalidOperationExceptionOnProcessCompletedOperation(string errorMessage)
     {
         Exception? errorInfoSourceException = _errorInfo?.SourceException;
 
@@ -383,9 +387,13 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
         throw new InvalidOperationException(errorMessage, errorInfoSourceException);
     }
 
+    /// <summary>
+    /// Throws a <see cref="System.IO.IOException"/> when <see cref="ProcessCompletedOperation()"/> detects an error state.
+    /// </summary>
+    /// <param name="exception">The error code to wrap in the exception being thrown.</param>
     [DoesNotReturn]
     [StackTraceHidden]
-    private static void ThrowWithIOExceptionDispatchInfo(Exception exception)
+    private static void ThrowIOExceptionWithExceptionDispatchInfo(Exception exception)
     {
         RestrictedErrorInfo.AttachErrorInfo(exception);
 

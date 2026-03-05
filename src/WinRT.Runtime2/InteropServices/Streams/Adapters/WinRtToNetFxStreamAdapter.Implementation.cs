@@ -25,15 +25,12 @@ internal partial class WinRtToNetFxStreamAdapter
     {
         get
         {
-            IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
+            IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
 
             NotSupportedException.ThrowIfStreamCannotUseLength(_canSeek);
 
-            Debug.Assert(wrtStr != null);
+            ulong size = windowsRuntimeStream.Size;
 
-            ulong size = wrtStr.Size;
-
-            // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
             IOException.ThrowIfUnderlyingWinRTStreamTooLong(size);
 
             return unchecked((long)size);
@@ -45,30 +42,25 @@ internal partial class WinRtToNetFxStreamAdapter
     {
         get
         {
-            IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
+            IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
 
             NotSupportedException.ThrowIfStreamCannotUsePosition(_canSeek);
 
-            Debug.Assert(wrtStr != null);
+            ulong position = windowsRuntimeStream.Position;
 
-            ulong pos = wrtStr.Position;
+            IOException.ThrowIfUnderlyingWinRTStreamTooLong(position);
 
-            // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
-            IOException.ThrowIfUnderlyingWinRTStreamTooLong(pos);
-
-            return unchecked((long)pos);
+            return unchecked((long)position);
         }
         set
         {
             ArgumentOutOfRangeException.ThrowIfNegativeStreamPosition(value);
 
-            IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
+            IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
 
             NotSupportedException.ThrowIfStreamCannotUsePosition(_canSeek);
 
-            Debug.Assert(wrtStr != null);
-
-            wrtStr.Seek(unchecked((ulong)value));
+            windowsRuntimeStream.Seek(unchecked((ulong)value));
         }
     }
 
@@ -77,27 +69,26 @@ internal partial class WinRtToNetFxStreamAdapter
     {
         ArgumentOutOfRangeException.ThrowIfNegativeStreamLength(value);
 
-        IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
+        IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
 
         NotSupportedException.ThrowIfStreamCannotSeek(_canSeek);
         NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
-        Debug.Assert(wrtStr != null);
+        windowsRuntimeStream.Size = unchecked((ulong)value);
 
-        wrtStr.Size = unchecked((ulong)value);
-
-        // If the length is set to a value < that the current position, then we need to set the position to that value
-        // Because we can't directly set the position, we are going to seek to it.
-        if (wrtStr.Size < wrtStr.Position)
+        // If the length is set to a value less than the current position, then we need to
+        // set the position to that value. This is because if we can't directly set the
+        // position, we are going to seek to it.
+        if (windowsRuntimeStream.Size < windowsRuntimeStream.Position)
         {
-            wrtStr.Seek(unchecked((ulong)value));
+            windowsRuntimeStream.Seek(unchecked((ulong)value));
         }
     }
 
     /// <inheritdoc/>
     public override long Seek(long offset, SeekOrigin origin)
     {
-        IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
+        IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
 
         NotSupportedException.ThrowIfStreamCannotSeek(_canSeek);
 
@@ -159,7 +150,7 @@ internal partial class WinRtToNetFxStreamAdapter
         {
             SeekOrigin.Begin => ComputeBeginSeek(offset),
             SeekOrigin.Current => ComputeCurrentSeek(offset),
-            SeekOrigin.End => ComputeEndSeek(offset, wrtStr),
+            SeekOrigin.End => ComputeEndSeek(offset, windowsRuntimeStream),
             _ => throw ArgumentException.GetInvalidSeekOriginException(nameof(origin))
         };
 

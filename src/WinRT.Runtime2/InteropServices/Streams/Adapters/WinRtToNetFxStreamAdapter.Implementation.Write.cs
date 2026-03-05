@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Diagnostics;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,33 +26,27 @@ internal partial class WinRtToNetFxStreamAdapter
     [SupportedOSPlatform("windows10.0.10240.0")]
     private StreamWriteAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
     {
-        // See the large comment in BeginRead about why we are not using this.WriteAsync,
-        // and instead using a custom implementation of IAsyncResult.
-
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentException.ThrowIfInsufficientArrayElementsAfterOffset(buffer.Length, offset, count);
 
-        IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
-        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
+        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
-        Debug.Assert(wrtStr != null);
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
         IBuffer asyncWriteBuffer = buffer.AsBuffer(offset, count);
 
-        IAsyncOperationWithProgress<uint, uint> asyncWriteOperation = wrtStr.WriteAsync(asyncWriteBuffer);
+        // See the large comment in the 'BeginRead' method about why we are not using the
+        // 'WriteAsync' method, and instead using a custom implementation of 'IAsyncResult'.
+        IAsyncOperationWithProgress<uint, uint> asyncWriteOperation = windowsRuntimeStream.WriteAsync(asyncWriteBuffer);
 
-        StreamWriteAsyncResult asyncResult = new(asyncWriteOperation, callback, state,
-                                                                        processCompletedOperationInCallback: !usedByBlockingWrapper);
-
-        // The StreamReadAsyncResult will set a private instance method to act as a Completed handler for asyncOperation.
-        // This will cause a CCW to be created for the delegate and the delegate has a reference to its target, i.e. to
-        // asyncResult, so asyncResult will not be collected. If we loose the entire AppDomain, then asyncResult and its CCW
-        // will be collected but the stub will remain and the callback will fail gracefully. The underlying buffer if the only
-        // item to which we expose a direct pointer and this is properly pinned using a mechanism similar to Overlapped.
-
-        return asyncResult;
+        // See additional notes in the 'Read' method about how CCW objects for this result are managed
+        return new StreamWriteAsyncResult(
+            asyncWriteOperation,
+            callback,
+            state,
+            processCompletedOperationInCallback: !usedByBlockingWrapper);
     }
 
     /// <inheritdoc/>
@@ -61,7 +54,6 @@ internal partial class WinRtToNetFxStreamAdapter
     public override void EndWrite(IAsyncResult asyncResult)
     {
         ArgumentNullException.ThrowIfNull(asyncResult);
-
         ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
         NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
@@ -75,16 +67,13 @@ internal partial class WinRtToNetFxStreamAdapter
 
         try
         {
-            // If the async result did NOT process the async IO operation in its completion handler (i.e. check for errors,
-            // cache results etc), then we need to do that processing now. This is to allow blocking-over-async IO operations.
-            // See the big comment in BeginWrite for details.
-
+            // Process the completed operation if needed (see additional notes in 'EndRead')
             if (!streamAsyncResult.ProcessCompletedOperationInCallback)
             {
                 streamAsyncResult.ProcessCompletedOperation();
             }
 
-            // Rethrow errors caught in the completion callback, if any:
+            // Rethrow any errors caught in the completion callback
             if (streamAsyncResult.HasError)
             {
                 streamAsyncResult.CloseStreamOperation();
@@ -93,7 +82,7 @@ internal partial class WinRtToNetFxStreamAdapter
         }
         finally
         {
-            // Closing multiple times is Ok.
+            // Closing an operation multiple times is fine
             streamAsyncResult.CloseStreamOperation();
         }
     }
@@ -107,30 +96,28 @@ internal partial class WinRtToNetFxStreamAdapter
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentException.ThrowIfInsufficientArrayElementsAfterOffset(buffer.Length, offset, count);
 
-        IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
+        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
+
         NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
-        // If already cancelled, bail early:
+        // If already cancelled, stop early
         cancellationToken.ThrowIfCancellationRequested();
 
         IBuffer asyncWriteBuffer = buffer.AsBuffer(offset, count);
 
-        IAsyncOperationWithProgress<uint, uint> asyncWriteOperation = wrtStr.WriteAsync(asyncWriteBuffer);
-        Task asyncWriteTask = asyncWriteOperation.AsTask(cancellationToken);
-
-        // The underlying IBuffer is the only object to which we expose a direct pointer to native,
-        // and that is properly pinned using a mechanism similar to Overlapped.
-
-        return asyncWriteTask;
+        // The underlying 'IBuffer' object is the only object to which we expose a direct pointer
+        // to native, and that is properly pinned using a mechanism similar to 'Overlapped'.
+        return windowsRuntimeStream.WriteAsync(asyncWriteBuffer).AsTask(cancellationToken);
     }
 
     /// <inheritdoc/>
     [SupportedOSPlatform("windows10.0.10240.0")]
     public override void Write(byte[] buffer, int offset, int count)
     {
-        // Arguments validation and not-disposed validation are done in BeginWrite.
+        // Arguments validation and disposal validation are done in 'BeginWrite'
 
-        IAsyncResult asyncResult = BeginWrite(buffer, offset, count, null, null, usedByBlockingWrapper: true);
+        StreamWriteAsyncResult asyncResult = BeginWrite(buffer, offset, count, null, null, usedByBlockingWrapper: true);
+
         EndWrite(asyncResult);
     }
 
@@ -145,29 +132,29 @@ internal partial class WinRtToNetFxStreamAdapter
     [SupportedOSPlatform("windows10.0.10240.0")]
     public override void Flush()
     {
-        // See the large comment in BeginRead about why we are not using this.FlushAsync,
-        // and instead using a custom implementation of IAsyncResult.
+        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
-        IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
-
-        // Calling Flush in a non-writable stream is a no-op, not an error:
+        // Calling 'Flush' in a non-writeable stream is a no-op, not an error
         if (!_canWrite)
         {
             return;
         }
 
-        IAsyncOperation<bool> asyncFlushOperation = wrtStr.FlushAsync();
+        IAsyncOperation<bool> asyncFlushOperation = windowsRuntimeStream.FlushAsync();
+
+        // See the large comment in 'BeginRead' about why we are not using 'FlushAsync', and instead
+        // using a custom implementation of 'IAsyncResult' (we do the same for reads and writes too).
         StreamFlushAsyncResult asyncResult = new(asyncFlushOperation);
 
         asyncResult.Wait();
 
         try
         {
-            // We got signaled, so process the async Flush operation back on this thread:
-            // (This is to allow blocking-over-async IO operations. See the big comment in BeginRead for details.)
+            // We got signaled, so process the 'Flush' operation back on this thread. This
+            // is to allow blocking-over-async I/O operations (see notes in 'BeginRead').
             asyncResult.ProcessCompletedOperation();
 
-            // Rethrow errors cached by the async result, if any:
+            // Rethrow errors cached by the async result, if any
             if (asyncResult.HasError)
             {
                 asyncResult.CloseStreamOperation();
@@ -176,7 +163,7 @@ internal partial class WinRtToNetFxStreamAdapter
         }
         finally
         {
-            // Closing multiple times is Ok.
+            // Closing an operation multiple times is fine
             asyncResult.CloseStreamOperation();
         }
     }
@@ -185,9 +172,9 @@ internal partial class WinRtToNetFxStreamAdapter
     [SupportedOSPlatform("windows10.0.10240.0")]
     public override Task FlushAsync(CancellationToken cancellationToken)
     {
-        IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
+        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
-        // Calling Flush in a non-writable stream is a no-op, not an error:
+        // Calling Flush in a non-writeable stream is a no-op, not an error
         if (!_canWrite)
         {
             return Task.CompletedTask;
@@ -195,8 +182,6 @@ internal partial class WinRtToNetFxStreamAdapter
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        IAsyncOperation<bool> asyncFlushOperation = wrtStr.FlushAsync();
-        Task asyncFlushTask = asyncFlushOperation.AsTask(cancellationToken);
-        return asyncFlushTask;
+        return windowsRuntimeStream.FlushAsync().AsTask(cancellationToken);
     }
 }
