@@ -211,13 +211,13 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
         // 'OnStreamOperationCompleted', which is set by each derived type as the completion handler upon construction.
         if (!_callbackInvoked)
         {
-            ProcessCompletedOperation_InvalidOperationThrowHelper(SR.InvalidOperation_CannotCallThisMethodInCurrentState);
+            ProcessCompletedOperation_InvalidOperationThrowHelper(WindowsRuntimeExceptionMessages.InvalidOperation_CannotCallThisMethodInCurrentState);
         }
 
         // Check that the the completion handler has actually ran to completion already (it might run concurrently)
         if (!_processCompletedOperationInCallback && !_completed)
         {
-            ProcessCompletedOperation_InvalidOperationThrowHelper(SR.InvalidOperation_CannotCallThisMethodInCurrentState);
+            ProcessCompletedOperation_InvalidOperationThrowHelper(WindowsRuntimeExceptionMessages.InvalidOperation_CannotCallThisMethodInCurrentState);
         }
 
         // If we don't have a completed operation, then we are in an invalid state and can't proceed
@@ -227,7 +227,7 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
 
             // See if the error info is set because we observed a 'null' completed async operation previously.
             // We're explicitly checking that the message is an exact match to avoid any false positives here.
-            if (errorInfo is { SourceException: ArgumentNullException { Message: SR.ArgumentNullReference_IOCompletionCallbackCannotProcessNullAsyncInfo } })
+            if (errorInfo is { SourceException: ArgumentNullException { Message: WindowsRuntimeExceptionMessages.ArgumentNullReference_IOCompletionCallbackCannotProcessNullAsyncInfo } })
             {
                 errorInfo.Throw();
             }
@@ -240,7 +240,7 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
         // Ensure that the completed operation matches the one that we're currently wrapping
         if (_completedOperation.Id != _asyncStreamOperation!.Id)
         {
-            ProcessCompletedOperation_InvalidOperationThrowHelper(SR.InvalidOperation_UnexpectedAsyncOperationID);
+            ProcessCompletedOperation_InvalidOperationThrowHelper(WindowsRuntimeExceptionMessages.InvalidOperation_UnexpectedAsyncOperationID);
         }
 
         // If the completed operation is in an error state, we also can't proceed

@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.ExceptionServices;
 using Windows.Storage.Buffers;
+using WindowsRuntime;
 
 namespace Windows.Storage.Streams;
 
@@ -38,7 +39,7 @@ internal static class WindowsRuntimeIOHelpers
         // If we do not have a meaningful message, we use a general IO error message
         if (string.IsNullOrWhiteSpace(message))
         {
-            message = SR.IO_General;
+            message = WindowsRuntimeExceptionMessages.IO_General;
         }
 
         // Manually create an 'IOException' with the original exception as inner exception

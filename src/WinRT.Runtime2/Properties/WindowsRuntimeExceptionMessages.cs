@@ -100,6 +100,8 @@ internal static class WindowsRuntimeExceptionMessages
 
     public const string IO_CannotSetSizeBeyondInt64MaxValue = "This Windows Runtime stream is backed by a .NET Stream; its size cannot be set to a value that is larger than 2^63 - 1 bytes. (2^63 - 1 = 0x7FFFFFFFFFFFFFFF = Int64.MaxValue).";
 
+    public const string IO_General = "An IO error occurred in the Windows runtime system.";
+
     public const string IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition = "This Stream is backed by a Windows Runtime stream with a length that exceeds 2^63 - 1 bytes. Operations related to the stream's length or position cannot be performed on streams when the length exceeds 2^63 - 1 bytes. (2^63 - 1 = 0x7FFFFFFFFFFFFFFF = Int64.MaxValue = approx. 8000 PetaBytes.)";
 
     public const string NotSupported_CannotReadFromStream = "This stream does not support read access.";
@@ -113,6 +115,8 @@ internal static class WindowsRuntimeExceptionMessages
     public const string NotSupported_CannotWriteToStream = "This stream does not support write access.";
 
     public const string NotSupported_CloningNotSupported = "This IRandomAccessStream does not support the {0} method because it requires cloning and this stream does not support cloning.";
+
+    public const string NotSupported_UnrecognizedStreamReadOptimization = "This stream is using a read optimization mode that was not recognized.";
 
     public const string ObjectDisposed_CannotPerformOperationOnDisposedStream = "The requested operation cannot be performed because this stream has already been disposed.";
 }

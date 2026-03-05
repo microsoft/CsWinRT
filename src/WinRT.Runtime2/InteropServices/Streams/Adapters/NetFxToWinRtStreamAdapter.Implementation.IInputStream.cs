@@ -30,7 +30,7 @@ internal partial class NetFxToWinRtStreamAdapter
         {
             StreamReadOperationOptimization.MemoryStream => StreamOperationsImplementation.MemoryStream.ReadAsync(managedStream, buffer, count),
             StreamReadOperationOptimization.AbstractStream => StreamOperationsImplementation.ReadAsync(managedStream, buffer, count, options),
-            _ => throw new NotSupportedException(SR.NotSupported_UnrecognizedStreamReadOptimization)
+            _ => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_UnrecognizedStreamReadOptimization)
         };
     }
 }
