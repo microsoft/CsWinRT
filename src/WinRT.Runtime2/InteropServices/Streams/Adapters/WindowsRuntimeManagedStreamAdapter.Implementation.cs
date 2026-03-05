@@ -8,8 +8,8 @@ using Windows.Storage.Streams;
 
 namespace WindowsRuntime.InteropServices;
 
-/// <inheritdoc cref="WinRtToNetFxStreamAdapter"/>
-internal partial class WinRtToNetFxStreamAdapter
+/// <inheritdoc cref="WindowsRuntimeManagedStreamAdapter"/>
+internal partial class WindowsRuntimeManagedStreamAdapter
 {
     /// <inheritdoc/>
     public override bool CanRead => _canRead && _windowsRuntimeStream is not null;

@@ -20,7 +20,7 @@ namespace WindowsRuntime.InteropServices;
 /// Provides methods that encapsulate specialized logic to handle <see cref="Stream"/> operations when exposed to the Windows Runtime.
 /// </summary>
 /// <remarks>
-/// Depending on the concrete type of the underlying stream managed by a <see cref="NetFxToWinRtStreamAdapter"/> instance, we want the
+/// Depending on the concrete type of the underlying stream managed by a <see cref="WindowsRuntimeNativeStreamAdapter"/> instance, we want the
 /// <see cref="IInputStream.ReadAsync"/>, <see cref="IOutputStream.WriteAsync"/>, and <see cref="IOutputStream.FlushAsync"/> methods to
 /// be implemented differently. This is for best performance, as we can take advantage of the specifics of particular stream types. For
 /// instance, <see cref="IInputStream.ReadAsync"/> currently has a special implementation for <see cref="MemoryStream"/> objects. Also,

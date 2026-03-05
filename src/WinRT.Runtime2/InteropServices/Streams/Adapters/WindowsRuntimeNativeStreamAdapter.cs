@@ -18,7 +18,7 @@ namespace WindowsRuntime.InteropServices;
 /// the region Interface adapters to implement WinRT ifaces and create instances of those types.
 /// See comment in that region for technical details.
 /// </summary>
-internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
+internal abstract partial class WindowsRuntimeNativeStreamAdapter : IDisposable
 {
     /// <summary>
     /// The <see cref="StreamReadOperationOptimization"/> value to use for <see cref="_managedStream"/>.
@@ -36,11 +36,11 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
     private bool _disposeManagedStream;
 
     /// <summary>
-    /// Creates a new <see cref="NetFxToWinRtStreamAdapter"/> instance with the specified parameters.
+    /// Creates a new <see cref="WindowsRuntimeNativeStreamAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="stream">The <see cref="Stream"/> instance to wrap.</param>
     /// <param name="readOptimization">The <see cref="StreamReadOperationOptimization"/> value to use.</param>
-    private NetFxToWinRtStreamAdapter(Stream stream, StreamReadOperationOptimization readOptimization)
+    private WindowsRuntimeNativeStreamAdapter(Stream stream, StreamReadOperationOptimization readOptimization)
     {
         Debug.Assert(stream != null);
         Debug.Assert(stream.CanRead || stream.CanWrite || stream.CanSeek);
@@ -53,11 +53,11 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
     }
 
     /// <summary>
-    /// Creates a new <see cref="NetFxToWinRtStreamAdapter"/> instance specialized for the a given <see cref="Stream"/> object.
+    /// Creates a new <see cref="WindowsRuntimeNativeStreamAdapter"/> instance specialized for the a given <see cref="Stream"/> object.
     /// </summary>
     /// <param name="stream">The <see cref="Stream"/> instance to wrap.</param>
-    /// <returns>The resulting <see cref="NetFxToWinRtStreamAdapter"/> instance wrapping <paramref name="stream"/>.</returns>
-    public static NetFxToWinRtStreamAdapter Create(Stream stream)
+    /// <returns>The resulting <see cref="WindowsRuntimeNativeStreamAdapter"/> instance wrapping <paramref name="stream"/>.</returns>
+    public static WindowsRuntimeNativeStreamAdapter Create(Stream stream)
     {
         Debug.Assert(stream is not null);
 

@@ -14,7 +14,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// A <code>Stream</code> used to wrap a Windows Runtime stream to expose it as a managed steam.
 /// </summary>
-internal sealed partial class WinRtToNetFxStreamAdapter : Stream
+internal sealed partial class WindowsRuntimeManagedStreamAdapter : Stream
 {
     /// <summary>
     /// The Windows Runtime stream being wrapped
@@ -42,13 +42,13 @@ internal sealed partial class WinRtToNetFxStreamAdapter : Stream
     private bool _disposeNativeStream;
 
     /// <summary>
-    /// Creates a new <see cref="WinRtToNetFxStreamAdapter"/> instance with the specified parameters.
+    /// Creates a new <see cref="WindowsRuntimeManagedStreamAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="windowsRuntimeStream">The Windows Runtime stream instance to wrap.</param>
     /// <param name="canRead">Indicates whether <paramref name="windowsRuntimeStream"/> is a readable stream.</param>
     /// <param name="canWrite">Indicates whether <paramref name="windowsRuntimeStream"/> is a writeable stream.</param>
     /// <param name="canSeek">Indicates whether <paramref name="windowsRuntimeStream"/> is a stream supporting seeking.</param>
-    private WinRtToNetFxStreamAdapter(object windowsRuntimeStream, bool canRead, bool canWrite, bool canSeek)
+    private WindowsRuntimeManagedStreamAdapter(object windowsRuntimeStream, bool canRead, bool canWrite, bool canSeek)
     {
         Debug.Assert(windowsRuntimeStream is not null);
         Debug.Assert(windowsRuntimeStream is IInputStream or IOutputStream or IRandomAccessStream);
@@ -69,14 +69,14 @@ internal sealed partial class WinRtToNetFxStreamAdapter : Stream
     }
 
     /// <summary>
-    /// Creates a new <see cref="WinRtToNetFxStreamAdapter"/> instance with the specified parameters.
+    /// Creates a new <see cref="WindowsRuntimeManagedStreamAdapter"/> instance with the specified parameters.
     /// </summary>
     /// <param name="windowsRuntimeStream">The Windows Runtime stream instance to wrap.</param>
     /// <remarks>
     /// The <paramref name="windowsRuntimeStream"/> object must implement at least one of the following Windows Runtime
     /// interfaces: <see cref="IInputStream"/>, <see cref="IOutputStream"/>, or <see cref="IRandomAccessStream"/>.
     /// </remarks>
-    public static WinRtToNetFxStreamAdapter Create(object windowsRuntimeStream)
+    public static WindowsRuntimeManagedStreamAdapter Create(object windowsRuntimeStream)
     {
         Debug.Assert(windowsRuntimeStream is not null);
 
@@ -127,10 +127,10 @@ internal sealed partial class WinRtToNetFxStreamAdapter : Stream
         }
 
         // Create the managed wrapper implementation around the input Windows Runtime stream
-        return new WinRtToNetFxStreamAdapter(windowsRuntimeStream, canRead, canWrite, canSeek);
+        return new WindowsRuntimeManagedStreamAdapter(windowsRuntimeStream, canRead, canWrite, canSeek);
     }
 
-    /// <inheritdoc cref="NetFxToWinRtStreamAdapter.SetWonInitializationRace"/>
+    /// <inheritdoc cref="WindowsRuntimeNativeStreamAdapter.SetWonInitializationRace"/>
     public void SetWonInitializationRace()
     {
         _disposeNativeStream = true;

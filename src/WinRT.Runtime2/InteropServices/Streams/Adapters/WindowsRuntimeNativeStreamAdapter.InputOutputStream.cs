@@ -6,15 +6,15 @@ using Windows.Storage.Streams;
 
 namespace WindowsRuntime.InteropServices;
 
-/// <inheritdoc cref="NetFxToWinRtStreamAdapter"/>
-internal partial class NetFxToWinRtStreamAdapter
+/// <inheritdoc cref="WindowsRuntimeNativeStreamAdapter"/>
+internal partial class WindowsRuntimeNativeStreamAdapter
 {
     /// <summary>
-    /// A <see cref="NetFxToWinRtStreamAdapter"/> implementation for <see cref="IInputStream"/> and <see cref="IOutputStream"/>.
+    /// A <see cref="WindowsRuntimeNativeStreamAdapter"/> implementation for <see cref="IInputStream"/> and <see cref="IOutputStream"/>.
     /// </summary>
-    private sealed class InputOutputStream : NetFxToWinRtStreamAdapter, IInputStream, IOutputStream
+    private sealed class InputOutputStream : WindowsRuntimeNativeStreamAdapter, IInputStream, IOutputStream
     {
-        /// <inheritdoc cref="NetFxToWinRtStreamAdapter.NetFxToWinRtStreamAdapter"/>
+        /// <inheritdoc cref="WindowsRuntimeNativeStreamAdapter.WindowsRuntimeNativeStreamAdapter"/>
         /// <summary>
         /// Creates a new <see cref="InputOutputStream"/> instance with the specified parameters.
         /// </summary>

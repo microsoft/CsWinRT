@@ -9,8 +9,8 @@ using Windows.Storage.Streams;
 
 namespace WindowsRuntime.InteropServices;
 
-/// <inheritdoc cref="NetFxToWinRtStreamAdapter"/>
-internal partial class NetFxToWinRtStreamAdapter
+/// <inheritdoc cref="WindowsRuntimeNativeStreamAdapter"/>
+internal partial class WindowsRuntimeNativeStreamAdapter
 {
     /// <inheritdoc cref="IRandomAccessStream.CanRead"/>
     public bool CanRead

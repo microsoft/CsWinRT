@@ -12,8 +12,8 @@ using Windows.Storage.Streams;
 
 namespace WindowsRuntime.InteropServices;
 
-/// <inheritdoc cref="WinRtToNetFxStreamAdapter"/>
-internal partial class WinRtToNetFxStreamAdapter
+/// <inheritdoc cref="WindowsRuntimeManagedStreamAdapter"/>
+internal partial class WindowsRuntimeManagedStreamAdapter
 {
     /// <inheritdoc/>
     [SupportedOSPlatform("windows10.0.10240.0")]
