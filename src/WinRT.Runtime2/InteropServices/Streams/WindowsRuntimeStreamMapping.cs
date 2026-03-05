@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -50,6 +51,16 @@ internal static class WindowsRuntimeStreamMapping
 
             ObjectDisposedException.ThrowIfStreamIsDisposed(wrappedManagedStream);
 
+            // In debug builds, verify that the original managed stream is correctly entered
+            // into the .NET -> Windows Runtime map, so we can retrieve it on the way back.
+#if DEBUG
+            AssertMapContains(
+                map: managedToWindowsRuntimeAdapterMap,
+                key: wrappedManagedStream,
+                value: nativeAdapter,
+                valueMayBeWrappedInBufferedStream: false);
+#endif
+
             return wrappedManagedStream;
         }
 
@@ -95,6 +106,16 @@ internal static class WindowsRuntimeStreamMapping
             object? wrappedWindowsRuntimeStream = managedAdapter.GetWindowsRuntimeStream();
 
             ObjectDisposedException.ThrowIfStreamIsDisposed(wrappedWindowsRuntimeStream);
+
+            // In debug builds, verify that the original Windows Runtime stream is correctly entered
+            // into the Windows Runtime -> .NET map, so we can retrieve it on the way back as well
+#if DEBUG
+            AssertMapContains(
+                map: windowsRuntimeToManagedAdapterMap,
+                key: wrappedWindowsRuntimeStream,
+                value: managedAdapter,
+                valueMayBeWrappedInBufferedStream: true);
+#endif
 
             return wrappedWindowsRuntimeStream;
         }
@@ -213,4 +234,41 @@ internal static class WindowsRuntimeStreamMapping
                 : InvalidOperationException.GetCannotChangeBufferSizeOfStreamAdapterException(methodName);
         }
     }
+
+#if DEBUG
+    /// <summary>
+    /// Asserts that the specified key exists in the map and that the associated value matches the expected value.
+    /// </summary>
+    /// <typeparam name="TKey">The type of keys contained in the map.</typeparam>
+    /// <typeparam name="TValue">The type of values contained in the map.</typeparam>
+    /// <param name="map">The <see cref="ConditionalWeakTable{TKey, TValue}"/> instance in which to check for the key and value association.</param>
+    /// <param name="key">The key to locate in the map.</param>
+    /// <param name="value">The expected value associated with the key.</param>
+    /// <param name="valueMayBeWrappedInBufferedStream">Indicates whether the value may be wrapped in a <see cref="BufferedStream"/>.</param>
+    private static void AssertMapContains<TKey, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] TValue>(
+        ConditionalWeakTable<TKey, TValue> map,
+        TKey key,
+        TValue value,
+        bool valueMayBeWrappedInBufferedStream)
+        where TKey : class
+        where TValue : class
+    {
+        Debug.Assert(key is not null);
+
+        bool hasValueForKey = map.TryGetValue(key, out TValue? valueInMap);
+
+        Debug.Assert(hasValueForKey);
+
+        if (valueMayBeWrappedInBufferedStream)
+        {
+            BufferedStream? bufferedValueInMap = valueInMap as BufferedStream;
+
+            Debug.Assert(ReferenceEquals(value, valueInMap) || (bufferedValueInMap is not null && ReferenceEquals(value, bufferedValueInMap.UnderlyingStream)));
+        }
+        else
+        {
+            Debug.Assert(ReferenceEquals(value, valueInMap));
+        }
+    }
+#endif
 }
