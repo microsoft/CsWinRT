@@ -85,7 +85,7 @@ internal sealed partial class WinRtToNetFxStreamAdapter : Stream
         // If we can't perform any operations on the input stream, then it's invalid
         if (!canRead && !canWrite && !canSeek)
         {
-            throw new ArgumentException(SR.Argument_ObjectMustBeWinRtStreamToConvertToNetFxStream);
+            throw ArgumentException.GetObjectMustBeWinRtStreamException();
         }
 
         // Proactively guard against a non-conforming implementations
@@ -95,12 +95,12 @@ internal sealed partial class WinRtToNetFxStreamAdapter : Stream
 
             if (!canRead && randomAccessStream.CanRead)
             {
-                throw new ArgumentException(SR.Argument_InstancesImplementingIRASThatCanReadMustImplementIIS);
+                throw ArgumentException.GetCanReadStreamMustImplementIInputStreamException();
             }
 
             if (!canWrite && randomAccessStream.CanWrite)
             {
-                throw new ArgumentException(SR.Argument_InstancesImplementingIRASThatCanWriteMustImplementIOS);
+                throw ArgumentException.GetCanWriteStreamMustImplementIOutputStreamException();
             }
 
             // If we have an 'IRandomAccessStream' instance, its 'CanRead' property takes precedence here.
@@ -121,7 +121,7 @@ internal sealed partial class WinRtToNetFxStreamAdapter : Stream
         // in case we have an 'IRandomAccessStream' that specifies it can't do any of these.
         if (!canRead && !canWrite)
         {
-            throw new ArgumentException(SR.Argument_WinRtStreamCannotReadOrWrite);
+            throw ArgumentException.GetWinRtStreamCannotReadOrWriteException();
         }
 
         // Create the managed wrapper implementation around the input Windows Runtime stream
@@ -144,20 +144,6 @@ internal sealed partial class WinRtToNetFxStreamAdapter : Stream
     }
 
     /// <summary>
-    /// Asserts that the current instance has not been disposed, and fails if it was.
-    /// </summary>
-    /// <exception cref="ObjectDisposedException">Thrown if the current instance has been disposed.</exception>
-    private void AssertNotDisposed()
-    {
-        object? windowsRuntimeStream = _windowsRuntimeStream;
-
-        if (windowsRuntimeStream is null)
-        {
-            throw new ObjectDisposedException(SR.ObjectDisposed_CannotPerformOperation);
-        }
-    }
-
-    /// <summary>
     /// Ensures that the current instance has not been disposed and returns a valid stream instance.
     /// </summary>
     /// <returns>The underlying Windows Runtime stream if the current instance has not been disposed.</returns>
@@ -169,28 +155,12 @@ internal sealed partial class WinRtToNetFxStreamAdapter : Stream
 
         if (windowsRuntimeStream is null)
         {
-            throw new ObjectDisposedException(SR.ObjectDisposed_CannotPerformOperation);
+            throw ObjectDisposedException.GetStreamIsDisposedException();
         }
 
         // Same suppression as in 'NetFxToWinRtStreamAdapter.EnsureNotDisposed'
 #pragma warning disable CS8774
         return windowsRuntimeStream;
 #pragma warning restore CS8774
-    }
-
-    private void EnsureCanRead()
-    {
-        if (!_canRead)
-        {
-            throw new NotSupportedException(SR.NotSupported_CannotReadFromStream);
-        }
-    }
-
-    private void EnsureCanWrite()
-    {
-        if (!_canWrite)
-        {
-            throw new NotSupportedException(SR.NotSupported_CannotWriteToStream);
-        }
     }
 }

@@ -17,13 +17,7 @@ internal partial class NetFxToWinRtStreamAdapter
     public IAsyncOperationWithProgress<uint, uint> WriteAsync(IBuffer buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
-
-        if (buffer.Capacity < buffer.Length)
-        {
-            ArgumentException ex = new ArgumentException(SR.Argument_BufferLengthExceedsCapacity);
-            ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
-            throw ex;
-        }
+        ArgumentException.ThrowIfBufferLengthExceedsBufferCapacity(buffer.Capacity, buffer.Length);
 
         Stream managedStream = EnsureNotDisposed();
 

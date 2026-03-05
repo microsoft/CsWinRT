@@ -56,21 +56,11 @@ internal partial class NetFxToWinRtStreamAdapter
         }
         set
         {
-            if (value > long.MaxValue)
-            {
-                ArgumentException ex = new ArgumentException(SR.IO_CannotSetSizeBeyondInt64MaxValue);
-                ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
-                throw ex;
-            }
+            ArgumentException.ThrowIfSizeExceedsInt64MaxValue(value);
 
             Stream managedStream = EnsureNotDisposed();
 
-            if (!managedStream.CanWrite)
-            {
-                InvalidOperationException ex = new InvalidOperationException(SR.InvalidOperation_CannotSetStreamSizeCannotWrite);
-                ex.HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL;
-                throw ex;
-            }
+            InvalidOperationException.ThrowIfStreamCannotWriteForResize(managedStream.CanWrite);
 
             Debug.Assert(managedStream.CanSeek);
             Debug.Assert(value <= long.MaxValue);
@@ -83,27 +73,20 @@ internal partial class NetFxToWinRtStreamAdapter
     [SuppressMessage("Style", "IDE0060", Justification = "The 'position' parameter is part of the interface method signature.")]
     public IInputStream GetInputStreamAt(ulong position)
     {
-        ThrowCloningNotSupported("GetInputStreamAt");
-        return null;
+        throw NotSupportedException.GetCloningNotSupportedException("GetInputStreamAt");
     }
 
     /// <inheritdoc cref="IRandomAccessStream.GetOutputStreamAt"/>
     [SuppressMessage("Style", "IDE0060", Justification = "The 'position' parameter is part of the interface method signature.")]
     public IOutputStream GetOutputStreamAt(ulong position)
     {
-        ThrowCloningNotSupported("GetOutputStreamAt");
-        return null;
+        throw NotSupportedException.GetCloningNotSupportedException("GetOutputStreamAt");
     }
 
     /// <inheritdoc cref="IRandomAccessStream.Seek"/>
     public void Seek(ulong position)
     {
-        if (position > long.MaxValue)
-        {
-            ArgumentException ex = new ArgumentException(SR.IO_CannotSeekBeyondInt64MaxValue);
-            ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
-            throw ex;
-        }
+        ArgumentException.ThrowIfPositionExceedsInt64MaxValue(position);
 
         Stream managedStream = EnsureNotDisposed();
 
@@ -116,8 +99,7 @@ internal partial class NetFxToWinRtStreamAdapter
     /// <inheritdoc cref="IRandomAccessStream.CloneStream"/>
     public IRandomAccessStream CloneStream()
     {
-        ThrowCloningNotSupported("CloneStream");
-        return null;
+        throw NotSupportedException.GetCloningNotSupportedException("CloneStream");
     }
 
     // We do not want to support the cloning-related operation for now.
@@ -126,10 +108,4 @@ internal partial class NetFxToWinRtStreamAdapter
     // for IRandonAccessStream.
     // Cloning can be added in future, however, it would be quite complex
     // to support it correctly for generic streams.
-    private static void ThrowCloningNotSupported(string methodName)
-    {
-        NotSupportedException nse = new NotSupportedException(string.Format(SR.NotSupported_CloningNotSupported, methodName));
-        nse.HResult = WellKnownErrorCodes.E_NOTIMPL;
-        throw nse;
-    }
 }

@@ -22,13 +22,13 @@ internal partial class WinRtToNetFxStreamAdapter
     {
         ArgumentNullException.ThrowIfNull(asyncResult);
 
-        AssertNotDisposed();
-        EnsureCanRead();
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream is null);
+        NotSupportedException.ThrowIfStreamCannotRead(_canRead);
 
         // We can only perform this operation if we have our own async result instance
         if (asyncResult is not StreamOperationAsyncResult streamAsyncResult)
         {
-            throw new ArgumentException(SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
+            throw ArgumentException.GetUnexpectedAsyncResultException(nameof(asyncResult));
         }
 
         streamAsyncResult.Wait();
@@ -72,14 +72,9 @@ internal partial class WinRtToNetFxStreamAdapter
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
-
-        if (buffer.Length - offset < count)
-        {
-            throw new ArgumentException(SR.Argument_InsufficientSpaceInTargetBuffer);
-        }
-
-        AssertNotDisposed();
-        EnsureCanRead();
+        ArgumentException.ThrowIfInsufficientSpaceInTargetBuffer(buffer.Length, offset, count);
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream is null);
+        NotSupportedException.ThrowIfStreamCannotRead(_canRead);
 
         // If already cancelled, bail early:
         cancellationToken.ThrowIfCancellationRequested();
@@ -135,14 +130,9 @@ internal partial class WinRtToNetFxStreamAdapter
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
-
-        if (buffer.Length - offset < count)
-        {
-            throw new ArgumentException(SR.Argument_InsufficientSpaceInTargetBuffer);
-        }
-
-        AssertNotDisposed();
-        EnsureCanRead();
+        ArgumentException.ThrowIfInsufficientSpaceInTargetBuffer(buffer.Length, offset, count);
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream is null);
+        NotSupportedException.ThrowIfStreamCannotRead(_canRead);
 
         StreamReadAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
         {

@@ -27,10 +27,7 @@ internal partial class WinRtToNetFxStreamAdapter
         {
             IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
-            if (!_canSeek)
-            {
-                throw new NotSupportedException(SR.NotSupported_CannotUseLength_StreamNotSeekable);
-            }
+            NotSupportedException.ThrowIfStreamCannotUseLength(_canSeek);
 
             Debug.Assert(wrtStr != null);
 
@@ -39,7 +36,7 @@ internal partial class WinRtToNetFxStreamAdapter
             // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
             if (size > long.MaxValue)
             {
-                throw new IOException(SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+                throw IOException.GetUnderlyingWinRTStreamTooLongException();
             }
 
             return unchecked((long)size);
@@ -53,10 +50,7 @@ internal partial class WinRtToNetFxStreamAdapter
         {
             IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
-            if (!_canSeek)
-            {
-                throw new NotSupportedException(SR.NotSupported_CannotUsePosition_StreamNotSeekable);
-            }
+            NotSupportedException.ThrowIfStreamCannotUsePosition(_canSeek);
 
             Debug.Assert(wrtStr != null);
 
@@ -65,24 +59,18 @@ internal partial class WinRtToNetFxStreamAdapter
             // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
             if (pos > long.MaxValue)
             {
-                throw new IOException(SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+                throw IOException.GetUnderlyingWinRTStreamTooLongException();
             }
 
             return unchecked((long)pos);
         }
         set
         {
-            if (value < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(Position), SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
-            }
+            ArgumentOutOfRangeException.ThrowIfNegativeStreamPosition(value);
 
             IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
-            if (!_canSeek)
-            {
-                throw new NotSupportedException(SR.NotSupported_CannotUsePosition_StreamNotSeekable);
-            }
+            NotSupportedException.ThrowIfStreamCannotUsePosition(_canSeek);
 
             Debug.Assert(wrtStr != null);
 
@@ -93,19 +81,12 @@ internal partial class WinRtToNetFxStreamAdapter
     /// <inheritdoc/>
     public override void SetLength(long value)
     {
-        if (value < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(value), SR.ArgumentOutOfRange_CannotResizeStreamToNegative);
-        }
+        ArgumentOutOfRangeException.ThrowIfNegativeStreamLength(value);
 
         IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
-        if (!_canSeek)
-        {
-            throw new NotSupportedException(SR.NotSupported_CannotSeekInStream);
-        }
-
-        EnsureCanWrite();
+        NotSupportedException.ThrowIfStreamCannotSeek(_canSeek);
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
         Debug.Assert(wrtStr != null);
 
@@ -124,10 +105,7 @@ internal partial class WinRtToNetFxStreamAdapter
     {
         IRandomAccessStream wrtStr = (IRandomAccessStream)EnsureNotDisposed();
 
-        if (!_canSeek)
-        {
-            throw new NotSupportedException(SR.NotSupported_CannotSeekInStream);
-        }
+        NotSupportedException.ThrowIfStreamCannotSeek(_canSeek);
 
         // Helper for seeking from the start of the stream
         static long ComputeBeginSeek(long offset) => offset;
@@ -139,14 +117,14 @@ internal partial class WinRtToNetFxStreamAdapter
 
             if (long.MaxValue - currentPosition < offset)
             {
-                throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                throw IOException.GetCannotSeekBeyondInt64MaxValueException();
             }
 
             long newPosition = currentPosition + offset;
 
             if (newPosition < 0)
             {
-                throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+                throw IOException.GetCannotSeekToNegativePositionException();
             }
 
             return newPosition;
@@ -164,7 +142,7 @@ internal partial class WinRtToNetFxStreamAdapter
             {
                 if (offset >= 0)
                 {
-                    throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                    throw IOException.GetCannotSeekBeyondInt64MaxValueException();
                 }
 
                 ulong absoluteOffset = (offset == long.MinValue) ? ((ulong)long.MaxValue) + 1 : (ulong)-offset;
@@ -175,7 +153,7 @@ internal partial class WinRtToNetFxStreamAdapter
 
                 if (newPositionNative > long.MaxValue)
                 {
-                    throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                    throw IOException.GetCannotSeekBeyondInt64MaxValueException();
                 }
 
                 newPosition = (long)newPositionNative;
@@ -187,14 +165,14 @@ internal partial class WinRtToNetFxStreamAdapter
 
                 if (long.MaxValue - size < offset)
                 {
-                    throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                    throw IOException.GetCannotSeekBeyondInt64MaxValueException();
                 }
 
                 newPosition = size + offset;
 
                 if (newPosition < 0)
                 {
-                    throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+                    throw IOException.GetCannotSeekToNegativePositionException();
                 }
             }
 
@@ -206,7 +184,7 @@ internal partial class WinRtToNetFxStreamAdapter
             SeekOrigin.Begin => ComputeBeginSeek(offset),
             SeekOrigin.Current => ComputeCurrentSeek(offset),
             SeekOrigin.End => ComputeEndSeek(offset, wrtStr),
-            _ => throw new ArgumentException(SR.Argument_InvalidSeekOrigin, nameof(origin))
+            _ => throw ArgumentException.GetInvalidSeekOriginException(nameof(origin))
         };
 
         Position = position;

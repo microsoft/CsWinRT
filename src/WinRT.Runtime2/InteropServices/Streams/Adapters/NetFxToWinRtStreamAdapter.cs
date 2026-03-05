@@ -74,7 +74,7 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
             { CanRead: true, CanWrite: true } => new InputOutputStream(stream, readOptimization),
             { CanRead: true } => new InputStream(stream, readOptimization),
             { CanWrite: true } => new OutputStream(stream, readOptimization),
-            _ => throw new ArgumentException(SR.Argument_NotSufficientCapabilitiesToConvertToWinRtStream)
+            _ => throw ArgumentException.GetNotSufficientCapabilitiesToConvertToWinRtStreamException()
         };
     }
 
@@ -132,9 +132,7 @@ internal abstract partial class NetFxToWinRtStreamAdapter : IDisposable
 
         if (managedStream is null)
         {
-            ObjectDisposedException ex = new ObjectDisposedException(SR.ObjectDisposed_CannotPerformOperation);
-            ex.HResult = WellKnownErrorCodes.RO_E_CLOSED;
-            throw ex;
+            throw ObjectDisposedException.GetStreamIsClosedException();
         }
 
         // This method throws if the stream is 'null', meaning it will only ever return if

@@ -17,27 +17,9 @@ internal partial class NetFxToWinRtStreamAdapter
     public IAsyncOperationWithProgress<IBuffer, uint> ReadAsync(IBuffer buffer, uint count, InputStreamOptions options)
     {
         ArgumentNullException.ThrowIfNull(buffer);
-
-        if (count is < 0 or > int.MaxValue)
-        {
-            ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(count));
-            ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
-            throw ex;
-        }
-
-        if (buffer.Capacity < count)
-        {
-            ArgumentException ex = new ArgumentException(SR.Argument_InsufficientBufferCapacity);
-            ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
-            throw ex;
-        }
-
-        if (!(options == InputStreamOptions.None || options == InputStreamOptions.Partial || options == InputStreamOptions.ReadAhead))
-        {
-            ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(options), SR.ArgumentOutOfRange_InvalidInputStreamOptionsEnumValue);
-            ex.HResult = WellKnownErrorCodes.E_INVALIDARG;
-            throw ex;
-        }
+        ArgumentOutOfRangeException.ThrowIfCountExceedsInt32MaxValue(count);
+        ArgumentException.ThrowIfBufferCapacityInsufficient(buffer.Capacity, count);
+        ArgumentOutOfRangeException.ThrowIfInvalidInputStreamOptions(options);
 
         Stream managedStream = EnsureNotDisposed();
 

@@ -233,7 +233,7 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
             }
             else
             {
-                throw new InvalidOperationException(SR.InvalidOperation_CannotCallThisMethodInCurrentState);
+                throw InvalidOperationException.GetCannotCallThisMethodInCurrentStateException();
             }
         }
 
@@ -317,7 +317,7 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
             // Ensure that this is the first time this callback is being invoked
             if (_callbackInvoked)
             {
-                throw new InvalidOperationException(SR.InvalidOperation_MultipleIOCompletionCallbackInvocation);
+                throw InvalidOperationException.GetMultipleIOCompletionCallbackInvocationException();
             }
 
             _callbackInvoked = true;
@@ -329,7 +329,7 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
             // a much more useful exception will be reported to the user, to inform them of exactly what went wrong and why.
             if (asyncInfo is null)
             {
-                throw new ArgumentNullException(nameof(asyncInfo), SR.ArgumentNullReference_IOCompletionCallbackCannotProcessNullAsyncInfo);
+                throw ArgumentNullException.GetIOCompletionCallbackCannotProcessNullAsyncInfoException(nameof(asyncInfo));
             }
 
             _completedOperation = asyncInfo;

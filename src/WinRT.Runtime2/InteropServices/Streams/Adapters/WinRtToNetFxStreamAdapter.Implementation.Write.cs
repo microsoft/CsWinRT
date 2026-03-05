@@ -33,14 +33,10 @@ internal partial class WinRtToNetFxStreamAdapter
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
-
-        if (buffer.Length - offset < count)
-        {
-            throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
-        }
+        ArgumentException.ThrowIfInsufficientArrayElementsAfterOffset(buffer.Length, offset, count);
 
         IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
-        EnsureCanWrite();
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
         Debug.Assert(wrtStr != null);
 
@@ -66,13 +62,13 @@ internal partial class WinRtToNetFxStreamAdapter
     {
         ArgumentNullException.ThrowIfNull(asyncResult);
 
-        AssertNotDisposed();
-        EnsureCanWrite();
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream is null);
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
         // We can only perform this operation if we have our own async result instance
         if (asyncResult is not StreamOperationAsyncResult streamAsyncResult)
         {
-            throw new ArgumentException(SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
+            throw ArgumentException.GetUnexpectedAsyncResultException(nameof(asyncResult));
         }
 
         streamAsyncResult.Wait();
@@ -109,14 +105,10 @@ internal partial class WinRtToNetFxStreamAdapter
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
-
-        if (buffer.Length - offset < count)
-        {
-            throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
-        }
+        ArgumentException.ThrowIfInsufficientArrayElementsAfterOffset(buffer.Length, offset, count);
 
         IOutputStream wrtStr = (IOutputStream)EnsureNotDisposed();
-        EnsureCanWrite();
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
         // If already cancelled, bail early:
         cancellationToken.ThrowIfCancellationRequested();
