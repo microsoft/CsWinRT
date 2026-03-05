@@ -33,7 +33,7 @@ internal static class WindowsRuntimeIOHelpers
         // If it instead it just gave us a generic 'Exception', we assume that it hit a general or
         // unknown case, and wrap it into an 'IOException', as this is what 'Stream' users expect.
         // 
-        // We will return a captured 'ExceptionDispatchInfo' object that users can invoke 'Throw()' on
+        // We will return a captured 'ExceptionDispatchInfo' object that users can invoke 'Throw()' on.
         if (exception.GetType() != typeof(Exception))
         {
             return ExceptionDispatchInfo.Capture(exception);
