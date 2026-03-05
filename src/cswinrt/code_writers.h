@@ -10404,6 +10404,10 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
 
     void write_factory_class(writer& w, TypeDef const& type)
     {
+        if (is_removed(type))
+        {
+            return;
+        }
         auto factory_type_name = write_type_name_temp(w, type, "%ServerActivationFactory", typedef_name_type::CCW);
         auto is_activatable = !is_static(type) && has_default_constructor(type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);

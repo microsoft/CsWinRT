@@ -394,6 +394,36 @@ if (-not $buildSuccess -and $hasErrors) {
 Remove-Item $compileDir -Recurse -Force -ErrorAction SilentlyContinue
 
 # ============================================================================
+# Step 18: Component generation excludes removed classes
+# ============================================================================
+Write-Host "`n=== Step 18: Component activation factory excludes removed classes ===" -ForegroundColor Cyan
+
+$componentDir = "$testDir\component_output"
+New-Item -ItemType Directory -Force $componentDir | Out-Null
+& $CsWinRTExe -input $winmd -input local -include DeprecatedRemovedTest -output $componentDir -component 2>&1 | Out-Null
+
+$moduleFile = "$componentDir\WinRT_Module.cs"
+Test-Result (Test-Path $moduleFile) `
+    "WinRT_Module.cs generated in component mode"
+
+if (Test-Path $moduleFile) {
+    $moduleContent = Get-Content $moduleFile -Raw
+
+    # RemovedClass must NOT appear in the activation factory
+    Test-Result ($moduleContent -notmatch 'RemovedClass') `
+        "RemovedClass excluded from component activation factory"
+
+    # Normal and deprecated classes MUST still appear
+    Test-Result ($moduleContent -match 'TestClass') `
+        "TestClass present in component activation factory"
+    Test-Result ($moduleContent -match 'DeprecatedClass') `
+        "DeprecatedClass present in component activation factory"
+}
+
+# Cleanup component output
+Remove-Item $componentDir -Recurse -Force -ErrorAction SilentlyContinue
+
+# ============================================================================
 # Summary
 # ============================================================================
 Write-Host "`n=== Summary ===" -ForegroundColor Cyan
