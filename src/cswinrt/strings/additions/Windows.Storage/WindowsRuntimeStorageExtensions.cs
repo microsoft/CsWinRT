@@ -184,9 +184,11 @@ namespace Windows.Storage.IO
                     // Now open a file with the correct options
                     return await OpenStreamForWriteCoreAsync(windowsRuntimeFile, offset).ConfigureAwait(false);
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (exception is not IOException)
                 {
-                    // Throw an 'IOException' (see notes above)
+                    // Throw an 'IOException' (see notes above). We use a filter here to avoid unnecessarily
+                    // re-throwing if we already have an 'IOException', since here we're also calling the
+                    // 'OpenStreamForWriteCoreAsync' helper, which will always throw that exception already.
                     WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(exception).Throw();
 
                     return null;
