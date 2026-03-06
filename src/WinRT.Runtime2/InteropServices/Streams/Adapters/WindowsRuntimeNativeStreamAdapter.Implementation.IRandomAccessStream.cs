@@ -69,6 +69,12 @@ internal partial class WindowsRuntimeNativeStreamAdapter
         }
     }
 
+    // We do not want to support the cloning-related operation for now.
+    // They appear to mainly target corner-case scenarios in Windows itself,
+    // and are (mainly) a historical artefact of abandoned early designs
+    // for IRandomAccessStream. Cloning can be added in future, however, it
+    // would be quite complex to support it correctly for generic streams.
+
     /// <inheritdoc cref="IRandomAccessStream.GetInputStreamAt"/>
     [SuppressMessage("Style", "IDE0060", Justification = "The 'position' parameter is part of the interface method signature.")]
     public IInputStream GetInputStreamAt(ulong position)
@@ -101,11 +107,4 @@ internal partial class WindowsRuntimeNativeStreamAdapter
     {
         throw NotSupportedException.GetCloningNotSupportedException("CloneStream");
     }
-
-    // We do not want to support the cloning-related operation for now.
-    // They appear to mainly target corner-case scenarios in Windows itself,
-    // and are (mainly) a historical artefact of abandoned early designs
-    // for IRandomAccessStream.
-    // Cloning can be added in future, however, it would be quite complex
-    // to support it correctly for generic streams.
 }
