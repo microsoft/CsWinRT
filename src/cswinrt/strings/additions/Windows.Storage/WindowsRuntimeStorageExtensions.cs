@@ -82,12 +82,7 @@ namespace Windows.Storage.IO
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFolder rootDirectory, string relativePath)
         {
             ArgumentNullException.ThrowIfNull(rootDirectory);
-            ArgumentNullException.ThrowIfNull(relativePath);
-
-            if (string.IsNullOrWhiteSpace(relativePath))
-            {
-                throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
-            }
+            ArgumentException.ThrowIfNullOrWhiteSpace(relativePath);
 
             // Helper with the actual read logic
             [SupportedOSPlatform("windows10.0.10240.0")]
@@ -133,12 +128,7 @@ namespace Windows.Storage.IO
             CreationCollisionOption creationCollisionOption)
         {
             ArgumentNullException.ThrowIfNull(rootDirectory);
-            ArgumentNullException.ThrowIfNull(relativePath);
-
-            if (string.IsNullOrWhiteSpace(relativePath))
-            {
-                throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
-            }
+            ArgumentException.ThrowIfNullOrWhiteSpace(relativePath);
 
             // Helper with the actual write logic
             [SupportedOSPlatform("windows10.0.10240.0")]
