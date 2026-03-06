@@ -16,10 +16,10 @@ internal partial class MethodRewriteInfo
     /// <see cref="Rewriters.InteropMethodRewriter.NativeParameter.RewriteMethod"/>
     public sealed class NativeParameter : MethodRewriteInfo
     {
-        /// <summary><inheritdoc cref="Rewriters.InteropMethodRewriter.ReturnValue.RewriteMethod" path="/param[@name='tryMarker']/node()"/></summary>
+        /// <summary><inheritdoc cref="Rewriters.InteropMethodRewriter.NativeParameter.RewriteMethod" path="/param[@name='tryMarker']/node()"/></summary>
         public required CilInstruction TryMarker { get; init; }
 
-        /// <summary><inheritdoc cref="Rewriters.InteropMethodRewriter.ReturnValue.RewriteMethod" path="/param[@name='finallyMarker']/node()"/></summary>
+        /// <summary><inheritdoc cref="Rewriters.InteropMethodRewriter.NativeParameter.RewriteMethod" path="/param[@name='finallyMarker']/node()"/></summary>
         public required CilInstruction FinallyMarker { get; init; }
 
         /// <summary><inheritdoc cref="Rewriters.InteropMethodRewriter.NativeParameter.RewriteMethod" path="/param[@name='parameterIndex']/node()"/></summary>
