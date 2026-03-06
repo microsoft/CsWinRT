@@ -103,6 +103,11 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         // If already cancelled, stop early
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (count == 0)
+        {
+            return Task.CompletedTask;
+        }
+
         IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
         IBuffer asyncWriteBuffer = buffer.AsBuffer(offset, count);
@@ -166,7 +171,17 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     [SupportedOSPlatform("windows10.0.10240.0")]
     public override void Write(byte[] buffer, int offset, int count)
     {
-        // Arguments validation and disposal validation are done in 'BeginWrite'
+        ArgumentNullException.ThrowIfNull(buffer);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        ArgumentException.ThrowIfInsufficientArrayElementsAfterOffset(buffer.Length, offset, count);
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
+
+        if (count == 0)
+        {
+            return;
+        }
 
         StreamWriteAsyncResult asyncResult = BeginWrite(buffer, offset, count, null, null, usedByBlockingWrapper: true);
 

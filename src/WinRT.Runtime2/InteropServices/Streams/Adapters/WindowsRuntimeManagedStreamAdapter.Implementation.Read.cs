@@ -80,6 +80,11 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         // If already cancelled, stop early
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (count == 0)
+        {
+            return Task.FromResult(0);
+        }
+
         // Helper to perform the actual asynchronous read operation
         async Task<int> ReadCoreAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
@@ -210,6 +215,11 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         ArgumentException.ThrowIfInsufficientSpaceInTargetBuffer(buffer.Length, offset, count);
         ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
         NotSupportedException.ThrowIfStreamCannotRead(_canRead);
+
+        if (count == 0)
+        {
+            return 0;
+        }
 
         // Helper to do a sync-over-async read operation
         StreamReadAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
