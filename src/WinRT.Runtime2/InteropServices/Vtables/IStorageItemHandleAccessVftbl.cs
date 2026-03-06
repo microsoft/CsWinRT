@@ -17,7 +17,7 @@ internal unsafe struct IStorageItemHandleAccessVftbl
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
-    public delegate* unmanaged[MemberFunction]<void*, HANDLE_ACCESS_OPTIONS, HANDLE_SHARING_OPTIONS, HANDLE_OPTIONS, nint, nint*, HRESULT> Create;
+    public delegate* unmanaged[MemberFunction]<void*, HANDLE_ACCESS_OPTIONS, HANDLE_SHARING_OPTIONS, HANDLE_OPTIONS, void*, HANDLE*, HRESULT> Create;
 
     /// <summary>
     /// Creates a handle for a random access stream for the storage item.
@@ -30,7 +30,13 @@ internal unsafe struct IStorageItemHandleAccessVftbl
     /// <param name="interopHandle">The resulting file handle.</param>
     /// <returns>If this method succeeds, it returns <c>S_OK</c>. Otherwise, it returns an <c>HRESULT</c> error code.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static HRESULT CreateUnsafe(void* thisPtr, HANDLE_ACCESS_OPTIONS accessOptions, HANDLE_SHARING_OPTIONS sharingOptions, HANDLE_OPTIONS options, nint oplockBreakingHandler, nint* interopHandle)
+    public static HRESULT CreateUnsafe(
+        void* thisPtr,
+        HANDLE_ACCESS_OPTIONS accessOptions,
+        HANDLE_SHARING_OPTIONS sharingOptions,
+        HANDLE_OPTIONS options,
+        void* oplockBreakingHandler,
+        HANDLE* interopHandle)
     {
         return ((IStorageItemHandleAccessVftbl*)*(void***)thisPtr)->Create(thisPtr, accessOptions, sharingOptions, options, oplockBreakingHandler, interopHandle);
     }

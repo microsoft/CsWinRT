@@ -39,13 +39,13 @@ public static unsafe class IStorageFolderHandleAccessMethods
         FileOptions options)
     {
         return Create(
-            storageFolder,
-            fileName,
-            WindowsRuntimeStorageHelpers.FileModeToHandleCreationOptions(mode),
-            WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access),
-            WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share),
-            WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options),
-            0);
+            storageFolder: storageFolder,
+            fileName: fileName,
+            creationOptions: WindowsRuntimeStorageHelpers.FileModeToHandleCreationOptions(mode),
+            accessOptions: WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access),
+            sharingOptions: WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share),
+            options: WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options),
+            oplockBreakingHandler: null);
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public static unsafe class IStorageFolderHandleAccessMethods
         HANDLE_ACCESS_OPTIONS accessOptions,
         HANDLE_SHARING_OPTIONS sharingOptions,
         HANDLE_OPTIONS options,
-        nint oplockBreakingHandler)
+        void* oplockBreakingHandler)
     {
         if (!storageFolder.HasUnwrappableNativeObjectReference)
         {
@@ -78,7 +78,7 @@ public static unsafe class IStorageFolderHandleAccessMethods
             return null;
         }
 
-        nint interopHandle = 0;
+        HANDLE interopHandle;
 
         try
         {
@@ -86,7 +86,7 @@ public static unsafe class IStorageFolderHandleAccessMethods
             {
                 RestrictedErrorInfo.ThrowExceptionForHR(IStorageFolderHandleAccessVftbl.CreateUnsafe(
                     thisPtr,
-                    (nint)fileNamePtr,
+                    fileNamePtr,
                     creationOptions,
                     accessOptions,
                     sharingOptions,
@@ -100,6 +100,6 @@ public static unsafe class IStorageFolderHandleAccessMethods
             _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
         }
 
-        return new SafeFileHandle(interopHandle, ownsHandle: true);
+        return new(interopHandle, ownsHandle: true);
     }
 }

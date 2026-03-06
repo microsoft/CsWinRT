@@ -35,11 +35,11 @@ public static unsafe class IStorageItemHandleAccessMethods
         FileOptions options)
     {
         return Create(
-            storageItem,
-            WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access),
-            WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share),
-            WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options),
-            0);
+            storageItem: storageItem,
+            accessOptions: WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access),
+            sharingOptions: WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share),
+            options: WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options),
+            oplockBreakingHandler: null);
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public static unsafe class IStorageItemHandleAccessMethods
         HANDLE_ACCESS_OPTIONS accessOptions,
         HANDLE_SHARING_OPTIONS sharingOptions,
         HANDLE_OPTIONS options,
-        nint oplockBreakingHandler)
+        void* oplockBreakingHandler)
     {
         if (!storageItem.HasUnwrappableNativeObjectReference)
         {
@@ -68,7 +68,7 @@ public static unsafe class IStorageItemHandleAccessMethods
             return null;
         }
 
-        nint interopHandle = 0;
+        HANDLE interopHandle;
 
         try
         {
@@ -85,6 +85,6 @@ public static unsafe class IStorageItemHandleAccessMethods
             _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
         }
 
-        return new SafeFileHandle(interopHandle, ownsHandle: true);
+        return new(interopHandle, ownsHandle: true);
     }
 }
