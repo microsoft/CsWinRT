@@ -596,6 +596,18 @@ internal static class WindowsRuntimeExceptionExtensions
                 ThrowArgumentOutOfRangeException(paramName, mode);
             }
         }
+
+        /// <summary>
+        /// Creates a new <see cref="ArgumentOutOfRangeException"/> for an invalid <see cref="FileAccess"/> value.
+        /// </summary>
+        /// <param name="paramName">The name of the parameter that caused the exception.</param>
+        /// <param name="access">The invalid <see cref="FileAccess"/> value.</param>
+        /// <returns>The resulting <see cref="ArgumentOutOfRangeException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ArgumentOutOfRangeException GetFileAccessOutOfRangeException(string? paramName, FileAccess access)
+        {
+            return new ArgumentOutOfRangeException(paramName, access, null);
+        }
     }
 
     extension(KeyNotFoundException)

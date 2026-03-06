@@ -26,7 +26,7 @@ internal static class WindowsRuntimeStorageOptionsExtensions
                 FileAccess.ReadWrite => HANDLE_ACCESS_OPTIONS.HAO_READ | HANDLE_ACCESS_OPTIONS.HAO_WRITE,
                 FileAccess.Read => HANDLE_ACCESS_OPTIONS.HAO_READ,
                 FileAccess.Write => HANDLE_ACCESS_OPTIONS.HAO_WRITE,
-                _ => throw new ArgumentOutOfRangeException(nameof(access), access, null),
+                _ => throw ArgumentOutOfRangeException.GetFileAccessOutOfRangeException(nameof(access), access),
             };
         }
     }
