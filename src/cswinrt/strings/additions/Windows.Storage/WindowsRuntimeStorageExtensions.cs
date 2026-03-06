@@ -5,7 +5,7 @@ namespace Windows.Storage.IO
 {
     using global::System.Diagnostics;
     using global::System.IO;
-    using global::System.Runtime.InteropServices;
+
     using global::System.Runtime.Versioning;
     using global::System.Threading.Tasks;
     using global::Microsoft.Win32.SafeHandles;
@@ -132,7 +132,7 @@ namespace Windows.Storage.IO
 
             // Helper with the actual write logic
             [SupportedOSPlatform("windows10.0.10240.0")]
-            private static async Task<Stream> OpenStreamForWriteCoreAsync(
+            static async Task<Stream> OpenStreamForWriteCoreAsync(
                 IStorageFolder rootDirectory,
                 string relativePath,
                 CreationCollisionOption creationCollisionOption)
@@ -166,7 +166,7 @@ namespace Windows.Storage.IO
 
                         ulong fileSize = fileProperties.Size;
 
-                        Debug.Assert(fileSize <= long.MaxValue, ".NET streams assume that file sizes are not larger than 'long.MaxValue.");
+                        Debug.Assert(fileSize <= long.MaxValue, ".NET streams assume that file sizes are not larger than 'long.MaxValue'.");
 
                         offset = checked((long)fileSize);
                     }
