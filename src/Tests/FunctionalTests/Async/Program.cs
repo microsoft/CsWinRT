@@ -183,12 +183,9 @@ if (!progressCalledWithExpectedResults)
         return 118;
     }
 
-    for (int i = 0; i < data.Length; i++)
+    if (!data.SequenceEqual(spanRead))
     {
-        if (data[i] != spanRead[i])
-        {
-            return 119;
-        }
+        return 119;
     }
 
     // Test WriteAsync(ReadOnlyMemory<byte>) and ReadAsync(Memory<byte>)
@@ -204,12 +201,9 @@ if (!progressCalledWithExpectedResults)
         return 120;
     }
 
-    for (int i = 0; i < data.Length; i++)
+    if (!data.SequenceEqual(memoryRead.Span))
     {
-        if (data[i] != memoryRead.Span[i])
-        {
-            return 121;
-        }
+        return 121;
     }
 
     // Test ReadByte/WriteByte (which delegate to span overrides)
