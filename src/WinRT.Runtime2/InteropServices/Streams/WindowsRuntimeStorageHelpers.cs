@@ -17,13 +17,13 @@ internal static class WindowsRuntimeStorageHelpers
     /// <param name="access">The <see cref="FileAccess"/> value to convert.</param>
     /// <returns>The corresponding <see cref="HANDLE_ACCESS_OPTIONS"/> value.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="access"/> is not a valid value.</exception>
-    public static uint FileAccessToHandleAccessOptions(FileAccess access)
+    public static HANDLE_ACCESS_OPTIONS FileAccessToHandleAccessOptions(FileAccess access)
     {
         return access switch
         {
-            FileAccess.ReadWrite => (uint)(HANDLE_ACCESS_OPTIONS.HAO_READ | HANDLE_ACCESS_OPTIONS.HAO_WRITE),
-            FileAccess.Read => (uint)HANDLE_ACCESS_OPTIONS.HAO_READ,
-            FileAccess.Write => (uint)HANDLE_ACCESS_OPTIONS.HAO_WRITE,
+            FileAccess.ReadWrite => HANDLE_ACCESS_OPTIONS.HAO_READ | HANDLE_ACCESS_OPTIONS.HAO_WRITE,
+            FileAccess.Read => HANDLE_ACCESS_OPTIONS.HAO_READ,
+            FileAccess.Write => HANDLE_ACCESS_OPTIONS.HAO_WRITE,
             _ => throw new ArgumentOutOfRangeException(nameof(access), access, null),
         };
     }
@@ -35,7 +35,7 @@ internal static class WindowsRuntimeStorageHelpers
     /// <returns>The corresponding <see cref="HANDLE_SHARING_OPTIONS"/> value.</returns>
     /// <exception cref="NotSupportedException">Thrown if <paramref name="share"/> has the <see cref="FileShare.Inheritable"/> flag.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="share"/> is not a valid combination of flags.</exception>
-    public static uint FileShareToHandleSharingOptions(FileShare share)
+    public static HANDLE_SHARING_OPTIONS FileShareToHandleSharingOptions(FileShare share)
     {
         NotSupportedException.ThrowIfFileShareIsInheritable(share);
         ArgumentOutOfRangeException.ThrowIfFileShareOutOfRange(share);
@@ -57,7 +57,7 @@ internal static class WindowsRuntimeStorageHelpers
             sharingOptions |= HANDLE_SHARING_OPTIONS.HSO_SHARE_DELETE;
         }
 
-        return (uint)sharingOptions;
+        return sharingOptions;
     }
 
     /// <summary>
@@ -67,12 +67,12 @@ internal static class WindowsRuntimeStorageHelpers
     /// <returns>The corresponding <see cref="HANDLE_OPTIONS"/> value.</returns>
     /// <exception cref="NotSupportedException">Thrown if <paramref name="options"/> has the <see cref="FileOptions.Encrypted"/> flag.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="options"/> contains unsupported flags.</exception>
-    public static uint FileOptionsToHandleOptions(FileOptions options)
+    public static HANDLE_OPTIONS FileOptionsToHandleOptions(FileOptions options)
     {
         NotSupportedException.ThrowIfFileOptionsAreEncrypted(options);
         ArgumentOutOfRangeException.ThrowIfFileOptionsOutOfRange(options);
 
-        return (uint)options;
+        return (HANDLE_OPTIONS)(uint)options;
     }
 
     /// <summary>
@@ -81,12 +81,12 @@ internal static class WindowsRuntimeStorageHelpers
     /// <param name="mode">The <see cref="FileMode"/> value to convert.</param>
     /// <returns>The corresponding <see cref="HANDLE_CREATION_OPTIONS"/> value.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="mode"/> is not a valid value.</exception>
-    public static uint FileModeToHandleCreationOptions(FileMode mode)
+    public static HANDLE_CREATION_OPTIONS FileModeToHandleCreationOptions(FileMode mode)
     {
         ArgumentOutOfRangeException.ThrowIfFileModeOutOfRange(mode);
 
         return mode == FileMode.Append
-            ? (uint)HANDLE_CREATION_OPTIONS.HCO_CREATE_ALWAYS
-            : (uint)mode;
+            ? HANDLE_CREATION_OPTIONS.HCO_CREATE_ALWAYS
+            : (HANDLE_CREATION_OPTIONS)(uint)mode;
     }
 }

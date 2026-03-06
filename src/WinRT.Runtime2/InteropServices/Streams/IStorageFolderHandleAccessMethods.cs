@@ -62,10 +62,10 @@ public static unsafe class IStorageFolderHandleAccessMethods
     private static SafeFileHandle? Create(
         WindowsRuntimeObject storageFolder,
         string fileName,
-        uint creationOptions,
-        uint accessOptions,
-        uint sharingOptions,
-        uint options,
+        HANDLE_CREATION_OPTIONS creationOptions,
+        HANDLE_ACCESS_OPTIONS accessOptions,
+        HANDLE_SHARING_OPTIONS sharingOptions,
+        HANDLE_OPTIONS options,
         nint oplockBreakingHandler)
     {
         if (!storageFolder.HasUnwrappableNativeObjectReference)

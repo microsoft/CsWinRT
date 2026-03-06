@@ -53,9 +53,9 @@ public static unsafe class IStorageItemHandleAccessMethods
     /// <returns>A <see cref="SafeFileHandle"/> for the storage item, or <see langword="null"/> if the operation failed.</returns>
     private static SafeFileHandle? Create(
         WindowsRuntimeObject storageItem,
-        uint accessOptions,
-        uint sharingOptions,
-        uint options,
+        HANDLE_ACCESS_OPTIONS accessOptions,
+        HANDLE_SHARING_OPTIONS sharingOptions,
+        HANDLE_OPTIONS options,
         nint oplockBreakingHandler)
     {
         if (!storageItem.HasUnwrappableNativeObjectReference)
