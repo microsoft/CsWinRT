@@ -254,7 +254,7 @@ internal static partial class ImplGenerator
             foreach (TypeDefinition exportedType in inputModule.TopLevelTypes)
             {
                 // We only need to forward public types
-                if (!exportedType.IsPublic && !IsForwardedInternalType(exportedType))
+                if (!exportedType.IsPublic)
                 {
                     continue;
                 }
@@ -273,24 +273,6 @@ internal static partial class ImplGenerator
         {
             throw WellKnownImplExceptions.EmitTypeForwards(e);
         }
-    }
-
-    /// <summary>
-    /// There are a couple types in the Windows SDK projection which are not public and vtables are generated for.
-    /// This checks whether it is one of those by checking the namespace.
-    /// </summary>
-    /// <param name="exportedType">The type to check.</param>
-    /// <returns>Whether the namespace for <paramref name="exportedType"/> is one of the forwarded internal types.</returns>
-    private static bool IsForwardedInternalType(TypeDefinition exportedType)
-    {
-        // Ignore all types which are not classes, as well as static classes ('abstract sealed' in IL)
-        if (!exportedType.IsClass || (exportedType.IsAbstract && exportedType.IsSealed))
-        {
-            return false;
-        }
-
-        // Match the special namespaces for well-known types
-        return exportedType.Namespace?.Value is "System.IO" or "Windows.Storage.Streams";
     }
 
     /// <summary>
