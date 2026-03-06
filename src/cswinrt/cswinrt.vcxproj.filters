@@ -28,9 +28,6 @@
     <Filter Include="strings\additions\Microsoft.UI.Xaml">
       <UniqueIdentifier>{8626e8bc-727e-4c4d-a7fa-fe90c02b3090}</UniqueIdentifier>
     </Filter>
-    <Filter Include="strings\additions\Windows.Storage.Streams">
-      <UniqueIdentifier>{4035db1f-9a59-42da-84a0-e3c3227fe586}</UniqueIdentifier>
-    </Filter>
     <Filter Include="strings\additions\Windows.Storage">
       <UniqueIdentifier>{d939d5a3-d5f9-4802-a8f8-3c5ce8b3a07e}</UniqueIdentifier>
     </Filter>
