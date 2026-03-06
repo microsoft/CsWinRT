@@ -82,6 +82,18 @@ internal sealed unsafe class WindowsRuntimePinnedMemoryBuffer : IBuffer
         return data;
     }
 
+    /// <inheritdoc cref="WindowsRuntimePinnedArrayBuffer.GetSpanForCapacity"/>
+    /// <exception cref="InvalidOperationException">Thrown if the buffer has been invalidated.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<byte> GetSpanForCapacity()
+    {
+        byte* data = (byte*)_data;
+
+        InvalidOperationException.ThrowIfBufferIsInvalidated(data);
+
+        return new(data, _capacity);
+    }
+
     /// <summary>
     /// Invalidates the buffer, preventing any further access to the underlying memory.
     /// </summary>

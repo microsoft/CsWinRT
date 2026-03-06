@@ -48,7 +48,7 @@ internal static class WindowsRuntimeBufferHelpers
     /// <remarks>
     /// The returned <see cref="Span{T}"/> value has a length equal to <see cref="IBuffer.Capacity"/>, not <see cref="IBuffer.Length"/>.
     /// </remarks>
-    public static unsafe bool TryGetManagedSpanForCapacity(IBuffer buffer, out Span<byte> span)
+    public static bool TryGetManagedSpanForCapacity(IBuffer buffer, out Span<byte> span)
     {
         // If the buffer is backed by a managed array, return it
         if (buffer is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
@@ -69,7 +69,7 @@ internal static class WindowsRuntimeBufferHelpers
         // Also handle pinned memory buffers (pointer-based, not array-backed)
         if (buffer is WindowsRuntimePinnedMemoryBuffer pinnedMemoryBuffer)
         {
-            span = new(pinnedMemoryBuffer.Buffer(), checked((int)buffer.Capacity));
+            span = pinnedMemoryBuffer.GetSpanForCapacity();
 
             return true;
         }
