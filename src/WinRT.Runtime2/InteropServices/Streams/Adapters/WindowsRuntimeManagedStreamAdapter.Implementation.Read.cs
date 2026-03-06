@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Buffers;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -122,6 +124,80 @@ internal partial class WindowsRuntimeManagedStreamAdapter
 
         // Now that we have validated the state, start the actual read operation
         return ReadCoreAsync(buffer, offset, count, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
+        NotSupportedException.ThrowIfStreamCannotRead(_canRead);
+
+        // If already cancelled, stop early
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (buffer.IsEmpty)
+        {
+            return new(0);
+        }
+
+        // Fast path: if the memory is backed by an array, use the existing array-based overload directly
+        if (MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)buffer, out ArraySegment<byte> segment))
+        {
+            return new(ReadAsync(segment.Array!, segment.Offset, segment.Count, cancellationToken));
+        }
+
+        // Helper to perform the actual asynchronous read operation with pinned memory
+        async ValueTask<int> ReadPinnedMemoryAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            using MemoryHandle handle = buffer.Pin();
+
+            WindowsRuntimePinnedMemoryBuffer pinnedMemoryBuffer;
+
+            // An explicit unsafe block is needed here because the 'async unsafe' modifier is not supported
+            // by the language (CS4004: "Cannot await in an unsafe context"), so we scope the pointer access
+            // to just the buffer initialization, which is the only expression that requires unsafe context.
+            unsafe
+            {
+                pinnedMemoryBuffer = new((byte*)handle.Pointer, length: 0, capacity: buffer.Length);
+            }
+
+            try
+            {
+                IInputStream windowsRuntimeStream = (IInputStream)EnsureNotDisposed();
+
+                IAsyncOperationWithProgress<IBuffer, uint> asyncReadOperation = windowsRuntimeStream.ReadAsync(
+                    buffer: pinnedMemoryBuffer,
+                    count: pinnedMemoryBuffer.Capacity,
+                    options: InputStreamOptions.Partial);
+
+                IBuffer? resultBuffer = await asyncReadOperation.AsTask(cancellationToken).ConfigureAwait(false);
+
+                if (resultBuffer is null)
+                {
+                    return 0;
+                }
+
+                WindowsRuntimeIOHelpers.EnsureResultsInUserBuffer(pinnedMemoryBuffer, resultBuffer);
+
+                Debug.Assert(resultBuffer.Length <= unchecked(int.MaxValue));
+
+                return unchecked((int)resultBuffer.Length);
+            }
+            catch (Exception exception)
+            {
+                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(exception).Throw();
+
+                return 0;
+            }
+            finally
+            {
+                pinnedMemoryBuffer.Invalidate();
+            }
+        }
+
+        // Slow path: pin the memory and use a pinned memory buffer for the async read operation
+        return ReadPinnedMemoryAsync(buffer, cancellationToken);
     }
 
     /// <inheritdoc/>

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Buffers;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -108,6 +110,56 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         // The underlying 'IBuffer' object is the only object to which we expose a direct pointer
         // to native, and that is properly pinned using a mechanism similar to 'Overlapped'.
         return windowsRuntimeStream.WriteAsync(asyncWriteBuffer).AsTask(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
+
+        // If already cancelled, stop early
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (buffer.IsEmpty)
+        {
+            return default;
+        }
+
+        // Fast path: if the memory is backed by an array, use the existing array-based overload directly
+        if (MemoryMarshal.TryGetArray(buffer, out ArraySegment<byte> segment))
+        {
+            return new(WriteAsync(segment.Array!, segment.Offset, segment.Count, cancellationToken));
+        }
+
+        // Helper to perform the actual asynchronous write operation with pinned memory
+        async ValueTask WritePinnedMemoryAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
+        {
+            using MemoryHandle handle = buffer.Pin();
+
+            WindowsRuntimePinnedMemoryBuffer pinnedMemoryBuffer;
+
+            // See notes in 'ReadPinnedMemoryAsync' for why we need an 'unsafe' block here
+            unsafe
+            {
+                pinnedMemoryBuffer = new((byte*)handle.Pointer, length: buffer.Length, capacity: buffer.Length);
+            }
+
+            try
+            {
+                IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
+
+                _ = await windowsRuntimeStream.WriteAsync(pinnedMemoryBuffer).AsTask(cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                pinnedMemoryBuffer.Invalidate();
+            }
+        }
+
+        // Slow path: pin the memory and use a pinned memory buffer for the async write operation
+        return WritePinnedMemoryAsync(buffer, cancellationToken);
     }
 
     /// <inheritdoc/>
