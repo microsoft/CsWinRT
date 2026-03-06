@@ -224,8 +224,10 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
             ExceptionDispatchInfo? errorInfo = _errorInfo;
 
             // See if the error info is set because we observed a 'null' completed async operation previously.
-            // We're explicitly checking that the message is an exact match to avoid any false positives here.
-            if (errorInfo is { SourceException: ArgumentNullException { Message: WindowsRuntimeExceptionMessages.ArgumentNullReference_IOCompletionCallbackCannotProcessNullAsyncInfo } })
+            // The only 'ArgumentNullException' that can be set in '_errorInfo' when '_completedOperation' is
+            // 'null' is the one explicitly thrown in 'OnStreamOperationCompleted' when 'asyncInfo' is 'null'
+            // (if it had been non-'null', '_completedOperation' would have been set before any other code ran).
+            if (errorInfo is { SourceException: ArgumentNullException })
             {
                 errorInfo.Throw();
             }
