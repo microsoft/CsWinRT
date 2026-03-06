@@ -76,13 +76,6 @@
     <None Include="packages.config" />
     <None Include="PreviousPlatforms.linq" />
     <None Include="strings\additions\Microsoft.UI.Dispatching\Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\NetFxToWinRtStreamAdapter.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\Windows.Storage.Streams.SR.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\StreamOperationAsyncResult.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\StreamOperationsImplementation.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeStreamExtensions.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\WinRtIOHelper.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\WinRtToNetFxStreamAdapter.cs" />
     <None Include="strings\additions\Windows.Storage\HANDLE_ACCESS_OPTIONS.cs" />
     <None Include="strings\additions\Windows.Storage\HANDLE_CREATION_OPTIONS.cs" />
     <None Include="strings\additions\Windows.Storage\HANDLE_OPTIONS.cs" />
