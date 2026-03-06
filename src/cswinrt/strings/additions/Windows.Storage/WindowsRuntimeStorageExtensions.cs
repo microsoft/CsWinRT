@@ -23,6 +23,7 @@ namespace Windows.Storage.IO
         /// <param name="windowsRuntimeFile">The <see cref="IStorageFile"/> to read from.</param>
         /// <returns>A <see cref="Task{TResult}"/> that represents the asynchronous operation, with a <see cref="Stream"/> as the result.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeFile"/> is <see langword="null"/>.</exception>
+        /// <exception cref="IOException">Thrown if the file could not be opened or retrieved as a stream.</exception>
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFile windowsRuntimeFile)
         {
@@ -57,6 +58,7 @@ namespace Windows.Storage.IO
         /// <param name="windowsRuntimeFile">The <see cref="IStorageFile"/> to write to.</param>
         /// <returns>A <see cref="Task{TResult}"/> that represents the asynchronous operation, with a <see cref="Stream"/> as the result.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeFile"/> is <see langword="null"/>.</exception>
+        /// <exception cref="IOException">Thrown if the file could not be opened or retrieved as a stream.</exception>
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFile windowsRuntimeFile)
         {
@@ -95,6 +97,7 @@ namespace Windows.Storage.IO
         /// <returns>A <see cref="Task{TResult}"/> that represents the asynchronous operation, with a <see cref="Stream"/> as the result.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="rootDirectory"/> or <paramref name="relativePath"/> is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="relativePath"/> is empty or contains only whitespace.</exception>
+        /// <exception cref="IOException">Thrown if the file could not be opened or retrieved as a stream.</exception>
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFolder rootDirectory, string relativePath)
         {
@@ -140,6 +143,7 @@ namespace Windows.Storage.IO
         /// <returns>A <see cref="Task{TResult}"/> that represents the asynchronous operation, with a <see cref="Stream"/> as the result.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="rootDirectory"/> or <paramref name="relativePath"/> is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="relativePath"/> is empty or contains only whitespace.</exception>
+        /// <exception cref="IOException">Thrown if the file could not be opened or retrieved as a stream.</exception>
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFolder rootDirectory, string relativePath,
                                                            CreationCollisionOption creationCollisionOption)
