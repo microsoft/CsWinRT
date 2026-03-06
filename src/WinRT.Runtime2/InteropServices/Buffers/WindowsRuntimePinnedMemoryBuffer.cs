@@ -4,7 +4,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using Windows.Storage.Streams;
 
 namespace WindowsRuntime.InteropServices;
@@ -18,9 +17,9 @@ namespace WindowsRuntime.InteropServices;
 internal sealed unsafe class WindowsRuntimePinnedMemoryBuffer : IBuffer
 {
     /// <summary>
-    /// The pointer to the pinned memory (stored as <see cref="nint"/> to support <see cref="Volatile"/> operations).
+    /// The pointer to the pinned memory.
     /// </summary>
-    private nint _data;
+    private volatile nint _data;
 
     /// <summary>
     /// The number of bytes that can be read or written in the buffer.
@@ -76,7 +75,7 @@ internal sealed unsafe class WindowsRuntimePinnedMemoryBuffer : IBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte* Buffer()
     {
-        byte* data = (byte*)Volatile.Read(ref _data);
+        byte* data = (byte*)_data;
 
         InvalidOperationException.ThrowIfBufferIsInvalidated(data);
 
@@ -101,6 +100,6 @@ internal sealed unsafe class WindowsRuntimePinnedMemoryBuffer : IBuffer
     /// </remarks>
     public void Invalidate()
     {
-        Volatile.Write(ref _data, 0);
+        _data = 0;
     }
 }
