@@ -6,6 +6,7 @@ namespace Windows.Storage.IO
     using global::System.Diagnostics;
     using global::System.IO;
     using global::System.Runtime.InteropServices;
+    using global::System.Runtime.Versioning;
     using global::System.Threading.Tasks;
     using global::Microsoft.Win32.SafeHandles;
     using global::Windows.Storage;
@@ -24,32 +25,33 @@ namespace Windows.Storage.IO
         /// <returns>A <see cref="Task{TResult}"/> that represents the asynchronous operation, with a <see cref="Stream"/> as the result.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeFile"/> is <see langword="null"/>.</exception>
         /// <exception cref="IOException">Thrown if the file could not be opened or retrieved as a stream.</exception>
-        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+        [SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFile windowsRuntimeFile)
         {
             ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
-            return OpenStreamForReadAsyncCore(windowsRuntimeFile);
-        }
-
-        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-        private static async Task<Stream> OpenStreamForReadAsyncCore(this IStorageFile windowsRuntimeFile)
-        {
-            Debug.Assert(windowsRuntimeFile != null);
-
-            try
+            // Helper with the actual read logic
+            [SupportedOSPlatform("windows10.0.10240.0")]
+            static async Task<Stream> OpenStreamForReadCoreAsync(IStorageFile windowsRuntimeFile)
             {
-                IRandomAccessStream windowsRuntimeStream = await windowsRuntimeFile.OpenAsync(FileAccessMode.Read)
-                                                                 .AsTask().ConfigureAwait(continueOnCapturedContext: false);
-                Stream managedStream = windowsRuntimeStream.AsStreamForRead();
-                return managedStream;
+                try
+                {
+                    IRandomAccessStream windowsRuntimeStream = await windowsRuntimeFile
+                        .OpenAsync(FileAccessMode.Read)
+                        .AsTask().ConfigureAwait(false);
+
+                    return windowsRuntimeStream.AsStreamForRead();
+                }
+                catch (Exception exception)
+                {
+                    // From this API, callers expect an 'IOException' if something went wrong
+                    WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(exception).Throw();
+
+                    return null;
+                }
             }
-            catch (Exception ex)
-            {
-                // From this API, managed dev expect IO exceptions for "something wrong":
-                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
-                return null;
-            }
+
+            return OpenStreamForReadCoreAsync(windowsRuntimeFile);
         }
 
         /// <summary>
@@ -59,34 +61,12 @@ namespace Windows.Storage.IO
         /// <returns>A <see cref="Task{TResult}"/> that represents the asynchronous operation, with a <see cref="Stream"/> as the result.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeFile"/> is <see langword="null"/>.</exception>
         /// <exception cref="IOException">Thrown if the file could not be opened or retrieved as a stream.</exception>
-        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+        [SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFile windowsRuntimeFile)
         {
             ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
-            return OpenStreamForWriteAsyncCore(windowsRuntimeFile, 0);
-        }
-
-        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-        private static async Task<Stream> OpenStreamForWriteAsyncCore(this IStorageFile windowsRuntimeFile, long offset)
-        {
-            Debug.Assert(windowsRuntimeFile != null);
-            Debug.Assert(offset >= 0);
-
-            try
-            {
-                IRandomAccessStream windowsRuntimeStream = await windowsRuntimeFile.OpenAsync(FileAccessMode.ReadWrite)
-                                                                 .AsTask().ConfigureAwait(continueOnCapturedContext: false);
-                Stream managedStream = windowsRuntimeStream.AsStreamForWrite();
-                managedStream.Position = offset;
-                return managedStream;
-            }
-            catch (Exception ex)
-            {
-                // From this API, managed dev expect IO exceptions for "something wrong":
-                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
-                return null;
-            }
+            return OpenStreamForWriteCoreAsync(windowsRuntimeFile, offset: 0);
         }
 
         /// <summary>
@@ -98,7 +78,7 @@ namespace Windows.Storage.IO
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="rootDirectory"/> or <paramref name="relativePath"/> is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="relativePath"/> is empty or contains only whitespace.</exception>
         /// <exception cref="IOException">Thrown if the file could not be opened or retrieved as a stream.</exception>
-        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+        [SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFolder rootDirectory, string relativePath)
         {
             ArgumentNullException.ThrowIfNull(rootDirectory);
@@ -109,29 +89,31 @@ namespace Windows.Storage.IO
                 throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
             }
 
-            return OpenStreamForReadAsyncCore(rootDirectory, relativePath);
-        }
-
-        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-        private static async Task<Stream> OpenStreamForReadAsyncCore(this IStorageFolder rootDirectory, string relativePath)
-        {
-            Debug.Assert(rootDirectory != null);
-            Debug.Assert(!string.IsNullOrWhiteSpace(relativePath));
-
-            try
+            // Helper with the actual read logic
+            [SupportedOSPlatform("windows10.0.10240.0")]
+            static async Task<Stream> OpenStreamForReadCoreAsync(IStorageFolder rootDirectory, string relativePath)
             {
-                IStorageFile windowsRuntimeFile = await rootDirectory.GetFileAsync(relativePath)
-                                                        .AsTask().ConfigureAwait(continueOnCapturedContext: false);
-                Stream managedStream = await windowsRuntimeFile.OpenStreamForReadAsync()
-                                             .ConfigureAwait(continueOnCapturedContext: false);
-                return managedStream;
+                try
+                {
+                    IStorageFile windowsRuntimeFile = await rootDirectory
+                        .GetFileAsync(relativePath)
+                        .AsTask()
+                        .ConfigureAwait(false);
+
+                    return await windowsRuntimeFile
+                        .OpenStreamForReadAsync()
+                        .ConfigureAwait(false);
+                }
+                catch (Exception exception)
+                {
+                    // Throw an 'IOException' (see notes above)
+                    WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(exception).Throw();
+
+                    return null;
+                }
             }
-            catch (Exception ex)
-            {
-                // From this API, managed dev expect IO exceptions for "something wrong":
-                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
-                return null;
-            }
+
+            return OpenStreamForReadCoreAsync(rootDirectory, relativePath);
         }
 
         /// <summary>
@@ -144,9 +126,11 @@ namespace Windows.Storage.IO
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="rootDirectory"/> or <paramref name="relativePath"/> is <see langword="null"/>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="relativePath"/> is empty or contains only whitespace.</exception>
         /// <exception cref="IOException">Thrown if the file could not be opened or retrieved as a stream.</exception>
-        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-        public static Task<Stream> OpenStreamForWriteAsync(this IStorageFolder rootDirectory, string relativePath,
-                                                           CreationCollisionOption creationCollisionOption)
+        [SupportedOSPlatform("windows10.0.10240.0")]
+        public static Task<Stream> OpenStreamForWriteAsync(
+            this IStorageFolder rootDirectory,
+            string relativePath,
+            CreationCollisionOption creationCollisionOption)
         {
             ArgumentNullException.ThrowIfNull(rootDirectory);
             ArgumentNullException.ThrowIfNull(relativePath);
@@ -156,56 +140,60 @@ namespace Windows.Storage.IO
                 throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
             }
 
-            return OpenStreamForWriteAsyncCore(rootDirectory, relativePath, creationCollisionOption);
-        }
-
-        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-        private static async Task<Stream> OpenStreamForWriteAsyncCore(this IStorageFolder rootDirectory, string relativePath,
-                                                                       CreationCollisionOption creationCollisionOption)
-        {
-            Debug.Assert(rootDirectory != null);
-            Debug.Assert(!string.IsNullOrWhiteSpace(relativePath));
-
-            Debug.Assert(creationCollisionOption == CreationCollisionOption.FailIfExists
-                                    || creationCollisionOption == CreationCollisionOption.GenerateUniqueName
-                                    || creationCollisionOption == CreationCollisionOption.OpenIfExists
-                                    || creationCollisionOption == CreationCollisionOption.ReplaceExisting,
-                              "The specified creationCollisionOption has a value that is not a value we considered when devising the"
-                            + " policy about Append-On-OpenIfExists used in this method. Apparently a new enum value was added to the"
-                            + " CreationCollisionOption type and we need to make sure that the policy still makes sense.");
-
-            try
+            // Helper with the actual write logic
+            [SupportedOSPlatform("windows10.0.10240.0")]
+            private static async Task<Stream> OpenStreamForWriteCoreAsync(
+                IStorageFolder rootDirectory,
+                string relativePath,
+                CreationCollisionOption creationCollisionOption)
             {
-                // Open file and set up default options for opening it:
+                Debug.Assert(creationCollisionOption is
+                    CreationCollisionOption.FailIfExists or
+                    CreationCollisionOption.GenerateUniqueName or
+                    CreationCollisionOption.OpenIfExists or
+                    CreationCollisionOption.ReplaceExisting,
+                    "The specified 'creationCollisionOption' argument has a value that is not a value we considered when devising the " +
+                    "policy about 'Append-On-OpenIfExists' used in this method. Apparently a new enum value was added to the " +
+                    "'CreationCollisionOption' type and we need to make sure that the policy still makes sense.");
 
-                IStorageFile windowsRuntimeFile = await rootDirectory.CreateFileAsync(relativePath, creationCollisionOption)
-                                                                     .AsTask().ConfigureAwait(continueOnCapturedContext: false);
-                long offset = 0;
-
-                // If the specified creationCollisionOption was OpenIfExists, then we will try to APPEND, otherwise we will OVERWRITE:
-
-                if (creationCollisionOption == CreationCollisionOption.OpenIfExists)
+                try
                 {
-                    BasicProperties fileProperties = await windowsRuntimeFile.GetBasicPropertiesAsync()
-                                                           .AsTask().ConfigureAwait(continueOnCapturedContext: false);
-                    ulong fileSize = fileProperties.Size;
+                    // Open file and set up default options for opening it
+                    IStorageFile windowsRuntimeFile = await rootDirectory
+                        .CreateFileAsync(relativePath, creationCollisionOption)
+                        .AsTask()
+                        .ConfigureAwait(false);
 
-                    Debug.Assert(fileSize <= long.MaxValue, ".NET streams assume that file sizes are not larger than Int64.MaxValue,"
-                                                              + " so we are not supporting the situation where this is not the case.");
-                    offset = checked((long)fileSize);
+                    long offset = 0;
+
+                    // If the specified option was 'OpenIfExists', then we will try to append, otherwise we will overwrite
+                    if (creationCollisionOption is CreationCollisionOption.OpenIfExists)
+                    {
+                        BasicProperties fileProperties = await windowsRuntimeFile
+                            .GetBasicPropertiesAsync()
+                            .AsTask()
+                            .ConfigureAwait(false);
+
+                        ulong fileSize = fileProperties.Size;
+
+                        Debug.Assert(fileSize <= long.MaxValue, ".NET streams assume that file sizes are not larger than 'long.MaxValue.");
+
+                        offset = checked((long)fileSize);
+                    }
+
+                    // Now open a file with the correct options
+                    return await OpenStreamForWriteCoreAsync(windowsRuntimeFile, offset).ConfigureAwait(false);
                 }
+                catch (Exception exception)
+                {
+                    // Throw an 'IOException' (see notes above)
+                    WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(exception).Throw();
 
-                // Now open a file with the correct options:
+                    return null;
+                }
+            }
 
-                Stream managedStream = await OpenStreamForWriteAsyncCore(windowsRuntimeFile, offset).ConfigureAwait(continueOnCapturedContext: false);
-                return managedStream;
-            }
-            catch (Exception ex)
-            {
-                // From this API, managed dev expect IO exceptions for "something wrong":
-                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
-                return null;
-            }
+            return OpenStreamForWriteCoreAsync(rootDirectory, relativePath, creationCollisionOption);
         }
 
         /// <summary>
@@ -244,7 +232,7 @@ namespace Windows.Storage.IO
             string relativePath,
             FileMode mode)
         {
-            return rootDirectory.CreateSafeFileHandle(relativePath, mode, (mode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite));
+            return rootDirectory.CreateSafeFileHandle(relativePath, mode, (mode is FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite));
         }
 
         /// <summary>
@@ -276,6 +264,36 @@ namespace Windows.Storage.IO
                 access,
                 share,
                 options);
+        }
+
+        /// <inheritdoc cref="OpenStreamForWriteAsync(IStorageFile)"/>
+        /// <param name="offset">The offset to set in the returned stream.</param>
+        [SupportedOSPlatform("windows10.0.10240.0")]
+        private static async Task<Stream> OpenStreamForWriteCoreAsync(IStorageFile windowsRuntimeFile, long offset)
+        {
+            Debug.Assert(windowsRuntimeFile is not null);
+            Debug.Assert(offset >= 0);
+
+            try
+            {
+                IRandomAccessStream windowsRuntimeStream = await windowsRuntimeFile
+                    .OpenAsync(FileAccessMode.ReadWrite)
+                    .AsTask()
+                    .ConfigureAwait(false);
+
+                Stream managedStream = windowsRuntimeStream.AsStreamForWrite();
+
+                managedStream.Position = offset;
+
+                return managedStream;
+            }
+            catch (Exception exception)
+            {
+                // Throw an 'IOException' (see notes above)
+                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(exception).Throw();
+
+                return null;
+            }
         }
     }
 }
