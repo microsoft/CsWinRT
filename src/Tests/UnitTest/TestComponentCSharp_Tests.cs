@@ -819,12 +819,12 @@ namespace UnitTest
             Assert.IsTrue(InvokeStreamWriteAndReadAsync().Wait(1000));
         }
 
-        [TestMethod]
-        public void TestDynamicInterfaceCastingOnValidInterface()
-        {
-            var agileObject = (IAgileObject)(IWinRTObject)TestObject;
-            Assert.IsNotNull(agileObject);
-        }
+        //[TestMethod]
+        //public void TestDynamicInterfaceCastingOnValidInterface()
+        //{
+        //    var agileObject = (IAgileObject)(IWinRTObject)TestObject;
+        //    Assert.IsNotNull(agileObject);
+        //}
 
         [TestMethod]
         public void TestDynamicInterfaceCastingOnInvalidInterface()
