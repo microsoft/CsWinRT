@@ -2548,7 +2548,7 @@ internal partial class InteropGenerator
         }
         catch (Exception e)
         {
-            WellKnownInteropExceptions.DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(e).ThrowOrAttach(e);
+            WellKnownInteropExceptions.DynamicCustomMappedTypeMapEntriesCodeGenerationError(e).ThrowOrAttach(e);
         }
     }
 

@@ -371,7 +371,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException IObservableVectorTypeCodeGenerationError(TypeSignature elementType, Exception exception)
     {
-        return Exception(41, $"Failed to generate marshalling code for 'IObservableVector<T>' type '{elementType}'.", exception);
+        return Exception(90, $"Failed to generate marshalling code for 'IObservableVector<T>' type '{elementType}'.", exception);
     }
 
     /// <summary>
@@ -395,7 +395,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException IAsyncActionWithProgressTypeCodeGenerationError(TypeSignature actionType, Exception exception)
     {
-        return Exception(44, $"Failed to generate marshalling code for 'IAsyncActionWithProgress<TResult>' type '{actionType}'.", exception);
+        return Exception(44, $"Failed to generate marshalling code for 'IAsyncActionWithProgress<TProgress>' type '{actionType}'.", exception);
     }
 
     /// <summary>
@@ -417,7 +417,7 @@ internal static class WellKnownInteropExceptions
     /// <summary>
     /// Failed to generate marshalling code for a dynamic implementation detail type.
     /// </summary>
-    public static WellKnownInteropException DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(Exception exception)
+    public static WellKnownInteropException DynamicCustomMappedTypeMapEntriesCodeGenerationError(Exception exception)
     {
         return Exception(47, $"Failed to generate type map entries for some dynamic custom-mapped types.", exception);
     }
@@ -459,7 +459,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException IReadOnlyCollectionKeyValuePairTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
-        return Exception(52, $"Failed to generate marshalling code for 'IReadOnlyCollection<KeyValuePair<TResult, TProgress>>' type '{operationType}'.", exception);
+        return Exception(52, $"Failed to generate marshalling code for 'IReadOnlyCollection<KeyValuePair<TKey, TValue>>' type '{operationType}'.", exception);
     }
 
     /// <summary>
