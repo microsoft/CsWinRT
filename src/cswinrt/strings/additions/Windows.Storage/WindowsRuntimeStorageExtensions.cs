@@ -1,6 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 namespace Windows.Storage.IO
 {
@@ -14,10 +13,16 @@ namespace Windows.Storage.IO
     using global::Windows.Storage.Streams;
 
     /// <summary>
-    /// Contains extension methods that provide convenience helpers for WinRT IO.
+    /// Provides extension methods for working with Windows Runtime storage files and folders.
     /// </summary>
     public static class WindowsRuntimeStorageExtensions
     {
+        /// <summary>
+        /// Opens a <see cref="Stream"/> for reading from the specified <see cref="IStorageFile"/>.
+        /// </summary>
+        /// <param name="windowsRuntimeFile">The <see cref="IStorageFile"/> to read from.</param>
+        /// <returns>A <see cref="Task{TResult}"/> that represents the asynchronous operation, with a <see cref="Stream"/> as the result.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeFile"/> is <see langword="null"/>.</exception>
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFile windowsRuntimeFile)
         {
@@ -46,6 +51,12 @@ namespace Windows.Storage.IO
             }
         }
 
+        /// <summary>
+        /// Opens a <see cref="Stream"/> for writing to the specified <see cref="IStorageFile"/>.
+        /// </summary>
+        /// <param name="windowsRuntimeFile">The <see cref="IStorageFile"/> to write to.</param>
+        /// <returns>A <see cref="Task{TResult}"/> that represents the asynchronous operation, with a <see cref="Stream"/> as the result.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeFile"/> is <see langword="null"/>.</exception>
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFile windowsRuntimeFile)
         {
@@ -76,6 +87,14 @@ namespace Windows.Storage.IO
             }
         }
 
+        /// <summary>
+        /// Opens a <see cref="Stream"/> for reading from a file in the specified <see cref="IStorageFolder"/>.
+        /// </summary>
+        /// <param name="rootDirectory">The <see cref="IStorageFolder"/> that contains the file to read from.</param>
+        /// <param name="relativePath">The path, relative to <paramref name="rootDirectory"/>, of the file to read from.</param>
+        /// <returns>A <see cref="Task{TResult}"/> that represents the asynchronous operation, with a <see cref="Stream"/> as the result.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="rootDirectory"/> or <paramref name="relativePath"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="relativePath"/> is empty or contains only whitespace.</exception>
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFolder rootDirectory, string relativePath)
         {
@@ -83,7 +102,9 @@ namespace Windows.Storage.IO
             ArgumentNullException.ThrowIfNull(relativePath);
 
             if (string.IsNullOrWhiteSpace(relativePath))
+            {
                 throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
+            }
 
             return OpenStreamForReadAsyncCore(rootDirectory, relativePath);
         }
@@ -110,6 +131,15 @@ namespace Windows.Storage.IO
             }
         }
 
+        /// <summary>
+        /// Opens a <see cref="Stream"/> for writing to a file in the specified <see cref="IStorageFolder"/>.
+        /// </summary>
+        /// <param name="rootDirectory">The <see cref="IStorageFolder"/> that contains or will contain the file to write to.</param>
+        /// <param name="relativePath">The path, relative to <paramref name="rootDirectory"/>, of the file to write to.</param>
+        /// <param name="creationCollisionOption">The <see cref="CreationCollisionOption"/> value that specifies how to handle the situation when the file already exists.</param>
+        /// <returns>A <see cref="Task{TResult}"/> that represents the asynchronous operation, with a <see cref="Stream"/> as the result.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="rootDirectory"/> or <paramref name="relativePath"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="relativePath"/> is empty or contains only whitespace.</exception>
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFolder rootDirectory, string relativePath,
                                                            CreationCollisionOption creationCollisionOption)
@@ -118,14 +148,16 @@ namespace Windows.Storage.IO
             ArgumentNullException.ThrowIfNull(relativePath);
 
             if (string.IsNullOrWhiteSpace(relativePath))
+            {
                 throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
+            }
 
             return OpenStreamForWriteAsyncCore(rootDirectory, relativePath, creationCollisionOption);
         }
 
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         private static async Task<Stream> OpenStreamForWriteAsyncCore(this IStorageFolder rootDirectory, string relativePath,
-                                                                      CreationCollisionOption creationCollisionOption)
+                                                                       CreationCollisionOption creationCollisionOption)
         {
             Debug.Assert(rootDirectory != null);
             Debug.Assert(!string.IsNullOrWhiteSpace(relativePath));
@@ -172,6 +204,15 @@ namespace Windows.Storage.IO
             }
         }
 
+        /// <summary>
+        /// Creates a <see cref="SafeFileHandle"/> for the specified <see cref="IStorageFile"/>.
+        /// </summary>
+        /// <param name="windowsRuntimeFile">The <see cref="IStorageFile"/> to create a file handle for.</param>
+        /// <param name="access">The <see cref="FileAccess"/> mode to open the file with.</param>
+        /// <param name="share">The <see cref="FileShare"/> mode to open the file with.</param>
+        /// <param name="options">The <see cref="FileOptions"/> to open the file with.</param>
+        /// <returns>A <see cref="SafeFileHandle"/> for the specified storage file.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeFile"/> is <see langword="null"/>.</exception>
         public static SafeFileHandle CreateSafeFileHandle(
             this IStorageFile windowsRuntimeFile,
             FileAccess access = FileAccess.ReadWrite,
@@ -187,6 +228,13 @@ namespace Windows.Storage.IO
                 options);
         }
 
+        /// <summary>
+        /// Creates a <see cref="SafeFileHandle"/> for a file in the specified <see cref="IStorageFolder"/>.
+        /// </summary>
+        /// <param name="rootDirectory">The <see cref="IStorageFolder"/> that contains the file.</param>
+        /// <param name="relativePath">The path, relative to <paramref name="rootDirectory"/>, of the file to create a handle for.</param>
+        /// <param name="mode">The <see cref="FileMode"/> to use when opening the file.</param>
+        /// <returns>A <see cref="SafeFileHandle"/> for the specified file.</returns>
         public static SafeFileHandle CreateSafeFileHandle(
             this IStorageFolder rootDirectory,
             string relativePath,
@@ -195,6 +243,17 @@ namespace Windows.Storage.IO
             return rootDirectory.CreateSafeFileHandle(relativePath, mode, (mode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite));
         }
 
+        /// <summary>
+        /// Creates a <see cref="SafeFileHandle"/> for a file in the specified <see cref="IStorageFolder"/>.
+        /// </summary>
+        /// <param name="rootDirectory">The <see cref="IStorageFolder"/> that contains the file.</param>
+        /// <param name="relativePath">The path, relative to <paramref name="rootDirectory"/>, of the file to create a handle for.</param>
+        /// <param name="mode">The <see cref="FileMode"/> to use when opening the file.</param>
+        /// <param name="access">The <see cref="FileAccess"/> mode to open the file with.</param>
+        /// <param name="share">The <see cref="FileShare"/> mode to open the file with.</param>
+        /// <param name="options">The <see cref="FileOptions"/> to open the file with.</param>
+        /// <returns>A <see cref="SafeFileHandle"/> for the specified file.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="rootDirectory"/> or <paramref name="relativePath"/> is <see langword="null"/>.</exception>
         public static SafeFileHandle CreateSafeFileHandle(
             this IStorageFolder rootDirectory,
             string relativePath,
