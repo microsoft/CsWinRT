@@ -244,7 +244,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Stloc_3 },
                     { Leave_S, ldloc_3_returnHResult.CreateLabel() },
 
-                    // Return the 'HRESULT' from location [2]
+                    // Return the 'HRESULT' from location [3]
                     { ldloc_3_returnHResult },
                     { Ret }
                 },

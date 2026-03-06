@@ -369,7 +369,7 @@ internal partial class InteropGenerator
 
         string destinationPath = Path.Combine(destinationDirectory, hashedName);
 
-        // After validating that the file is unique and should be copied, we can safely do that. We move
+        // After validating that the file is unique and should be copied, we can safely do that. We defer
         // this operation to ensure we don't accidentally end up with duplicated .dll-s in the debug repro.
         File.Copy(assemblyPath, destinationPath, overwrite: true);
 

@@ -65,7 +65,7 @@ internal partial class InteropMethodDefinitionFactory
             CilLocalVariable loc_0_hresult = new(interopReferences.Int32);
             CilLocalVariable loc_1_handlerValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
 
-            // Create a method body for the 'get_Current' method
+            // Create a method body for the 'get_Handler' method
             handlerMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_hresult, loc_1_handlerValue },
@@ -135,7 +135,7 @@ internal partial class InteropMethodDefinitionFactory
             MethodDefinition convertToManagedMethod,
             InteropReferences interopReferences)
         {
-            // Define the 'set_Handler' get method as follows:
+            // Define the 'set_Handler' set method as follows:
             //
             // [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
             // private static int <METHOD_NAME>(void* thisPtr, void* handler)
@@ -161,7 +161,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_hresult = new(interopReferences.Int32);
 
-            // Create a method body for the 'get_Current' method
+            // Create a method body for the 'set_Handler' method
             handlerMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_hresult },

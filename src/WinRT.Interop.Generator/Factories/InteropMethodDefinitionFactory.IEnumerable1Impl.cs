@@ -60,7 +60,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [0]: 'int' (the 'HRESULT' to return)
             CilLocalVariable loc_0_hresult = new(interopReferences.Int32);
 
-            // Create a method body for the 'get_Current' method
+            // Create a method body for the 'First' method
             firstMethod.CilMethodBody = new CilMethodBody()
             {
                 LocalVariables = { loc_0_hresult },
