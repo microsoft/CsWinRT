@@ -36,9 +36,9 @@ public static unsafe class IStorageItemHandleAccessMethods
     {
         return Create(
             storageItem: storageItem,
-            accessOptions: WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access),
-            sharingOptions: WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share),
-            options: WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options),
+            accessOptions: access.ToHandleAccessOptions(),
+            sharingOptions: share.ToHandleSharingOptions(),
+            options: options.ToHandleOptions(),
             oplockBreakingHandler: null);
     }
 

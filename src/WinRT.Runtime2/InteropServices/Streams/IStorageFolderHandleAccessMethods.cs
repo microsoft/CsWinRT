@@ -41,10 +41,10 @@ public static unsafe class IStorageFolderHandleAccessMethods
         return Create(
             storageFolder: storageFolder,
             fileName: fileName,
-            creationOptions: WindowsRuntimeStorageHelpers.FileModeToHandleCreationOptions(mode),
-            accessOptions: WindowsRuntimeStorageHelpers.FileAccessToHandleAccessOptions(access),
-            sharingOptions: WindowsRuntimeStorageHelpers.FileShareToHandleSharingOptions(share),
-            options: WindowsRuntimeStorageHelpers.FileOptionsToHandleOptions(options),
+            creationOptions: mode.ToHandleCreationOptions(),
+            accessOptions: access.ToHandleAccessOptions(),
+            sharingOptions: share.ToHandleSharingOptions(),
+            options: options.ToHandleOptions(),
             oplockBreakingHandler: null);
     }
 
