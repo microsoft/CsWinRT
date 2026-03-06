@@ -194,6 +194,55 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     }
 
     /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    public override unsafe int Read(Span<byte> buffer)
+    {
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
+        NotSupportedException.ThrowIfStreamCannotRead(_canRead);
+
+        if (buffer.IsEmpty)
+        {
+            return 0;
+        }
+
+        IInputStream windowsRuntimeStream = (IInputStream)EnsureNotDisposed();
+
+        // Pin the span so that it stays at the same address while the async I/O operation is in progress.
+        // We create a 'WindowsRuntimePinnedMemoryBuffer' wrapping the pinned pointer, then invalidate it
+        // in the 'finally' block to ensure no one can access the pointer after the span goes out of scope.
+        fixed (byte* pinnedData = buffer)
+        {
+            WindowsRuntimePinnedMemoryBuffer pinnedMemoryBuffer = new(pinnedData, length: 0, capacity: buffer.Length);
+
+            try
+            {
+                IAsyncOperationWithProgress<IBuffer, uint> asyncReadOperation = windowsRuntimeStream.ReadAsync(
+                    buffer: pinnedMemoryBuffer,
+                    count: unchecked((uint)buffer.Length),
+                    options: InputStreamOptions.Partial);
+
+                // See the large comment in the 'Read(byte[], int, int)' method about why we use
+                // a custom 'IAsyncResult' implementation instead of 'ReadAsync' + 'AsTask' here.
+                StreamReadAsyncResult asyncResult = new(
+                    asyncReadOperation,
+                    pinnedMemoryBuffer,
+                    userCompletionCallback: null,
+                    userAsyncStateInfo: null,
+                    processCompletedOperationInCallback: false);
+
+                int numberOfBytesRead = EndRead(asyncResult);
+
+                return numberOfBytesRead;
+            }
+            finally
+            {
+                pinnedMemoryBuffer.Invalidate();
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public override int ReadByte()
     {
         byte result = 0;

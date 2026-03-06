@@ -122,10 +122,53 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     }
 
     /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public override void WriteByte(byte value)
     {
         // We don't need to call 'EnsureNotDisposed', see notes in 'ReadByte'
         Write(new ReadOnlySpan<byte>(in value));
+    }
+
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    public override unsafe void Write(ReadOnlySpan<byte> buffer)
+    {
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
+
+        if (buffer.IsEmpty)
+        {
+            return;
+        }
+
+        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
+
+        // Pin the span so that it stays at the same address while the async I/O operation is in progress.
+        // We create a 'WindowsRuntimePinnedMemoryBuffer' wrapping the pinned pointer, then invalidate it
+        // in the 'finally' block to ensure no one can access the pointer after the span goes out of scope.
+        fixed (byte* pinnedData = buffer)
+        {
+            WindowsRuntimePinnedMemoryBuffer pinnedMemoryBuffer = new(pinnedData, length: buffer.Length, capacity: buffer.Length);
+
+            try
+            {
+                // See the large comment in 'Read(byte[], int, int)' about why we use a custom 'IAsyncResult'
+                // implementation instead of 'WriteAsync' + 'AsTask' here (same deadlock concerns apply).
+                IAsyncOperationWithProgress<uint, uint> asyncWriteOperation = windowsRuntimeStream.WriteAsync(pinnedMemoryBuffer);
+
+                StreamWriteAsyncResult asyncResult = new(
+                    asyncWriteOperation,
+                    userCompletionCallback: null,
+                    userAsyncStateInfo: null,
+                    processCompletedOperationInCallback: false);
+
+                EndWrite(asyncResult);
+            }
+            finally
+            {
+                pinnedMemoryBuffer.Invalidate();
+            }
+        }
     }
 
     /// <inheritdoc/>
