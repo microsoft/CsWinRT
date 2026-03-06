@@ -112,6 +112,6 @@ internal sealed unsafe class WindowsRuntimePinnedMemoryBuffer : IBuffer
     /// </remarks>
     public void Invalidate()
     {
-        _data = 0;
+        _data = default;
     }
 }
