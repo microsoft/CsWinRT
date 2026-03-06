@@ -31,7 +31,7 @@ public static unsafe class IStorageFolderHandleAccessMethods
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="mode"/> or <paramref name="access"/> are not valid values.</exception>
     /// <exception cref="NotSupportedException">Thrown if <paramref name="share"/> or <paramref name="options"/> contain unsupported flags.</exception>
     public static SafeFileHandle? Create(
-        WindowsRuntimeObject storageFolder,
+        object storageFolder,
         string fileName,
         FileMode mode,
         FileAccess access,
@@ -60,7 +60,7 @@ public static unsafe class IStorageFolderHandleAccessMethods
     /// <param name="oplockBreakingHandler">The oplock breaking handler.</param>
     /// <returns>A <see cref="SafeFileHandle"/> for the file, or <see langword="null"/> if the operation failed.</returns>
     private static SafeFileHandle? Create(
-        WindowsRuntimeObject storageFolder,
+        object storageFolder,
         string fileName,
         HANDLE_CREATION_OPTIONS creationOptions,
         HANDLE_ACCESS_OPTIONS accessOptions,
@@ -68,12 +68,12 @@ public static unsafe class IStorageFolderHandleAccessMethods
         HANDLE_OPTIONS options,
         void* oplockBreakingHandler)
     {
-        if (!storageFolder.HasUnwrappableNativeObjectReference)
+        if (!WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(storageFolder, out WindowsRuntimeObjectReference? objectReference))
         {
             return null;
         }
 
-        if (!storageFolder.NativeObjectReference.TryAsUnsafe(in WellKnownWindowsInterfaceIIDs.IID_IStorageFolderHandleAccess, out void* thisPtr))
+        if (!objectReference.TryAsUnsafe(in WellKnownWindowsInterfaceIIDs.IID_IStorageFolderHandleAccess, out void* thisPtr))
         {
             return null;
         }

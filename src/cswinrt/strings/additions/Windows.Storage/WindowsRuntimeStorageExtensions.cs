@@ -206,7 +206,7 @@ namespace Windows.Storage.IO
             ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
             return global::WindowsRuntime.InteropServices.IStorageItemHandleAccessMethods.Create(
-                (global::WindowsRuntime.WindowsRuntimeObject)windowsRuntimeFile,
+                windowsRuntimeFile,
                 access,
                 share,
                 options);
@@ -250,7 +250,7 @@ namespace Windows.Storage.IO
             ArgumentNullException.ThrowIfNull(relativePath);
 
             return global::WindowsRuntime.InteropServices.IStorageFolderHandleAccessMethods.Create(
-                (global::WindowsRuntime.WindowsRuntimeObject)rootDirectory,
+                rootDirectory,
                 relativePath,
                 mode,
                 access,

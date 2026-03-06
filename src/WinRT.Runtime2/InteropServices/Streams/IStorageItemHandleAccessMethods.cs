@@ -29,7 +29,7 @@ public static unsafe class IStorageItemHandleAccessMethods
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="access"/> is not a valid value.</exception>
     /// <exception cref="NotSupportedException">Thrown if <paramref name="share"/> or <paramref name="options"/> contain unsupported flags.</exception>
     public static SafeFileHandle? Create(
-        WindowsRuntimeObject storageItem,
+        object storageItem,
         FileAccess access,
         FileShare share,
         FileOptions options)
@@ -52,18 +52,18 @@ public static unsafe class IStorageItemHandleAccessMethods
     /// <param name="oplockBreakingHandler">The oplock breaking handler.</param>
     /// <returns>A <see cref="SafeFileHandle"/> for the storage item, or <see langword="null"/> if the operation failed.</returns>
     private static SafeFileHandle? Create(
-        WindowsRuntimeObject storageItem,
+        object storageItem,
         HANDLE_ACCESS_OPTIONS accessOptions,
         HANDLE_SHARING_OPTIONS sharingOptions,
         HANDLE_OPTIONS options,
         void* oplockBreakingHandler)
     {
-        if (!storageItem.HasUnwrappableNativeObjectReference)
+        if (!WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(storageItem, out WindowsRuntimeObjectReference? objectReference))
         {
             return null;
         }
 
-        if (!storageItem.NativeObjectReference.TryAsUnsafe(in WellKnownWindowsInterfaceIIDs.IID_IStorageItemHandleAccess, out void* thisPtr))
+        if (!objectReference.TryAsUnsafe(in WellKnownWindowsInterfaceIIDs.IID_IStorageItemHandleAccess, out void* thisPtr))
         {
             return null;
         }
