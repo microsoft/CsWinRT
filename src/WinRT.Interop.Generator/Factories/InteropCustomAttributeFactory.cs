@@ -141,7 +141,7 @@ internal static class InteropCustomAttributeFactory
     /// <summary>
     /// Creates a new custom attribute value for <c>IgnoresAccessChecksToAttribute</c>.
     /// </summary>
-    /// <param name="assemblyName">The target assemby name.</param>
+    /// <param name="assemblyName">The target assembly name.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>The resulting <see cref="CustomAttribute"/> instance.</returns>

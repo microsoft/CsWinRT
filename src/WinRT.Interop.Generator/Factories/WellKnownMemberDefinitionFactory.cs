@@ -123,8 +123,8 @@ internal static class WellKnownMemberDefinitionFactory
     /// </summary>
     /// <param name="vftblField">The target vtable field to access.</param>
     /// <param name="corLibTypeFactory">The <see cref="CorLibTypeFactory"/> instance to use.</param>
-    /// <param name="vtableProperty">The resulting 'IID' property.</param>
-    /// <param name="get_VtableMethod">The resulting 'IID' getter method.</param>
+    /// <param name="vtableProperty">The resulting 'Vtable' property.</param>
+    /// <param name="get_VtableMethod">The resulting 'Vtable' getter method.</param>
     public static void Vtable(
         FieldDefinition vftblField,
         CorLibTypeFactory corLibTypeFactory,

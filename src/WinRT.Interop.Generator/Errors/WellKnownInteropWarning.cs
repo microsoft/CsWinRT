@@ -23,7 +23,7 @@ internal sealed class WellKnownInteropWarning
     private readonly string _message;
 
     /// <summary>
-    /// Creates a new <see cref="WellKnownInteropException"/> instance with the specified parameters.
+    /// Creates a new <see cref="WellKnownInteropWarning"/> instance with the specified parameters.
     /// </summary>
     /// <param name="id">The id of the warning.</param>
     /// <param name="message">The warning message.</param>

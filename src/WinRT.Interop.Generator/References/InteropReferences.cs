@@ -108,7 +108,7 @@ internal sealed class InteropReferences
     public IResolutionScope WindowsRuntimeModule => _windowsRuntimeModule;
 
     /// <summary>
-    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.
+    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime foundation projection assembly.
     /// </summary>
     public IResolutionScope WindowsFoundationModule => _windowsSdkProjectionModule;
 
