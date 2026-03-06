@@ -84,7 +84,7 @@ public static unsafe class IStorageFolderHandleAccessMethods
         {
             fixed (char* fileNamePtr = fileName)
             {
-                RestrictedErrorInfo.ThrowExceptionForHR(IStorageFolderHandleAccessVftbl.CreateUnsafe(
+                HRESULT hresult = IStorageFolderHandleAccessVftbl.CreateUnsafe(
                     thisPtr,
                     fileNamePtr,
                     creationOptions,
@@ -92,7 +92,9 @@ public static unsafe class IStorageFolderHandleAccessMethods
                     sharingOptions,
                     options,
                     oplockBreakingHandler,
-                    &interopHandle));
+                    &interopHandle);
+
+                RestrictedErrorInfo.ThrowExceptionForHR(hresult);
             }
         }
         finally

@@ -72,13 +72,15 @@ public static unsafe class IStorageItemHandleAccessMethods
 
         try
         {
-            RestrictedErrorInfo.ThrowExceptionForHR(IStorageItemHandleAccessVftbl.CreateUnsafe(
+            HRESULT hresult = IStorageItemHandleAccessVftbl.CreateUnsafe(
                 thisPtr,
                 accessOptions,
                 sharingOptions,
                 options,
                 oplockBreakingHandler,
-                &interopHandle));
+                &interopHandle);
+
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
         }
         finally
         {
