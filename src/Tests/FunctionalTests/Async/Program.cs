@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TestComponentCSharp;
 using Windows.Foundation;
@@ -160,6 +161,109 @@ Class.UnboxAndCallProgressHandler(asyncProgressHandler);
 if (!progressCalledWithExpectedResults)
 {
     return 117;
+}
+
+// Test stream adapter span/memory overrides using InMemoryRandomAccessStream
+{
+    var random = new Random(42);
+    byte[] data = new byte[256];
+    random.NextBytes(data);
+
+    using var adaptedStream = new InMemoryRandomAccessStream().AsStream();
+
+    // Test Write(ReadOnlySpan<byte>) and Read(Span<byte>)
+    adaptedStream.Write(new ReadOnlySpan<byte>(data));
+    adaptedStream.Seek(0, SeekOrigin.Begin);
+
+    Span<byte> spanRead = new byte[256];
+    int spanBytesRead = adaptedStream.Read(spanRead);
+
+    if (spanBytesRead != 256)
+    {
+        return 118;
+    }
+
+    for (int i = 0; i < data.Length; i++)
+    {
+        if (data[i] != spanRead[i])
+        {
+            return 119;
+        }
+    }
+
+    // Test WriteAsync(ReadOnlyMemory<byte>) and ReadAsync(Memory<byte>)
+    adaptedStream.Seek(0, SeekOrigin.Begin);
+    await adaptedStream.WriteAsync(new ReadOnlyMemory<byte>(data));
+    adaptedStream.Seek(0, SeekOrigin.Begin);
+
+    Memory<byte> memoryRead = new byte[256];
+    int memoryBytesRead = await adaptedStream.ReadAsync(memoryRead);
+
+    if (memoryBytesRead != 256)
+    {
+        return 120;
+    }
+
+    for (int i = 0; i < data.Length; i++)
+    {
+        if (data[i] != memoryRead.Span[i])
+        {
+            return 121;
+        }
+    }
+
+    // Test ReadByte/WriteByte (which delegate to span overrides)
+    adaptedStream.Seek(0, SeekOrigin.Begin);
+    adaptedStream.WriteByte(0xAB);
+    adaptedStream.WriteByte(0xCD);
+    adaptedStream.Seek(0, SeekOrigin.Begin);
+
+    if (adaptedStream.ReadByte() != 0xAB)
+    {
+        return 122;
+    }
+
+    if (adaptedStream.ReadByte() != 0xCD)
+    {
+        return 123;
+    }
+
+    // Test empty span/memory operations
+    if (adaptedStream.Read(Span<byte>.Empty) != 0)
+    {
+        return 124;
+    }
+
+    adaptedStream.Write(ReadOnlySpan<byte>.Empty);
+
+    if (await adaptedStream.ReadAsync(Memory<byte>.Empty) != 0)
+    {
+        return 125;
+    }
+
+    await adaptedStream.WriteAsync(ReadOnlyMemory<byte>.Empty);
+
+    // Test cancellation for memory-based async operations
+    using var cts = new CancellationTokenSource();
+    cts.Cancel();
+
+    try
+    {
+        await adaptedStream.ReadAsync(new byte[256].AsMemory(), cts.Token);
+        return 126;
+    }
+    catch (OperationCanceledException)
+    {
+    }
+
+    try
+    {
+        await adaptedStream.WriteAsync(new byte[256].AsMemory(), cts.Token);
+        return 127;
+    }
+    catch (OperationCanceledException)
+    {
+    }
 }
 
 return 100;
