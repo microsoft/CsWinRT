@@ -48,7 +48,7 @@ internal static class WindowsRuntimeBufferHelpers
     /// <remarks>
     /// The returned <see cref="Span{T}"/> value has a length equal to <see cref="IBuffer.Capacity"/>, not <see cref="IBuffer.Length"/>.
     /// </remarks>
-    public static bool TryGetManagedSpanForCapacity(IBuffer buffer, out Span<byte> span)
+    public static unsafe bool TryGetManagedSpanForCapacity(IBuffer buffer, out Span<byte> span)
     {
         // If the buffer is backed by a managed array, return it
         if (buffer is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
@@ -62,6 +62,14 @@ internal static class WindowsRuntimeBufferHelpers
         if (buffer is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
         {
             span = pinnedArrayBuffer.GetSpanForCapacity();
+
+            return true;
+        }
+
+        // Also handle pinned memory buffers (pointer-based, not array-backed)
+        if (buffer is WindowsRuntimePinnedMemoryBuffer pinnedMemoryBuffer)
+        {
+            span = new(pinnedMemoryBuffer.Buffer(), checked((int)buffer.Capacity));
 
             return true;
         }
@@ -98,6 +106,43 @@ internal static class WindowsRuntimeBufferHelpers
 
         array = null;
         offset = 0;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to get a pointer to the underlying data for the specified buffer, only if it is a known managed buffer implementation.
+    /// </summary>
+    /// <param name="buffer">The input <see cref="IBuffer"/> instance.</param>
+    /// <param name="data">The underlying data, if retrieved.</param>
+    /// <returns>Whether <paramref name="data"/> could be retrieved.</returns>
+    public static unsafe bool TryGetManagedData(IBuffer buffer, out byte* data)
+    {
+        // If the buffer is backed by a managed array, get the data pointer
+        if (buffer is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
+        {
+            data = externalArrayBuffer.Buffer();
+
+            return true;
+        }
+
+        // Same as above for pinned arrays as well
+        if (buffer is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
+        {
+            data = pinnedArrayBuffer.Buffer();
+
+            return true;
+        }
+
+        // Also handle pinned memory buffers (pointer-based, not array-backed)
+        if (buffer is WindowsRuntimePinnedMemoryBuffer pinnedMemoryBuffer)
+        {
+            data = pinnedMemoryBuffer.Buffer();
+
+            return true;
+        }
+
+        data = null;
 
         return false;
     }
