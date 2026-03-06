@@ -12,6 +12,8 @@ using Windows.Foundation.Tasks;
 using Windows.Storage.Buffers;
 using Windows.Storage.Streams;
 
+#pragma warning disable CS1573
+
 namespace WindowsRuntime.InteropServices;
 
 /// <inheritdoc cref="WindowsRuntimeManagedStreamAdapter"/>
@@ -21,13 +23,6 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     [SupportedOSPlatform("windows10.0.10240.0")]
     public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
     {
-        return BeginWrite(buffer, offset, count, callback, state, usedByBlockingWrapper: false);
-    }
-
-    /// <inheritdoc/>
-    [SupportedOSPlatform("windows10.0.10240.0")]
-    private StreamWriteAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
-    {
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
@@ -35,20 +30,7 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
         NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
-        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
-
-        IBuffer asyncWriteBuffer = buffer.AsBuffer(offset, count);
-
-        // See the large comment in the 'BeginRead' method about why we are not using the
-        // 'WriteAsync' method, and instead using a custom implementation of 'IAsyncResult'.
-        IAsyncOperationWithProgress<uint, uint> asyncWriteOperation = windowsRuntimeStream.WriteAsync(asyncWriteBuffer);
-
-        // See additional notes in the 'Read' method about how CCW objects for this result are managed
-        return new StreamWriteAsyncResult(
-            asyncWriteOperation,
-            callback,
-            state,
-            processCompletedOperationInCallback: !usedByBlockingWrapper);
+        return BeginWrite(buffer, offset, count, callback, state, usedByBlockingWrapper: false);
     }
 
     /// <inheritdoc/>
@@ -297,5 +279,29 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
         return windowsRuntimeStream.FlushAsync().AsTask(cancellationToken);
+    }
+
+    /// <inheritdoc cref="System.IO.Stream.BeginWrite"/>
+    /// <param name="usedByBlockingWrapper">Indicates whether this method is being called by a method doing sync-over-async on the result.</param>
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    private StreamWriteAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
+    {
+        // This method doesn't do validation, to avoid repeating it in the 'Write' method that calls this one.
+        // It is only called by that method and by 'BeginWrite', so the validation there should be kept in sync.
+
+        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
+
+        IBuffer asyncWriteBuffer = buffer.AsBuffer(offset, count);
+
+        // See the large comment in the 'BeginRead' method about why we are not using the
+        // 'WriteAsync' method, and instead using a custom implementation of 'IAsyncResult'.
+        IAsyncOperationWithProgress<uint, uint> asyncWriteOperation = windowsRuntimeStream.WriteAsync(asyncWriteBuffer);
+
+        // See additional notes in the 'Read' method about how CCW objects for this result are managed
+        return new StreamWriteAsyncResult(
+            asyncWriteOperation,
+            callback,
+            state,
+            processCompletedOperationInCallback: !usedByBlockingWrapper);
     }
 }
