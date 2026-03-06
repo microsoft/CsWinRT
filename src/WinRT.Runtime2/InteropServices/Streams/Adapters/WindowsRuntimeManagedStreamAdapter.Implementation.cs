@@ -25,9 +25,10 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     {
         get
         {
-            IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
-
+            ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
             NotSupportedException.ThrowIfStreamCannotUseLength(_canSeek);
+
+            IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
 
             ulong size = windowsRuntimeStream.Size;
 
@@ -42,9 +43,10 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     {
         get
         {
-            IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
-
+            ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
             NotSupportedException.ThrowIfStreamCannotUsePosition(_canSeek);
+
+            IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
 
             ulong position = windowsRuntimeStream.Position;
 
@@ -55,10 +57,10 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         set
         {
             ArgumentOutOfRangeException.ThrowIfNegativeStreamPosition(value);
+            ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
+            NotSupportedException.ThrowIfStreamCannotUsePosition(_canSeek);
 
             IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
-
-            NotSupportedException.ThrowIfStreamCannotUsePosition(_canSeek);
 
             windowsRuntimeStream.Seek(unchecked((ulong)value));
         }
@@ -68,11 +70,11 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     public override void SetLength(long value)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeStreamLength(value);
-
-        IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
-
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
         NotSupportedException.ThrowIfStreamCannotSeek(_canSeek);
         NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
+
+        IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
 
         windowsRuntimeStream.Size = unchecked((ulong)value);
 
@@ -88,9 +90,10 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     /// <inheritdoc/>
     public override long Seek(long offset, SeekOrigin origin)
     {
-        IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
-
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
         NotSupportedException.ThrowIfStreamCannotSeek(_canSeek);
+
+        IRandomAccessStream windowsRuntimeStream = (IRandomAccessStream)EnsureNotDisposed();
 
         // Helper for seeking from the start of the stream
         static long ComputeBeginSeek(long offset) => offset;

@@ -30,10 +30,10 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentException.ThrowIfInsufficientArrayElementsAfterOffset(buffer.Length, offset, count);
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
         IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
-
-        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
         IBuffer asyncWriteBuffer = buffer.AsBuffer(offset, count);
 
@@ -95,13 +95,13 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentException.ThrowIfInsufficientArrayElementsAfterOffset(buffer.Length, offset, count);
-
-        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
-
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
         NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
         // If already cancelled, stop early
         cancellationToken.ThrowIfCancellationRequested();
+
+        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
         IBuffer asyncWriteBuffer = buffer.AsBuffer(offset, count);
 
@@ -132,13 +132,15 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     [SupportedOSPlatform("windows10.0.10240.0")]
     public override void Flush()
     {
-        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
 
         // Calling 'Flush' in a non-writable stream is a no-op, not an error
         if (!_canWrite)
         {
             return;
         }
+
+        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
         IAsyncOperation<bool> asyncFlushOperation = windowsRuntimeStream.FlushAsync();
 
@@ -172,7 +174,7 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     [SupportedOSPlatform("windows10.0.10240.0")]
     public override Task FlushAsync(CancellationToken cancellationToken)
     {
-        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
 
         // Calling Flush in a non-writable stream is a no-op, not an error
         if (!_canWrite)
@@ -181,6 +183,8 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+
+        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
         return windowsRuntimeStream.FlushAsync().AsTask(cancellationToken);
     }
