@@ -5,7 +5,6 @@ namespace Windows.Storage.IO
 {
     using global::System.Diagnostics;
     using global::System.IO;
-
     using global::System.Runtime.Versioning;
     using global::System.Threading.Tasks;
     using global::Microsoft.Win32.SafeHandles;
@@ -13,6 +12,7 @@ namespace Windows.Storage.IO
     using global::Windows.Storage.FileProperties;
     using global::Windows.Storage.Streams;
 
+#nullable enable
     /// <summary>
     /// Provides extension methods for working with Windows Runtime storage files and folders.
     /// </summary>
@@ -195,9 +195,9 @@ namespace Windows.Storage.IO
         /// <param name="access">The <see cref="FileAccess"/> mode to open the file with.</param>
         /// <param name="share">The <see cref="FileShare"/> mode to open the file with.</param>
         /// <param name="options">The <see cref="FileOptions"/> to open the file with.</param>
-        /// <returns>A <see cref="SafeFileHandle"/> for the specified storage file.</returns>
+        /// <returns>A <see cref="SafeFileHandle"/> for the specified storage file, or <see langword="null"/> if the operation failed.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeFile"/> is <see langword="null"/>.</exception>
-        public static SafeFileHandle CreateSafeFileHandle(
+        public static SafeFileHandle? CreateSafeFileHandle(
             this IStorageFile windowsRuntimeFile,
             FileAccess access = FileAccess.ReadWrite,
             FileShare share = FileShare.Read,
@@ -218,8 +218,8 @@ namespace Windows.Storage.IO
         /// <param name="rootDirectory">The <see cref="IStorageFolder"/> that contains the file.</param>
         /// <param name="relativePath">The path, relative to <paramref name="rootDirectory"/>, of the file to create a handle for.</param>
         /// <param name="mode">The <see cref="FileMode"/> to use when opening the file.</param>
-        /// <returns>A <see cref="SafeFileHandle"/> for the specified file.</returns>
-        public static SafeFileHandle CreateSafeFileHandle(
+        /// <returns>A <see cref="SafeFileHandle"/> for the specified file, or <see langword="null"/> if the operation failed.</returns>
+        public static SafeFileHandle? CreateSafeFileHandle(
             this IStorageFolder rootDirectory,
             string relativePath,
             FileMode mode)
@@ -236,9 +236,9 @@ namespace Windows.Storage.IO
         /// <param name="access">The <see cref="FileAccess"/> mode to open the file with.</param>
         /// <param name="share">The <see cref="FileShare"/> mode to open the file with.</param>
         /// <param name="options">The <see cref="FileOptions"/> to open the file with.</param>
-        /// <returns>A <see cref="SafeFileHandle"/> for the specified file.</returns>
+        /// <returns>A <see cref="SafeFileHandle"/> for the specified file, or <see langword="null"/> if the operation failed.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="rootDirectory"/> or <paramref name="relativePath"/> is <see langword="null"/>.</exception>
-        public static SafeFileHandle CreateSafeFileHandle(
+        public static SafeFileHandle? CreateSafeFileHandle(
             this IStorageFolder rootDirectory,
             string relativePath,
             FileMode mode,
@@ -288,4 +288,5 @@ namespace Windows.Storage.IO
             }
         }
     }
+#nullable restore
 }
