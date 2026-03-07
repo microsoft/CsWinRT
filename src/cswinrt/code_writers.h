@@ -2205,6 +2205,8 @@ remove => %;
 
     void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute, type_semantics static_method_semantics)
     {
+        (void)static_method_semantics;
+
         auto visibility = "public ";
 
         if (is_protected)
@@ -2221,15 +2223,51 @@ remove => %;
         bool is_private = is_implemented_as_private_method(w, class_type, add);
         if (!is_private)
         {
-            write_event(
-                w,
-                event.Name(),
-                event,
-                w.write_temp("%", bind<write_objref_type_name>(static_method_semantics)),
+            auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
+
+            // Microsoft.UI.Xaml.Input.ICommand has a lower-fidelity type mapping where the type of the event handler doesn't project one-to-one
+            // so we need to hard-code mapping the event handler from the mapped WinRT type to the correct .NET type.
+            if (event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
+            {
+                auto parent_type_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::NonProjected, true));
+                if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
+                {
+                    event_type = "global::System.EventHandler";
+                }
+            }
+
+            w.write(R"(
+%%%event % %
+{
+add => %;
+remove => %;
+}
+)",
+                platform_attribute,
                 visibility,
                 ""sv,
-                platform_attribute,
-                std::optional(std::tuple(static_method_semantics, event, false)));
+                event_type,
+                event.Name(),
+                bind([&](writer& w) {
+                    if (settings.reference_projection)
+                    {
+                        w.write("throw null");
+                    }
+                    else
+                    {
+                        w.write("_eventSource_%.Subscribe(value)", event.Name());
+                    }
+                }),
+                bind([&](writer& w) {
+                    if (settings.reference_projection)
+                    {
+                        w.write("throw null");
+                    }
+                    else
+                    {
+                        w.write("_eventSource_%.Unsubscribe(value)", event.Name());
+                    }
+                }));
         }
 
         // If overridable or private, we need to generate the explicit event
