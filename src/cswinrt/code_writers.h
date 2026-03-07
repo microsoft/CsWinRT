@@ -2922,6 +2922,97 @@ private WindowsRuntimeObjectReference %
         }
     }
 
+    void write_class_event_sources_definition(writer& w, TypeDef const& classType)
+    {
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
+        auto fast_abi_class_val = get_fast_abi_class_for_class(classType);
+
+        for (auto&& ii : classType.InterfaceImpl())
+        {
+            auto semantics = get_type_semantics(ii.Interface());
+            for_typedef(w, semantics, [&](TypeDef ifaceType)
+                {
+                    // Skip fast ABI exclusive non-default interfaces (same as objrefs)
+                    if (is_fast_abi_class(classType) && is_exclusive_to(ifaceType) && !is_default_interface(ii))
+                    {
+                        return;
+                    }
+
+                    // Skip custom mapped types (events handled by write_custom_mapped_type_members)
+                    if (auto mapping = get_mapped_type(ifaceType.TypeNamespace(), ifaceType.TypeName()); mapping && mapping->has_custom_members_output)
+                    {
+                        return;
+                    }
+
+                    auto is_fast_abi_iface = fast_abi_class_val.has_value() && is_exclusive_to(ifaceType);
+                    auto semantics_for_abi_call = is_fast_abi_iface ? get_default_iface_as_type_sem(classType) : semantics;
+                    auto objref_name = w.write_temp("%", bind<write_objref_type_name>(semantics_for_abi_call));
+
+                    for (auto&& evt : ifaceType.EventList())
+                    {
+                        auto [add, _] = get_event_methods(evt);
+                        if (is_implemented_as_private_method(w, classType, add))
+                        {
+                            continue;
+                        }
+
+                        auto event_semantics = get_type_semantics(evt.EventType());
+                        auto event_source_type = w.write_temp("%",
+                            bind<write_type_name>(event_semantics, typedef_name_type::EventSource, false));
+                        auto vtable_index = get_vmethod_index(add.Parent(), add) + 6;
+                        bool is_generic_event = std::holds_alternative<generic_type_instance>(event_semantics);
+
+                        w.write(R"(
+private % _eventSource_%
+{
+    get
+    {%
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        % MakeEventSource()
+        {
+            _ = global::System.Threading.Interlocked.CompareExchange(
+                location1: ref field,
+                value: %,
+                comparand: null);
+
+            return field;
+        }
+
+        return field ?? MakeEventSource();
+    }
+}
+)",
+                            event_source_type,
+                            evt.Name(),
+                            [&](writer& w) {
+                                if (is_generic_event) {
+                                    w.write(R"(
+        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
+        [return: UnsafeAccessorType("%, WinRT.Interop")]
+        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
+)",
+                                        bind<write_interop_dll_type_name>(event_semantics, typedef_name_type::EventSource));
+                                }
+                            },
+                            event_source_type,
+                            [&](writer& w) {
+                                if (is_generic_event) {
+                                    w.write("Unsafe.As<%>(ctor(%, %))",
+                                        event_source_type, objref_name, vtable_index);
+                                } else {
+                                    w.write("new %(%, %)",
+                                        event_source_type, objref_name, vtable_index);
+                                }
+                            });
+                    }
+                });
+        }
+    }
+
     void write_composable_constructors(writer& w, TypeDef const& composable_type, TypeDef const& class_type, std::string_view visibility)
     {
         // Write the factory objref if there are constructors on this type.
@@ -8844,6 +8935,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 %%%%%% %class %%
 {
 %
+%
 
 %
 
@@ -8866,6 +8958,8 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             bind<write_type_inheritance>(type, base_semantics, false, true),
             // start of class
             bind<write_class_objrefs_definition>(type, type.Flags().Sealed()),
+            // event source properties (lazy-loaded, inline cached)
+            bind<write_class_event_sources_definition>(type),
             // ObjectReference constructor
             [&](writer& w)
             {
