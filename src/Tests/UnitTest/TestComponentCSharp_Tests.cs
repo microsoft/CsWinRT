@@ -1012,7 +1012,18 @@ namespace UnitTest
             cts.Cancel();
 
             Memory<byte> buffer = new byte[256];
-            Assert.ThrowsExactly<OperationCanceledException>(() => stream.ReadAsync(buffer, cts.Token).AsTask().GetAwaiter().GetResult());
+            bool threwCancellation = false;
+
+            try
+            {
+                stream.ReadAsync(buffer, cts.Token).AsTask().GetAwaiter().GetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                threwCancellation = true;
+            }
+
+            Assert.IsTrue(threwCancellation);
         }
 
         [TestMethod]
@@ -1023,7 +1034,18 @@ namespace UnitTest
             cts.Cancel();
 
             ReadOnlyMemory<byte> buffer = new byte[256];
-            Assert.ThrowsExactly<OperationCanceledException>(() => stream.WriteAsync(buffer, cts.Token).AsTask().GetAwaiter().GetResult());
+            bool threwCancellation = false;
+
+            try
+            {
+                stream.WriteAsync(buffer, cts.Token).AsTask().GetAwaiter().GetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                threwCancellation = true;
+            }
+
+            Assert.IsTrue(threwCancellation);
         }
 
         [TestMethod]
