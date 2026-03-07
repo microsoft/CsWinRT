@@ -67,7 +67,7 @@ namespace Windows.Storage.IO
         {
             ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
-            return OpenStreamForWriteCoreAsync(windowsRuntimeFile, offset: 0);
+            return OpenStreamForWriteWithOffsetAsync(windowsRuntimeFile, offset: 0);
         }
 
         /// <summary>
@@ -173,13 +173,13 @@ namespace Windows.Storage.IO
                     }
 
                     // Now open a file with the correct options
-                    return await OpenStreamForWriteCoreAsync(windowsRuntimeFile, offset).ConfigureAwait(false);
+                    return await OpenStreamForWriteWithOffsetAsync(windowsRuntimeFile, offset).ConfigureAwait(false);
                 }
                 catch (Exception exception) when (exception is not IOException)
                 {
                     // Throw an 'IOException' (see notes above). We use a filter here to avoid unnecessarily
                     // re-throwing if we already have an 'IOException', since here we're also calling the
-                    // 'OpenStreamForWriteCoreAsync' helper, which will always throw that exception already.
+                    // 'OpenStreamForWriteWithOffsetAsync' helper, which will always throw that exception already.
                     WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(exception).Throw();
 
                     return null;
@@ -262,7 +262,7 @@ namespace Windows.Storage.IO
         /// <inheritdoc cref="OpenStreamForWriteAsync(IStorageFile)"/>
         /// <param name="offset">The offset to set in the returned stream.</param>
         [SupportedOSPlatform("windows10.0.10240.0")]
-        private static async Task<Stream> OpenStreamForWriteCoreAsync(IStorageFile windowsRuntimeFile, long offset)
+        private static async Task<Stream> OpenStreamForWriteWithOffsetAsync(IStorageFile windowsRuntimeFile, long offset)
         {
             Debug.Assert(windowsRuntimeFile is not null);
             Debug.Assert(offset >= 0);
