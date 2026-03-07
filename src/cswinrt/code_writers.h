@@ -2206,6 +2206,7 @@ remove => %;
     void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute, type_semantics static_method_semantics)
     {
         (void)static_method_semantics;
+        (void)interface_member;
 
         auto visibility = "public ";
 
@@ -2221,21 +2222,22 @@ remove => %;
 
         auto [add, _] = get_event_methods(event);
         bool is_private = is_implemented_as_private_method(w, class_type, add);
+
+        auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
+
+        // Microsoft.UI.Xaml.Input.ICommand has a lower-fidelity type mapping where the type of the event handler doesn't project one-to-one
+        // so we need to hard-code mapping the event handler from the mapped WinRT type to the correct .NET type.
+        if (event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
+        {
+            auto parent_type_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::NonProjected, true));
+            if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
+            {
+                event_type = "global::System.EventHandler";
+            }
+        }
+
         if (!is_private)
         {
-            auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
-
-            // Microsoft.UI.Xaml.Input.ICommand has a lower-fidelity type mapping where the type of the event handler doesn't project one-to-one
-            // so we need to hard-code mapping the event handler from the mapped WinRT type to the correct .NET type.
-            if (event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
-            {
-                auto parent_type_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::NonProjected, true));
-                if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
-                {
-                    event_type = "global::System.EventHandler";
-                }
-            }
-
             w.write(R"(
 %%%event % %
 {
@@ -2273,15 +2275,58 @@ remove => %;
         // If overridable or private, we need to generate the explicit event
         if (is_overridable || is_private)
         {
-            write_event(
-                w, 
-                w.write_temp("%.%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false), event.Name()),
-                event,
-                is_private ? interface_member : "this",
-                ""sv,
-                ""sv,
-                platform_attribute,
-                std::nullopt);
+            auto explicit_event_name = w.write_temp("%.%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false), event.Name());
+
+            if (is_private)
+            {
+                auto interface_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false));
+                auto event_source_field_name = escape_type_name_for_identifier(interface_name, true) + "_" + std::string(event.Name());
+
+                w.write(R"(
+%%%event % %
+{
+add => %;
+remove => %;
+}
+)",
+                    platform_attribute,
+                    ""sv,
+                    ""sv,
+                    event_type,
+                    explicit_event_name,
+                    bind([&](writer& w) {
+                        if (settings.reference_projection)
+                        {
+                            w.write("throw null");
+                        }
+                        else
+                        {
+                            w.write("_eventSource_%.Subscribe(value)", event_source_field_name);
+                        }
+                    }),
+                    bind([&](writer& w) {
+                        if (settings.reference_projection)
+                        {
+                            w.write("throw null");
+                        }
+                        else
+                        {
+                            w.write("_eventSource_%.Unsubscribe(value)", event_source_field_name);
+                        }
+                    }));
+            }
+            else
+            {
+                write_event(
+                    w,
+                    explicit_event_name,
+                    event,
+                    "this",
+                    ""sv,
+                    ""sv,
+                    platform_attribute,
+                    std::nullopt);
+            }
         }
     }
 
@@ -2993,9 +3038,17 @@ private WindowsRuntimeObjectReference %
                     for (auto&& evt : ifaceType.EventList())
                     {
                         auto [add, _] = get_event_methods(evt);
-                        if (is_implemented_as_private_method(w, classType, add))
+                        bool is_private = is_implemented_as_private_method(w, classType, add);
+
+                        std::string event_source_field_name;
+                        if (is_private)
                         {
-                            continue;
+                            auto interface_name = w.write_temp("%", bind<write_type_name>(ifaceType, typedef_name_type::CCW, false));
+                            event_source_field_name = escape_type_name_for_identifier(interface_name, true) + "_" + std::string(evt.Name());
+                        }
+                        else
+                        {
+                            event_source_field_name = std::string(evt.Name());
                         }
 
                         auto event_semantics = get_type_semantics(evt.EventType());
@@ -3025,7 +3078,7 @@ private % _eventSource_%
 }
 )",
                             event_source_type,
-                            evt.Name(),
+                            event_source_field_name,
                             [&](writer& w) {
                                 if (is_generic_event) {
                                     w.write(R"(
