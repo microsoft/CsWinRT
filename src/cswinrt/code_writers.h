@@ -2130,7 +2130,8 @@ static extern void %([UnsafeAccessorType("%, WinRT.Interop")] object _, WindowsR
 
     void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view event_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv, std::string_view platform_attribute = ""sv,
-        std::optional<std::tuple<type_semantics, Event, bool>> paramsForStaticMethodCall = {})
+        std::optional<std::tuple<type_semantics, Event, bool>> paramsForStaticMethodCall = {},
+        std::string_view inline_event_source_field = ""sv)
     {
         auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
         auto parent_type = event.Parent();
@@ -2173,7 +2174,18 @@ remove => %;
             event_type,
             external_event_name,
             bind([&](writer& w) {
-                    if (paramsForStaticMethodCall.has_value())
+                    if (!inline_event_source_field.empty())
+                    {
+                        if (settings.reference_projection)
+                        {
+                            w.write("throw null");
+                        }
+                        else
+                        {
+                            w.write("_eventSource_%.Subscribe(value)", inline_event_source_field);
+                        }
+                    }
+                    else if (paramsForStaticMethodCall.has_value())
                     {
                         auto&& [iface_type_semantics, _, is_static] = paramsForStaticMethodCall.value();
                         w.write("%", bind<write_abi_event_source_static_method_call>(iface_type_semantics, event, true,
@@ -2185,7 +2197,18 @@ remove => %;
                     }
                 }),
             bind([&](writer& w) {
-                    if (paramsForStaticMethodCall.has_value())
+                    if (!inline_event_source_field.empty())
+                    {
+                        if (settings.reference_projection)
+                        {
+                            w.write("throw null");
+                        }
+                        else
+                        {
+                            w.write("_eventSource_%.Unsubscribe(value)", inline_event_source_field);
+                        }
+                    }
+                    else if (paramsForStaticMethodCall.has_value())
                     {
                         auto&& [iface_type_semantics, _, is_static] = paramsForStaticMethodCall.value();
                         w.write("%", bind<write_abi_event_source_static_method_call>(iface_type_semantics, event, false,
@@ -2223,53 +2246,9 @@ remove => %;
         auto [add, _] = get_event_methods(event);
         bool is_private = is_implemented_as_private_method(w, class_type, add);
 
-        auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
-
-        // Microsoft.UI.Xaml.Input.ICommand has a lower-fidelity type mapping where the type of the event handler doesn't project one-to-one
-        // so we need to hard-code mapping the event handler from the mapped WinRT type to the correct .NET type.
-        if (event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
-        {
-            auto parent_type_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::NonProjected, true));
-            if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
-            {
-                event_type = "global::System.EventHandler";
-            }
-        }
-
         if (!is_private)
         {
-            w.write(R"(
-%%%event % %
-{
-add => %;
-remove => %;
-}
-)",
-                platform_attribute,
-                visibility,
-                ""sv,
-                event_type,
-                event.Name(),
-                bind([&](writer& w) {
-                    if (settings.reference_projection)
-                    {
-                        w.write("throw null");
-                    }
-                    else
-                    {
-                        w.write("_eventSource_%.Subscribe(value)", event.Name());
-                    }
-                }),
-                bind([&](writer& w) {
-                    if (settings.reference_projection)
-                    {
-                        w.write("throw null");
-                    }
-                    else
-                    {
-                        w.write("_eventSource_%.Unsubscribe(value)", event.Name());
-                    }
-                }));
+            write_event(w, event.Name(), event, ""sv, visibility, ""sv, platform_attribute, std::nullopt, event.Name());
         }
 
         // If overridable or private, we need to generate the explicit event
@@ -2282,50 +2261,11 @@ remove => %;
                 auto interface_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false));
                 auto event_source_field_name = escape_type_name_for_identifier(interface_name, true) + "_" + std::string(event.Name());
 
-                w.write(R"(
-%%%event % %
-{
-add => %;
-remove => %;
-}
-)",
-                    platform_attribute,
-                    ""sv,
-                    ""sv,
-                    event_type,
-                    explicit_event_name,
-                    bind([&](writer& w) {
-                        if (settings.reference_projection)
-                        {
-                            w.write("throw null");
-                        }
-                        else
-                        {
-                            w.write("_eventSource_%.Subscribe(value)", event_source_field_name);
-                        }
-                    }),
-                    bind([&](writer& w) {
-                        if (settings.reference_projection)
-                        {
-                            w.write("throw null");
-                        }
-                        else
-                        {
-                            w.write("_eventSource_%.Unsubscribe(value)", event_source_field_name);
-                        }
-                    }));
+                write_event(w, explicit_event_name, event, ""sv, ""sv, ""sv, platform_attribute, std::nullopt, event_source_field_name);
             }
             else
             {
-                write_event(
-                    w,
-                    explicit_event_name,
-                    event,
-                    "this",
-                    ""sv,
-                    ""sv,
-                    platform_attribute,
-                    std::nullopt);
+                write_event(w, explicit_event_name, event, "this", ""sv, ""sv, platform_attribute, std::nullopt);
             }
         }
     }
