@@ -27,7 +27,6 @@ internal sealed class TaskWithProgressAdapter<TResult, TProgress> : UniversalTas
     /// </summary>
     /// <param name="factory">The function to invoke to create the <see cref="Task{TResult}"/> instance to wrap.</param>
     public TaskWithProgressAdapter(Func<CancellationToken, IProgress<TProgress>, Task<TResult>> factory)
-
          : base(factory)
     {
     }

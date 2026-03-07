@@ -34,17 +34,8 @@ public static partial class WindowsRuntimeBufferMarshal
 
         // If the input buffer is a Windows Runtime object wrapper, unwrap it and use it to access the underlying buffer.
         // This will be the case for both projected Windows Runtime types, or for 'IBuffer' references obtained via IDIC.
-        if (buffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
+        if (WindowsRuntimeBufferHelpers.TryGetNativeData(buffer, out data))
         {
-            using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IBufferByteAccess);
-
-            fixed (byte** dataPtr = &data)
-            {
-                HRESULT hresult = IBufferByteAccessVftbl.BufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), dataPtr);
-
-                RestrictedErrorInfo.ThrowExceptionForHR(hresult);
-            }
-
             return true;
         }
 
@@ -90,7 +81,7 @@ public static partial class WindowsRuntimeBufferMarshal
             goto Failure;
         }
 
-        // Similar handling as above, but for native 'IMemoryBufferByteAccess' instances
+        // Similar handling as in 'WindowsRuntimeBufferHelpers.TryGetNativeData', but for native 'IMemoryBufferByteAccess' instances
         if (buffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
         {
             using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IMemoryBufferByteAccess);

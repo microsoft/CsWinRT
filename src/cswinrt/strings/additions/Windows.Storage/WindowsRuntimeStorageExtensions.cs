@@ -2,15 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace System.IO
+namespace Windows.Storage.IO
 {
-    using System.Diagnostics;
-    using System.Threading.Tasks;
-    using Microsoft.Win32.SafeHandles;
+    using global::System.Diagnostics;
+    using global::System.IO;
+    using global::System.Runtime.InteropServices;
+    using global::System.Threading.Tasks;
+    using global::Microsoft.Win32.SafeHandles;
     using global::Windows.Storage;
     using global::Windows.Storage.FileProperties;
     using global::Windows.Storage.Streams;
-    using System.Runtime.InteropServices;
 
     /// <summary>
     /// Contains extension methods that provide convenience helpers for WinRT IO.
@@ -20,8 +21,7 @@ namespace System.IO
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFile windowsRuntimeFile)
         {
-            if (windowsRuntimeFile == null)
-                throw new ArgumentNullException(nameof(windowsRuntimeFile));
+            ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
             return OpenStreamForReadAsyncCore(windowsRuntimeFile);
         }
@@ -41,7 +41,7 @@ namespace System.IO
             catch (Exception ex)
             {
                 // From this API, managed dev expect IO exceptions for "something wrong":
-                WinRtIOHelper.NativeExceptionToIOExceptionInfo(ex).Throw();
+                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
                 return null;
             }
         }
@@ -49,8 +49,7 @@ namespace System.IO
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFile windowsRuntimeFile)
         {
-            if (windowsRuntimeFile == null)
-                throw new ArgumentNullException(nameof(windowsRuntimeFile));
+            ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
             return OpenStreamForWriteAsyncCore(windowsRuntimeFile, 0);
         }
@@ -72,7 +71,7 @@ namespace System.IO
             catch (Exception ex)
             {
                 // From this API, managed dev expect IO exceptions for "something wrong":
-                WinRtIOHelper.NativeExceptionToIOExceptionInfo(ex).Throw();
+                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
                 return null;
             }
         }
@@ -80,11 +79,8 @@ namespace System.IO
         [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFolder rootDirectory, string relativePath)
         {
-            if (rootDirectory == null)
-                throw new ArgumentNullException(nameof(rootDirectory));
-
-            if (relativePath == null)
-                throw new ArgumentNullException(nameof(relativePath));
+            ArgumentNullException.ThrowIfNull(rootDirectory);
+            ArgumentNullException.ThrowIfNull(relativePath);
 
             if (string.IsNullOrWhiteSpace(relativePath))
                 throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
@@ -109,7 +105,7 @@ namespace System.IO
             catch (Exception ex)
             {
                 // From this API, managed dev expect IO exceptions for "something wrong":
-                WinRtIOHelper.NativeExceptionToIOExceptionInfo(ex).Throw();
+                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
                 return null;
             }
         }
@@ -118,11 +114,8 @@ namespace System.IO
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFolder rootDirectory, string relativePath,
                                                            CreationCollisionOption creationCollisionOption)
         {
-            if (rootDirectory == null)
-                throw new ArgumentNullException(nameof(rootDirectory));
-
-            if (relativePath == null)
-                throw new ArgumentNullException(nameof(relativePath));
+            ArgumentNullException.ThrowIfNull(rootDirectory);
+            ArgumentNullException.ThrowIfNull(relativePath);
 
             if (string.IsNullOrWhiteSpace(relativePath))
                 throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
@@ -174,7 +167,7 @@ namespace System.IO
             catch (Exception ex)
             {
                 // From this API, managed dev expect IO exceptions for "something wrong":
-                WinRtIOHelper.NativeExceptionToIOExceptionInfo(ex).Throw();
+                WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(ex).Throw();
                 return null;
             }
         }
@@ -185,8 +178,7 @@ namespace System.IO
             FileShare share = FileShare.Read,
             FileOptions options = FileOptions.None)
         {
-            if (windowsRuntimeFile == null)
-                throw new ArgumentNullException(nameof(windowsRuntimeFile));
+            ArgumentNullException.ThrowIfNull(windowsRuntimeFile);
 
             HANDLE_ACCESS_OPTIONS accessOptions = FileAccessToHandleAccessOptions(access);
             HANDLE_SHARING_OPTIONS sharingOptions = FileShareToHandleSharingOptions(share);
@@ -216,10 +208,8 @@ namespace System.IO
             FileShare share = FileShare.Read,
             FileOptions options = FileOptions.None)
         {
-            if (rootDirectory == null)
-                throw new ArgumentNullException(nameof(rootDirectory));
-            if (relativePath == null)
-                throw new ArgumentNullException(nameof(relativePath));
+            ArgumentNullException.ThrowIfNull(rootDirectory);
+            ArgumentNullException.ThrowIfNull(relativePath);
 
             HANDLE_CREATION_OPTIONS creationOptions = FileModeToCreationOptions(mode);
             HANDLE_ACCESS_OPTIONS accessOptions = FileAccessToHandleAccessOptions(access);

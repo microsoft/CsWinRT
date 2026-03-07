@@ -6,6 +6,7 @@ using TestComponentCSharp;
 using Windows.Foundation;
 using Windows.Foundation.Tasks;
 using Windows.Storage.Buffers;
+using Windows.Storage.IO;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
 using WindowsRuntime.InteropServices;
@@ -124,8 +125,6 @@ unsafe
         return 113;
     }
 
-    // TODO: Enable after ReadAsync porting
-    /*
     var asyncOperation = randomAccessStream.ReadAsync(buffer, 50, InputStreamOptions.Partial);
     ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(asyncOperation);
     if (ptr is null)
@@ -138,18 +137,15 @@ unsafe
     if (Marshal.QueryInterface((nint)ptr, IID_IAsyncOperationWithProgress, out ptr2) != 0 ||
         ptr2 == IntPtr.Zero)
     {
-        // TODO: Stream implementation needs to move to WinRT.Runtime
-        // return 115;
+        return 115;
     }
 
     Guid IID_IAsyncInfo = new("00000036-0000-0000-C000-000000000046");
     if (Marshal.QueryInterface((nint)ptr, IID_IAsyncInfo, out ptr2) != 0 ||
         ptr2 == IntPtr.Zero)
     {
-        // TODO: Stream implementation needs to move to WinRT.Runtime
-        // return 116;
+        return 116;
     }
-    */
 }
 
 bool progressCalledWithExpectedResults = false;

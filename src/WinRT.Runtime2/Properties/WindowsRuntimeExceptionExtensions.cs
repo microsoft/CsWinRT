@@ -6,8 +6,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
+using Windows.Storage.Streams;
 using WindowsRuntime.InteropServices;
 
 namespace WindowsRuntime;
@@ -195,6 +198,75 @@ internal static class WindowsRuntimeExceptionExtensions
                 ThrowInvalidOperationException();
             }
         }
+
+        /// <summary>
+        /// Throws an <see cref="InvalidOperationException"/> if the stream does not support writing for a resize operation.
+        /// </summary>
+        /// <param name="stream">The stream to check.</param>
+        /// <exception cref="InvalidOperationException">Thrown if <paramref name="stream"/> does not support writing, with an HResult of <c>E_ILLEGAL_METHOD_CALL</c>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotWriteForResize(Stream stream)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowInvalidOperationException()
+            {
+                InvalidOperationException exception = new(WindowsRuntimeExceptionMessages.InvalidOperation_CannotSetStreamSizeCannotWrite)
+                {
+                    HResult = WellKnownErrorCodes.E_ILLEGAL_METHOD_CALL
+                };
+
+                throw exception;
+            }
+
+            if (!stream.CanWrite)
+            {
+                ThrowInvalidOperationException();
+            }
+        }
+
+        /// <summary>
+        /// Creates an <see cref="InvalidOperationException"/> indicating that the method cannot be called in the current state.
+        /// </summary>
+        /// <returns>The resulting <see cref="InvalidOperationException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static InvalidOperationException GetCannotCallThisMethodInCurrentStateException()
+        {
+            return new(WindowsRuntimeExceptionMessages.InvalidOperation_CannotCallThisMethodInCurrentState);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="InvalidOperationException"/> indicating that the I/O completion callback was invoked more than once.
+        /// </summary>
+        /// <returns>The resulting <see cref="InvalidOperationException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static InvalidOperationException GetMultipleIOCompletionCallbackInvocationException()
+        {
+            return new(WindowsRuntimeExceptionMessages.InvalidOperation_MultipleIOCompletionCallbackInvocation);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="InvalidOperationException"/> indicating that the buffer size of a stream adapter cannot be changed.
+        /// </summary>
+        /// <param name="methodName">The name of the method being called.</param>
+        /// <returns>The resulting <see cref="InvalidOperationException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static InvalidOperationException GetCannotChangeBufferSizeOfStreamAdapterException(string methodName)
+        {
+            return new(string.Format(WindowsRuntimeExceptionMessages.InvalidOperation_CannotChangeBufferSizeOfStreamAdapter, methodName));
+        }
+
+        /// <summary>
+        /// Creates an <see cref="InvalidOperationException"/> indicating that the buffer size of a stream adapter cannot be changed to zero.
+        /// </summary>
+        /// <param name="methodName">The name of the method being called.</param>
+        /// <returns>The resulting <see cref="InvalidOperationException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static InvalidOperationException GetCannotChangeBufferSizeOfStreamAdapterToZeroException(string methodName)
+        {
+            return new(string.Format(WindowsRuntimeExceptionMessages.InvalidOperation_CannotChangeBufferSizeOfStreamAdapterToZero, methodName));
+        }
     }
 
     extension(ObjectDisposedException)
@@ -224,6 +296,49 @@ internal static class WindowsRuntimeExceptionExtensions
             {
                 ThrowObjectDisposedException();
             }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ObjectDisposedException"/> if the stream has been disposed (ie. the stream reference is <see langword="null"/>).
+        /// </summary>
+        /// <param name="stream">The stream reference to check.</param>
+        /// <exception cref="ObjectDisposedException">Thrown if <paramref name="stream"/> is <see langword="null"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamIsDisposed([NotNull] object? stream)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowObjectDisposedException()
+                => throw new ObjectDisposedException(WindowsRuntimeExceptionMessages.ObjectDisposed_CannotPerformOperationOnDisposedStream);
+
+            if (stream is null)
+            {
+                ThrowObjectDisposedException();
+            }
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ObjectDisposedException"/> indicating that the stream has been disposed, with an HResult of <c>RO_E_CLOSED</c>.
+        /// </summary>
+        /// <returns>The resulting <see cref="ObjectDisposedException"/> instance with an HResult of <c>RO_E_CLOSED</c>.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ObjectDisposedException GetStreamIsClosedException()
+        {
+            return new ObjectDisposedException(WindowsRuntimeExceptionMessages.ObjectDisposed_CannotPerformOperationOnDisposedStream)
+            {
+                HResult = WellKnownErrorCodes.RO_E_CLOSED
+            };
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ObjectDisposedException"/> indicating that the stream has been disposed.
+        /// </summary>
+        /// <returns>The resulting <see cref="ObjectDisposedException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ObjectDisposedException GetStreamIsDisposedException()
+        {
+            return new ObjectDisposedException(WindowsRuntimeExceptionMessages.ObjectDisposed_CannotPerformOperationOnDisposedStream);
         }
     }
 
@@ -315,6 +430,105 @@ internal static class WindowsRuntimeExceptionExtensions
             if (length > Array.MaxLength)
             {
                 ThrowArgumentOutOfRangeException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentOutOfRangeException"/> if the specified <paramref name="count"/> exceeds <see cref="int.MaxValue"/>.
+        /// </summary>
+        /// <param name="count">The count value to check.</param>
+        /// <param name="paramName">The name of the parameter being checked.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="count"/> exceeds <see cref="int.MaxValue"/>, with an HResult of <c>E_INVALIDARG</c>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfCountExceedsInt32MaxValue(uint count, [CallerArgumentExpression(nameof(count))] string? paramName = null)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentOutOfRangeException(string? paramName)
+            {
+                ArgumentOutOfRangeException exception = new(paramName)
+                {
+                    HResult = WellKnownErrorCodes.E_INVALIDARG
+                };
+
+                throw exception;
+            }
+
+            if (count > int.MaxValue)
+            {
+                ThrowArgumentOutOfRangeException(paramName);
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentOutOfRangeException"/> if the specified <see cref="InputStreamOptions"/> value is not valid.
+        /// </summary>
+        /// <param name="options">The options value to check.</param>
+        /// <param name="paramName">The name of the parameter being checked.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="options"/> is not a valid value, with an HResult of <c>E_INVALIDARG</c>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        [SupportedOSPlatform("windows10.0.10240.0")]
+        public static void ThrowIfInvalidInputStreamOptions(InputStreamOptions options, [CallerArgumentExpression(nameof(options))] string? paramName = null)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentOutOfRangeException(string? paramName)
+            {
+                ArgumentOutOfRangeException exception = new(paramName, WindowsRuntimeExceptionMessages.ArgumentOutOfRange_InvalidInputStreamOptionsEnumValue)
+                {
+                    HResult = WellKnownErrorCodes.E_INVALIDARG
+                };
+
+                throw exception;
+            }
+
+            if (options is not (InputStreamOptions.None or InputStreamOptions.Partial or InputStreamOptions.ReadAhead))
+            {
+                ThrowArgumentOutOfRangeException(paramName);
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentOutOfRangeException"/> if the specified stream position <paramref name="value"/> is negative.
+        /// </summary>
+        /// <param name="value">The position value to check.</param>
+        /// <param name="paramName">The name of the parameter being checked.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="value"/> is negative.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfNegativeStreamPosition(long value, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentOutOfRangeException(string? paramName)
+                => throw new ArgumentOutOfRangeException(paramName, WindowsRuntimeExceptionMessages.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+
+            if (value < 0)
+            {
+                ThrowArgumentOutOfRangeException(paramName);
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentOutOfRangeException"/> if the specified stream length <paramref name="value"/> is negative.
+        /// </summary>
+        /// <param name="value">The length value to check.</param>
+        /// <param name="paramName">The name of the parameter being checked.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="value"/> is negative.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfNegativeStreamLength(long value, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentOutOfRangeException(string? paramName)
+                => throw new ArgumentOutOfRangeException(paramName, WindowsRuntimeExceptionMessages.ArgumentOutOfRange_CannotResizeStreamToNegative);
+
+            if (value < 0)
+            {
+                ThrowArgumentOutOfRangeException(paramName);
             }
         }
     }
@@ -586,6 +800,210 @@ internal static class WindowsRuntimeExceptionExtensions
         {
             return new(WindowsRuntimeExceptionMessages.Argument_InvalidIBufferInstance);
         }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if the buffer capacity is insufficient for the specified count.
+        /// </summary>
+        /// <param name="bufferCapacity">The buffer capacity.</param>
+        /// <param name="requiredCount">The required count.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="bufferCapacity"/> is less than <paramref name="requiredCount"/>, with an HResult of <c>E_INVALIDARG</c>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfBufferCapacityInsufficient(uint bufferCapacity, uint requiredCount)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+            {
+                ArgumentException exception = new(WindowsRuntimeExceptionMessages.Argument_InsufficientBufferCapacity)
+                {
+                    HResult = WellKnownErrorCodes.E_INVALIDARG
+                };
+
+                throw exception;
+            }
+
+            if (bufferCapacity < requiredCount)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if the buffer length exceeds the buffer capacity.
+        /// </summary>
+        /// <param name="bufferCapacity">The buffer capacity.</param>
+        /// <param name="bufferLength">The buffer length.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="bufferCapacity"/> is less than <paramref name="bufferLength"/>, with an HResult of <c>E_INVALIDARG</c>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfBufferLengthExceedsBufferCapacity(uint bufferCapacity, uint bufferLength)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+            {
+                ArgumentException exception = new(WindowsRuntimeExceptionMessages.Argument_BufferLengthExceedsCapacity)
+                {
+                    HResult = WellKnownErrorCodes.E_INVALIDARG
+                };
+
+                throw exception;
+            }
+
+            if (bufferCapacity < bufferLength)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if the specified value exceeds <see cref="long.MaxValue"/>.
+        /// </summary>
+        /// <param name="value">The value to check.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> exceeds <see cref="long.MaxValue"/>, with an HResult of <c>E_INVALIDARG</c>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfSizeExceedsInt64MaxValue(ulong value)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+            {
+                ArgumentException exception = new(WindowsRuntimeExceptionMessages.IO_CannotSetSizeBeyondInt64MaxValue)
+                {
+                    HResult = WellKnownErrorCodes.E_INVALIDARG
+                };
+
+                throw exception;
+            }
+
+            if (value > long.MaxValue)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if the specified stream position exceeds <see cref="long.MaxValue"/>.
+        /// </summary>
+        /// <param name="position">The position to check.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="position"/> exceeds <see cref="long.MaxValue"/>, with an HResult of <c>E_INVALIDARG</c>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfPositionExceedsInt64MaxValue(ulong position)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+            {
+                ArgumentException exception = new(WindowsRuntimeExceptionMessages.IO_CannotSeekBeyondInt64MaxValue)
+                {
+                    HResult = WellKnownErrorCodes.E_INVALIDARG
+                };
+
+                throw exception;
+            }
+
+            if (position > long.MaxValue)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentException"/> if the buffer does not have enough space for the specified read operation.
+        /// </summary>
+        /// <param name="totalLength">The total length of the buffer.</param>
+        /// <param name="offset">The offset into the buffer.</param>
+        /// <param name="required">The number of required elements after the offset.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="totalLength"/> minus <paramref name="offset"/> is less than <paramref name="required"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfInsufficientSpaceInTargetBuffer(int totalLength, int offset, int required)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowArgumentException()
+                => throw new ArgumentException(WindowsRuntimeExceptionMessages.Argument_InsufficientSpaceInTargetBuffer);
+
+            if (totalLength - offset < required)
+            {
+                ThrowArgumentException();
+            }
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ArgumentException"/> indicating that the stream does not have sufficient capabilities to convert to a Windows Runtime stream.
+        /// </summary>
+        /// <returns>The resulting <see cref="ArgumentException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ArgumentException GetNotSufficientCapabilitiesToConvertToWinRtStreamException()
+        {
+            return new(WindowsRuntimeExceptionMessages.Argument_NotSufficientCapabilitiesToConvertToWinRtStream);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ArgumentException"/> indicating that the specified object is not a Windows Runtime stream.
+        /// </summary>
+        /// <returns>The resulting <see cref="ArgumentException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ArgumentException GetObjectMustBeWinRtStreamException()
+        {
+            return new(WindowsRuntimeExceptionMessages.Argument_ObjectMustBeWinRtStreamToConvertToNetFxStream);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ArgumentException"/> indicating that an <c>IRandomAccessStream</c> reporting <c>CanRead</c> must also implement <c>IInputStream</c>.
+        /// </summary>
+        /// <returns>The resulting <see cref="ArgumentException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ArgumentException GetCanReadStreamMustImplementIInputStreamException()
+        {
+            return new(WindowsRuntimeExceptionMessages.Argument_InstancesImplementingIRASThatCanReadMustImplementIIS);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ArgumentException"/> indicating that an <c>IRandomAccessStream</c> reporting <c>CanWrite</c> must also implement <c>IOutputStream</c>.
+        /// </summary>
+        /// <returns>The resulting <see cref="ArgumentException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ArgumentException GetCanWriteStreamMustImplementIOutputStreamException()
+        {
+            return new(WindowsRuntimeExceptionMessages.Argument_InstancesImplementingIRASThatCanWriteMustImplementIOS);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ArgumentException"/> indicating that a Windows Runtime stream supports neither reading nor writing.
+        /// </summary>
+        /// <returns>The resulting <see cref="ArgumentException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ArgumentException GetWinRtStreamCannotReadOrWriteException()
+        {
+            return new(WindowsRuntimeExceptionMessages.Argument_WinRtStreamCannotReadOrWrite);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ArgumentException"/> indicating that the specified <see cref="IAsyncResult"/> is not expected.
+        /// </summary>
+        /// <param name="paramName">The name of the parameter that caused the exception.</param>
+        /// <returns>The resulting <see cref="ArgumentException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ArgumentException GetUnexpectedAsyncResultException(string? paramName)
+        {
+            return new(WindowsRuntimeExceptionMessages.Argument_UnexpectedAsyncResult, paramName);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ArgumentException"/> indicating that the specified seek origin is not valid.
+        /// </summary>
+        /// <param name="paramName">The name of the parameter that caused the exception.</param>
+        /// <returns>The resulting <see cref="ArgumentException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ArgumentException GetInvalidSeekOriginException(string? paramName)
+        {
+            return new(WindowsRuntimeExceptionMessages.Argument_InvalidSeekOrigin, paramName);
+        }
     }
 
     extension(UnauthorizedAccessException)
@@ -631,6 +1049,299 @@ internal static class WindowsRuntimeExceptionExtensions
             {
                 HResult = WellKnownErrorCodes.E_BOUNDS
             };
+        }
+    }
+
+    extension(NotSupportedException)
+    {
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the stream does not support reading.
+        /// </summary>
+        /// <param name="canRead">Whether the stream supports reading.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="canRead"/> is <see langword="false"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotRead(bool canRead)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotReadFromStream);
+
+            if (!canRead)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the stream does not support writing.
+        /// </summary>
+        /// <param name="canWrite">Whether the stream supports writing.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="canWrite"/> is <see langword="false"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotWrite(bool canWrite)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotWriteToStream);
+
+            if (!canWrite)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the stream does not support the <c>Length</c> property.
+        /// </summary>
+        /// <param name="canSeek">Whether the stream supports seeking.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="canSeek"/> is <see langword="false"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotUseLength(bool canSeek)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotUseLength_StreamNotSeekable);
+
+            if (!canSeek)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the stream does not support the <c>Position</c> property.
+        /// </summary>
+        /// <param name="canSeek">Whether the stream supports seeking.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="canSeek"/> is <see langword="false"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotUsePosition(bool canSeek)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotUsePosition_StreamNotSeekable);
+
+            if (!canSeek)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the stream does not support seeking.
+        /// </summary>
+        /// <param name="canSeek">Whether the stream supports seeking.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="canSeek"/> is <see langword="false"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotSeek(bool canSeek)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotSeekInStream);
+
+            if (!canSeek)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the stream does not support reading for conversion to an <see cref="IInputStream"/>.
+        /// </summary>
+        /// <param name="canRead">Whether the stream supports reading.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="canRead"/> is <see langword="false"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotConvertToInputStream(bool canRead)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotConvertNotReadableStreamToInputStream);
+
+            if (!canRead)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the stream does not support writing for conversion to an <see cref="IOutputStream"/>.
+        /// </summary>
+        /// <param name="canWrite">Whether the stream supports writing.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="canWrite"/> is <see langword="false"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotConvertToOutputStream(bool canWrite)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotConvertNotWritableStreamToOutputStream);
+
+            if (!canWrite)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/> if the stream does not support seeking for conversion to an <see cref="IRandomAccessStream"/>.
+        /// </summary>
+        /// <param name="canSeek">Whether the stream supports seeking.</param>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="canSeek"/> is <see langword="false"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfStreamCannotConvertToRandomAccessStream(bool canSeek)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowNotSupportedException()
+                => throw new NotSupportedException(WindowsRuntimeExceptionMessages.NotSupported_CannotConvertNotSeekableStreamToRandomAccessStream);
+
+            if (!canSeek)
+            {
+                ThrowNotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Creates a <see cref="NotSupportedException"/> indicating that the stream does not support cloning.
+        /// </summary>
+        /// <param name="methodName">The name of the method that requires cloning support.</param>
+        /// <returns>The resulting <see cref="NotSupportedException"/> instance with an HResult of <c>E_NOTIMPL</c>.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static NotSupportedException GetCloningNotSupportedException(string methodName)
+        {
+            return new NotSupportedException(string.Format(WindowsRuntimeExceptionMessages.NotSupported_CloningNotSupported, methodName))
+            {
+                HResult = WellKnownErrorCodes.E_NOTIMPL
+            };
+        }
+    }
+
+    extension(IOException)
+    {
+        /// <summary>
+        /// Throws an <see cref="IOException"/> if the sum of <paramref name="basePosition"/> and <paramref name="offset"/> would exceed <see cref="long.MaxValue"/>.
+        /// </summary>
+        /// <param name="basePosition">The base position value.</param>
+        /// <param name="offset">The offset value.</param>
+        /// <exception cref="IOException">Thrown if <paramref name="basePosition"/> + <paramref name="offset"/> would exceed <see cref="long.MaxValue"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfSeekWouldExceedMaxPosition(long basePosition, long offset)
+        {
+            if (long.MaxValue - basePosition < offset)
+            {
+                ThrowCannotSeekBeyondInt64MaxValue();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="IOException"/> if the specified <paramref name="offset"/> is non-negative (indicating a forward seek from an oversized stream).
+        /// </summary>
+        /// <param name="offset">The seek offset value.</param>
+        /// <exception cref="IOException">Thrown if <paramref name="offset"/> is greater than or equal to zero.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfNonNegativeOffsetForOversizedStream(long offset)
+        {
+            if (offset >= 0)
+            {
+                ThrowCannotSeekBeyondInt64MaxValue();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="IOException"/> if the specified <paramref name="position"/> exceeds <see cref="long.MaxValue"/>.
+        /// </summary>
+        /// <param name="position">The position value to check.</param>
+        /// <exception cref="IOException">Thrown if <paramref name="position"/> exceeds <see cref="long.MaxValue"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfSeekPositionExceedsInt64MaxValue(ulong position)
+        {
+            if (position > long.MaxValue)
+            {
+                ThrowCannotSeekBeyondInt64MaxValue();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="IOException"/> if the specified <paramref name="position"/> is negative.
+        /// </summary>
+        /// <param name="position">The position value to check.</param>
+        /// <exception cref="IOException">Thrown if <paramref name="position"/> is negative.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfSeekResultNegative(long position)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowCannotSeekToNegativePosition()
+                => throw new IOException(WindowsRuntimeExceptionMessages.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+
+            if (position < 0)
+            {
+                ThrowCannotSeekToNegativePosition();
+            }
+        }
+
+        /// <summary>
+        /// Throws an <see cref="IOException"/> if the specified <paramref name="value"/> exceeds <see cref="long.MaxValue"/>,
+        /// indicating that the underlying Windows Runtime stream is too long to use length or position operations.
+        /// </summary>
+        /// <param name="value">The stream size or position value to check.</param>
+        /// <exception cref="IOException">Thrown if <paramref name="value"/> exceeds <see cref="long.MaxValue"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static void ThrowIfUnderlyingWinRTStreamTooLong(ulong value)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowUnderlyingWinRTStreamTooLong()
+                => throw new IOException(WindowsRuntimeExceptionMessages.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+
+            if (value > long.MaxValue)
+            {
+                ThrowUnderlyingWinRTStreamTooLong();
+            }
+        }
+
+#pragma warning disable IDE0051 // TODO: remove this once Roslyn bug is fixed
+        /// <summary>
+        /// Throw helper for <see cref="ThrowIfSeekPositionExceedsInt64MaxValue"/>.
+        /// </summary>
+        [DoesNotReturn]
+        [StackTraceHidden]
+        private static void ThrowCannotSeekBeyondInt64MaxValue()
+        {
+            throw new IOException(WindowsRuntimeExceptionMessages.IO_CannotSeekBeyondInt64MaxValue);
+        }
+#pragma warning restore IDE0051
+    }
+
+    extension(ArgumentNullException)
+    {
+        /// <summary>
+        /// Creates an <see cref="ArgumentNullException"/> indicating that the I/O completion callback received a <see langword="null"/> async info.
+        /// </summary>
+        /// <param name="paramName">The name of the parameter that caused the exception.</param>
+        /// <returns>The resulting <see cref="ArgumentNullException"/> instance.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ArgumentNullException GetIOCompletionCallbackCannotProcessNullAsyncInfoException(string? paramName)
+        {
+            return new(paramName, WindowsRuntimeExceptionMessages.ArgumentNullReference_IOCompletionCallbackCannotProcessNullAsyncInfo);
         }
     }
 }
