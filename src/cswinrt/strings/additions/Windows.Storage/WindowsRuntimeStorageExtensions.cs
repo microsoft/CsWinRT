@@ -3,6 +3,7 @@
 
 namespace Windows.Storage.IO
 {
+    using global::System;
     using global::System.Diagnostics;
     using global::System.IO;
     using global::System.Runtime.Versioning;
