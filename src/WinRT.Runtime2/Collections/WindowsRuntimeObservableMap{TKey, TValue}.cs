@@ -24,7 +24,7 @@ namespace WindowsRuntime;
 /// <typeparam name="TIIterableMethods">The <c>Windows.Foundation.Collections.IIterable&lt;T&gt;</c> implementation type.</typeparam>
 /// <typeparam name="TIMap">The <c>Windows.Foundation.Collections.IMap&lt;K, V&gt;</c> interface type.</typeparam>
 /// <typeparam name="TIMapMethods">The <c>Windows.Foundation.Collections.IMap&lt;K, V&gt;</c> implementation type.</typeparam>
-/// <typeparam name="TIObservableMapMethods">The <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> implementation type.</typeparam>
+/// <typeparam name="TIObservableMapEventSourceFactory">The <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> factory type for event source objects.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablevector-1"/>
 [WindowsRuntimeManagedOnlyType]
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
@@ -38,7 +38,7 @@ public abstract class WindowsRuntimeObservableMap<
     TIIterableMethods,
     TIMap,
     TIMapMethods,
-    TIObservableMapMethods> : WindowsRuntimeObject,
+    TIObservableMapEventSourceFactory> : WindowsRuntimeObject,
     IObservableMap<TKey, TValue>,
     IDictionary<TKey, TValue>,
     IReadOnlyDictionary<TKey, TValue>,
@@ -49,7 +49,7 @@ public abstract class WindowsRuntimeObservableMap<
     where TIIterableMethods : IIterableMethodsImpl<KeyValuePair<TKey, TValue>>
     where TIMap : IWindowsRuntimeInterface
     where TIMapMethods : IMapMethodsImpl<TKey, TValue>
-    where TIObservableMapMethods : IObservableMapMethodsImpl<TKey, TValue>
+    where TIObservableMapEventSourceFactory : IObservableMapEventSourceFactory<TKey, TValue>
 {
     /// <inheritdoc cref="WindowsRuntimeDictionary{TKey, TValue, TIIterable, TIIterableMethods, TIMapMethods}._keys"/>
     private DictionaryKeyCollection<TKey, TValue>? _keys;
@@ -109,11 +109,33 @@ public abstract class WindowsRuntimeObservableMap<
         }
     }
 
+    /// <summary>
+    /// Gets the lazy-loaded <see cref="ABI.Windows.Foundation.Collections.MapChangedEventHandlerEventSource{K, V}"/> instance for the current object.
+    /// </summary>
+    private ABI.Windows.Foundation.Collections.MapChangedEventHandlerEventSource<TKey, TValue> MapChangedEventSource
+    {
+        get
+        {
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            ABI.Windows.Foundation.Collections.MapChangedEventHandlerEventSource<TKey, TValue> InitializeMapChangedEventSource()
+            {
+                _ = Interlocked.CompareExchange(
+                    location1: ref field,
+                    value: TIObservableMapEventSourceFactory.MapChanged(NativeObjectReference),
+                    comparand: null);
+
+                return field;
+            }
+
+            return field ?? InitializeMapChangedEventSource();
+        }
+    }
+
     /// <inheritdoc/>
     public event MapChangedEventHandler<TKey, TValue>? MapChanged
     {
-        add => TIObservableMapMethods.MapChanged(this, NativeObjectReference).Subscribe(value);
-        remove => TIObservableMapMethods.MapChanged(this, NativeObjectReference).Unsubscribe(value);
+        add => MapChangedEventSource.Subscribe(value);
+        remove => MapChangedEventSource.Unsubscribe(value);
     }
 
     /// <inheritdoc/>

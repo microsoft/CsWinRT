@@ -1483,16 +1483,23 @@ internal partial class InteropGenerator
                     module: module,
                     factoryType: out TypeDefinition factoryType);
 
+                InteropTypeDefinitionBuilder.IObservableVector1.EventSourceCallback(
+                    vectorType: typeSignature,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    callbackType: out TypeDefinition callbackType);
+
                 InteropTypeDefinitionBuilder.IObservableVector1.Methods(
                     vectorType: typeSignature,
-                    eventSourceFactoryType: factoryType,
+                    eventSourceCallbackType: callbackType,
                     interopReferences: interopReferences,
                     module: module,
                     methodsType: out TypeDefinition methodsType);
 
                 InteropTypeDefinitionBuilder.IObservableVector1.NativeObject(
                     vectorType: typeSignature,
-                    vectorMethodsType: methodsType,
+                    factoryType: factoryType,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
@@ -1601,16 +1608,23 @@ internal partial class InteropGenerator
                     module: module,
                     factoryType: out TypeDefinition factoryType);
 
+                InteropTypeDefinitionBuilder.IObservableMap2.EventSourceCallback(
+                    mapType: typeSignature,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    callbackType: out TypeDefinition callbackType);
+
                 InteropTypeDefinitionBuilder.IObservableMap2.Methods(
                     mapType: typeSignature,
-                    eventSourceFactoryType: factoryType,
+                    eventSourceCallbackType: callbackType,
                     interopReferences: interopReferences,
                     module: module,
                     methodsType: out TypeDefinition methodsType);
 
                 InteropTypeDefinitionBuilder.IObservableMap2.NativeObject(
                     mapType: typeSignature,
-                    mapMethodsType: methodsType,
+                    factoryType: factoryType,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
