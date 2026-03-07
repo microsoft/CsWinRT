@@ -243,7 +243,7 @@ if (!progressCalledWithExpectedResults)
 
     try
     {
-        await adaptedStream.ReadAsync(new byte[256].AsMemory(), cts.Token);
+        _ = await adaptedStream.ReadAsync(new byte[256].AsMemory(), cts.Token);
         return 126;
     }
     catch (OperationCanceledException)
