@@ -306,6 +306,24 @@ if (!progressCalledWithExpectedResults)
     {
         return 131;
     }
+
+    // Test WindowsRuntimePinnedMemoryBuffer (created internally by the stream adapter when
+    // using span/memory-based Write, which pins the data and wraps it in a PinnedMemoryBuffer
+    // before passing it as an IBuffer CCW to the native WinRT stream's WriteAsync)
+    using var stream3 = new InMemoryRandomAccessStream();
+    using var adaptedStream3 = stream3.AsStream();
+    adaptedStream3.Write(new ReadOnlySpan<byte>(testData));
+    adaptedStream3.Dispose();
+
+    stream3.Seek(0);
+
+    byte[] read3 = new byte[8];
+    IBuffer readBuffer3 = read3.AsBuffer();
+    await stream3.ReadAsync(readBuffer3, 8, InputStreamOptions.None);
+    if (!testData.SequenceEqual(read3))
+    {
+        return 132;
+    }
 }
 
 return 100;
