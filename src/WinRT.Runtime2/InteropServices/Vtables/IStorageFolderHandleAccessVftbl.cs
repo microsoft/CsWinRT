@@ -42,6 +42,14 @@ internal unsafe struct IStorageFolderHandleAccessVftbl
         void* oplockBreakingHandler,
         HANDLE* interopHandle)
     {
-        return ((IStorageFolderHandleAccessVftbl*)*(void***)thisPtr)->Create(thisPtr, fileName, creationOptions, accessOptions, sharingOptions, options, oplockBreakingHandler, interopHandle);
+        return ((IStorageFolderHandleAccessVftbl*)*(void***)thisPtr)->Create(
+            thisPtr,
+            fileName,
+            creationOptions,
+            accessOptions,
+            sharingOptions,
+            options,
+            oplockBreakingHandler,
+            interopHandle);
     }
 }
