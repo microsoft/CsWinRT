@@ -2228,6 +2228,9 @@ remove => %;
 
     void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute, type_semantics static_method_semantics)
     {
+        (void)static_method_semantics;
+        (void)interface_member;
+
         auto visibility = "public ";
 
         if (is_protected)
@@ -2243,36 +2246,9 @@ remove => %;
         auto [add, _] = get_event_methods(event);
         bool is_private = is_implemented_as_private_method(w, class_type, add);
 
-        // ICommand.CanExecuteChanged has a type mismatch between the .NET event type (EventHandler) and the WinRT
-        // event source type (EventHandler<object>), so we can't use inline event sources for it. Fall back to the
-        // old ABI static method call path for non-private events, and to the delegate-to-target path for private
-        // events (explicit interface implementations).
-        bool use_inline_event_source = true;
-        if (event.Name() == "CanExecuteChanged")
-        {
-            auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
-            if (event_type == "global::System.EventHandler<object>")
-            {
-                auto parent_type_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::NonProjected, true));
-                if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
-                {
-                    use_inline_event_source = false;
-                }
-            }
-        }
-
         if (!is_private)
         {
-            if (use_inline_event_source)
-            {
-                write_event(w, event.Name(), event, ""sv, visibility, ""sv, platform_attribute, std::nullopt, event.Name());
-            }
-            else
-            {
-                auto event_target = w.write_temp("%", bind<write_objref_type_name>(static_method_semantics));
-                write_event(w, event.Name(), event, event_target, visibility, ""sv, platform_attribute,
-                    std::optional(std::tuple(static_method_semantics, event, false)));
-            }
+            write_event(w, event.Name(), event, ""sv, visibility, ""sv, platform_attribute, std::nullopt, event.Name());
         }
 
         // If overridable or private, we need to generate the explicit event
@@ -2282,17 +2258,10 @@ remove => %;
 
             if (is_private)
             {
-                if (use_inline_event_source)
-                {
-                    auto interface_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false));
-                    auto event_source_field_name = escape_type_name_for_identifier(interface_name, true) + "_" + std::string(event.Name());
+                auto interface_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false));
+                auto event_source_field_name = escape_type_name_for_identifier(interface_name, true) + "_" + std::string(event.Name());
 
-                    write_event(w, explicit_event_name, event, ""sv, ""sv, ""sv, platform_attribute, std::nullopt, event_source_field_name);
-                }
-                else
-                {
-                    write_event(w, explicit_event_name, event, interface_member, ""sv, ""sv, platform_attribute, std::nullopt);
-                }
+                write_event(w, explicit_event_name, event, ""sv, ""sv, ""sv, platform_attribute, std::nullopt, event_source_field_name);
             }
             else
             {
@@ -3011,21 +2980,6 @@ private WindowsRuntimeObjectReference %
                         auto [add, _] = get_event_methods(evt);
                         bool is_private = is_implemented_as_private_method(w, classType, add);
 
-                        // ICommand.CanExecuteChanged can't use inline event sources due to a type mismatch
-                        // between the .NET event type (EventHandler) and the WinRT type (EventHandler<object>).
-                        if (evt.Name() == "CanExecuteChanged")
-                        {
-                            auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false));
-                            if (event_type == "global::System.EventHandler<object>")
-                            {
-                                auto parent_type_name = w.write_temp("%", bind<write_type_name>(evt.Parent(), typedef_name_type::NonProjected, true));
-                                if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
-                                {
-                                    continue;
-                                }
-                            }
-                        }
-
                         std::string event_source_field_name;
                         if (is_private)
                         {
@@ -3042,6 +2996,19 @@ private WindowsRuntimeObjectReference %
                             bind<write_type_name>(event_semantics, typedef_name_type::EventSource, false));
                         auto vtable_index = get_vmethod_index(add.Parent(), add) + 6;
                         bool is_generic_event = std::holds_alternative<generic_type_instance>(event_semantics);
+
+                        // ICommand.CanExecuteChanged has a type mismatch: the .NET event type is EventHandler (non-generic),
+                        // but the WinRT type is EventHandler<object>. Use the non-generic EventHandlerEventSource which has
+                        // Subscribe(EventHandler), matching the .NET event type after the fixup in write_event.
+                        if (evt.Name() == "CanExecuteChanged" && is_generic_event)
+                        {
+                            auto parent_type_name = w.write_temp("%", bind<write_type_name>(evt.Parent(), typedef_name_type::NonProjected, true));
+                            if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
+                            {
+                                event_source_type = "global::WindowsRuntime.InteropServices.EventHandlerEventSource";
+                                is_generic_event = false;
+                            }
+                        }
 
                         w.write(R"(
 private % _eventSource_%
