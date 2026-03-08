@@ -1681,6 +1681,26 @@ namespace cswinrt
         return gc_pressure_amount;
     }
 
+    std::string_view get_marshaling_type_name(TypeDef const& classType)
+    {
+        if (auto marshaling_attr = get_attribute(classType, "Windows.Foundation.Metadata"sv, "MarshalingBehaviorAttribute"sv))
+        {
+            auto sig = marshaling_attr.Value();
+            auto const& fixed_args = sig.FixedArgs();
+            XLANG_ASSERT(fixed_args.size() == 1);
+
+            auto marshaling_type = std::get<int32_t>(std::get<ElemSig::EnumValue>(std::get<ElemSig>(fixed_args[0].value).value).value);
+
+            switch (marshaling_type)
+            {
+            case 2: return "CreateObjectReferenceMarshalingType.Agile"sv;
+            case 3: return "CreateObjectReferenceMarshalingType.Standard"sv;
+            }
+        }
+
+        return "CreateObjectReferenceMarshalingType.Unknown"sv;
+    }
+
     struct generic_abi_delegate
     {
         std::string abi_delegate_name;
