@@ -112,6 +112,7 @@ unsafe
         return 111;
     }
 
+    // Test WindowsRuntimeExternalArrayBuffer CCW (created via AsBuffer())
     var arr = new byte[100];
     var buffer = arr.AsBuffer();
     ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(buffer);
@@ -124,6 +125,20 @@ unsafe
         ptr2 == IntPtr.Zero)
     {
         return 113;
+    }
+
+    // Test WindowsRuntimePinnedArrayBuffer CCW (created via WindowsRuntimeBuffer.Create())
+    var pinnedBuffer = WindowsRuntimeBuffer.Create(100);
+    ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(pinnedBuffer);
+    if (ptr is null)
+    {
+        return 128;
+    }
+
+    if (Marshal.QueryInterface((nint)ptr, typeof(IBuffer).GUID, out ptr2) != 0 ||
+        ptr2 == IntPtr.Zero)
+    {
+        return 129;
     }
 
     var asyncOperation = randomAccessStream.ReadAsync(buffer, 50, InputStreamOptions.Partial);
@@ -257,6 +272,39 @@ if (!progressCalledWithExpectedResults)
     }
     catch (OperationCanceledException)
     {
+    }
+}
+
+// Test writing each managed buffer type to a native WinRT stream (exercises CCW interop)
+{
+    byte[] testData = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
+
+    // Test WindowsRuntimeExternalArrayBuffer (from AsBuffer()) written to native stream
+    using var stream1 = new InMemoryRandomAccessStream();
+    IBuffer externalArrayBuffer = testData.AsBuffer();
+    await stream1.WriteAsync(externalArrayBuffer);
+    stream1.Seek(0);
+
+    byte[] read1 = new byte[8];
+    IBuffer readBuffer1 = read1.AsBuffer();
+    await stream1.ReadAsync(readBuffer1, 8, InputStreamOptions.None);
+    if (!testData.SequenceEqual(read1))
+    {
+        return 130;
+    }
+
+    // Test WindowsRuntimePinnedArrayBuffer (from WindowsRuntimeBuffer.Create()) written to native stream
+    using var stream2 = new InMemoryRandomAccessStream();
+    IBuffer pinnedArrayBuffer = WindowsRuntimeBuffer.Create(testData);
+    await stream2.WriteAsync(pinnedArrayBuffer);
+    stream2.Seek(0);
+
+    byte[] read2 = new byte[8];
+    IBuffer readBuffer2 = read2.AsBuffer();
+    await stream2.ReadAsync(readBuffer2, 8, InputStreamOptions.None);
+    if (!testData.SequenceEqual(read2))
+    {
+        return 131;
     }
 }
 
