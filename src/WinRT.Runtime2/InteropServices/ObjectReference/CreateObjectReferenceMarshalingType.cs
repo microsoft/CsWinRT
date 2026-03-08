@@ -24,11 +24,11 @@ public enum CreateObjectReferenceMarshalingType
     /// <summary>
     /// The class marshals and unmarshals to the same pointer value on all interfaces.
     /// </summary>
-    Agile = 2,
+    Agile,
 
     /// <summary>
     /// The class does not implement <see href="https://learn.microsoft.com/windows/win32/api/objidl/nn-objidl-imarshal"><c>IMarshal</c></see> or forwards to
     /// <see href="https://learn.microsoft.com/windows/win32/api/combaseapi/nf-combaseapi-cogetstandardmarshal"><c>CoGetStandardMarshal</c></see> on all interfaces.
     /// </summary>
-    Standard = 3
+    Standard
 }
