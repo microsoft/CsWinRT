@@ -2764,6 +2764,7 @@ private static class _%
     {
         auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
         auto gc_pressure_amount = get_gc_pressure_amount(class_type);
+        auto marshaling_type = get_marshaling_type_name(class_type);
         if (factory_type)
         {
             write_static_objref_definition(w, factory_type, class_type);
@@ -2776,7 +2777,7 @@ private static class _%
 
             w.write(R"(
 %public unsafe %(%)
-  :base(%.Instance, %, [%])
+  :base(%.Instance, %, %, [%])
 {
 %}
 )",
@@ -2787,6 +2788,7 @@ private static class _%
                 // base
                 bind<write_constructor_callback_method_name>(method),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                marshaling_type,
                 bind_list<write_constructor_parameter_name_with_modifier>(", ", signature.params()),
                 [&](writer& w)
                 {
@@ -2804,13 +2806,14 @@ private static class _%
 
             w.write(R"(
 public %()
-  :base(default(WindowsRuntimeActivationTypes.DerivedSealed), %, %)
+  :base(default(WindowsRuntimeActivationTypes.DerivedSealed), %, %, %)
 {
 %}
 )",
                 class_type.TypeName(),
                 objrefname,
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                marshaling_type,
                 [&](writer& w)
                 {
                     if (!gc_pressure_amount) return;
