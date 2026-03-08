@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -842,6 +843,387 @@ namespace UnitTest
             Assert.IsTrue(arr1[1] == arr2[1]);
         }
 
+        [TestMethod]
+        public void TestStreamReadSpan()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            stream.Write(data, 0, data.Length);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            Span<byte> read = new byte[256];
+            int bytesRead = stream.Read(read);
+
+            Assert.AreEqual(256, bytesRead);
+            CollectionAssert.AreEqual(data, read.ToArray());
+        }
+
+        [TestMethod]
+        public void TestStreamReadSpanPartial()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            stream.Write(data, 0, data.Length);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            Span<byte> read = new byte[64];
+            int bytesRead = stream.Read(read);
+
+            Assert.AreEqual(64, bytesRead);
+            CollectionAssert.AreEqual(data[..64], read.ToArray());
+        }
+
+        [TestMethod]
+        public void TestStreamReadSpanEmpty()
+        {
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            int bytesRead = stream.Read(Span<byte>.Empty);
+            Assert.AreEqual(0, bytesRead);
+        }
+
+        [TestMethod]
+        public void TestStreamWriteSpan()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            stream.Write(new ReadOnlySpan<byte>(data));
+            stream.Seek(0, SeekOrigin.Begin);
+
+            byte[] read = new byte[256];
+            stream.Read(read, 0, read.Length);
+            CollectionAssert.AreEqual(data, read);
+        }
+
+        [TestMethod]
+        public void TestStreamWriteSpanEmpty()
+        {
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            stream.Write(ReadOnlySpan<byte>.Empty);
+            Assert.AreEqual(0L, stream.Length);
+        }
+
+        [TestMethod]
+        public void TestStreamReadAsyncMemory()
+        {
+            async Task TestAsync()
+            {
+                var random = new Random(42);
+                byte[] data = new byte[256];
+                random.NextBytes(data);
+
+                using var stream = new InMemoryRandomAccessStream().AsStream();
+                await stream.WriteAsync(data, 0, data.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+
+                Memory<byte> read = new byte[256];
+                int bytesRead = await stream.ReadAsync(read);
+
+                Assert.AreEqual(256, bytesRead);
+                CollectionAssert.AreEqual(data, read.ToArray());
+            }
+
+            Assert.IsTrue(TestAsync().Wait(5000));
+        }
+
+        [TestMethod]
+        public void TestStreamReadAsyncMemoryPartial()
+        {
+            async Task TestAsync()
+            {
+                var random = new Random(42);
+                byte[] data = new byte[256];
+                random.NextBytes(data);
+
+                using var stream = new InMemoryRandomAccessStream().AsStream();
+                await stream.WriteAsync(data, 0, data.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+
+                Memory<byte> read = new byte[64];
+                int bytesRead = await stream.ReadAsync(read);
+
+                Assert.AreEqual(64, bytesRead);
+                CollectionAssert.AreEqual(data[..64], read.ToArray());
+            }
+
+            Assert.IsTrue(TestAsync().Wait(5000));
+        }
+
+        [TestMethod]
+        public void TestStreamReadAsyncMemoryEmpty()
+        {
+            async Task TestAsync()
+            {
+                using var stream = new InMemoryRandomAccessStream().AsStream();
+                int bytesRead = await stream.ReadAsync(Memory<byte>.Empty);
+                Assert.AreEqual(0, bytesRead);
+            }
+
+            Assert.IsTrue(TestAsync().Wait(5000));
+        }
+
+        [TestMethod]
+        public void TestStreamWriteAsyncMemory()
+        {
+            async Task TestAsync()
+            {
+                var random = new Random(42);
+                byte[] data = new byte[256];
+                random.NextBytes(data);
+
+                using var stream = new InMemoryRandomAccessStream().AsStream();
+                await stream.WriteAsync(new ReadOnlyMemory<byte>(data));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                byte[] read = new byte[256];
+                await stream.ReadAsync(read, 0, read.Length);
+                CollectionAssert.AreEqual(data, read);
+            }
+
+            Assert.IsTrue(TestAsync().Wait(5000));
+        }
+
+        [TestMethod]
+        public void TestStreamWriteAsyncMemoryEmpty()
+        {
+            async Task TestAsync()
+            {
+                using var stream = new InMemoryRandomAccessStream().AsStream();
+                await stream.WriteAsync(ReadOnlyMemory<byte>.Empty);
+                Assert.AreEqual(0L, stream.Length);
+            }
+
+            Assert.IsTrue(TestAsync().Wait(5000));
+        }
+
+        [TestMethod]
+        public void TestStreamReadAsyncMemoryWithCancellation()
+        {
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            Memory<byte> buffer = new byte[256];
+            bool threwCancellation = false;
+
+            try
+            {
+                stream.ReadAsync(buffer, cts.Token).AsTask().GetAwaiter().GetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                threwCancellation = true;
+            }
+
+            Assert.IsTrue(threwCancellation);
+        }
+
+        [TestMethod]
+        public void TestStreamWriteAsyncMemoryWithCancellation()
+        {
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            ReadOnlyMemory<byte> buffer = new byte[256];
+            bool threwCancellation = false;
+
+            try
+            {
+                stream.WriteAsync(buffer, cts.Token).AsTask().GetAwaiter().GetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                threwCancellation = true;
+            }
+
+            Assert.IsTrue(threwCancellation);
+        }
+
+        [TestMethod]
+        public void TestStreamReadByteAfterSpanWrite()
+        {
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            stream.Write(new ReadOnlySpan<byte>([0xAB, 0xCD]));
+            stream.Seek(0, SeekOrigin.Begin);
+
+            Assert.AreEqual(0xAB, stream.ReadByte());
+            Assert.AreEqual(0xCD, stream.ReadByte());
+            Assert.AreEqual(-1, stream.ReadByte());
+        }
+
+        [TestMethod]
+        public void TestStreamWriteByteAndReadSpan()
+        {
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            stream.WriteByte(0xAB);
+            stream.WriteByte(0xCD);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            Span<byte> read = new byte[2];
+            int bytesRead = stream.Read(read);
+
+            Assert.AreEqual(2, bytesRead);
+            Assert.AreEqual((byte)0xAB, read[0]);
+            Assert.AreEqual((byte)0xCD, read[1]);
+        }
+
+        [TestMethod]
+        public void TestStreamSpanAndMemoryRoundTrip()
+        {
+            async Task TestAsync()
+            {
+                var random = new Random(42);
+                byte[] data = new byte[1024];
+                random.NextBytes(data);
+
+                using var stream = new InMemoryRandomAccessStream().AsStream();
+
+                // Write via span (sync)
+                stream.Write(new ReadOnlySpan<byte>(data, 0, 512));
+
+                // Write via memory (async)
+                await stream.WriteAsync(new ReadOnlyMemory<byte>(data, 512, 512));
+
+                stream.Seek(0, SeekOrigin.Begin);
+
+                // Read via memory (async)
+                Memory<byte> readFirst = new byte[512];
+                int bytesRead1 = await stream.ReadAsync(readFirst);
+                Assert.AreEqual(512, bytesRead1);
+
+                // Read via span (sync)
+                Span<byte> readSecond = new byte[512];
+                int bytesRead2 = stream.Read(readSecond);
+                Assert.AreEqual(512, bytesRead2);
+
+                // Verify round-trip
+                CollectionAssert.AreEqual(data[..512], readFirst.ToArray());
+                CollectionAssert.AreEqual(data[512..], readSecond.ToArray());
+            }
+
+            Assert.IsTrue(TestAsync().Wait(5000));
+        }
+
+        /// <summary>
+        /// A <see cref="MemoryManager{T}"/> backed by unmanaged memory, used to test the pinned memory
+        /// code path in <see cref="Stream.ReadAsync(Memory{byte}, CancellationToken)"/> and
+        /// <see cref="Stream.WriteAsync(ReadOnlyMemory{byte}, CancellationToken)"/> (i.e. the slow
+        /// path when <see cref="MemoryMarshal.TryGetArray{T}(ReadOnlyMemory{T}, out ArraySegment{T})"/>
+        /// returns <see langword="false"/>).
+        /// </summary>
+        unsafe class UnmanagedMemoryManager : System.Buffers.MemoryManager<byte>
+        {
+            private byte* _pointer;
+            private readonly int _length;
+
+            public UnmanagedMemoryManager(int length)
+            {
+                _pointer = (byte*)NativeMemory.AllocZeroed((nuint)length);
+                _length = length;
+            }
+
+            public override Span<byte> GetSpan() => new(_pointer, _length);
+
+            public override MemoryHandle Pin(int elementIndex = 0) => new(_pointer + elementIndex);
+
+            public override void Unpin() { }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (_pointer is not null)
+                {
+                    NativeMemory.Free(_pointer);
+                    _pointer = null;
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestStreamReadAsyncUnmanagedMemory()
+        {
+            async Task TestAsync()
+            {
+                var random = new Random(42);
+                byte[] data = new byte[256];
+                random.NextBytes(data);
+
+                using var stream = new InMemoryRandomAccessStream().AsStream();
+                await stream.WriteAsync(data, 0, data.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+
+                using var manager = new UnmanagedMemoryManager(256);
+                Memory<byte> read = manager.Memory;
+                int bytesRead = await stream.ReadAsync(read);
+
+                Assert.AreEqual(256, bytesRead);
+                CollectionAssert.AreEqual(data, read.ToArray());
+            }
+
+            Assert.IsTrue(TestAsync().Wait(5000));
+        }
+
+        [TestMethod]
+        public void TestStreamWriteAsyncUnmanagedMemory()
+        {
+            async Task TestAsync()
+            {
+                var random = new Random(42);
+                byte[] data = new byte[256];
+                random.NextBytes(data);
+
+                using var manager = new UnmanagedMemoryManager(256);
+                data.AsSpan().CopyTo(manager.Memory.Span);
+
+                using var stream = new InMemoryRandomAccessStream().AsStream();
+                await stream.WriteAsync((ReadOnlyMemory<byte>)manager.Memory);
+                stream.Seek(0, SeekOrigin.Begin);
+
+                byte[] read = new byte[256];
+                await stream.ReadAsync(read, 0, read.Length);
+                CollectionAssert.AreEqual(data, read);
+            }
+
+            Assert.IsTrue(TestAsync().Wait(5000));
+        }
+
+        [TestMethod]
+        public void TestStreamUnmanagedMemoryRoundTrip()
+        {
+            async Task TestAsync()
+            {
+                var random = new Random(42);
+                byte[] data = new byte[512];
+                random.NextBytes(data);
+
+                using var stream = new InMemoryRandomAccessStream().AsStream();
+
+                // Write via unmanaged memory (exercises pinned memory buffer path)
+                using var writeManager = new UnmanagedMemoryManager(512);
+                data.AsSpan().CopyTo(writeManager.Memory.Span);
+                await stream.WriteAsync((ReadOnlyMemory<byte>)writeManager.Memory);
+
+                stream.Seek(0, SeekOrigin.Begin);
+
+                // Read via unmanaged memory (exercises pinned memory buffer path)
+                using var readManager = new UnmanagedMemoryManager(512);
+                int bytesRead = await stream.ReadAsync(readManager.Memory);
+
+                Assert.AreEqual(512, bytesRead);
+                CollectionAssert.AreEqual(data, readManager.Memory.ToArray());
+            }
+
+            Assert.IsTrue(TestAsync().Wait(5000));
+        }
+
 #endif
 
         async Task TestStorageFileAsync()
@@ -886,6 +1268,34 @@ namespace UnitTest
         public void TestWriteBuffer()
         {
             Assert.IsTrue(InvokeWriteBufferAsync().Wait(1000));
+        }
+
+        [TestMethod]
+        public void TestWriteBufferPinnedArrayBuffer()
+        {
+            async Task TestAsync()
+            {
+                var random = new Random(42);
+                byte[] data = new byte[256];
+                random.NextBytes(data);
+
+                // WindowsRuntimeBuffer.Create() creates a WindowsRuntimePinnedArrayBuffer,
+                // which exercises a separate CCW code path than AsBuffer() (which creates
+                // a WindowsRuntimeExternalArrayBuffer). This test verifies that the pinned
+                // array buffer CCW is correctly used when writing to a native WinRT stream.
+                using var stream = new InMemoryRandomAccessStream();
+                IBuffer buffer = WindowsRuntimeBuffer.Create(data);
+                await stream.WriteAsync(buffer);
+
+                stream.Seek(0);
+
+                byte[] readData = new byte[256];
+                IBuffer readBuffer = readData.AsBuffer();
+                await stream.ReadAsync(readBuffer, 256, InputStreamOptions.None);
+                CollectionAssert.AreEqual(data, readData);
+            }
+
+            Assert.IsTrue(TestAsync().Wait(5000));
         }
 
         [TestMethod]
@@ -1856,11 +2266,18 @@ namespace UnitTest
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw.GetThisPtrUnsafe(), in IID_IMarshal, out var marshalCCW));
             Assert.AreNotEqual(IntPtr.Zero, marshalCCW);
 
+            // Test WindowsRuntimeExternalArrayBuffer CCW (created via AsBuffer())
             var array = new byte[] { 0x01 };
             var buff = array.AsBuffer();
             using WindowsRuntimeObjectReferenceValue ccw2 = WindowsRuntimeInterfaceMarshaller<IBuffer>.ConvertToUnmanaged(buff, typeof(IBuffer).GUID);
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw2.GetThisPtrUnsafe(), in IID_IMarshal, out var marshalCCW2));
             Assert.AreNotEqual(IntPtr.Zero, marshalCCW2);
+
+            // Test WindowsRuntimePinnedArrayBuffer CCW (created via WindowsRuntimeBuffer.Create())
+            var pinnedBuff = WindowsRuntimeBuffer.Create(new byte[] { 0x01 });
+            using WindowsRuntimeObjectReferenceValue ccw3 = WindowsRuntimeInterfaceMarshaller<IBuffer>.ConvertToUnmanaged(pinnedBuff, typeof(IBuffer).GUID);
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw3.GetThisPtrUnsafe(), in IID_IMarshal, out var marshalCCW3));
+            Assert.AreNotEqual(IntPtr.Zero, marshalCCW3);
         }
 
         [TestMethod]

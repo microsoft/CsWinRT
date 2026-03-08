@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Buffers;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +11,8 @@ using Windows.Foundation;
 using Windows.Foundation.Tasks;
 using Windows.Storage.Buffers;
 using Windows.Storage.Streams;
+
+#pragma warning disable CS1573
 
 namespace WindowsRuntime.InteropServices;
 
@@ -19,13 +23,6 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     [SupportedOSPlatform("windows10.0.10240.0")]
     public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
     {
-        return BeginWrite(buffer, offset, count, callback, state, usedByBlockingWrapper: false);
-    }
-
-    /// <inheritdoc/>
-    [SupportedOSPlatform("windows10.0.10240.0")]
-    private StreamWriteAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
-    {
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
@@ -33,20 +30,7 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
         NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
 
-        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
-
-        IBuffer asyncWriteBuffer = buffer.AsBuffer(offset, count);
-
-        // See the large comment in the 'BeginRead' method about why we are not using the
-        // 'WriteAsync' method, and instead using a custom implementation of 'IAsyncResult'.
-        IAsyncOperationWithProgress<uint, uint> asyncWriteOperation = windowsRuntimeStream.WriteAsync(asyncWriteBuffer);
-
-        // See additional notes in the 'Read' method about how CCW objects for this result are managed
-        return new StreamWriteAsyncResult(
-            asyncWriteOperation,
-            callback,
-            state,
-            processCompletedOperationInCallback: !usedByBlockingWrapper);
+        return BeginWrite(buffer, offset, count, callback, state, usedByBlockingWrapper: false);
     }
 
     /// <inheritdoc/>
@@ -101,6 +85,11 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         // If already cancelled, stop early
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (count == 0)
+        {
+            return Task.CompletedTask;
+        }
+
         IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
         IBuffer asyncWriteBuffer = buffer.AsBuffer(offset, count);
@@ -112,9 +101,69 @@ internal partial class WindowsRuntimeManagedStreamAdapter
 
     /// <inheritdoc/>
     [SupportedOSPlatform("windows10.0.10240.0")]
+    public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
+
+        // If already cancelled, stop early
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (buffer.IsEmpty)
+        {
+            return default;
+        }
+
+        // Fast path: if the memory is backed by an array, use the existing array-based overload directly
+        if (MemoryMarshal.TryGetArray(buffer, out ArraySegment<byte> segment))
+        {
+            return new(WriteAsync(segment.Array!, segment.Offset, segment.Count, cancellationToken));
+        }
+
+        // Helper to perform the actual asynchronous write operation with pinned memory
+        async ValueTask WritePinnedMemoryAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
+        {
+            using MemoryHandle handle = buffer.Pin();
+
+            WindowsRuntimePinnedMemoryBuffer pinnedMemoryBuffer;
+
+            // See notes in 'ReadPinnedMemoryAsync' for why we need an 'unsafe' block here
+            unsafe
+            {
+                pinnedMemoryBuffer = new((byte*)handle.Pointer, length: buffer.Length, capacity: buffer.Length);
+            }
+
+            try
+            {
+                IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
+
+                _ = await windowsRuntimeStream.WriteAsync(pinnedMemoryBuffer).AsTask(cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                pinnedMemoryBuffer.Invalidate();
+            }
+        }
+
+        // Slow path: pin the memory and use a pinned memory buffer for the async write operation
+        return WritePinnedMemoryAsync(buffer, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public override void Write(byte[] buffer, int offset, int count)
     {
-        // Arguments validation and disposal validation are done in 'BeginWrite'
+        ArgumentNullException.ThrowIfNull(buffer);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        ArgumentException.ThrowIfInsufficientArrayElementsAfterOffset(buffer.Length, offset, count);
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
+
+        if (count == 0)
+        {
+            return;
+        }
 
         StreamWriteAsyncResult asyncResult = BeginWrite(buffer, offset, count, null, null, usedByBlockingWrapper: true);
 
@@ -122,10 +171,53 @@ internal partial class WindowsRuntimeManagedStreamAdapter
     }
 
     /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
     public override void WriteByte(byte value)
     {
         // We don't need to call 'EnsureNotDisposed', see notes in 'ReadByte'
         Write(new ReadOnlySpan<byte>(in value));
+    }
+
+    /// <inheritdoc/>
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    public override unsafe void Write(ReadOnlySpan<byte> buffer)
+    {
+        ObjectDisposedException.ThrowIfStreamIsDisposed(_windowsRuntimeStream);
+        NotSupportedException.ThrowIfStreamCannotWrite(_canWrite);
+
+        if (buffer.IsEmpty)
+        {
+            return;
+        }
+
+        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
+
+        // Pin the span so that it stays at the same address while the async I/O operation is in progress.
+        // We create a 'WindowsRuntimePinnedMemoryBuffer' wrapping the pinned pointer, then invalidate it
+        // in the 'finally' block to ensure no one can access the pointer after the span goes out of scope.
+        fixed (byte* pinnedData = buffer)
+        {
+            WindowsRuntimePinnedMemoryBuffer pinnedMemoryBuffer = new(pinnedData, length: buffer.Length, capacity: buffer.Length);
+
+            try
+            {
+                // See the large comment in 'Read(byte[], int, int)' about why we use a custom 'IAsyncResult'
+                // implementation instead of 'WriteAsync' + 'AsTask' here (same deadlock concerns apply).
+                IAsyncOperationWithProgress<uint, uint> asyncWriteOperation = windowsRuntimeStream.WriteAsync(pinnedMemoryBuffer);
+
+                StreamWriteAsyncResult asyncResult = new(
+                    asyncWriteOperation,
+                    userCompletionCallback: null,
+                    userAsyncStateInfo: null,
+                    processCompletedOperationInCallback: false);
+
+                EndWrite(asyncResult);
+            }
+            finally
+            {
+                pinnedMemoryBuffer.Invalidate();
+            }
+        }
     }
 
     /// <inheritdoc/>
@@ -187,5 +279,29 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
 
         return windowsRuntimeStream.FlushAsync().AsTask(cancellationToken);
+    }
+
+    /// <inheritdoc cref="System.IO.Stream.BeginWrite"/>
+    /// <param name="usedByBlockingWrapper">Indicates whether this method is being called by a method doing sync-over-async on the result.</param>
+    [SupportedOSPlatform("windows10.0.10240.0")]
+    private StreamWriteAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
+    {
+        // This method doesn't do validation, to avoid repeating it in the 'Write' method that calls this one.
+        // It is only called by that method and by 'BeginWrite', so the validation there should be kept in sync.
+
+        IOutputStream windowsRuntimeStream = (IOutputStream)EnsureNotDisposed();
+
+        IBuffer asyncWriteBuffer = buffer.AsBuffer(offset, count);
+
+        // See the large comment in the 'BeginRead' method about why we are not using the
+        // 'WriteAsync' method, and instead using a custom implementation of 'IAsyncResult'.
+        IAsyncOperationWithProgress<uint, uint> asyncWriteOperation = windowsRuntimeStream.WriteAsync(asyncWriteBuffer);
+
+        // See additional notes in the 'Read' method about how CCW objects for this result are managed
+        return new StreamWriteAsyncResult(
+            asyncWriteOperation,
+            callback,
+            state,
+            processCompletedOperationInCallback: !usedByBlockingWrapper);
     }
 }

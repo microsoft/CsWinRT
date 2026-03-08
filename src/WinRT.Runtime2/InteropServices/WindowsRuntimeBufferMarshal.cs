@@ -39,19 +39,9 @@ public static partial class WindowsRuntimeBufferMarshal
             return true;
         }
 
-        // Also handle a managed instance of the external array buffer type from 'WinRT.Runtime.dll'
-        if (buffer is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
+        // Also handle managed buffer implementations from 'WinRT.Runtime.dll'
+        if (WindowsRuntimeBufferHelpers.TryGetManagedData(buffer, out data))
         {
-            data = externalArrayBuffer.Buffer();
-
-            return true;
-        }
-
-        // Same as above, but for pinned array buffers as well
-        if (buffer is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
-        {
-            data = pinnedArrayBuffer.Buffer();
-
             return true;
         }
 
