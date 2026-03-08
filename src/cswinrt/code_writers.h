@@ -2138,8 +2138,7 @@ static extern void %([UnsafeAccessorType("%, WinRT.Interop")] object _, WindowsR
 
         // Microsoft.UI.Xaml.Input.ICommand has a lower-fidelity type mapping where the type of the event handler doesn't project one-to-one
         // so we need to hard-code mapping the event handler from the mapped WinRT type to the correct .NET type.
-        // Skip this fixup when using inline event sources, since Subscribe/Unsubscribe expect the original WinRT type.
-        if (inline_event_source_field.empty() && event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
+        if (event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
         {
             auto parent_type_name = w.write_temp("%", bind<write_type_name>(parent_type, typedef_name_type::NonProjected, true));
             if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
@@ -2229,9 +2228,6 @@ remove => %;
 
     void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute, type_semantics static_method_semantics)
     {
-        (void)static_method_semantics;
-        (void)interface_member;
-
         auto visibility = "public ";
 
         if (is_protected)
@@ -2247,9 +2243,36 @@ remove => %;
         auto [add, _] = get_event_methods(event);
         bool is_private = is_implemented_as_private_method(w, class_type, add);
 
+        // ICommand.CanExecuteChanged has a type mismatch between the .NET event type (EventHandler) and the WinRT
+        // event source type (EventHandler<object>), so we can't use inline event sources for it. Fall back to the
+        // old ABI static method call path for non-private events, and to the delegate-to-target path for private
+        // events (explicit interface implementations).
+        bool use_inline_event_source = true;
+        if (event.Name() == "CanExecuteChanged")
+        {
+            auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
+            if (event_type == "global::System.EventHandler<object>")
+            {
+                auto parent_type_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::NonProjected, true));
+                if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
+                {
+                    use_inline_event_source = false;
+                }
+            }
+        }
+
         if (!is_private)
         {
-            write_event(w, event.Name(), event, ""sv, visibility, ""sv, platform_attribute, std::nullopt, event.Name());
+            if (use_inline_event_source)
+            {
+                write_event(w, event.Name(), event, ""sv, visibility, ""sv, platform_attribute, std::nullopt, event.Name());
+            }
+            else
+            {
+                auto event_target = w.write_temp("%", bind<write_objref_type_name>(static_method_semantics));
+                write_event(w, event.Name(), event, event_target, visibility, ""sv, platform_attribute,
+                    std::optional(std::tuple(static_method_semantics, event, false)));
+            }
         }
 
         // If overridable or private, we need to generate the explicit event
@@ -2259,10 +2282,17 @@ remove => %;
 
             if (is_private)
             {
-                auto interface_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false));
-                auto event_source_field_name = escape_type_name_for_identifier(interface_name, true) + "_" + std::string(event.Name());
+                if (use_inline_event_source)
+                {
+                    auto interface_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false));
+                    auto event_source_field_name = escape_type_name_for_identifier(interface_name, true) + "_" + std::string(event.Name());
 
-                write_event(w, explicit_event_name, event, ""sv, ""sv, ""sv, platform_attribute, std::nullopt, event_source_field_name);
+                    write_event(w, explicit_event_name, event, ""sv, ""sv, ""sv, platform_attribute, std::nullopt, event_source_field_name);
+                }
+                else
+                {
+                    write_event(w, explicit_event_name, event, interface_member, ""sv, ""sv, platform_attribute, std::nullopt);
+                }
             }
             else
             {
@@ -2980,6 +3010,21 @@ private WindowsRuntimeObjectReference %
                     {
                         auto [add, _] = get_event_methods(evt);
                         bool is_private = is_implemented_as_private_method(w, classType, add);
+
+                        // ICommand.CanExecuteChanged can't use inline event sources due to a type mismatch
+                        // between the .NET event type (EventHandler) and the WinRT type (EventHandler<object>).
+                        if (evt.Name() == "CanExecuteChanged")
+                        {
+                            auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false));
+                            if (event_type == "global::System.EventHandler<object>")
+                            {
+                                auto parent_type_name = w.write_temp("%", bind<write_type_name>(evt.Parent(), typedef_name_type::NonProjected, true));
+                                if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
+                                {
+                                    continue;
+                                }
+                            }
+                        }
 
                         std::string event_source_field_name;
                         if (is_private)
