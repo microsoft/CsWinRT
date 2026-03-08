@@ -169,19 +169,10 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(eventSourceType);
 
-            // Check whether we also need to pass a target index for the event (otherwise we'll only have a single parameter)
-            bool requiresIndexParameter = baseEventSource_ctor.Signature is MethodSignature { ParameterTypes.Count: 2 };
-
-            // Prepare the parameter types as requested. These are not constant because for some well-known event source types (e.g.
-            // for 'IObservableVector<T>'), the event index is hardcoded in the base type (to simplify the code and for efficiency).
-            TypeSignature[] parameterTypes = requiresIndexParameter
-                ? [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(), interopReferences.Int32]
-                : [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()];
-
             // Define the constructor:
             //
-            // public <EVENT_SOURCE_TYPE>(<PARAMETER_TYPES>)
-            //     : base(<PARAMETERS>)
+            // public <EVENT_SOURCE_TYPE>(WindowsRuntimeObjectReference nativeObjectReference, int index)
+            //     : base(nativeObjectReference, index)
             // {
             // }
             //
@@ -189,7 +180,9 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition ctor = MethodDefinition.CreateConstructor(
                 corLibTypeFactory: interopReferences.CorLibTypeFactory,
                 constructorMethod: baseEventSource_ctor,
-                parameterTypes: parameterTypes);
+                parameterTypes: [
+                    interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
+                    interopReferences.Int32]);
 
             eventSourceType.Methods.Add(ctor);
 
