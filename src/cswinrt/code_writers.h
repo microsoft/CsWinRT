@@ -3010,6 +3010,21 @@ private WindowsRuntimeObjectReference %
                         auto vtable_index = get_vmethod_index(add.Parent(), add) + 6;
                         bool is_generic_event = std::holds_alternative<generic_type_instance>(event_semantics);
 
+                        // MapChangedEventHandler and VectorChangedEventHandler event sources have a hardcoded
+                        // vtable index in their constructor, so they only take a WindowsRuntimeObjectReference
+                        // parameter (no int index). We need to track this to emit the correct constructor call.
+                        bool is_collection_changed_event = false;
+                        if (is_generic_event)
+                        {
+                            auto& gti = std::get<generic_type_instance>(event_semantics);
+                            if (gti.generic_type.TypeNamespace() == "Windows.Foundation.Collections" &&
+                                (gti.generic_type.TypeName() == "MapChangedEventHandler`2" ||
+                                 gti.generic_type.TypeName() == "VectorChangedEventHandler`1"))
+                            {
+                                is_collection_changed_event = true;
+                            }
+                        }
+
                         // ICommand.CanExecuteChanged has a type mismatch: the .NET event type is EventHandler (non-generic),
                         // but the WinRT type is EventHandler<object>. Use the non-generic EventHandlerEventSource which has
                         // Subscribe(EventHandler), matching the .NET event type after the fixup in write_event.
@@ -3047,19 +3062,33 @@ private % _eventSource_%
                             event_source_field_name,
                             [&](writer& w) {
                                 if (is_generic_event) {
-                                    w.write(R"(
+                                    if (is_collection_changed_event) {
+                                        w.write(R"(
+        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
+        [return: UnsafeAccessorType("%, WinRT.Interop")]
+        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference);
+)",
+                                            bind<write_interop_dll_type_name>(event_semantics, typedef_name_type::EventSource));
+                                    } else {
+                                        w.write(R"(
         [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
         [return: UnsafeAccessorType("%, WinRT.Interop")]
         static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
 )",
-                                        bind<write_interop_dll_type_name>(event_semantics, typedef_name_type::EventSource));
+                                            bind<write_interop_dll_type_name>(event_semantics, typedef_name_type::EventSource));
+                                    }
                                 }
                             },
                             event_source_type,
                             [&](writer& w) {
                                 if (is_generic_event) {
-                                    w.write("Unsafe.As<%>(ctor(%, %))",
-                                        event_source_type, objref_name, vtable_index);
+                                    if (is_collection_changed_event) {
+                                        w.write("Unsafe.As<%>(ctor(%))",
+                                            event_source_type, objref_name);
+                                    } else {
+                                        w.write("Unsafe.As<%>(ctor(%, %))",
+                                            event_source_type, objref_name, vtable_index);
+                                    }
                                 } else {
                                     w.write("new %(%, %)",
                                         event_source_type, objref_name, vtable_index);
