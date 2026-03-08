@@ -2138,7 +2138,8 @@ static extern void %([UnsafeAccessorType("%, WinRT.Interop")] object _, WindowsR
 
         // Microsoft.UI.Xaml.Input.ICommand has a lower-fidelity type mapping where the type of the event handler doesn't project one-to-one
         // so we need to hard-code mapping the event handler from the mapped WinRT type to the correct .NET type.
-        if (event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
+        // Skip this fixup when using inline event sources, since Subscribe/Unsubscribe expect the original WinRT type.
+        if (inline_event_source_field.empty() && event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
         {
             auto parent_type_name = w.write_temp("%", bind<write_type_name>(parent_type, typedef_name_type::NonProjected, true));
             if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
