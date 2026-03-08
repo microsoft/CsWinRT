@@ -19,7 +19,7 @@ internal sealed unsafe class WindowsRuntimePinnedMemoryBuffer : IBuffer
     /// <summary>
     /// The pointer to the pinned memory.
     /// </summary>
-    private volatile nint _data;
+    private volatile byte* _data;
 
     /// <summary>
     /// The number of bytes that can be read or written in the buffer.
@@ -45,7 +45,7 @@ internal sealed unsafe class WindowsRuntimePinnedMemoryBuffer : IBuffer
         Debug.Assert(capacity >= 0);
         Debug.Assert(capacity >= length);
 
-        _data = (nint)data;
+        _data = data;
         _length = length;
         _capacity = capacity;
     }
@@ -75,7 +75,7 @@ internal sealed unsafe class WindowsRuntimePinnedMemoryBuffer : IBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte* Buffer()
     {
-        byte* data = (byte*)_data;
+        byte* data = _data;
 
         InvalidOperationException.ThrowIfBufferIsInvalidated(data);
 
@@ -87,7 +87,7 @@ internal sealed unsafe class WindowsRuntimePinnedMemoryBuffer : IBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> GetSpanForCapacity()
     {
-        byte* data = (byte*)_data;
+        byte* data = _data;
 
         InvalidOperationException.ThrowIfBufferIsInvalidated(data);
 
@@ -112,6 +112,6 @@ internal sealed unsafe class WindowsRuntimePinnedMemoryBuffer : IBuffer
     /// </remarks>
     public void Invalidate()
     {
-        _data = default;
+        _data = null;
     }
 }
