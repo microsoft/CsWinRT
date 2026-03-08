@@ -2226,11 +2226,8 @@ remove => %;
         write_event(w, write_explicit_name(w, iface, evt.Name()), evt, write_as_cast(w, iface));
     }
 
-    void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute, type_semantics static_method_semantics)
+    void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute, type_semantics static_method_semantics, bool use_inline_event_source)
     {
-        (void)static_method_semantics;
-        (void)interface_member;
-
         auto visibility = "public ";
 
         if (is_protected)
@@ -2248,7 +2245,16 @@ remove => %;
 
         if (!is_private)
         {
-            write_event(w, event.Name(), event, ""sv, visibility, ""sv, platform_attribute, std::nullopt, event.Name());
+            if (use_inline_event_source)
+            {
+                write_event(w, event.Name(), event, ""sv, visibility, ""sv, platform_attribute, std::nullopt, event.Name());
+            }
+            else
+            {
+                auto event_target = w.write_temp("%", bind<write_objref_type_name>(static_method_semantics));
+                write_event(w, event.Name(), event, event_target, visibility, ""sv, platform_attribute,
+                    std::optional(std::tuple(static_method_semantics, event, false)));
+            }
         }
 
         // If overridable or private, we need to generate the explicit event
@@ -2258,10 +2264,17 @@ remove => %;
 
             if (is_private)
             {
-                auto interface_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false));
-                auto event_source_field_name = escape_type_name_for_identifier(interface_name, true) + "_" + std::string(event.Name());
+                if (use_inline_event_source)
+                {
+                    auto interface_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false));
+                    auto event_source_field_name = escape_type_name_for_identifier(interface_name, true) + "_" + std::string(event.Name());
 
-                write_event(w, explicit_event_name, event, ""sv, ""sv, ""sv, platform_attribute, std::nullopt, event_source_field_name);
+                    write_event(w, explicit_event_name, event, ""sv, ""sv, ""sv, platform_attribute, std::nullopt, event_source_field_name);
+                }
+                else
+                {
+                    write_event(w, explicit_event_name, event, interface_member, ""sv, ""sv, platform_attribute, std::nullopt);
+                }
             }
             else
             {
@@ -4206,7 +4219,7 @@ return %.AsValue();
             auto platform_attribute = write_platform_attribute_temp(w, interface_type);
 
             w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, platform_attribute, semantics_for_abi_call);
-            w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, semantics_for_abi_call);
+            w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, semantics_for_abi_call, !is_fast_abi_iface || is_default_interface);
 
             // Merge property getters/setters, since such may be defined across interfaces
             for (auto&& prop : interface_type.PropertyList())
