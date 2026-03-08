@@ -2764,6 +2764,7 @@ private static class _%
     {
         auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
         auto gc_pressure_amount = get_gc_pressure_amount(class_type);
+        auto marshaling_type = get_marshaling_type_name(class_type);
         if (factory_type)
         {
             write_static_objref_definition(w, factory_type, class_type);
@@ -2776,7 +2777,7 @@ private static class _%
 
             w.write(R"(
 %public unsafe %(%)
-  :base(%.Instance, %, [%])
+  :base(%.Instance, %, %, [%])
 {
 %}
 )",
@@ -2787,6 +2788,7 @@ private static class _%
                 // base
                 bind<write_constructor_callback_method_name>(method),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                marshaling_type,
                 bind_list<write_constructor_parameter_name_with_modifier>(", ", signature.params()),
                 [&](writer& w)
                 {
@@ -2804,13 +2806,14 @@ private static class _%
 
             w.write(R"(
 public %()
-  :base(default(WindowsRuntimeActivationTypes.DerivedSealed), %, %)
+  :base(default(WindowsRuntimeActivationTypes.DerivedSealed), %, %, %)
 {
 %}
 )",
                 class_type.TypeName(),
                 objrefname,
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                marshaling_type,
                 [&](writer& w)
                 {
                     if (!gc_pressure_amount) return;
@@ -2940,6 +2943,7 @@ private WindowsRuntimeObjectReference %
             });
 
         auto default_type_semantics = get_type_semantics(get_default_interface(class_type));
+        auto marshaling_type = get_marshaling_type_name(class_type);
 
         for (auto&& method : composable_type.MethodList())
         {
@@ -2971,15 +2975,17 @@ if (GetType() == typeof(%))
                 {
                     if (params_without_objects.empty())
                     {
-                        w.write("default(WindowsRuntimeActivationTypes.DerivedComposed), %, %",
+                        w.write("default(WindowsRuntimeActivationTypes.DerivedComposed), %, %, %",
                             cache_object,
-                            bind<write_iid_guid_with_type_semantics>(default_type_semantics));
+                            bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                            marshaling_type);
                     }
                     else
                     {
-                        w.write("%.Instance, %, [%]",
+                        w.write("%.Instance, %, %, [%]",
                             bind<write_constructor_callback_method_name>(method),
                             bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                            marshaling_type,
                             bind_list<write_constructor_parameter_name_with_modifier>(", ", params_without_objects));
                     }
                 }),
@@ -3001,23 +3007,23 @@ if (GetType() == typeof(%))
         }
 
         w.write(R"(
-protected %(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid)
-  :base(_, activationFactoryObjectReference, in iid)
+protected %(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)
+  :base(_, activationFactoryObjectReference, in iid, marshalingType)
 {
 %}
 
-protected %(WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid)
-  :base(_, activationFactoryObjectReference, in iid)
+protected %(WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)
+  :base(_, activationFactoryObjectReference, in iid, marshalingType)
 {
 %}
 
-protected %(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, params ReadOnlySpan<object> additionalParameters)
-  :base(activationFactoryCallback, in iid, additionalParameters)
+protected %(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, params ReadOnlySpan<object> additionalParameters)
+  :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
 {
 %}
 
-protected %(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback, in Guid iid, params ReadOnlySpan<object> additionalParameters)
-  :base(activationFactoryCallback, in iid, additionalParameters)
+protected %(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, params ReadOnlySpan<object> additionalParameters)
+  :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
 {
 %}
 )",
@@ -9011,6 +9017,7 @@ return value.GetDefaultInterface();
     void write_class_comwrappers_marshaller_attribute(writer& w, TypeDef const& type)
     {
         auto default_type_semantics = get_type_semantics(get_default_interface(type));
+        auto marshaling_type = get_marshaling_type_name(type);
 
         w.write(R"(
 file sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
@@ -9020,6 +9027,7 @@ public override object CreateObject(void* value, out CreatedWrapperFlags wrapper
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
     externalComObject: value,
     iid: %,
+    marshalingType: %,
     wrapperFlags: out wrapperFlags);
 
 return new %(valueReference);
@@ -9037,12 +9045,14 @@ return new %(valueReference);
                 });
             }),
             bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+            marshaling_type,
             bind<write_type_name>(type, typedef_name_type::Projected, true));
     }
 
     void write_class_comwrappers_callback(writer& w, TypeDef const& type)
     {
         auto default_type_semantics = get_type_semantics(get_default_interface(type));
+        auto marshaling_type = get_marshaling_type_name(type);
 
         // For sealed, we know the runtime class name is this class, while for unsealed, we check.
         if (type.Flags().Sealed())
@@ -9055,6 +9065,7 @@ public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFl
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
     externalComObject: value,
     iid: %,
+    marshalingType: %,
     wrapperFlags: out wrapperFlags);
 
 return new %(valueReference);
@@ -9072,6 +9083,7 @@ return new %(valueReference);
                     });
                 }),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                marshaling_type,
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
         }
         else
@@ -9090,6 +9102,7 @@ if (runtimeClassName.SequenceEqual("%".AsSpan()))
     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
         externalComObject: value,
         iid: %,
+        marshalingType: %,
         wrapperFlags: out wrapperFlags);
 
     wrapperObject = new %(valueReference);
@@ -9106,6 +9119,7 @@ public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wr
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
     externalComObject: value,
     iid: %,
+    marshalingType: %,
     wrapperFlags: out wrapperFlags);
 
 return new %(valueReference);
@@ -9125,9 +9139,11 @@ return new %(valueReference);
                 // TryCreateObject
                 bind<write_type_name>(type, typedef_name_type::NonProjected, true),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                marshaling_type,
                 bind<write_type_name>(type, typedef_name_type::Projected, true),
                 // CreateObject
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                marshaling_type,
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
         }
     }
