@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TestComponentCSharp;
 using Windows.Foundation;
@@ -111,6 +112,7 @@ unsafe
         return 111;
     }
 
+    // Test WindowsRuntimeExternalArrayBuffer CCW (created via AsBuffer())
     var arr = new byte[100];
     var buffer = arr.AsBuffer();
     ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(buffer);
@@ -123,6 +125,20 @@ unsafe
         ptr2 == IntPtr.Zero)
     {
         return 113;
+    }
+
+    // Test WindowsRuntimePinnedArrayBuffer CCW (created via WindowsRuntimeBuffer.Create())
+    var pinnedBuffer = WindowsRuntimeBuffer.Create(100);
+    ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(pinnedBuffer);
+    if (ptr is null)
+    {
+        return 128;
+    }
+
+    if (Marshal.QueryInterface((nint)ptr, typeof(IBuffer).GUID, out ptr2) != 0 ||
+        ptr2 == IntPtr.Zero)
+    {
+        return 129;
     }
 
     var asyncOperation = randomAccessStream.ReadAsync(buffer, 50, InputStreamOptions.Partial);
@@ -160,6 +176,154 @@ Class.UnboxAndCallProgressHandler(asyncProgressHandler);
 if (!progressCalledWithExpectedResults)
 {
     return 117;
+}
+
+// Test stream adapter span/memory overrides using InMemoryRandomAccessStream
+{
+    var random = new Random(42);
+    byte[] data = new byte[256];
+    random.NextBytes(data);
+
+    using var adaptedStream = new InMemoryRandomAccessStream().AsStream();
+
+    // Test Write(ReadOnlySpan<byte>) and Read(Span<byte>)
+    adaptedStream.Write(new ReadOnlySpan<byte>(data));
+    adaptedStream.Seek(0, SeekOrigin.Begin);
+
+    Span<byte> spanRead = new byte[256];
+    int spanBytesRead = adaptedStream.Read(spanRead);
+
+    if (spanBytesRead != 256)
+    {
+        return 118;
+    }
+
+    if (!data.SequenceEqual(spanRead))
+    {
+        return 119;
+    }
+
+    // Test WriteAsync(ReadOnlyMemory<byte>) and ReadAsync(Memory<byte>)
+    adaptedStream.Seek(0, SeekOrigin.Begin);
+    await adaptedStream.WriteAsync(new ReadOnlyMemory<byte>(data));
+    adaptedStream.Seek(0, SeekOrigin.Begin);
+
+    Memory<byte> memoryRead = new byte[256];
+    int memoryBytesRead = await adaptedStream.ReadAsync(memoryRead);
+
+    if (memoryBytesRead != 256)
+    {
+        return 120;
+    }
+
+    if (!data.SequenceEqual(memoryRead.Span))
+    {
+        return 121;
+    }
+
+    // Test ReadByte/WriteByte (which delegate to span overrides)
+    adaptedStream.Seek(0, SeekOrigin.Begin);
+    adaptedStream.WriteByte(0xAB);
+    adaptedStream.WriteByte(0xCD);
+    adaptedStream.Seek(0, SeekOrigin.Begin);
+
+    if (adaptedStream.ReadByte() != 0xAB)
+    {
+        return 122;
+    }
+
+    if (adaptedStream.ReadByte() != 0xCD)
+    {
+        return 123;
+    }
+
+    // Test empty span/memory operations
+    if (adaptedStream.Read(Span<byte>.Empty) != 0)
+    {
+        return 124;
+    }
+
+    adaptedStream.Write(ReadOnlySpan<byte>.Empty);
+
+    if (await adaptedStream.ReadAsync(Memory<byte>.Empty) != 0)
+    {
+        return 125;
+    }
+
+    await adaptedStream.WriteAsync(ReadOnlyMemory<byte>.Empty);
+
+    // Test cancellation for memory-based async operations
+    using var cts = new CancellationTokenSource();
+    cts.Cancel();
+
+    try
+    {
+        _ = await adaptedStream.ReadAsync(new byte[256].AsMemory(), cts.Token);
+        return 126;
+    }
+    catch (OperationCanceledException)
+    {
+    }
+
+    try
+    {
+        await adaptedStream.WriteAsync(new byte[256].AsMemory(), cts.Token);
+        return 127;
+    }
+    catch (OperationCanceledException)
+    {
+    }
+}
+
+// Test writing each managed buffer type to a native WinRT stream (exercises CCW interop)
+{
+    byte[] testData = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
+
+    // Test WindowsRuntimeExternalArrayBuffer (from AsBuffer()) written to native stream
+    using var stream1 = new InMemoryRandomAccessStream();
+    IBuffer externalArrayBuffer = testData.AsBuffer();
+    await stream1.WriteAsync(externalArrayBuffer);
+    stream1.Seek(0);
+
+    byte[] read1 = new byte[8];
+    IBuffer readBuffer1 = read1.AsBuffer();
+    await stream1.ReadAsync(readBuffer1, 8, InputStreamOptions.None);
+    if (!testData.SequenceEqual(read1))
+    {
+        return 130;
+    }
+
+    // Test WindowsRuntimePinnedArrayBuffer (from WindowsRuntimeBuffer.Create()) written to native stream
+    using var stream2 = new InMemoryRandomAccessStream();
+    IBuffer pinnedArrayBuffer = WindowsRuntimeBuffer.Create(testData);
+    await stream2.WriteAsync(pinnedArrayBuffer);
+    stream2.Seek(0);
+
+    byte[] read2 = new byte[8];
+    IBuffer readBuffer2 = read2.AsBuffer();
+    await stream2.ReadAsync(readBuffer2, 8, InputStreamOptions.None);
+    if (!testData.SequenceEqual(read2))
+    {
+        return 131;
+    }
+
+    // Test WindowsRuntimePinnedMemoryBuffer (created internally by the stream adapter when
+    // using span/memory-based Write, which pins the data and wraps it in a PinnedMemoryBuffer
+    // before passing it as an IBuffer CCW to the native WinRT stream's WriteAsync)
+    using var stream3 = new InMemoryRandomAccessStream();
+    using var adaptedStream3 = stream3.AsStream();
+    adaptedStream3.Write(new ReadOnlySpan<byte>(testData));
+    adaptedStream3.Dispose();
+
+    stream3.Seek(0);
+
+    byte[] read3 = new byte[8];
+    IBuffer readBuffer3 = read3.AsBuffer();
+    await stream3.ReadAsync(readBuffer3, 8, InputStreamOptions.None);
+    if (!testData.SequenceEqual(read3))
+    {
+        return 132;
+    }
 }
 
 return 100;

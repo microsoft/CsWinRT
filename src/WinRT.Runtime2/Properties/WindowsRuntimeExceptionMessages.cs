@@ -88,6 +88,8 @@ internal static class WindowsRuntimeExceptionMessages
 
     public const string ArgumentOutOfRange_IO_CannotSeekToNegativePosition = "Cannot seek to an absolute stream position that is negative.";
 
+    public const string InvalidOperation_CannotAccessInvalidatedBuffer = "Cannot access the underlying data of this buffer because it has been invalidated.";
+
     public const string InvalidOperation_CannotCallThisMethodInCurrentState = "The state of this object does not permit invoking this method.";
 
     public const string InvalidOperation_CannotChangeBufferSizeOfStreamAdapter = "Cannot convert the specified Windows Runtime stream to a managed System.IO.Stream object with the specified buffer size because this Windows Runtime stream has been previously converted to a managed Stream object with a different buffer size. Ensure that the 'bufferSize' argument matches the existing buffer or use the '{0}'-overload without the 'bufferSize' argument to convert the specified Windows Runtime stream to a Stream object with the same buffer size as previously.";

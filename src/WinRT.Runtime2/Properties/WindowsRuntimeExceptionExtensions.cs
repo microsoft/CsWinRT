@@ -227,6 +227,26 @@ internal static class WindowsRuntimeExceptionExtensions
         }
 
         /// <summary>
+        /// Throws an <see cref="InvalidOperationException"/> if the buffer has been invalidated.
+        /// </summary>
+        /// <param name="data">The pointer to the buffer data.</param>
+        /// <exception cref="InvalidOperationException">Thrown if <paramref name="data"/> is <see langword="null"/>.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [StackTraceHidden]
+        public static unsafe void ThrowIfBufferIsInvalidated(byte* data)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowInvalidOperationException()
+                => throw new InvalidOperationException(WindowsRuntimeExceptionMessages.InvalidOperation_CannotAccessInvalidatedBuffer);
+
+            if (data is null)
+            {
+                ThrowInvalidOperationException();
+            }
+        }
+
+        /// <summary>
         /// Creates an <see cref="InvalidOperationException"/> indicating that the method cannot be called in the current state.
         /// </summary>
         /// <returns>The resulting <see cref="InvalidOperationException"/> instance.</returns>
