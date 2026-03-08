@@ -68,16 +68,34 @@ internal static class WindowsRuntimeExtensions
         {
             get
             {
-                // Because only the Windows SDK can define Windows Runtime types in the 'Windows.*' namespaces,
-                // we can use this to determine the right implementation projection .dll to use for the lookup.
-                // We also optimize when an UTF8 value is available to avoid redundant UTF8 transcoding work.
-                return type switch
+                // Types from 'Microsoft.Windows.SDK.NET.dll' belong to the SDK projection .dll. We check
+                // the declaring assembly name to reliably determine the origin of the type. We also optimize
+                // when an UTF8 value is available to avoid redundant UTF8 transcoding work.
+                if (type is TypeDefinition { Module.Assembly.Name: Utf8String name })
                 {
-                    ITypeDefOrRef { Namespace: Utf8String ns } => ns.AsSpan().StartsWith("Windows."u8),
-                    ITypeDefOrRef => false,
-                    { Namespace: string ns } => ns.StartsWith("Windows."),
-                    _ => false
-                };
+                    return name.AsSpan().SequenceEqual(InteropNames.WindowsSDKAssemblyNameUtf8);
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the type is a projected Windows SDK XAML type (from <c>Microsoft.Windows.UI.Xaml.dll</c>).
+        /// </summary>
+        public bool IsProjectedWindowsSdkXamlType
+        {
+            get
+            {
+                // Types from 'Microsoft.Windows.UI.Xaml.dll' belong to the XAML projection .dll. We check the
+                // declaring assembly name to reliably determine the origin of the type, as types from this
+                // assembly may span various 'Windows.*' sub-namespaces that can't be easily pattern-matched.
+                if (type is TypeDefinition { Module.Assembly.Name: Utf8String name })
+                {
+                    return name.AsSpan().SequenceEqual(InteropNames.WindowsSDKXamlAssemblyNameUtf8);
+                }
+
+                return false;
             }
         }
 
@@ -611,9 +629,11 @@ internal static class WindowsRuntimeExtensions
                 }
 
                 // Determine the right assembly reference for this projected type
-                AssemblyReference projectionAssembly = type.IsProjectedWindowsSdkType
-                    ? interopReferences.WinRTSdkProjection
-                    : interopReferences.WinRTProjection;
+                AssemblyReference projectionAssembly = type.IsProjectedWindowsSdkXamlType
+                    ? interopReferences.WinRTSdkXamlProjection
+                    : type.IsProjectedWindowsSdkType
+                        ? interopReferences.WinRTSdkProjection
+                        : interopReferences.WinRTProjection;
 
                 // For all types that get here, their ABI types will be in the right projection assembly, under the 'ABI' namespace
                 return projectionAssembly.CreateTypeReference(

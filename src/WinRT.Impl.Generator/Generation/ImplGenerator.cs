@@ -12,6 +12,7 @@ using System.Runtime.Versioning;
 using System.Security;
 using System.Security.Permissions;
 using System.Threading;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.PE.DotNet.StrongName;
 using ConsoleAppFramework;
@@ -251,6 +252,14 @@ internal static partial class ImplGenerator
                 HasPublicKey = true
             };
 
+            // Similar as above, but for the precompiled XAML projection .dll for Windows SDK XAML types.
+            // This is only used when the option to use Windows UI Xaml projections is enabled.
+            AssemblyReference sdkXamlProjectionAssembly = new("WinRT.Sdk.Xaml.Projection"u8, new Version(0, 0, 0, 0))
+            {
+                PublicKeyOrToken = ImplValues.PublicKeyData,
+                HasPublicKey = true
+            };
+
             // Similar as above, but for the merged projection .dll for all other Windows Runtime types.
             // Unlike the implementation .dll for the Windows SDK however, this .dll is created on the fly.
             AssemblyReference projectionAssembly = new("WinRT.Projection"u8, new Version(0, 0, 0, 0))
@@ -258,6 +267,13 @@ internal static partial class ImplGenerator
                 PublicKeyOrToken = ImplValues.PublicKeyData,
                 HasPublicKey = true
             };
+
+            // Check if the input module is either of the Windows SDK reference assemblies. Types
+            // from the XAML assembly belong to the XAML projection .dll, while types from the SDK
+            // assembly belong to the standard SDK projection .dll. All other types are forwarded
+            // to the merged projection .dll, which is generated at final build time.
+            bool isSdkModule = inputModule.Assembly?.Name is Utf8String sdkName && sdkName.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET"u8);
+            bool isXamlModule = inputModule.Assembly?.Name is Utf8String xamlName && xamlName.AsSpan().SequenceEqual("Microsoft.Windows.UI.Xaml"u8);
 
             foreach (TypeDefinition exportedType in inputModule.TopLevelTypes)
             {
@@ -273,11 +289,13 @@ internal static partial class ImplGenerator
                     continue;
                 }
 
-                // Determine the target assembly based on the namespace of the current type.
+                // Determine the target assembly based on the declaring assembly of the current type.
                 // This matches the logic in 'cswinrtinteropgen' to figure out the right one.
-                AssemblyReference implementationAssembly = exportedType.Namespace.AsSpan().StartsWith("Windows."u8)
-                    ? sdkProjectionAssembly
-                    : projectionAssembly;
+                AssemblyReference implementationAssembly = isXamlModule
+                    ? sdkXamlProjectionAssembly
+                    : isSdkModule
+                        ? sdkProjectionAssembly
+                        : projectionAssembly;
 
                 // Emit the type forwards for all public (projected) types
                 implModule.ExportedTypes.Add(new ExportedType(

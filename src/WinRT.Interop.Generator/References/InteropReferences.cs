@@ -159,7 +159,17 @@ internal sealed class InteropReferences
     /// </summary>
     /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
     public AssemblyReference WinRTSdkProjection => field ??= new AssemblyReference(
-        name: "WinRT.Sdk.Projection"u8,
+        name: InteropNames.WindowsRuntimeSdkProjectionAssemblyNameUtf8,
+        version: new Version(0, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: default).Import(_corLibTypeFactory.CorLibScope);
+
+    /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Sdk.Xaml.Projection.dll</c>.
+    /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
+    public AssemblyReference WinRTSdkXamlProjection => field ??= new AssemblyReference(
+        name: InteropNames.WindowsRuntimeSdkXamlProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
         publicKeyOrToken: default).Import(_corLibTypeFactory.CorLibScope);
@@ -169,7 +179,7 @@ internal sealed class InteropReferences
     /// </summary>
     /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
     public AssemblyReference WinRTProjection => field ??= new AssemblyReference(
-        name: "WinRT.Projection"u8,
+        name: InteropNames.WindowsRuntimeProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
         publicKeyOrToken: default).Import(_corLibTypeFactory.CorLibScope);

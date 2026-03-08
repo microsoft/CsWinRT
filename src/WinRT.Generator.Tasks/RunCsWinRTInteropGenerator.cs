@@ -50,6 +50,11 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public ITaskItem? WinRTSdkProjectionAssemblyPath { get; set; }
 
     /// <summary>
+    /// Gets or sets the path to the WinRT Windows SDK XAML projection assembly (i.e. <c>WinRT.Sdk.Xaml.Projection.dll</c>).
+    /// </summary>
+    public ITaskItem? WinRTSdkXamlProjectionAssemblyPath { get; set; }
+
+    /// <summary>
     /// Gets or sets the path to the WinRT merged projection assembly (i.e. <c>WinRT.Projection.dll</c>).
     /// </summary>
     public ITaskItem? WinRTProjectionAssemblyPath { get; set; }
@@ -260,6 +265,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileCommand(args, "--implementation-assembly-paths", implementationAssemblyPathsArg);
         AppendResponseFileCommand(args, "--output-assembly-path", EffectiveOutputAssemblyItemSpec);
         AppendResponseFileCommand(args, "--winrt-sdk-projection-assembly-path", WinRTSdkProjectionAssemblyPath!.ItemSpec);
+        AppendResponseFileOptionalCommand(args, "--winrt-sdk-xaml-projection-assembly-path", WinRTSdkXamlProjectionAssemblyPath?.ItemSpec);
         AppendResponseFileOptionalCommand(args, "--winrt-projection-assembly-path", WinRTProjectionAssemblyPath?.ItemSpec);
         AppendResponseFileOptionalCommand(args, "--winrt-component-assembly-path", WinRTComponentAssemblyPath?.ItemSpec);
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);

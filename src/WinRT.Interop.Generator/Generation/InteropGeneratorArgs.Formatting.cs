@@ -32,6 +32,13 @@ internal partial class InteropGeneratorArgs
         _ = builder.Append(' ');
         _ = builder.AppendLine(WinRTSdkProjectionAssemblyPath);
 
+        if (WinRTSdkXamlProjectionAssemblyPath is not null)
+        {
+            _ = builder.Append(GetCommandLineArgumentName(nameof(WinRTSdkXamlProjectionAssemblyPath)));
+            _ = builder.Append(' ');
+            _ = builder.AppendLine(WinRTSdkXamlProjectionAssemblyPath);
+        }
+
         if (WinRTProjectionAssemblyPath is not null)
         {
             _ = builder.Append(GetCommandLineArgumentName(nameof(WinRTProjectionAssemblyPath)));

@@ -163,9 +163,11 @@ internal static partial class SignatureGenerator
         if (type.IsDelegate)
         {
             // Determine the right implementation projection .dll to use for the lookup
-            ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
-                ? interopDefinitions.WindowsRuntimeSdkProjectionModule
-                : interopDefinitions.WindowsRuntimeProjectionModule;
+            ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkXamlType
+                ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
+                : type.IsProjectedWindowsSdkType
+                    ? interopDefinitions.WindowsRuntimeSdkProjectionModule
+                    : interopDefinitions.WindowsRuntimeProjectionModule;
 
             // Try to get the implementation type via a fast lookup, if we did get a valid projection module
             if (projectionModule?.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType) is true)
@@ -195,9 +197,11 @@ internal static partial class SignatureGenerator
         [NotNullWhen(true)] out TypeSignature? defaultInterface)
     {
         // Determine the right implementation projection .dll (see notes above)
-        ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
-            ? interopDefinitions.WindowsRuntimeSdkProjectionModule
-            : interopDefinitions.WindowsRuntimeProjectionModule;
+        ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkXamlType
+            ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
+            : type.IsProjectedWindowsSdkType
+                ? interopDefinitions.WindowsRuntimeSdkProjectionModule
+                : interopDefinitions.WindowsRuntimeProjectionModule;
 
         // Tries to get the projected type from the projection .dll, as it will have the attribute
         if (projectionModule?.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType) is not true)

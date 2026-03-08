@@ -22,6 +22,9 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>Backing field for <see cref="WinRTSdkProjectionModuleDefinition"/>.</summary>
     private ModuleDefinition? _winRTSdkProjectionModuleDefinition;
 
+    /// <summary>Backing field for <see cref="WinRTSdkXamlProjectionModuleDefinition"/>.</summary>
+    private ModuleDefinition? _winRTSdkXamlProjectionModuleDefinition;
+
     /// <summary>Backing field for <see cref="WinRTProjectionModuleDefinition"/>.</summary>
     private ModuleDefinition? _winRTProjectionModuleDefinition;
 
@@ -123,6 +126,11 @@ internal sealed class InteropGeneratorDiscoveryState
     /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Sdk.Projection.dll</c>.
     /// </summary>
     public ModuleDefinition? WinRTSdkProjectionModuleDefinition => _winRTSdkProjectionModuleDefinition;
+
+    /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Sdk.Xaml.Projection.dll</c>.
+    /// </summary>
+    public ModuleDefinition? WinRTSdkXamlProjectionModuleDefinition => _winRTSdkXamlProjectionModuleDefinition;
 
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Projection.dll</c>.
@@ -256,6 +264,18 @@ internal sealed class InteropGeneratorDiscoveryState
         ThrowIfReadOnly();
 
         _winRTSdkProjectionModuleDefinition = module;
+    }
+
+    /// <summary>
+    /// Tracks the <c>WinRT.Sdk.Xaml.Projection.dll</c> loaded module definition.
+    /// </summary>
+    /// <param name="module">The loaded module.</param>
+    [MemberNotNull(nameof(_winRTSdkXamlProjectionModuleDefinition))]
+    public void TrackWinRTSdkXamlProjectionModuleDefinition(ModuleDefinition module)
+    {
+        ThrowIfReadOnly();
+
+        _winRTSdkXamlProjectionModuleDefinition = module;
     }
 
     /// <summary>

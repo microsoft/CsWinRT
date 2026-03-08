@@ -27,6 +27,10 @@ internal sealed partial class InteropGeneratorArgs
     [CommandLineArgumentName("--winrt-sdk-projection-assembly-path")]
     public required string WinRTSdkProjectionAssemblyPath { get; init; }
 
+    /// <summary>Gets the path of the <c>WinRT.Sdk.Xaml.Projection.dll</c> assembly, if available.</summary>
+    [CommandLineArgumentName("--winrt-sdk-xaml-projection-assembly-path")]
+    public string? WinRTSdkXamlProjectionAssemblyPath { get; init; }
+
     /// <summary>Gets the path of the <c>WinRT.Projection.dll</c> assembly.</summary>
     [CommandLineArgumentName("--winrt-projection-assembly-path")]
     public string? WinRTProjectionAssemblyPath { get; init; }
