@@ -77,6 +77,7 @@ internal partial class InteropGenerator
         List<string> implementationPaths = [];
         string? outputAssemblyPath = null;
         string? winRTSdkProjectionAssemblyPath = null;
+        string? winRTSdkXamlProjectionAssemblyPath = null;
         string? winRTProjectionAssemblyPath = null;
         string? winRTComponentAssemblyPath = null;
 
@@ -147,6 +148,10 @@ internal partial class InteropGenerator
             {
                 winRTSdkProjectionAssemblyPath = destinationPath;
             }
+            else if (args.WinRTSdkXamlProjectionAssemblyPath is not null && dllEntry.Name == args.WinRTSdkXamlProjectionAssemblyPath)
+            {
+                winRTSdkXamlProjectionAssemblyPath = destinationPath;
+            }
             else if (args.WinRTProjectionAssemblyPath is not null && dllEntry.Name == args.WinRTProjectionAssemblyPath)
             {
                 winRTProjectionAssemblyPath = destinationPath;
@@ -166,6 +171,7 @@ internal partial class InteropGenerator
             ImplementationAssemblyPaths = [.. implementationPaths],
             OutputAssemblyPath = outputAssemblyPath!,
             WinRTSdkProjectionAssemblyPath = winRTSdkProjectionAssemblyPath!,
+            WinRTSdkXamlProjectionAssemblyPath = winRTSdkXamlProjectionAssemblyPath,
             WinRTProjectionAssemblyPath = winRTProjectionAssemblyPath,
             WinRTComponentAssemblyPath = winRTComponentAssemblyPath,
             GeneratedAssemblyDirectory = tempDirectory,
@@ -233,6 +239,7 @@ internal partial class InteropGenerator
         // Hash and copy the well known assemblies we use as input
         string outputAssemblyHashedName = CopyHashedFileToDirectory(args.OutputAssemblyPath, tempDirectory, originalImplementationDllPaths, args.Token);
         string winRTSdkProjectionAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTSdkProjectionAssemblyPath, implementationDirectory, originalImplementationDllPaths, args.Token);
+        string? winRTSdkXamlProjectionAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTSdkXamlProjectionAssemblyPath, implementationDirectory, originalImplementationDllPaths, args.Token);
         string? winRTProjectionAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTProjectionAssemblyPath, implementationDirectory, originalImplementationDllPaths, args.Token);
         string? winRTComponentAssemblyHashedName = CopyHashedFileToDirectory(args.WinRTComponentAssemblyPath, implementationDirectory, originalImplementationDllPaths, args.Token);
 
@@ -245,6 +252,7 @@ internal partial class InteropGenerator
             ImplementationAssemblyPaths = [.. updatedImplementationDllNames],
             OutputAssemblyPath = outputAssemblyHashedName,
             WinRTSdkProjectionAssemblyPath = winRTSdkProjectionAssemblyHashedName,
+            WinRTSdkXamlProjectionAssemblyPath = winRTSdkXamlProjectionAssemblyHashedName,
             WinRTProjectionAssemblyPath = winRTProjectionAssemblyHashedName,
             WinRTComponentAssemblyPath = winRTComponentAssemblyHashedName,
             GeneratedAssemblyDirectory = args.GeneratedAssemblyDirectory,

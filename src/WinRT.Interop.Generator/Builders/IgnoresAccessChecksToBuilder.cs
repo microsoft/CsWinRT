@@ -17,6 +17,7 @@ internal static partial class IgnoresAccessChecksToBuilder
     /// <summary>
     /// Defines all assembly attributes for target modules using the Windows TFM.
     /// </summary>
+    /// <param name="winRTSdkXamlProjectionModule">The <see cref="ModuleDefinition"/> for the Windows Runtime XAML projection assembly (i.e. <c>WinRT.Sdk.Xaml.Projection.dll</c>).</param>
     /// <param name="winRTProjectionModule">The <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly (i.e. <c>WinRT.Projection.dll</c>).</param>
     /// <param name="winRTComponentModule">The <see cref="ModuleDefinition"/> for the Windows Runtime component assembly (i.e. <c>WinRT.Component.dll</c>).</param>
     /// <param name="referencePathModules">The input set of reference path modules.</param>
@@ -24,6 +25,7 @@ internal static partial class IgnoresAccessChecksToBuilder
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     public static void AssemblyAttributes(
+        ModuleDefinition? winRTSdkXamlProjectionModule,
         ModuleDefinition? winRTProjectionModule,
         ModuleDefinition? winRTComponentModule,
         IEnumerable<ModuleDefinition> referencePathModules,
@@ -49,6 +51,13 @@ internal static partial class IgnoresAccessChecksToBuilder
 
         // We also always add an attribute for 'WinRT.Sdk.Projection', which is the precompiled projection .dll for the Windows SDK
         module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoresAccessChecksTo("WinRT.Sdk.Projection", interopDefinitions, interopReferences));
+
+        // For 'WinRT.Sdk.Xaml.Projection', which is the precompiled projection .dll for Windows SDK XAML types, we only
+        // need the attribute if we do have that .dll being passed as input. That is only if XAML projections are enabled.
+        if (winRTSdkXamlProjectionModule is not null)
+        {
+            module.Assembly!.CustomAttributes.Add(InteropCustomAttributeFactory.IgnoresAccessChecksTo("WinRT.Sdk.Xaml.Projection", interopDefinitions, interopReferences));
+        }
 
         // For 'WinRT.Projection', which is the merged Windows Runtime projection assembly that is generated at final build time,
         // we only need the attribute if we do have that .dll being passed as input. That is only if we have any 3rd party types.
