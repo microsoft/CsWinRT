@@ -9017,6 +9017,7 @@ return value.GetDefaultInterface();
     void write_class_comwrappers_marshaller_attribute(writer& w, TypeDef const& type)
     {
         auto default_type_semantics = get_type_semantics(get_default_interface(type));
+        auto marshaling_type = get_marshaling_type_name(type);
 
         w.write(R"(
 file sealed unsafe class %ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
@@ -9026,6 +9027,7 @@ public override object CreateObject(void* value, out CreatedWrapperFlags wrapper
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(
     externalComObject: value,
     iid: %,
+    marshalingType: %,
     wrapperFlags: out wrapperFlags);
 
 return new %(valueReference);
@@ -9043,12 +9045,14 @@ return new %(valueReference);
                 });
             }),
             bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+            marshaling_type,
             bind<write_type_name>(type, typedef_name_type::Projected, true));
     }
 
     void write_class_comwrappers_callback(writer& w, TypeDef const& type)
     {
         auto default_type_semantics = get_type_semantics(get_default_interface(type));
+        auto marshaling_type = get_marshaling_type_name(type);
 
         // For sealed, we know the runtime class name is this class, while for unsealed, we check.
         if (type.Flags().Sealed())
@@ -9061,6 +9065,7 @@ public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFl
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
     externalComObject: value,
     iid: %,
+    marshalingType: %,
     wrapperFlags: out wrapperFlags);
 
 return new %(valueReference);
@@ -9078,6 +9083,7 @@ return new %(valueReference);
                     });
                 }),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                marshaling_type,
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
         }
         else
@@ -9096,6 +9102,7 @@ if (runtimeClassName.SequenceEqual("%".AsSpan()))
     WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
         externalComObject: value,
         iid: %,
+        marshalingType: %,
         wrapperFlags: out wrapperFlags);
 
     wrapperObject = new %(valueReference);
@@ -9112,6 +9119,7 @@ public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wr
 WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
     externalComObject: value,
     iid: %,
+    marshalingType: %,
     wrapperFlags: out wrapperFlags);
 
 return new %(valueReference);
@@ -9131,9 +9139,11 @@ return new %(valueReference);
                 // TryCreateObject
                 bind<write_type_name>(type, typedef_name_type::NonProjected, true),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                marshaling_type,
                 bind<write_type_name>(type, typedef_name_type::Projected, true),
                 // CreateObject
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+                marshaling_type,
                 bind<write_type_name>(type, typedef_name_type::Projected, true));
         }
     }
