@@ -8715,7 +8715,24 @@ private IObjectReference % => __% ?? Make__%();
         // Skip generating event members for exclusive interfaces whose events are now
         // inlined in the RCW class. This is safe because the interface and its Methods
         // type are internal, so no other type can reference these event methods.
-        bool skip_exclusive_events = is_exclusive_to(iface) && !settings.public_exclusiveto;
+        // Only do this for instance interfaces (listed in InterfaceImpl on the class),
+        // not for statics interfaces (referenced via StaticAttribute), whose events
+        // are never inlined and still go through the Methods type.
+        bool skip_exclusive_events = false;
+        if (is_exclusive_to(iface) && !settings.public_exclusiveto)
+        {
+            auto class_type = get_exclusive_to_type(iface);
+            for (auto&& ii : class_type.InterfaceImpl())
+            {
+                for_typedef(w, get_type_semantics(ii.Interface()), [&](TypeDef const& impl_iface)
+                {
+                    if (interfaces_equal(impl_iface, iface))
+                    {
+                        skip_exclusive_events = true;
+                    }
+                });
+            }
+        }
 
         auto members = w.write_temp("%", [&](writer& w) {
             if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
