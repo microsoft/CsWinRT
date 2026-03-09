@@ -127,6 +127,14 @@ unsafe
         return 113;
     }
 
+    // Test IBufferByteAccess QI for WindowsRuntimeExternalArrayBuffer CCW
+    Guid IID_IBufferByteAccess = new("905a0fef-bc53-11df-8c49-001e4fc686da");
+    if (Marshal.QueryInterface((nint)ptr, IID_IBufferByteAccess, out ptr2) != 0 ||
+        ptr2 == IntPtr.Zero)
+    {
+        return 133;
+    }
+
     // Test WindowsRuntimePinnedArrayBuffer CCW (created via WindowsRuntimeBuffer.Create())
     var pinnedBuffer = WindowsRuntimeBuffer.Create(100);
     ptr = WindowsRuntimeMarshal.ConvertToUnmanaged(pinnedBuffer);
@@ -139,6 +147,13 @@ unsafe
         ptr2 == IntPtr.Zero)
     {
         return 129;
+    }
+
+    // Test IBufferByteAccess QI for WindowsRuntimePinnedArrayBuffer CCW
+    if (Marshal.QueryInterface((nint)ptr, IID_IBufferByteAccess, out ptr2) != 0 ||
+        ptr2 == IntPtr.Zero)
+    {
+        return 134;
     }
 
     var asyncOperation = randomAccessStream.ReadAsync(buffer, 50, InputStreamOptions.Partial);

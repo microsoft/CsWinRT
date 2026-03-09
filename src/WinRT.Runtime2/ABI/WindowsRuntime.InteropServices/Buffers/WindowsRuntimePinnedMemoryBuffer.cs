@@ -111,7 +111,7 @@ file static unsafe class WindowsRuntimePinnedMemoryBufferByteAccessImpl
     /// </summary>
     static WindowsRuntimePinnedMemoryBufferByteAccessImpl()
     {
-        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
+        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
 
         Vftbl.Buffer = &Buffer;
     }

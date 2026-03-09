@@ -1259,15 +1259,26 @@ namespace UnitTest
             byte[] data = new byte[256];
             random.NextBytes(data);
 
+            // AsBuffer() creates a WindowsRuntimeExternalArrayBuffer, which exercises
+            // its own CCW code path. This test verifies that the external array buffer
+            // CCW is correctly used when writing to a native WinRT stream, and that the
+            // data can be read back correctly (which exercises IBufferByteAccess).
             using var stream = new InMemoryRandomAccessStream();
             IBuffer buffer = data.AsBuffer();
             await stream.WriteAsync(buffer);
+
+            stream.Seek(0);
+
+            byte[] readData = new byte[256];
+            IBuffer readBuffer = readData.AsBuffer();
+            await stream.ReadAsync(readBuffer, 256, InputStreamOptions.None);
+            CollectionAssert.AreEqual(data, readData);
         }
         
         [TestMethod]
         public void TestWriteBuffer()
         {
-            Assert.IsTrue(InvokeWriteBufferAsync().Wait(1000));
+            Assert.IsTrue(InvokeWriteBufferAsync().Wait(5000));
         }
 
         [TestMethod]
@@ -2261,6 +2272,7 @@ namespace UnitTest
         public unsafe void TestCCWMarshaler()
         {
             Guid IID_IMarshal = new Guid("00000003-0000-0000-c000-000000000046");
+            Guid IID_IBufferByteAccess = new Guid("905a0fef-bc53-11df-8c49-001e4fc686da");
             var managedProperties = new ManagedProperties(42);
             using WindowsRuntimeObjectReferenceValue ccw = WindowsRuntimeInterfaceMarshaller<IProperties1>.ConvertToUnmanaged(managedProperties, typeof(IProperties1).GUID);
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw.GetThisPtrUnsafe(), in IID_IMarshal, out var marshalCCW));
@@ -2272,12 +2284,16 @@ namespace UnitTest
             using WindowsRuntimeObjectReferenceValue ccw2 = WindowsRuntimeInterfaceMarshaller<IBuffer>.ConvertToUnmanaged(buff, typeof(IBuffer).GUID);
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw2.GetThisPtrUnsafe(), in IID_IMarshal, out var marshalCCW2));
             Assert.AreNotEqual(IntPtr.Zero, marshalCCW2);
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw2.GetThisPtrUnsafe(), in IID_IBufferByteAccess, out var byteAccessCCW2));
+            Assert.AreNotEqual(IntPtr.Zero, byteAccessCCW2);
 
             // Test WindowsRuntimePinnedArrayBuffer CCW (created via WindowsRuntimeBuffer.Create())
             var pinnedBuff = WindowsRuntimeBuffer.Create(new byte[] { 0x01 });
             using WindowsRuntimeObjectReferenceValue ccw3 = WindowsRuntimeInterfaceMarshaller<IBuffer>.ConvertToUnmanaged(pinnedBuff, typeof(IBuffer).GUID);
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw3.GetThisPtrUnsafe(), in IID_IMarshal, out var marshalCCW3));
             Assert.AreNotEqual(IntPtr.Zero, marshalCCW3);
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((IntPtr)ccw3.GetThisPtrUnsafe(), in IID_IBufferByteAccess, out var byteAccessCCW3));
+            Assert.AreNotEqual(IntPtr.Zero, byteAccessCCW3);
         }
 
         [TestMethod]

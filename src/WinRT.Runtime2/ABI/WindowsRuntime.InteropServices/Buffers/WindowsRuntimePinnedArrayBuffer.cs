@@ -113,7 +113,7 @@ file static unsafe class WindowsRuntimePinnedArrayBufferByteAccessImpl
     /// </summary>
     static WindowsRuntimePinnedArrayBufferByteAccessImpl()
     {
-        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
+        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
 
         Vftbl.Buffer = &Buffer;
     }
