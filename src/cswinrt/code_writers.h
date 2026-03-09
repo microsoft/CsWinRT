@@ -6812,7 +6812,7 @@ remove
                 is_parameter_variable ? "" : ";");
     }
 
-    void write_static_abi_class_members(writer& w, TypeDef const& iface, uint32_t const& abi_methods_start_index = 6)
+    void write_static_abi_class_members(writer& w, TypeDef const& iface, uint32_t const& abi_methods_start_index = 6, bool skip_events = false)
     {
         auto init_call_variables = [&](writer& w)
         {
@@ -6890,6 +6890,8 @@ public static unsafe void %(WindowsRuntimeObjectReference thisReference, % value
             w.write("\n");
         }
 
+        if (!skip_events)
+        {
         int index = 0;
         for (auto&& evt : iface.EventList())
         {
@@ -6912,6 +6914,7 @@ public static % %(object thisObject, WindowsRuntimeObjectReference thisReference
                 evt.Name(),
                 bind<write_event_source_ctor_call>(evt, abi_methods_start_index));
             index++;
+        }
         }
     }
 
@@ -8709,6 +8712,11 @@ private IObjectReference % => __% ?? Make__%();
             }
         }
 
+        // Skip generating event members for exclusive interfaces whose events are now
+        // inlined in the RCW class. This is safe because the interface and its Methods
+        // type are internal, so no other type can reference these event methods.
+        bool skip_exclusive_events = is_exclusive_to(iface) && !settings.public_exclusiveto;
+
         w.write(R"(
 % static class %
 {
@@ -8719,14 +8727,16 @@ private IObjectReference % => __% ?? Make__%();
         bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
         [&](writer& w) {
             if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
-                write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT);
+                write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT, skip_exclusive_events);
                 return;
             }
             auto abi_methods_start_index = INSPECTABLE_METHOD_COUNT;
-            write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index);
+            // Skip events for the default interface (its events are inlined in the RCW class)
+            write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index, skip_exclusive_events);
             abi_methods_start_index += distance(fast_abi_class_val.value().default_interface.MethodList()) + get_class_hierarchy_index(fast_abi_class_val.value().class_type);
             for (auto&& other_iface : fast_abi_class_val.value().other_interfaces)
             {
+                // Keep events for other interfaces (they are NOT inlined, they still use the old CWT path)
                 write_static_abi_class_members(w, other_iface, abi_methods_start_index);
                 abi_methods_start_index += distance(other_iface.MethodList());
             }
