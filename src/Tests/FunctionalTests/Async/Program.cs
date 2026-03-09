@@ -328,6 +328,7 @@ if (!progressCalledWithExpectedResults)
     using var stream3 = new InMemoryRandomAccessStream();
     using var adaptedStream3 = stream3.AsStream();
     adaptedStream3.Write(new ReadOnlySpan<byte>(testData));
+    adaptedStream3.Flush();
 
     stream3.Seek(0);
 
