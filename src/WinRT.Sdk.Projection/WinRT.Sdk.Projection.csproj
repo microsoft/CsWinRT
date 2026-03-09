@@ -1,0 +1,115 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsAotCompatible>true</IsAotCompatible>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+
+    <!--
+      When WindowsSdkXaml=true, generate WinRT.Sdk.Xaml.Projection.dll (the Windows.UI.Xaml projection)
+      instead of WinRT.Sdk.Projection.dll. Uses winmd\xaml and the XAML namespace filters.
+    -->
+    <AssemblyName Condition="'$(WindowsSdkXaml)' != 'true'">WinRT.Sdk.Projection</AssemblyName>
+    <AssemblyName Condition="'$(WindowsSdkXaml)' == 'true'">WinRT.Sdk.Xaml.Projection</AssemblyName>
+
+    <!-- Don't generate the merged or interop projection; we build it here. -->
+    <CsWinRTGenerateProjection>false</CsWinRTGenerateProjection>
+    <CsWinRTGenerateInteropAssembly2>false</CsWinRTGenerateInteropAssembly2>
+
+    <!--
+      SDK version to build for. Pass from the pipeline via /p:WindowsSdkBuild=XXXXX.
+    -->
+    <WindowsSdkBuild Condition="'$(WindowsSdkBuild)' == ''">26100</WindowsSdkBuild>
+    <CsWinRTWindowsMetadata>10.0.$(WindowsSdkBuild).0</CsWinRTWindowsMetadata>
+
+    <!-- Output to a per-SDK-version subdirectory so multiple builds don't overwrite each other.
+         XAML projection uses a separate intermediate path to avoid artifact collision. -->
+    <_BuildSuffix Condition="'$(WindowsSdkXaml)' == 'true'">-xaml</_BuildSuffix>
+    <OutputPath>bin\$(Configuration)\$(WindowsSdkBuild)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\$(WindowsSdkBuild)$(_BuildSuffix)\</IntermediateOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <_SdkPackageName>Microsoft.Windows.SDK.Contracts</_SdkPackageName>
+    <_SdkPackageVersion>10.0.$(WindowsSdkBuild).0</_SdkPackageVersion>
+    <_SdkPackageVersion>10.0.26100.7705</_SdkPackageVersion>
+  </PropertyGroup>
+
+  <!-- Download the SDK package to get WinMDs -->
+  <ItemGroup>
+    <PackageDownload Include="$(_SdkPackageName)" Version="[$(_SdkPackageVersion)]" />
+  </ItemGroup>
+
+  <!--
+    Reference the already-built WinRT.Runtime.dll directly instead of via ProjectReference
+    to avoid rebuilding it with default version properties (0.0.0.0).
+  -->
+  <ItemGroup>
+    <Reference Include="WinRT.Runtime">
+      <HintPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Runtime2', 'bin', '$(Configuration)', 'net10.0', 'WinRT.Runtime.dll'))</HintPath>
+    </Reference>
+    <Reference Include="WinRT.Sdk.Projection" Condition="'$(WindowsSdkXaml)' == 'true'">
+      <HintPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Sdk.Projection', 'bin', '$(Configuration)', '$(WindowsSdkBuild)', 'WinRT.Sdk.Projection.dll'))</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!--
+    ============================================================
+                        GenerateWindowsProjection
+
+    Calls cswinrtprojectiongen.exe (via the MSBuild task) to
+    generate WinRT.Sdk.Projection.dll (or WinRT.Sdk.Xaml.Projection.dll when
+    WindowsSdkXaml=true) for the target SDK version.
+
+    After the tool produces the DLL, we replace IntermediateAssembly
+    so the build system copies it to the output directory.
+    ============================================================
+  -->
+  <Target Name="GenerateWindowsProjection"
+          AfterTargets="CoreCompile"
+          DependsOnTargets="_ResolveCsWinRToolsDirectory">
+
+    <PropertyGroup>
+      <_WinMDSubfolder Condition="'$(WindowsSdkXaml)' != 'true'">windows</_WinMDSubfolder>
+      <_WinMDSubfolder Condition="'$(WindowsSdkXaml)' == 'true'">xaml</_WinMDSubfolder>
+      <_WinMDFolder>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_SdkPackageName)', '$(_SdkPackageVersion)', 'winmd', '$(_WinMDSubfolder)'))</_WinMDFolder>
+      <_WinMDFolder>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_SdkPackageName)', '$(_SdkPackageVersion)', 'ref', 'netstandard2.0'))</_WinMDFolder>
+      <_SdkProjectionOutputDir>$(IntermediateOutputPath)sdkprojection\</_SdkProjectionOutputDir>
+    </PropertyGroup>
+
+    <Error Condition="!Exists('$(_WinMDFolder)')"
+           Text="WinMD folder not found at '$(_WinMDFolder)'. Check that PackageDownload for $(_SdkPackageName) version $(_SdkPackageVersion) succeeded." />
+
+    <MakeDir Directories="$(_SdkProjectionOutputDir)" />
+
+    <ItemGroup>
+      <_SdkWinMDPaths Include="$(CsWinRTInteropMetadata)" />
+    </ItemGroup>
+
+    <RunCsWinRTMergedProjectionGenerator
+      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
+      GeneratedAssemblyDirectory="$(_SdkProjectionOutputDir)"
+      WinMDPaths="@(_SdkWinMDPaths)"
+      TargetFramework="net10.0"
+      WindowsMetadata="$(_WinMDFolder)"
+      CsWinRTExePath="$(CsWinRTExe)"
+      AssemblyName="$(AssemblyName)"
+      WindowsSdkOnly="true"
+      WindowsUIXamlProjection="$(WindowsSdkXaml)"
+      CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
+      CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+      StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
+      StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
+
+    <!-- Replace the intermediate assembly with the tool's output -->
+    <ItemGroup>
+      <IntermediateAssembly Remove="@(IntermediateAssembly)" />
+      <IntermediateAssembly Include="$(_SdkProjectionOutputDir)$(AssemblyName).dll" />
+    </ItemGroup>
+  </Target>
+
+</Project>

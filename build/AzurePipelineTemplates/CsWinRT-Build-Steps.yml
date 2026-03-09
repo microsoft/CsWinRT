@@ -6,6 +6,15 @@ parameters:
   - name: SetupForBuildOnly
     type: boolean
     default: false
+  - name: SdkProjectionVersions
+    type: object
+    default:
+      - 17763
+      - 18362
+      - 19041
+      - 22000
+      - 22621
+      - 26100
     
 steps:
   # Setup remote for source link to pick up
@@ -311,3 +320,33 @@ steps:
           WinRT.Generator.Tasks.dll
           WinRT.Generator.Tasks.pdb
         TargetFolder: $(StagingFolder)\netstandard2.0
+
+    # Build and stage merged Windows SDK projections for each supported OS version
+    - ${{ each sdkVersion in parameters.SdkProjectionVersions }}:
+      - task: VSBuild@1
+        displayName: Build WinRT.Sdk.Projection (${{ sdkVersion }})
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
+        inputs:
+          solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
+          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }}
+          platform: x86
+          configuration: Release
+
+      - task: VSBuild@1
+        displayName: Build WinRT.Sdk.Xaml.Projection (${{ sdkVersion }})
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
+        inputs:
+          solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
+          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }} /p:WindowsSdkXaml=true
+          platform: x86
+          configuration: Release
+
+    - task: CopyFiles@2
+      displayName: Stage WinRT.Sdk.Projection (all SDK versions)
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\bin\Release
+        Contents: |
+          *\WinRT.Sdk.Projection.dll
+          *\WinRT.Sdk.Xaml.Projection.dll
+        TargetFolder: $(StagingFolder)\impl

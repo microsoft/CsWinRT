@@ -242,13 +242,38 @@ internal static partial class ImplGenerator
     {
         try
         {
-            // We need an assembly reference for the merged projection .dll that will be generated.
+            // We need assembly references for the projection .dlls that will be generated.
             // The version doesn't matter here (as long as it's not '255.255.255.255'). The real .dll
             // will always have a version number equal or higher than this, so it will load correctly.
             AssemblyReference projectionAssembly = new("WinRT.Projection"u8, new Version(0, 0, 0, 0))
             {
                 PublicKeyOrToken = ImplValues.PublicKeyData,
                 HasPublicKey = true
+            };
+
+            AssemblyReference sdkProjectionAssembly = new("WinRT.Sdk.Projection"u8, new Version(0, 0, 0, 0))
+            {
+                PublicKeyOrToken = ImplValues.PublicKeyData,
+                HasPublicKey = true
+            };
+
+            AssemblyReference sdkXamlAssembly = new("WinRT.Sdk.Xaml.Projection"u8, new Version(0, 0, 0, 0))
+            {
+                PublicKeyOrToken = ImplValues.PublicKeyData,
+                HasPublicKey = true
+            };
+
+            // Route all types based on the source assembly name:
+            // - Microsoft.Windows.SDK.NET -> WinRT.Sdk.Projection.dll
+            // - Microsoft.Windows.UI.Xaml -> WinRT.Sdk.Xaml.Projection.dll
+            // - All other assemblies -> WinRT.Projection.dll
+            string? assemblyName = inputModule.Assembly?.Name;
+
+            AssemblyReference targetAssembly = assemblyName switch
+            {
+                "Microsoft.Windows.SDK.NET" => sdkProjectionAssembly,
+                "Microsoft.Windows.UI.Xaml" => sdkXamlAssembly,
+                _ => projectionAssembly
             };
 
             foreach (TypeDefinition exportedType in inputModule.TopLevelTypes)
@@ -261,7 +286,7 @@ internal static partial class ImplGenerator
 
                 // Emit the type forwards for all public (projected) types
                 implModule.ExportedTypes.Add(new ExportedType(
-                    implementation: projectionAssembly.ImportWith(implModule.DefaultImporter),
+                    implementation: targetAssembly.ImportWith(implModule.DefaultImporter),
                     ns: exportedType.Namespace,
                     name: exportedType.Name)
                 {

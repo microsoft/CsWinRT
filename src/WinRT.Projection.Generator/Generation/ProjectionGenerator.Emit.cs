@@ -15,8 +15,6 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 /// <inheritdoc cref="ProjectionGenerator"/>
 internal partial class ProjectionGenerator
 {
-    private const string ProjectionAssemblyName = "WinRT.Projection";
-
     /// <summary>
     /// Runs the emit logic for the generator.
     /// </summary>
@@ -24,6 +22,7 @@ internal partial class ProjectionGenerator
     /// <param name="processingState">The state from the processing phase.</param>
     private static void Emit(ProjectionGeneratorArgs args, ProjectionGeneratorProcessingState processingState)
     {
+        string assemblyName = args.AssemblyName;
         CSharpCompilation compilation;
 
         // Create the Roslyn compilation from the generated projection sources
@@ -53,7 +52,7 @@ internal partial class ProjectionGenerator
 
             // Create the compilation
             compilation = CSharpCompilation.Create(
-                ProjectionAssemblyName,
+                assemblyName,
                 syntaxTrees,
                 references,
                 new CSharpCompilationOptions(
@@ -78,7 +77,7 @@ internal partial class ProjectionGenerator
                 debugInformationFormat: DebugInformationFormat.Embedded,
                 includePrivateMembers: true);
 
-            string projectionDllPath = Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName + ".dll");
+            string projectionDllPath = Path.Combine(args.GeneratedAssemblyDirectory, assemblyName + ".dll");
 
             EmitResult result;
 

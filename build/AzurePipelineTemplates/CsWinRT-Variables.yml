@@ -27,3 +27,6 @@ variables:
   value: $[coalesce(variables.PublishCsWinMD, 'false')]
 - name: _PublishFunctionalTests
   value: $[coalesce(variables.PublishFunctionalTests, 'false')]
+
+- name: _GenerateSdkProjection
+  value: $[coalesce(variables.GenerateSdkProjection, 'false')]
