@@ -8717,15 +8717,7 @@ private IObjectReference % => __% ?? Make__%();
         // type are internal, so no other type can reference these event methods.
         bool skip_exclusive_events = is_exclusive_to(iface) && !settings.public_exclusiveto;
 
-        w.write(R"(
-% static class %
-{
-%
-}
-)",
-        (is_exclusive_to(iface) && !settings.public_exclusiveto) ? "internal" : "public",
-        bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
-        [&](writer& w) {
+        auto members = w.write_temp("%", [&](writer& w) {
             if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
                 write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT, skip_exclusive_events);
                 return;
@@ -8741,6 +8733,23 @@ private IObjectReference % => __% ?? Make__%();
                 abi_methods_start_index += distance(other_iface.MethodList());
             }
         });
+
+        // If all members were skipped (e.g., an exclusive interface with only events),
+        // omit generating the empty Methods type entirely.
+        if (members.empty())
+        {
+            return;
+        }
+
+        w.write(R"(
+% static class %
+{
+%
+}
+)",
+        (is_exclusive_to(iface) && !settings.public_exclusiveto) ? "internal" : "public",
+        bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
+        members);
     }
 
     void write_interface_vftbl(writer& w, TypeDef const& type)
