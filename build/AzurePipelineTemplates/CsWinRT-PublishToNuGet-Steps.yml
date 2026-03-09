@@ -73,20 +73,19 @@ steps:
       script: |
         $nuspecPath = "$(Build.SourcesDirectory)\nuget\Microsoft.Windows.CsWinRT.nuspec"
         $implEntries = @"
-
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\17763\WinRT.Sdk.Projection.dll" target="impl\net10\17763\"/>
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\17763\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\17763\"/>
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\18362\WinRT.Sdk.Projection.dll" target="impl\net10\18362\"/>
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\18362\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\18362\"/>
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\19041\WinRT.Sdk.Projection.dll" target="impl\net10\19041\"/>
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\19041\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\19041\"/>
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\22000\WinRT.Sdk.Projection.dll" target="impl\net10\22000\"/>
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\22000\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\22000\"/>
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\22621\WinRT.Sdk.Projection.dll" target="impl\net10\22621\"/>
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\22621\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\22621\"/>
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\26100\WinRT.Sdk.Projection.dll" target="impl\net10\26100\"/>
-    <file src="$(Build.SourcesDirectory)\release_x86\impl\26100\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\26100\"/>
-"@
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\17763\WinRT.Sdk.Projection.dll" target="impl\net10\17763\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\17763\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\17763\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\18362\WinRT.Sdk.Projection.dll" target="impl\net10\18362\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\18362\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\18362\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\19041\WinRT.Sdk.Projection.dll" target="impl\net10\19041\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\19041\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\19041\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\22000\WinRT.Sdk.Projection.dll" target="impl\net10\22000\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\22000\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\22000\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\22621\WinRT.Sdk.Projection.dll" target="impl\net10\22621\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\22621\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\22621\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\26100\WinRT.Sdk.Projection.dll" target="impl\net10\26100\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\26100\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\26100\"/>
+        "@
         (Get-Content $nuspecPath -Raw).Replace('  </files>', "$implEntries`n  </files>") | Set-Content $nuspecPath
 
   # NuGet Pack
