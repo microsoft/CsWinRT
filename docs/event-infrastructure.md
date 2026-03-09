@@ -546,19 +546,21 @@ MyRuntimeClass.StaticEvent -= MyHandler;
 ```mermaid
 graph TD
     subgraph "Before context switch"
-        A["Activation Factory A<br/>(cached in __IStaticsType)"]
+        FIELD_BEFORE["__IStaticsType (static field)"]
+        A["Activation Factory A"]
         CWT1["ConditionalWeakTable<br/>A → EventSource"]
         ES1["EventSource&lt;T&gt;"]
         ESS1["EventSourceState&lt;T&gt;<br/>• Token<br/>• EventInvoke"]
     end
 
-    A -->|"strong ref (field)"| A
+    FIELD_BEFORE -->|"strong ref"| A
     CWT1 -->|"weak key"| A
     CWT1 -->|"strong value"| ES1
     ES1 -->|"weak ref"| ESS1
 
     subgraph "After context switch"
-        B["Activation Factory B<br/>(now in __IStaticsType)"]
+        FIELD_AFTER["__IStaticsType (overwritten)"]
+        B["Activation Factory B"]
         CWT2["ConditionalWeakTable<br/>B → new EventSource (empty)"]
         ES2["EventSource&lt;T&gt;<br/>(fresh, no state)"]
     end
@@ -567,7 +569,7 @@ graph TD
         ESS_ORPHAN["EventSourceState&lt;T&gt;<br/>• Token (unreachable)<br/>• EventInvoke CCW"]
     end
 
-    B -->|"strong ref (field)"| B
+    FIELD_AFTER -->|"strong ref"| B
     CWT2 -->|"weak key"| B
     CWT2 -->|"strong value"| ES2
 
