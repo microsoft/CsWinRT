@@ -22,10 +22,6 @@ internal static class AbiTypeWriter
     /// Main entry point that dispatches to specific writers based on <see cref="TypeCategory"/>.
     /// Called during Phase 3 of code generation to emit ABI types in the <c>ABI.{Namespace}</c> namespace.
     /// </summary>
-    /// <param name="writer">The writer to output to.</param>
-    /// <param name="type">The type definition to process.</param>
-    /// <param name="category">The category of the type.</param>
-    /// <param name="args">The projection generator arguments.</param>
     public static void WriteAbiType(CodeWriter writer, TypeDefinition type, TypeCategory category, ProjectionGeneratorArgs args)
     {
         switch (category)
@@ -52,9 +48,10 @@ internal static class AbiTypeWriter
         }
     }
 
+    #region Enum
+
     /// <summary>
-    /// Writes the ABI marshaller for an enum type, providing conversions between
-    /// the projected enum and its underlying integer ABI representation.
+    /// Writes a simple enum marshaller that casts between the projected enum and its underlying integer type.
     /// </summary>
     private static void WriteAbiEnum(CodeWriter writer, TypeDefinition type, ProjectionGeneratorArgs args)
     {
@@ -65,44 +62,35 @@ internal static class AbiTypeWriter
         string underlyingType = GetEnumUnderlyingType(type);
 
         writer.WriteLine();
-        writer.WriteLine($"/// <summary>Marshaller for <see cref=\"{fullProjectedName}\"/>.</summary>");
-        writer.WriteLine($"internal static class {name}Marshaller");
+        writer.WriteLine($"public static class {name}Marshaller");
 
         using (writer.WriteBlock())
         {
-            // ABI struct that holds the raw integer value
-            writer.WriteLine("internal struct AbiType");
+            writer.WriteLine($"public static {underlyingType} ConvertToUnmanaged({fullProjectedName} value)");
 
             using (writer.WriteBlock())
             {
-                writer.WriteLine($"public {underlyingType} Value;");
+                writer.WriteLine($"return ({underlyingType})value;");
             }
 
             writer.WriteLine();
 
-            // ConvertToUnmanaged: projected enum → ABI integer
-            writer.WriteLine($"public static AbiType ConvertToUnmanaged({fullProjectedName} value)");
+            writer.WriteLine($"public static {fullProjectedName} ConvertToManaged({underlyingType} value)");
 
             using (writer.WriteBlock())
             {
-                writer.WriteLine($"return new AbiType {{ Value = ({underlyingType})value }};");
-            }
-
-            writer.WriteLine();
-
-            // ConvertToManaged: ABI integer → projected enum
-            writer.WriteLine($"public static {fullProjectedName} ConvertToManaged(AbiType value)");
-
-            using (writer.WriteBlock())
-            {
-                writer.WriteLine($"return ({fullProjectedName})value.Value;");
+                writer.WriteLine($"return ({fullProjectedName})value;");
             }
         }
     }
 
+    #endregion
+
+    #region Struct
+
     /// <summary>
     /// Writes the ABI marshaller for a struct type, converting between
-    /// projected struct fields and their ABI representations (e.g., strings → <c>IntPtr</c>).
+    /// projected struct fields and their ABI representations.
     /// </summary>
     private static void WriteAbiStruct(CodeWriter writer, TypeDefinition type, ProjectionGeneratorArgs args)
     {
@@ -111,7 +99,6 @@ internal static class AbiTypeWriter
         string name = TypeNameHelpers.GetSimpleName(type);
         string fullProjectedName = GetFullProjectedTypeName(type);
 
-        // Collect fields and their ABI types
         List<(string Name, string ProjectedType, string AbiType, bool RequiresMarshaling)> fields = [];
 
         foreach (FieldDefinition field in type.Fields)
@@ -140,14 +127,19 @@ internal static class AbiTypeWriter
             }
         }
 
+        if (!hasNonBlittableFields)
+        {
+            // Blittable struct: no marshaller needed
+            return;
+        }
+
         writer.WriteLine();
-        writer.WriteLine($"/// <summary>Marshaller for <see cref=\"{fullProjectedName}\"/>.</summary>");
-        writer.WriteLine($"internal static class {name}Marshaller");
+        writer.WriteLine($"public static class {name}Marshaller");
 
         using (writer.WriteBlock())
         {
-            // ABI struct with marshaled field types
-            writer.WriteLine("internal struct AbiType");
+            writer.WriteLine("[global::System.Runtime.InteropServices.StructLayout(global::System.Runtime.InteropServices.LayoutKind.Sequential)]");
+            writer.WriteLine("public struct AbiType");
 
             using (writer.WriteBlock())
             {
@@ -159,7 +151,6 @@ internal static class AbiTypeWriter
 
             writer.WriteLine();
 
-            // ConvertToUnmanaged
             writer.WriteLine($"public static AbiType ConvertToUnmanaged({fullProjectedName} value)");
 
             using (writer.WriteBlock())
@@ -170,10 +161,9 @@ internal static class AbiTypeWriter
                 {
                     foreach ((string fieldName, _, string abiType, bool requiresMarshaling) in fields)
                     {
-                        if (requiresMarshaling && abiType == "global::System.IntPtr")
+                        if (requiresMarshaling)
                         {
-                            // String fields: marshal via WindowsRuntimeStringMarshaller
-                            writer.WriteLine($"{fieldName} = global::System.Runtime.InteropServices.Marshalling.WindowsRuntimeStringMarshaller.ConvertToUnmanaged(value.{fieldName}),");
+                            writer.WriteLine($"{fieldName} = {GetFieldMarshalToUnmanagedExpression(abiType, $"value.{fieldName}")},");
                         }
                         else
                         {
@@ -188,7 +178,6 @@ internal static class AbiTypeWriter
 
             writer.WriteLine();
 
-            // ConvertToManaged
             writer.WriteLine($"public static {fullProjectedName} ConvertToManaged(AbiType value)");
 
             using (writer.WriteBlock())
@@ -199,9 +188,9 @@ internal static class AbiTypeWriter
                 {
                     foreach ((string fieldName, _, string abiType, bool requiresMarshaling) in fields)
                     {
-                        if (requiresMarshaling && abiType == "global::System.IntPtr")
+                        if (requiresMarshaling)
                         {
-                            writer.WriteLine($"{fieldName} = global::System.Runtime.InteropServices.Marshalling.WindowsRuntimeStringMarshaller.ConvertToManaged(value.{fieldName}),");
+                            writer.WriteLine($"{fieldName} = {GetFieldMarshalToManagedExpression(abiType, $"value.{fieldName}")},");
                         }
                         else
                         {
@@ -214,29 +203,29 @@ internal static class AbiTypeWriter
                 writer.WriteLine();
             }
 
-            // Free method: only needed if any field requires marshaling
-            if (hasNonBlittableFields)
-            {
-                writer.WriteLine();
-                writer.WriteLine("public static void Free(AbiType value)");
+            writer.WriteLine();
 
-                using (writer.WriteBlock())
+            writer.WriteLine("public static void Free(AbiType value)");
+
+            using (writer.WriteBlock())
+            {
+                foreach ((string fieldName, _, string abiType, bool requiresMarshaling) in fields)
                 {
-                    foreach ((string fieldName, _, string abiType, bool requiresMarshaling) in fields)
+                    if (requiresMarshaling)
                     {
-                        if (requiresMarshaling && abiType == "global::System.IntPtr")
-                        {
-                            writer.WriteLine($"global::System.Runtime.InteropServices.Marshalling.WindowsRuntimeStringMarshaller.Free(value.{fieldName});");
-                        }
+                        WriteFieldFree(writer, abiType, $"value.{fieldName}");
                     }
                 }
             }
         }
     }
 
+    #endregion
+
+    #region Delegate
+
     /// <summary>
-    /// Writes the ABI helper for a delegate type, including a vtable structure
-    /// and an <c>[UnmanagedCallersOnly]</c> invoke callback for CCW support.
+    /// Writes the ABI marshaller, ComWrappers callback, vtable, and impl for a delegate type.
     /// </summary>
     private static void WriteAbiDelegate(CodeWriter writer, TypeDefinition type, ProjectionGeneratorArgs args)
     {
@@ -244,6 +233,7 @@ internal static class AbiTypeWriter
 
         string name = TypeNameHelpers.GetSimpleName(type);
         string fullProjectedName = GetFullProjectedTypeName(type);
+        string iidFieldName = GetIIDFieldReference(type);
 
         MethodDefinition? invokeMethod = TypeHelpers.GetDelegateInvoke(type);
 
@@ -252,37 +242,150 @@ internal static class AbiTypeWriter
             return;
         }
 
-        string returnType = GetProjectedTypeName(methodSig.ReturnType);
-        bool hasReturnValue = returnType != "void";
-
+        // --- Marshaller ---
         writer.WriteLine();
-        writer.WriteLine($"/// <summary>ABI helper for the <see cref=\"{fullProjectedName}\"/> delegate.</summary>");
-        writer.WriteLine($"internal static unsafe class {name}Abi");
+        writer.WriteLine($"public static unsafe class {name}Marshaller");
 
         using (writer.WriteBlock())
         {
-            // Vtable field
-            writer.WriteLine("/// <summary>The static vtable pointer for this delegate's CCW.</summary>");
-            writer.WriteLine("private static readonly void* Vtable;");
-            writer.WriteLine();
-
-            // Static constructor to initialize the vtable
-            writer.WriteLine($"static {name}Abi()");
+            writer.WriteLine($"public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({fullProjectedName} value)");
 
             using (writer.WriteBlock())
             {
-                writer.WriteLine("// Vtable initialization is deferred to runtime type registration.");
+                writer.WriteLine($"return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in {iidFieldName});");
             }
 
             writer.WriteLine();
 
-            // UnmanagedCallersOnly invoke stub
-            writer.WriteLine("/// <summary>ABI invoke callback for native-to-managed delegate calls.</summary>");
-            writer.WriteLine("[global::System.Runtime.InteropServices.UnmanagedCallersOnly(CallConvs = [typeof(global::System.Runtime.CompilerServices.CallConvMemberFunction)])]");
+            writer.WriteLine($"public static {fullProjectedName}? ConvertToManaged(void* value)");
 
-            // Build ABI parameter list
-            string abiParams = BuildAbiParameterList(invokeMethod, includeThisPtr: true, includeReturnParam: hasReturnValue);
-            writer.WriteLine($"private static int Do_Abi_Invoke({abiParams})");
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine($"return ({fullProjectedName}?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<{name}ComWrappersCallback>(value);");
+            }
+        }
+
+        // --- ComWrappersMarshallerAttribute ---
+        writer.WriteLine();
+        writer.WriteLine($"file sealed unsafe class {name}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute");
+
+        using (writer.WriteBlock())
+        {
+            writer.WriteLine("public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine("WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(");
+                writer.IncreaseIndent();
+                writer.WriteLine("externalComObject: value,");
+                writer.WriteLine($"iid: {iidFieldName},");
+                writer.WriteLine("wrapperFlags: out wrapperFlags);");
+                writer.DecreaseIndent();
+                writer.WriteLine($"return WindowsRuntimeDelegateMarshal.CreateDelegate<{fullProjectedName}>(valueReference);");
+            }
+        }
+
+        // --- ComWrappersCallback ---
+        writer.WriteLine();
+        writer.WriteLine($"file sealed unsafe class {name}ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback");
+
+        using (writer.WriteBlock())
+        {
+            writer.WriteLine("public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine("WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(");
+                writer.IncreaseIndent();
+                writer.WriteLine("externalComObject: value,");
+                writer.WriteLine($"iid: {iidFieldName},");
+                writer.WriteLine("wrapperFlags: out wrapperFlags);");
+                writer.DecreaseIndent();
+                writer.WriteLine($"return WindowsRuntimeDelegateMarshal.CreateDelegate<{fullProjectedName}>(valueReference);");
+            }
+        }
+
+        // --- Vftbl ---
+        WriteDelegateVftbl(writer, name, invokeMethod, methodSig);
+
+        // --- Impl ---
+        WriteDelegateImpl(writer, name, fullProjectedName, type, invokeMethod, methodSig);
+    }
+
+    /// <summary>
+    /// Writes the vtable struct for a delegate type. Delegates have IUnknown (3 slots) + Invoke (1 slot).
+    /// </summary>
+    private static void WriteDelegateVftbl(CodeWriter writer, string name, MethodDefinition invokeMethod, MethodSignature methodSig)
+    {
+        writer.WriteLine();
+        writer.WriteLine("[global::System.Runtime.InteropServices.StructLayout(global::System.Runtime.InteropServices.LayoutKind.Sequential)]");
+        writer.WriteLine($"internal unsafe struct {name}Vftbl");
+
+        using (writer.WriteBlock())
+        {
+            writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, global::System.Guid*, void**, int> QueryInterface;");
+            writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;");
+            writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint> Release;");
+
+            string invokeSignature = BuildVftblFunctionPointerSignature(invokeMethod, methodSig);
+            writer.WriteLine($"public {invokeSignature} Invoke_0;");
+        }
+    }
+    /// <summary>
+    /// Writes the Impl class for a delegate type with UnmanagedCallersOnly invoke callback.
+    /// </summary>
+    private static void WriteDelegateImpl(
+        CodeWriter writer,
+        string name,
+        string fullProjectedName,
+        TypeDefinition type,
+        MethodDefinition invokeMethod,
+        MethodSignature methodSig)
+    {
+        string iidFieldName = GetIIDFieldReference(type);
+
+        writer.WriteLine();
+        writer.WriteLine($"public static unsafe class {name}Impl");
+
+        using (writer.WriteBlock())
+        {
+            writer.WriteLine("[global::System.Runtime.CompilerServices.FixedAddressValueType]");
+            writer.WriteLine($"private static readonly {name}Vftbl Vftbl;");
+            writer.WriteLine();
+
+            writer.WriteLine($"static {name}Impl()");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine($"*(IUnknownVftbl*)global::System.Runtime.CompilerServices.Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;");
+                writer.WriteLine("Vftbl.Invoke_0 = &Do_Abi_Invoke_0;");
+            }
+
+            writer.WriteLine();
+
+            writer.WriteLine("public static ref readonly global::System.Guid IID");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine("[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+                writer.WriteLine($"get => ref {iidFieldName};");
+            }
+
+            writer.WriteLine();
+
+            writer.WriteLine("public static nint Vtable");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine("[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+                writer.WriteLine("get => (nint)global::System.Runtime.CompilerServices.Unsafe.AsPointer(in Vftbl);");
+            }
+
+            writer.WriteLine();
+
+            string abiParams = BuildAbiParameterList(invokeMethod, includeThisPtr: true, includeReturnParam: true);
+            writer.WriteLine("[global::System.Runtime.InteropServices.UnmanagedCallersOnly(CallConvs = new[] { typeof(global::System.Runtime.CompilerServices.CallConvMemberFunction) })]");
+            writer.WriteLine($"private static unsafe int Do_Abi_Invoke_0({abiParams})");
 
             using (writer.WriteBlock())
             {
@@ -290,25 +393,26 @@ internal static class AbiTypeWriter
 
                 using (writer.WriteBlock())
                 {
-                    // Marshal parameters and invoke
                     WriteDelegateInvokeBody(writer, invokeMethod, methodSig, fullProjectedName);
-                    writer.WriteLine("return 0; // S_OK");
+                    writer.WriteLine("return 0;");
                 }
 
-                writer.WriteLine("catch (global::System.Exception __e)");
+                writer.WriteLine("catch (global::System.Exception __exception__)");
 
                 using (writer.WriteBlock())
                 {
-                    writer.WriteLine("return global::System.Runtime.InteropServices.Marshalling.RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__e);");
+                    writer.WriteLine("return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);");
                 }
             }
         }
     }
 
+    #endregion
+
+    #region Interface
+
     /// <summary>
-    /// Writes the ABI static methods class and vtable for an interface type.
-    /// The methods class provides managed wrappers that call through the vtable,
-    /// and the vtable class provides <c>[UnmanagedCallersOnly]</c> callbacks for CCW support.
+    /// Writes the ABI Methods class, Vftbl struct, and Impl class for an interface type.
     /// </summary>
     private static void WriteAbiInterface(CodeWriter writer, TypeDefinition type, ProjectionGeneratorArgs args)
     {
@@ -317,150 +421,309 @@ internal static class AbiTypeWriter
         string name = TypeNameHelpers.GetSimpleName(type);
         string fullProjectedName = GetFullProjectedTypeName(type);
 
-        // Collect property and event accessor names to avoid duplicating them as regular methods
-        HashSet<string> specialMethodNames = CollectSpecialMethodNames(type);
+        List<(MethodDefinition Method, int SlotIndex)> vtableMethods = CollectVtableMethods(type);
 
+        // --- Methods class ---
         writer.WriteLine();
-        writer.WriteLine($"/// <summary>ABI methods for <see cref=\"{fullProjectedName}\"/>.</summary>");
-        writer.WriteLine($"internal static unsafe class {name}Methods");
+        writer.WriteLine($"internal static class {name}Methods");
 
         using (writer.WriteBlock())
         {
-            // Vtable slot index counter: IUnknown has 3 methods (QueryInterface, AddRef, Release),
-            // and IInspectable adds 3 more (GetIids, GetRuntimeClassName, GetTrustLevel).
-            int vtableSlotIndex = 6;
-
-            // Write ABI methods for interface members
-            foreach (MethodDefinition method in type.Methods)
+            foreach ((MethodDefinition method, int slotIndex) in vtableMethods)
             {
-                if (method.IsSpecialName || method.IsRuntimeSpecialName)
-                {
-                    vtableSlotIndex++;
-                    continue;
-                }
-
-                string? methodName = method.Name?.Value;
-
-                if (methodName is null || specialMethodNames.Contains(methodName))
-                {
-                    vtableSlotIndex++;
-                    continue;
-                }
-
-                WriteAbiMethodWrapper(writer, method, vtableSlotIndex);
-                vtableSlotIndex++;
-            }
-
-            // Write ABI methods for properties
-            foreach (PropertyDefinition property in type.Properties)
-            {
-                (MethodDefinition? getter, MethodDefinition? setter) = TypeHelpers.GetPropertyMethods(property);
-
-                if (getter is not null)
-                {
-                    WriteAbiMethodWrapper(writer, getter, vtableSlotIndex);
-                    vtableSlotIndex++;
-                }
-
-                if (setter is not null)
-                {
-                    WriteAbiMethodWrapper(writer, setter, vtableSlotIndex);
-                    vtableSlotIndex++;
-                }
-            }
-
-            // Write ABI methods for events
-            foreach (EventDefinition evt in type.Events)
-            {
-                (MethodDefinition? add, MethodDefinition? remove) = TypeHelpers.GetEventMethods(evt);
-
-                if (add is not null)
-                {
-                    WriteAbiMethodWrapper(writer, add, vtableSlotIndex);
-                    vtableSlotIndex++;
-                }
-
-                if (remove is not null)
-                {
-                    WriteAbiMethodWrapper(writer, remove, vtableSlotIndex);
-                    vtableSlotIndex++;
-                }
+                WriteAbiMethodWrapper(writer, method, slotIndex);
             }
         }
 
-        // Write the vtable class (file-scoped, not accessible outside this compilation unit)
+        // --- Vftbl struct ---
+        WriteInterfaceVftbl(writer, name, vtableMethods);
+
+        // --- Impl class ---
+        WriteInterfaceImpl(writer, name, fullProjectedName, type, vtableMethods);
+    }
+
+    /// <summary>
+    /// Collects all methods on an interface in their vtable order, assigning slot indices starting at 6.
+    /// Methods are enumerated in metadata order: all MethodDef entries sequentially.
+    /// </summary>
+    private static List<(MethodDefinition Method, int SlotIndex)> CollectVtableMethods(TypeDefinition type)
+    {
+        List<(MethodDefinition, int)> result = [];
+        int slotIndex = 6;
+
+        foreach (MethodDefinition method in type.Methods)
+        {
+            if (method.Name?.Value is ".ctor" or ".cctor")
+            {
+                continue;
+            }
+
+            result.Add((method, slotIndex));
+            slotIndex++;
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Writes the Vftbl struct for an interface.
+    /// </summary>
+    private static void WriteInterfaceVftbl(
+        CodeWriter writer,
+        string name,
+        List<(MethodDefinition Method, int SlotIndex)> vtableMethods)
+    {
         writer.WriteLine();
-        writer.WriteLine($"/// <summary>Vtable for <see cref=\"{fullProjectedName}\"/> CCW support.</summary>");
-        writer.WriteLine($"file static unsafe class {name}Vtable");
+        writer.WriteLine("[global::System.Runtime.InteropServices.StructLayout(global::System.Runtime.InteropServices.LayoutKind.Sequential)]");
+        writer.WriteLine($"internal unsafe struct {name}Vftbl");
 
         using (writer.WriteBlock())
         {
-            writer.WriteLine("[global::System.Runtime.CompilerServices.FixedAddressValueType]");
-            writer.WriteLine("private static readonly global::System.IntPtr Vftbl;");
-            writer.WriteLine();
+            // IUnknown (slots 0-2)
+            writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, global::System.Guid*, void**, int> QueryInterface;");
+            writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;");
+            writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint> Release;");
 
-            writer.WriteLine($"static {name}Vtable()");
+            // IInspectable (slots 3-5)
+            writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint*, global::System.Guid**, int> GetIids;");
+            writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;");
+            writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;");
 
-            using (writer.WriteBlock())
+            // Interface methods (slots 6+)
+            foreach ((MethodDefinition method, int slotIndex) in vtableMethods)
             {
-                writer.WriteLine("// Vtable function pointer initialization is deferred to runtime type registration.");
+                if (method.Signature is not { } methodSig)
+                {
+                    continue;
+                }
+
+                string methodName = method.Name?.Value ?? $"Method{slotIndex}";
+                string escapedName = SanitizeVftblMethodName(methodName);
+                int methodIndex = slotIndex - 6;
+                string signature = BuildVftblFunctionPointerSignature(method, methodSig);
+                writer.WriteLine($"public {signature} {escapedName}_{methodIndex};");
             }
         }
     }
 
     /// <summary>
-    /// Writes the ABI helper for a runtime class type, including factory method wrappers
-    /// and static interface method forwarders.
+    /// Writes the Impl class for an interface with static Vftbl, IID, Vtable, and UnmanagedCallersOnly methods.
     /// </summary>
-    private static void WriteAbiClass(CodeWriter writer, TypeDefinition type, ProjectionGeneratorArgs args)
+    private static void WriteInterfaceImpl(
+        CodeWriter writer,
+        string name,
+        string fullProjectedName,
+        TypeDefinition type,
+        List<(MethodDefinition Method, int SlotIndex)> vtableMethods)
     {
-        _ = args;
-
-        string name = TypeNameHelpers.GetSimpleName(type);
-        string fullProjectedName = GetFullProjectedTypeName(type);
-        bool isStatic = TypeHelpers.IsStaticClass(type);
+        string iidFieldName = GetIIDFieldReference(type);
 
         writer.WriteLine();
-        writer.WriteLine($"/// <summary>ABI helper for <see cref=\"{fullProjectedName}\"/>.</summary>");
-        writer.WriteLine($"internal static class {name}Abi");
+        writer.WriteLine($"public static unsafe class {name}Impl");
 
         using (writer.WriteBlock())
         {
-            if (!isStatic && TypeHelpers.HasDefaultConstructor(type))
-            {
-                // Activation factory method for default constructor
-                writer.WriteLine("/// <summary>Activates a new instance via the activation factory.</summary>");
-                writer.WriteLine($"public static unsafe void* ActivateInstance()");
+            writer.WriteLine("[global::System.Runtime.CompilerServices.FixedAddressValueType]");
+            writer.WriteLine($"private static readonly {name}Vftbl Vftbl;");
+            writer.WriteLine();
 
-                using (writer.WriteBlock())
+            writer.WriteLine($"static {name}Impl()");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine($"*(IInspectableVftbl*)global::System.Runtime.CompilerServices.Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;");
+
+                foreach ((MethodDefinition method, int slotIndex) in vtableMethods)
                 {
-                    writer.WriteLine("throw new global::System.NotImplementedException();");
+                    string methodName = method.Name?.Value ?? $"Method{slotIndex}";
+                    string escapedName = SanitizeVftblMethodName(methodName);
+                    int methodIndex = slotIndex - 6;
+                    writer.WriteLine($"Vftbl.{escapedName}_{methodIndex} = &Do_Abi_{escapedName}_{methodIndex};");
                 }
             }
 
-            // Static interface forwarders
-            foreach (InterfaceImplementation interfaceImpl in type.Interfaces)
+            writer.WriteLine();
+
+            writer.WriteLine("public static ref readonly global::System.Guid IID");
+
+            using (writer.WriteBlock())
             {
-                if (interfaceImpl.Interface is not { } interfaceRef)
+                writer.WriteLine("[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+                writer.WriteLine($"get => ref {iidFieldName};");
+            }
+
+            writer.WriteLine();
+
+            writer.WriteLine("public static nint Vtable");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine("[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+                writer.WriteLine("get => (nint)global::System.Runtime.CompilerServices.Unsafe.AsPointer(in Vftbl);");
+            }
+
+            // UnmanagedCallersOnly methods
+            foreach ((MethodDefinition method, int slotIndex) in vtableMethods)
+            {
+                if (method.Signature is not { } methodSig)
                 {
                     continue;
                 }
 
-                // Only process static interfaces (marked with StaticAttribute on the class)
-                if (!TypeHelpers.IsDefaultInterface(interfaceImpl) && !TypeHelpers.IsOverridable(interfaceImpl))
+                WriteImplCallbackMethod(writer, method, methodSig, slotIndex, fullProjectedName);
+            }
+        }
+    }
+    /// <summary>
+    /// Writes a single [UnmanagedCallersOnly] callback method for the Impl class.
+    /// </summary>
+    private static void WriteImplCallbackMethod(
+        CodeWriter writer,
+        MethodDefinition method,
+        MethodSignature methodSig,
+        int slotIndex,
+        string fullProjectedName)
+    {
+        string methodName = method.Name?.Value ?? $"Method{slotIndex}";
+        string escapedName = SanitizeVftblMethodName(methodName);
+        int methodIndex = slotIndex - 6;
+
+        string returnType = GetProjectedTypeName(methodSig.ReturnType);
+        bool hasReturnValue = returnType != "void";
+
+        string abiParams = BuildAbiParameterList(method, includeThisPtr: true, includeReturnParam: hasReturnValue);
+
+        writer.WriteLine();
+        writer.WriteLine("[global::System.Runtime.InteropServices.UnmanagedCallersOnly(CallConvs = new[] { typeof(global::System.Runtime.CompilerServices.CallConvMemberFunction) })]");
+        writer.WriteLine($"private static unsafe int Do_Abi_{escapedName}_{methodIndex}({abiParams})");
+
+        using (writer.WriteBlock())
+        {
+            writer.WriteLine("try");
+
+            using (writer.WriteBlock())
+            {
+                WriteImplMethodBody(writer, method, methodSig, fullProjectedName, hasReturnValue);
+                writer.WriteLine("return 0;");
+            }
+
+            writer.WriteLine("catch (global::System.Exception __exception__)");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine("return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Writes the body of an Impl callback that gets the managed instance and calls it.
+    /// </summary>
+    private static void WriteImplMethodBody(
+        CodeWriter writer,
+        MethodDefinition method,
+        MethodSignature methodSig,
+        string fullProjectedName,
+        bool hasReturnValue)
+    {
+        List<string> managedArgs = [];
+
+        for (int i = 0; i < methodSig.ParameterTypes.Count; i++)
+        {
+            TypeSignature paramType = methodSig.ParameterTypes[i];
+            string paramName = GetParameterName(method, i);
+
+            if (paramType is ByReferenceTypeSignature)
+            {
+                ParameterDefinition? paramDef = GetParameterDefinition(method, i);
+                string prefix = paramDef?.IsOut == true ? "out " : "ref ";
+                managedArgs.Add($"{prefix}*{paramName}");
+            }
+            else
+            {
+                string abiType = GetAbiTypeName(paramType);
+                string projectedType = GetProjectedTypeName(paramType);
+
+                if (abiType != projectedType)
                 {
-                    TypeDefinition? interfaceDef = interfaceRef.Resolve();
-
-                    if (interfaceDef is null)
-                    {
-                        continue;
-                    }
-
-                    // Write a comment indicating the static interface source
-                    string interfaceName = TypeNameHelpers.GetSimpleName(interfaceDef);
-                    writer.WriteLine();
-                    writer.WriteLine($"// Static members from {interfaceName}");
+                    managedArgs.Add(GetMarshalToManagedExpression(paramType, paramName));
                 }
+                else
+                {
+                    managedArgs.Add(paramName);
+                }
+            }
+        }
+
+        string argsJoined = string.Join(", ", managedArgs);
+
+        string callMethodName = CSharpKeywords.EscapeIdentifier(method.Name?.Value ?? "");
+        bool isPropertyGetter = method.IsSpecialName && (method.Name?.Value?.StartsWith("get_", StringComparison.Ordinal) ?? false);
+        bool isPropertySetter = method.IsSpecialName && (method.Name?.Value?.StartsWith("put_", StringComparison.Ordinal) ?? false);
+        bool isEventAdd = method.IsSpecialName && (method.Name?.Value?.StartsWith("add_", StringComparison.Ordinal) ?? false);
+        bool isEventRemove = method.IsSpecialName && (method.Name?.Value?.StartsWith("remove_", StringComparison.Ordinal) ?? false);
+
+        if (isPropertyGetter)
+        {
+            string propName = method.Name!.Value![4..];
+
+            if (hasReturnValue)
+            {
+                string abiReturnType = GetAbiTypeName(methodSig.ReturnType);
+                string projectedReturnType = GetProjectedTypeName(methodSig.ReturnType);
+
+                if (abiReturnType != projectedReturnType)
+                {
+                    writer.WriteLine($"*retval = {GetMarshalToUnmanagedExpression(methodSig.ReturnType, $"ComInterfaceDispatch.GetInstance<{fullProjectedName}>((ComInterfaceDispatch*)thisPtr).{propName}")};");
+                }
+                else
+                {
+                    writer.WriteLine($"*retval = ComInterfaceDispatch.GetInstance<{fullProjectedName}>((ComInterfaceDispatch*)thisPtr).{propName};");
+                }
+            }
+        }
+        else if (isPropertySetter)
+        {
+            string propName = method.Name!.Value![4..];
+            writer.WriteLine($"ComInterfaceDispatch.GetInstance<{fullProjectedName}>((ComInterfaceDispatch*)thisPtr).{propName} = {argsJoined};");
+        }
+        else if (isEventAdd)
+        {
+            string eventName = method.Name!.Value![4..];
+
+            if (hasReturnValue)
+            {
+                writer.WriteLine($"*retval = ComInterfaceDispatch.GetInstance<{fullProjectedName}>((ComInterfaceDispatch*)thisPtr).{eventName} += {argsJoined};");
+            }
+            else
+            {
+                writer.WriteLine($"ComInterfaceDispatch.GetInstance<{fullProjectedName}>((ComInterfaceDispatch*)thisPtr).{eventName} += {argsJoined};");
+            }
+        }
+        else if (isEventRemove)
+        {
+            string eventName = method.Name!.Value![7..];
+            writer.WriteLine($"ComInterfaceDispatch.GetInstance<{fullProjectedName}>((ComInterfaceDispatch*)thisPtr).{eventName} -= {argsJoined};");
+        }
+        else
+        {
+            if (hasReturnValue)
+            {
+                string abiReturnType = GetAbiTypeName(methodSig.ReturnType);
+                string projectedReturnType = GetProjectedTypeName(methodSig.ReturnType);
+
+                if (abiReturnType != projectedReturnType)
+                {
+                    writer.WriteLine($"*retval = {GetMarshalToUnmanagedExpression(methodSig.ReturnType, $"ComInterfaceDispatch.GetInstance<{fullProjectedName}>((ComInterfaceDispatch*)thisPtr).{callMethodName}({argsJoined})")};");
+                }
+                else
+                {
+                    writer.WriteLine($"*retval = ComInterfaceDispatch.GetInstance<{fullProjectedName}>((ComInterfaceDispatch*)thisPtr).{callMethodName}({argsJoined});");
+                }
+            }
+            else
+            {
+                writer.WriteLine($"ComInterfaceDispatch.GetInstance<{fullProjectedName}>((ComInterfaceDispatch*)thisPtr).{callMethodName}({argsJoined});");
             }
         }
     }
@@ -479,22 +742,62 @@ internal static class AbiTypeWriter
         bool hasReturnValue = returnType != "void";
         string methodName = CSharpKeywords.EscapeIdentifier(method.Name?.Value ?? "");
 
-        // Build projected parameter list (for the public-facing signature)
         string projectedParams = BuildProjectedParameterList(method);
 
         writer.WriteLine();
-        writer.WriteLine($"/// <summary>Calls the ABI method at vtable slot {vtableSlotIndex}.</summary>");
+        writer.WriteLine("[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]");
 
         string fullParams = string.IsNullOrEmpty(projectedParams)
-            ? "global::WindowsRuntime.WindowsRuntimeObjectReference thisReference"
-            : $"global::WindowsRuntime.WindowsRuntimeObjectReference thisReference, {projectedParams}";
+            ? "WindowsRuntimeObjectReference thisReference"
+            : $"WindowsRuntimeObjectReference thisReference, {projectedParams}";
 
         writer.WriteLine($"public static unsafe {returnType} {methodName}({fullParams})");
 
         using (writer.WriteBlock())
         {
-            writer.WriteLine("using global::WindowsRuntime.WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();");
-            writer.WriteLine("void* thisPtr = thisValue.GetThisPtrUnsafe();");
+            writer.WriteLine("using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();");
+            writer.WriteLine("void* ThisPtr = thisValue.GetThisPtrUnsafe();");
+
+            // Marshal input parameters
+            List<string> marshaledParamDeclarations = [];
+
+            if (method.Signature is { } sig)
+            {
+                for (int i = 0; i < sig.ParameterTypes.Count; i++)
+                {
+                    TypeSignature paramType = sig.ParameterTypes[i];
+                    string paramName = GetParameterName(method, i);
+                    string escapedParamName = CSharpKeywords.EscapeIdentifier(paramName);
+                    string abiType = GetAbiTypeName(paramType);
+                    string projType = GetProjectedTypeName(paramType);
+
+                    if (paramType is ByReferenceTypeSignature)
+                    {
+                        continue;
+                    }
+
+                    if (abiType != projType)
+                    {
+                        bool isRefType = IsReferenceAbiType(paramType);
+
+                        if (isRefType)
+                        {
+                            string marshalExpr = GetMarshalParamToUnmanagedExpression(paramType, escapedParamName);
+                            marshaledParamDeclarations.Add($"using WindowsRuntimeObjectReferenceValue __{paramName} = {marshalExpr};");
+                        }
+                        else
+                        {
+                            string marshalExpr = GetMarshalToUnmanagedExpression(paramType, escapedParamName);
+                            marshaledParamDeclarations.Add($"var __{paramName} = {marshalExpr};");
+                        }
+                    }
+                }
+            }
+
+            foreach (string decl in marshaledParamDeclarations)
+            {
+                writer.WriteLine(decl);
+            }
 
             if (hasReturnValue)
             {
@@ -502,103 +805,241 @@ internal static class AbiTypeWriter
                 writer.WriteLine($"{abiReturnType} __retval = default;");
             }
 
-            writer.WriteLine();
+            bool needsTryFinally = hasReturnValue && NeedsReturnValueCleanup(methodSig.ReturnType);
 
-            // Call the native method through the vtable
-            writer.WriteLine($"// Native call via vtable slot {vtableSlotIndex}");
-            writer.WriteLine("global::System.Runtime.InteropServices.Marshal.ThrowExceptionForHR(");
-            writer.IncreaseIndent();
-
-            // Build the native call arguments
-            string nativeCallArgs = BuildNativeCallArguments(method, hasReturnValue);
-            writer.WriteLine($"((delegate* unmanaged[MemberFunction]<void*, {GetNativeSignature(method, hasReturnValue)}>)");
-            writer.IncreaseIndent();
-            writer.WriteLine($"(*(void***)thisPtr)[{vtableSlotIndex}])(thisPtr{nativeCallArgs}));");
-            writer.DecreaseIndent();
-            writer.DecreaseIndent();
-
-            if (hasReturnValue)
+            if (needsTryFinally)
             {
-                writer.WriteLine();
+                writer.WriteLine("try");
 
-                string abiReturnType = GetAbiTypeName(methodSig.ReturnType);
+                using (writer.WriteBlock())
+                {
+                    WriteVtableCall(writer, method, methodSig, vtableSlotIndex, hasReturnValue);
+                    WriteReturnMarshal(writer, methodSig, hasReturnValue);
+                }
 
-                if (abiReturnType != returnType)
+                writer.WriteLine("finally");
+
+                using (writer.WriteBlock())
                 {
-                    // Return value needs marshaling
-                    writer.WriteLine($"return {GetMarshalToManagedExpression(methodSig.ReturnType, "__retval")};");
+                    WriteReturnValueCleanup(writer, methodSig);
                 }
-                else
-                {
-                    writer.WriteLine("return __retval;");
-                }
+            }
+            else
+            {
+                WriteVtableCall(writer, method, methodSig, vtableSlotIndex, hasReturnValue);
+                WriteReturnMarshal(writer, methodSig, hasReturnValue);
             }
         }
     }
-
     /// <summary>
-    /// Writes the body of a delegate's <c>Do_Abi_Invoke</c> method that marshals
-    /// parameters and invokes the managed delegate.
+    /// Writes the vtable function pointer call.
     /// </summary>
-    private static void WriteDelegateInvokeBody(
+    private static void WriteVtableCall(
         CodeWriter writer,
-        MethodDefinition invokeMethod,
+        MethodDefinition method,
         MethodSignature methodSig,
-        string fullProjectedName)
+        int vtableSlotIndex,
+        bool hasReturnValue)
     {
-        string returnType = GetProjectedTypeName(methodSig.ReturnType);
-        bool hasReturnValue = returnType != "void";
+        string fPtrSig = BuildFunctionPointerSignature(method, hasReturnValue);
 
-        // Build the argument list for the managed delegate call
-        List<string> managedArgs = [];
+        List<string> callArgs = [];
 
         for (int i = 0; i < methodSig.ParameterTypes.Count; i++)
         {
             TypeSignature paramType = methodSig.ParameterTypes[i];
-            string paramName = GetParameterName(invokeMethod, i);
+            string paramName = GetParameterName(method, i);
+            string escapedParamName = CSharpKeywords.EscapeIdentifier(paramName);
             string abiType = GetAbiTypeName(paramType);
-            string projectedType = GetProjectedTypeName(paramType);
+            string projType = GetProjectedTypeName(paramType);
 
-            if (abiType != projectedType)
+            if (paramType is ByReferenceTypeSignature)
             {
-                managedArgs.Add(GetMarshalToManagedExpression(paramType, paramName));
+                callArgs.Add($"&{escapedParamName}");
+            }
+            else if (abiType != projType)
+            {
+                if (IsReferenceAbiType(paramType))
+                {
+                    callArgs.Add($"__{paramName}.GetThisPtrUnsafe()");
+                }
+                else
+                {
+                    callArgs.Add($"__{paramName}");
+                }
             }
             else
             {
-                managedArgs.Add(paramName);
+                callArgs.Add(escapedParamName);
             }
         }
-
-        string argsJoined = string.Join(", ", managedArgs);
 
         if (hasReturnValue)
         {
-            writer.WriteLine($"var __managed = global::System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch.GetInstance<{fullProjectedName}>((global::System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch*)thisPtr);");
-            writer.WriteLine($"var __result = __managed({argsJoined});");
+            callArgs.Add("&__retval");
+        }
 
-            string abiReturnType = GetAbiTypeName(methodSig.ReturnType);
+        writer.Write($"RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<{fPtrSig}>**)ThisPtr)[{vtableSlotIndex}](ThisPtr");
 
-            if (abiReturnType != GetProjectedTypeName(methodSig.ReturnType))
+        if (callArgs.Count > 0)
+        {
+            writer.Write(",");
+            writer.WriteLine();
+            writer.IncreaseIndent();
+            writer.IncreaseIndent();
+
+            for (int i = 0; i < callArgs.Count; i++)
             {
-                writer.WriteLine($"*retval = {GetMarshalToUnmanagedExpression(methodSig.ReturnType, "__result")};");
+                if (i < callArgs.Count - 1)
+                {
+                    writer.WriteLine($"{callArgs[i]},");
+                }
+                else
+                {
+                    writer.Write($"{callArgs[i]}");
+                }
             }
-            else
-            {
-                writer.WriteLine("*retval = __result;");
-            }
+
+            writer.Write("));");
+            writer.WriteLine();
+            writer.DecreaseIndent();
+            writer.DecreaseIndent();
         }
         else
         {
-            writer.WriteLine($"var __managed = global::System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch.GetInstance<{fullProjectedName}>((global::System.Runtime.InteropServices.ComWrappers.ComInterfaceDispatch*)thisPtr);");
-            writer.WriteLine($"__managed({argsJoined});");
+            writer.Write("));");
+            writer.WriteLine();
         }
     }
 
+    /// <summary>
+    /// Writes the return value marshaling if needed.
+    /// </summary>
+    private static void WriteReturnMarshal(CodeWriter writer, MethodSignature methodSig, bool hasReturnValue)
+    {
+        if (!hasReturnValue)
+        {
+            return;
+        }
+
+        string abiReturnType = GetAbiTypeName(methodSig.ReturnType);
+        string projectedReturnType = GetProjectedTypeName(methodSig.ReturnType);
+
+        if (abiReturnType != projectedReturnType)
+        {
+            writer.WriteLine($"return {GetMarshalToManagedExpression(methodSig.ReturnType, "__retval")};");
+        }
+        else
+        {
+            writer.WriteLine("return __retval;");
+        }
+    }
+
+    #endregion
+
+    #region Class
+
+    /// <summary>
+    /// Writes the ABI marshaller and ComWrappers callback for a runtime class type.
+    /// </summary>
+    private static void WriteAbiClass(CodeWriter writer, TypeDefinition type, ProjectionGeneratorArgs args)
+    {
+        _ = args;
+
+        string name = TypeNameHelpers.GetSimpleName(type);
+        string fullProjectedName = GetFullProjectedTypeName(type);
+        bool isStatic = TypeHelpers.IsStaticClass(type);
+
+        if (isStatic)
+        {
+            return;
+        }
+
+        ITypeDefOrRef? defaultInterface = TypeHelpers.GetDefaultInterface(type);
+
+        if (defaultInterface is null)
+        {
+            return;
+        }
+
+        string iidFieldName = GetIIDFieldReferenceForTypeRef(defaultInterface);
+
+        // --- Marshaller ---
+        writer.WriteLine();
+        writer.WriteLine($"public static unsafe class {name}Marshaller");
+
+        using (writer.WriteBlock())
+        {
+            writer.WriteLine($"public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({fullProjectedName} value)");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine("if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(value, out WindowsRuntimeObjectReference? objectReference))");
+
+                using (writer.WriteBlock())
+                {
+                    writer.WriteLine("return objectReference.AsValue();");
+                }
+
+                writer.WriteLine("return default;");
+            }
+
+            writer.WriteLine();
+
+            writer.WriteLine($"public static {fullProjectedName}? ConvertToManaged(void* value)");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine($"return ({fullProjectedName}?)WindowsRuntimeObjectMarshaller.ConvertToManaged<{name}ComWrappersCallback>(value);");
+            }
+        }
+
+        // --- ComWrappersMarshallerAttribute ---
+        writer.WriteLine();
+        writer.WriteLine($"file sealed unsafe class {name}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute");
+
+        using (writer.WriteBlock())
+        {
+            writer.WriteLine("public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine("WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(");
+                writer.IncreaseIndent();
+                writer.WriteLine("externalComObject: value,");
+                writer.WriteLine($"iid: {iidFieldName},");
+                writer.WriteLine("wrapperFlags: out wrapperFlags);");
+                writer.DecreaseIndent();
+                writer.WriteLine($"return new {fullProjectedName}(valueReference);");
+            }
+        }
+
+        // --- ComWrappersCallback ---
+        writer.WriteLine();
+        writer.WriteLine($"file sealed unsafe class {name}ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback");
+
+        using (writer.WriteBlock())
+        {
+            writer.WriteLine("public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)");
+
+            using (writer.WriteBlock())
+            {
+                writer.WriteLine("WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(");
+                writer.IncreaseIndent();
+                writer.WriteLine("externalComObject: value,");
+                writer.WriteLine($"iid: {iidFieldName},");
+                writer.WriteLine("wrapperFlags: out wrapperFlags);");
+                writer.DecreaseIndent();
+                writer.WriteLine($"return new {fullProjectedName}(valueReference);");
+            }
+        }
+    }
+
+    #endregion
     #region Type name helpers
 
     /// <summary>
-    /// Gets the fully qualified projected type name suitable for use in generated ABI code
-    /// (references the type from the projected namespace, not the ABI namespace).
+    /// Gets the fully qualified projected type name.
     /// </summary>
     private static string GetFullProjectedTypeName(TypeDefinition type)
     {
@@ -611,7 +1052,7 @@ internal static class AbiTypeWriter
     }
 
     /// <summary>
-    /// Gets the projected C# type name for a type signature (mirrors <c>ProjectedTypeWriter.GetProjectedTypeName</c>).
+    /// Gets the projected C# type name for a type signature.
     /// </summary>
     private static string GetProjectedTypeName(TypeSignature? typeSig)
     {
@@ -718,13 +1159,11 @@ internal static class AbiTypeWriter
             return GetProjectedTypeName(byRef.BaseType);
         }
 
-        // Handle custom modifier types (modopt/modreq) - just unwrap them
         if (typeSig is CustomModifierTypeSignature customMod)
         {
             return GetProjectedTypeName(customMod.BaseType);
         }
 
-        // Handle generic parameter references (T, T0, T1, etc.)
         if (typeSig is GenericParameterSignature genericParam)
         {
             return genericParam.ParameterType == GenericParameterType.Type
@@ -745,9 +1184,8 @@ internal static class AbiTypeWriter
     }
 
     /// <summary>
-    /// Gets the ABI type name for a type signature. This maps projected types
-    /// to their unmanaged representations (e.g., <c>string</c> → <c>IntPtr</c>,
-    /// interface/class → <c>void*</c>, enum → underlying integer).
+    /// Gets the ABI type name for a type signature. Maps projected types to their
+    /// unmanaged representations.
     /// </summary>
     private static string GetAbiTypeName(TypeSignature? typeSig)
     {
@@ -756,27 +1194,18 @@ internal static class AbiTypeWriter
             return "void";
         }
 
-        // Fundamental (blittable) types stay the same in ABI
         if (typeSig is CorLibTypeSignature corLibType)
         {
             string fullName = $"{corLibType.Namespace}.{corLibType.Name}";
 
-            // String is not blittable - it marshals to IntPtr (HSTRING)
-            if (fullName == "System.String")
+            return fullName switch
             {
-                return "global::System.IntPtr";
-            }
-
-            // System.Object marshals to void* (IInspectable*)
-            if (fullName == "System.Object")
-            {
-                return "void*";
-            }
-
-            // All other fundamental types (int, float, bool, etc.) are blittable
-            string? csharpName = TypeNameHelpers.GetCSharpTypeName(fullName);
-
-            return csharpName ?? $"global::{fullName}";
+                "System.String" => "void*",
+                "System.Object" => "void*",
+                "System.Boolean" => "byte",
+                "System.Char" => "ushort",
+                _ => TypeNameHelpers.GetCSharpTypeName(fullName) ?? $"global::{fullName}"
+            };
         }
 
         if (typeSig is TypeDefOrRefSignature typeDefOrRef)
@@ -794,50 +1223,36 @@ internal static class AbiTypeWriter
             {
                 string? baseFullName = resolved.BaseType?.FullName;
 
-                // Enums marshal to their underlying integer type
                 if (baseFullName == "System.Enum")
                 {
                     return GetEnumUnderlyingType(resolved);
                 }
 
-                // Structs: check if any field requires marshaling
                 if (baseFullName == "System.ValueType")
                 {
                     return GetAbiStructTypeName(resolved);
                 }
 
-                // Delegates and interfaces marshal to void*
                 if (baseFullName == "System.MulticastDelegate" || resolved.IsInterface)
                 {
                     return "void*";
                 }
             }
 
-            // Classes marshal to void*
             return "void*";
         }
 
-        // Generic instances marshal to void* (they are always reference types in WinRT)
-        if (typeSig is GenericInstanceTypeSignature)
+        return typeSig switch
         {
-            return "void*";
-        }
-
-        // Arrays marshal to IntPtr
-        if (typeSig is SzArrayTypeSignature)
-        {
-            return "global::System.IntPtr";
-        }
-
-        // By-reference: get the ABI type of the underlying type
-        return typeSig is ByReferenceTypeSignature byRef
-            ? GetAbiTypeName(byRef.BaseType)
-            : "void*";
+            GenericInstanceTypeSignature => "void*",
+            SzArrayTypeSignature => "void*",
+            ByReferenceTypeSignature byRef => GetAbiTypeName(byRef.BaseType),
+            _ => "void*"
+        };
     }
 
     /// <summary>
-    /// Gets the ABI struct type name. If the struct has only blittable fields,
-    /// uses the projected name directly; otherwise, references the marshaller's <c>AbiType</c>.
+    /// Gets the ABI struct type name. Blittable structs use their projected name directly.
     /// </summary>
     private static string GetAbiStructTypeName(TypeDefinition structType)
     {
@@ -853,7 +1268,6 @@ internal static class AbiTypeWriter
 
             if (projectedType != abiType)
             {
-                // Non-blittable struct: reference the marshaller's AbiType
                 string? ns = structType.Namespace?.Value;
                 string simpleName = TypeNameHelpers.GetSimpleName(structType);
 
@@ -863,12 +1277,11 @@ internal static class AbiTypeWriter
             }
         }
 
-        // All fields are blittable: use the projected type directly
         return GetFullProjectedTypeName(structType);
     }
 
     /// <summary>
-    /// Gets the underlying C# type for a WinRT enum (<c>int</c> or <c>uint</c>).
+    /// Gets the underlying C# type for a WinRT enum.
     /// </summary>
     private static string GetEnumUnderlyingType(TypeDefinition enumType)
     {
@@ -885,13 +1298,31 @@ internal static class AbiTypeWriter
         return "int";
     }
 
-    #endregion
+    /// <summary>
+    /// Gets the IID field reference for a type definition.
+    /// </summary>
+    private static string GetIIDFieldReference(TypeDefinition type)
+    {
+        string escapedName = TypeNameHelpers.EscapeTypeNameForIdentifier($"{type.Namespace}.{type.Name}");
 
+        return $"global::ABI.InterfaceIIDs.IID_{escapedName}";
+    }
+
+    /// <summary>
+    /// Gets the IID field reference for a type reference.
+    /// </summary>
+    private static string GetIIDFieldReferenceForTypeRef(ITypeDefOrRef typeRef)
+    {
+        string escapedName = TypeNameHelpers.EscapeTypeNameForIdentifier($"{typeRef.Namespace}.{typeRef.Name}");
+
+        return $"global::ABI.InterfaceIIDs.IID_{escapedName}";
+    }
+
+    #endregion
     #region Parameter and signature helpers
 
     /// <summary>
-    /// Builds the ABI parameter list for an <c>[UnmanagedCallersOnly]</c> method.
-    /// Includes <c>void* thisPtr</c> and optionally a return-value out parameter.
+    /// Builds the ABI parameter list for an [UnmanagedCallersOnly] method.
     /// </summary>
     private static string BuildAbiParameterList(MethodDefinition method, bool includeThisPtr, bool includeReturnParam)
     {
@@ -971,12 +1402,11 @@ internal static class AbiTypeWriter
     }
 
     /// <summary>
-    /// Builds the native function pointer signature string (the type parameters for
-    /// <c>delegate* unmanaged[MemberFunction]</c>).
+    /// Builds the function pointer signature string including thisPtr and HRESULT return.
     /// </summary>
-    private static string GetNativeSignature(MethodDefinition method, bool hasReturnValue)
+    private static string BuildFunctionPointerSignature(MethodDefinition method, bool hasReturnValue)
     {
-        List<string> types = [];
+        List<string> types = ["void*"];
 
         if (method.Signature is { } methodSig)
         {
@@ -1006,64 +1436,56 @@ internal static class AbiTypeWriter
             }
         }
 
-        // The last type is always the HRESULT return
         types.Add("int");
 
         return string.Join(", ", types);
     }
 
     /// <summary>
-    /// Builds the native call argument list (excludes the <c>thisPtr</c> which is written separately).
+    /// Builds a vftbl function pointer type string.
     /// </summary>
-    private static string BuildNativeCallArguments(MethodDefinition method, bool hasReturnValue)
+    private static string BuildVftblFunctionPointerSignature(MethodDefinition _, MethodSignature methodSig)
     {
-        List<string> args = [];
+        List<string> types = ["void*"];
 
-        if (method.Signature is { } methodSig)
+        for (int i = 0; i < methodSig.ParameterTypes.Count; i++)
         {
-            for (int i = 0; i < methodSig.ParameterTypes.Count; i++)
+            TypeSignature paramType = methodSig.ParameterTypes[i];
+            string abiType = GetAbiTypeName(paramType);
+
+            if (paramType is ByReferenceTypeSignature)
             {
-                TypeSignature paramType = methodSig.ParameterTypes[i];
-                string paramName = GetParameterName(method, i);
-                string projectedType = GetProjectedTypeName(paramType);
-                string abiType = GetAbiTypeName(paramType);
-
-                if (paramType is ByReferenceTypeSignature)
-                {
-                    // Out/ref parameters are passed as pointers
-                    string managedParamName = CSharpKeywords.EscapeIdentifier(paramName);
-
-                    args.Add($"&{managedParamName}");
-                }
-                else if (abiType != projectedType)
-                {
-                    // Needs marshaling
-                    string managedParamName = CSharpKeywords.EscapeIdentifier(paramName);
-                    args.Add(GetMarshalToUnmanagedExpression(paramType, managedParamName));
-                }
-                else
-                {
-                    args.Add(CSharpKeywords.EscapeIdentifier(paramName));
-                }
+                types.Add($"{abiType}*");
             }
-
-            if (hasReturnValue)
+            else
             {
-                args.Add("&__retval");
+                types.Add(abiType);
             }
         }
 
-        return args.Count > 0
-            ? $", {string.Join(", ", args)}"
-            : "";
+        string returnType = GetProjectedTypeName(methodSig.ReturnType);
+        bool hasReturnValue = returnType != "void";
+
+        if (hasReturnValue && methodSig.ReturnType is not null)
+        {
+            string returnAbiType = GetAbiTypeName(methodSig.ReturnType);
+
+            if (returnAbiType != "void")
+            {
+                types.Add($"{returnAbiType}*");
+            }
+        }
+
+        types.Add("int");
+
+        return $"delegate* unmanaged[MemberFunction]<{string.Join(", ", types)}>";
     }
 
     #endregion
-
     #region Marshaling expression helpers
 
     /// <summary>
-    /// Gets a C# expression to marshal a value from unmanaged (ABI) to managed (projected) representation.
+    /// Gets an expression to marshal from unmanaged (ABI) to managed (projected).
     /// </summary>
     private static string GetMarshalToManagedExpression(TypeSignature? typeSig, string variableName)
     {
@@ -1076,29 +1498,68 @@ internal static class AbiTypeWriter
         {
             string fullName = $"{corLibType.Namespace}.{corLibType.Name}";
 
-            if (fullName == "System.String")
+            return fullName switch
             {
-                return $"global::System.Runtime.InteropServices.Marshalling.WindowsRuntimeStringMarshaller.ConvertToManaged({variableName})";
-            }
+                "System.String" => $"HStringMarshaller.ConvertToManaged({variableName})",
+                "System.Boolean" => $"{variableName} != 0",
+                "System.Char" => $"(char){variableName}",
+                _ => variableName
+            };
         }
 
         if (typeSig is TypeDefOrRefSignature typeDefOrRef)
         {
             TypeDefinition? resolved = typeDefOrRef.Type?.Resolve();
 
-            if (resolved is not null && resolved.BaseType?.FullName == "System.Enum")
+            if (resolved is not null)
             {
-                string projectedType = GetProjectedTypeName(typeSig);
+                string? baseFullName = resolved.BaseType?.FullName;
 
-                return $"({projectedType}){variableName}";
+                if (baseFullName == "System.Enum")
+                {
+                    string projectedType = GetProjectedTypeName(typeSig);
+
+                    return $"({projectedType}){variableName}";
+                }
+
+                if (baseFullName == "System.MulticastDelegate")
+                {
+                    string? ns = resolved.Namespace?.Value;
+                    string simpleName = TypeNameHelpers.GetSimpleName(resolved);
+                    string marshallerName = string.IsNullOrEmpty(ns)
+                        ? $"global::ABI.{simpleName}Marshaller"
+                        : $"global::ABI.{ns}.{simpleName}Marshaller";
+
+                    return $"{marshallerName}.ConvertToManaged({variableName})";
+                }
+
+                if (resolved.IsInterface)
+                {
+                    string projectedType = GetProjectedTypeName(typeSig);
+
+                    return $"({projectedType})WindowsRuntimeObjectMarshaller.ConvertToManaged({variableName})";
+                }
+
+                if (baseFullName is not "System.Enum" and not "System.ValueType" and not "System.MulticastDelegate")
+                {
+                    string? ns = resolved.Namespace?.Value;
+                    string simpleName = TypeNameHelpers.GetSimpleName(resolved);
+                    string marshallerName = string.IsNullOrEmpty(ns)
+                        ? $"global::ABI.{simpleName}Marshaller"
+                        : $"global::ABI.{ns}.{simpleName}Marshaller";
+
+                    return $"{marshallerName}.ConvertToManaged({variableName})";
+                }
             }
         }
 
-        return variableName;
+        return typeSig is GenericInstanceTypeSignature
+            ? $"WindowsRuntimeObjectMarshaller.ConvertToManaged({variableName})"
+            : variableName;
     }
 
     /// <summary>
-    /// Gets a C# expression to marshal a value from managed (projected) to unmanaged (ABI) representation.
+    /// Gets an expression to marshal from managed (projected) to unmanaged (ABI).
     /// </summary>
     private static string GetMarshalToUnmanagedExpression(TypeSignature? typeSig, string variableName)
     {
@@ -1111,25 +1572,204 @@ internal static class AbiTypeWriter
         {
             string fullName = $"{corLibType.Namespace}.{corLibType.Name}";
 
-            if (fullName == "System.String")
+            return fullName switch
             {
-                return $"global::System.Runtime.InteropServices.Marshalling.WindowsRuntimeStringMarshaller.ConvertToUnmanaged({variableName})";
-            }
+                "System.String" => $"HStringMarshaller.ConvertToUnmanaged({variableName})",
+                "System.Boolean" => $"(byte)({variableName} ? 1 : 0)",
+                "System.Char" => $"(ushort){variableName}",
+                _ => variableName
+            };
         }
 
         if (typeSig is TypeDefOrRefSignature typeDefOrRef)
         {
             TypeDefinition? resolved = typeDefOrRef.Type?.Resolve();
 
-            if (resolved is not null && resolved.BaseType?.FullName == "System.Enum")
+            if (resolved is not null)
             {
-                string abiType = GetEnumUnderlyingType(resolved);
+                string? baseFullName = resolved.BaseType?.FullName;
 
-                return $"({abiType}){variableName}";
+                if (baseFullName == "System.Enum")
+                {
+                    string abiType = GetEnumUnderlyingType(resolved);
+
+                    return $"({abiType}){variableName}";
+                }
             }
         }
 
         return variableName;
+    }
+
+    /// <summary>
+    /// Gets an expression to marshal a parameter to unmanaged, returning a WindowsRuntimeObjectReferenceValue.
+    /// </summary>
+    private static string GetMarshalParamToUnmanagedExpression(TypeSignature paramType, string variableName)
+    {
+        if (paramType is TypeDefOrRefSignature typeDefOrRef)
+        {
+            TypeDefinition? resolved = typeDefOrRef.Type?.Resolve();
+
+            if (resolved is not null)
+            {
+                string? baseFullName = resolved.BaseType?.FullName;
+
+                if (baseFullName == "System.MulticastDelegate")
+                {
+                    string? ns = resolved.Namespace?.Value;
+                    string simpleName = TypeNameHelpers.GetSimpleName(resolved);
+                    string marshallerName = string.IsNullOrEmpty(ns)
+                        ? $"global::ABI.{simpleName}Marshaller"
+                        : $"global::ABI.{ns}.{simpleName}Marshaller";
+
+                    return $"{marshallerName}.ConvertToUnmanaged({variableName})";
+                }
+
+                if (resolved.IsInterface || (baseFullName is not "System.Enum" and not "System.ValueType" and not "System.MulticastDelegate"))
+                {
+                    string? ns = resolved.Namespace?.Value;
+                    string simpleName = TypeNameHelpers.GetSimpleName(resolved);
+                    string marshallerName = string.IsNullOrEmpty(ns)
+                        ? $"global::ABI.{simpleName}Marshaller"
+                        : $"global::ABI.{ns}.{simpleName}Marshaller";
+
+                    return $"{marshallerName}.ConvertToUnmanaged({variableName})";
+                }
+            }
+        }
+
+        return $"WindowsRuntimeObjectMarshaller.ConvertToUnmanaged({variableName})";
+    }
+
+    /// <summary>
+    /// Checks whether a type's ABI representation is void*.
+    /// </summary>
+    private static bool IsReferenceAbiType(TypeSignature typeSig)
+    {
+        string abiType = GetAbiTypeName(typeSig);
+
+        return abiType == "void*";
+    }
+
+    /// <summary>
+    /// Checks whether a return value needs cleanup in a finally block.
+    /// </summary>
+    private static bool NeedsReturnValueCleanup(TypeSignature? returnType)
+    {
+        if (returnType is null)
+        {
+            return false;
+        }
+
+        string abiType = GetAbiTypeName(returnType);
+        string projectedType = GetProjectedTypeName(returnType);
+
+        return abiType == "void*" && projectedType != "void";
+    }
+
+    /// <summary>
+    /// Writes cleanup code for a return value in a finally block.
+    /// </summary>
+    private static void WriteReturnValueCleanup(CodeWriter writer, MethodSignature methodSig)
+    {
+        if (methodSig.ReturnType is null)
+        {
+            return;
+        }
+
+        if (methodSig.ReturnType is CorLibTypeSignature corLib && $"{corLib.Namespace}.{corLib.Name}" == "System.String")
+        {
+            writer.WriteLine("HStringMarshaller.Free(__retval);");
+        }
+        else
+        {
+            writer.WriteLine("WindowsRuntimeUnknownMarshaller.Free(__retval);");
+        }
+    }
+
+    /// <summary>
+    /// Gets the expression to marshal a struct field to unmanaged.
+    /// </summary>
+    private static string GetFieldMarshalToUnmanagedExpression(string abiType, string expression)
+    {
+        return abiType == "void*"
+            ? $"HStringMarshaller.ConvertToUnmanaged({expression})"
+            : expression;
+    }
+
+    /// <summary>
+    /// Gets the expression to marshal a struct field to managed.
+    /// </summary>
+    private static string GetFieldMarshalToManagedExpression(string abiType, string expression)
+    {
+        return abiType == "void*"
+            ? $"HStringMarshaller.ConvertToManaged({expression})"
+            : expression;
+    }
+
+    /// <summary>
+    /// Writes the Free call for a struct field.
+    /// </summary>
+    private static void WriteFieldFree(CodeWriter writer, string abiType, string expression)
+    {
+        if (abiType == "void*")
+        {
+            writer.WriteLine($"HStringMarshaller.Free({expression});");
+        }
+    }
+
+    /// <summary>
+    /// Writes the body of a delegate's Do_Abi_Invoke callback.
+    /// </summary>
+    private static void WriteDelegateInvokeBody(
+        CodeWriter writer,
+        MethodDefinition invokeMethod,
+        MethodSignature methodSig,
+        string fullProjectedName)
+    {
+        string returnType = GetProjectedTypeName(methodSig.ReturnType);
+        bool hasReturnValue = returnType != "void";
+
+        List<string> managedArgs = [];
+
+        for (int i = 0; i < methodSig.ParameterTypes.Count; i++)
+        {
+            TypeSignature paramType = methodSig.ParameterTypes[i];
+            string paramName = GetParameterName(invokeMethod, i);
+            string abiType = GetAbiTypeName(paramType);
+            string projectedType = GetProjectedTypeName(paramType);
+
+            if (abiType != projectedType)
+            {
+                managedArgs.Add(GetMarshalToManagedExpression(paramType, paramName));
+            }
+            else
+            {
+                managedArgs.Add(paramName);
+            }
+        }
+
+        string argsJoined = string.Join(", ", managedArgs);
+
+        if (hasReturnValue)
+        {
+            writer.WriteLine($"var __result = ComInterfaceDispatch.GetInstance<{fullProjectedName}>((ComInterfaceDispatch*)thisPtr).Invoke({argsJoined});");
+
+            string abiReturnType = GetAbiTypeName(methodSig.ReturnType);
+
+            if (abiReturnType != GetProjectedTypeName(methodSig.ReturnType))
+            {
+                writer.WriteLine($"*retval = {GetMarshalToUnmanagedExpression(methodSig.ReturnType, "__result")};");
+            }
+            else
+            {
+                writer.WriteLine("*retval = __result;");
+            }
+        }
+        else
+        {
+            writer.WriteLine($"ComInterfaceDispatch.GetInstance<{fullProjectedName}>((ComInterfaceDispatch*)thisPtr).Invoke({argsJoined});");
+        }
     }
 
     #endregion
@@ -1147,7 +1787,7 @@ internal static class AbiTypeWriter
     }
 
     /// <summary>
-    /// Gets the <see cref="ParameterDefinition"/> for a parameter at the given index.
+    /// Gets the ParameterDefinition for a parameter at the given index.
     /// </summary>
     private static ParameterDefinition? GetParameterDefinition(MethodDefinition method, int index)
     {
@@ -1165,7 +1805,7 @@ internal static class AbiTypeWriter
     }
 
     /// <summary>
-    /// Removes the generic arity suffix from a type name (e.g., <c>IList`1</c> → <c>IList</c>).
+    /// Removes the generic arity suffix from a type name.
     /// </summary>
     private static string RemoveGenericArity(string typeName)
     {
@@ -1175,40 +1815,14 @@ internal static class AbiTypeWriter
     }
 
     /// <summary>
-    /// Collects the names of all property and event accessor methods so they
-    /// can be skipped when iterating regular methods.
+    /// Sanitizes a method name for use in the Vftbl struct field names.
     /// </summary>
-    private static HashSet<string> CollectSpecialMethodNames(TypeDefinition type)
+    private static string SanitizeVftblMethodName(string methodName)
     {
-        HashSet<string> names = new(StringComparer.Ordinal);
-
-        foreach (PropertyDefinition property in type.Properties)
-        {
-            if (property.GetMethod?.Name?.Value is { } getterName)
-            {
-                _ = names.Add(getterName);
-            }
-
-            if (property.SetMethod?.Name?.Value is { } setterName)
-            {
-                _ = names.Add(setterName);
-            }
-        }
-
-        foreach (EventDefinition evt in type.Events)
-        {
-            if (evt.AddMethod?.Name?.Value is { } addName)
-            {
-                _ = names.Add(addName);
-            }
-
-            if (evt.RemoveMethod?.Name?.Value is { } removeName)
-            {
-                _ = names.Add(removeName);
-            }
-        }
-
-        return names;
+        return methodName
+            .Replace('.', '_')
+            .Replace('<', '_')
+            .Replace('>', '_');
     }
 
     #endregion
