@@ -343,6 +343,27 @@ steps:
           platform: x86
           configuration: Release
 
+    # Build for additional OS version thats specified via variable to handle ones not added to the default list yet.
+    # Set variables AdditionalSdkBuild (e.g. 28000) and AdditionalSdkPackageVersion (e.g. 10.0.28000.100)
+    # at queue time to enable these steps.
+    - task: VSBuild@1
+      displayName: Build WinRT.Sdk.Projection ($(AdditionalSdkBuild))
+      condition: and(succeeded(), ne(variables['AdditionalSdkBuild'], ''), ne(variables['AdditionalSdkPackageVersion'], ''), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
+        msbuildArgs: /restore /p:WindowsSdkBuild=$(AdditionalSdkBuild) /p:SdkPackageVersion=$(AdditionalSdkPackageVersion)
+        platform: x86
+        configuration: Release
+
+    - task: VSBuild@1
+      displayName: Build WinRT.Sdk.Xaml.Projection ($(AdditionalSdkBuild))
+      condition: and(succeeded(), ne(variables['AdditionalSdkBuild'], ''), ne(variables['AdditionalSdkPackageVersion'], ''), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
+        msbuildArgs: /restore /p:WindowsSdkBuild=$(AdditionalSdkBuild) /p:SdkPackageVersion=$(AdditionalSdkPackageVersion) /p:WindowsSdkXaml=true
+        platform: x86
+        configuration: Release
+
     - task: CopyFiles@2
       displayName: Stage WinRT.Sdk.Projection (all SDK versions)
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))

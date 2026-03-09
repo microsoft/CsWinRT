@@ -45,3 +45,10 @@ variables:
   value: $[coalesce(variables.SdkPackageVersion_22621, '10.0.22621.755')]
 - name: SdkPackageVersion_26100
   value: $[coalesce(variables.SdkPackageVersion_26100, '10.0.26100.7705')]
+
+# Additional SDK build for a new version not yet in the default list.
+# Set both variables at queue time to build a projection for the new version.
+- name: AdditionalSdkBuild
+  value: $[coalesce(variables.AdditionalSdkBuild, '')]
+- name: AdditionalSdkPackageVersion
+  value: $[coalesce(variables.AdditionalSdkPackageVersion, '')]
