@@ -7,7 +7,7 @@
 
     <!--
       When WindowsSdkXaml=true, generate WinRT.Sdk.Xaml.Projection.dll (the Windows.UI.Xaml projection)
-      instead of WinRT.Sdk.Projection.dll. Uses winmd\xaml and the XAML namespace filters.
+      instead of WinRT.Sdk.Projection.dll.
     -->
     <AssemblyName Condition="'$(WindowsSdkXaml)' != 'true'">WinRT.Sdk.Projection</AssemblyName>
     <AssemblyName Condition="'$(WindowsSdkXaml)' == 'true'">WinRT.Sdk.Xaml.Projection</AssemblyName>
@@ -34,8 +34,13 @@
 
   <PropertyGroup>
     <_SdkPackageName>Microsoft.Windows.SDK.Contracts</_SdkPackageName>
-    <_SdkPackageVersion>10.0.$(WindowsSdkBuild).0</_SdkPackageVersion>
-    <_SdkPackageVersion>10.0.26100.7705</_SdkPackageVersion>
+    <!--
+      SDK package version. Passed from the pipeline via /p:SdkPackageVersion=X.Y.Z.W.
+      Falls back to 10.0.{WindowsSdkBuild}.0 for local dev, but this may not resolve
+      for all SDK versions (Contracts versions have non-zero patch numbers).
+    -->
+    <_SdkPackageVersion Condition="'$(SdkPackageVersion)' != ''">$(SdkPackageVersion)</_SdkPackageVersion>
+    <_SdkPackageVersion Condition="'$(SdkPackageVersion)' == ''">10.0.$(WindowsSdkBuild).0</_SdkPackageVersion>
   </PropertyGroup>
 
   <!-- Download the SDK package to get WinMDs -->
@@ -73,11 +78,8 @@
           DependsOnTargets="_ResolveCsWinRToolsDirectory">
 
     <PropertyGroup>
-      <_WinMDSubfolder Condition="'$(WindowsSdkXaml)' != 'true'">windows</_WinMDSubfolder>
-      <_WinMDSubfolder Condition="'$(WindowsSdkXaml)' == 'true'">xaml</_WinMDSubfolder>
-      <_WinMDFolder>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_SdkPackageName)', '$(_SdkPackageVersion)', 'winmd', '$(_WinMDSubfolder)'))</_WinMDFolder>
-      <_WinMDFolder>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_SdkPackageName)', '$(_SdkPackageVersion)', 'ref', 'netstandard2.0'))</_WinMDFolder>
       <_SdkProjectionOutputDir>$(IntermediateOutputPath)sdkprojection\</_SdkProjectionOutputDir>
+      <_WinMDFolder>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_SdkPackageName)', '$(_SdkPackageVersion)', 'ref', 'netstandard2.0'))</_WinMDFolder>
     </PropertyGroup>
 
     <Error Condition="!Exists('$(_WinMDFolder)')"

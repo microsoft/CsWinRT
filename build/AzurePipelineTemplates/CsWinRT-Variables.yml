@@ -30,3 +30,18 @@ variables:
 
 - name: _GenerateSdkProjection
   value: $[coalesce(variables.GenerateSdkProjection, 'false')]
+
+# SDK Contracts package versions for each Windows SDK build.
+# Override at queue time by setting the corresponding variable (e.g. SdkPackageVersion_26100).
+- name: SdkPackageVersion_17763
+  value: $[coalesce(variables.SdkPackageVersion_17763, '10.0.17763.1000')]
+- name: SdkPackageVersion_18362
+  value: $[coalesce(variables.SdkPackageVersion_18362, '10.0.18362.2005')]
+- name: SdkPackageVersion_19041
+  value: $[coalesce(variables.SdkPackageVersion_19041, '10.0.19041.1')]
+- name: SdkPackageVersion_22000
+  value: $[coalesce(variables.SdkPackageVersion_22000, '10.0.22000.196')]
+- name: SdkPackageVersion_22621
+  value: $[coalesce(variables.SdkPackageVersion_22621, '10.0.22621.755')]
+- name: SdkPackageVersion_26100
+  value: $[coalesce(variables.SdkPackageVersion_26100, '10.0.26100.7705')]

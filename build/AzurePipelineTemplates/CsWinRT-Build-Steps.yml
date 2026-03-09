@@ -321,14 +321,16 @@ steps:
           WinRT.Generator.Tasks.pdb
         TargetFolder: $(StagingFolder)\netstandard2.0
 
-    # Build and stage merged Windows SDK projections for each supported OS version
+    # Build and stage merged Windows SDK projections for each supported OS version.
+    # Package versions come from pipeline variables (SdkPackageVersion_XXXXX), which can be
+    # overridden at queue time. Defaults are defined in CsWinRT-Variables.yml.
     - ${{ each sdkVersion in parameters.SdkProjectionVersions }}:
       - task: VSBuild@1
         displayName: Build WinRT.Sdk.Projection (${{ sdkVersion }})
         condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
         inputs:
           solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
-          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }}
+          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }} /p:SdkPackageVersion=$(SdkPackageVersion_${{ sdkVersion }})
           platform: x86
           configuration: Release
 
@@ -337,7 +339,7 @@ steps:
         condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
         inputs:
           solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
-          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }} /p:WindowsSdkXaml=true
+          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }} /p:SdkPackageVersion=$(SdkPackageVersion_${{ sdkVersion }}) /p:WindowsSdkXaml=true
           platform: x86
           configuration: Release
 
