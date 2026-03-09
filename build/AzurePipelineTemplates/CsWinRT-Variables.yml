@@ -36,13 +36,13 @@ variables:
 - name: SdkPackageVersion_17763
   value: $[coalesce(variables.SdkPackageVersion_17763, '10.0.17763.1000')]
 - name: SdkPackageVersion_18362
-  value: $[coalesce(variables.SdkPackageVersion_18362, '10.0.18362.2005')]
+  value: $[coalesce(variables.SdkPackageVersion_18362, '10.0.18362.2007')]
 - name: SdkPackageVersion_19041
-  value: $[coalesce(variables.SdkPackageVersion_19041, '10.0.19041.1')]
+  value: $[coalesce(variables.SdkPackageVersion_19041, '10.0.19041.2')]
 - name: SdkPackageVersion_22000
-  value: $[coalesce(variables.SdkPackageVersion_22000, '10.0.22000.196')]
+  value: $[coalesce(variables.SdkPackageVersion_22000, '10.0.22000.197')]
 - name: SdkPackageVersion_22621
-  value: $[coalesce(variables.SdkPackageVersion_22621, '10.0.22621.755')]
+  value: $[coalesce(variables.SdkPackageVersion_22621, '10.0.22621.3233')]
 - name: SdkPackageVersion_26100
   value: $[coalesce(variables.SdkPackageVersion_26100, '10.0.26100.7705')]
 
