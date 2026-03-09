@@ -20,8 +20,8 @@ namespace ABI.Windows.Foundation.Collections;
 public abstract unsafe class VectorChangedEventHandlerEventSource<T> : EventSource<VectorChangedEventHandler<T>>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>
-    protected VectorChangedEventHandlerEventSource(WindowsRuntimeObjectReference nativeObjectReference)
-        : base(nativeObjectReference, index: 6)
+    protected VectorChangedEventHandlerEventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)
+        : base(nativeObjectReference, index)
     {
     }
 
