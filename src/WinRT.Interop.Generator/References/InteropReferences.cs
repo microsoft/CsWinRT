@@ -3625,7 +3625,7 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]);
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
     }
 
     /// <summary>
@@ -3640,7 +3640,7 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]);
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
     }
 
     /// <summary>
