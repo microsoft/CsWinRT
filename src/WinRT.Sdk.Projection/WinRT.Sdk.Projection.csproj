@@ -79,13 +79,30 @@
 
     <PropertyGroup>
       <_SdkProjectionOutputDir>$(IntermediateOutputPath)sdkprojection\</_SdkProjectionOutputDir>
-      <_WinMDFolder>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_SdkPackageName)', '$(_SdkPackageVersion)', 'ref', 'netstandard2.0'))</_WinMDFolder>
+      <_SdkPackageWinMDFolder>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', '$(_SdkPackageName)', '$(_SdkPackageVersion)', 'ref', 'netstandard2.0'))</_SdkPackageWinMDFolder>
+      <_WinMDFolder>$(IntermediateOutputPath)sdkwinmds\</_WinMDFolder>
     </PropertyGroup>
 
-    <Error Condition="!Exists('$(_WinMDFolder)')"
-           Text="WinMD folder not found at '$(_WinMDFolder)'. Check that PackageDownload for $(_SdkPackageName) version $(_SdkPackageVersion) succeeded." />
+    <Error Condition="!Exists('$(_SdkPackageWinMDFolder)')"
+           Text="WinMD folder not found at '$(_SdkPackageWinMDFolder)'. Check that PackageDownload for $(_SdkPackageName) version $(_SdkPackageVersion) succeeded." />
 
-    <MakeDir Directories="$(_SdkProjectionOutputDir)" />
+    <!--
+      Copy SDK WinMDs to a staging folder, excluding contract WinMDs that haven't
+      been included in the Microsoft.Windows.SDK.NET.Ref package such as due to
+      they don't target desktop.
+    -->
+    <ItemGroup>
+      <_SdkPackageWinMDs Include="$(_SdkPackageWinMDFolder)*.winmd"
+                         Exclude="$(_SdkPackageWinMDFolder)Windows.winmd;
+                                  $(_SdkPackageWinMDFolder)Windows.Embedded.DeviceLockdown.DeviceLockdownContract.winmd;
+                                  $(_SdkPackageWinMDFolder)Windows.Networking.NetworkOperators.NetworkOperatorsFdnContract.winmd;
+                                  $(_SdkPackageWinMDFolder)Windows.Phone.PhoneContract.winmd;
+                                  $(_SdkPackageWinMDFolder)Windows.Phone.StartScreen.DualSimTileContract.winmd;
+                                  $(_SdkPackageWinMDFolder)Windows.UI.WebUI.Core.WebUICommandBarContract.winmd" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(_SdkProjectionOutputDir);$(_WinMDFolder)" />
+    <Copy SourceFiles="@(_SdkPackageWinMDs)" DestinationFolder="$(_WinMDFolder)" SkipUnchangedFiles="true" />
 
     <ItemGroup>
       <_SdkWinMDPaths Include="$(CsWinRTInteropMetadata)" />
