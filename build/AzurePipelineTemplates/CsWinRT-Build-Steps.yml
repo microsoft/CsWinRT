@@ -40,7 +40,7 @@ steps:
     condition: eq(variables['BuildPlatform'], 'x86')
     inputs:
       packageType: sdk
-      version: ${_DotnetVersion}
+      version: $(_DotnetVersion)
       installationPath: $(LocalAppData)\Microsoft\dotnet\x86\
     env:
       PROCESSOR_ARCHITECTURE: x86
@@ -55,13 +55,13 @@ steps:
       failOnStderr: true
       script: |          
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;          
-        &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "${_DotnetVersion}" -Architecture "arm64" -InstallDir "$(LocalAppData)\Microsoft\dotnet\arm64\"
+        &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$(_DotnetVersion)" -Architecture "arm64" -InstallDir "$(LocalAppData)\Microsoft\dotnet\arm64\"
 
   - task: UseDotNet@2
     displayName: Use .NET Core SDK 10.0
     inputs:
       packageType: sdk
-      version: ${_DotnetVersion}
+      version: $(_DotnetVersion)
       installationPath: $(LocalAppData)\Microsoft\dotnet\
 
 # Set Dotnet path for x86.  The normal one already gets set above.
