@@ -111,7 +111,7 @@ file static unsafe class WindowsRuntimeExternalArrayBufferByteAccessImpl
     /// </summary>
     static WindowsRuntimeExternalArrayBufferByteAccessImpl()
     {
-        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
+        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;
 
         Vftbl.Buffer = &Buffer;
     }
