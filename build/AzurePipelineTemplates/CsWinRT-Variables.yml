@@ -10,6 +10,8 @@ variables:
 
 - name: NoSamples
   value: 'false'
+- name: _DotnetVersion
+  value: '10.0.104'
   
   # This 'coalesce' pattern allows the yml to define a default value for a variable but allows the value to be overridden at queue time.
   # E.g. '_IsRelease' defaults to empty string, but if 'IsRelease' is set at queue time that value will be used.
