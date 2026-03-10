@@ -2474,6 +2474,10 @@ remove => %;
 
     void write_platform_attribute(writer& w, std::pair<CustomAttribute, CustomAttribute> const& custom_attributes)
     {
+        if (!settings.reference_projection)
+        {
+            return;
+        }
         auto platform = get_platform(w, custom_attributes);
         if (platform.empty())
         {
@@ -2503,7 +2507,7 @@ remove => %;
             auto signature = attribute.Value();
             auto params = write_custom_attribute_args(w, attribute, signature);
             // ContractVersion attribute ==> SupportedOSPlatform attribute
-            if (enable_platform_attrib && attribute_name == "ContractVersion" && signature.FixedArgs().size() == 2)
+            if (settings.reference_projection && enable_platform_attrib && attribute_name == "ContractVersion" && signature.FixedArgs().size() == 2)
             {
                 auto platform = get_platform(w, signature, params);
                 if (!platform.empty())
