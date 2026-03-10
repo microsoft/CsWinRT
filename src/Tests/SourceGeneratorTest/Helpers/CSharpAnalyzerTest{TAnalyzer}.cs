@@ -6,6 +6,7 @@
 // Source: https://github.com/Sergio0694/ComputeSharp/blob/main/tests/ComputeSharp.Tests.SourceGenerators/Helpers/CSharpAnalyzerTest%7BTAnalyzer%7D.cs.
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -67,8 +68,13 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
     {
         CSharpAnalyzerTest<TAnalyzer> test = new(true, LanguageVersion.Latest) { TestCode = source };
 
-        test.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
-        test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ComWrappersSupport).Assembly.Location));
+        string winrtRuntimeAssemblyLocation = typeof(ComWrappersSupport).Assembly.Location;
+
+        // Given we use a different nuget feed, we pass nuget.config.
+        string nugetConfigFilePath = Path.Combine(Path.GetDirectoryName(winrtRuntimeAssemblyLocation), "nuget.config");
+
+        test.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80.WithNuGetConfigFilePath(nugetConfigFilePath);
+        test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(winrtRuntimeAssemblyLocation));
 
         // Add any editorconfig properties, if present
         if (editorconfig.Length > 0)

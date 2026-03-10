@@ -25,7 +25,10 @@ extends:
     - ES365AIMigrationTooling
     sdl:
       binskim:
+        preReleaseVersion: '4.3.1'
         scanOutputDirectoryOnly: true
+        # Disabling until https://developercommunity.visualstudio.com/t/Latest-December-update-v171422-fails-b/11014457
+        enabled: false
       sourceRepositoriesToScan:
         exclude:
         - repository: TestWinRT
