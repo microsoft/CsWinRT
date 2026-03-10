@@ -330,7 +330,7 @@ steps:
         condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
         inputs:
           solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
-          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }} /p:SdkPackageVersion=$(SdkPackageVersion_${{ sdkVersion }})
+          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }} /p:SdkPackageVersion=$(SdkPackageVersion_${{ sdkVersion }}) /p:RestoreAdditionalProjectSources=$(_SdkNuGetFeed)
           platform: x86
           configuration: Release
 
@@ -339,7 +339,7 @@ steps:
         condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
         inputs:
           solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
-          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }} /p:SdkPackageVersion=$(SdkPackageVersion_${{ sdkVersion }}) /p:WindowsSdkXaml=true
+          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }} /p:SdkPackageVersion=$(SdkPackageVersion_${{ sdkVersion }}) /p:WindowsSdkXaml=true /p:RestoreAdditionalProjectSources=$(_SdkNuGetFeed)
           platform: x86
           configuration: Release
 
@@ -351,7 +351,7 @@ steps:
       condition: and(succeeded(), ne(variables['AdditionalSdkBuild'], ''), ne(variables['AdditionalSdkPackageVersion'], ''), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
       inputs:
         solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
-        msbuildArgs: /restore /p:WindowsSdkBuild=$(AdditionalSdkBuild) /p:SdkPackageVersion=$(AdditionalSdkPackageVersion)
+        msbuildArgs: /restore /p:WindowsSdkBuild=$(AdditionalSdkBuild) /p:SdkPackageVersion=$(AdditionalSdkPackageVersion) /p:RestoreAdditionalProjectSources=$(_SdkNuGetFeed)
         platform: x86
         configuration: Release
 
@@ -360,7 +360,7 @@ steps:
       condition: and(succeeded(), ne(variables['AdditionalSdkBuild'], ''), ne(variables['AdditionalSdkPackageVersion'], ''), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
       inputs:
         solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
-        msbuildArgs: /restore /p:WindowsSdkBuild=$(AdditionalSdkBuild) /p:SdkPackageVersion=$(AdditionalSdkPackageVersion) /p:WindowsSdkXaml=true
+        msbuildArgs: /restore /p:WindowsSdkBuild=$(AdditionalSdkBuild) /p:SdkPackageVersion=$(AdditionalSdkPackageVersion) /p:WindowsSdkXaml=true /p:RestoreAdditionalProjectSources=$(_SdkNuGetFeed)
         platform: x86
         configuration: Release
 
