@@ -49,6 +49,11 @@ internal static class WindowsRuntimeFeatureSwitches
     private const string EnableMarshalingTypeValidationPropertyName = "CSWINRT_ENABLE_MARSHALING_TYPE_VALIDATION";
 
     /// <summary>
+    /// The configuration property name for <see cref="EnableMarshalingTypeMetadataSupport"/>.
+    /// </summary>
+    private const string EnableMarshalingTypeMetadataSupportPropertyName = "CSWINRT_ENABLE_MARSHALING_TYPE_METADATA_SUPPORT";
+
+    /// <summary>
     /// Gets a value indicating whether or not manifest free WinRT activation is supported (defaults to <see langword="true"/>).
     /// </summary>
     [FeatureSwitchDefinition(EnableManifestFreeActivationPropertyName)]
@@ -83,6 +88,12 @@ internal static class WindowsRuntimeFeatureSwitches
     /// </summary>
     [FeatureSwitchDefinition(EnableMarshalingTypeValidationPropertyName)]
     public static bool EnableMarshalingTypeValidation { get; } = GetConfigurationValue(EnableMarshalingTypeValidationPropertyName, defaultValue: false);
+
+    /// <summary>
+    /// Gets a value indicating whether or not <see cref="InteropServices.CreateObjectReferenceMarshalingType"/> metadata should be used to optimize marshaling (defaults to <see langword="true"/>).
+    /// </summary>
+    [FeatureSwitchDefinition(EnableMarshalingTypeMetadataSupportPropertyName)]
+    public static bool EnableMarshalingTypeMetadataSupport { get; } = GetConfigurationValue(EnableMarshalingTypeMetadataSupportPropertyName, defaultValue: true);
 
     /// <summary>
     /// Gets a configuration value for a specified property.
