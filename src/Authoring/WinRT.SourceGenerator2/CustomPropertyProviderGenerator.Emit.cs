@@ -27,7 +27,7 @@ public partial class CustomPropertyProviderGenerator
             // Emit the implementation on the annotated type
             info.TypeHierarchy.WriteSyntax(
                 state: info,
-                writer: writer,
+                writer: ref writer,
                 baseTypes: [info.FullyQualifiedCustomPropertyProviderInterfaceName],
                 memberCallbacks: [
                     WriteCustomPropertyProviderType,
@@ -36,7 +36,7 @@ public partial class CustomPropertyProviderGenerator
                     WriteCustomPropertyProviderGetStringRepresentation]);
 
             // Emit the additional property implementation types, if needed
-            WriteCustomPropertyImplementationTypes(info, writer);
+            WriteCustomPropertyImplementationTypes(info, ref writer);
 
             // Add the source file for the annotated type
             context.AddSource($"{info.TypeHierarchy.FullyQualifiedMetadataName}.g.cs", writer.ToStringAndClear());
@@ -47,7 +47,7 @@ public partial class CustomPropertyProviderGenerator
         /// </summary>
         /// <param name="info"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='info']/node()"/></param>
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
-        private static void WriteCustomPropertyProviderType(CustomPropertyProviderInfo info, IndentedTextWriter writer)
+        private static void WriteCustomPropertyProviderType(CustomPropertyProviderInfo info, ref IndentedTextWriter writer)
         {
             writer.WriteLine($"""
                 /// <inheritdoc/>
@@ -60,7 +60,7 @@ public partial class CustomPropertyProviderGenerator
         /// </summary>
         /// <param name="info"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='info']/node()"/></param>
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
-        private static void WriteCustomPropertyProviderGetCustomProperty(CustomPropertyProviderInfo info, IndentedTextWriter writer)
+        private static void WriteCustomPropertyProviderGetCustomProperty(CustomPropertyProviderInfo info, ref IndentedTextWriter writer)
         {
             writer.WriteLine($"""
                 /// <inheritdoc/>
@@ -104,7 +104,7 @@ public partial class CustomPropertyProviderGenerator
         /// </summary>
         /// <param name="info"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='info']/node()"/></param>
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
-        private static void WriteCustomPropertyProviderGetIndexedProperty(CustomPropertyProviderInfo info, IndentedTextWriter writer)
+        private static void WriteCustomPropertyProviderGetIndexedProperty(CustomPropertyProviderInfo info, ref IndentedTextWriter writer)
         {
             writer.WriteLine($"""
                 /// <inheritdoc/>
@@ -149,7 +149,7 @@ public partial class CustomPropertyProviderGenerator
         /// </summary>
         /// <param name="info"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='info']/node()"/></param>
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
-        private static void WriteCustomPropertyProviderGetStringRepresentation(CustomPropertyProviderInfo info, IndentedTextWriter writer)
+        private static void WriteCustomPropertyProviderGetStringRepresentation(CustomPropertyProviderInfo info, ref IndentedTextWriter writer)
         {
             writer.WriteLine($$"""
                 /// <inheritdoc/>
@@ -165,7 +165,7 @@ public partial class CustomPropertyProviderGenerator
         /// </summary>
         /// <param name="info"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='info']/node()"/></param>
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
-        private static void WriteCustomPropertyImplementationTypes(CustomPropertyProviderInfo info, IndentedTextWriter writer)
+        private static void WriteCustomPropertyImplementationTypes(CustomPropertyProviderInfo info, ref IndentedTextWriter writer)
         {
             // If we have no custom properties, we don't need to emit any additional code
             if (info.CustomProperties.IsEmpty)
@@ -198,11 +198,11 @@ public partial class CustomPropertyProviderGenerator
                     // Generate the correct implementation types for normal properties or indexer properties
                     if (propertyInfo.IsIndexer)
                     {
-                        WriteIndexedCustomPropertyImplementationType(info, propertyInfo, writer);
+                        WriteIndexedCustomPropertyImplementationType(info, propertyInfo, ref writer);
                     }
                     else
                     {
-                        WriteNonIndexedCustomPropertyImplementationType(info, propertyInfo, writer);
+                        WriteNonIndexedCustomPropertyImplementationType(info, propertyInfo, ref writer);
                     }
                 }
             }
@@ -214,7 +214,7 @@ public partial class CustomPropertyProviderGenerator
         /// <param name="info"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='info']/node()"/></param>
         /// <param name="propertyInfo">The input <see cref="CustomPropertyInfo"/> instance for the property to generate the implementation type for.</param>
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
-        private static void WriteNonIndexedCustomPropertyImplementationType(CustomPropertyProviderInfo info, CustomPropertyInfo propertyInfo, IndentedTextWriter writer)
+        private static void WriteNonIndexedCustomPropertyImplementationType(CustomPropertyProviderInfo info, CustomPropertyInfo propertyInfo, ref IndentedTextWriter writer)
         {
             string implementationTypeName = $"{info.TypeHierarchy.Hierarchy[0].QualifiedName}_{propertyInfo.Name}";
 
@@ -305,7 +305,7 @@ public partial class CustomPropertyProviderGenerator
         /// <param name="info"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='info']/node()"/></param>
         /// <param name="propertyInfo">The input <see cref="CustomPropertyInfo"/> instance for the property to generate the implementation type for.</param>
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
-        private static void WriteIndexedCustomPropertyImplementationType(CustomPropertyProviderInfo info, CustomPropertyInfo propertyInfo, IndentedTextWriter writer)
+        private static void WriteIndexedCustomPropertyImplementationType(CustomPropertyProviderInfo info, CustomPropertyInfo propertyInfo, ref IndentedTextWriter writer)
         {
             string implementationTypeName = $"{info.TypeHierarchy.Hierarchy[0].QualifiedName}_{propertyInfo.Name}";
 

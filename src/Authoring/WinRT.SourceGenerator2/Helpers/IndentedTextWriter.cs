@@ -100,12 +100,13 @@ internal ref struct IndentedTextWriter
     /// Writes a block to the underlying buffer.
     /// </summary>
     /// <returns>A <see cref="Block"/> value to close the open block with.</returns>
+    [UnscopedRef]
     public Block WriteBlock()
     {
         WriteLine("{");
         IncreaseIndent();
 
-        return new(this);
+        return new(ref this);
     }
 
     /// <summary>
@@ -366,25 +367,25 @@ internal ref struct IndentedTextWriter
     /// <typeparam name="T">The type of data to use.</typeparam>
     /// <param name="value">The input data to use to write into <paramref name="writer"/>.</param>
     /// <param name="writer">The <see cref="IndentedTextWriter"/> instance to write into.</param>
-    public delegate void Callback<T>(T value, IndentedTextWriter writer);
+    public delegate void Callback<T>(T value, ref IndentedTextWriter writer);
 
     /// <summary>
     /// Represents an indented block that needs to be closed.
     /// </summary>
     /// <param name="writer">The input <see cref="IndentedTextWriter"/> instance to wrap.</param>
-    public ref struct Block(IndentedTextWriter writer) : IDisposable
+    public unsafe ref struct Block(ref IndentedTextWriter writer) : IDisposable
     {
         /// <summary>
         /// The <see cref="IndentedTextWriter"/> instance to write to.
         /// </summary>
-        private IndentedTextWriter _writer = writer;
+        private IndentedTextWriter* _writer = (IndentedTextWriter*)Unsafe.AsPointer(ref writer);
 
         /// <inheritdoc/>
         public void Dispose()
         {
-            IndentedTextWriter writer = _writer;
+            ref IndentedTextWriter writer = ref *_writer;
 
-            _writer = default;
+            _writer = null;
 
             // We check the indentation as a way of knowing if we have reset the field before.
             // The field itself can't be 'null', but if we have assigned 'default' to it, then

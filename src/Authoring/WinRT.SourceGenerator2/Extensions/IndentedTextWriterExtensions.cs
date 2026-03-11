@@ -91,8 +91,8 @@ internal static class IndentedTextWriterExtensions
     /// <param name="items">The input items to process.</param>
     /// <param name="callback">The <see cref="IndentedTextWriter.Callback{T}"/> instance to invoke for each item.</param>
     public static void WriteLineSeparatedMembers<T>(
-        this ref IndentedTextWriter writer,
-        ReadOnlySpan<T> items,
+        this scoped ref IndentedTextWriter writer,
+        scoped ReadOnlySpan<T> items,
         IndentedTextWriter.Callback<T> callback)
     {
         for (int i = 0; i < items.Length; i++)
@@ -102,7 +102,7 @@ internal static class IndentedTextWriterExtensions
                 writer.WriteLine();
             }
 
-            callback(items[i], writer);
+            callback(items[i], ref writer);
         }
     }
 
@@ -114,13 +114,13 @@ internal static class IndentedTextWriterExtensions
     /// <param name="items">The input items to process.</param>
     /// <param name="callback">The <see cref="IndentedTextWriter.Callback{T}"/> instance to invoke for each item.</param>
     public static void WriteInitializationExpressions<T>(
-        this ref IndentedTextWriter writer,
-        ReadOnlySpan<T> items,
+        this scoped ref IndentedTextWriter writer,
+        scoped ReadOnlySpan<T> items,
         IndentedTextWriter.Callback<T> callback)
     {
         for (int i = 0; i < items.Length; i++)
         {
-            callback(items[i], writer);
+            callback(items[i], ref writer);
 
             if (i < items.Length - 1)
             {
