@@ -476,7 +476,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     return 0;
                 }
 
-                // Intentionally declare this hereto avoid marshalling this value entirely on AOT,
+                // Intentionally declare this here to avoid marshalling this value entirely on AOT,
                 // as it's not needed. The indexer property is just matched by the parameter type.
                 string _name = MarshalString.FromAbi(name);
 
