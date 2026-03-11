@@ -383,17 +383,15 @@ internal ref struct IndentedTextWriter
         /// <inheritdoc/>
         public void Dispose()
         {
-            ref IndentedTextWriter writer = ref *_writer;
+            IndentedTextWriter* writer = _writer;
 
             _writer = null;
 
-            // We check the indentation as a way of knowing if we have reset the field before.
-            // The field itself can't be 'null', but if we have assigned 'default' to it, then
-            // that field will be 'null' even though it's always set from the constructor.
-            if (writer._currentIndentation is not null)
+            // Make sure to only close the block the first time this value is disposed
+            if (writer is not null)
             {
-                writer.DecreaseIndent();
-                writer.WriteLine("}");
+                writer->DecreaseIndent();
+                writer->WriteLine("}");
             }
         }
     }
@@ -403,26 +401,26 @@ internal ref struct IndentedTextWriter
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [InterpolatedStringHandler]
-    public readonly ref struct WriteInterpolatedStringHandler
+    public readonly unsafe ref struct WriteInterpolatedStringHandler
     {
         /// <summary>The associated <see cref="IndentedTextWriter"/> to which to append.</summary>
-        private readonly IndentedTextWriter _writer;
+        private readonly IndentedTextWriter* _writer;
 
         /// <summary>Creates a handler used to append an interpolated string into a <see cref="StringBuilder"/>.</summary>
         /// <param name="literalLength">The number of constant characters outside of interpolation expressions in the interpolated string.</param>
         /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
         /// <param name="writer">The associated <see cref="IndentedTextWriter"/> to which to append.</param>
         /// <remarks>This is intended to be called only by compiler-generated code. Arguments are not validated as they'd otherwise be for members intended to be used directly.</remarks>
-        public WriteInterpolatedStringHandler(int literalLength, int formattedCount, IndentedTextWriter writer)
+        public WriteInterpolatedStringHandler(int literalLength, int formattedCount, in IndentedTextWriter writer)
         {
-            _writer = writer;
+            _writer = (IndentedTextWriter*)Unsafe.AsPointer(ref Unsafe.AsRef(in writer));
         }
 
         /// <summary>Writes the specified string to the handler.</summary>
         /// <param name="value">The string to write.</param>
         public void AppendLiteral(string value)
         {
-            _writer.Write(value);
+            _writer->Write(value);
         }
 
         /// <summary>Writes the specified value to the handler.</summary>
@@ -436,7 +434,7 @@ internal ref struct IndentedTextWriter
         /// <param name="value">The span to write.</param>
         public void AppendFormatted(scoped ReadOnlySpan<char> value)
         {
-            _writer.Write(value);
+            _writer->Write(value);
         }
 
         /// <summary>Writes the specified value to the handler.</summary>
@@ -446,7 +444,7 @@ internal ref struct IndentedTextWriter
         {
             if (value is not null)
             {
-                _writer.Write(value.ToString()!);
+                _writer->Write(value.ToString()!);
             }
         }
 
@@ -459,11 +457,11 @@ internal ref struct IndentedTextWriter
         {
             if (value is IFormattable)
             {
-                _writer.Write(((IFormattable)value).ToString(format, CultureInfo.InvariantCulture));
+                _writer->Write(((IFormattable)value).ToString(format, CultureInfo.InvariantCulture));
             }
             else if (value is not null)
             {
-                _writer.Write(value.ToString()!);
+                _writer->Write(value.ToString()!);
             }
         }
     }
@@ -485,11 +483,11 @@ internal ref struct IndentedTextWriter
         /// <param name="condition">The condition to use to decide whether or not to write content.</param>
         /// <param name="shouldAppend">A value indicating whether formatting should proceed.</param>
         /// <remarks>This is intended to be called only by compiler-generated code. Arguments are not validated as they'd otherwise be for members intended to be used directly.</remarks>
-        public WriteIfInterpolatedStringHandler(int literalLength, int formattedCount, IndentedTextWriter writer, bool condition, out bool shouldAppend)
+        public WriteIfInterpolatedStringHandler(int literalLength, int formattedCount, in IndentedTextWriter writer, bool condition, out bool shouldAppend)
         {
             if (condition)
             {
-                _writer = new WriteInterpolatedStringHandler(literalLength, formattedCount, writer);
+                _writer = new WriteInterpolatedStringHandler(literalLength, formattedCount, in writer);
 
                 shouldAppend = true;
             }
