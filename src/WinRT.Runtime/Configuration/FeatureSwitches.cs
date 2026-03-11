@@ -67,6 +67,11 @@ namespace WinRT
         private const string UseWindowsUIXamlProjectionsPropertyName = "CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS";
 
         /// <summary>
+        /// The configuration property name for <see cref="SuppressCustomPropertyNotSupportedException"/>.
+        /// </summary>
+        private const string SuppressCustomPropertyNotSupportedExceptionPropertyName = "CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION";
+
+        /// <summary>
         /// The backing field for <see cref="EnableDynamicObjectsSupport"/>.
         /// </summary>
         private static int _enableDynamicObjectsSupport;
@@ -110,6 +115,11 @@ namespace WinRT
         /// The backing field for <see cref="UseWindowsUIXamlProjections"/>.
         /// </summary>
         private static int _useWindowsUIXamlProjections;
+
+        /// <summary>
+        /// The backing field for <see cref="SuppressCustomPropertyNotSupportedException"/>.
+        /// </summary>
+        private static int _suppressCustomPropertyNotSupportedException;
 
         /// <summary>
         /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
@@ -190,6 +200,16 @@ namespace WinRT
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => GetConfigurationValue(UseWindowsUIXamlProjectionsPropertyName, ref _useWindowsUIXamlProjections, false);
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether to suppress the <see cref="NotSupportedException"/> thrown when a type does not implement
+        /// <c>IBindableCustomPropertyImplementation</c> on AOT, and return <see langword="null"/> instead (defaults to <see langword="false"/>).
+        /// </summary>
+        public static bool SuppressCustomPropertyNotSupportedException
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetConfigurationValue(SuppressCustomPropertyNotSupportedExceptionPropertyName, ref _suppressCustomPropertyNotSupportedException, false);
         }
 
         /// <summary>
