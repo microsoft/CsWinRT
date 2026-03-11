@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -12,10 +12,12 @@ namespace WindowsRuntime.ProjectionGenerator;
 /// </summary>
 internal static class SignatureComparerExtensions
 {
+#pragma warning disable IDE0052 // TODO: remove this once Roslyn bug is fixed
     /// <summary>
     /// Backing field for <see cref="get_IgnoreVersion"/>.
     /// </summary>
     private static readonly SignatureComparer IgnoreVersion = new(SignatureComparisonFlags.VersionAgnostic);
+#pragma warning restore IDE0052
 
     extension(SignatureComparer comparer)
     {
