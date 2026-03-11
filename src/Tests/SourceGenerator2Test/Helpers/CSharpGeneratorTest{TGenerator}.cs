@@ -8,7 +8,6 @@ using System.Linq;
 using Basic.Reference.Assemblies;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace WindowsRuntime.SourceGenerator.Tests.Helpers;
 

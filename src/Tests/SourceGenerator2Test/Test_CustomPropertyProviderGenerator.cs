@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using WindowsRuntime.SourceGenerator.Tests.Helpers;
 
 namespace WindowsRuntime.SourceGenerator.Tests;
