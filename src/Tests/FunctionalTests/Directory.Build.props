@@ -39,8 +39,4 @@
     <ControlFlowGuard>Guard</ControlFlowGuard>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">
-    <PublishAot>true</PublishAot>
-  </PropertyGroup>
- 
 </Project>
