@@ -8,6 +8,8 @@ using System.Linq;
 using Basic.Reference.Assemblies;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.UI.Xaml.Controls;
+using Windows.ApplicationModel.Core;
 
 namespace WindowsRuntime.SourceGenerator.Tests.Helpers;
 
@@ -52,6 +54,8 @@ internal static class CSharpGeneratorTest<TGenerator>
         [
             .. Net100.References.All,
             MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(CoreApplication).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(Button).Assembly.Location)
         ];
 
         // Parse the source text

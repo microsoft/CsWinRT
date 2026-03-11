@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
+using Microsoft.UI.Xaml.Controls;
+using Windows.ApplicationModel.Core;
 
 namespace WindowsRuntime.SourceGenerator.Tests.Helpers;
 
@@ -64,6 +66,8 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
 
         test.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net100;
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location));
+        test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(CoreApplication).Assembly.Location));
+        test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(Button).Assembly.Location));
 
         return test.RunAsync(CancellationToken.None);
     }
