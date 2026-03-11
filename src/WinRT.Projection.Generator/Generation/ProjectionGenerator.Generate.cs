@@ -127,7 +127,6 @@ internal partial class ProjectionGenerator
         PathAssemblyResolver resolver = new(args.ReferenceAssemblyPaths);
 
         bool isWindowsSdkMode = args.WindowsSdkOnly || args.WindowsUIXamlProjection;
-        bool hasWindowsSdkProjectionImplReference = false;
 
         foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
         {
@@ -157,14 +156,7 @@ internal partial class ProjectionGenerator
 
             if (moduleDefinition.Assembly is not null)
             {
-                if (moduleDefinition.Assembly?.Name == "WinRT.Sdk.Projection")
-                {
-                    // If it is the impl assembly, we just include it as a projection reference assembly
-                    // to ensure the merged projection will compile.
-                    hasWindowsSdkProjectionImplReference = true;
-                    continue;
-                }
-                else if (isWindowsSdk)
+                if (isWindowsSdk)
                 {
                     // Write the filtes for the Windows SDK projection mode.
                     WriteWindowsSdkFilters(fileStream, args.WindowsUIXamlProjection);
@@ -190,16 +182,6 @@ internal partial class ProjectionGenerator
         if (isWindowsSdkMode && projectionReferenceAssemblies.Count == 0)
         {
             WriteWindowsSdkFilters(fileStream, args.WindowsUIXamlProjection);
-        }
-
-        // If we didn't find a pre-compiled impl assembly for the Windows SDK projection,
-        // we will generate it as part of the merged projection.
-        if (!hasWindowsSdkProjectionImplReference)
-        {
-            // Given we know this is the Windows SDK projection and types will be only from that namespace,
-            // we just include that namespace rather than going through the types.
-            fileStream.WriteLine($"-include Windows");
-            fileStream.WriteLine($"-include WinRT.Interop");
         }
 
         fileStream.WriteLine($"-target {args.TargetFramework}");

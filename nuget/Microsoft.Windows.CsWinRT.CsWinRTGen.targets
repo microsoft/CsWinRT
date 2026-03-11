@@ -306,7 +306,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTMergedProjectionGenerator"
-    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
+    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
@@ -441,6 +441,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Add the SDK projection .dll to the required output groups -->
     <ItemGroup>
       <ReferencePath Include="@(CsWinRTSdkProjectionPath)" />
+
+      <ReferencePathWithRefAssemblies Include="@(CsWinRTSdkProjectionPath)" />
         
       <ReferenceCopyLocalPaths Include="@(CsWinRTSdkProjectionPath)" />
         
@@ -529,6 +531,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Add the SDK XAML .dll to the required output groups -->
     <ItemGroup>
       <ReferencePath Include="@(CsWinRTSdkXamlPath)" />
+
+      <ReferencePathWithRefAssemblies Include="@(CsWinRTSdkXamlPath)" />
         
       <ReferenceCopyLocalPaths Include="@(CsWinRTSdkXamlPath)" />
         
