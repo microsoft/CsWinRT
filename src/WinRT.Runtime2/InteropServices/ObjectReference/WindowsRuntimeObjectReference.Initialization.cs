@@ -64,6 +64,13 @@ public unsafe partial class WindowsRuntimeObjectReference
 
         ComObjectHelpers.ValidateMarshalingType(externalComObject, marshalingType);
 
+        // If marshaling type metadata support is disabled, override the value to 'Unknown' so
+        // that the runtime always queries the marshaling type at runtime (ie. the slow path).
+        if (!WindowsRuntimeFeatureSwitches.EnableMarshalingTypeMetadataSupport)
+        {
+            marshalingType = CreateObjectReferenceMarshalingType.Unknown;
+        }
+
         bool isFreeThreaded;
 
         // Depending on the input marshaling type, we can either use a fast-path where we just trust the
@@ -347,6 +354,12 @@ public unsafe partial class WindowsRuntimeObjectReference
     {
         ComObjectHelpers.ValidateMarshalingType(externalComObject, marshalingType);
 
+        // Override the marshalling move to 'Unknown' if requested (see notes above)
+        if (!WindowsRuntimeFeatureSwitches.EnableMarshalingTypeMetadataSupport)
+        {
+            marshalingType = CreateObjectReferenceMarshalingType.Unknown;
+        }
+
         bool isFreeThreaded;
 
         // Check whether the object is free-threaded, optimizing if possible (see notes above)
@@ -423,6 +436,12 @@ public unsafe partial class WindowsRuntimeObjectReference
         externalComObject = null;
 
         ComObjectHelpers.ValidateMarshalingType(acquiredExternalComObject, marshalingType);
+
+        // Override the marshalling move to 'Unknown' if requested (see notes above)
+        if (!WindowsRuntimeFeatureSwitches.EnableMarshalingTypeMetadataSupport)
+        {
+            marshalingType = CreateObjectReferenceMarshalingType.Unknown;
+        }
 
         bool isFreeThreaded;
 
