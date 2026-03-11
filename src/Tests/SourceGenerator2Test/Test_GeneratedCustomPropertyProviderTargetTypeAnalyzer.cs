@@ -26,17 +26,38 @@ public class Test_GeneratedCustomPropertyProviderTargetTypeAnalyzer
     }
 
     [TestMethod]
-    [DataRow("abstract class")]
-    [DataRow("static class")]
-    [DataRow("static struct")]
-    [DataRow("ref struct")]
+    [DataRow("class")]
+    [DataRow("struct")]
+    public async Task ValidTargetType_InValidHierarchy_DoesNotWarn(string modifier)
+    {
+        string source = $$"""
+            using WindowsRuntime.Xaml;
+
+            public partial struct A
+            {
+                public partial class B
+                {
+                    [GeneratedCustomPropertyProvider]
+                    public partial {{modifier}} MyType;
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<GeneratedCustomPropertyProviderTargetTypeAnalyzer>.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    [DataRow("abstract partial class")]
+    [DataRow("static partial class")]
+    [DataRow("static partial struct")]
+    [DataRow("ref partial struct")]
     public async Task InvalidTargetType_Warns(string modifiers)
     {
         string source = $$"""
             using WindowsRuntime.Xaml;
 
-            [{|CSWINRT2000:GeneratedCustomPropertyProvider|}]
-            public {{modifiers}} MyType;
+            [GeneratedCustomPropertyProvider]
+            public {{modifiers}} {|CSWINRT2000:MyType|};
             """;
 
         await CSharpAnalyzerTest<GeneratedCustomPropertyProviderTargetTypeAnalyzer>.VerifyAnalyzerAsync(source);
@@ -50,8 +71,8 @@ public class Test_GeneratedCustomPropertyProviderTargetTypeAnalyzer
         string source = $$"""
             using WindowsRuntime.Xaml;
 
-            [{|CSWINRT2001:GeneratedCustomPropertyProvider|}]
-            public {{modifier}} MyType;
+            [GeneratedCustomPropertyProvider]
+            public {{modifier}} {|CSWINRT2001:MyType|};
             """;
 
         await CSharpAnalyzerTest<GeneratedCustomPropertyProviderTargetTypeAnalyzer>.VerifyAnalyzerAsync(source);
@@ -67,8 +88,8 @@ public class Test_GeneratedCustomPropertyProviderTargetTypeAnalyzer
 
             public class ParentType
             {
-                [{|CSWINRT2001:GeneratedCustomPropertyProvider|}]
-                public partial {{modifier}} MyType;
+                [GeneratedCustomPropertyProvider]
+                public partial {{modifier}} {|CSWINRT2001:MyType|};
             }
             """;
 
