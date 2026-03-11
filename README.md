@@ -2,9 +2,9 @@
 
 <p align="center">
   <a style="text-decoration:none" href="https://www.nuget.org/packages/Microsoft.Windows.CsWinRT">
-    <img src="https://img.shields.io/nuget/v/Microsoft.Windows.CsWinRT?label=nuget (stable)" alt="NuGet badge" /></a>
+    <img src="https://img.shields.io/nuget/v/Microsoft.Windows.CsWinRT?label=nuget%20%28stable%29" alt="NuGet badge" /></a>
   <a style="text-decoration:none" href="https://www.nuget.org/packages/Microsoft.Windows.CsWinRT">
-    <img src="https://img.shields.io/nuget/vpre/Microsoft.Windows.CsWinRT?label=nuget (preview)" alt="NuGet badge" /></a>
+    <img src="https://img.shields.io/nuget/vpre/Microsoft.Windows.CsWinRT?label=nuget%20%28preview%29" alt="NuGet badge" /></a>
 </p>
 
 C#/WinRT provides **Windows Runtime (WinRT) API** projection support for C#. A *projection* is an adapter that lets developers use WinRT APIs naturally in their language of choice. The C#/WinRT projection abstracts interop details and maps WinRT types to their .NET equivalents, such as strings, URIs, value types, and generic collections.
