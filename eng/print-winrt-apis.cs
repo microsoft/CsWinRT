@@ -350,8 +350,8 @@ static void CollectEnum(EnumDeclarationSyntax ed, string ns, Dictionary<string, 
     if (HasCsWinRT3001(ed.AttributeLists))
         info.IsPrivateImplDetail = true;
 
-    // Check projected type
-    if (HasWindowsRuntimeMetadata(ed.AttributeLists))
+    // Check projected type (or contract enum)
+    if (HasWindowsRuntimeMetadata(ed.AttributeLists) || HasContractVersionAttribute(ed.AttributeLists))
         info.IsProjectedType = true;
 
     if (ed.BaseList != null && info.EnumBaseType == null)
@@ -549,7 +549,7 @@ static void CollectNestedEnum(EnumDeclarationSyntax ed, TypeInfo parent)
     if (HasCsWinRT3001(ed.AttributeLists))
         nested.IsPrivateImplDetail = true;
 
-    if (HasWindowsRuntimeMetadata(ed.AttributeLists))
+    if (HasWindowsRuntimeMetadata(ed.AttributeLists) || HasContractVersionAttribute(ed.AttributeLists))
         nested.IsProjectedType = true;
 
     if (ed.BaseList != null)
@@ -1068,6 +1068,20 @@ static bool HasWindowsRuntimeMetadata(SyntaxList<AttributeListSyntax> attributeL
         {
             string name = GetAttributeSimpleName(attr.Name);
             if (name is "WindowsRuntimeMetadata" or "WindowsRuntimeMetadataAttribute")
+                return true;
+        }
+    }
+    return false;
+}
+
+static bool HasContractVersionAttribute(SyntaxList<AttributeListSyntax> attributeLists)
+{
+    foreach (var attrList in attributeLists)
+    {
+        foreach (var attr in attrList.Attributes)
+        {
+            string name = GetAttributeSimpleName(attr.Name);
+            if (name is "ContractVersion" or "ContractVersionAttribute")
                 return true;
         }
     }
