@@ -80,8 +80,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       Default property values for the Windows.UI.Xaml projection (`WinRT.Sdk.Xaml.Projection.dll`).
       Only used when CsWinRTUseWindowsUIXamlProjections is true.
     -->
-    <_CsWinRTSdkXamlAssemblyPath>$(IntermediateOutputPath)WinRT.Sdk.Xaml.Projection.dll</_CsWinRTSdkXamlAssemblyPath>
-    <_CsWinRTSdkXamlOutputAssemblyPath>WinRT.Sdk.Xaml.Projection.dll</_CsWinRTSdkXamlOutputAssemblyPath>
+    <_CsWinRTSdkXamlAssemblyPath Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">$(IntermediateOutputPath)WinRT.Sdk.Xaml.Projection.dll</_CsWinRTSdkXamlAssemblyPath>
+    <_CsWinRTSdkXamlOutputAssemblyPath Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">WinRT.Sdk.Xaml.Projection.dll</_CsWinRTSdkXamlOutputAssemblyPath>
 
     <DefineConstants Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">$(DefineConstants);CSWINRT_REFERENCE_PROJECTION</DefineConstants>    
   </PropertyGroup>
