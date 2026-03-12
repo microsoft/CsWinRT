@@ -10,6 +10,8 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
 
+#pragma warning disable IDE0046
+
 namespace WindowsRuntime.InteropGenerator;
 
 /// <summary>
@@ -71,7 +73,7 @@ internal static class WindowsRuntimeExtensions
                 // Types from 'Microsoft.Windows.SDK.NET.dll' belong to the SDK projection .dll. We check
                 // the declaring assembly name to reliably determine the origin of the type. We also optimize
                 // when an UTF8 value is available to avoid redundant UTF8 transcoding work.
-                if (type is TypeDefinition { Module.Assembly.Name: Utf8String name })
+                if (type is TypeDefinition { DeclaringModule.Assembly.Name: Utf8String name })
                 {
                     return name.AsSpan().SequenceEqual(InteropNames.WindowsSDKAssemblyNameUtf8);
                 }
@@ -90,7 +92,7 @@ internal static class WindowsRuntimeExtensions
                 // Types from 'Microsoft.Windows.UI.Xaml.dll' belong to the XAML projection .dll. We check the
                 // declaring assembly name to reliably determine the origin of the type, as types from this
                 // assembly may span various 'Windows.*' sub-namespaces that can't be easily pattern-matched.
-                if (type is TypeDefinition { Module.Assembly.Name: Utf8String name })
+                if (type is TypeDefinition { DeclaringModule.Assembly.Name: Utf8String name })
                 {
                     return name.AsSpan().SequenceEqual(InteropNames.WindowsSDKXamlAssemblyNameUtf8);
                 }
