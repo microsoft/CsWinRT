@@ -65,11 +65,14 @@ public partial class CustomPropertyProviderGenerator
 
             token.ThrowIfCancellationRequested();
 
+            string customPropertyProviderMetadataName = useWindowsUIXamlProjections
+                ? "Windows.UI.Xaml.Data.ICustomPropertyProvider"
+                : "Microsoft.UI.Xaml.Data.ICustomPropertyProvider";
+
             // Make sure that the target interface types are available. This is mostly because when UWP XAML projections
             // are not used, the target project must be referencing the WinUI package to get the right interface type.
             // If we can't find it, we just stop here. A separate diagnostic analyzer will emit the right diagnostic.
-            if ((useWindowsUIXamlProjections && context.SemanticModel.Compilation.GetTypeByMetadataName("Windows.UI.Xaml.Data.ICustomPropertyProvider") is null) ||
-                (!useWindowsUIXamlProjections && context.SemanticModel.Compilation.GetTypeByMetadataName("Microsoft.UI.Xaml.Data.ICustomPropertyProvider") is null))
+            if (context.SemanticModel.Compilation.GetTypeByMetadataName(customPropertyProviderMetadataName) is not { } customPropertyProviderType)
             {
                 return null;
             }
@@ -81,6 +84,16 @@ public partial class CustomPropertyProviderGenerator
             {
                 return null;
             }
+
+            // If the annotated type already implements 'ICustomPropertyProvider' and has or inherits any
+            // member implementations, we can't generate the implementation. A separate diagnostic analyzer
+            // will emit the right diagnostic for this case.
+            if (typeSymbol.HasAnyImplementedMembersForInterface(customPropertyProviderType))
+            {
+                return null;
+            }
+
+            token.ThrowIfCancellationRequested();
 
             // Get the type hierarchy (needed to correctly generate sources for nested types too)
             HierarchyInfo typeHierarchy = HierarchyInfo.From(typeSymbol);
