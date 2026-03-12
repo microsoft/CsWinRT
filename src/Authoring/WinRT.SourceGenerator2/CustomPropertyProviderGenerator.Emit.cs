@@ -368,7 +368,7 @@ public partial class CustomPropertyProviderGenerator
                     {
                         throw new NotSupportedException();
                     }
-                        
+
                     /// <inheritdoc/>
                     public void SetValue(object target, object value)
                     {
