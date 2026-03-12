@@ -226,9 +226,14 @@ internal ref struct IndentedTextWriter
     /// <param name="skipIfPresent">Indicates whether to skip adding the line if there already is one.</param>
     public void WriteLine(bool skipIfPresent = false)
     {
-        if (skipIfPresent && _handler.Text is [.., '\n', '\n'])
+        if (skipIfPresent)
         {
-            return;
+            ReadOnlySpan<char> trimmedText = _handler.Text.TrimEnd(' ');
+
+            if (trimmedText is [.., '\n', '\n'] or [.., '{', '\n'])
+            {
+                return;
+            }
         }
 
         _handler.AppendFormatted(DefaultNewLine);
