@@ -40,8 +40,9 @@ internal partial class InteropGenerator
         // No additional parameters will be passed to later steps: all the info is in this object.
         InteropGeneratorDiscoveryState discoveryState = new() { AssemblyResolver = pathAssemblyResolver };
 
-        // First, load the special 'WinRT.Projection.dll' and 'WinRT.Component.dll' modules (the latter is optional).
-        // These are necessary for surfacing some information needed to generate code, that is not present otherwise.
+        // First, load the special 'WinRT.Sdk.Projection.dll', 'WinRT.Sdk.Xaml.Projection.dll', 'WinRT.Projection.dll'
+        // and 'WinRT.Component.dll' modules (the last three are optional). These are necessary for surfacing some
+        // information needed to generate code, that is not present otherwise.
         LoadWinRTModules(args, discoveryState);
 
         try
@@ -86,12 +87,32 @@ internal partial class InteropGenerator
     /// <param name="discoveryState">The discovery state for this invocation.</param>
     private static void LoadWinRTModules(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState)
     {
-        // Load the 'WinRT.Projection.dll' module, this should always be available
-        ModuleDefinition winRTProjectionModule = ModuleDefinition.FromFile(args.WinRTProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+        // Load the 'WinRT.Sdk.Projection.dll' module, this should always be available
+        ModuleDefinition winRTSdkProjectionModule = ModuleDefinition.FromFile(args.WinRTSdkProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
 
-        discoveryState.TrackWinRTProjectionModuleDefinition(winRTProjectionModule);
+        discoveryState.TrackWinRTSdkProjectionModuleDefinition(winRTSdkProjectionModule);
 
         args.Token.ThrowIfCancellationRequested();
+
+        // Load the 'WinRT.Sdk.Xaml.Projection.dll' module, if available
+        if (args.WinRTSdkXamlProjectionAssemblyPath is not null)
+        {
+            ModuleDefinition winRTSdkXamlProjectionModule = ModuleDefinition.FromFile(args.WinRTSdkXamlProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+
+            discoveryState.TrackWinRTSdkXamlProjectionModuleDefinition(winRTSdkXamlProjectionModule);
+
+            args.Token.ThrowIfCancellationRequested();
+        }
+
+        // Load the 'WinRT.Projection.dll' module, if available
+        if (args.WinRTProjectionAssemblyPath is not null)
+        {
+            ModuleDefinition winRTProjectionModule = ModuleDefinition.FromFile(args.WinRTProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+
+            discoveryState.TrackWinRTProjectionModuleDefinition(winRTProjectionModule);
+
+            args.Token.ThrowIfCancellationRequested();
+        }
 
         // Load the 'WinRT.Component.dll' module, if available
         if (args.WinRTComponentAssemblyPath is not null)
@@ -115,10 +136,14 @@ internal partial class InteropGenerator
     {
         ReadOnlySpan<char> fileName = Path.GetFileName(path.AsSpan());
 
-        // Validate that the two possible private implementation detail .dll-s we expect have a matching path. These are:
+        // Validate that the possible private implementation detail .dll-s we expect have a matching path. These are:
+        //   - 'WinRT.Sdk.Projection.dll': the precompiled projection assembly for the Windows SDK.
+        //   - 'WinRT.Sdk.Xaml.Projection.dll': the precompiled projection assembly for the Windows SDK XAML types.
         //   - 'WinRT.Projection.dll': the generated merged projection assembly.
         //   - 'WinRT.Component.dll': the optional generated merged component assembly.
-        if ((fileName.SequenceEqual(InteropNames.WindowsRuntimeProjectionDllName) && path != args.WinRTProjectionAssemblyPath) ||
+        if ((fileName.SequenceEqual(InteropNames.WindowsRuntimeSdkProjectionDllName) && path != args.WinRTSdkProjectionAssemblyPath) ||
+            (fileName.SequenceEqual(InteropNames.WindowsRuntimeSdkXamlProjectionDllName) && path != args.WinRTSdkXamlProjectionAssemblyPath) ||
+            (fileName.SequenceEqual(InteropNames.WindowsRuntimeProjectionDllName) && path != args.WinRTProjectionAssemblyPath) ||
             (fileName.SequenceEqual(InteropNames.WindowsRuntimeComponentDllName) && path != args.WinRTComponentAssemblyPath))
         {
             throw WellKnownInteropExceptions.ReservedDllOriginalPathMismatch(fileName.ToString());
@@ -127,7 +152,9 @@ internal partial class InteropGenerator
         // If the current module is one of those two .dll-s, we just skip it. They will be loaded separately (see above).
         // However since they're also passed in the reference set (as they need to be referenced by the app directly),
         // they will also show up here. This is intended, and it simplifies the targets (no need for them to filter items).
-        if (fileName.SequenceEqual(InteropNames.WindowsRuntimeProjectionDllName) ||
+        if (fileName.SequenceEqual(InteropNames.WindowsRuntimeSdkProjectionDllName) ||
+            fileName.SequenceEqual(InteropNames.WindowsRuntimeSdkXamlProjectionDllName) ||
+            fileName.SequenceEqual(InteropNames.WindowsRuntimeProjectionDllName) ||
             fileName.SequenceEqual(InteropNames.WindowsRuntimeComponentDllName))
         {
             return;

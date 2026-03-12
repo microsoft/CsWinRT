@@ -78,15 +78,22 @@ internal static class InteropImplTypeResolver
         TypeDefinition type,
         InteropReferences interopReferences)
     {
-        // Finally, we have the base scenario of simple non-generic projected Windows Runtime
-        // interface types. In this case, the marshalling code will be in the merged projection.
-        TypeReference ImplTypeReference = interopReferences.WinRTProjection.CreateTypeReference($"ABI.{type.Namespace}", $"{type.Name}Impl");
+        // Determine the right assembly reference for this projected type
+        AssemblyReference projectionAssembly = type.IsProjectedWindowsSdkXamlType
+            ? interopReferences.WinRTSdkXamlProjection
+            : type.IsProjectedWindowsSdkType
+                ? interopReferences.WinRTSdkProjection
+                : interopReferences.WinRTProjection;
+
+        // Finally, we have the base scenario of simple non-generic projected Windows Runtime interface types.
+        // Those will have the marshalling code in the right implementation projection .dll that we found above.
+        TypeReference ImplTypeReference = projectionAssembly.CreateTypeReference($"ABI.{type.Namespace}", $"{type.Name}Impl");
         MemberReference get_VtableMethod = ImplTypeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
 
         // For normal projected types, the IID is in the generated 'InterfaceIIDs' type in the merged projection
         string get_IIDMethodName = $"get_IID_{type.FullName.Replace('.', '_')}";
         TypeSignature get_IIDMethodReturnType = WellKnownTypeSignatureFactory.InGuid(interopReferences);
-        TypeReference interfaceIIDsTypeReference = interopReferences.WinRTProjection.CreateTypeReference("ABI"u8, "InterfaceIIDs"u8);
+        TypeReference interfaceIIDsTypeReference = projectionAssembly.CreateTypeReference("ABI"u8, "InterfaceIIDs"u8);
         MemberReference get_IIDMethod = interfaceIIDsTypeReference.CreateMemberReference(get_IIDMethodName, MethodSignature.CreateStatic(get_IIDMethodReturnType));
 
         // Return the pair of methods from the ABI type in the declaring assembly for the type

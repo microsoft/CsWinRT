@@ -10,6 +10,8 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
 
+#pragma warning disable IDE0046
+
 namespace WindowsRuntime.InteropGenerator;
 
 /// <summary>
@@ -61,6 +63,44 @@ internal static class WindowsRuntimeExtensions
 
     extension(ITypeDescriptor type)
     {
+        /// <summary>
+        /// Gets a value indicating whether the type is a projected Windows SDK type (not custom-mapped or manually-projected).
+        /// </summary>
+        public bool IsProjectedWindowsSdkType
+        {
+            get
+            {
+                // Types from 'Microsoft.Windows.SDK.NET.dll' belong to the SDK projection .dll. We check
+                // the declaring assembly name to reliably determine the origin of the type. We also optimize
+                // when an UTF8 value is available to avoid redundant UTF8 transcoding work.
+                if (type is TypeDefinition { DeclaringModule.Assembly.Name: Utf8String name })
+                {
+                    return name.AsSpan().SequenceEqual(InteropNames.WindowsSDKAssemblyNameUtf8);
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the type is a projected Windows SDK XAML type (from <c>Microsoft.Windows.UI.Xaml.dll</c>).
+        /// </summary>
+        public bool IsProjectedWindowsSdkXamlType
+        {
+            get
+            {
+                // Types from 'Microsoft.Windows.UI.Xaml.dll' belong to the XAML projection .dll. We check the
+                // declaring assembly name to reliably determine the origin of the type, as types from this
+                // assembly may span various 'Windows.*' sub-namespaces that can't be easily pattern-matched.
+                if (type is TypeDefinition { DeclaringModule.Assembly.Name: Utf8String name })
+                {
+                    return name.AsSpan().SequenceEqual(InteropNames.WindowsSDKXamlAssemblyNameUtf8);
+                }
+
+                return false;
+            }
+        }
+
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Guid"/> type.
         /// </summary>
@@ -591,8 +631,15 @@ internal static class WindowsRuntimeExtensions
                     return interopReferences.AbiDateTimeOffset.ToValueTypeSignature();
                 }
 
-                // Otherwise, we can rely on the blittable type being defined in the same module under the 'ABI' namespace
-                return interopReferences.WinRTProjection.CreateTypeReference(
+                // Determine the right assembly reference for this projected type
+                AssemblyReference projectionAssembly = type.IsProjectedWindowsSdkXamlType
+                    ? interopReferences.WinRTSdkXamlProjection
+                    : type.IsProjectedWindowsSdkType
+                        ? interopReferences.WinRTSdkProjection
+                        : interopReferences.WinRTProjection;
+
+                // For all types that get here, their ABI types will be in the right projection assembly, under the 'ABI' namespace
+                return projectionAssembly.CreateTypeReference(
                     ns: (Utf8String)$"ABI.{typeDefinition.Namespace}",
                     name: typeDefinition.Name!).ToValueTypeSignature();
             }
