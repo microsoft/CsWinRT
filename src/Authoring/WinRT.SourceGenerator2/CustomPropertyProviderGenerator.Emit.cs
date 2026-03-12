@@ -22,7 +22,12 @@ public partial class CustomPropertyProviderGenerator
         /// <param name="info">The input <see cref="CustomPropertyProviderInfo"/> state to use.</param>
         public static void WriteCustomPropertyProviderImplementation(SourceProductionContext context, CustomPropertyProviderInfo info)
         {
-            IndentedTextWriter writer = new(literalLength: 0, formattedCount: 0); // TODO: adjust the literal length
+            const int ApproximateTypeDeclarationLength = 2048;
+
+            // Approximate a close enough starting length to reduce copies
+            int approximateLiteralLength = ApproximateTypeDeclarationLength + (ApproximateTypeDeclarationLength * info.CustomProperties.Length);
+
+            IndentedTextWriter writer = new(literalLength: approximateLiteralLength, formattedCount: 0);
 
             // Emit the implementation on the annotated type
             info.TypeHierarchy.WriteSyntax(
