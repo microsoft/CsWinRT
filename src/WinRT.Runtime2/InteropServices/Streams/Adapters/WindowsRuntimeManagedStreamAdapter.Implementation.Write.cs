@@ -8,8 +8,6 @@ using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
-using Windows.Foundation.Tasks;
-using Windows.Storage.Buffers;
 using Windows.Storage.Streams;
 
 #pragma warning disable CS1573
