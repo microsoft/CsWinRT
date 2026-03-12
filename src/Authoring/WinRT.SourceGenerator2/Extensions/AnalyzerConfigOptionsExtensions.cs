@@ -41,6 +41,15 @@ internal static class AnalyzerConfigOptionsExtensions
         }
 
         /// <summary>
+        /// Gets the value of the <c>"CsWinRTUseWindowsUIXamlProjections"</c> property.
+        /// </summary>
+        /// <returns>The value of the <c>"CsWinRTUseWindowsUIXamlProjections"</c> property.</returns>
+        public bool GetCsWinRTUseWindowsUIXamlProjections()
+        {
+            return options.GetBooleanProperty("CsWinRTUseWindowsUIXamlProjections");
+        }
+
+        /// <summary>
         /// Tries to get the value of a boolean MSBuild property.
         /// </summary>
         /// <param name="propertyName">The property name.</param>
