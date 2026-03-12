@@ -129,17 +129,20 @@ public partial class CustomPropertyProviderGenerator
                         continue;
                     }
 
+                    string implementationTypeName = $"{info.TypeHierarchy.Hierarchy[0].QualifiedName}_this_{propertyInfo.FullyQualifiedIndexerTypeName.Replace("global::", "").EscapeIdentifierName()}";
+
                     // If we have a match, return the cached property implementation for the current indexer
                     writer.WriteLine(skipIfPresent: true);
                     writer.WriteLine($$"""
                         if (type == typeof({{propertyInfo.FullyQualifiedIndexerTypeName}}))
                         {
-                            return global::WindowsRuntime.Xaml.Generated.{{info.TypeHierarchy.Hierarchy[0].QualifiedName}}_{{propertyInfo.FullyQualifiedIndexerTypeName}}.Instance;
+                            return global::WindowsRuntime.Xaml.Generated.{{implementationTypeName}}.Instance;
                         }
                         """, isMultiline: true);
                 }
 
                 // If there's no matching property, just return 'null'
+                writer.WriteLine(skipIfPresent: true);
                 writer.WriteLine("return null;");
             }
         }
@@ -179,9 +182,12 @@ public partial class CustomPropertyProviderGenerator
 
             using (writer.WriteBlock())
             {
-                // Using declarations for well-known types we can refer to directly
+                // Using declarations for well-known namespaces we can use with simple names
                 writer.WriteLine("using global::System;");
-                writer.WriteLine($"using global:{info.FullyQualifiedCustomPropertyProviderInterfaceName};");
+                writer.WriteLine("using global::System.CodeDom.Compiler");
+                writer.WriteLine("using global::System.Diagnostics");
+                writer.WriteLine("using global::System.Diagnostics.CodeAnalysis");
+                writer.WriteLine($"using global::{info.FullyQualifiedCustomPropertyProviderInterfaceName.Replace(".ICustomPropertyProvider", "")};");
                 writer.WriteLine();
 
                 // Write all custom property implementation types
@@ -216,12 +222,19 @@ public partial class CustomPropertyProviderGenerator
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
         private static void WriteNonIndexedCustomPropertyImplementationType(CustomPropertyProviderInfo info, CustomPropertyInfo propertyInfo, ref IndentedTextWriter writer)
         {
+            string userTypeName = info.TypeHierarchy.GetFullyQualifiedTypeName().Replace("global::", "");
             string implementationTypeName = $"{info.TypeHierarchy.Hierarchy[0].QualifiedName}_{propertyInfo.Name}";
 
             // Emit a type as follows:
             //
-            // file sealed class <IMPLEMENTATION_TYPE_NAME> : <CUSTOM_PROPERTY_INTERFACE_TYPE>
-            writer.WriteLine($"file sealed class {implementationTypeName} : {info.FullyQualifiedCustomPropertyInterfaceName}");
+            // file sealed class <IMPLEMENTATION_TYPE_NAME> : ICustomProperty
+            writer.WriteLine($"""
+                /// <summary>
+                /// The <see cref="ICustomProperty"/> implementation for <see cref="{userTypeName}.{propertyInfo.Name}"/>.
+                /// </summary>
+                """, isMultiline: true);
+            writer.WriteGeneratedAttributes(nameof(CustomPropertyProviderGenerator), useFullyQualifiedTypeNames: false);
+            writer.WriteLine($"file sealed class {implementationTypeName} : ICustomProperty");
 
             using (writer.WriteBlock())
             {
@@ -307,10 +320,18 @@ public partial class CustomPropertyProviderGenerator
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
         private static void WriteIndexedCustomPropertyImplementationType(CustomPropertyProviderInfo info, CustomPropertyInfo propertyInfo, ref IndentedTextWriter writer)
         {
-            string implementationTypeName = $"{info.TypeHierarchy.Hierarchy[0].QualifiedName}_{propertyInfo.Name}";
+            string userTypeName = info.TypeHierarchy.GetFullyQualifiedTypeName().Replace("global::", "");
+            string indexerTypeName = propertyInfo.FullyQualifiedIndexerTypeName!.Replace("global::", "");
+            string implementationTypeName = $"{info.TypeHierarchy.Hierarchy[0].QualifiedName}_this_{indexerTypeName.EscapeIdentifierName()}";
 
             // Emit the implementation type, same as above
-            writer.WriteLine($"file sealed class {implementationTypeName} : {info.FullyQualifiedCustomPropertyInterfaceName}");
+            writer.WriteLine($"""
+                /// <summary>
+                /// The <see cref="ICustomProperty"/> implementation for <see cref="{userTypeName}"/>'s <see cref="{indexerTypeName}"/> indexer.
+                /// </summary>
+                """, isMultiline: true);
+            writer.WriteGeneratedAttributes(nameof(CustomPropertyProviderGenerator), useFullyQualifiedTypeNames: false);
+            writer.WriteLine($"file sealed class {implementationTypeName} : ICustomProperty");
 
             using (writer.WriteBlock())
             {
@@ -328,7 +349,7 @@ public partial class CustomPropertyProviderGenerator
                     public bool CanWrite => {{propertyInfo.CanWrite.ToString().ToLowerInvariant()}};
 
                     /// <inheritdoc/>
-                    public string Name => "{{propertyInfo.Name}}";
+                    public string Name => "this";
 
                     /// <inheritdoc/>
                     public Type Type => typeof({{propertyInfo.FullyQualifiedTypeName}});
