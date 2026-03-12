@@ -2130,7 +2130,8 @@ static extern void %([UnsafeAccessorType("%, WinRT.Interop")] object _, WindowsR
 
     void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view event_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv, std::string_view platform_attribute = ""sv,
-        std::optional<std::tuple<type_semantics, Event, bool>> paramsForStaticMethodCall = {})
+        std::optional<std::tuple<type_semantics, Event, bool>> paramsForStaticMethodCall = {},
+        std::string_view inline_event_source_field = ""sv)
     {
         auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
         auto parent_type = event.Parent();
@@ -2173,7 +2174,18 @@ remove => %;
             event_type,
             external_event_name,
             bind([&](writer& w) {
-                    if (paramsForStaticMethodCall.has_value())
+                    if (!inline_event_source_field.empty())
+                    {
+                        if (settings.reference_projection)
+                        {
+                            w.write("throw null");
+                        }
+                        else
+                        {
+                            w.write("_eventSource_%.Subscribe(value)", inline_event_source_field);
+                        }
+                    }
+                    else if (paramsForStaticMethodCall.has_value())
                     {
                         auto&& [iface_type_semantics, _, is_static] = paramsForStaticMethodCall.value();
                         w.write("%", bind<write_abi_event_source_static_method_call>(iface_type_semantics, event, true,
@@ -2185,7 +2197,18 @@ remove => %;
                     }
                 }),
             bind([&](writer& w) {
-                    if (paramsForStaticMethodCall.has_value())
+                    if (!inline_event_source_field.empty())
+                    {
+                        if (settings.reference_projection)
+                        {
+                            w.write("throw null");
+                        }
+                        else
+                        {
+                            w.write("_eventSource_%.Unsubscribe(value)", inline_event_source_field);
+                        }
+                    }
+                    else if (paramsForStaticMethodCall.has_value())
                     {
                         auto&& [iface_type_semantics, _, is_static] = paramsForStaticMethodCall.value();
                         w.write("%", bind<write_abi_event_source_static_method_call>(iface_type_semantics, event, false,
@@ -2203,7 +2226,7 @@ remove => %;
         write_event(w, write_explicit_name(w, iface, evt.Name()), evt, write_as_cast(w, iface));
     }
 
-    void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute, type_semantics static_method_semantics)
+    void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute, type_semantics static_method_semantics, bool use_inline_event_source)
     {
         auto visibility = "public ";
 
@@ -2219,31 +2242,44 @@ remove => %;
 
         auto [add, _] = get_event_methods(event);
         bool is_private = is_implemented_as_private_method(w, class_type, add);
+
         if (!is_private)
         {
-            write_event(
-                w,
-                event.Name(),
-                event,
-                w.write_temp("%", bind<write_objref_type_name>(static_method_semantics)),
-                visibility,
-                ""sv,
-                platform_attribute,
-                std::optional(std::tuple(static_method_semantics, event, false)));
+            if (use_inline_event_source)
+            {
+                write_event(w, event.Name(), event, ""sv, visibility, ""sv, platform_attribute, std::nullopt, event.Name());
+            }
+            else
+            {
+                auto event_target = w.write_temp("%", bind<write_objref_type_name>(static_method_semantics));
+                write_event(w, event.Name(), event, event_target, visibility, ""sv, platform_attribute,
+                    std::optional(std::tuple(static_method_semantics, event, false)));
+            }
         }
 
         // If overridable or private, we need to generate the explicit event
         if (is_overridable || is_private)
         {
-            write_event(
-                w, 
-                w.write_temp("%.%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false), event.Name()),
-                event,
-                is_private ? interface_member : "this",
-                ""sv,
-                ""sv,
-                platform_attribute,
-                std::nullopt);
+            auto explicit_event_name = w.write_temp("%.%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false), event.Name());
+
+            if (is_private)
+            {
+                if (use_inline_event_source)
+                {
+                    auto interface_name = w.write_temp("%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false));
+                    auto event_source_field_name = escape_type_name_for_identifier(interface_name, true) + "_" + std::string(event.Name());
+
+                    write_event(w, explicit_event_name, event, ""sv, ""sv, ""sv, platform_attribute, std::nullopt, event_source_field_name);
+                }
+                else
+                {
+                    write_event(w, explicit_event_name, event, interface_member, ""sv, ""sv, platform_attribute, std::nullopt);
+                }
+            }
+            else
+            {
+                write_event(w, explicit_event_name, event, "this", ""sv, ""sv, platform_attribute, std::nullopt);
+            }
         }
     }
 
@@ -2921,6 +2957,118 @@ private WindowsRuntimeObjectReference %
                         {
                             write_unsafe_accessor_for_iid(w, ifaceType);
                         }
+                    }
+                });
+        }
+    }
+
+    void write_class_event_sources_definition(writer& w, TypeDef const& classType)
+    {
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
+        auto fast_abi_class_val = get_fast_abi_class_for_class(classType);
+
+        for (auto&& ii : classType.InterfaceImpl())
+        {
+            auto semantics = get_type_semantics(ii.Interface());
+            for_typedef(w, semantics, [&](TypeDef ifaceType)
+                {
+                    // Skip fast ABI exclusive non-default interfaces (same as objrefs)
+                    if (is_fast_abi_class(classType) && is_exclusive_to(ifaceType) && !is_default_interface(ii))
+                    {
+                        return;
+                    }
+
+                    // Skip custom mapped types (events handled by write_custom_mapped_type_members)
+                    if (auto mapping = get_mapped_type(ifaceType.TypeNamespace(), ifaceType.TypeName()); mapping && mapping->has_custom_members_output)
+                    {
+                        return;
+                    }
+
+                    auto is_fast_abi_iface = fast_abi_class_val.has_value() && is_exclusive_to(ifaceType);
+                    auto semantics_for_abi_call = is_fast_abi_iface ? get_default_iface_as_type_sem(classType) : semantics;
+                    auto objref_name = w.write_temp("%", bind<write_objref_type_name>(semantics_for_abi_call));
+
+                    for (auto&& evt : ifaceType.EventList())
+                    {
+                        auto [add, _] = get_event_methods(evt);
+                        bool is_private = is_implemented_as_private_method(w, classType, add);
+
+                        std::string event_source_field_name;
+                        if (is_private)
+                        {
+                            auto interface_name = w.write_temp("%", bind<write_type_name>(ifaceType, typedef_name_type::CCW, false));
+                            event_source_field_name = escape_type_name_for_identifier(interface_name, true) + "_" + std::string(evt.Name());
+                        }
+                        else
+                        {
+                            event_source_field_name = std::string(evt.Name());
+                        }
+
+                        auto event_semantics = get_type_semantics(evt.EventType());
+                        auto event_source_type = w.write_temp("%",
+                            bind<write_type_name>(event_semantics, typedef_name_type::EventSource, false));
+                        auto vtable_index = get_vmethod_index(add.Parent(), add) + 6;
+                        bool is_generic_event = std::holds_alternative<generic_type_instance>(event_semantics);
+
+                        // ICommand.CanExecuteChanged has a type mismatch: the .NET event type is EventHandler (non-generic),
+                        // but the WinRT type is EventHandler<object>. Use the non-generic EventHandlerEventSource which has
+                        // Subscribe(EventHandler), matching the .NET event type after the fixup in write_event.
+                        if (evt.Name() == "CanExecuteChanged" && is_generic_event)
+                        {
+                            auto parent_type_name = w.write_temp("%", bind<write_type_name>(evt.Parent(), typedef_name_type::NonProjected, true));
+                            if (parent_type_name == "Microsoft.UI.Xaml.Input.ICommand" || parent_type_name == "Windows.UI.Xaml.Input.ICommand")
+                            {
+                                event_source_type = "global::WindowsRuntime.InteropServices.EventHandlerEventSource";
+                                is_generic_event = false;
+                            }
+                        }
+
+                        w.write(R"(
+private % _eventSource_%
+{
+    get
+    {%
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        % MakeEventSource()
+        {
+            _ = global::System.Threading.Interlocked.CompareExchange(
+                location1: ref field,
+                value: %,
+                comparand: null);
+
+            return field;
+        }
+
+        return field ?? MakeEventSource();
+    }
+}
+)",
+                            event_source_type,
+                            event_source_field_name,
+                            [&](writer& w) {
+                                if (is_generic_event) {
+                                    w.write(R"(
+        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
+        [return: UnsafeAccessorType("%, WinRT.Interop")]
+        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
+)",
+                                        bind<write_interop_dll_type_name>(event_semantics, typedef_name_type::EventSource));
+                                }
+                            },
+                            event_source_type,
+                            [&](writer& w) {
+                                if (is_generic_event) {
+                                    w.write("Unsafe.As<%>(ctor(%, %))",
+                                        event_source_type, objref_name, vtable_index);
+                                } else {
+                                    w.write("new %(%, %)",
+                                        event_source_type, objref_name, vtable_index);
+                                }
+                            });
                     }
                 });
         }
@@ -4075,7 +4223,7 @@ return %.AsValue();
             auto platform_attribute = write_platform_attribute_temp(w, interface_type);
 
             w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, platform_attribute, semantics_for_abi_call);
-            w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, semantics_for_abi_call);
+            w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, semantics_for_abi_call, !is_fast_abi_iface || is_default_interface);
 
             // Merge property getters/setters, since such may be defined across interfaces
             for (auto&& prop : interface_type.PropertyList())
@@ -6668,7 +6816,7 @@ remove
                 is_parameter_variable ? "" : ";");
     }
 
-    void write_static_abi_class_members(writer& w, TypeDef const& iface, uint32_t const& abi_methods_start_index = 6)
+    void write_static_abi_class_members(writer& w, TypeDef const& iface, uint32_t const& abi_methods_start_index = 6, bool skip_events = false)
     {
         auto init_call_variables = [&](writer& w)
         {
@@ -6746,6 +6894,8 @@ public static unsafe void %(WindowsRuntimeObjectReference thisReference, % value
             w.write("\n");
         }
 
+        if (!skip_events)
+        {
         int index = 0;
         for (auto&& evt : iface.EventList())
         {
@@ -6768,6 +6918,7 @@ public static % %(object thisObject, WindowsRuntimeObjectReference thisReference
                 evt.Name(),
                 bind<write_event_source_ctor_call>(evt, abi_methods_start_index));
             index++;
+        }
         }
     }
 
@@ -8565,6 +8716,52 @@ private IObjectReference % => __% ?? Make__%();
             }
         }
 
+        // Skip generating event members for exclusive interfaces whose events are now
+        // inlined in the RCW class. This is safe because the interface and its Methods
+        // type are internal, so no other type can reference these event methods.
+        // Only do this for instance interfaces (listed in InterfaceImpl on the class),
+        // not for statics interfaces (referenced via StaticAttribute), whose events
+        // are never inlined and still go through the Methods type.
+        bool skip_exclusive_events = false;
+        if (is_exclusive_to(iface) && !settings.public_exclusiveto)
+        {
+            auto class_type = get_exclusive_to_type(iface);
+            for (auto&& ii : class_type.InterfaceImpl())
+            {
+                for_typedef(w, get_type_semantics(ii.Interface()), [&](TypeDef const& impl_iface)
+                {
+                    if (interfaces_equal(impl_iface, iface))
+                    {
+                        skip_exclusive_events = true;
+                    }
+                });
+            }
+        }
+
+        auto members = w.write_temp("%", [&](writer& w) {
+            if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
+                write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT, skip_exclusive_events);
+                return;
+            }
+            auto abi_methods_start_index = INSPECTABLE_METHOD_COUNT;
+            // Skip events for the default interface (its events are inlined in the RCW class)
+            write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index, skip_exclusive_events);
+            abi_methods_start_index += distance(fast_abi_class_val.value().default_interface.MethodList()) + get_class_hierarchy_index(fast_abi_class_val.value().class_type);
+            for (auto&& other_iface : fast_abi_class_val.value().other_interfaces)
+            {
+                // Keep events for other interfaces (they are NOT inlined, they still use the old CWT path)
+                write_static_abi_class_members(w, other_iface, abi_methods_start_index);
+                abi_methods_start_index += distance(other_iface.MethodList());
+            }
+        });
+
+        // If all members were skipped (e.g., an exclusive interface with only events),
+        // omit generating the empty Methods type entirely.
+        if (members.empty())
+        {
+            return;
+        }
+
         w.write(R"(
 % static class %
 {
@@ -8573,20 +8770,7 @@ private IObjectReference % => __% ?? Make__%();
 )",
         (is_exclusive_to(iface) && !settings.public_exclusiveto) ? "internal" : "public",
         bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
-        [&](writer& w) {
-            if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
-                write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT);
-                return;
-            }
-            auto abi_methods_start_index = INSPECTABLE_METHOD_COUNT;
-            write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index);
-            abi_methods_start_index += distance(fast_abi_class_val.value().default_interface.MethodList()) + get_class_hierarchy_index(fast_abi_class_val.value().class_type);
-            for (auto&& other_iface : fast_abi_class_val.value().other_interfaces)
-            {
-                write_static_abi_class_members(w, other_iface, abi_methods_start_index);
-                abi_methods_start_index += distance(other_iface.MethodList());
-            }
-        });
+        members);
     }
 
     void write_interface_vftbl(writer& w, TypeDef const& type)
@@ -8848,6 +9032,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 %%%%%% %class %%
 {
 %
+%
 
 %
 
@@ -8870,6 +9055,8 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             bind<write_type_inheritance>(type, base_semantics, false, true),
             // start of class
             bind<write_class_objrefs_definition>(type, type.Flags().Sealed()),
+            // event source properties (lazy-loaded, inline cached)
+            bind<write_class_event_sources_definition>(type),
             // ObjectReference constructor
             [&](writer& w)
             {

@@ -865,14 +865,14 @@ internal sealed class InteropReferences
     public TypeReference IMapViewMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapViewMethodsImpl`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableVectorMethodsImpl&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableVectorEventSourceFactory&lt;T&gt;</c>.
     /// </summary>
-    public TypeReference IObservableVectorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableVectorMethodsImpl`1"u8);
+    public TypeReference IObservableVectorEventSourceFactory1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableVectorEventSourceFactory`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableMapMethodsImpl&lt;TKey, TValue&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableMapEventSourceFactory&lt;TKey, TValue&gt;</c>.
     /// </summary>
-    public TypeReference IObservableMapMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableMapMethodsImpl`2"u8);
+    public TypeReference IObservableMapEventSourceFactory2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableMapEventSourceFactory`2"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsMethodsImpl&lt;K&gt;</c>.
@@ -6123,16 +6123,14 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;.VectorChanged</c>'s getter.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
-    public MemberReference IObservableVectorMethodsImpl1VectorChanged(TypeSignature elementType)
+    public MemberReference IObservableVectorEventSourceFactory1VectorChanged(TypeSignature elementType)
     {
-        return IObservableVectorMethodsImpl1
+        return IObservableVectorEventSourceFactory1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("VectorChanged"u8, MethodSignature.CreateStatic(
                 returnType: VectorChangedEventHandler1EventSource.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
-                parameterTypes: [
-                    WindowsRuntimeObject.ToReferenceTypeSignature(),
-                    WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
 
     /// <summary>
@@ -6174,18 +6172,16 @@ internal sealed class InteropReferences
     /// </summary>
     /// <param name="keyType">The type of keys.</param>
     /// <param name="valueType">The type of values.</param>
-    public MemberReference IObservableMapMethodsImpl2MapChanged(TypeSignature keyType, TypeSignature valueType)
+    public MemberReference IObservableMapEventSourceFactory2MapChanged(TypeSignature keyType, TypeSignature valueType)
     {
-        return IObservableMapMethodsImpl2
+        return IObservableMapEventSourceFactory2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("MapChanged"u8, MethodSignature.CreateStatic(
                 returnType: MapChangedEventHandler2EventSource.MakeGenericReferenceType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1)),
-                parameterTypes: [
-                    WindowsRuntimeObject.ToReferenceTypeSignature(),
-                    WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
 
     /// <summary>

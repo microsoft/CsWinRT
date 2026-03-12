@@ -179,16 +179,12 @@ internal partial class InteropTypeDefinitionBuilder
             // All the actual initialization logic is done in the base 'EventSource<T>' type.
             MethodDefinition ctor = MethodDefinition.CreateConstructor(
                 corLibTypeFactory: interopReferences.CorLibTypeFactory,
+                constructorMethod: baseEventSource_ctor,
                 parameterTypes: [
                     interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     interopReferences.Int32]);
 
             eventSourceType.Methods.Add(ctor);
-
-            _ = ctor.CilMethodBody!.Instructions.Insert(0, Ldarg_0);
-            _ = ctor.CilMethodBody!.Instructions.Insert(1, Ldarg_1);
-            _ = ctor.CilMethodBody!.Instructions.Insert(2, Ldarg_2);
-            _ = ctor.CilMethodBody!.Instructions.Insert(3, Call, baseEventSource_ctor);
 
             // Define the 'ConvertToUnmanaged' method as follows:
             //
