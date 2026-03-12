@@ -14,7 +14,8 @@ ConsoleApp.Run(args, Run);
 /// </summary>
 /// <param name="output">The output .cs file path to write the API surface to.</param>
 /// <param name="public">When set, filters out private implementation detail types/members (marked with CSWINRT3001).</param>
-static void Run([Argument] string output, bool @public = false)
+/// <param name="skipProjected">When set, filters out projected WinRT types (marked with [WindowsRuntimeMetadata]).</param>
+static void Run([Argument] string output, bool @public = false, bool skipProjected = false)
 {
     string runtimeDir = Path.GetFullPath(Path.Combine("src", "WinRT.Runtime2"));
 
@@ -63,10 +64,14 @@ static void Run([Argument] string output, bool @public = false)
 
     // Format output
     var sb = new StringBuilder();
+    bool shouldIncludeType(TypeInfo t) =>
+        (!@public || !t.IsPrivateImplDetail) &&
+        (!skipProjected || !t.IsProjectedType);
+
     var byNs = typeMap.Values
-        .Where(t => !@public || !t.IsPrivateImplDetail)
+        .Where(shouldIncludeType)
         .GroupBy(t => t.Namespace)
-        .Where(g => g.Any(t => !@public || !t.IsPrivateImplDetail))
+        .Where(g => g.Any(shouldIncludeType))
         .OrderBy(g => g.Key, StringComparer.Ordinal);
 
     bool firstNs = true;
@@ -79,14 +84,14 @@ static void Run([Argument] string output, bool @public = false)
         sb.AppendLine("{");
 
         var types = nsGroup
-            .Where(t => !@public || !t.IsPrivateImplDetail)
+            .Where(shouldIncludeType)
             .OrderBy(t => GetTypeSortKey(t), StringComparer.Ordinal)
             .ToList();
 
         for (int i = 0; i < types.Count; i++)
         {
             if (i > 0) sb.AppendLine();
-            WriteType(sb, types[i], "    ", @public, privateImplTypeNames);
+            WriteType(sb, types[i], "    ", @public, privateImplTypeNames, skipProjected);
         }
 
         sb.AppendLine("}");
@@ -260,6 +265,10 @@ static void CollectType(TypeDeclarationSyntax td, string ns, Dictionary<string, 
     if (HasCsWinRT3001(td.AttributeLists))
         info.IsPrivateImplDetail = true;
 
+    // Check projected type
+    if (HasWindowsRuntimeMetadata(td.AttributeLists))
+        info.IsProjectedType = true;
+
     // Merge base types
     if (td.BaseList != null)
     {
@@ -341,6 +350,10 @@ static void CollectEnum(EnumDeclarationSyntax ed, string ns, Dictionary<string, 
     if (HasCsWinRT3001(ed.AttributeLists))
         info.IsPrivateImplDetail = true;
 
+    // Check projected type
+    if (HasWindowsRuntimeMetadata(ed.AttributeLists))
+        info.IsProjectedType = true;
+
     if (ed.BaseList != null && info.EnumBaseType == null)
         info.EnumBaseType = ed.BaseList.Types.First().Type.ToString();
 
@@ -397,6 +410,10 @@ static void CollectDelegate(DelegateDeclarationSyntax dd, string ns, Dictionary<
     // Check private impl detail
     if (HasCsWinRT3001(dd.AttributeLists))
         info.IsPrivateImplDetail = true;
+
+    // Check projected type
+    if (HasWindowsRuntimeMetadata(dd.AttributeLists))
+        info.IsProjectedType = true;
 
     // Type parameters
     if (dd.TypeParameterList != null)
@@ -462,6 +479,9 @@ static void CollectNestedType(TypeDeclarationSyntax td, string parentNs, TypeInf
 
     if (HasCsWinRT3001(td.AttributeLists))
         nested.IsPrivateImplDetail = true;
+
+    if (HasWindowsRuntimeMetadata(td.AttributeLists))
+        nested.IsProjectedType = true;
 
     if (td.BaseList != null)
     {
@@ -529,6 +549,9 @@ static void CollectNestedEnum(EnumDeclarationSyntax ed, TypeInfo parent)
     if (HasCsWinRT3001(ed.AttributeLists))
         nested.IsPrivateImplDetail = true;
 
+    if (HasWindowsRuntimeMetadata(ed.AttributeLists))
+        nested.IsProjectedType = true;
+
     if (ed.BaseList != null)
         nested.EnumBaseType = ed.BaseList.Types.First().Type.ToString();
 
@@ -569,6 +592,9 @@ static void CollectNestedDelegate(DelegateDeclarationSyntax dd, TypeInfo parent)
 
     if (HasCsWinRT3001(dd.AttributeLists))
         nested.IsPrivateImplDetail = true;
+
+    if (HasWindowsRuntimeMetadata(dd.AttributeLists))
+        nested.IsProjectedType = true;
 
     if (dd.TypeParameterList != null)
         nested.TypeParameterListText = NormalizeWhitespace(dd.TypeParameterList.ToString());
@@ -841,7 +867,7 @@ static MemberEntry FormatIndexer(IndexerDeclarationSyntax idx, bool isInterface)
 
 // ===== Output writing =====
 
-static void WriteType(StringBuilder sb, TypeInfo info, string indent, bool publicOnly, HashSet<string> privateImplTypeNames)
+static void WriteType(StringBuilder sb, TypeInfo info, string indent, bool publicOnly, HashSet<string> privateImplTypeNames, bool skipProjected = false)
 {
     // Write filtered attributes
     foreach (var attr in info.AttributeTexts)
@@ -942,7 +968,7 @@ static void WriteType(StringBuilder sb, TypeInfo info, string indent, bool publi
 
     // Nested types
     var nestedTypes = info.NestedTypes
-        .Where(t => !publicOnly || !t.IsPrivateImplDetail)
+        .Where(t => (!publicOnly || !t.IsPrivateImplDetail) && (!skipProjected || !t.IsProjectedType))
         .OrderBy(t => GetTypeSortKey(t), StringComparer.Ordinal)
         .ToList();
 
@@ -952,7 +978,7 @@ static void WriteType(StringBuilder sb, TypeInfo info, string indent, bool publi
     for (int i = 0; i < nestedTypes.Count; i++)
     {
         if (i > 0) sb.AppendLine();
-        WriteType(sb, nestedTypes[i], indent + "    ", publicOnly, privateImplTypeNames);
+        WriteType(sb, nestedTypes[i], indent + "    ", publicOnly, privateImplTypeNames, skipProjected);
     }
 
     sb.AppendLine(indent + "}");
@@ -1023,6 +1049,20 @@ static bool HasCsWinRT3001(SyntaxList<AttributeListSyntax> attributeLists)
                     exprText.Contains("PrivateImplementationDetailObsoleteDiagnosticId"))
                     return true;
             }
+        }
+    }
+    return false;
+}
+
+static bool HasWindowsRuntimeMetadata(SyntaxList<AttributeListSyntax> attributeLists)
+{
+    foreach (var attrList in attributeLists)
+    {
+        foreach (var attr in attrList.Attributes)
+        {
+            string name = GetAttributeSimpleName(attr.Name);
+            if (name is "WindowsRuntimeMetadata" or "WindowsRuntimeMetadataAttribute")
+                return true;
         }
     }
     return false;
@@ -1244,6 +1284,7 @@ class TypeInfo
     public string Kind = "class";
     public bool IsInterface;
     public bool IsPrivateImplDetail;
+    public bool IsProjectedType;
     public string? TypeParameterListText;
     public HashSet<string> Modifiers = new();
     public List<string> AttributeTexts = new();
