@@ -4,7 +4,7 @@
 using System.Numerics;
 using System.Runtime.Versioning;
 
-namespace Windows.Foundation.Numerics;
+namespace Windows.Foundation;
 
 /// <summary>
 /// Provides extension methods for converting between <see cref="Vector2"/> and Windows Foundation types.
