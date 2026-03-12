@@ -1,0 +1,71 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Collections.Immutable;
+using System.Linq;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
+
+namespace WindowsRuntime.SourceGenerator.Diagnostics;
+
+/// <summary>
+/// A diagnostic analyzer that validates when <c>[GeneratedCustomPropertyProvider]</c> is used on a type
+/// that already has or inherits implementations for one or more <c>ICustomPropertyProvider</c> members.
+/// </summary>
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
+public sealed class GeneratedCustomPropertyProviderExistingMemberImplementationAnalyzer : DiagnosticAnalyzer
+{
+    /// <inheritdoc/>
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [DiagnosticDescriptors.GeneratedCustomPropertyProviderExistingMemberImplementation];
+
+    /// <inheritdoc/>
+    public override void Initialize(AnalysisContext context)
+    {
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.EnableConcurrentExecution();
+
+        context.RegisterCompilationStartAction(static context =>
+        {
+            // Get the '[GeneratedCustomPropertyProvider]' symbol
+            if (context.Compilation.GetTypeByMetadataName("WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute") is not { } attributeType)
+            {
+                return;
+            }
+
+            // Try to get any 'ICustomPropertyProvider' symbol
+            INamedTypeSymbol? windowsUIXamlCustomPropertyProviderType = context.Compilation.GetTypeByMetadataName("Windows.UI.Xaml.Data.ICustomPropertyProvider");
+            INamedTypeSymbol? microsoftUIXamlCustomPropertyProviderType = context.Compilation.GetTypeByMetadataName("Microsoft.UI.Xaml.Data.ICustomPropertyProvider");
+
+            // If we have neither, a different analyzer will handle that
+            if (windowsUIXamlCustomPropertyProviderType is null && microsoftUIXamlCustomPropertyProviderType is null)
+            {
+                return;
+            }
+
+            context.RegisterSymbolAction(context =>
+            {
+                // Only classes and structs can be targets of the attribute
+                if (context.Symbol is not INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Struct } typeSymbol)
+                {
+                    return;
+                }
+
+                // Immediately bail if the type doesn't have the attribute
+                if (!typeSymbol.HasAttributeWithType(attributeType))
+                {
+                    return;
+                }
+
+                // Check whether the type has or inherits any 'ICustomPropertyProvider' member implementations
+                if ((windowsUIXamlCustomPropertyProviderType is not null && typeSymbol.HasAnyImplementedMembersForInterface(windowsUIXamlCustomPropertyProviderType)) ||
+                    (microsoftUIXamlCustomPropertyProviderType is not null && typeSymbol.HasAnyImplementedMembersForInterface(microsoftUIXamlCustomPropertyProviderType)))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.GeneratedCustomPropertyProviderExistingMemberImplementation,
+                        typeSymbol.Locations.FirstOrDefault(),
+                        typeSymbol));
+                }
+            }, SymbolKind.NamedType);
+        });
+    }
+}

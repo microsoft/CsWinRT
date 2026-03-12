@@ -48,4 +48,17 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Using '[GeneratedCustomPropertyProvider]' requires the 'ICustomPropertyProvider' interface type to be available in the compilation, which can be done by either referencing 'WindowsAppSDK.WinUI' or by setting the 'UseUwp' property in the .csproj file.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when <c>[GeneratedCustomPropertyProvider]</c> is used on a type that already implements <c>ICustomPropertyProvider</c> members.
+    /// </summary>
+    public static readonly DiagnosticDescriptor GeneratedCustomPropertyProviderExistingMemberImplementation = new(
+        id: "CSWINRT2003",
+        title: "Existing 'ICustomPropertyProvider' member implementation",
+        messageFormat: """The type '{0}' cannot use '[GeneratedCustomPropertyProvider]' because it already has or inherits implementations for one or more 'ICustomPropertyProvider' members""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Types annotated with '[GeneratedCustomPropertyProvider]' must not already have or inherit implementations for any 'ICustomPropertyProvider' members, as the generator will provide them.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
