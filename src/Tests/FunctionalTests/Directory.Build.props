@@ -42,5 +42,11 @@
   <PropertyGroup Condition="$(IsTargetFrameworkNet8OrGreater) and '$(Platform)' != 'x86'">
     <PublishAot>true</PublishAot>
   </PropertyGroup>
+
+  <!-- Same as in https://github.com/dotnet/sdk/pull/41936, but needed here because this project doesn't target a Windows TFM -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="CsWinRTUseWindowsUIXamlProjections" />
+    <RuntimeHostConfigurationOption Include="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" Value="$(CsWinRTUseWindowsUIXamlProjections)" Trim="true" />
+  </ItemGroup>
  
 </Project>
