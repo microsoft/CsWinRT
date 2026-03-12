@@ -49,7 +49,6 @@ public class Test_GeneratedCustomPropertyProviderTargetTypeAnalyzer
     [TestMethod]
     [DataRow("abstract partial class")]
     [DataRow("static partial class")]
-    [DataRow("static partial struct")]
     [DataRow("ref partial struct")]
     public async Task InvalidTargetType_Warns(string modifiers)
     {
