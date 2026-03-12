@@ -1227,7 +1227,7 @@ namespace UnitTest
         {
             var folderPath = Path.GetDirectoryName(AppContext.BaseDirectory);
             StorageFile file = await StorageFile.GetFileFromPathAsync(folderPath + "\\TestComponentCSharp.dll");
-            var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(file, FileAccess.Read);
+            var handle = file.CreateSafeFileHandle(FileAccess.Read);
             Assert.IsNotNull(handle);
         }
 
@@ -1240,7 +1240,7 @@ namespace UnitTest
         async Task TestStorageFolderAsync()
         {
             StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(AppContext.BaseDirectory);
-            var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(folder, "TestComponentCSharp.dll", FileMode.Open, FileAccess.Read);
+            var handle = folder.CreateSafeFileHandle("TestComponentCSharp.dll", FileMode.Open, FileAccess.Read);
             Assert.IsNotNull(handle);
         }
 

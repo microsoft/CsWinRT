@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TestComponentCSharp;
 using Windows.Foundation;
+using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
 using WindowsRuntime.InteropServices;
@@ -65,8 +66,8 @@ foreach (var port in ports)
 }
 
 var folderPath = Path.GetDirectoryName(AppContext.BaseDirectory);
-var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(folderPath + "\\Async.exe");
-var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(file, FileAccess.Read);
+var file = await StorageFile.GetFileFromPathAsync(folderPath + "\\Async.exe");
+var handle = file.CreateSafeFileHandle(FileAccess.Read);
 if (handle is null)
 {
     return 107;
@@ -74,10 +75,10 @@ if (handle is null)
 handle.Close();
 
 handle = null;
-var getFolderFromPathAsync = Windows.Storage.StorageFolder.GetFolderFromPathAsync(folderPath);
+var getFolderFromPathAsync = StorageFolder.GetFolderFromPathAsync(folderPath);
 getFolderFromPathAsync.Completed += (s, e) =>
 {
-    handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(s.GetResults(), "TestComponent.dll", FileMode.Open, FileAccess.Read);
+    handle = s.GetResults().CreateSafeFileHandle("TestComponent.dll", FileMode.Open, FileAccess.Read);
 };
 await Task.Delay(1000);
 if (handle is null)
@@ -86,7 +87,7 @@ if (handle is null)
 }
 handle.Close();
 
-using var stream = await file.OpenAsync(Windows.Storage.FileAccessMode.Read).AsTask().ConfigureAwait(continueOnCapturedContext: false);
+using var stream = await file.OpenAsync(FileAccessMode.Read).AsTask().ConfigureAwait(continueOnCapturedContext: false);
 using var sw = new StreamReader(stream.AsStreamForRead());
 if (string.IsNullOrEmpty(sw.ReadToEnd()))
 {
