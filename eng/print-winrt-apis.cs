@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text;
+using System.Text.RegularExpressions;
 
 ConsoleApp.Run(args, Run);
 
@@ -97,7 +98,8 @@ static void Run([Argument] string output, bool @public = false, bool skipProject
         sb.AppendLine("}");
     }
 
-    File.WriteAllText(output, sb.ToString().TrimEnd() + Environment.NewLine);
+    string result = Regexes.HResultAlias.Replace(sb.ToString(), "int").TrimEnd();
+    File.WriteAllText(output, result + Environment.NewLine);
     ConsoleApp.Log($"Wrote {typeMap.Count} types to {output}");
 }
 
@@ -1334,3 +1336,9 @@ class MemberEntry
 }
 
 #endregion
+
+partial class Regexes
+{
+    [GeneratedRegex(@"\bHRESULT\b")]
+    public static partial Regex HResultAlias { get; }
+}
