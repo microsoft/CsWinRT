@@ -320,11 +320,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <_WinMDPathsList Include="$([MSBuild]::ValueOrDefault('%(_ReferencePathsWithWinMDs.CsWinRTInputs)', '').Split(';'))"
                          Condition="'%(_ReferencePathsWithWinMDs.CsWinRTInputs)' != ''" />
         <_WinMDPathsList Include="$(CsWinRTInteropMetadata)" />
+        <_MergedProjectionReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" />
+        <_MergedProjectionReferenceAssemblyPaths Include="$(_CsWinRTSdkProjectionAssemblyPath)" />
+        <_MergedProjectionReferenceAssemblyPaths Include="$(_CsWinRTSdkXamlAssemblyPath)" Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'" />
     </ItemGroup>
 
       <!-- Invoke 'cswinrtprojectiongen' -->
     <RunCsWinRTMergedProjectionGenerator
-      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
+      ReferenceAssemblyPaths="@(_MergedProjectionReferenceAssemblyPaths)"
       GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       WinMDPaths="@(_WinMDPathsList)"
       TargetFramework="$(CsWinRTExeTFM)"
@@ -443,8 +446,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Add the SDK projection .dll to the required output groups -->
     <ItemGroup>
       <ReferencePath Include="@(CsWinRTSdkProjectionPath)" />
-
-      <ReferencePathWithRefAssemblies Include="@(CsWinRTSdkProjectionPath)" />
         
       <ReferenceCopyLocalPaths Include="@(CsWinRTSdkProjectionPath)" />
         
@@ -497,11 +498,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <_SdkXamlWinMDPathsList Include="$([MSBuild]::ValueOrDefault('%(_SdkXamlReferencePathsWithWinMDs.CsWinRTInputs)', '').Split(';'))"
                          Condition="'%(_SdkXamlReferencePathsWithWinMDs.CsWinRTInputs)' != ''" />
         <_SdkXamlWinMDPathsList Include="$(CsWinRTInteropMetadata)" />
+        <_SdkXamlProjectionReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" />
+        <_SdkXamlProjectionReferenceAssemblyPaths Include="$(_CsWinRTSdkProjectionAssemblyPath)" />
     </ItemGroup>
 
     <RunCsWinRTMergedProjectionGenerator
       Condition="'$(_SdkXamlImplExists)' != 'true'"
-      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
+      ReferenceAssemblyPaths="@(_SdkXamlProjectionReferenceAssemblyPaths)"
       GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       WinMDPaths="@(_SdkXamlWinMDPathsList)"
       TargetFramework="$(CsWinRTExeTFM)"
@@ -533,8 +536,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Add the SDK XAML .dll to the required output groups -->
     <ItemGroup>
       <ReferencePath Include="@(CsWinRTSdkXamlPath)" />
-
-      <ReferencePathWithRefAssemblies Include="@(CsWinRTSdkXamlPath)" />
         
       <ReferenceCopyLocalPaths Include="@(CsWinRTSdkXamlPath)" />
         
