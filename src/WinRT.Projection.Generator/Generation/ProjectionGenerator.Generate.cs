@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using AsmResolver;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionGenerator.Errors;
 using WindowsRuntime.ProjectionGenerator.Resolvers;
@@ -138,15 +139,20 @@ internal partial class ProjectionGenerator
                 continue;
             }
 
-            bool isWindowsSdk = moduleDefinition.Assembly?.Name == "Microsoft.Windows.SDK.NET";
+            bool isWindowsSdk = IsWindowsSdkAssembly(moduleDefinition);
 
-            // By default, Windows SDK types are excluded (they go into WinRT.Sdk.Projection.dll).
-            // In --windows-sdk-only or --windows-ui-xaml-projection mode, ONLY Windows SDK types are included.
+            // By default, Windows SDK types are excluded (they go into WinRT.Sdk.Projection.dll
+            // and WinRT.Sdk.Xaml.Projection.dll). In WindowsSdkOnly mode where we are generating
+            // those dlls is when we will include them.
             if (isWindowsSdk && !isWindowsSdkMode)
             {
+                // Track this as a projection assembly so it's excluded from compilation references.
+                // WinRT.Sdk.Projection.dll and WinRT.Sdk.Xaml.Projection.dll replace these types.
+                _ = projectionReferenceAssemblies.Add(referenceAssemblyPath);
                 continue;
             }
 
+            // Skip other projection binaries we may get.
             if (!isWindowsSdk && isWindowsSdkMode)
             {
                 continue;
@@ -258,5 +264,18 @@ internal partial class ProjectionGenerator
     private static bool IsWindowsRuntimeReferenceAssembly(ModuleDefinition moduleDefinition)
     {
         return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeReferenceAssemblyAttribute"u8);
+    }
+
+    /// <summary>
+    /// Checks if the specified module definition represents a Windows SDK assembly
+    /// (i.e. <c>Microsoft.Windows.SDK.NET</c> or <c>Microsoft.Windows.UI.Xaml</c>).
+    /// </summary>
+    /// <param name="moduleDefinition">The module definition to check.</param>
+    /// <returns><c>true</c> if the module is a Windows SDK assembly; otherwise, <c>false</c>.</returns>
+    private static bool IsWindowsSdkAssembly(ModuleDefinition moduleDefinition)
+    {
+        return
+            (moduleDefinition.Assembly?.Name is Utf8String sdkName && sdkName.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET"u8)) ||
+            (moduleDefinition.Assembly?.Name is Utf8String xamlName && xamlName.AsSpan().SequenceEqual("Microsoft.Windows.UI.Xaml"u8));
     }
 }
