@@ -5,9 +5,9 @@ using System;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
-using WindowsRuntime.InteropServices;
+using Windows.Foundation;
 
-namespace Windows.Foundation.Tasks;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Provides factory methods to construct Windows Runtime representations of asynchronous operations.

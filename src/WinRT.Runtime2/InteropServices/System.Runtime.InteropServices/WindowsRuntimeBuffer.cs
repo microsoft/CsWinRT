@@ -3,9 +3,8 @@
 
 using System;
 using Windows.Storage.Streams;
-using WindowsRuntime.InteropServices;
 
-namespace Windows.Storage.Buffers;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Provides a way to create managed instances of the <see cref="IBuffer"/> interface.
