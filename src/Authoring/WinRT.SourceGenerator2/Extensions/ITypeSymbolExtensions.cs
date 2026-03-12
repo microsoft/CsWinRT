@@ -57,6 +57,30 @@ internal static class ITypeSymbolExtensions
         }
 
         /// <summary>
+        /// Checks whether the given <see cref="ITypeSymbol"/> implements a specified interface
+        /// and has or inherits implementations for any of its members.
+        /// </summary>
+        /// <param name="interfaceType">The interface type to check for member implementations.</param>
+        /// <returns>Whether <paramref name="symbol"/> has any implemented members for <paramref name="interfaceType"/>.</returns>
+        public bool HasAnyImplementedMembersForInterface(INamedTypeSymbol interfaceType)
+        {
+            if (!symbol.AllInterfaces.Contains(interfaceType, SymbolEqualityComparer.Default))
+            {
+                return false;
+            }
+
+            foreach (ISymbol member in interfaceType.GetMembers())
+            {
+                if (symbol.FindImplementationForInterfaceMember(member) is not null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Gets the fully qualified metadata name for a given <see cref="ITypeSymbol"/> instance.
         /// </summary>
         /// <returns>The fully qualified metadata name for <paramref name="symbol"/>.</returns>
