@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -55,10 +56,12 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
 
     /// <inheritdoc cref="AnalyzerVerifier{TAnalyzer, TTest, TVerifier}.VerifyAnalyzerAsync"/>
     /// <param name="source">The source code to analyze.</param>
+    /// <param name="expectedDiagnostics">The list of expected diagnostic for the test (used as alternative to the markdown syntax).</param>
     /// <param name="allowUnsafeBlocks">Whether to enable unsafe blocks.</param>
     /// <param name="languageVersion">The language version to use to run the test.</param>
     public static Task VerifyAnalyzerAsync(
         string source,
+        ReadOnlySpan<DiagnosticResult> expectedDiagnostics = default,
         bool allowUnsafeBlocks = true,
         LanguageVersion languageVersion = LanguageVersion.CSharp14)
     {
@@ -68,6 +71,7 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location));
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(CoreApplication).Assembly.Location));
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(Button).Assembly.Location));
+        test.TestState.ExpectedDiagnostics.AddRange([.. expectedDiagnostics]);
 
         return test.RunAsync(CancellationToken.None);
     }
