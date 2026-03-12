@@ -170,6 +170,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
       ImplementationAssemblyPaths="@(ReferencePath)"      
       OutputAssemblyPath="@(IntermediateAssembly)"
+      WinRTSdkProjectionAssemblyPath="$(_CsWinRTSdkProjectionAssemblyPath)"
+      WinRTSdkXamlProjectionAssemblyPath="$(_CsWinRTSdkXamlAssemblyPath)"
       WinRTProjectionAssemblyPath="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
       InteropAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
