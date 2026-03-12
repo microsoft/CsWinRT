@@ -641,10 +641,10 @@ internal static class WindowsRuntimeExtensions
                 }
 
                 // Determine the right assembly reference for this projected type
-                AssemblyReference projectionAssembly = type.IsProjectedWindowsSdkXamlType
-                    ? interopReferences.WinRTSdkXamlProjection
-                    : type.IsProjectedWindowsSdkType
-                        ? interopReferences.WinRTSdkProjection
+                AssemblyReference projectionAssembly = type.IsProjectedWindowsSdkType
+                    ? interopReferences.WinRTSdkProjection
+                    : type.IsProjectedWindowsSdkXamlType
+                        ? interopReferences.WinRTSdkXamlProjection
                         : interopReferences.WinRTProjection;
 
                 // For all types that get here, their ABI types will be in the right projection assembly, under the 'ABI' namespace

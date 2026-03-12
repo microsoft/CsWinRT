@@ -163,10 +163,10 @@ internal static partial class SignatureGenerator
         if (type.IsDelegate)
         {
             // Determine the right implementation projection .dll to use for the lookup
-            ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkXamlType
-                ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
-                : type.IsProjectedWindowsSdkType
-                    ? interopDefinitions.WindowsRuntimeSdkProjectionModule
+            ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
+                ? interopDefinitions.WindowsRuntimeSdkProjectionModule
+                : type.IsProjectedWindowsSdkXamlType
+                    ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
                     : interopDefinitions.WindowsRuntimeProjectionModule;
 
             // Try to get the implementation type via a fast lookup, if we did get a valid projection module
@@ -197,10 +197,10 @@ internal static partial class SignatureGenerator
         [NotNullWhen(true)] out TypeSignature? defaultInterface)
     {
         // Determine the right implementation projection .dll (see notes above)
-        ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkXamlType
-            ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
-            : type.IsProjectedWindowsSdkType
-                ? interopDefinitions.WindowsRuntimeSdkProjectionModule
+        ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
+            ? interopDefinitions.WindowsRuntimeSdkProjectionModule
+            : type.IsProjectedWindowsSdkXamlType
+                ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
                 : interopDefinitions.WindowsRuntimeProjectionModule;
 
         // Tries to get the projected type from the projection .dll, as it will have the attribute
