@@ -101,7 +101,7 @@ static void Run([Argument] string output, bool @public = false, bool skipProject
     ConsoleApp.Log($"Wrote {typeMap.Count} types to {output}");
 }
 
-// ===== Collection =====
+#region Collection
 
 /// <summary>
 /// First pass: collect the simple names of ALL types (including non-public) with CSWINRT3001.
@@ -608,7 +608,9 @@ static void CollectNestedDelegate(DelegateDeclarationSyntax dd, TypeInfo parent)
     parent.NestedTypes.Add(nested);
 }
 
-// ===== Member formatting =====
+#endregion
+
+#region Member formatting
 
 static MemberEntry? FormatMemberEntry(MemberDeclarationSyntax member, bool isInterface)
 {
@@ -865,7 +867,9 @@ static MemberEntry FormatIndexer(IndexerDeclarationSyntax idx, bool isInterface)
     };
 }
 
-// ===== Output writing =====
+#endregion
+
+#region Output writing
 
 static void WriteType(StringBuilder sb, TypeInfo info, string indent, bool publicOnly, HashSet<string> privateImplTypeNames, bool skipProjected = false)
 {
@@ -984,7 +988,9 @@ static void WriteType(StringBuilder sb, TypeInfo info, string indent, bool publi
     sb.AppendLine(indent + "}");
 }
 
-// ===== Helpers =====
+#endregion
+
+#region Helpers
 
 static bool IsPublicApiType(MemberDeclarationSyntax decl, bool isNested)
 {
@@ -1275,7 +1281,9 @@ static string GetTypeSortKey(TypeInfo t)
     return $"{kindOrder}_{t.Identifier}";
 }
 
-// ===== Data classes =====
+#endregion
+
+#region Data classes
 
 class TypeInfo
 {
@@ -1310,3 +1318,5 @@ class MemberEntry
     public bool IsPrivateImplDetail;
     public string SortKey = "";
 }
+
+#endregion
