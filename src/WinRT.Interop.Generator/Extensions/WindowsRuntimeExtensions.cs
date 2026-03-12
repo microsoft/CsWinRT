@@ -79,7 +79,7 @@ internal static class WindowsRuntimeExtensions
                 // case we would lose the original context for the ref assembly, and instead we'd see the scope
                 // as being from the generated implementation .dll. We still want to make sure to detect those
                 // types as projected from the right set, otherwise e.g. computing the type signature would fail.
-                if (type is TypeDefinition { DeclaringModule.Assembly.Name: Utf8String name })
+                if (type.Scope?.GetAssembly() is { Name: Utf8String name })
                 {
                     return
                         name.AsSpan().SequenceEqual(InteropNames.WindowsSDKAssemblyNameUtf8) ||
@@ -99,7 +99,7 @@ internal static class WindowsRuntimeExtensions
             {
                 // Types from 'Microsoft.Windows.UI.Xaml.dll' belong to the XAML projection .dll. Here we do the
                 // same checks as above, and also check for 'WinRT.Sdk.Xaml.projection.dll' for the same reason.
-                if (type is TypeDefinition { DeclaringModule.Assembly.Name: Utf8String name })
+                if (type.Scope?.GetAssembly() is { Name: Utf8String name })
                 {
                     return
                         name.AsSpan().SequenceEqual(InteropNames.WindowsSDKXamlAssemblyNameUtf8) ||
