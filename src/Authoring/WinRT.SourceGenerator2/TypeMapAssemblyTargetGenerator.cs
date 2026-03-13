@@ -34,6 +34,12 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
             return options.GlobalOptions.GetPublishAot();
         });
 
+        // Get whether the project has CsWinRTUseWindowsUIXamlProjections set
+        IncrementalValueProvider<bool> useWindowsUIXamlProjections = context.AnalyzerConfigOptionsProvider.Select(static (options, token) =>
+        {
+            return options.GlobalOptions.GetCsWinRTUseWindowsUIXamlProjections();
+        });
+
         // Get whether the current project is a library published with Native AOT
         IncrementalValueProvider<bool> isPublishAotLibrary =
             isOutputTypeLibrary
@@ -71,5 +77,14 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
 
         // Also generate the '[TypeMapAssemblyTarget]' entry for the default items
         context.RegisterImplementationSourceOutput(isGeneratorEnabled, Execute.EmitDefaultTypeMapAssemblyTargetAttributes);
+
+        // Get whether the xaml type map attributes should be emitted.
+        IncrementalValueProvider<bool> isXamlGeneratorEnabled =
+            isGeneratorEnabled
+            .Combine(useWindowsUIXamlProjections)
+            .Select(static (flags, token) => flags.Left && flags.Right);
+
+        // Also generate the '[TypeMapAssemblyTarget]' entry for the xaml projection based on isXamlGeneratorEnabled.
+        context.RegisterImplementationSourceOutput(isXamlGeneratorEnabled, Execute.EmitXamlTypeMapAssemblyTargetAttributes);
     }
 }

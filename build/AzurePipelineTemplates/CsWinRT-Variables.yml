@@ -27,3 +27,33 @@ variables:
   value: $[coalesce(variables.PublishCsWinMD, 'false')]
 - name: _PublishFunctionalTests
   value: $[coalesce(variables.PublishFunctionalTests, 'false')]
+
+- name: _GenerateSdkProjection
+  value: $[coalesce(variables.GenerateSdkProjection, 'false')]
+
+# SDK Contracts package versions for each Windows SDK build.
+# Override at queue time by setting the corresponding variable (e.g. SdkPackageVersion_26100).
+- name: _SdkPackageVersion_17763
+  value: $[coalesce(variables.SdkPackageVersion_17763, '10.0.17763.1000')]
+- name: _SdkPackageVersion_18362
+  value: $[coalesce(variables.SdkPackageVersion_18362, '10.0.18362.2007')]
+- name: _SdkPackageVersion_19041
+  value: $[coalesce(variables.SdkPackageVersion_19041, '10.0.19041.2')]
+- name: _SdkPackageVersion_22000
+  value: $[coalesce(variables.SdkPackageVersion_22000, '10.0.22000.197')]
+- name: _SdkPackageVersion_22621
+  value: $[coalesce(variables.SdkPackageVersion_22621, '10.0.22621.3233')]
+- name: _SdkPackageVersion_26100
+  value: $[coalesce(variables.SdkPackageVersion_26100, '10.0.26100.7705')]
+
+# Additional NuGet feed for SDK Contracts packages.
+# Set SdkNuGetFeed at queue time to a feed URL to use it alongside the default feed.
+- name: _SdkNuGetFeed
+  value: $[coalesce(variables.SdkNuGetFeed, '')]
+
+# Additional SDK build for a new version not yet in the default list.
+# Set both variables at queue time to build a projection for the new version.
+- name: _AdditionalSdkBuild
+  value: $[coalesce(variables.AdditionalSdkBuild, '')]
+- name: _AdditionalSdkPackageVersion
+  value: $[coalesce(variables.AdditionalSdkPackageVersion, '')]

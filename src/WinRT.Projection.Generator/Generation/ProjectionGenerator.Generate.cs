@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using AsmResolver;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionGenerator.Errors;
 using WindowsRuntime.ProjectionGenerator.Resolvers;
@@ -126,6 +127,8 @@ internal partial class ProjectionGenerator
 
         PathAssemblyResolver resolver = new(args.ReferenceAssemblyPaths);
 
+        bool isWindowsSdkMode = args.WindowsSdkOnly || args.WindowsUIXamlProjection;
+
         foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
         {
             ModuleDefinition moduleDefinition = ModuleDefinition.FromFile(referenceAssemblyPath, resolver.ReaderParameters);
@@ -136,20 +139,37 @@ internal partial class ProjectionGenerator
                 continue;
             }
 
+            bool isWindowsSdk = IsWindowsSdkAssembly(moduleDefinition);
+
+            // By default, Windows SDK types are excluded (they go into WinRT.Sdk.Projection.dll
+            // and WinRT.Sdk.Xaml.Projection.dll). In WindowsSdkOnly mode where we are generating
+            // those dlls is when we will include them.
+            if (isWindowsSdk && !isWindowsSdkMode)
+            {
+                // Track this as a projection assembly so it's excluded from compilation references.
+                // WinRT.Sdk.Projection.dll and WinRT.Sdk.Xaml.Projection.dll replace these types.
+                _ = projectionReferenceAssemblies.Add(referenceAssemblyPath);
+                continue;
+            }
+
+            // Skip other projection binaries we may get.
+            if (!isWindowsSdk && isWindowsSdkMode)
+            {
+                continue;
+            }
+
             _ = projectionReferenceAssemblies.Add(referenceAssemblyPath);
 
             if (moduleDefinition.Assembly is not null)
             {
-                if (moduleDefinition.Assembly.Name == "Microsoft.Windows.SDK.NET")
+                if (isWindowsSdk)
                 {
-                    // Given we know this is the Windows SDK projection and types will be only from that namespace,
-                    // we just include that namespace rather than going through the types.
-                    fileStream.WriteLine($"-include Windows");
-                    fileStream.WriteLine($"-include WinRT.Interop");
+                    // Write the filtes for the Windows SDK projection mode.
+                    WriteWindowsSdkFilters(fileStream, args.WindowsUIXamlProjection);
 
                     continue;
                 }
-                else if (moduleDefinition.Assembly.Name == "Microsoft.WinUI")
+                else if (moduleDefinition.Assembly!.Name == "Microsoft.WinUI")
                 {
                     // In addition to projecting the individual types, make sure
                     // the additions get included by including the namespace.
@@ -163,6 +183,13 @@ internal partial class ProjectionGenerator
             }
         }
 
+        // In Windows SDK mode, if no Microsoft.Windows.SDK.NET reference assembly was found
+        // (e.g., pipeline builds that pass WinMDs directly), hardcode the includes.
+        if (isWindowsSdkMode && projectionReferenceAssemblies.Count == 0)
+        {
+            WriteWindowsSdkFilters(fileStream, args.WindowsUIXamlProjection);
+        }
+
         fileStream.WriteLine($"-target {args.TargetFramework}");
         fileStream.WriteLine($"-input {args.WindowsMetadata}");
         fileStream.WriteLine($"-output \"{outputFolder}\"");
@@ -170,6 +197,52 @@ internal partial class ProjectionGenerator
         foreach (string winmdPath in args.WinMDPaths)
         {
             fileStream.WriteLine($"-input \"{winmdPath}\"");
+        }
+    }
+
+    /// <summary>
+    /// Writes the cswinrt.exe include/exclude filter directives for the Windows SDK projection.
+    /// </summary>
+    /// <param name="writer">The RSP file writer.</param>
+    /// <param name="xamlProjection">
+    /// When <c>true</c>, writes the Windows.UI.Xaml filter set.
+    /// When <c>false</c>, writes the base Windows SDK filter set.
+    /// </param>
+    private static void WriteWindowsSdkFilters(StreamWriter writer, bool xamlProjection)
+    {
+        if (xamlProjection)
+        {
+            writer.WriteLine("-exclude Windows");
+            writer.WriteLine("-include Windows.UI.Colors");
+            writer.WriteLine("-include Windows.UI.ColorHelper");
+            writer.WriteLine("-include Windows.UI.IColorHelper");
+            writer.WriteLine("-include Windows.UI.IColors");
+            writer.WriteLine("-include Windows.UI.Text.FontWeights");
+            writer.WriteLine("-include Windows.UI.Text.IFontWeights");
+            writer.WriteLine("-include Windows.UI.Xaml");
+            writer.WriteLine("-include Windows.ApplicationModel.Store.Preview.WebAuthenticationCoreManagerHelper");
+            writer.WriteLine("-include Windows.ApplicationModel.Store.Preview.IWebAuthenticationCoreManagerHelper");
+            writer.WriteLine("-exclude Windows.UI.Xaml.Interop");
+            writer.WriteLine("-exclude Windows.UI.Xaml.Data.BindableAttribute");
+            writer.WriteLine("-exclude Windows.UI.Xaml.Markup.ContentPropertyAttribute");
+        }
+        else
+        {
+            writer.WriteLine("-include Windows");
+            writer.WriteLine("-include WinRT.Interop");
+
+            writer.WriteLine("-exclude Windows.UI.Colors");
+            writer.WriteLine("-exclude Windows.UI.ColorHelper");
+            writer.WriteLine("-exclude Windows.UI.IColorHelper");
+            writer.WriteLine("-exclude Windows.UI.IColors");
+            writer.WriteLine("-exclude Windows.UI.Text.FontWeights");
+            writer.WriteLine("-exclude Windows.UI.Text.IFontWeights");
+            writer.WriteLine("-exclude Windows.UI.Xaml");
+            writer.WriteLine("-exclude Windows.ApplicationModel.Store.Preview.WebAuthenticationCoreManagerHelper");
+            writer.WriteLine("-exclude Windows.ApplicationModel.Store.Preview.IWebAuthenticationCoreManagerHelper");
+            writer.WriteLine("-include Windows.UI.Xaml.Interop");
+            writer.WriteLine("-include Windows.UI.Xaml.Data.BindableAttribute");
+            writer.WriteLine("-include Windows.UI.Xaml.Markup.ContentPropertyAttribute");
         }
     }
 
@@ -191,5 +264,18 @@ internal partial class ProjectionGenerator
     private static bool IsWindowsRuntimeReferenceAssembly(ModuleDefinition moduleDefinition)
     {
         return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeReferenceAssemblyAttribute"u8);
+    }
+
+    /// <summary>
+    /// Checks if the specified module definition represents a Windows SDK assembly
+    /// (i.e. <c>Microsoft.Windows.SDK.NET</c> or <c>Microsoft.Windows.UI.Xaml</c>).
+    /// </summary>
+    /// <param name="moduleDefinition">The module definition to check.</param>
+    /// <returns><c>true</c> if the module is a Windows SDK assembly; otherwise, <c>false</c>.</returns>
+    private static bool IsWindowsSdkAssembly(ModuleDefinition moduleDefinition)
+    {
+        return
+            (moduleDefinition.Assembly?.Name is Utf8String sdkName && sdkName.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET"u8)) ||
+            (moduleDefinition.Assembly?.Name is Utf8String xamlName && xamlName.AsSpan().SequenceEqual("Microsoft.Windows.UI.Xaml"u8));
     }
 }

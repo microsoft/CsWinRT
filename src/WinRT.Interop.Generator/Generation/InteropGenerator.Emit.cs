@@ -47,7 +47,9 @@ internal partial class InteropGenerator
         InteropReferences interopReferences = new(module.CorLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
         InteropDefinitions interopDefinitions = new(
             interopReferences: interopReferences,
-            windowsRuntimeProjectionModule: discoveryState.WinRTProjectionModuleDefinition!,
+            windowsRuntimeSdkProjectionModule: discoveryState.WinRTSdkProjectionModuleDefinition!,
+            windowsRuntimeSdkXamlProjectionModule: discoveryState.WinRTSdkXamlProjectionModuleDefinition,
+            windowsRuntimeProjectionModule: discoveryState.WinRTProjectionModuleDefinition,
             windowsRuntimeComponentModule: discoveryState.WinRTComponentModuleDefinition);
 
         args.Token.ThrowIfCancellationRequested();
@@ -2586,6 +2588,9 @@ internal partial class InteropGenerator
 
             // Next, emit all the '[IgnoresAccessChecksTo]' attributes for each type
             IgnoresAccessChecksToBuilder.AssemblyAttributes(
+                winRTSdkXamlProjectionModule: discoveryState.WinRTSdkXamlProjectionModuleDefinition,
+                winRTProjectionModule: discoveryState.WinRTProjectionModuleDefinition,
+                winRTComponentModule: discoveryState.WinRTComponentModuleDefinition,
                 referencePathModules: discoveryState.ModuleDefinitions.Values.OrderByFullyQualifiedName(),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
