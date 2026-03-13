@@ -69,6 +69,23 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     /// </summary>
     public ITaskItem[]? AdditionalArguments { get; set; }
 
+    /// <summary>
+    /// Gets or sets the output assembly name. Defaults to 'WinRT.Projection'.
+    /// </summary>
+    public string? AssemblyName { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to only include the Windows SDK projection (Windows and WinRT.Interop namespaces).
+    /// When false (the default), Windows SDK types are excluded.
+    /// </summary>
+    public bool WindowsSdkOnly { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to generate the Windows.UI.Xaml projection (WinRT.Sdk.Xaml.Projection).
+    /// When true, uses the XAML namespace filters and implies <see cref="WindowsSdkOnly"/> behavior.
+    /// </summary>
+    public bool WindowsUIXamlProjection { get; set; }
+
     /// <inheritdoc/>
     protected override string ToolName => "cswinrtprojectiongen.exe";
 
@@ -175,6 +192,21 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         AppendResponseFileCommand(args, "--target-framework", TargetFramework!);
         AppendResponseFileCommand(args, "--windows-metadata", WindowsMetadata!);
         AppendResponseFileCommand(args, "--cswinrt-exe-path", CsWinRTExePath!);
+
+        if (!string.IsNullOrEmpty(AssemblyName))
+        {
+            AppendResponseFileCommand(args, "--assembly-name", AssemblyName!);
+        }
+
+        if (WindowsSdkOnly)
+        {
+            AppendResponseFileCommand(args, "--windows-sdk-only", "true");
+        }
+
+        if (WindowsUIXamlProjection)
+        {
+            AppendResponseFileCommand(args, "--windows-ui-xaml-projection", "true");
+        }
 
         // Add any additional arguments that are not statically known
         foreach (ITaskItem additionalArgument in AdditionalArguments ?? [])

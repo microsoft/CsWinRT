@@ -69,6 +69,20 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <_CsWinRTGeneratorMergedProjectionAssemblyPath>$(IntermediateOutputPath)WinRT.Projection.dll</_CsWinRTGeneratorMergedProjectionAssemblyPath>
     <_CsWinRTGeneratorMergedProjectionOutputAssemblyPath>WinRT.Projection.dll</_CsWinRTGeneratorMergedProjectionOutputAssemblyPath>
 
+    <!--
+      Default property values for the Windows SDK projection (`WinRT.Sdk.Projection.dll`).
+      This is either a pre-built impl assembly from the package or generated at build time.
+    -->
+    <_CsWinRTSdkProjectionAssemblyPath>$(IntermediateOutputPath)WinRT.Sdk.Projection.dll</_CsWinRTSdkProjectionAssemblyPath>
+    <_CsWinRTSdkProjectionOutputAssemblyPath>WinRT.Sdk.Projection.dll</_CsWinRTSdkProjectionOutputAssemblyPath>
+
+    <!--
+      Default property values for the Windows.UI.Xaml projection (`WinRT.Sdk.Xaml.Projection.dll`).
+      Only used when CsWinRTUseWindowsUIXamlProjections is true.
+    -->
+    <_CsWinRTSdkXamlAssemblyPath Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">$(IntermediateOutputPath)WinRT.Sdk.Xaml.Projection.dll</_CsWinRTSdkXamlAssemblyPath>
+    <_CsWinRTSdkXamlOutputAssemblyPath Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">WinRT.Sdk.Xaml.Projection.dll</_CsWinRTSdkXamlOutputAssemblyPath>
+
     <DefineConstants Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">$(DefineConstants);CSWINRT_REFERENCE_PROJECTION</DefineConstants>    
   </PropertyGroup>
 
@@ -156,6 +170,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
       ImplementationAssemblyPaths="@(ReferencePath)"      
       OutputAssemblyPath="@(IntermediateAssembly)"
+      WinRTSdkProjectionAssemblyPath="$(_CsWinRTSdkProjectionAssemblyPath)"
+      WinRTSdkXamlProjectionAssemblyPath="$(_CsWinRTSdkXamlAssemblyPath)"
       WinRTProjectionAssemblyPath="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
       InteropAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
@@ -292,7 +308,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTMergedProjectionGenerator"
-    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
+    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
@@ -304,11 +320,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <_WinMDPathsList Include="$([MSBuild]::ValueOrDefault('%(_ReferencePathsWithWinMDs.CsWinRTInputs)', '').Split(';'))"
                          Condition="'%(_ReferencePathsWithWinMDs.CsWinRTInputs)' != ''" />
         <_WinMDPathsList Include="$(CsWinRTInteropMetadata)" />
+        <_MergedProjectionReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" />
+        <_MergedProjectionReferenceAssemblyPaths Include="$(_CsWinRTSdkProjectionAssemblyPath)" />
+        <_MergedProjectionReferenceAssemblyPaths Include="$(_CsWinRTSdkXamlAssemblyPath)" Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'" />
     </ItemGroup>
 
       <!-- Invoke 'cswinrtprojectiongen' -->
     <RunCsWinRTMergedProjectionGenerator
-      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
+      ReferenceAssemblyPaths="@(_MergedProjectionReferenceAssemblyPaths)"
       GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       WinMDPaths="@(_WinMDPathsList)"
       TargetFramework="$(CsWinRTExeTFM)"
@@ -351,6 +370,183 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Append to 'FileWrites' so the forwarder .dll will be removed on clean -->
     <ItemGroup>
       <FileWrites Include="@(CsWinRTGeneratorMergedProjectionPath)"/>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    ============================================================
+                 _RunCsWinRTSdkProjectionGenerator
+
+    Produces 'WinRT.Sdk.Projection.dll' containing the Windows SDK
+    projection (Windows.* and WinRT.Interop.* namespaces). If a
+    pre-built impl assembly exists in the package, it is used directly.
+    Otherwise, 'cswinrtprojectiongen' is invoked to generate it.
+    ============================================================
+  -->
+  <Target
+    Name="_RunCsWinRTSdkProjectionGenerator"
+    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
+    BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
+    Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
+    Outputs="$(_CsWinRTSdkProjectionAssemblyPath)"
+    Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
+
+    <!-- Determine the OS build number from the target platform version (e.g. 10.0.22621.0 -> 22621) -->
+    <PropertyGroup>
+        <_SdkProjectionOsBuild Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.Version]::Parse('$(EffectiveTargetPlatformVersion)').Build)</_SdkProjectionOsBuild>
+        <_SdkProjectionImplPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'impl', 'net10', '$(_SdkProjectionOsBuild)', 'WinRT.Sdk.Projection.dll'))</_SdkProjectionImplPath>
+        <_SdkProjectionImplExists Condition="Exists('$(_SdkProjectionImplPath)')">true</_SdkProjectionImplExists>
+    </PropertyGroup>
+
+    <!-- If pre-built impl assembly exists - copy it to the intermediate output -->
+    <Copy
+      SourceFiles="$(_SdkProjectionImplPath)"
+      DestinationFiles="$(_CsWinRTSdkProjectionAssemblyPath)"
+      Condition="'$(_SdkProjectionImplExists)' == 'true'" />
+
+    <!-- If no pre-built impl - generate it using cswinrtprojectiongen -->
+    <ItemGroup Condition="'$(_SdkProjectionImplExists)' != 'true'">
+        <_SdkWinMDPathsList Include="@(CsWinRTInputs)" />
+        <_SdkReferencePathsWithWinMDs Include="@(ReferencePathWithRefAssemblies)" Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
+        <_SdkWinMDPathsList Include="$([MSBuild]::ValueOrDefault('%(_SdkReferencePathsWithWinMDs.CsWinRTInputs)', '').Split(';'))"
+                         Condition="'%(_SdkReferencePathsWithWinMDs.CsWinRTInputs)' != ''" />
+        <_SdkWinMDPathsList Include="$(CsWinRTInteropMetadata)" />
+    </ItemGroup>
+
+    <RunCsWinRTMergedProjectionGenerator
+      Condition="'$(_SdkProjectionImplExists)' != 'true'"
+      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
+      GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
+      WinMDPaths="@(_SdkWinMDPathsList)"
+      TargetFramework="$(CsWinRTExeTFM)"
+      WindowsMetadata="$(CsWinRTWindowsMetadata)"      
+      CsWinRTExePath="$(CsWinRTExe)"
+      AssemblyName="WinRT.Sdk.Projection"
+      WindowsSdkOnly="true"
+      CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
+      CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+      AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
+      StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
+      StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
+
+    <!-- Set the metadata for the SDK projection .dll item -->
+    <ItemGroup>
+      <CsWinRTSdkProjectionPath Include="$(_CsWinRTSdkProjectionAssemblyPath)">
+        <AssemblyName>WinRT.Sdk.Projection</AssemblyName>
+        <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+        <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        <IncludeRuntimeDependency>true</IncludeRuntimeDependency>
+        <Private>true</Private>
+        <MSBuildSourceTargetName>_RunCsWinRTSdkProjectionGenerator</MSBuildSourceTargetName>
+        <Platforms>AnyCPU</Platforms>
+      </CsWinRTSdkProjectionPath>
+    </ItemGroup>
+
+    <!-- Add the SDK projection .dll to the required output groups -->
+    <ItemGroup>
+      <ReferencePath Include="@(CsWinRTSdkProjectionPath)" />
+        
+      <ReferenceCopyLocalPaths Include="@(CsWinRTSdkProjectionPath)" />
+        
+      <_SourceItemsToCopyToOutputDirectory
+        Include="@(CsWinRTSdkProjectionPath)"
+        TargetPath="$(_CsWinRTSdkProjectionOutputAssemblyPath)" />
+    </ItemGroup>
+
+    <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
+    <ItemGroup>
+      <FileWrites Include="@(CsWinRTSdkProjectionPath)"/>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    ============================================================
+               _RunCsWinRTSdkXamlProjectionGenerator
+
+    Produces 'WinRT.Sdk.Xaml.Projection.dll' containing the Windows.UI.Xaml
+    projection. Only runs when CsWinRTUseWindowsUIXamlProjections
+    is true. If a pre-built impl assembly exists in the package, it is
+    used directly. Otherwise, 'cswinrtprojectiongen' is invoked.
+    ============================================================
+  -->
+  <Target
+    Name="_RunCsWinRTSdkXamlProjectionGenerator"
+    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
+    BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
+    Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
+    Outputs="$(_CsWinRTSdkXamlAssemblyPath)"
+    Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">
+
+    <!-- Determine the OS build number from the target platform version (e.g. 10.0.22621.0 -> 22621) -->
+    <PropertyGroup>
+        <_SdkXamlOsBuild Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.Version]::Parse('$(EffectiveTargetPlatformVersion)').Build)</_SdkXamlOsBuild>
+        <_SdkXamlImplPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'impl', 'net10', '$(_SdkXamlOsBuild)', 'WinRT.Sdk.Xaml.Projection.dll'))</_SdkXamlImplPath>
+        <_SdkXamlImplExists Condition="Exists('$(_SdkXamlImplPath)')">true</_SdkXamlImplExists>
+    </PropertyGroup>
+
+    <!-- If pre-built impl assembly exists - copy it to the intermediate output -->
+    <Copy
+      SourceFiles="$(_SdkXamlImplPath)"
+      DestinationFiles="$(_CsWinRTSdkXamlAssemblyPath)"
+      Condition="'$(_SdkXamlImplExists)' == 'true'" />
+
+    <!-- If no pre-built impl - generate it using cswinrtprojectiongen -->
+    <ItemGroup Condition="'$(_SdkXamlImplExists)' != 'true'">
+        <_SdkXamlWinMDPathsList Include="@(CsWinRTInputs)" />
+        <_SdkXamlReferencePathsWithWinMDs Include="@(ReferencePathWithRefAssemblies)" Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
+        <_SdkXamlWinMDPathsList Include="$([MSBuild]::ValueOrDefault('%(_SdkXamlReferencePathsWithWinMDs.CsWinRTInputs)', '').Split(';'))"
+                         Condition="'%(_SdkXamlReferencePathsWithWinMDs.CsWinRTInputs)' != ''" />
+        <_SdkXamlWinMDPathsList Include="$(CsWinRTInteropMetadata)" />
+        <_SdkXamlProjectionReferenceAssemblyPaths Include="@(ReferencePathWithRefAssemblies)" />
+        <_SdkXamlProjectionReferenceAssemblyPaths Include="$(_CsWinRTSdkProjectionAssemblyPath)" />
+    </ItemGroup>
+
+    <RunCsWinRTMergedProjectionGenerator
+      Condition="'$(_SdkXamlImplExists)' != 'true'"
+      ReferenceAssemblyPaths="@(_SdkXamlProjectionReferenceAssemblyPaths)"
+      GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
+      WinMDPaths="@(_SdkXamlWinMDPathsList)"
+      TargetFramework="$(CsWinRTExeTFM)"
+      WindowsMetadata="$(CsWinRTWindowsMetadata)"
+      CsWinRTExePath="$(CsWinRTExe)"
+      AssemblyName="WinRT.Sdk.Xaml.Projection"
+      WindowsSdkOnly="true"
+      WindowsUIXamlProjection="true"
+      CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
+      CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+      AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
+      StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
+      StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
+
+    <!-- Set the metadata for the SDK XAML .dll item -->
+    <ItemGroup>
+      <CsWinRTSdkXamlPath Include="$(_CsWinRTSdkXamlAssemblyPath)">
+        <AssemblyName>WinRT.Sdk.Xaml.Projection</AssemblyName>
+        <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+        <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        <IncludeRuntimeDependency>true</IncludeRuntimeDependency>
+        <Private>true</Private>
+        <MSBuildSourceTargetName>_RunCsWinRTSdkXamlProjectionGenerator</MSBuildSourceTargetName>
+        <Platforms>AnyCPU</Platforms>
+      </CsWinRTSdkXamlPath>
+    </ItemGroup>
+
+    <!-- Add the SDK XAML .dll to the required output groups -->
+    <ItemGroup>
+      <ReferencePath Include="@(CsWinRTSdkXamlPath)" />
+        
+      <ReferenceCopyLocalPaths Include="@(CsWinRTSdkXamlPath)" />
+        
+      <_SourceItemsToCopyToOutputDirectory
+        Include="@(CsWinRTSdkXamlPath)"
+        TargetPath="$(_CsWinRTSdkXamlOutputAssemblyPath)" />
+    </ItemGroup>
+
+    <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
+    <ItemGroup>
+      <FileWrites Include="@(CsWinRTSdkXamlPath)"/>
     </ItemGroup>
   </Target>
 </Project>

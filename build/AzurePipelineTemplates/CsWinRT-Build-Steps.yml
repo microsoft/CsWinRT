@@ -6,6 +6,15 @@ parameters:
   - name: SetupForBuildOnly
     type: boolean
     default: false
+  - name: SdkProjectionVersions
+    type: object
+    default:
+      - 17763
+      - 18362
+      - 19041
+      - 22000
+      - 22621
+      - 26100
     
 steps:
   # Setup remote for source link to pick up
@@ -311,3 +320,56 @@ steps:
           WinRT.Generator.Tasks.dll
           WinRT.Generator.Tasks.pdb
         TargetFolder: $(StagingFolder)\netstandard2.0
+
+    # Build and stage merged Windows SDK projections for each supported OS version.
+    # Package versions come from pipeline variables (SdkPackageVersion_XXXXX), which can be
+    # overridden at queue time. Defaults are defined in CsWinRT-Variables.yml.
+    - ${{ each sdkVersion in parameters.SdkProjectionVersions }}:
+      - task: VSBuild@1
+        displayName: Build WinRT.Sdk.Projection (${{ sdkVersion }})
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
+        inputs:
+          solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
+          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }} /p:SdkPackageVersion=$(_SdkPackageVersion_${{ sdkVersion }}) /p:RestoreAdditionalProjectSources=$(_SdkNuGetFeed) /p:BuildToolArch=$(CsWinRTBuildToolsArch)
+          platform: x86
+          configuration: Release
+
+      - task: VSBuild@1
+        displayName: Build WinRT.Sdk.Xaml.Projection (${{ sdkVersion }})
+        condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
+        inputs:
+          solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
+          msbuildArgs: /restore /p:WindowsSdkBuild=${{ sdkVersion }} /p:SdkPackageVersion=$(_SdkPackageVersion_${{ sdkVersion }}) /p:WindowsSdkXaml=true /p:RestoreAdditionalProjectSources=$(_SdkNuGetFeed) /p:BuildToolArch=$(CsWinRTBuildToolsArch)
+          platform: x86
+          configuration: Release
+
+    # Build for additional OS version thats specified via variable to handle ones not added to the default list yet.
+    # Set variables AdditionalSdkBuild (e.g. 28000) and AdditionalSdkPackageVersion (e.g. 10.0.28000.100)
+    # at queue time to enable these steps.
+    - task: VSBuild@1
+      displayName: Build WinRT.Sdk.Projection ($(_AdditionalSdkBuild))
+      condition: and(succeeded(), ne(variables['_AdditionalSdkBuild'], ''), ne(variables['_AdditionalSdkPackageVersion'], ''), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
+        msbuildArgs: /restore /p:WindowsSdkBuild=$(_AdditionalSdkBuild) /p:SdkPackageVersion=$(_AdditionalSdkPackageVersion) /p:RestoreAdditionalProjectSources=$(_SdkNuGetFeed) /p:BuildToolArch=$(CsWinRTBuildToolsArch)
+        platform: x86
+        configuration: Release
+
+    - task: VSBuild@1
+      displayName: Build WinRT.Sdk.Xaml.Projection ($(_AdditionalSdkBuild))
+      condition: and(succeeded(), ne(variables['_AdditionalSdkBuild'], ''), ne(variables['_AdditionalSdkPackageVersion'], ''), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj
+        msbuildArgs: /restore /p:WindowsSdkBuild=$(_AdditionalSdkBuild) /p:SdkPackageVersion=$(_AdditionalSdkPackageVersion) /p:WindowsSdkXaml=true /p:RestoreAdditionalProjectSources=$(_SdkNuGetFeed) /p:BuildToolArch=$(CsWinRTBuildToolsArch)
+        platform: x86
+        configuration: Release
+
+    - task: CopyFiles@2
+      displayName: Stage WinRT.Sdk.Projection (all SDK versions)
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Sdk.Projection\bin\Release
+        Contents: |
+          *\WinRT.Sdk.Projection.dll
+          *\WinRT.Sdk.Xaml.Projection.dll
+        TargetFolder: $(StagingFolder)\impl

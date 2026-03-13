@@ -79,10 +79,10 @@ internal static class InteropImplTypeResolver
         InteropReferences interopReferences)
     {
         // Determine the right assembly reference for this projected type
-        AssemblyReference projectionAssembly = type.IsProjectedWindowsSdkXamlType
-            ? interopReferences.WinRTSdkXamlProjection
-            : type.IsProjectedWindowsSdkType
-                ? interopReferences.WinRTSdkProjection
+        AssemblyReference projectionAssembly = type.IsProjectedWindowsSdkType
+            ? interopReferences.WinRTSdkProjection
+            : type.IsProjectedWindowsSdkXamlType
+                ? interopReferences.WinRTSdkXamlProjection
                 : interopReferences.WinRTProjection;
 
         // Finally, we have the base scenario of simple non-generic projected Windows Runtime interface types.
