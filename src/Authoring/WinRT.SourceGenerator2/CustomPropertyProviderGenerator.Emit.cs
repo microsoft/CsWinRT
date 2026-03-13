@@ -83,24 +83,25 @@ public partial class CustomPropertyProviderGenerator
                 }
 
                 writer.WriteLine("return name switch");
+                writer.WriteLine("{");
+                writer.IncreaseIndent();
 
-                using (writer.WriteBlock())
+                // Emit a switch case for each available property
+                foreach (CustomPropertyInfo propertyInfo in info.CustomProperties)
                 {
-                    // Emit a switch case for each available property
-                    foreach (CustomPropertyInfo propertyInfo in info.CustomProperties)
+                    if (propertyInfo.IsIndexer)
                     {
-                        if (propertyInfo.IsIndexer)
-                        {
-                            continue;
-                        }
-
-                        // Return the cached property implementation for the current custom property
-                        writer.WriteLine($"nameof({propertyInfo.Name}) => global::WindowsRuntime.Xaml.Generated.{info.TypeHierarchy.Hierarchy[0].QualifiedName}_{propertyInfo.Name}.Instance,");
+                        continue;
                     }
 
-                    // If there's no matching property, just return 'null'
-                    writer.WriteLine("_ => null");
+                    // Return the cached property implementation for the current custom property
+                    writer.WriteLine($"nameof({propertyInfo.Name}) => global::WindowsRuntime.Xaml.Generated.{info.TypeHierarchy.Hierarchy[0].QualifiedName}_{propertyInfo.Name}.Instance,");
                 }
+
+                // If there's no matching property, just return 'null'
+                writer.WriteLine("_ => null");
+                writer.DecreaseIndent();
+                writer.WriteLine("};");
             }
         }
 
@@ -189,9 +190,9 @@ public partial class CustomPropertyProviderGenerator
             {
                 // Using declarations for well-known namespaces we can use with simple names
                 writer.WriteLine("using global::System;");
-                writer.WriteLine("using global::System.CodeDom.Compiler");
-                writer.WriteLine("using global::System.Diagnostics");
-                writer.WriteLine("using global::System.Diagnostics.CodeAnalysis");
+                writer.WriteLine("using global::System.CodeDom.Compiler;");
+                writer.WriteLine("using global::System.Diagnostics;");
+                writer.WriteLine("using global::System.Diagnostics.CodeAnalysis;");
                 writer.WriteLine($"using global::{info.FullyQualifiedCustomPropertyProviderInterfaceName.Replace(".ICustomPropertyProvider", "")};");
                 writer.WriteLine();
 

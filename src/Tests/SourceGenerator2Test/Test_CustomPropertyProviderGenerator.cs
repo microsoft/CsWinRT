@@ -52,7 +52,7 @@ public class Test_CustomPropertyProviderGenerator
                             nameof(Name) => global::WindowsRuntime.Xaml.Generated.MyClass_Name.Instance,
                             nameof(Age) => global::WindowsRuntime.Xaml.Generated.MyClass_Age.Instance,
                             _ => null
-                        }
+                        };
                     }
 
                     /// <inheritdoc/>
@@ -77,9 +77,9 @@ public class Test_CustomPropertyProviderGenerator
             namespace WindowsRuntime.Xaml.Generated
             {
                 using global::System;
-                using global::System.CodeDom.Compiler
-                using global::System.Diagnostics
-                using global::System.Diagnostics.CodeAnalysis
+                using global::System.CodeDom.Compiler;
+                using global::System.Diagnostics;
+                using global::System.Diagnostics.CodeAnalysis;
                 using global::Microsoft.UI.Xaml.Data;
 
                 /// <summary>
@@ -324,7 +324,7 @@ public class Test_CustomPropertyProviderGenerator
                             nameof(Name) => global::WindowsRuntime.Xaml.Generated.MyClass_Name.Instance,
                             nameof(Age) => global::WindowsRuntime.Xaml.Generated.MyClass_Age.Instance,
                             _ => null
-                        }
+                        };
                     }
 
                     /// <inheritdoc/>
@@ -344,9 +344,9 @@ public class Test_CustomPropertyProviderGenerator
             namespace WindowsRuntime.Xaml.Generated
             {
                 using global::System;
-                using global::System.CodeDom.Compiler
-                using global::System.Diagnostics
-                using global::System.Diagnostics.CodeAnalysis
+                using global::System.CodeDom.Compiler;
+                using global::System.Diagnostics;
+                using global::System.Diagnostics.CodeAnalysis;
                 using global::Microsoft.UI.Xaml.Data;
 
                 /// <summary>
@@ -513,9 +513,9 @@ public class Test_CustomPropertyProviderGenerator
             namespace WindowsRuntime.Xaml.Generated
             {
                 using global::System;
-                using global::System.CodeDom.Compiler
-                using global::System.Diagnostics
-                using global::System.Diagnostics.CodeAnalysis
+                using global::System.CodeDom.Compiler;
+                using global::System.Diagnostics;
+                using global::System.Diagnostics.CodeAnalysis;
                 using global::Microsoft.UI.Xaml.Data;
 
                 /// <summary>
@@ -607,7 +607,7 @@ public class Test_CustomPropertyProviderGenerator
                         {
                             nameof(Name) => global::WindowsRuntime.Xaml.Generated.MyClass_Name.Instance,
                             _ => null
-                        }
+                        };
                     }
 
                     /// <inheritdoc/>
@@ -627,9 +627,9 @@ public class Test_CustomPropertyProviderGenerator
             namespace WindowsRuntime.Xaml.Generated
             {
                 using global::System;
-                using global::System.CodeDom.Compiler
-                using global::System.Diagnostics
-                using global::System.Diagnostics.CodeAnalysis
+                using global::System.CodeDom.Compiler;
+                using global::System.Diagnostics;
+                using global::System.Diagnostics.CodeAnalysis;
                 using global::Microsoft.UI.Xaml.Data;
 
                 /// <summary>
@@ -721,7 +721,7 @@ public class Test_CustomPropertyProviderGenerator
                         {
                             nameof(Name) => global::WindowsRuntime.Xaml.Generated.MyClass_Name.Instance,
                             _ => null
-                        }
+                        };
                     }
 
                     /// <inheritdoc/>
@@ -741,9 +741,9 @@ public class Test_CustomPropertyProviderGenerator
             namespace WindowsRuntime.Xaml.Generated
             {
                 using global::System;
-                using global::System.CodeDom.Compiler
-                using global::System.Diagnostics
-                using global::System.Diagnostics.CodeAnalysis
+                using global::System.CodeDom.Compiler;
+                using global::System.Diagnostics;
+                using global::System.Diagnostics.CodeAnalysis;
                 using global::Microsoft.UI.Xaml.Data;
 
                 /// <summary>
@@ -835,7 +835,7 @@ public class Test_CustomPropertyProviderGenerator
                         {
                             nameof(Count) => global::WindowsRuntime.Xaml.Generated.MyClass_Count.Instance,
                             _ => null
-                        }
+                        };
                     }
 
                     /// <inheritdoc/>
@@ -855,9 +855,9 @@ public class Test_CustomPropertyProviderGenerator
             namespace WindowsRuntime.Xaml.Generated
             {
                 using global::System;
-                using global::System.CodeDom.Compiler
-                using global::System.Diagnostics
-                using global::System.Diagnostics.CodeAnalysis
+                using global::System.CodeDom.Compiler;
+                using global::System.Diagnostics;
+                using global::System.Diagnostics.CodeAnalysis;
                 using global::Microsoft.UI.Xaml.Data;
 
                 /// <summary>
@@ -970,9 +970,9 @@ public class Test_CustomPropertyProviderGenerator
             namespace WindowsRuntime.Xaml.Generated
             {
                 using global::System;
-                using global::System.CodeDom.Compiler
-                using global::System.Diagnostics
-                using global::System.Diagnostics.CodeAnalysis
+                using global::System.CodeDom.Compiler;
+                using global::System.Diagnostics;
+                using global::System.Diagnostics.CodeAnalysis;
                 using global::Microsoft.UI.Xaml.Data;
 
                 /// <summary>
