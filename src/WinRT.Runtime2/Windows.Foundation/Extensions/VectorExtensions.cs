@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Numerics;
 using System.Runtime.Versioning;
-using Windows.Foundation;
 
-namespace System.Numerics;
+namespace Windows.Foundation;
 
 /// <summary>
 /// Provides extension methods for converting between <see cref="Vector2"/> and Windows Foundation types.

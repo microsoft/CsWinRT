@@ -8,8 +8,6 @@ using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
-using Windows.Foundation.Tasks;
-using Windows.Storage.Buffers;
 using Windows.Storage.Streams;
 
 #pragma warning disable CS1573
@@ -108,7 +106,7 @@ internal static class StreamOperationsImplementation
         // TODO: optimize this for external buffers too by using a custom 'Memory<byte>' implementation
         IBuffer dataBuffer = buffer is WindowsRuntimePinnedArrayBuffer or WindowsRuntimeExternalArrayBuffer
             ? buffer
-            : Windows.Storage.Buffers.WindowsRuntimeBuffer.Create((int)uint.Min(buffer.Capacity, (uint)Array.MaxLength));
+            : WindowsRuntimeBuffer.Create((int)uint.Min(buffer.Capacity, (uint)Array.MaxLength));
 
         // Helper with the core read operation logic, that will run inside the returned 'IAsyncOperationWithProgress<IBuffer, uint>' instance
         async Task<IBuffer> ReadCoreAsync(CancellationToken token, IProgress<uint> progress)

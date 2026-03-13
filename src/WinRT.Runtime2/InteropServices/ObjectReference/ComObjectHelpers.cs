@@ -8,7 +8,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Helpers to work with COM objects and query information from them.
 /// </summary>
-internal unsafe partial class ComObjectHelpers
+internal static unsafe class ComObjectHelpers
 {
     /// <summary>
     /// Checks whether a given COM object is free-threaded.

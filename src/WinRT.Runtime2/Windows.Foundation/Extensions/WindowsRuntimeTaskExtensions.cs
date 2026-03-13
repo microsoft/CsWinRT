@@ -10,13 +10,13 @@ using WindowsRuntime.InteropServices;
 
 #pragma warning disable IDE0010
 
-namespace Windows.Foundation.Tasks;
+namespace Windows.Foundation;
 
 /// <summary>
 /// Provides extensions for <see cref="IAsyncInfo"/> types to interoperate with <see cref="Task"/> types.
 /// </summary>
 [SupportedOSPlatform("windows10.0.10240.0")]
-public static class WindowsRuntimeSystemExtensions
+public static class WindowsRuntimeTaskExtensions
 {
     /// <summary>
     /// Creates a <see cref="Task"/> for the asynchronous operation represented by the specified <see cref="IAsyncAction"/> instance.

@@ -3,11 +3,10 @@
 
 using System;
 using System.IO;
-using Windows.Storage.Streams;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 
-namespace Windows.Storage.IO;
+namespace Windows.Storage.Streams;
 
 /// <summary>
 /// Provides extension methods for converting between Windows Runtime streams and managed <see cref="Stream"/> objects.

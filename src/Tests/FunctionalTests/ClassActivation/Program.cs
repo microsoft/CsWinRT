@@ -11,7 +11,6 @@ using TestComponent;
 using TestComponentCSharp;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.Foundation.Tasks;
 using WindowsRuntime.InteropServices;
 
 CustomDisposableTest customDisposableTest = new();

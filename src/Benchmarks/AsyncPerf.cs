@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using BenchmarkComponent;
 using BenchmarkDotNet.Attributes;
-using Windows.Foundation.Tasks;
+using Windows.Foundation;
 
 namespace Benchmarks
 {

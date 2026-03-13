@@ -5,13 +5,12 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using Windows.Storage.Streams;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 
 #pragma warning disable IDE0057
 
-namespace Windows.Storage.Buffers;
+namespace Windows.Storage.Streams;
 
 /// <summary>
 /// Provides extension methods that expose operations on <see cref="IBuffer"/> objects.
