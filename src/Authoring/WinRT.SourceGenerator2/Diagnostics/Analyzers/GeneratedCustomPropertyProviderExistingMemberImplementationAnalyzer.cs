@@ -66,9 +66,15 @@ public sealed class GeneratedCustomPropertyProviderExistingMemberImplementationA
                     INamedTypeSymbol? interfaceType,
                     INamedTypeSymbol generatedCodeAttributeType)
                 {
-                    return
-                        interfaceType is not null &&
-                        !typeSymbol.EnumerateImplementedMembersForInterface(interfaceType).AreAllImplementedByGenerator(generatedCodeAttributeType, nameof(CustomPropertyProviderGenerator));
+                    if (interfaceType is null)
+                    {
+                        return false;
+                    }
+
+                    ISymbol[] implementedMembers = [.. typeSymbol.EnumerateImplementedMembersForInterface(interfaceType)];
+
+                    // Check that we have at least one implemented member, and that not all of them are produced by our generator
+                    return implementedMembers.Length > 0 && !implementedMembers.AreAllImplementedByGenerator(generatedCodeAttributeType, nameof(CustomPropertyProviderGenerator));
                 }
 
                 // Check whether the type has or inherits any 'ICustomPropertyProvider' member implementations.
