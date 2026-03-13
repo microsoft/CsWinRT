@@ -42,9 +42,11 @@ public class Test_CustomPropertyProviderGenerator
                 partial class MyClass : Microsoft.UI.Xaml.Data.ICustomPropertyProvider
                 {
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     global::System.Type Microsoft.UI.Xaml.Data.ICustomPropertyProvider.Type => typeof(MyClass);
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetCustomProperty(string name)
                     {
                         return name switch
@@ -56,6 +58,7 @@ public class Test_CustomPropertyProviderGenerator
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetIndexedProperty(string name, global::System.Type type)
                     {
                         if (type == typeof(int))
@@ -67,6 +70,7 @@ public class Test_CustomPropertyProviderGenerator
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     string Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetStringRepresentation()
                     {
                         return ToString();
@@ -261,21 +265,25 @@ public class Test_CustomPropertyProviderGenerator
                 partial class MyClass : Microsoft.UI.Xaml.Data.ICustomPropertyProvider
                 {
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     global::System.Type Microsoft.UI.Xaml.Data.ICustomPropertyProvider.Type => typeof(MyClass);
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetCustomProperty(string name)
                     {
                         return null;
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetIndexedProperty(string name, global::System.Type type)
                     {
                         return null;
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     string Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetStringRepresentation()
                     {
                         return ToString();
@@ -314,9 +322,11 @@ public class Test_CustomPropertyProviderGenerator
                 partial class MyClass : Microsoft.UI.Xaml.Data.ICustomPropertyProvider
                 {
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     global::System.Type Microsoft.UI.Xaml.Data.ICustomPropertyProvider.Type => typeof(MyClass);
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetCustomProperty(string name)
                     {
                         return name switch
@@ -328,12 +338,14 @@ public class Test_CustomPropertyProviderGenerator
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetIndexedProperty(string name, global::System.Type type)
                     {
                         return null;
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     string Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetStringRepresentation()
                     {
                         return ToString();
@@ -483,15 +495,18 @@ public class Test_CustomPropertyProviderGenerator
                 partial class MyClass : Microsoft.UI.Xaml.Data.ICustomPropertyProvider
                 {
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     global::System.Type Microsoft.UI.Xaml.Data.ICustomPropertyProvider.Type => typeof(MyClass);
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetCustomProperty(string name)
                     {
                         return null;
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetIndexedProperty(string name, global::System.Type type)
                     {
                         if (type == typeof(int))
@@ -503,6 +518,7 @@ public class Test_CustomPropertyProviderGenerator
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     string Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetStringRepresentation()
                     {
                         return ToString();
@@ -598,9 +614,11 @@ public class Test_CustomPropertyProviderGenerator
                 partial class MyClass : Microsoft.UI.Xaml.Data.ICustomPropertyProvider
                 {
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     global::System.Type Microsoft.UI.Xaml.Data.ICustomPropertyProvider.Type => typeof(MyClass);
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetCustomProperty(string name)
                     {
                         return name switch
@@ -611,12 +629,14 @@ public class Test_CustomPropertyProviderGenerator
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetIndexedProperty(string name, global::System.Type type)
                     {
                         return null;
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     string Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetStringRepresentation()
                     {
                         return ToString();
@@ -712,9 +732,11 @@ public class Test_CustomPropertyProviderGenerator
                 partial class MyClass : Microsoft.UI.Xaml.Data.ICustomPropertyProvider
                 {
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     global::System.Type Microsoft.UI.Xaml.Data.ICustomPropertyProvider.Type => typeof(MyClass);
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetCustomProperty(string name)
                     {
                         return name switch
@@ -725,12 +747,14 @@ public class Test_CustomPropertyProviderGenerator
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetIndexedProperty(string name, global::System.Type type)
                     {
                         return null;
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     string Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetStringRepresentation()
                     {
                         return ToString();
@@ -826,9 +850,11 @@ public class Test_CustomPropertyProviderGenerator
                 partial class MyClass : Microsoft.UI.Xaml.Data.ICustomPropertyProvider
                 {
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     global::System.Type Microsoft.UI.Xaml.Data.ICustomPropertyProvider.Type => typeof(MyClass);
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetCustomProperty(string name)
                     {
                         return name switch
@@ -839,12 +865,14 @@ public class Test_CustomPropertyProviderGenerator
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetIndexedProperty(string name, global::System.Type type)
                     {
                         return null;
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     string Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetStringRepresentation()
                     {
                         return ToString();
@@ -940,15 +968,18 @@ public class Test_CustomPropertyProviderGenerator
                 partial class MyClass : Microsoft.UI.Xaml.Data.ICustomPropertyProvider
                 {
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     global::System.Type Microsoft.UI.Xaml.Data.ICustomPropertyProvider.Type => typeof(MyClass);
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetCustomProperty(string name)
                     {
                         return null;
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     Microsoft.UI.Xaml.Data.ICustomProperty Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetIndexedProperty(string name, global::System.Type type)
                     {
                         if (type == typeof(int))
@@ -960,6 +991,7 @@ public class Test_CustomPropertyProviderGenerator
                     }
 
                     /// <inheritdoc/>
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
                     string Microsoft.UI.Xaml.Data.ICustomPropertyProvider.GetStringRepresentation()
                     {
                         return ToString();

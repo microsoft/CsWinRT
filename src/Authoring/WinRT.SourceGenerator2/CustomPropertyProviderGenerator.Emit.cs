@@ -54,10 +54,9 @@ public partial class CustomPropertyProviderGenerator
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
         private static void WriteCustomPropertyProviderType(CustomPropertyProviderInfo info, ref IndentedTextWriter writer)
         {
-            writer.WriteLine($"""
-                /// <inheritdoc/>
-                global::System.Type {info.FullyQualifiedCustomPropertyProviderInterfaceName}.Type => typeof({info.TypeHierarchy.Hierarchy[0].QualifiedName});
-                """, isMultiline: true);
+            writer.WriteLine("/// <inheritdoc/>");
+            writer.WriteGeneratedAttributes(nameof(CustomPropertyProviderGenerator), includeNonUserCodeAttributes: false);
+            writer.WriteLine($"global::System.Type {info.FullyQualifiedCustomPropertyProviderInterfaceName}.Type => typeof({info.TypeHierarchy.Hierarchy[0].QualifiedName});");
         }
 
         /// <summary>
@@ -67,8 +66,9 @@ public partial class CustomPropertyProviderGenerator
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
         private static void WriteCustomPropertyProviderGetCustomProperty(CustomPropertyProviderInfo info, ref IndentedTextWriter writer)
         {
+            writer.WriteLine("/// <inheritdoc/>");
+            writer.WriteGeneratedAttributes(nameof(CustomPropertyProviderGenerator), includeNonUserCodeAttributes: false);
             writer.WriteLine($"""
-                /// <inheritdoc/>
                 {info.FullyQualifiedCustomPropertyInterfaceName} {info.FullyQualifiedCustomPropertyProviderInterfaceName}.GetCustomProperty(string name)
                 """, isMultiline: true);
 
@@ -112,8 +112,9 @@ public partial class CustomPropertyProviderGenerator
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
         private static void WriteCustomPropertyProviderGetIndexedProperty(CustomPropertyProviderInfo info, ref IndentedTextWriter writer)
         {
+            writer.WriteLine("/// <inheritdoc/>");
+            writer.WriteGeneratedAttributes(nameof(CustomPropertyProviderGenerator), includeNonUserCodeAttributes: false);
             writer.WriteLine($"""
-                /// <inheritdoc/>
                 {info.FullyQualifiedCustomPropertyInterfaceName} {info.FullyQualifiedCustomPropertyProviderInterfaceName}.GetIndexedProperty(string name, global::System.Type type)
                 """, isMultiline: true);
 
@@ -160,8 +161,9 @@ public partial class CustomPropertyProviderGenerator
         /// <param name="writer"><inheritdoc cref="IndentedTextWriter.Callback{T}" path="/param[@name='writer']/node()"/></param>
         private static void WriteCustomPropertyProviderGetStringRepresentation(CustomPropertyProviderInfo info, ref IndentedTextWriter writer)
         {
+            writer.WriteLine("/// <inheritdoc/>");
+            writer.WriteGeneratedAttributes(nameof(CustomPropertyProviderGenerator), includeNonUserCodeAttributes: false);
             writer.WriteLine($$"""
-                /// <inheritdoc/>
                 string {{info.FullyQualifiedCustomPropertyProviderInterfaceName}}.GetStringRepresentation()
                 {
                     return ToString();
