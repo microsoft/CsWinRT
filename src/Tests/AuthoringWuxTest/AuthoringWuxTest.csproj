@@ -10,7 +10,7 @@
     <CsWinRTUseWindowsUIXamlProjections>true</CsWinRTUseWindowsUIXamlProjections>
     <!-- CsWinRTEnableLogging helps to diagnose generation issues -->
     <!-- <CsWinRTEnableLogging>true</CsWinRTEnableLogging> -->
-    <!--<CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources>--> 
+    <!-- <CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources> --> 
   </PropertyGroup>
 
   <!-- Same as in https://github.com/dotnet/sdk/pull/41936, but needed here because this project doesn't target a Windows TFM -->
