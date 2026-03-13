@@ -209,6 +209,13 @@ internal partial class InteropGenerator
     {
         try
         {
+            // Optimization: we only need to crawl Windows Runtime reference assemblies for
+            // this, since normal assemblies will never contain projected types we could want.
+            if (module.Assembly is not { IsWindowsRuntimeReferenceAssembly: true })
+            {
+                return;
+            }
+
             foreach (TypeDefinition type in module.GetAllTypes())
             {
                 args.Token.ThrowIfCancellationRequested();
@@ -235,6 +242,14 @@ internal partial class InteropGenerator
     {
         try
         {
+            // Optimization: we only need to crawl assemblies that are not Windows Runtime
+            // reference assemblies, since otherwise they'd only contain projections and no
+            // user-defined types we'd actually need to generate CCW marshalling code for.
+            if (module.Assembly is not { IsWindowsRuntimeReferenceAssembly: false })
+            {
+                return;
+            }
+
             InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
 
             // We can share a single builder when processing all types to reduce allocations
