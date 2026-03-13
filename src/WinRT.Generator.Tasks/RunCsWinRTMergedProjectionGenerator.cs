@@ -150,7 +150,7 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         {
             Architecture.X64 => "x64",
             Architecture.Arm64 => "arm64",
-            _ => "x86"
+            _ => "x64"
         };
 
         // The tool is inside an architecture-specific subfolder, as it's a native binary

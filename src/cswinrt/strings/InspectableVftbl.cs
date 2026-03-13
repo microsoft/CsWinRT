@@ -7,11 +7,14 @@
 [assembly: WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssembly]
 #else
 using System;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
 
 [assembly: DisableRuntimeMarshallingAttribute]
+[assembly: AssemblyMetadata("IsTrimmable", "True")]
+[assembly: AssemblyMetadata("IsAotCompatible", "True")]
 
 namespace WindowsRuntime.InteropServices;
 

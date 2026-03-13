@@ -8773,8 +8773,48 @@ private IObjectReference % => __% ?? Make__%();
         members);
     }
 
+    // Determines whether to emit the impl type with the vtable.
+    // For exclusive interfaces which aren't overridable interfaces that are implemented by unsealed types,
+    // we do not need any of the Do_Abi functions or the vtable logic as we will not create CCWs for them.
+    // The only exception to this is if public_exclusiveto is set.
+    bool emit_impl_type(writer& w, TypeDef const& type)
+    {
+        if (is_exclusive_to(type) && !settings.public_exclusiveto)
+        {
+            bool hasOverridableAttribute = false;
+            auto exclusive_to_type = get_exclusive_to_type(type);
+            for (auto&& iface : exclusive_to_type.InterfaceImpl())
+            {
+                for_typedef(w, get_type_semantics(iface.Interface()), [&](auto interface_type)
+                {
+                    if (type == interface_type && is_overridable(iface))
+                    {
+                        hasOverridableAttribute = true;
+                    }
+                });
+
+                if (hasOverridableAttribute)
+                {
+                    break;
+                }
+            }
+
+            if (!hasOverridableAttribute)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     void write_interface_vftbl(writer& w, TypeDef const& type)
     {
+        if (!emit_impl_type(w, type))
+        {
+            return;
+        }
+
         w.write(R"(
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct %Vftbl
@@ -8800,6 +8840,11 @@ public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;
 
     void write_interface_impl(writer& w, TypeDef const& type)
     {
+        if (!emit_impl_type(w, type))
+        {
+            return;
+        }
+
         w.write(R"(
 public static unsafe class %Impl
 {
