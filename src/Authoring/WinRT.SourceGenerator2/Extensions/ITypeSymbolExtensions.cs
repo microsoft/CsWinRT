@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 
 #pragma warning disable CS1734, IDE0046
@@ -85,12 +86,7 @@ internal static class ITypeSymbolExtensions
         /// <returns>Whether <paramref name="symbol"/> has any implemented members for <paramref name="interfaceType"/>.</returns>
         public bool HasAnyImplementedMembersForInterface(INamedTypeSymbol interfaceType)
         {
-            foreach (ISymbol _ in symbol.EnumerateImplementedMembersForInterface(interfaceType))
-            {
-                return true;
-            }
-
-            return false;
+            return symbol.EnumerateImplementedMembersForInterface(interfaceType).Any();
         }
 
         /// <summary>
