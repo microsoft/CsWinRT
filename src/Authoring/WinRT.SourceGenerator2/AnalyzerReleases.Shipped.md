@@ -10,3 +10,8 @@ CSWINRT2000 | WindowsRuntime.SourceGenerator | Error | Invalid '[GeneratedCustom
 CSWINRT2001 | WindowsRuntime.SourceGenerator | Error | Missing 'partial' for '[GeneratedCustomPropertyProvider]' target type
 CSWINRT2002 | WindowsRuntime.SourceGenerator | Error | 'ICustomPropertyProvider' interface type not available
 CSWINRT2003 | WindowsRuntime.SourceGenerator | Error | Existing 'ICustomPropertyProvider' member implementation
+CSWINRT2004 | WindowsRuntime.SourceGenerator | Error | Null property name in '[GeneratedCustomPropertyProvider]'
+CSWINRT2005 | WindowsRuntime.SourceGenerator | Error | Null indexer type in '[GeneratedCustomPropertyProvider]'
+CSWINRT2006 | WindowsRuntime.SourceGenerator | Error | Property name not found for '[GeneratedCustomPropertyProvider]'
+CSWINRT2007 | WindowsRuntime.SourceGenerator | Error | Indexer type not found for '[GeneratedCustomPropertyProvider]'
+CSWINRT2008 | WindowsRuntime.SourceGenerator | Error | Static indexer for '[GeneratedCustomPropertyProvider]'

@@ -61,4 +61,69 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Types annotated with '[GeneratedCustomPropertyProvider]' must not already have or inherit implementations for any 'ICustomPropertyProvider' members, as the generator will provide them.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when a <see langword="null"/> property name is specified in <c>[GeneratedCustomPropertyProvider]</c>.
+    /// </summary>
+    public static readonly DiagnosticDescriptor GeneratedCustomPropertyProviderNullPropertyName = new(
+        id: "CSWINRT2004",
+        title: "Null property name in '[GeneratedCustomPropertyProvider]'",
+        messageFormat: """A null property name was specified in '[GeneratedCustomPropertyProvider]' on type '{0}'""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Property names specified in '[GeneratedCustomPropertyProvider]' must not be null.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when a <see langword="null"/> indexer type is specified in <c>[GeneratedCustomPropertyProvider]</c>.
+    /// </summary>
+    public static readonly DiagnosticDescriptor GeneratedCustomPropertyProviderNullIndexerType = new(
+        id: "CSWINRT2005",
+        title: "Null indexer type in '[GeneratedCustomPropertyProvider]'",
+        messageFormat: """A null indexer type was specified in '[GeneratedCustomPropertyProvider]' on type '{0}'""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Indexer types specified in '[GeneratedCustomPropertyProvider]' must not be null.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when a property name in <c>[GeneratedCustomPropertyProvider]</c> doesn't match any accessible property.
+    /// </summary>
+    public static readonly DiagnosticDescriptor GeneratedCustomPropertyProviderPropertyNameNotFound = new(
+        id: "CSWINRT2006",
+        title: "Property name not found for '[GeneratedCustomPropertyProvider]'",
+        messageFormat: """The property name '{0}' specified in '[GeneratedCustomPropertyProvider]' on type '{1}' does not match any accessible property""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Property names specified in '[GeneratedCustomPropertyProvider]' must match the name of a public, non-override, non-indexer property on the annotated type.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when an indexer type in <c>[GeneratedCustomPropertyProvider]</c> doesn't match any accessible indexer.
+    /// </summary>
+    public static readonly DiagnosticDescriptor GeneratedCustomPropertyProviderIndexerTypeNotFound = new(
+        id: "CSWINRT2007",
+        title: "Indexer type not found for '[GeneratedCustomPropertyProvider]'",
+        messageFormat: """The indexer type '{0}' specified in '[GeneratedCustomPropertyProvider]' on type '{1}' does not match any accessible indexer""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Indexer types specified in '[GeneratedCustomPropertyProvider]' must match the parameter type of a public, non-override, non-static, single-parameter indexer on the annotated type.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when an indexer type in <c>[GeneratedCustomPropertyProvider]</c> matches a static indexer.
+    /// </summary>
+    public static readonly DiagnosticDescriptor GeneratedCustomPropertyProviderStaticIndexer = new(
+        id: "CSWINRT2008",
+        title: "Static indexer for '[GeneratedCustomPropertyProvider]'",
+        messageFormat: """The indexer type '{0}' specified in '[GeneratedCustomPropertyProvider]' on type '{1}' matches a static indexer, which is not supported""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Indexers used with '[GeneratedCustomPropertyProvider]' must be instance indexers, not static indexers.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
