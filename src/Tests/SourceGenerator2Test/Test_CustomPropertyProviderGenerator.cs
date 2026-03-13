@@ -666,7 +666,7 @@ public class Test_CustomPropertyProviderGenerator
                     /// <inheritdoc/>
                     public void SetValue(object target, object value)
                     {
-                        ((global::MyNamespace.MyClass)target).Name = (string)value;
+                        throw new NotSupportedException();
                     }
 
                     /// <inheritdoc/>
@@ -774,7 +774,7 @@ public class Test_CustomPropertyProviderGenerator
                     /// <inheritdoc/>
                     public object GetValue(object target)
                     {
-                        return ((global::MyNamespace.MyClass)target).Name;
+                        throw new NotSupportedException();
                     }
 
                     /// <inheritdoc/>
@@ -1021,7 +1021,7 @@ public class Test_CustomPropertyProviderGenerator
                     /// <inheritdoc/>
                     public void SetIndexedValue(object target, object value, object index)
                     {
-                        ((global::MyNamespace.MyClass)target)[(int)index] = (string)value;
+                        throw new NotSupportedException();
                     }
                 }
             }

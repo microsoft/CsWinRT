@@ -264,17 +264,46 @@ public partial class CustomPropertyProviderGenerator
                     public Type Type => typeof({{propertyInfo.FullyQualifiedTypeName}});
                     """, isMultiline: true);
 
-                // Emit the right dispatching code depending on whether the property is static
-                if (propertyInfo.IsStatic)
+                writer.WriteLine();
+
+                // Emit 'GetValue' depending on whether the property is readable and whether it's static
+                if (propertyInfo.CanRead && propertyInfo.IsStatic)
                 {
-                    writer.WriteLine();
                     writer.WriteLine($$"""
                         /// <inheritdoc/>
                         public object GetValue(object target)
                         {
                             return {{info.TypeHierarchy.GetFullyQualifiedTypeName()}}.{{propertyInfo.Name}};
                         }
-                        
+                        """, isMultiline: true);
+                }
+                else if (propertyInfo.CanRead)
+                {
+                    writer.WriteLine($$"""
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            return (({{info.TypeHierarchy.GetFullyQualifiedTypeName()}})target).{{propertyInfo.Name}};
+                        }
+                        """, isMultiline: true);
+                }
+                else
+                {
+                    writer.WriteLine("""
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            throw new NotSupportedException();
+                        }
+                        """, isMultiline: true);
+                }
+
+                writer.WriteLine();
+
+                // Emit 'SetValue' depending on whether the property is writable and whether it's static
+                if (propertyInfo.CanWrite && propertyInfo.IsStatic)
+                {
+                    writer.WriteLine($$"""
                         /// <inheritdoc/>
                         public void SetValue(object target, object value)
                         {
@@ -282,20 +311,23 @@ public partial class CustomPropertyProviderGenerator
                         }
                         """, isMultiline: true);
                 }
-                else
+                else if (propertyInfo.CanWrite)
                 {
-                    writer.WriteLine();
                     writer.WriteLine($$"""
-                        /// <inheritdoc/>
-                        public object GetValue(object target)
-                        {
-                            return (({{info.TypeHierarchy.GetFullyQualifiedTypeName()}})target).{{propertyInfo.Name}};
-                        }
-                        
                         /// <inheritdoc/>
                         public void SetValue(object target, object value)
                         {
                             (({{info.TypeHierarchy.GetFullyQualifiedTypeName()}})target).{{propertyInfo.Name}} = ({{propertyInfo.FullyQualifiedTypeName}})value;
+                        }
+                        """, isMultiline: true);
+                }
+                else
+                {
+                    writer.WriteLine("""
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            throw new NotSupportedException();
                         }
                         """, isMultiline: true);
                 }
@@ -377,21 +409,52 @@ public partial class CustomPropertyProviderGenerator
                     }
                     """, isMultiline: true);
 
-                // Emit the indexer property accessors (not supported)
+                // Emit the indexer property accessors, conditionally based on CanRead/CanWrite
                 writer.WriteLine();
-                writer.WriteLine($$"""                    
-                    /// <inheritdoc/>
-                    public object GetIndexedValue(object target, object index)
-                    {
-                        return (({{info.TypeHierarchy.GetFullyQualifiedTypeName()}})target)[({{propertyInfo.FullyQualifiedIndexerTypeName}})index];
-                    }
-                    
-                    /// <inheritdoc/>
-                    public void SetIndexedValue(object target, object value, object index)
-                    {
-                        (({{info.TypeHierarchy.GetFullyQualifiedTypeName()}})target)[({{propertyInfo.FullyQualifiedIndexerTypeName}})index] = ({{propertyInfo.FullyQualifiedTypeName}})value;
-                    }
-                    """, isMultiline: true);
+
+                if (propertyInfo.CanRead)
+                {
+                    writer.WriteLine($$"""                    
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            return (({{info.TypeHierarchy.GetFullyQualifiedTypeName()}})target)[({{propertyInfo.FullyQualifiedIndexerTypeName}})index];
+                        }
+                        """, isMultiline: true);
+                }
+                else
+                {
+                    writer.WriteLine("""
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            throw new NotSupportedException();
+                        }
+                        """, isMultiline: true);
+                }
+
+                writer.WriteLine();
+
+                if (propertyInfo.CanWrite)
+                {
+                    writer.WriteLine($$"""
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            (({{info.TypeHierarchy.GetFullyQualifiedTypeName()}})target)[({{propertyInfo.FullyQualifiedIndexerTypeName}})index] = ({{propertyInfo.FullyQualifiedTypeName}})value;
+                        }
+                        """, isMultiline: true);
+                }
+                else
+                {
+                    writer.WriteLine("""
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            throw new NotSupportedException();
+                        }
+                        """, isMultiline: true);
+                }
             }
         }
     }
