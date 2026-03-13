@@ -174,4 +174,59 @@ public class Test_GeneratedCustomPropertyProviderExistingMemberImplementationAna
 
         await CSharpAnalyzerTest<GeneratedCustomPropertyProviderExistingMemberImplementationAnalyzer>.VerifyAnalyzerAsync(source);
     }
+
+    [TestMethod]
+    public async Task TypeWithGeneratedExplicitInterfaceImplementation_DoesNotWarn()
+    {
+        string source = """
+            using System;
+            using System.CodeDom.Compiler;
+            using Microsoft.UI.Xaml.Data;
+            using WindowsRuntime.Xaml;
+
+            [GeneratedCustomPropertyProvider]
+            public partial class MyType : ICustomPropertyProvider
+            {
+                public string Name { get; set; }
+
+                [GeneratedCode("CustomPropertyProviderGenerator", "1.0.0")]
+                Type ICustomPropertyProvider.Type => typeof(MyType);
+                [GeneratedCode("CustomPropertyProviderGenerator", "1.0.0")]
+                ICustomProperty ICustomPropertyProvider.GetCustomProperty(string name) => null;
+                [GeneratedCode("CustomPropertyProviderGenerator", "1.0.0")]
+                ICustomProperty ICustomPropertyProvider.GetIndexedProperty(string name, Type type) => null;
+                [GeneratedCode("CustomPropertyProviderGenerator", "1.0.0")]
+                string ICustomPropertyProvider.GetStringRepresentation() => "";
+            }
+            """;
+
+        await CSharpAnalyzerTest<GeneratedCustomPropertyProviderExistingMemberImplementationAnalyzer>.VerifyAnalyzerAsync(source);
+    }
+
+    [TestMethod]
+    public async Task TypeWithMixedGeneratedAndUserImplementation_Warns()
+    {
+        string source = """
+            using System;
+            using System.CodeDom.Compiler;
+            using Microsoft.UI.Xaml.Data;
+            using WindowsRuntime.Xaml;
+
+            [GeneratedCustomPropertyProvider]
+            public partial class {|CSWINRT2003:MyType|} : ICustomPropertyProvider
+            {
+                public string Name { get; set; }
+
+                Type ICustomPropertyProvider.Type => typeof(MyType);
+                [GeneratedCode("CustomPropertyProviderGenerator", "1.0.0")]
+                ICustomProperty ICustomPropertyProvider.GetCustomProperty(string name) => null;
+                [GeneratedCode("CustomPropertyProviderGenerator", "1.0.0")]
+                ICustomProperty ICustomPropertyProvider.GetIndexedProperty(string name, Type type) => null;
+                [GeneratedCode("CustomPropertyProviderGenerator", "1.0.0")]
+                string ICustomPropertyProvider.GetStringRepresentation() => "";
+            }
+            """;
+
+        await CSharpAnalyzerTest<GeneratedCustomPropertyProviderExistingMemberImplementationAnalyzer>.VerifyAnalyzerAsync(source);
+    }
 }

@@ -290,7 +290,7 @@ class GenericType<T1, T2> : IEnumerable<T1>, IReadOnlyDictionary<T1, T2>, IMapCh
 }
 
 [GeneratedCustomPropertyProvider]
-sealed partial class TestCustomPropertyProvider : ICustomPropertyProvider
+sealed partial class TestCustomPropertyProvider
 {
     public string Text => "Hello";
 
