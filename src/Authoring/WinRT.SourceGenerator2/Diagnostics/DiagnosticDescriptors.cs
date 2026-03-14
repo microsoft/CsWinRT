@@ -42,7 +42,7 @@ internal static partial class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor GeneratedCustomPropertyProviderNoAvailableInterfaceType = new(
         id: "CSWINRT2002",
         title: "'ICustomPropertyProvider' interface type not available",
-        messageFormat: """The 'ICustomPropertyProvider' interface is not available in the compilation, but it is required to use '[GeneratedCustomPropertyProvider]' (make sure to either reference 'WindowsAppSDK.WinUI' or set the 'UseUwp' property in your .csproj file)""",
+        messageFormat: """The 'ICustomPropertyProvider' interface is not available in the compilation, but it is required to use '[GeneratedCustomPropertyProvider]' (make sure to either reference 'Microsoft.WindowsAppSDK.WinUI' or set the 'UseUwp' property in your .csproj file)""",
         category: "WindowsRuntime.SourceGenerator",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
