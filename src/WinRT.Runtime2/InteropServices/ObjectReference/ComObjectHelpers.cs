@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -81,5 +82,44 @@ internal static unsafe class ComObjectHelpers
         }
 
         return WellKnownErrorCodes.S_FALSE;
+    }
+
+    /// <summary>
+    /// Validates the provided marshaling type for a given object.
+    /// </summary>
+    /// <param name="thisPtr">The target COM object.</param>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
+    /// <remarks>
+    /// This method will fail-fast if the validation fails.
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ValidateMarshalingType(void* thisPtr, CreateObjectReferenceMarshalingType marshalingType)
+    {
+        if (!WindowsRuntimeFeatureSwitches.EnableMarshalingTypeValidation)
+        {
+            return;
+        }
+
+        // Move the logic into a non-inlineable method to help the containing one get inlined correctly
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void PerformValidation(void* thisPtr, CreateObjectReferenceMarshalingType marshalingType)
+        {
+            // If no static type information is available, we can avoid the validation overhead
+            if (marshalingType == CreateObjectReferenceMarshalingType.Unknown)
+            {
+                return;
+            }
+
+            HRESULT hresult = IsFreeThreadedUnsafe(thisPtr);
+
+            // If the object declared a marshalling type that doesn't match what we can compute at runtime, fail immediately
+            if ((marshalingType == CreateObjectReferenceMarshalingType.Agile && hresult == WellKnownErrorCodes.S_FALSE) ||
+                (marshalingType == CreateObjectReferenceMarshalingType.Standard && hresult == WellKnownErrorCodes.S_OK))
+            {
+                Environment.FailFast($"The input object ('{(nint)thisPtr:X16}') declared the incorrect marshalling type '{marshalingType}'.");
+            }
+        }
+
+        PerformValidation(thisPtr, marshalingType);
     }
 }

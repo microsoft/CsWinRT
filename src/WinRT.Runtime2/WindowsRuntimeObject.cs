@@ -67,6 +67,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <param name="_">Marker parameter used to select this constructor for sealed types (unused).</param>
     /// <param name="activationFactoryObjectReference">The <see cref="WindowsRuntimeObjectReference"/> for the <c>IActivationFactory</c> instance.</param>
     /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryObjectReference"/> is <see langword="null"/>.</exception>
     /// <exception cref="ObjectDisposedException">Thrown if <paramref name="activationFactoryObjectReference"/> has been disposed.</exception>
     /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
@@ -80,7 +81,8 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationTypes.DerivedSealed _,
         WindowsRuntimeObjectReference activationFactoryObjectReference,
-        in Guid iid)
+        in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryObjectReference);
 
@@ -101,7 +103,8 @@ public abstract unsafe class WindowsRuntimeObject :
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
-            newInstanceIid: in iid);
+            newInstanceIid: in iid,
+            marshalingType: marshalingType);
     }
 
     /// <summary>
@@ -110,6 +113,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <param name="_">Marker parameter used to select this constructor for composed types (unused).</param>
     /// <param name="activationFactoryObjectReference">The <see cref="WindowsRuntimeObjectReference"/> for the <c>IActivationFactory</c> instance.</param>
     /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryObjectReference"/> is <see langword="null"/>.</exception>
     /// <exception cref="ObjectDisposedException">Thrown if <paramref name="activationFactoryObjectReference"/> has been disposed.</exception>
     /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
@@ -123,7 +127,8 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationTypes.DerivedComposed _,
         WindowsRuntimeObjectReference activationFactoryObjectReference,
-        in Guid iid)
+        in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryObjectReference);
 
@@ -157,7 +162,8 @@ public abstract unsafe class WindowsRuntimeObject :
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
-            newInstanceIid: in iid);
+            newInstanceIid: in iid,
+            marshalingType: marshalingType);
 
         // Optimization: if we are activating the current type for composition, then the returned object reference
         // will wrap the 'IInspectable' pointer for the controlling instance (ie. 'innerInterface'). In this case,
@@ -183,6 +189,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     /// <param name="activationFactoryCallback">The <see cref="WindowsRuntimeActivationFactoryCallback"/> instance to delegate activation to.</param>
     /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
     /// <param name="additionalParameters">The additional parameters to provide to <paramref name="activationFactoryCallback"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryCallback"/> is <see langword="null"/>.</exception>
     /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
@@ -192,8 +199,8 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </para>
     /// <para>
     /// Additionally, this constructor is only meant to be used when additional custom parameters are required to invoke the target factory method. If no additional
-    /// parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedSealed, WindowsRuntimeObjectReference, in Guid)"/> overload
-    /// should be used instead, as that is more efficient in case the default signature is sufficient.
+    /// parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedSealed, WindowsRuntimeObjectReference, in Guid, CreateObjectReferenceMarshalingType)"/>
+    /// overload should be used instead, as that is more efficient in case the default signature is sufficient.
     /// </para>
     /// </remarks>
     [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
@@ -203,6 +210,7 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback,
         in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType,
         params ReadOnlySpan<object?> additionalParameters)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryCallback);
@@ -221,7 +229,8 @@ public abstract unsafe class WindowsRuntimeObject :
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
-            newInstanceIid: in iid);
+            newInstanceIid: in iid,
+            marshalingType: marshalingType);
     }
 
     /// <summary>
@@ -229,6 +238,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     /// <param name="activationFactoryCallback">The <see cref="WindowsRuntimeActivationFactoryCallback"/> instance to delegate activation to.</param>
     /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
     /// <param name="additionalParameters">The additional parameters to provide to <paramref name="activationFactoryCallback"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryCallback"/> is <see langword="null"/>.</exception>
     /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
@@ -238,8 +248,8 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </para>
     /// <para>
     /// Additionally, this constructor is only meant to be used when additional custom parameters are required to invoke the target factory method. If no additional
-    /// parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedComposed, WindowsRuntimeObjectReference, in Guid)"/> overload
-    /// should be used instead, as that is more efficient in case the default signature is sufficient.
+    /// parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedComposed, WindowsRuntimeObjectReference, in Guid, CreateObjectReferenceMarshalingType)"/>
+    /// overload should be used instead, as that is more efficient in case the default signature is sufficient.
     /// </para>
     /// </remarks>
     [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
@@ -249,6 +259,7 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback,
         in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType,
         params ReadOnlySpan<object?> additionalParameters)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryCallback);
@@ -268,7 +279,8 @@ public abstract unsafe class WindowsRuntimeObject :
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
-            newInstanceIid: in iid);
+            newInstanceIid: in iid,
+            marshalingType: marshalingType);
 
         // Optimization: pre-cache the inspectable object reference if possible (see detailed explanation above)
         if (!hasUnwrappableNativeObjectReference)
