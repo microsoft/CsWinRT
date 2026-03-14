@@ -1,3 +1,8 @@
+parameters:
+- name: BenchmarkMode
+  type: string
+  default: 'regression'
+
 steps:
 - checkout: self
   clean: true
@@ -26,19 +31,79 @@ steps:
       where dotnet
       dotnet --info
 
-# Run Benchmarks
+# Restore and build BenchmarkComponent
+- task: NuGetCommand@2
+  displayName: NuGet restore TestWinRT
+  inputs:
+    command: 'restore'
+    restoreSolution: '$(Build.SourcesDirectory)\src\TestWinRT\Test.sln'
+    feedsToUse: config
+    nugetConfigPath: NuGet.config
+
+- task: MSBuild@1
+  displayName: Build BenchmarkComponent
+  inputs:
+    solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
+    msbuildArguments: /t:restore /t:BenchmarkComponent /p:solutiondir=$(Build.SourcesDirectory)\src\
+    platform: x64
+    configuration: Release
+
+# Copy BenchmarkComponent artifacts
 - task: CmdLine@2
-  displayName: Run Benchmarks for x64 Release
+  displayName: Copy BenchmarkComponent artifacts
   inputs:
     workingDirectory: $(Build.SourcesDirectory)\src
     script: |
-      if "%VSCMD_VER%"=="" (
-        pushd c:
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
-        popd
+      copy /Y "_build\x64\Release\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll" "Benchmarks\BenchmarkProjection\"
+      copy /Y "_build\x64\Release\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.winmd" "Benchmarks\BenchmarkProjection\"
+
+# Set up local NuGet source for regression mode (if pipeline-built package is available)
+- task: CmdLine@2
+  displayName: Set up local NuGet source
+  condition: eq('${{ parameters.BenchmarkMode }}', 'regression')
+  inputs:
+    workingDirectory: $(Build.SourcesDirectory)\src
+    script: |
+      if exist "$(Build.SourcesDirectory)\packages\local" (
+        dotnet nuget add source "$(Build.SourcesDirectory)\packages\local" --name LocalBuild 2>nul || echo Local source already registered
       )
 
-      benchmark.cmd
+# Run Benchmarks
+- task: CmdLine@2
+  displayName: Run Benchmarks (${{ parameters.BenchmarkMode }} mode)
+  inputs:
+    workingDirectory: $(Build.SourcesDirectory)\src
+    script: >-
+      dotnet run
+      --project Benchmarks\Benchmarks.csproj
+      -c Release
+      --framework net10.0-windows10.0.26100.1
+      -- --mode ${{ parameters.BenchmarkMode }} --filter *
+  env:
+    BENCHMARK_MODE: ${{ parameters.BenchmarkMode }}
+    BENCHMARK_CSWINRT_BASELINE_VERSION: $(_BenchmarkBaselineCsWinRT3Version)
+    BENCHMARK_CSWINRT2_VERSION: $(_BenchmarkCsWinRT2Version)
+    BENCHMARK_CSWINRT_CURRENT_VERSION: $(_BenchmarkCurrentCsWinRT3Version)
+
+# Build and run ResultsComparer
+- task: MSBuild@1
+  displayName: Build ResultsComparer
+  inputs:
+    solution: $(Build.SourcesDirectory)\src\Perf\ResultsComparer\ResultsComparer.sln
+    msbuildArguments: /t:restore /t:build
+    platform: Any CPU
+    configuration: Release
+
+- task: CmdLine@2
+  displayName: Run ResultsComparer
+  inputs:
+    workingDirectory: $(Build.SourcesDirectory)\src
+    script: >-
+      Perf\ResultsComparer\bin\Release\net8.0\ResultsComparer.exe
+      --base Perf\BenchmarkBaseline
+      --diff BenchmarkDotNet.Artifacts\results\
+      --threshold 5%%
+      --xml BenchmarkDotNet.Artifacts\results\comparison.xml
 
 # Component Detection
 - task: ComponentGovernanceComponentDetection@0

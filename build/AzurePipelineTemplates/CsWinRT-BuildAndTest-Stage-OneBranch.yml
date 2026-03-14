@@ -103,6 +103,8 @@ jobs:
       StagingFolder: $(ob_outputDirectory)
     steps:
     - template: CsWinRT-Benchmarks-Steps.yml@self
+      parameters:
+        BenchmarkMode: $(_BenchmarkMode)
 
 # Publish Benchmark Results
     - task: PublishPipelineArtifact@1

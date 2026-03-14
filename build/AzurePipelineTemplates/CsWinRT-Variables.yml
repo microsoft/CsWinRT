@@ -23,6 +23,23 @@ variables:
 - name: _RunGCStress
   value: $[coalesce(variables.RunGCStress, 'false')]
 
+# Benchmark configuration
+# Known-good CsWinRT 3.x version used as baseline for regression benchmarks.
+# Override at queue time by setting BenchmarkBaselineCsWinRT3Version.
+- name: _BenchmarkBaselineCsWinRT3Version
+  value: $[coalesce(variables.BenchmarkBaselineCsWinRT3Version, '3.0.0-prerelease-ci.260302.3')]
+# CsWinRT 2.x version used as baseline for compare-versions benchmarks.
+- name: _BenchmarkCsWinRT2Version
+  value: $[coalesce(variables.BenchmarkCsWinRT2Version, '2.3.0-prerelease.251115.2')]
+# Benchmark mode: 'compare-versions' or 'regression'
+- name: _BenchmarkMode
+  value: $[coalesce(variables.BenchmarkMode, 'regression')]
+# CsWinRT 3.x version to benchmark as "current" in regression mode.
+# Override at queue time by setting BenchmarkCurrentCsWinRT3Version to the version under test.
+# Defaults to the baseline version (i.e., no-op comparison) when not overridden.
+- name: _BenchmarkCurrentCsWinRT3Version
+  value: $[coalesce(variables.BenchmarkCurrentCsWinRT3Version, variables._BenchmarkBaselineCsWinRT3Version)]
+
 - name: _PublishCsWinMD
   value: $[coalesce(variables.PublishCsWinMD, 'false')]
 - name: _PublishFunctionalTests
