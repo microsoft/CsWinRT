@@ -666,25 +666,32 @@ public abstract unsafe class WindowsRuntimeObject :
         }
 
         // First, check for 'IDynamicInterfaceCastable' casts through the Windows Runtime infrastructure
-        if (LookupDynamicInterfaceCastableImplementationInfo(
+        CustomQueryInterfaceResult dynamicQueryInterfaceResult = LookupDynamicInterfaceCastableImplementationInfo(
             interfaceType: interfaceType,
-            castResult: out DynamicInterfaceCastableResult? dynamicInterfaceCastableResult))
-        {
-            implementationType = dynamicInterfaceCastableResult!.ImplementationType.TypeHandle;
-            interfaceReference = dynamicInterfaceCastableResult.InterfaceObjectReference;
+            castResult: out DynamicInterfaceCastableResult? dynamicInterfaceCastableResult);
 
-            return true;
+        // Return the appropriate result based on the 'QueryInterface' result, if handled
+        switch (dynamicQueryInterfaceResult)
+        {
+            case CustomQueryInterfaceResult.Handled:
+                implementationType = dynamicInterfaceCastableResult!.ImplementationType.TypeHandle;
+                interfaceReference = dynamicInterfaceCastableResult.InterfaceObjectReference;
+                return true;
+            case CustomQueryInterfaceResult.Failed:
+                goto Failure;
+            case CustomQueryInterfaceResult.NotHandled:
+            default: break;
         }
 
         // Next, check to see if the target interface is a generated COM interface
-        CustomQueryInterfaceResult queryInterfaceResult = LookupGeneratedVTableInfo(
+        CustomQueryInterfaceResult generatedQueryInterfaceResult = LookupGeneratedVTableInfo(
             interfaceType: interfaceType,
             performTypeHandleCacheLookup: false,
             throwOnQueryInterfaceFailure: false,
             castResult: out GeneratedComInterfaceCastResult? generatedComInterfaceCastResult);
 
-        // Return the appropriate result based on the 'QueryInterface' result, if handled
-        switch (queryInterfaceResult)
+        // Return the appropriate result for 'QueryInterface' (same as above)
+        switch (generatedQueryInterfaceResult)
         {
             case CustomQueryInterfaceResult.Handled:
                 implementationType = generatedComInterfaceCastResult!.TableInfo.ManagedType;
@@ -695,6 +702,7 @@ public abstract unsafe class WindowsRuntimeObject :
             default: break;
         }
 
+    Failure:
         implementationType = default;
         interfaceReference = null;
 
@@ -709,11 +717,11 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     /// <param name="interfaceType">The input interface type.</param>
     /// <param name="castResult">The resulting <see cref="GeneratedComInterfaceCastResult"/> value, if the cast is successful.</param>
-    /// <returns>Whether <paramref name="interfaceType"/> is implemented.</returns>
+    /// <returns>A <see cref="CustomQueryInterfaceResult"/> value representing the result of this dynamic cast lookup operation.</returns>
     /// <remarks>
     /// When successful, this method will cache a <see cref="DynamicInterfaceCastableResult"/> value into <see cref="TypeHandleCache"/>.
     /// </remarks>
-    private bool LookupDynamicInterfaceCastableImplementationInfo(RuntimeTypeHandle interfaceType, out DynamicInterfaceCastableResult? castResult)
+    private CustomQueryInterfaceResult LookupDynamicInterfaceCastableImplementationInfo(RuntimeTypeHandle interfaceType, out DynamicInterfaceCastableResult? castResult)
     {
         castResult = null;
 
@@ -721,7 +729,7 @@ public abstract unsafe class WindowsRuntimeObject :
         // can fully be trimmed. In theory this path shouldn't be reachable if the feature is disabled, but this can help.
         if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
         {
-            return false;
+            return CustomQueryInterfaceResult.Failed;
         }
 
         Type type = Type.GetTypeFromHandle(interfaceType)!;
@@ -731,7 +739,7 @@ public abstract unsafe class WindowsRuntimeObject :
             interfaceType: type,
             info: out DynamicInterfaceCastableImplementationInfo? implementationInfo))
         {
-            return false;
+            return CustomQueryInterfaceResult.NotHandled;
         }
 
         WindowsRuntimeObjectReference? interfaceReference;
@@ -753,7 +761,7 @@ public abstract unsafe class WindowsRuntimeObject :
             // This interface shouldn't really be needed from this key for the lookup, but we still store it.
             if (!implementationInfo.GetDynamicInterfaceCastableForwarder().IsInterfaceImplemented(this, out interfaceReference))
             {
-                return false;
+                return CustomQueryInterfaceResult.Failed;
             }
         }
         else
@@ -764,7 +772,7 @@ public abstract unsafe class WindowsRuntimeObject :
                 iid: implementationInfo.ImplementationType.GUID,
                 objectReference: out interfaceReference))
             {
-                return false;
+                return CustomQueryInterfaceResult.Failed;
             }
         }
 
@@ -787,7 +795,7 @@ public abstract unsafe class WindowsRuntimeObject :
             castResult = (DynamicInterfaceCastableResult)effectiveCastResult;
         }
 
-        return true;
+        return CustomQueryInterfaceResult.Handled;
     }
 
     /// <summary>
@@ -797,7 +805,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <param name="performTypeHandleCacheLookup">Whether to lookup into <see cref="TypeHandleCache"/> first.</param>
     /// <param name="throwOnQueryInterfaceFailure">Whether to throw an exception of <c>QueryInterface</c> fails.</param>
     /// <param name="castResult">The resulting <see cref="GeneratedComInterfaceCastResult"/> value, if the cast is successful.</param>
-    /// <returns>Whether <paramref name="interfaceType"/> is implemented.</returns>
+    /// <returns>A <see cref="CustomQueryInterfaceResult"/> value representing the result of this dynamic cast lookup operation.</returns>
     /// <remarks>
     /// When successful, this method will cache a <see cref="GeneratedComInterfaceCastResult"/> value into <see cref="TypeHandleCache"/>.
     /// </remarks>
@@ -808,6 +816,12 @@ public abstract unsafe class WindowsRuntimeObject :
         out GeneratedComInterfaceCastResult? castResult)
     {
         castResult = null;
+
+        // Same trim-friendly check as above (see notes there)
+        if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+        {
+            return CustomQueryInterfaceResult.Failed;
+        }
 
         // We only do the lookup if the caller hasn't already done so
         if (performTypeHandleCacheLookup && TypeHandleCache.TryGetValue(interfaceType, out object? typeHandleCacheValue))
