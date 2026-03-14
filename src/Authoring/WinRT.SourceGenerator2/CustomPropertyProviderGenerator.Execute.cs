@@ -61,7 +61,7 @@ public partial class CustomPropertyProviderGenerator
         /// <returns>The resulting <see cref="CustomPropertyProviderInfo"/> instance, if processed successfully.</returns>
         public static CustomPropertyProviderInfo? GetCustomPropertyProviderInfo(GeneratorAttributeSyntaxContextWithOptions context, CancellationToken token)
         {
-            bool useWindowsUIXamlProjections = context.GlobalOptions.GetBooleanProperty("CsWinRTUseWindowsUIXamlProjections");
+            bool useWindowsUIXamlProjections = context.GlobalOptions.GetCsWinRTUseWindowsUIXamlProjections();
 
             token.ThrowIfCancellationRequested();
 
