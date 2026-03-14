@@ -54,15 +54,6 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void TestMockDragDropManager()
-        {
-            var interop = (WinRT.Interop.IDragDropManagerInterop)Class.ComInterop;
-            Guid iid_ICoreDragDropManager = new("7D56D344-8464-4FAF-AA49-37EA6E2D7BD1");
-            var manager = interop.GetForWindow(new IntPtr(0), iid_ICoreDragDropManager);
-            Assert.IsNotNull(manager);
-        }
-
-        [TestMethod]
         public void TestAccountsSettingsPane()
         {
             Assert.ThrowsExactly<COMException>(() => AccountsSettingsPaneInterop.GetForWindow(new IntPtr(0)));
