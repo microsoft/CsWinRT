@@ -35,7 +35,8 @@ internal static class CSharpGeneratorTest<TGenerator>
 
         // Update the assembly version using the version from the assembly of the input generators.
         // This allows the tests to not need updates whenever the version of the generators changes.
-        string expectedText = result.Source.Replace("<ASSEMBLY_VERSION>", $"\"{typeof(TGenerator).Assembly.GetName().Version}\"");
+        // Also normalize line endings to 'LF', so the test files don't have to worry about that.
+        string expectedText = result.Source.Replace("<ASSEMBLY_VERSION>", $"\"{typeof(TGenerator).Assembly.GetName().Version}\"").Replace("\r\n", "\n");
         string actualText = compilation.SyntaxTrees.Single(tree => Path.GetFileName(tree.FilePath) == result.Filename).ToString();
 
         Assert.AreEqual(expectedText, actualText);
