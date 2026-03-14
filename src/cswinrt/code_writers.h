@@ -4696,9 +4696,6 @@ R"(public static %? UnboxToManaged(void* value)
         w.write(
 R"(file static unsafe class %ReferenceImpl
 {
-    private const int S_OK = unchecked((int)0x00000000);
-    private const int E_POINTER = unchecked((int)0x80004003);
-
     [FixedAddressValueType]
     private static readonly ReferenceVftbl Vftbl;
 
@@ -4719,7 +4716,7 @@ R"(file static unsafe class %ReferenceImpl
     {
         if (result is null)
         {
-            return E_POINTER;
+            return unchecked((int)0x80004003);
         }
 
         try
@@ -4756,7 +4753,7 @@ R"(
         }
 
      w.write(R"(
-            return S_OK;
+            return 0;
         }
         catch (Exception e)
         {
@@ -4910,6 +4907,14 @@ R"(
 
     void write_winrt_windowsmetadata_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
     {
+        // We don't need to emit it for exclusive interfaces or internal projections given
+        // they are projected as internal and xaml won't be using typeof with them.
+        if (get_category(type) == category::interface_type &&
+            (is_exclusive_to(type) || is_projection_internal(type)))
+        {
+            return;
+        }
+
         auto projection_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::NonProjected, true));
         w.write(
 R"(
@@ -4955,7 +4960,8 @@ R"(
             return;
         }
 
-        if (is_exclusive_to(type) && !settings.idic_exclusiveto)
+        if ((is_exclusive_to(type) && !settings.idic_exclusiveto) ||
+            is_projection_internal(type))
         {
             return;
         }
@@ -8586,9 +8592,56 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             });
     }
 
+    bool is_default_or_overridable_interface_typedef(writer& w, TypeDef const& iface)
+    {
+        if (!is_exclusive_to(iface))
+        {
+            return false;
+        }
+
+        auto class_type = get_exclusive_to_type(iface);
+        for (auto&& ii : class_type.InterfaceImpl())
+        {
+            if (!is_default_interface(ii) && !is_overridable(ii))
+            {
+                continue;
+            }
+
+            bool interface_matches = false;
+            for_typedef(w, get_type_semantics(ii.Interface()), [&](TypeDef const& impl_iface)
+            {
+                if (impl_iface == iface)
+                {
+                    interface_matches = true;
+                }
+            });
+
+            if (interface_matches)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void write_interface(writer& w, TypeDef const& type)
     {
         XLANG_ASSERT(get_category(type) == category::interface_type);
+
+        // Exclusive interfaces other than for the default and overridable one are not used
+        // in the projection, so we can skip them unless public_exclusiveto is set.
+        // We still need to emit them in the reference projection so the merged projection
+        // generator can discover them and include them as part of the includes to allow the
+        // ABI types to still get generated.
+        if (!settings.reference_projection &&
+            is_exclusive_to(type) &&
+            !settings.public_exclusiveto &&
+            !is_default_or_overridable_interface_typedef(w, type))
+        {
+            return;
+        }
+
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
 
         w.write(R"(
@@ -8601,7 +8654,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             bind<write_winrt_metadata_attribute>(type),
             bind<write_guid_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
-            (is_exclusive_to(type) && !settings.public_exclusiveto) ? "internal" : "public",
+            (is_exclusive_to(type) && !settings.public_exclusiveto) || is_projection_internal(type) ? "internal" : "public",
             type_name,
             bind<write_type_inheritance>(type, object_type{}, false, false),
             bind<write_interface_member_signatures>(type)
@@ -8774,7 +8827,7 @@ private IObjectReference % => __% ?? Make__%();
 %
 }
 )",
-        (is_exclusive_to(iface) && !settings.public_exclusiveto) ? "internal" : "public",
+        (is_exclusive_to(iface) && !settings.public_exclusiveto) || is_projection_internal(iface) ? "internal" : "public",
         bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false),
         members);
     }
@@ -8976,6 +9029,13 @@ public static unsafe class %Marshaller
         }
 
         write_static_abi_classes(w, type);
+
+        // Internal projections just need the static ABI methods class.
+        if (is_projection_internal(type))
+        {
+            return;
+        };
+
         write_interface_vftbl(w, type);
         write_interface_impl(w, type);
         write_interface_idic_impl(w, type);
@@ -9429,8 +9489,6 @@ return new %(valueReference);
         w.write(R"(
 internal static unsafe class %Impl
 {
-    private const int S_OK = unchecked((int)0x00000000);
-
     [FixedAddressValueType]
     private static readonly %Vftbl Vftbl;
 
