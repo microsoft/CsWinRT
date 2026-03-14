@@ -15,10 +15,17 @@ internal static class ReferenceAssembliesExtensions
     /// <summary>
     /// The lazy-loaded <see cref="ReferenceAssemblies"/> instance for .NET 10 assemblies.
     /// </summary>
-    private static readonly Lazy<ReferenceAssemblies> Net100 = new(static () => new(
-        targetFramework: "net10.0",
-        referenceAssemblyPackage: new PackageIdentity("Microsoft.NETCore.App.Ref", "10.0.1"),
-        referenceAssemblyPath: Path.Combine("ref", "net10.0")));
+    private static readonly Lazy<ReferenceAssemblies> Net100 = new(static () =>
+    {
+        // Given we use a different nuget feed, we pass nuget.config.
+        string nugetConfigFilePath = Path.Combine(Path.GetDirectoryName(typeof(ReferenceAssembliesExtensions).Assembly.Location), "nuget.config");
+
+        ReferenceAssemblies referenceAssembly = new(
+                targetFramework: "net10.0",
+                referenceAssemblyPackage: new PackageIdentity("Microsoft.NETCore.App.Ref", "10.0.1"),
+                referenceAssemblyPath: Path.Combine("ref", "net10.0"));
+        return referenceAssembly.WithNuGetConfigFilePath(nugetConfigFilePath);
+    });
 
     extension(ReferenceAssemblies.Net)
     {
