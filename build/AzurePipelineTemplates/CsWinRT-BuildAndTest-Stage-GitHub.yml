@@ -66,6 +66,8 @@ stages:
       StagingFolder: $(ob_outputDirectory)
     steps:
     - template: CsWinRT-Benchmarks-Steps.yml@self
+      parameters:
+        BenchmarkMode: $(_BenchmarkMode)
 
     templateContext:
       outputs:

@@ -1,10 +1,16 @@
-<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" >
+<Project>
+
+  <!-- Stop the import chain: do NOT import parent Directory.Build.props.
+       The benchmark projects are decoupled from the main CsWinRT build
+       and use NuGet packages instead of project references. -->
 
   <PropertyGroup>
-    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
-    <CsWinRTGenerateInteropAssembly Condition="$(IsDotnetBuild) == true">false</CsWinRTGenerateInteropAssembly>
+    <!-- Benchmark package versions (override at queue time or via environment variables).
+         Keep defaults in sync with Program.cs and CsWinRT-Variables.yml. -->
+    <BenchmarkCsWinRT3Version Condition="'$(BenchmarkCsWinRT3Version)' == ''">3.0.0-prerelease-ci.260302.3</BenchmarkCsWinRT3Version>
+    <BenchmarkCsWinRT2Version Condition="'$(BenchmarkCsWinRT2Version)' == ''">2.3.0-prerelease.251115.2</BenchmarkCsWinRT2Version>
+    <BenchmarkWindowsSdkPackageVersion Condition="'$(BenchmarkWindowsSdkPackageVersion)' == ''">10.0.26100.7706-preview.ge-release-svc-prod3</BenchmarkWindowsSdkPackageVersion>
+    <BenchmarkDotNetVersion Condition="'$(BenchmarkDotNetVersion)' == ''">0.15.8</BenchmarkDotNetVersion>
   </PropertyGroup>
 
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
- 
 </Project>

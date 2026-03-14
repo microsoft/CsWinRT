@@ -15,6 +15,9 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Benchmarks/BenchmarkProjection/BenchmarkProjection.csproj">
+      <Build Project="false" />
+    </Project>
     <Project Path="TestWinRT/BenchmarkComponent/BenchmarkComponent.vcxproj" Id="78d85f23-7cb1-44a1-9238-6df2c76754e4">
       <Platform Solution="*|ARM64" Project="Win32" />
       <Build Solution="*|ARM64" Project="false" />
