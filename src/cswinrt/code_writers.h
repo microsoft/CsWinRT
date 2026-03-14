@@ -4696,9 +4696,6 @@ R"(public static %? UnboxToManaged(void* value)
         w.write(
 R"(file static unsafe class %ReferenceImpl
 {
-    private const int S_OK = unchecked((int)0x00000000);
-    private const int E_POINTER = unchecked((int)0x80004003);
-
     [FixedAddressValueType]
     private static readonly ReferenceVftbl Vftbl;
 
@@ -4719,7 +4716,7 @@ R"(file static unsafe class %ReferenceImpl
     {
         if (result is null)
         {
-            return E_POINTER;
+            return unchecked((int)0x80004003);
         }
 
         try
@@ -4756,7 +4753,7 @@ R"(
         }
 
      w.write(R"(
-            return S_OK;
+            return 0;
         }
         catch (Exception e)
         {
@@ -9492,8 +9489,6 @@ return new %(valueReference);
         w.write(R"(
 internal static unsafe class %Impl
 {
-    private const int S_OK = unchecked((int)0x00000000);
-
     [FixedAddressValueType]
     private static readonly %Vftbl Vftbl;
 
