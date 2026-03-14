@@ -716,7 +716,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// Looks up whether the input interface type is implemented for an <see cref="IDynamicInterfaceCastable"/> cast.
     /// </summary>
     /// <param name="interfaceType">The input interface type.</param>
-    /// <param name="castResult">The resulting <see cref="GeneratedComInterfaceCastResult"/> value, if the cast is successful.</param>
+    /// <param name="castResult">The resulting <see cref="DynamicInterfaceCastableResult"/> value, if the cast is successful.</param>
     /// <returns>A <see cref="CustomQueryInterfaceResult"/> value representing the result of this dynamic cast lookup operation.</returns>
     /// <remarks>
     /// When successful, this method will cache a <see cref="DynamicInterfaceCastableResult"/> value into <see cref="TypeHandleCache"/>.
