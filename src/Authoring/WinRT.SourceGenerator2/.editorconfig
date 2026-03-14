@@ -1,4 +1,7 @@
-# Remove the line below if you want to inherit .editorconfig settings from higher directories
+# This '.editorconfig' file is a copy of the root one, except that we replace the 'CRLF' line endings
+# with 'LF'. This is because we want all generated sources to use 'LF', as that simplifies handling
+# indentations and formatting when writing text. We need this change because we often use multiline
+# string literal, which are affected by the actual line endings being used in the source files.
 root = true
 
 # All files
