@@ -111,6 +111,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
     </Link>
     <Link Condition="'$(Configuration)'=='Release' and ('$(MSBuildProjectExtension)' == '.vcxproj' or '$(MSBuildProjectExtension)' == '.wapproj')">
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <!-- /Brepro Enables deterministic output from the compiler toolchain -->
       <!-- /PDBALTPATH Stops pdb's basepath from appearing in the Debug Directories of the image header -->
       <!-- /CETCOMPAT enables Control-flow Enforcement Technology (CET) Shadow Stack mitigation.
