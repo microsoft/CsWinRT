@@ -13,6 +13,7 @@ steps:
   - task: DotNetCoreCLI@2
     displayName: Run Unit Tests
     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    continueOnError: True
     inputs:
       command: test
       projects: 'src/Tests/UnitTest/UnitTest.csproj'
@@ -119,3 +120,13 @@ steps:
       targetType: inline
       script: |
         Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0x0"
+
+# Fail the pipeline if any test steps failed
+  - task: PowerShell@2
+    displayName: Fail if any tests failed
+    condition: eq(variables['Agent.JobStatus'], 'SucceededWithIssues')
+    inputs:
+      targetType: inline
+      script: |
+        Write-Host "##vso[task.logissue type=error]One or more test steps failed. See above for details."
+        exit 1
