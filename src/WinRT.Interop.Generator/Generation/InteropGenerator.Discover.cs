@@ -90,7 +90,7 @@ internal partial class InteropGenerator
         // Load the 'WinRT.Sdk.Projection.dll' module, this should always be available
         ModuleDefinition winRTSdkProjectionModule = ModuleDefinition.FromFile(args.WinRTSdkProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
 
-        discoveryState.TrackWinRTSdkProjectionModuleDefinition(winRTSdkProjectionModule);
+        discoveryState.TrackWindowsRuntimeSdkProjectionModule(winRTSdkProjectionModule);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -99,7 +99,7 @@ internal partial class InteropGenerator
         {
             ModuleDefinition winRTSdkXamlProjectionModule = ModuleDefinition.FromFile(args.WinRTSdkXamlProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
 
-            discoveryState.TrackWinRTSdkXamlProjectionModuleDefinition(winRTSdkXamlProjectionModule);
+            discoveryState.TrackWindowsRuntimeSdkXamlProjectionModule(winRTSdkXamlProjectionModule);
 
             args.Token.ThrowIfCancellationRequested();
         }
@@ -109,7 +109,7 @@ internal partial class InteropGenerator
         {
             ModuleDefinition winRTProjectionModule = ModuleDefinition.FromFile(args.WinRTProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
 
-            discoveryState.TrackWinRTProjectionModuleDefinition(winRTProjectionModule);
+            discoveryState.TrackWindowsRuntimeProjectionModule(winRTProjectionModule);
 
             args.Token.ThrowIfCancellationRequested();
         }
@@ -280,7 +280,9 @@ internal partial class InteropGenerator
             InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
-                windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule!,
+                windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
+                windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
+                windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
             // We can share a single builder when processing all types to reduce allocations
@@ -323,7 +325,9 @@ internal partial class InteropGenerator
             InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
-                windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule!,
+                windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
+                windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
+                windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
             foreach (GenericInstanceTypeSignature typeSignature in module.EnumerateGenericInstanceTypeSignatures())
@@ -362,7 +366,9 @@ internal partial class InteropGenerator
             InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
             InteropDefinitions interopDefinitions = new(
                 interopReferences: interopReferences,
-                windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule!,
+                windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
+                windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
+                windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
                 windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
             foreach (SzArrayTypeSignature typeSignature in module.EnumerateSzArrayTypeSignatures())

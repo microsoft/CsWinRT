@@ -2588,9 +2588,9 @@ internal partial class InteropGenerator
 
             // Next, emit all the '[IgnoresAccessChecksTo]' attributes for each type
             IgnoresAccessChecksToBuilder.AssemblyAttributes(
-                winRTSdkXamlProjectionModule: discoveryState.WinRTSdkXamlProjectionModuleDefinition,
-                winRTProjectionModule: discoveryState.WinRTProjectionModuleDefinition,
-                winRTComponentModule: discoveryState.WinRTComponentModuleDefinition,
+                winRTSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
+                winRTProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule,
+                winRTComponentModule: discoveryState.WindowsRuntimeComponentModule,
                 referencePathModules: discoveryState.Modules.Values.OrderByFullyQualifiedName(),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
