@@ -44,7 +44,7 @@ steps:
   displayName: Build BenchmarkComponent
   inputs:
     solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
-    msbuildArguments: /t:restore /t:BenchmarkComponent /p:RestorePackagesConfig=true /p:RestoreAdditionalProjectSources=$(_BenchmarkNuGetFeed) /p:solutiondir=$(Build.SourcesDirectory)\src\
+    msbuildArguments: /t:restore /t:BenchmarkComponent /p:RestorePackagesConfig=true /p:solutiondir=$(Build.SourcesDirectory)\src\
     platform: x64
     configuration: Release
 
