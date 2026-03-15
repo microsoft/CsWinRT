@@ -134,14 +134,14 @@ public partial class AuthoringExportTypesGenerator
                 /// <summary>
                 /// Contains the managed exports for activating types from the current project in an authoring scenario.
                 /// </summary>
-                """);
+                """, isMultiline: true);
 
             // Emit the standard generated attributes, and also mark the type as hidden, since it's generated as a public type
             writer.WriteGeneratedAttributes(nameof(AuthoringExportTypesGenerator), useFullyQualifiedTypeNames: false);
             writer.WriteLine($$"""
                 [EditorBrowsable(EditorBrowsableState.Never)]
                 public static unsafe class ManagedExports
-                """);
+                """, isMultiline: true);
 
             // Indent via a block, as we'll also need to emit custom logic for the activation factory
             using (writer.WriteBlock())
@@ -155,7 +155,7 @@ public partial class AuthoringExportTypesGenerator
                     /// <param name="activatableClassId">The class identifier that is associated with an activatable runtime class.</param>
                     /// <returns>The resulting pointer to the activation factory that corresponds with the class specified by <paramref name="activatableClassId"/>.</returns>
                     public static void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)
-                    """);
+                    """, isMultiline: true);
 
                 using (writer.WriteBlock())
                 {
@@ -167,7 +167,7 @@ public partial class AuthoringExportTypesGenerator
                             static extern void* AuthoringGetActivationFactory(
                                 [UnsafeAccessorType("ABI.{info.AssemblyName.EscapeIdentifierName()}.ManagedExports, WinRT.Authoring")] object? _,
                                 ReadOnlySpan<char> activatableClassId);
-                            """);
+                            """, isMultiline: true);
                     }
 
                     // Emit the specialized code to redirect the activation
@@ -181,7 +181,7 @@ public partial class AuthoringExportTypesGenerator
                             void* activationFactory = AuthoringGetActivationFactory(null, activatableClassId);
 
                             return activationFactory ?? ReferencedManagedExports.GetActivationFactory(activatableClassId);
-                            """);
+                            """, isMultiline: true);
                     }
                     else if (info.Options.MergeReferencedActivationFactories)
                     {
@@ -198,7 +198,7 @@ public partial class AuthoringExportTypesGenerator
                     {
                         return (nint)GetActivationFactory(activatableClassId.AsSpan());
                     }
-                    """);
+                    """, isMultiline: true);
             }
 
             // Emit a helper type with the logic for merging activaton factories, if needed
@@ -209,7 +209,7 @@ public partial class AuthoringExportTypesGenerator
                     /// <summary>
                     /// Contains the logic for activating types from transitively referenced Windows Runtime components.
                     /// </summary>
-                    """);
+                    """, isMultiline: true);
                 writer.WriteGeneratedAttributes(nameof(AuthoringExportTypesGenerator), useFullyQualifiedTypeNames: false);
                 writer.WriteLine("file static unsafe class ReferencedManagedExports");
 
@@ -222,7 +222,7 @@ public partial class AuthoringExportTypesGenerator
                         /// <param name="activatableClassId">The class identifier that is associated with an activatable runtime class.</param>
                         /// <returns>The resulting pointer to the activation factory that corresponds with the class specified by <paramref name="activatableClassId"/>.</returns>
                         public static void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)
-                        """);
+                        """, isMultiline: true);
 
                     using (writer.WriteBlock())
                     {
@@ -239,7 +239,7 @@ public partial class AuthoringExportTypesGenerator
                                 {
                                     return activationFactory;
                                 }
-                                """);
+                                """, isMultiline: true);
                         }
 
                         // No match across the referenced factories, we can't do anything else
@@ -290,7 +290,7 @@ public partial class AuthoringExportTypesGenerator
                 /// <summary>
                 /// Contains the native exports for activating types from the current project in an authoring scenario.
                 /// </summary>
-                """);
+                """, isMultiline: true);
 
             // Emit the attributes to mark the code as generated, and to exclude it from code coverage as well. We also use a
             // file-scoped P/Invoke, so we don't take a dependency on private implementation detail types from 'WinRT.Runtime.dll'.
@@ -383,7 +383,7 @@ public partial class AuthoringExportTypesGenerator
                     [SupportedOSPlatform("windows6.2")]
                     public static extern char* WindowsGetStringRawBuffer(HSTRING @string, uint* length);
                 }
-                """);
+                """, isMultiline: true);
 
             context.AddSource("NativeExports.g.cs", writer.ToStringAndClear());
         }

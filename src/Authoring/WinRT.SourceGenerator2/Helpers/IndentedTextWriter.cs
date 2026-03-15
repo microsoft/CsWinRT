@@ -143,6 +143,14 @@ internal ref struct IndentedTextWriter
                 {
                     ReadOnlySpan<char> line = content[..newLineIndex];
 
+                    // Remove the trailing 'CR' character, if present. This ensures that the resulting
+                    // text will be correctly normalized with 'LF' newlines, regardless of the line
+                    // endings used in source files. In fact, this whole repo uses 'CRLF' line endings.
+                    if (line is [.. var trim, '\r'])
+                    {
+                        line = trim;
+                    }
+
                     // Write the current line (if it's empty, we can skip writing the text entirely).
                     // This ensures that raw multiline string literals with blank lines don't have
                     // extra whitespace at the start of those lines, which would otherwise happen.
