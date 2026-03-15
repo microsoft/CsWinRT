@@ -144,12 +144,12 @@ namespace WindowsRuntime.Internal
     [uuid(F4B8E804-811E-4436-B69C-44CB67B72084), ProjectionInternal]
     interface IWebAuthenticationCoreManagerInterop
     {
-        Windows.Foundation.IAsyncOperation<Windows.Security.Authentication.Web.Core.WebTokenRequest> RequestTokenForWindowAsync(
+        Windows.Foundation.IAsyncOperation<Windows.Security.Authentication.Web.Core.WebTokenRequestResult> RequestTokenForWindowAsync(
             HWND appWindow,
             Windows.Security.Authentication.Web.Core.WebTokenRequest request, 
             ref const GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult>)    
 
-        Windows.Foundation.IAsyncOperation<Windows.Security.Authentication.Web.Core.WebTokenRequest> RequestTokenWithWebAccountForWindowAsync(
+        Windows.Foundation.IAsyncOperation<Windows.Security.Authentication.Web.Core.WebTokenRequestResult> RequestTokenWithWebAccountForWindowAsync(
             HWND appWindow,
             Windows.Security.Authentication.Web.Core.WebTokenRequest request,
             Windows.Security.Credentials.WebAccount webAccount,
