@@ -35,10 +35,14 @@ using global::WindowsRuntime.InteropServices.Marshalling;
 
 namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
 {
+    /// <summary>
+    /// Extensions for <see cref="CoreDragDropManager"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class CoreDragDropManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="CoreDragDropManager"/> activation factory, as <c>IDragDropManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.ApplicationModel.DataTransfer.DragDrop.Core.CoreDragDropManager",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDragDropManagerInterop);
@@ -46,7 +50,14 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
 
         extension(CoreDragDropManager)
         {
-            public static CoreDragDropManager GetForWindow(IntPtr appWindow)
+            /// <summary>
+            /// Gets a <see cref="CoreDragDropManager"/> object for the window of the active application.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <returns>The resulting <see cref="CoreDragDropManager"/> object</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the resulting <see cref="CoreDragDropManager"/> object.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/dragdropinterop/nf-dragdropinterop-idragdropmanagerinterop-getforwindow"/>
+            public static CoreDragDropManager GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -73,13 +84,14 @@ namespace Windows.Graphics.Printing
             runtimeClassName: "Windows.Graphics.Printing.PrintManager",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPrintManagerInterop);
 
+        /// <summary>The accessor for <c>__uuidof(IAsyncOperation&lt;bool&gt;)</c>.</summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<bool>")]
         private static extern ref readonly Guid IID_IAsyncOperation_bool([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(PrintManager)
         {
-            public static PrintManager GetForWindow(IntPtr appWindow)
+            public static PrintManager GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -91,7 +103,7 @@ namespace Windows.Graphics.Printing
 #endif
             }
 
-            public static IAsyncOperation<bool> ShowPrintUIForWindowAsync(IntPtr appWindow)
+            public static IAsyncOperation<bool> ShowPrintUIForWindowAsync(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -119,7 +131,7 @@ namespace Windows.Media
 
         extension(SystemMediaTransportControls)
         {
-            public static SystemMediaTransportControls GetForWindow(IntPtr appWindow)
+            public static SystemMediaTransportControls GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -147,7 +159,7 @@ namespace Windows.Media.PlayTo
 
         extension(PlayToManager)
         {
-            public static PlayToManager GetForWindow(IntPtr appWindow)
+            public static PlayToManager GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -159,7 +171,7 @@ namespace Windows.Media.PlayTo
 #endif
             }
 
-            public static void ShowPlayToUIForWindow(IntPtr appWindow)
+            public static void ShowPlayToUIForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -192,7 +204,7 @@ namespace Windows.Security.Credentials.UI
 
         extension(UserConsentVerifier)
         {
-            public static IAsyncOperation<UserConsentVerificationResult> RequestVerificationForWindowAsync(IntPtr appWindow, string message)
+            public static IAsyncOperation<UserConsentVerificationResult> RequestVerificationForWindowAsync(nint appWindow, string message)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -226,7 +238,7 @@ namespace Windows.Security.Authentication.Web.Core
 
         extension(WebAuthenticationCoreManager)
         {
-            public static IAsyncOperation<WebTokenRequestResult> RequestTokenForWindowAsync(IntPtr appWindow, WebTokenRequest request)
+            public static IAsyncOperation<WebTokenRequestResult> RequestTokenForWindowAsync(nint appWindow, WebTokenRequest request)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -239,7 +251,7 @@ namespace Windows.Security.Authentication.Web.Core
 #endif
             }
 
-            public static IAsyncOperation<WebTokenRequestResult> RequestTokenWithWebAccountForWindowAsync(IntPtr appWindow, WebTokenRequest request, WebAccount webAccount)
+            public static IAsyncOperation<WebTokenRequestResult> RequestTokenWithWebAccountForWindowAsync(nint appWindow, WebTokenRequest request, WebAccount webAccount)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -271,7 +283,7 @@ namespace Windows.UI.ApplicationSettings
 
         extension(AccountsSettingsPane)
         {
-            public static AccountsSettingsPane GetForWindow(IntPtr appWindow)
+            public static AccountsSettingsPane GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -283,7 +295,7 @@ namespace Windows.UI.ApplicationSettings
 #endif
             }
 
-            public static IAsyncAction ShowManageAccountsForWindowAsync(IntPtr appWindow)
+            public static IAsyncAction ShowManageAccountsForWindowAsync(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -295,7 +307,7 @@ namespace Windows.UI.ApplicationSettings
 #endif
             }
 
-            public static IAsyncAction ShowAddAccountForWindowAsync(IntPtr appWindow)
+            public static IAsyncAction ShowAddAccountForWindowAsync(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -323,7 +335,7 @@ namespace Windows.UI.Input
 
         extension(RadialControllerConfiguration)
         {
-            public static RadialControllerConfiguration GetForWindow(IntPtr hwnd)
+            public static RadialControllerConfiguration GetForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -348,7 +360,7 @@ namespace Windows.UI.Input
 
         extension(RadialController)
         {
-            public static RadialController CreateForWindow(IntPtr hwnd)
+            public static RadialController CreateForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -376,7 +388,7 @@ namespace Windows.UI.Input.Core
 
         extension(RadialControllerIndependentInputSource)
         {
-            public static RadialControllerIndependentInputSource CreateForWindow(IntPtr hwnd)
+            public static RadialControllerIndependentInputSource CreateForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -404,7 +416,7 @@ namespace Windows.UI.Input.Spatial
 
         extension(SpatialInteractionManager)
         {
-            public static SpatialInteractionManager GetForWindow(IntPtr window)
+            public static SpatialInteractionManager GetForWindow(nint window)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -432,7 +444,7 @@ namespace Windows.UI.ViewManagement
 
         extension(InputPane)
         {
-            public static InputPane GetForWindow(IntPtr appWindow)
+            public static InputPane GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -457,7 +469,7 @@ namespace Windows.UI.ViewManagement
 
         extension(UIViewSettings)
         {
-            public static UIViewSettings GetForWindow(IntPtr hwnd)
+            public static UIViewSettings GetForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -486,7 +498,7 @@ namespace Windows.Graphics.Display
 
         extension(DisplayInformation)
         {
-            public static DisplayInformation GetForWindow(IntPtr window)
+            public static DisplayInformation GetForWindow(nint window)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -498,7 +510,7 @@ namespace Windows.Graphics.Display
 #endif
             }
 
-            public static DisplayInformation GetForMonitor(IntPtr monitor)
+            public static DisplayInformation GetForMonitor(nint monitor)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
