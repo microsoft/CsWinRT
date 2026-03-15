@@ -18,7 +18,6 @@ namespace WinRT.Interop
     };
 
     // accountssettingspaneinterop.idl (see: https://learn.microsoft.com/windows/win32/api/accountssettingspaneinterop/)
-#if UAC_VERSION > 2
     [uuid(D3EE12AD-3865-4362-9746-B75A682DF0E6), ProjectionInternal]
     interface IAccountsSettingsPaneInterop
     {
@@ -34,10 +33,8 @@ namespace WinRT.Interop
             HWND appWindow,
             ref const GUID riid); // __uuidof(IAsyncAction)
     }
-#endif
 
     // dragdropinterop.idl (see: https://learn.microsoft.com/windows/win32/api/dragdropinterop/)
-#if UAC_VERSION > 0
     [uuid(5AD8CBA7-4C01-4DAC-9074-827894292D63), ProjectionInternal]
     interface IDragDropManagerInterop
     {
@@ -45,10 +42,8 @@ namespace WinRT.Interop
             HWND hwnd,
             ref const GUID riid); // __uuidof(CoreDragDropManager)
     }
-#endif
 
     // inputpaneinterop.idl (see: https://learn.microsoft.com/windows/win32/api/inputpaneinterop/)
-#if UAC_VERSION > 2
     [uuid(75CF2C57-9195-4931-8332-F0B409E916AF), ProjectionInternal]
     interface IInputPaneInterop
     {
@@ -56,10 +51,8 @@ namespace WinRT.Interop
             HWND appWindow,
             ref const GUID riid); // __uuidof(InputPane)
     }
-#endif
 
     // PlayToManagerInterop.idl (see: https://learn.microsoft.com/windows/win32/api/playtomanagerinterop/)
-#if UAC_VERSION > 0
     [uuid(24394699-1F2C-4EB3-8CD7-0EC1DA42A540), ProjectionInternal]
     interface IPlayToManagerInterop
     {
@@ -70,10 +63,8 @@ namespace WinRT.Interop
         void ShowPlayToUIForWindow(
             HWND appWindow);
     }
-#endif
 
     // PrintManagerInterop.idl (see: https://learn.microsoft.com/windows/win32/api/printmanagerinterop/)
-#if UAC_VERSION > 0
     [uuid(c5435a42-8d43-4e7b-a68a-ef311e392087), ProjectionInternal]
     interface IPrintManagerInterop
     {
@@ -85,10 +76,8 @@ namespace WinRT.Interop
             HWND appWindow,
             ref const GUID riid); // __uuidof(IAsyncOperation<Boolean>)
     }
-#endif
 
     // RadialControllerInterop.idl (see: https://learn.microsoft.com/windows/win32/api/radialcontrollerinterop/)
-#if UAC_VERSION > 2
     [uuid(1B0535C9-57AD-45C1-9D79-AD5C34360513), ProjectionInternal]
     interface IRadialControllerInterop
     {
@@ -96,9 +85,7 @@ namespace WinRT.Interop
             HWND hwnd,
             ref const GUID riid); // __uuidof(RadialController)
     }
-#endif
 
-#if UAC_VERSION > 2
     [uuid(787cdaac-3186-476d-87e4-b9374a7b9970), ProjectionInternal]
     interface IRadialControllerConfigurationInterop
     {
@@ -106,9 +93,7 @@ namespace WinRT.Interop
             HWND hwnd,
             ref const GUID riid); // __uuidof(RadialControllerConfiguration)
     }
-#endif
 
-#if UAC_VERSION > 3
     [uuid(3D577EFF-4CEE-11E6-B535-001BDC06AB3B), ProjectionInternal]
     interface IRadialControllerIndependentInputSourceInterop
     {
@@ -116,11 +101,9 @@ namespace WinRT.Interop
             HWND hwnd,
             ref const GUID riid); // __uuidof(RadialControllerIndependentInputSource)
     }
-#endif
 
     // SpatialInteractionManagerInterop.idl (see: https://learn.microsoft.com/windows/win32/api/spatialinteractionmanagerinterop/)
     // This interop interface is duplicated by IHolographicSpaceInterop, which has the same IID
-#if UAC_VERSION > 3
     [uuid(5C4EE536-6A98-4B86-A170-587013D6FD4B), ProjectionInternal]
     interface ISpatialInteractionManagerInterop
     {
@@ -128,10 +111,8 @@ namespace WinRT.Interop
             HWND window,
             ref const GUID riid); // __uuidof(SpatialInteractionManager)
     }
-#endif
 
     // SystemMediaTransportControlsInterop.idl (see: https://learn.microsoft.com/windows/win32/api/systemmediatransportcontrolsinterop/)
-#if UAC_VERSION > 0
     [uuid(ddb0472d-c911-4a1f-86d9-dc3d71a95f5a), ProjectionInternal]
     interface ISystemMediaTransportControlsInterop
     {
@@ -139,10 +120,8 @@ namespace WinRT.Interop
             HWND appWindow,
             ref const GUID riid); // __uuidof(SystemMediaTransportControls)
     }
-#endif
 
     // UIViewSettingsInterop.idl (see: https://learn.microsoft.com/windows/win32/api/uiviewsettingsinterop/)
-#if UAC_VERSION > 0
     [uuid(3694dbf9-8f68-44be-8ff5-195c98ede8a6), ProjectionInternal]
     interface IUIViewSettingsInterop
     {
@@ -150,10 +129,8 @@ namespace WinRT.Interop
             HWND hwnd,
             ref const GUID riid); // __uuidof(UIViewSettings)
     }
-#endif
 
     // UserConsentVerifierInterop.idl (see: https://learn.microsoft.com/windows/win32/api/userconsentverifierinterop/)
-#if UAC_VERSION > 4
     [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C), ProjectionInternal]
     interface IUserConsentVerifierInterop
     {
@@ -162,10 +139,8 @@ namespace WinRT.Interop
             String message,
             ref const GUID riid); // __uuidof(IAsyncOperation<UserConsentVerificationResult>)     
     }
-#endif
 
     // WebAuthenticationCoreManagerInterop.idl (see: https://learn.microsoft.com/windows/win32/api/webauthenticationcoremanagerinterop/)
-#if UAC_VERSION > 0
     [uuid(F4B8E804-811E-4436-B69C-44CB67B72084), ProjectionInternal]
     interface IWebAuthenticationCoreManagerInterop
     {
@@ -180,7 +155,6 @@ namespace WinRT.Interop
             Windows.Security.Credentials.WebAccount webAccount,
             ref const GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult>)
     }
-#endif
 
     // WindowsGraphicsDisplayInterop.idl (see: https://learn.microsoft.com/windows/win32/api/windows.graphics.display.interop/)
 #if UAC_VERSION > 14

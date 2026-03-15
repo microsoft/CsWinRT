@@ -19,30 +19,11 @@
 #if UAC_VERSION_9
 #define UAC_VERSION_8
 #endif
-#if UAC_VERSION_8
-#define UAC_VERSION_7
-#endif
-#if UAC_VERSION_7
-#define UAC_VERSION_6
-#endif
-#if UAC_VERSION_6
-#define UAC_VERSION_5
-#endif
-#if UAC_VERSION_5
-#define UAC_VERSION_4
-#endif
-#if UAC_VERSION_4
-#define UAC_VERSION_3
-#endif
-#if UAC_VERSION_3
-#define UAC_VERSION_2
-#endif
-#if UAC_VERSION_2
-#define UAC_VERSION_1
-#endif
-#if !UAC_VERSION_1
-#error Unsupported Universal API Contract version
-#endif
+
+// All 'UAC_VERSION' checks for version '7' and below are not present,
+// because the Windows SDK 17763 maps to version '7', and that's the
+// minimum Windows SDK that is currently supported. See this mapping
+// in the Windows SDK projection project. The two should be kept in sync.
 
 #pragma warning disable CSWINRT3001
 
@@ -54,7 +35,6 @@ using Windows.Security.Credentials;
 
 namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
 {
-#if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class CoreDragDropManagerExtensions
     {
@@ -79,12 +59,10 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
             }
         }
     }
-#endif
 }
 
 namespace Windows.Graphics.Printing
 {
-#if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class PrintManagerExtensions
     {
@@ -124,12 +102,10 @@ namespace Windows.Graphics.Printing
             }
         }
     }
-#endif
 }
 
 namespace Windows.Media
 {
-#if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class SystemMediaTransportControlsExtensions
     {
@@ -154,12 +130,10 @@ namespace Windows.Media
             }
         }
     }
-#endif
 }
 
 namespace Windows.Media.PlayTo
 {
-#if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class PlayToManagerExtensions
     {
@@ -195,12 +169,10 @@ namespace Windows.Media.PlayTo
             }
         }
     }
-#endif
 }
 
 namespace Windows.Security.Credentials.UI
 {
-#if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class UserConsentVerifierExtensions
     {
@@ -229,12 +201,10 @@ namespace Windows.Security.Credentials.UI
             }
         }
     }
-#endif
 }
 
 namespace Windows.Security.Authentication.Web.Core
 {
-#if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class WebAuthenticationCoreManagerExtensions
     {
@@ -277,12 +247,10 @@ namespace Windows.Security.Authentication.Web.Core
             }
         }
     }
-#endif
 }
 
 namespace Windows.UI.ApplicationSettings
 {
-#if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class AccountsSettingsPaneExtensions
     {
@@ -331,12 +299,10 @@ namespace Windows.UI.ApplicationSettings
             }
         }
     }
-#endif
 }
 
 namespace Windows.UI.Input
 {
-#if UAC_VERSION_3
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.14393.0")]
     public static class RadialControllerConfigurationExtensions
     {
@@ -386,12 +352,10 @@ namespace Windows.UI.Input
             }
         }
     }
-#endif
 }
 
 namespace Windows.UI.Input.Core
 {
-#if UAC_VERSION_4
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.15063.0")]
     public static class RadialControllerIndependentInputSourceExtensions
     {
@@ -416,12 +380,10 @@ namespace Windows.UI.Input.Core
             }
         }
     }
-#endif
 }
 
 namespace Windows.UI.Input.Spatial
 {
-#if UAC_VERSION_2
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10586.0")]
     public static class SpatialInteractionManagerExtensions
     {
@@ -446,12 +408,10 @@ namespace Windows.UI.Input.Spatial
             }
         }
     }
-#endif
 }
 
 namespace Windows.UI.ViewManagement
 {
-#if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class InputPaneExtensions
     {
@@ -501,7 +461,6 @@ namespace Windows.UI.ViewManagement
             }
         }
     }
-#endif
 }
 
 namespace Windows.Graphics.Display
@@ -548,7 +507,6 @@ namespace Windows.Graphics.Display
 
 namespace Windows.ApplicationModel.DataTransfer
 {
-#if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class DataTransferManagerExtensions
     {
@@ -587,7 +545,6 @@ namespace Windows.ApplicationModel.DataTransfer
             }
         }
     }
-#endif
 
 #if !CSWINRT_REFERENCE_PROJECTION
     internal static class IDataTransferManagerInteropMethods
