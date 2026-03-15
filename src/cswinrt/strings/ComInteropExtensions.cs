@@ -727,7 +727,7 @@ namespace Windows.ApplicationModel.DataTransfer
         /// <summary>The cached <see cref="DataTransferManager"/> activation factory, as <c>IDataTransferManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.ApplicationModel.DataTransfer.DataTransferManager",
-            iid: in IDataTransferManagerInteropMethods.IID);
+            iid: in global::ABI.WindowsRuntime.Internal.IDataTransferManagerInteropMethods.IID);
 #endif
 
         extension(DataTransferManager)
