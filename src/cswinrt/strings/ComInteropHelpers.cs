@@ -67,7 +67,7 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (CoreDragDropManager) global::ABI.WinRT.Interop.IDragDropManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_ApplicationModel_DataTransfer_DragDrop_Core_ICoreDragDropManager);
+            return global::ABI.WinRT.Interop.IDragDropManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_ApplicationModel_DataTransfer_DragDrop_Core_ICoreDragDropManager);
 #endif
         }
     }
@@ -103,7 +103,7 @@ namespace Windows.Graphics.Printing
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (PrintManager) global::ABI.WinRT.Interop.IPrintManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Printing_IPrintManager);
+            return global::ABI.WinRT.Interop.IPrintManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Printing_IPrintManager);
 #endif
         }
 
@@ -112,7 +112,7 @@ namespace Windows.Graphics.Printing
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (IAsyncOperation<bool>) global::ABI.WinRT.Interop.IPrintManagerInteropMethods.ShowPrintUIForWindowAsync(objectReference, appWindow, IID_IAsyncOperation_bool);
+            return global::ABI.WinRT.Interop.IPrintManagerInteropMethods.ShowPrintUIForWindowAsync(objectReference, appWindow, IID_IAsyncOperation_bool);
 #endif
         }
     }
@@ -134,7 +134,7 @@ namespace Windows.Media
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (SystemMediaTransportControls) global::ABI.WinRT.Interop.ISystemMediaTransportControlsInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Media_ISystemMediaTransportControls);
+            return global::ABI.WinRT.Interop.ISystemMediaTransportControlsInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Media_ISystemMediaTransportControls);
 #endif
         }
     }
@@ -156,7 +156,7 @@ namespace Windows.Media.PlayTo
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (PlayToManager) global::ABI.WinRT.Interop.IPlayToManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Media_PlayTo_IPlayToManager);
+            return global::ABI.WinRT.Interop.IPlayToManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Media_PlayTo_IPlayToManager);
 #endif
         }
 
@@ -200,7 +200,7 @@ namespace Windows.Security.Credentials.UI
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (IAsyncOperation<UserConsentVerificationResult>) global::ABI.WinRT.Interop.IUserConsentVerifierInteropMethods.RequestVerificationForWindowAsync(objectReference, appWindow, message, IID_IAsyncOperation_UserConsentVerificationResult);
+            return global::ABI.WinRT.Interop.IUserConsentVerifierInteropMethods.RequestVerificationForWindowAsync(objectReference, appWindow, message, IID_IAsyncOperation_UserConsentVerificationResult);
 #endif
         }
     }
@@ -266,7 +266,7 @@ namespace Windows.UI.ApplicationSettings
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (AccountsSettingsPane) global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_UI_ApplicationSettings_IAccountsSettingsPane);
+            return global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_UI_ApplicationSettings_IAccountsSettingsPane);
 #endif
         }
 
@@ -275,7 +275,7 @@ namespace Windows.UI.ApplicationSettings
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (IAsyncAction) global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.ShowManageAccountsForWindowAsync(objectReference, appWindow, global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_Windows_Foundation_IAsyncAction);
+            return global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.ShowManageAccountsForWindowAsync(objectReference, appWindow, global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_Windows_Foundation_IAsyncAction);
 #endif
         }
 
@@ -284,7 +284,7 @@ namespace Windows.UI.ApplicationSettings
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (IAsyncAction) global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.ShowAddAccountForWindowAsync(objectReference, appWindow, global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_Windows_Foundation_IAsyncAction);
+            return global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.ShowAddAccountForWindowAsync(objectReference, appWindow, global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_Windows_Foundation_IAsyncAction);
 #endif
         }
     }
@@ -306,7 +306,7 @@ namespace Windows.UI.Input
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (RadialControllerConfiguration) global::ABI.WinRT.Interop.IRadialControllerConfigurationInteropMethods.GetForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_IRadialControllerConfiguration);
+            return global::ABI.WinRT.Interop.IRadialControllerConfigurationInteropMethods.GetForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_IRadialControllerConfiguration);
 #endif
         }
     }
@@ -323,7 +323,7 @@ namespace Windows.UI.Input
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (RadialController) global::ABI.WinRT.Interop.IRadialControllerInteropMethods.CreateForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_IRadialController);
+            return global::ABI.WinRT.Interop.IRadialControllerInteropMethods.CreateForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_IRadialController);
 #endif
         }
     }
@@ -345,7 +345,7 @@ namespace Windows.UI.Input.Core
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (RadialControllerIndependentInputSource) global::ABI.WinRT.Interop.IRadialControllerIndependentInputSourceInteropMethods.CreateForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_Core_IRadialControllerIndependentInputSource);
+            return global::ABI.WinRT.Interop.IRadialControllerIndependentInputSourceInteropMethods.CreateForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_Core_IRadialControllerIndependentInputSource);
 #endif
         }
     }
@@ -367,7 +367,7 @@ namespace Windows.UI.Input.Spatial
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (SpatialInteractionManager) global::ABI.WinRT.Interop.ISpatialInteractionManagerInteropMethods.GetForWindow(objectReference, window, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_Spatial_ISpatialInteractionManager);
+            return global::ABI.WinRT.Interop.ISpatialInteractionManagerInteropMethods.GetForWindow(objectReference, window, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_Spatial_ISpatialInteractionManager);
 #endif
         }
     }
@@ -389,7 +389,7 @@ namespace Windows.UI.ViewManagement
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (InputPane) global::ABI.WinRT.Interop.IInputPaneInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_UI_ViewManagement_IInputPane);
+            return global::ABI.WinRT.Interop.IInputPaneInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_UI_ViewManagement_IInputPane);
 #endif
         }
     }
@@ -406,7 +406,7 @@ namespace Windows.UI.ViewManagement
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (UIViewSettings) global::ABI.WinRT.Interop.IUIViewSettingsInteropMethods.GetForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_ViewManagement_IUIViewSettings);
+            return global::ABI.WinRT.Interop.IUIViewSettingsInteropMethods.GetForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_ViewManagement_IUIViewSettings);
 #endif
         }
     }
@@ -428,7 +428,7 @@ namespace Windows.Graphics.Display
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (DisplayInformation) global::ABI.WinRT.Interop.IDisplayInformationStaticsInteropMethods.GetForWindow(objectReference, window, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Display_IDisplayInformation);
+            return global::ABI.WinRT.Interop.IDisplayInformationStaticsInteropMethods.GetForWindow(objectReference, window, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Display_IDisplayInformation);
 #endif
         }
 
@@ -437,7 +437,7 @@ namespace Windows.Graphics.Display
 #if CSWINRT_REFERENCE_PROJECTION
             throw null;
 #else
-            return (DisplayInformation) global::ABI.WinRT.Interop.IDisplayInformationStaticsInteropMethods.GetForMonitor(objectReference, monitor, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Display_IDisplayInformation);
+            return global::ABI.WinRT.Interop.IDisplayInformationStaticsInteropMethods.GetForMonitor(objectReference, monitor, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Display_IDisplayInformation);
 #endif
         }
     }
