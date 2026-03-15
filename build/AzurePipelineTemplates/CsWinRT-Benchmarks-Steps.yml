@@ -76,7 +76,6 @@ steps:
   inputs:
     workingDirectory: $(Build.SourcesDirectory)\src
     script: |
-      set "RESTORE_SOURCES=$(_BenchmarkNuGetFeed);$(_SdkNuGetFeed)"
       dotnet run ^
         --project Benchmarks\Benchmarks.csproj ^
         -c Release ^
@@ -87,6 +86,7 @@ steps:
         -p:BenchmarkWindowsSdkPackageVersion=$(_BenchmarkWindowsSdkPackageVersion) ^
         -- --mode ${{ parameters.BenchmarkMode }} --filter *
   env:
+    RESTORE_SOURCES: $(_BenchmarkNuGetFeed);$(_SdkNuGetFeed)
     BENCHMARK_MODE: ${{ parameters.BenchmarkMode }}
     BENCHMARK_CSWINRT3_VERSION: $(_BenchmarkBaselineCsWinRT3Version)
     BENCHMARK_CSWINRT_BASELINE_VERSION: $(_BenchmarkBaselineCsWinRT3Version)
