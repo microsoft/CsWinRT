@@ -30,8 +30,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Windows.Foundation;
-using Windows.Security.Credentials;
+using global::WindowsRuntime.InteropServices;
 
 namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
 {
@@ -39,7 +38,7 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
     public static class CoreDragDropManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.ApplicationModel.DataTransfer.DragDrop.Core.CoreDragDropManager",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDragDropManagerInterop);
 #endif
@@ -63,16 +62,18 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
 
 namespace Windows.Graphics.Printing
 {
+    using Windows.Foundation;
+
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class PrintManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Graphics.Printing.PrintManager",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPrintManagerInterop);
 
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<bool>")]
-        static extern ref readonly Guid IID_IAsyncOperation_bool([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
+        private static extern ref readonly Guid IID_IAsyncOperation_bool([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(PrintManager)
@@ -110,7 +111,7 @@ namespace Windows.Media
     public static class SystemMediaTransportControlsExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Media.SystemMediaTransportControls",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISystemMediaTransportControlsInterop);
 #endif
@@ -138,7 +139,7 @@ namespace Windows.Media.PlayTo
     public static class PlayToManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Media.PlayTo.PlayToManager",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPlayToManagerInterop);
 #endif
@@ -173,16 +174,19 @@ namespace Windows.Media.PlayTo
 
 namespace Windows.Security.Credentials.UI
 {
+    using Windows.Foundation;
+    using Windows.Security.Credentials;
+
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class UserConsentVerifierExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Security.Credentials.UI.UserConsentVerifier",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUserConsentVerifierInterop);
 
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Credentials-UI-UserConsentVerificationResult>")]
-        static extern ref readonly Guid IID_IAsyncOperation_UserConsentVerificationResult([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
+        private static extern ref readonly Guid IID_IAsyncOperation_UserConsentVerificationResult([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(UserConsentVerifier)
@@ -205,16 +209,18 @@ namespace Windows.Security.Credentials.UI
 
 namespace Windows.Security.Authentication.Web.Core
 {
+    using Windows.Foundation;
+
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class WebAuthenticationCoreManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Security.Authentication.Web.Core.WebAuthenticationCoreManager",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IWebAuthenticationCoreManagerInterop);
 
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Authentication-Web-Core-WebTokenRequestResult>")]
-        static extern ref readonly Guid IID_IAsyncOperation_WebTokenRequestResult([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
+        private static extern ref readonly Guid IID_IAsyncOperation_WebTokenRequestResult([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(WebAuthenticationCoreManager)
@@ -224,7 +230,7 @@ namespace Windows.Security.Authentication.Web.Core
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
 #else
-                return (IAsyncOperation<WebTokenRequestResult>) global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenForWindowAsync(
+                return global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenForWindowAsync(
                     thisReference: objectReference,
                     appWindow: appWindow,
                     request: request,
@@ -237,7 +243,7 @@ namespace Windows.Security.Authentication.Web.Core
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
 #else
-                return (IAsyncOperation<WebTokenRequestResult>) global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenWithWebAccountForWindowAsync(
+                return global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenWithWebAccountForWindowAsync(
                     thisReference: objectReference,
                     appWindow: appWindow,
                     request: request,
@@ -251,11 +257,13 @@ namespace Windows.Security.Authentication.Web.Core
 
 namespace Windows.UI.ApplicationSettings
 {
+    using Windows.Foundation;
+
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class AccountsSettingsPaneExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.ApplicationSettings.AccountsSettingsPane",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IAccountsSettingsPaneInterop);
 #endif
@@ -307,7 +315,7 @@ namespace Windows.UI.Input
     public static class RadialControllerConfigurationExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.RadialControllerConfiguration",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerConfigurationInterop);
 #endif
@@ -332,7 +340,7 @@ namespace Windows.UI.Input
     public static class RadialControllerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.RadialController",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerInterop);
 #endif
@@ -360,7 +368,7 @@ namespace Windows.UI.Input.Core
     public static class RadialControllerIndependentInputSourceExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.Core.RadialControllerIndependentInputSource",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerIndependentInputSourceInterop);
 #endif
@@ -388,7 +396,7 @@ namespace Windows.UI.Input.Spatial
     public static class SpatialInteractionManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.Spatial.SpatialInteractionManager",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISpatialInteractionManagerInterop);
 #endif
@@ -416,7 +424,7 @@ namespace Windows.UI.ViewManagement
     public static class InputPaneExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.ViewManagement.InputPane",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IInputPaneInterop);
 #endif
@@ -441,7 +449,7 @@ namespace Windows.UI.ViewManagement
     public static class UIViewSettingsExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.ViewManagement.UIViewSettings",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUIViewSettingsInterop);
 #endif
@@ -470,7 +478,7 @@ namespace Windows.Graphics.Display
     public static class DisplayInformationExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Graphics.Display.DisplayInformation",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDisplayInformationStaticsInterop);
 #endif
@@ -511,12 +519,12 @@ namespace Windows.ApplicationModel.DataTransfer
     public static class DataTransferManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
-        private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory(
+        private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.ApplicationModel.DataTransfer.DataTransferManager",
             iid: in IDataTransferManagerInteropMethods.IID);
 
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#Windows>IDataTransferManager")]
-        static extern ref readonly Guid IID_IDataTransferManager([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
+        private static extern ref readonly Guid IID_IDataTransferManager([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(DataTransferManager)
@@ -562,9 +570,9 @@ namespace Windows.ApplicationModel.DataTransfer
             }
         }
 
-        internal static unsafe global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference _obj, global::System.IntPtr appWindow, in global::System.Guid riid)
+        internal static unsafe global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(WindowsRuntimeObjectReference _obj, global::System.IntPtr appWindow, in global::System.Guid riid)
         {
-            using global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue activationFactoryValue = _obj.AsValue();
+            using WindowsRuntimeObjectReferenceValue activationFactoryValue = _obj.AsValue();
             void* thisPtr = activationFactoryValue.GetThisPtrUnsafe();
             void* ptr = null;
 
@@ -581,9 +589,9 @@ namespace Windows.ApplicationModel.DataTransfer
             }
         }
 
-        internal static unsafe void ShowShareUIForWindow(global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference _obj, global::System.IntPtr appWindow)
+        internal static unsafe void ShowShareUIForWindow(WindowsRuntimeObjectReference _obj, global::System.IntPtr appWindow)
         {
-            using global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue activationFactoryValue = _obj.AsValue();
+            using WindowsRuntimeObjectReferenceValue activationFactoryValue = _obj.AsValue();
             void* thisPtr = activationFactoryValue.GetThisPtrUnsafe();
 
             // IDataTransferManagerInterop inherits IUnknown (3 functions) and provides ShowShareUIForWindow giving a total of 5 functions
