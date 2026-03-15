@@ -120,7 +120,7 @@ public class Test_CustomPropertyProviderGenerator
                     /// <inheritdoc/>
                     public void SetValue(object target, object value)
                     {
-                        ((global::MyNamespace.MyClass)target).Name = (string)value;
+                        throw new NotSupportedException();
                     }
 
                     /// <inheritdoc/>
@@ -395,7 +395,7 @@ public class Test_CustomPropertyProviderGenerator
                     /// <inheritdoc/>
                     public void SetValue(object target, object value)
                     {
-                        ((global::MyNamespace.MyClass)target).Name = (string)value;
+                        throw new NotSupportedException();
                     }
 
                     /// <inheritdoc/>
