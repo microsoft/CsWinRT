@@ -82,6 +82,7 @@ steps:
       -- --mode ${{ parameters.BenchmarkMode }} --filter *
   env:
     BENCHMARK_MODE: ${{ parameters.BenchmarkMode }}
+    BENCHMARK_CSWINRT3_VERSION: $(_BenchmarkBaselineCsWinRT3Version)
     BENCHMARK_CSWINRT_BASELINE_VERSION: $(_BenchmarkBaselineCsWinRT3Version)
     BENCHMARK_CSWINRT2_VERSION: $(_BenchmarkCsWinRT2Version)
     BENCHMARK_CSWINRT_CURRENT_VERSION: $(_BenchmarkCurrentCsWinRT3Version)
