@@ -83,22 +83,11 @@ namespace Windows.Graphics.Printing
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class PrintManagerExtensions
     {
-        private static ref readonly Guid IID_IAsyncOperation_bool
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]   
-            get
-            {
-                ReadOnlySpan<byte> data =
-                [
-                    0xB3, 0xEF, 0xB5, 0xCD, 0x88, 0x57, 0x9D, 0x50, 0x9B, 0xE1, 0x71, 0xCC, 0xB8, 0xA3, 0x36, 0x2A
-                ];
-
-                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-            }
-        }
-
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Graphics.Printing.PrintManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPrintManagerInterop);
+
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<bool>")]
+        static extern ref readonly Guid IID_IAsyncOperation_bool([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(PrintManager)
@@ -117,7 +106,7 @@ namespace Windows.Graphics.Printing
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
 #else
-                return global::ABI.WinRT.Interop.IPrintManagerInteropMethods.ShowPrintUIForWindowAsync(objectReference, appWindow, IID_IAsyncOperation_bool);
+                return global::ABI.WinRT.Interop.IPrintManagerInteropMethods.ShowPrintUIForWindowAsync(objectReference, appWindow, IID_IAsyncOperation_bool(null));
 #endif
             }
         }
@@ -190,21 +179,11 @@ namespace Windows.Security.Credentials.UI
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class UserConsentVerifierExtensions
     {
-        private static ref readonly Guid IID_IAsyncOperation_UserConsentVerificationResult
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                ReadOnlySpan<byte> data =
-                [
-                    0xFD, 0x6F, 0x59, 0xFD, 0x18, 0x23, 0x8F, 0x55, 0x9D, 0xBE, 0xD2, 0x1D, 0xF4, 0x37, 0x64, 0xA5
-                ];
-                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-            }
-        }
-
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Security.Credentials.UI.UserConsentVerifier", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUserConsentVerifierInterop);
+
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Credentials-UI-UserConsentVerificationResult>")]
+        static extern ref readonly Guid IID_IAsyncOperation_UserConsentVerificationResult([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(UserConsentVerifier)
@@ -214,7 +193,7 @@ namespace Windows.Security.Credentials.UI
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
 #else
-                return global::ABI.WinRT.Interop.IUserConsentVerifierInteropMethods.RequestVerificationForWindowAsync(objectReference, appWindow, message, IID_IAsyncOperation_UserConsentVerificationResult);
+                return global::ABI.WinRT.Interop.IUserConsentVerifierInteropMethods.RequestVerificationForWindowAsync(objectReference, appWindow, message, IID_IAsyncOperation_UserConsentVerificationResult(null));
 #endif
             }
         }
@@ -228,21 +207,11 @@ namespace Windows.Security.Authentication.Web.Core
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class WebAuthenticationCoreManagerExtensions
     {
-        private static ref readonly Guid IID_IAsyncOperation_WebTokenRequestResult
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                ReadOnlySpan<byte> data =
-                [
-                    0x52, 0x58, 0x81, 0x0A, 0x44, 0x7C, 0x74, 0x56, 0xB3, 0xD2, 0xFA, 0x2E, 0x4C, 0x1E, 0x46, 0xC9
-                ];
-                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-            }
-        }
-
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Security.Authentication.Web.Core.WebAuthenticationCoreManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IWebAuthenticationCoreManagerInterop);
+
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Authentication-Web-Core-WebTokenRequestResult>")]
+        static extern ref readonly Guid IID_IAsyncOperation_WebTokenRequestResult([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(WebAuthenticationCoreManager)
@@ -252,7 +221,7 @@ namespace Windows.Security.Authentication.Web.Core
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
 #else
-                return (IAsyncOperation<WebTokenRequestResult>) global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenForWindowAsync(objectReference, appWindow, request, IID_IAsyncOperation_WebTokenRequestResult);
+                return (IAsyncOperation<WebTokenRequestResult>) global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenForWindowAsync(objectReference, appWindow, request, IID_IAsyncOperation_WebTokenRequestResult(null));
 #endif
             }
 
@@ -261,7 +230,7 @@ namespace Windows.Security.Authentication.Web.Core
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
 #else
-                return (IAsyncOperation<WebTokenRequestResult>) global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenWithWebAccountForWindowAsync(objectReference, appWindow, request, webAccount, IID_IAsyncOperation_WebTokenRequestResult);
+                return (IAsyncOperation<WebTokenRequestResult>) global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenWithWebAccountForWindowAsync(objectReference, appWindow, request, webAccount, IID_IAsyncOperation_WebTokenRequestResult(null));
 #endif
             }
         }
@@ -492,21 +461,11 @@ namespace Windows.ApplicationModel.DataTransfer
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class DataTransferManagerExtensions
     {
-        private static ref readonly Guid Riid
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                ReadOnlySpan<byte> data =
-                [
-                    0x9B, 0xEE, 0xCA, 0xA5, 0x08, 0x87, 0xD1, 0x49, 0x8D, 0x36, 0x67, 0xD2, 0x5A, 0x8D, 0xA0, 0x0C
-                ];
-                return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-            }
-        }
-
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.ApplicationModel.DataTransfer.DataTransferManager", IDataTransferManagerInteropMethods.IID);
+
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#Windows>IDataTransferManager")]
+        static extern ref readonly Guid IID_IDataTransferManager([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(DataTransferManager)
@@ -516,7 +475,7 @@ namespace Windows.ApplicationModel.DataTransfer
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
 #else
-                return IDataTransferManagerInteropMethods.GetForWindow(objectReference, appWindow, Riid);
+                return IDataTransferManagerInteropMethods.GetForWindow(objectReference, appWindow, IID_IDataTransferManager(null));
 #endif
             }
 
