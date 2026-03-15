@@ -5,14 +5,14 @@
     </PropertyGroup>
 
     <!--Workaround for MidlRT nupkg expecting project to publish $(RootNamespace).winmd-->
-    <Target Name="CopyWinRTInteropWinMD" Inputs="$(CsWinRTPath)..\obj\merged\WinRT.Interop.winmd" Outputs="$(MidlRTProjectWinMD);$(CsWinRTInteropMetadata)">
+    <Target Name="CopyWinRTInteropWinMD" Inputs="$(CsWinRTPath)..\obj\merged\WindowsRuntime.Internal.winmd" Outputs="$(MidlRTProjectWinMD);$(CsWinRTInteropMetadata)">
         <Copy UseHardlinksIfPossible="$(MidlRTUseHardlinksIfPossible)"
             SkipUnchangedFiles="$(MidlRTSkipUnchangedFiles)"
-            SourceFiles="$(CsWinRTPath)..\obj\merged\WinRT.Interop.winmd"
+            SourceFiles="$(CsWinRTPath)..\obj\merged\WindowsRuntime.Internal.winmd"
             DestinationFiles="$(MidlRTProjectWinMD)" />
         <Copy UseHardlinksIfPossible="$(MidlRTUseHardlinksIfPossible)"
             SkipUnchangedFiles="$(MidlRTSkipUnchangedFiles)"
-            SourceFiles="$(CsWinRTPath)..\obj\merged\WinRT.Interop.winmd"
+            SourceFiles="$(CsWinRTPath)..\obj\merged\WindowsRuntime.Internal.winmd"
             DestinationFiles="$(CsWinRTInteropMetadata)" />
     </Target>
 

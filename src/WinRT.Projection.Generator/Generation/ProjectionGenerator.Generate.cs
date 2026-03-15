@@ -229,7 +229,7 @@ internal partial class ProjectionGenerator
         else
         {
             writer.WriteLine("-include Windows");
-            writer.WriteLine("-include WinRT.Interop");
+            writer.WriteLine("-include WindowsRuntime.Internal");
 
             writer.WriteLine("-exclude Windows.UI.Colors");
             writer.WriteLine("-exclude Windows.UI.ColorHelper");

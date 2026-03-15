@@ -60,7 +60,7 @@ namespace cswinrt
 
     bool is_projection_internal(TypeDef const& type)
     {
-        return has_attribute(type, "WinRT.Interop"sv, "ProjectionInternalAttribute"sv);
+        return has_attribute(type, "WindowsRuntime.Internal"sv, "ProjectionInternalAttribute"sv);
     }
 
     bool is_flags_enum(TypeDef const& type)
@@ -816,7 +816,7 @@ namespace cswinrt
                     { "Matrix3DHelper" },
                 }
             },
-            { "WinRT.Interop",
+            { "WindowsRuntime.Internal",
                 {
                     { "HWND", "System", "IntPtr" },
                     { "ProjectionInternalAttribute" },

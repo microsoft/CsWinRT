@@ -40,7 +40,7 @@ internal sealed partial class ProjectionGeneratorArgs
     public string AssemblyName { get; init; } = "WinRT.Projection";
 
     /// <summary>
-    /// Gets whether to only include the Windows SDK projection (Windows and WinRT.Interop namespaces).
+    /// Gets whether to only include the Windows SDK projection (Windows and WindowsRuntime.Internal namespaces).
     /// When 'false' (the default), the Windows SDK types are excluded and only non-Windows
     /// projection types are included.
     /// </summary>

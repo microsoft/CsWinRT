@@ -378,7 +378,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                  _RunCsWinRTSdkProjectionGenerator
 
     Produces 'WinRT.Sdk.Projection.dll' containing the Windows SDK
-    projection (Windows.* and WinRT.Interop.* namespaces). If a
+    projection (Windows.* and WindowsRuntime.Internal.* namespaces). If a
     pre-built impl assembly exists in the package, it is used directly.
     Otherwise, 'cswinrtprojectiongen' is invoked to generate it.
     ============================================================

@@ -94,7 +94,7 @@
     <None Include="Directory.Build.targets" />
     <None Include="PreviousPlatforms.linq" />
     <None Include="Directory.Build.props" />
-    <None Include="strings\ComInteropHelpers.cs">
+    <None Include="strings\ComInteropExtensions.cs">
       <Filter>strings</Filter>
     </None>
     <None Include="strings\additions\Windows.UI.Xaml.Controls.Primitives\Windows.UI.Xaml.Controls.Primitives.GeneratorPosition.cs">
@@ -153,6 +153,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="WinRT.Interop.idl" />
+    <Midl Include="WindowsRuntime.Internal.idl" />
   </ItemGroup>
 </Project>

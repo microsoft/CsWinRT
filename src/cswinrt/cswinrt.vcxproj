@@ -99,12 +99,12 @@
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.Thickness.cs" />
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.SR.cs" />
     <None Include="strings\additions\Windows.UI\Windows.UI.Color.cs" />
-    <None Include="strings\ComInteropHelpers.cs" />
+    <None Include="strings\ComInteropExtensions.cs" />
     <None Include="strings\InspectableVftbl.cs" />
     <None Include="strings\ReferenceInterfaceEntries.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="WinRT.Interop.idl" />
+    <Midl Include="WindowsRuntime.Internal.idl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

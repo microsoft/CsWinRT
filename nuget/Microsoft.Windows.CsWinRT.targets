@@ -267,16 +267,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 @(CsWinRTIncludeItems->'-include %(Identity)', '&#x0d;&#x0a;')
       </CsWinRTFilters>
 
-      <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WinRT.Interop.winmd'))</CsWinRTInteropMetadata>
+      <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WindowsRuntime.Internal.winmd'))</CsWinRTInteropMetadata>
       <CsWinRTIncludeWinRTInterop Condition="$(CsWinRTFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTFilters.Contains('-include Windows&#x0a;'))">
 -input $(CsWinRTInteropMetadata)
--include WinRT.Interop
+-include WindowsRuntime.Internal
       </CsWinRTIncludeWinRTInterop>
 
 
       <CsWinRTPrivateIncludeWinRTInterop Condition="$(CsWinRTPrivateFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTPrivateFilters.Contains('-include Windows&#x0a;'))">
 -input $(CsWinRTInteropMetadata)
--include WinRT.Interop
+-include WindowsRuntime.Internal
       </CsWinRTPrivateIncludeWinRTInterop>
 
       <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-internal</CsWinRTInternalProjection>
