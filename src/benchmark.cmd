@@ -28,7 +28,7 @@ if "%MODE%"=="" set MODE=compare-versions
 if not exist "%this_dir%_build\x64\Release\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll" (
     echo Building BenchmarkComponent...
     nuget restore TestWinRT\Test.sln
-    msbuild -t:restore -t:BenchmarkComponent /p:platform=x64 /p:configuration=release /p:solutiondir=%this_dir% %this_dir%cswinrt.slnx
+    msbuild -t:restore -t:BenchmarkComponent /p:RestorePackagesConfig=true /p:platform=x64 /p:configuration=release /p:solutiondir=%this_dir% %this_dir%cswinrt.slnx
 )
 
 :: Copy BenchmarkComponent artifacts to BenchmarkProjection
