@@ -83,6 +83,7 @@ steps:
       -p:RestoreAdditionalProjectSources=$(_BenchmarkNuGetFeed)
       -p:BenchmarkCsWinRT3Version=$(_BenchmarkBaselineCsWinRT3Version)
       -p:BenchmarkCsWinRT2Version=$(_BenchmarkCsWinRT2Version)
+      -p:BenchmarkWindowsSdkPackageVersion=$(_BenchmarkWindowsSdkPackageVersion)
       -- --mode ${{ parameters.BenchmarkMode }} --filter *
   env:
     BENCHMARK_MODE: ${{ parameters.BenchmarkMode }}
@@ -90,6 +91,7 @@ steps:
     BENCHMARK_CSWINRT_BASELINE_VERSION: $(_BenchmarkBaselineCsWinRT3Version)
     BENCHMARK_CSWINRT2_VERSION: $(_BenchmarkCsWinRT2Version)
     BENCHMARK_CSWINRT_CURRENT_VERSION: $(_BenchmarkCurrentCsWinRT3Version)
+    BENCHMARK_WINDOWS_SDK_VERSION: $(_BenchmarkWindowsSdkPackageVersion)
 
 # Build and run ResultsComparer
 - task: MSBuild@1

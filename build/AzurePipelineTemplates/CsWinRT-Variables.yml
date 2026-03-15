@@ -43,6 +43,10 @@ variables:
 # Set BenchmarkNuGetFeed at queue time to a feed URL to use it alongside the default feed.
 - name: _BenchmarkNuGetFeed
   value: $[coalesce(variables.BenchmarkNuGetFeed, '')]
+# Windows SDK package version for benchmarks.
+# Override at queue time by setting BenchmarkWindowsSdkPackageVersion.
+- name: _BenchmarkWindowsSdkPackageVersion
+  value: $[coalesce(variables.BenchmarkWindowsSdkPackageVersion, '10.0.26100.7706-preview.ge-release-svc-prod3')]
 
 - name: _PublishCsWinMD
   value: $[coalesce(variables.PublishCsWinMD, 'false')]
