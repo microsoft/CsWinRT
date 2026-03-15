@@ -32,6 +32,8 @@ steps:
       dotnet --info
 
 # Restore and build BenchmarkComponent
+- task: NuGetAuthenticate@1
+
 - task: NuGetCommand@2
   displayName: NuGet restore TestWinRT
   inputs:
