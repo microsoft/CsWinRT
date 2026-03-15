@@ -31,6 +31,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using global::WindowsRuntime.InteropServices;
+using global::WindowsRuntime.InteropServices.Marshalling;
 
 namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
 {
@@ -534,8 +535,8 @@ namespace Windows.ApplicationModel.DataTransfer
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
 #else
-                return IDataTransferManagerInteropMethods.GetForWindow(
-                    _obj: objectReference,
+                return global::ABI.WinRT.Interop.IDataTransferManagerInteropMethods.GetForWindow(
+                    thisReference: objectReference,
                     appWindow: appWindow,
                     riid: in IID_IDataTransferManager(null));
 #endif
@@ -546,56 +547,80 @@ namespace Windows.ApplicationModel.DataTransfer
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
 #else
-                IDataTransferManagerInteropMethods.ShowShareUIForWindow(
-                    _obj: objectReference,
+                global::ABI.WinRT.Interop.IDataTransferManagerInteropMethods.ShowShareUIForWindow(
+                    thisReference: objectReference,
                     appWindow: appWindow);
 #endif
             }
         }
     }
+}
 
+namespace ABI.WinRT.Interop
+{
 #if !CSWINRT_REFERENCE_PROJECTION
     internal static class IDataTransferManagerInteropMethods
     {
-        internal static ref readonly Guid IID
+        public static ref readonly Guid IID
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 ReadOnlySpan<byte> data =
                 [
-                    0x6C, 0xCD, 0x3D, 0x3A, 0xAB, 0x3E, 0xDC, 0x43, 0xBC, 0xDE, 0x45, 0x67, 0x1C, 0xE8, 0x00, 0xC8
+                    0x6C, 0xCD, 0x3D, 0x3A,
+                    0xAB, 0x3E,
+                    0xDC, 0x43,
+                    0xBC,
+                    0xDE,
+                    0x45,
+                    0x67,
+                    0x1C,
+                    0xE8,
+                    0x00,
+                    0xC8
                 ];
+
                 return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
             }
         }
 
-        internal static unsafe global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(WindowsRuntimeObjectReference _obj, global::System.IntPtr appWindow, in global::System.Guid riid)
+        public static unsafe global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(
+            WindowsRuntimeObjectReference thisReference,
+            global::System.IntPtr appWindow,
+            in Guid riid)
         {
-            using WindowsRuntimeObjectReferenceValue activationFactoryValue = _obj.AsValue();
+            using WindowsRuntimeObjectReferenceValue activationFactoryValue = thisReference.AsValue();
+
             void* thisPtr = activationFactoryValue.GetThisPtrUnsafe();
-            void* ptr = null;
+            void* result = null;
 
             try
             {
-                // IDataTransferManagerInterop inherits IUnknown (3 functions) and provides GetForWindow giving a total of 5 functions
-                fixed(Guid* _riid = &riid)
-                global::WindowsRuntime.InteropServices.RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<void*, global::System.IntPtr, global::System.Guid*, void**, int>**)thisPtr)[3](thisPtr, appWindow, _riid, &ptr));
-                return global::ABI.Windows.ApplicationModel.DataTransfer.DataTransferManagerMarshaller.ConvertToManaged(ptr);
+                fixed (Guid* _riid = &riid)
+                {
+                    int hresult = (*(delegate* unmanaged[MemberFunction]<void*, global::System.IntPtr, Guid*, void**, int>**)thisPtr)[3](thisPtr, appWindow, _riid, &result);
+
+                    RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+                }
+
+                return global::ABI.Windows.ApplicationModel.DataTransfer.DataTransferManagerMarshaller.ConvertToManaged(result);
             }
             finally
             {
-                global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeUnknownMarshaller.Free(ptr);
+                WindowsRuntimeUnknownMarshaller.Free(result);
             }
         }
 
-        internal static unsafe void ShowShareUIForWindow(WindowsRuntimeObjectReference _obj, global::System.IntPtr appWindow)
+        public static unsafe void ShowShareUIForWindow(WindowsRuntimeObjectReference thisReference, global::System.IntPtr appWindow)
         {
-            using WindowsRuntimeObjectReferenceValue activationFactoryValue = _obj.AsValue();
+            using WindowsRuntimeObjectReferenceValue activationFactoryValue = thisReference.AsValue();
+
             void* thisPtr = activationFactoryValue.GetThisPtrUnsafe();
 
-            // IDataTransferManagerInterop inherits IUnknown (3 functions) and provides ShowShareUIForWindow giving a total of 5 functions
-            global::WindowsRuntime.InteropServices.RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<void*, global::System.IntPtr, int>**)thisPtr)[4](thisPtr, appWindow));
+            int hresult = (*(delegate* unmanaged[MemberFunction]<void*, global::System.IntPtr, int>**)thisPtr)[4](thisPtr, appWindow);
+
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
         }
     }
 #endif
