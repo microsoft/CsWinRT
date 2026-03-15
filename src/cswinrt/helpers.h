@@ -816,12 +816,6 @@ namespace cswinrt
                     { "Matrix3DHelper" },
                 }
             },
-            { "WindowsRuntime.Internal",
-                {
-                    { "HWND", "System", "IntPtr" },
-                    { "ProjectionInternalAttribute" },
-                }
-            },
             { "Windows.Foundation",
                 {
                     { "AsyncActionCompletedHandler", "Windows.Foundation", "AsyncActionCompletedHandler" },
@@ -981,6 +975,12 @@ namespace cswinrt
                     { "IMatrix3DHelperStatics" },
                     { "Matrix3D", "Windows.UI.Xaml.Media.Media3D", "Matrix3D", false, false, true },
                     { "Matrix3DHelper" },
+                }
+            },
+            { "WindowsRuntime.Internal",
+                {
+                    { "HWND", "System", "IntPtr" },
+                    { "ProjectionInternalAttribute" },
                 }
             },
         };
