@@ -81,6 +81,8 @@ steps:
       -c Release
       --framework net10.0-windows10.0.26100.1
       -p:RestoreAdditionalProjectSources=$(_BenchmarkNuGetFeed)
+      -p:BenchmarkCsWinRT3Version=$(_BenchmarkBaselineCsWinRT3Version)
+      -p:BenchmarkCsWinRT2Version=$(_BenchmarkCsWinRT2Version)
       -- --mode ${{ parameters.BenchmarkMode }} --filter *
   env:
     BENCHMARK_MODE: ${{ parameters.BenchmarkMode }}
