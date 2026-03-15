@@ -597,7 +597,7 @@ namespace UnitTest
             RunDictionaryTests(c);
         }
 
-        sealed class TestIDICInspectable : WindowsRuntimeObject
+        class TestIDICInspectable : WindowsRuntimeObject
         {
 #pragma warning disable CSWINRT3001 // Type or member is obsolete
             public unsafe TestIDICInspectable(void* ptr)
@@ -611,6 +611,15 @@ namespace UnitTest
             protected override bool IsOverridableInterface(in Guid iid)
             {
                 return false;
+            }
+        }
+
+        // Workaround for .NET bug until it is resolved.
+        sealed class TestIDICInspectable2 : TestIDICInspectable
+        {
+            public unsafe TestIDICInspectable2(void* ptr)
+                : base(ptr)
+            {
             }
         }
 
@@ -698,7 +707,7 @@ namespace UnitTest
             };
             IReadOnlyDictionary<string, string> b = null;
             var c = Tests.Collection4(a, out b);
-            var inspectable = new TestIDICInspectable(WindowsRuntimeMarshal.ConvertToUnmanaged(c));
+            var inspectable = new TestIDICInspectable2(WindowsRuntimeMarshal.ConvertToUnmanaged(c));
             var dictCreatedWithIDIC = (IReadOnlyDictionary<string, string>)(object)inspectable;
             RunReadOnlyDictionaryTests(dictCreatedWithIDIC);
         }
