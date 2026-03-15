@@ -56,19 +56,22 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
 {
 #if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
-    public static class DragDropManagerInterop
+    public static class CoreDragDropManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.ApplicationModel.DataTransfer.DragDrop.Core.CoreDragDropManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDragDropManagerInterop);
 #endif
 
-        public static CoreDragDropManager GetForWindow(IntPtr appWindow)
+        extension(CoreDragDropManager)
         {
+            public static CoreDragDropManager GetForWindow(IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IDragDropManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_ApplicationModel_DataTransfer_DragDrop_Core_ICoreDragDropManager);
+                return global::ABI.WinRT.Interop.IDragDropManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_ApplicationModel_DataTransfer_DragDrop_Core_ICoreDragDropManager);
 #endif
+            }
         }
     }
 #endif
@@ -78,7 +81,7 @@ namespace Windows.Graphics.Printing
 {
 #if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
-    public static class PrintManagerInterop
+    public static class PrintManagerExtensions
     {
         private static ref readonly Guid IID_IAsyncOperation_bool
         {
@@ -98,22 +101,25 @@ namespace Windows.Graphics.Printing
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Graphics.Printing.PrintManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPrintManagerInterop);
 #endif
 
-        public static PrintManager GetForWindow(IntPtr appWindow)
+        extension(PrintManager)
         {
+            public static PrintManager GetForWindow(IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IPrintManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Printing_IPrintManager);
+                return global::ABI.WinRT.Interop.IPrintManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Printing_IPrintManager);
 #endif
-        }
+            }
 
-        public static IAsyncOperation<bool> ShowPrintUIForWindowAsync(IntPtr appWindow)
-        {
+            public static IAsyncOperation<bool> ShowPrintUIForWindowAsync(IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IPrintManagerInteropMethods.ShowPrintUIForWindowAsync(objectReference, appWindow, IID_IAsyncOperation_bool);
+                return global::ABI.WinRT.Interop.IPrintManagerInteropMethods.ShowPrintUIForWindowAsync(objectReference, appWindow, IID_IAsyncOperation_bool);
 #endif
+            }
         }
     }
 #endif
@@ -123,19 +129,22 @@ namespace Windows.Media
 {
 #if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
-    public static class SystemMediaTransportControlsInterop
+    public static class SystemMediaTransportControlsExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Media.SystemMediaTransportControls", global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISystemMediaTransportControlsInterop);
 #endif
 
-        public static SystemMediaTransportControls GetForWindow(IntPtr appWindow)
+        extension(SystemMediaTransportControls)
         {
+            public static SystemMediaTransportControls GetForWindow(IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.ISystemMediaTransportControlsInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Media_ISystemMediaTransportControls);
+                return global::ABI.WinRT.Interop.ISystemMediaTransportControlsInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Media_ISystemMediaTransportControls);
 #endif
+            }
         }
     }
 #endif
@@ -145,28 +154,31 @@ namespace Windows.Media.PlayTo
 {
 #if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
-    public static class PlayToManagerInterop
+    public static class PlayToManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Media.PlayTo.PlayToManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPlayToManagerInterop);
 #endif
 
-        public static PlayToManager GetForWindow(IntPtr appWindow)
+        extension(PlayToManager)
         {
+            public static PlayToManager GetForWindow(IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IPlayToManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Media_PlayTo_IPlayToManager);
+                return global::ABI.WinRT.Interop.IPlayToManagerInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_Media_PlayTo_IPlayToManager);
 #endif
-        }
+            }
 
-        public static void ShowPlayToUIForWindow(IntPtr appWindow)
-        {
+            public static void ShowPlayToUIForWindow(IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            global::ABI.WinRT.Interop.IPlayToManagerInteropMethods.ShowPlayToUIForWindow(objectReference, appWindow);
+                global::ABI.WinRT.Interop.IPlayToManagerInteropMethods.ShowPlayToUIForWindow(objectReference, appWindow);
 #endif
+            }
         }
     }
 #endif
@@ -176,7 +188,7 @@ namespace Windows.Security.Credentials.UI
 {
 #if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
-    public static class UserConsentVerifierInterop
+    public static class UserConsentVerifierExtensions
     {
         private static ref readonly Guid IID_IAsyncOperation_UserConsentVerificationResult
         {
@@ -195,13 +207,16 @@ namespace Windows.Security.Credentials.UI
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Security.Credentials.UI.UserConsentVerifier", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUserConsentVerifierInterop);
 #endif
 
-        public static IAsyncOperation<UserConsentVerificationResult> RequestVerificationForWindowAsync(IntPtr appWindow, string message)
+        extension(UserConsentVerifier)
         {
+            public static IAsyncOperation<UserConsentVerificationResult> RequestVerificationForWindowAsync(IntPtr appWindow, string message)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IUserConsentVerifierInteropMethods.RequestVerificationForWindowAsync(objectReference, appWindow, message, IID_IAsyncOperation_UserConsentVerificationResult);
+                return global::ABI.WinRT.Interop.IUserConsentVerifierInteropMethods.RequestVerificationForWindowAsync(objectReference, appWindow, message, IID_IAsyncOperation_UserConsentVerificationResult);
 #endif
+            }
         }
     }
 #endif
@@ -211,7 +226,7 @@ namespace Windows.Security.Authentication.Web.Core
 {
 #if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
-    public static class WebAuthenticationCoreManagerInterop
+    public static class WebAuthenticationCoreManagerExtensions
     {
         private static ref readonly Guid IID_IAsyncOperation_WebTokenRequestResult
         {
@@ -230,22 +245,25 @@ namespace Windows.Security.Authentication.Web.Core
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Security.Authentication.Web.Core.WebAuthenticationCoreManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IWebAuthenticationCoreManagerInterop);
 #endif
 
-        public static IAsyncOperation<WebTokenRequestResult> RequestTokenForWindowAsync(IntPtr appWindow, WebTokenRequest request)
+        extension(WebAuthenticationCoreManager)
         {
+            public static IAsyncOperation<WebTokenRequestResult> RequestTokenForWindowAsync(IntPtr appWindow, WebTokenRequest request)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return (IAsyncOperation<WebTokenRequestResult>) global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenForWindowAsync(objectReference, appWindow, request, IID_IAsyncOperation_WebTokenRequestResult);
+                return (IAsyncOperation<WebTokenRequestResult>) global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenForWindowAsync(objectReference, appWindow, request, IID_IAsyncOperation_WebTokenRequestResult);
 #endif
-        }
+            }
 
-        public static IAsyncOperation<WebTokenRequestResult> RequestTokenWithWebAccountForWindowAsync(IntPtr appWindow, WebTokenRequest request, WebAccount webAccount)
-        {
+            public static IAsyncOperation<WebTokenRequestResult> RequestTokenWithWebAccountForWindowAsync(IntPtr appWindow, WebTokenRequest request, WebAccount webAccount)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return (IAsyncOperation<WebTokenRequestResult>) global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenWithWebAccountForWindowAsync(objectReference, appWindow, request, webAccount, IID_IAsyncOperation_WebTokenRequestResult);
+                return (IAsyncOperation<WebTokenRequestResult>) global::ABI.WinRT.Interop.IWebAuthenticationCoreManagerInteropMethods.RequestTokenWithWebAccountForWindowAsync(objectReference, appWindow, request, webAccount, IID_IAsyncOperation_WebTokenRequestResult);
 #endif
+            }
         }
     }
 #endif
@@ -255,37 +273,40 @@ namespace Windows.UI.ApplicationSettings
 {
 #if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
-    public static class AccountsSettingsPaneInterop
+    public static class AccountsSettingsPaneExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.ApplicationSettings.AccountsSettingsPane", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IAccountsSettingsPaneInterop);
 #endif
 
-        public static AccountsSettingsPane GetForWindow(IntPtr appWindow)
+        extension(AccountsSettingsPane)
         {
+            public static AccountsSettingsPane GetForWindow(IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_UI_ApplicationSettings_IAccountsSettingsPane);
+                return global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_UI_ApplicationSettings_IAccountsSettingsPane);
 #endif
-        }
+            }
 
-        public static IAsyncAction ShowManageAccountsForWindowAsync(IntPtr appWindow)
-        {
+            public static IAsyncAction ShowManageAccountsForWindowAsync(IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.ShowManageAccountsForWindowAsync(objectReference, appWindow, global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_Windows_Foundation_IAsyncAction);
+                return global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.ShowManageAccountsForWindowAsync(objectReference, appWindow, global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_Windows_Foundation_IAsyncAction);
 #endif
-        }
+            }
 
-        public static IAsyncAction ShowAddAccountForWindowAsync(IntPtr appWindow)
-        {
+            public static IAsyncAction ShowAddAccountForWindowAsync(IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.ShowAddAccountForWindowAsync(objectReference, appWindow, global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_Windows_Foundation_IAsyncAction);
+                return global::ABI.WinRT.Interop.IAccountsSettingsPaneInteropMethods.ShowAddAccountForWindowAsync(objectReference, appWindow, global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_Windows_Foundation_IAsyncAction);
 #endif
+            }
         }
     }
 #endif
@@ -295,36 +316,42 @@ namespace Windows.UI.Input
 {
 #if UAC_VERSION_3
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.14393.0")]
-    public static class RadialControllerConfigurationInterop
+    public static class RadialControllerConfigurationExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.Input.RadialControllerConfiguration", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerConfigurationInterop);
 #endif
 
-        public static RadialControllerConfiguration GetForWindow(IntPtr hwnd)
+        extension(RadialControllerConfiguration)
         {
+            public static RadialControllerConfiguration GetForWindow(IntPtr hwnd)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IRadialControllerConfigurationInteropMethods.GetForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_IRadialControllerConfiguration);
+                return global::ABI.WinRT.Interop.IRadialControllerConfigurationInteropMethods.GetForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_IRadialControllerConfiguration);
 #endif
+            }
         }
     }
 
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.14393.0")]
-    public static class RadialControllerInterop
+    public static class RadialControllerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.Input.RadialController", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerInterop);
 #endif
 
-        public static RadialController CreateForWindow(IntPtr hwnd)
+        extension(RadialController)
         {
+            public static RadialController CreateForWindow(IntPtr hwnd)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IRadialControllerInteropMethods.CreateForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_IRadialController);
+                return global::ABI.WinRT.Interop.IRadialControllerInteropMethods.CreateForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_IRadialController);
 #endif
+            }
         }
     }
 #endif
@@ -334,19 +361,22 @@ namespace Windows.UI.Input.Core
 {
 #if UAC_VERSION_4
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.15063.0")]
-    public static class RadialControllerIndependentInputSourceInterop
+    public static class RadialControllerIndependentInputSourceExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.Input.Core.RadialControllerIndependentInputSource", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerIndependentInputSourceInterop);
 #endif
 
-        public static RadialControllerIndependentInputSource CreateForWindow(IntPtr hwnd)
+        extension(RadialControllerIndependentInputSource)
         {
+            public static RadialControllerIndependentInputSource CreateForWindow(IntPtr hwnd)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IRadialControllerIndependentInputSourceInteropMethods.CreateForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_Core_IRadialControllerIndependentInputSource);
+                return global::ABI.WinRT.Interop.IRadialControllerIndependentInputSourceInteropMethods.CreateForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_Core_IRadialControllerIndependentInputSource);
 #endif
+            }
         }
     }
 #endif
@@ -356,19 +386,22 @@ namespace Windows.UI.Input.Spatial
 {
 #if UAC_VERSION_2
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10586.0")]
-    public static class SpatialInteractionManagerInterop
+    public static class SpatialInteractionManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.Input.Spatial.SpatialInteractionManager", global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISpatialInteractionManagerInterop);
 #endif
 
-        public static SpatialInteractionManager GetForWindow(IntPtr window)
+        extension(SpatialInteractionManager)
         {
+            public static SpatialInteractionManager GetForWindow(IntPtr window)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.ISpatialInteractionManagerInteropMethods.GetForWindow(objectReference, window, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_Spatial_ISpatialInteractionManager);
+                return global::ABI.WinRT.Interop.ISpatialInteractionManagerInteropMethods.GetForWindow(objectReference, window, global::ABI.InterfaceIIDs.IID_Windows_UI_Input_Spatial_ISpatialInteractionManager);
 #endif
+            }
         }
     }
 #endif
@@ -378,36 +411,42 @@ namespace Windows.UI.ViewManagement
 {
 #if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
-    public static class InputPaneInterop
+    public static class InputPaneExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.ViewManagement.InputPane", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IInputPaneInterop);
 #endif
 
-        public static InputPane GetForWindow(IntPtr appWindow)
+        extension(InputPane)
         {
+            public static InputPane GetForWindow(IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IInputPaneInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_UI_ViewManagement_IInputPane);
+                return global::ABI.WinRT.Interop.IInputPaneInteropMethods.GetForWindow(objectReference, appWindow, global::ABI.InterfaceIIDs.IID_Windows_UI_ViewManagement_IInputPane);
 #endif
+            }
         }
     }
 
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
-    public static class UIViewSettingsInterop
+    public static class UIViewSettingsExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.UI.ViewManagement.UIViewSettings", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUIViewSettingsInterop);
 #endif
 
-        public static UIViewSettings GetForWindow(IntPtr hwnd)
+        extension(UIViewSettings)
         {
+            public static UIViewSettings GetForWindow(IntPtr hwnd)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IUIViewSettingsInteropMethods.GetForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_ViewManagement_IUIViewSettings);
+                return global::ABI.WinRT.Interop.IUIViewSettingsInteropMethods.GetForWindow(objectReference, hwnd, global::ABI.InterfaceIIDs.IID_Windows_UI_ViewManagement_IUIViewSettings);
 #endif
+            }
         }
     }
 #endif
@@ -417,28 +456,31 @@ namespace Windows.Graphics.Display
 {
 #if UAC_VERSION_15
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.22621.0")]
-    public static class DisplayInformationInterop
+    public static class DisplayInformationExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.Graphics.Display.DisplayInformation", global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDisplayInformationStaticsInterop);
 #endif
 
-        public static DisplayInformation GetForWindow(IntPtr window)
+        extension(DisplayInformation)
         {
+            public static DisplayInformation GetForWindow(IntPtr window)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IDisplayInformationStaticsInteropMethods.GetForWindow(objectReference, window, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Display_IDisplayInformation);
+                return global::ABI.WinRT.Interop.IDisplayInformationStaticsInteropMethods.GetForWindow(objectReference, window, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Display_IDisplayInformation);
 #endif
-        }
+            }
 
-        public static DisplayInformation GetForMonitor(IntPtr monitor)
-        {
+            public static DisplayInformation GetForMonitor(IntPtr monitor)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return global::ABI.WinRT.Interop.IDisplayInformationStaticsInteropMethods.GetForMonitor(objectReference, monitor, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Display_IDisplayInformation);
+                return global::ABI.WinRT.Interop.IDisplayInformationStaticsInteropMethods.GetForMonitor(objectReference, monitor, global::ABI.InterfaceIIDs.IID_Windows_Graphics_Display_IDisplayInformation);
 #endif
+            }
         }
     }
 #endif
@@ -448,7 +490,7 @@ namespace Windows.ApplicationModel.DataTransfer
 {
 #if UAC_VERSION_1
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
-    public static class DataTransferManagerInterop
+    public static class DataTransferManagerExtensions
     {
         private static ref readonly Guid Riid
         {
@@ -467,22 +509,25 @@ namespace Windows.ApplicationModel.DataTransfer
         private static readonly global::WindowsRuntime.InteropServices.WindowsRuntimeObjectReference objectReference = global::WindowsRuntime.InteropServices.WindowsRuntimeActivationFactory.GetActivationFactory("Windows.ApplicationModel.DataTransfer.DataTransferManager", IDataTransferManagerInteropMethods.IID);
 #endif
 
-        public static global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(global::System.IntPtr appWindow)
+        extension(DataTransferManager)
         {
+            public static global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(global::System.IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            return IDataTransferManagerInteropMethods.GetForWindow(objectReference, appWindow, Riid);
+                return IDataTransferManagerInteropMethods.GetForWindow(objectReference, appWindow, Riid);
 #endif
-        }
+            }
 
-        public static void ShowShareUIForWindow(global::System.IntPtr appWindow)
-        {
+            public static void ShowShareUIForWindow(global::System.IntPtr appWindow)
+            {
 #if CSWINRT_REFERENCE_PROJECTION
-            throw null;
+                throw null;
 #else
-            IDataTransferManagerInteropMethods.ShowShareUIForWindow(objectReference, appWindow);
+                IDataTransferManagerInteropMethods.ShowShareUIForWindow(objectReference, appWindow);
 #endif
+            }
         }
     }
 #endif
