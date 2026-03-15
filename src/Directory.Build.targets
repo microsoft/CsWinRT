@@ -34,6 +34,18 @@
     <Error Condition="!Exists('$(MSBuildThisFileDirectory)TestWinRT')" Text="This solution requires the TestWinRT repo, which is missing. Please run build.cmd from a Visual Studio command prompt." />
   </Target>
 
+  <!--
+    Force non-incremental LTCG for Release C++ builds.
+    WholeProgramOptimization=true causes Microsoft.Cpp.props to default to /LTCG:incremental,
+    which is incompatible with CastGuard (/guard:cast). Setting LinkTimeCodeGeneration here
+    in targets ensures it overrides the default set by the C++ build system.
+  -->
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' and ('$(MSBuildProjectExtension)' == '.vcxproj' or '$(MSBuildProjectExtension)' == '.wapproj')">
+    <Link>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+
   <Target Name="CleanIntermediateDirs" Condition="'$(CleanIntermediateDirs)'=='true'" AfterTargets="Build">
     <RemoveDir Directories="$(IntDir)" />
   </Target>
