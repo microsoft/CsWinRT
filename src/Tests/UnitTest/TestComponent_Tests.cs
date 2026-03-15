@@ -614,7 +614,7 @@ namespace UnitTest
             }
         }
 
-        // Workaround for .NET bug until it is resolved.
+        // Workaround for .NET bug (https://github.com/dotnet/runtime/issues/125577) until it is resolved.
         sealed class TestIDICInspectable2 : TestIDICInspectable
         {
             public unsafe TestIDICInspectable2(void* ptr)
