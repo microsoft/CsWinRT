@@ -76,10 +76,14 @@ namespace Windows.Graphics.Printing
 {
     using Windows.Foundation;
 
+    /// <summary>
+    /// Extensions for <see cref="PrintManager"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class PrintManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="PrintManager"/> activation factory, as <c>IPrintManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Graphics.Printing.PrintManager",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPrintManagerInterop);
@@ -91,6 +95,13 @@ namespace Windows.Graphics.Printing
 
         extension(PrintManager)
         {
+            /// <summary>
+            /// Gets the <see cref="PrintManager"/> instance for the specified window.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window to get the <see cref="PrintManager"/> instance for (an <c>HWND</c>).</param>
+            /// <returns>The <see cref="PrintManager"/> instance for the specified window.</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="PrintManager"/> instance.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/printmanagerinterop/nf-printmanagerinterop-iprintmanagerinterop-getforwindow"/>
             public static PrintManager GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -103,6 +114,13 @@ namespace Windows.Graphics.Printing
 #endif
             }
 
+            /// <summary>
+            /// Displays the UI for printing content for the specified window.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window to show the print UI for (an <c>HWND</c>).</param>
+            /// <returns>An asynchronous operation that reports completion.</returns>
+            /// <exception cref="Exception">Thrown if failed to display the print UI.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/printmanagerinterop/nf-printmanagerinterop-iprintmanagerinterop-showprintuiforwindowasync"/>
             public static IAsyncOperation<bool> ShowPrintUIForWindowAsync(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -120,10 +138,14 @@ namespace Windows.Graphics.Printing
 
 namespace Windows.Media
 {
+    /// <summary>
+    /// Extensions for <see cref="SystemMediaTransportControls"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class SystemMediaTransportControlsExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="SystemMediaTransportControls"/> activation factory, as <c>ISystemMediaTransportControlsInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Media.SystemMediaTransportControls",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISystemMediaTransportControlsInterop);
@@ -131,6 +153,13 @@ namespace Windows.Media
 
         extension(SystemMediaTransportControls)
         {
+            /// <summary>
+            /// Gets an instance of <see cref="SystemMediaTransportControls"/> for the specified window.
+            /// </summary>
+            /// <param name="appWindow">The handle to the top-level window for which the <see cref="SystemMediaTransportControls"/> instance is retrieved (an <c>HWND</c>).</param>
+            /// <returns>The <see cref="SystemMediaTransportControls"/> instance for the specified window.</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="SystemMediaTransportControls"/> instance.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/systemmediatransportcontrolsinterop/nf-systemmediatransportcontrolsinterop-isystemmediatransportcontrolsinterop-getforwindow"/>
             public static SystemMediaTransportControls GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -148,10 +177,14 @@ namespace Windows.Media
 
 namespace Windows.Media.PlayTo
 {
+    /// <summary>
+    /// Extensions for <see cref="PlayToManager"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class PlayToManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="PlayToManager"/> activation factory, as <c>IPlayToManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Media.PlayTo.PlayToManager",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPlayToManagerInterop);
@@ -159,6 +192,13 @@ namespace Windows.Media.PlayTo
 
         extension(PlayToManager)
         {
+            /// <summary>
+            /// Gets the <see cref="PlayToManager"/> instance for the specified window.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window to get the <see cref="PlayToManager"/> instance for (an <c>HWND</c>).</param>
+            /// <returns>The <see cref="PlayToManager"/> instance for the specified window.</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="PlayToManager"/> instance.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/playtomanagerinterop/nf-playtomanagerinterop-iplaytomanagerinterop-getforwindow"/>
             public static PlayToManager GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -171,6 +211,12 @@ namespace Windows.Media.PlayTo
 #endif
             }
 
+            /// <summary>
+            /// Displays the Play To UI for the specified window.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window to show the Play To UI for (an <c>HWND</c>).</param>
+            /// <exception cref="Exception">Thrown if failed to display the Play To UI.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/playtomanagerinterop/nf-playtomanagerinterop-iplaytomanagerinterop-showplaytouiforwindow"/>
             public static void ShowPlayToUIForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -190,20 +236,33 @@ namespace Windows.Security.Credentials.UI
     using Windows.Foundation;
     using Windows.Security.Credentials;
 
+    /// <summary>
+    /// Extensions for <see cref="UserConsentVerifier"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class UserConsentVerifierExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="UserConsentVerifier"/> activation factory, as <c>IUserConsentVerifierInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Security.Credentials.UI.UserConsentVerifier",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUserConsentVerifierInterop);
 
+        /// <summary>The accessor for <c>__uuidof(IAsyncOperation&lt;UserConsentVerificationResult&gt;)</c>.</summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Credentials-UI-UserConsentVerificationResult>")]
         private static extern ref readonly Guid IID_IAsyncOperation_UserConsentVerificationResult([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(UserConsentVerifier)
         {
+            /// <summary>
+            /// Performs a verification using a device such as Microsoft Passport PIN, Windows Hello, or a fingerprint reader.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <param name="message">A message to display to the user for this biometric verification request.</param>
+            /// <returns>An asynchronous operation with a <see cref="UserConsentVerificationResult"/> value describing the result of the verification.</returns>
+            /// <exception cref="Exception">Thrown if the verification request failed.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/userconsentverifierinterop/nf-userconsentverifierinterop-iuserconsentverifierinterop-requestverificationforwindowasync"/>
             public static IAsyncOperation<UserConsentVerificationResult> RequestVerificationForWindowAsync(nint appWindow, string message)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -224,20 +283,33 @@ namespace Windows.Security.Authentication.Web.Core
 {
     using Windows.Foundation;
 
+    /// <summary>
+    /// Extensions for <see cref="WebAuthenticationCoreManager"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class WebAuthenticationCoreManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="WebAuthenticationCoreManager"/> activation factory, as <c>IWebAuthenticationCoreManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Security.Authentication.Web.Core.WebAuthenticationCoreManager",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IWebAuthenticationCoreManagerInterop);
 
+        /// <summary>The accessor for <c>__uuidof(IAsyncOperation&lt;WebTokenRequestResult&gt;)</c>.</summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Authentication-Web-Core-WebTokenRequestResult>")]
         private static extern ref readonly Guid IID_IAsyncOperation_WebTokenRequestResult([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(WebAuthenticationCoreManager)
         {
+            /// <summary>
+            /// Asynchronously requests a token from a web account provider. If necessary, the user is prompted to enter their credentials.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window to be used as the owner for the window prompting the user for credentials, in case such a window becomes necessary (an <c>HWND</c>).</param>
+            /// <param name="request">The web token request.</param>
+            /// <returns>An asynchronous operation with the <see cref="WebTokenRequestResult"/> for the request.</returns>
+            /// <exception cref="Exception">Thrown if the token request failed.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/webauthenticationcoremanagerinterop/nf-webauthenticationcoremanagerinterop-iwebauthenticationcoremanagerinterop-requesttokenforwindowasync"/>
             public static IAsyncOperation<WebTokenRequestResult> RequestTokenForWindowAsync(nint appWindow, WebTokenRequest request)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -251,6 +323,15 @@ namespace Windows.Security.Authentication.Web.Core
 #endif
             }
 
+            /// <summary>
+            /// Asynchronously requests a token from a web account provider. If necessary, the user is prompted to enter their credentials.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window to be used as the owner for the window prompting the user for credentials, in case such a window becomes necessary (an <c>HWND</c>).</param>
+            /// <param name="request">The web token request.</param>
+            /// <param name="webAccount">The web account for the request.</param>
+            /// <returns>An asynchronous operation with the <see cref="WebTokenRequestResult"/> for the request.</returns>
+            /// <exception cref="Exception">Thrown if the token request failed.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/webauthenticationcoremanagerinterop/nf-webauthenticationcoremanagerinterop-iwebauthenticationcoremanagerinterop-requesttokenwithwebaccountforwindowasync"/>
             public static IAsyncOperation<WebTokenRequestResult> RequestTokenWithWebAccountForWindowAsync(nint appWindow, WebTokenRequest request, WebAccount webAccount)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -272,10 +353,14 @@ namespace Windows.UI.ApplicationSettings
 {
     using Windows.Foundation;
 
+    /// <summary>
+    /// Extensions for <see cref="AccountsSettingsPane"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class AccountsSettingsPaneExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="AccountsSettingsPane"/> activation factory, as <c>IAccountsSettingsPaneInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.ApplicationSettings.AccountsSettingsPane",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IAccountsSettingsPaneInterop);
@@ -283,6 +368,13 @@ namespace Windows.UI.ApplicationSettings
 
         extension(AccountsSettingsPane)
         {
+            /// <summary>
+            /// Gets an <see cref="AccountsSettingsPane"/> object for the window of the active application.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <returns>The resulting <see cref="AccountsSettingsPane"/> object.</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="AccountsSettingsPane"/> object.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/accountssettingspaneinterop/nf-accountssettingspaneinterop-iaccountssettingspaneinterop-getforwindow"/>
             public static AccountsSettingsPane GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -295,6 +387,13 @@ namespace Windows.UI.ApplicationSettings
 #endif
             }
 
+            /// <summary>
+            /// Displays the manage accounts screen for the specified window.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <returns>An asynchronous action that reports completion.</returns>
+            /// <exception cref="Exception">Thrown if failed to display the manage accounts screen.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/accountssettingspaneinterop/nf-accountssettingspaneinterop-iaccountssettingspaneinterop-showmanageaccountsforwindowasync"/>
             public static IAsyncAction ShowManageAccountsForWindowAsync(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -307,6 +406,13 @@ namespace Windows.UI.ApplicationSettings
 #endif
             }
 
+            /// <summary>
+            /// Displays the add accounts screen for the specified window.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <returns>An asynchronous action that reports completion.</returns>
+            /// <exception cref="Exception">Thrown if failed to display the add accounts screen.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/accountssettingspaneinterop/nf-accountssettingspaneinterop-iaccountssettingspaneinterop-showaddaccountforwindowasync"/>
             public static IAsyncAction ShowAddAccountForWindowAsync(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -324,10 +430,14 @@ namespace Windows.UI.ApplicationSettings
 
 namespace Windows.UI.Input
 {
+    /// <summary>
+    /// Extensions for <see cref="RadialControllerConfiguration"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.14393.0")]
     public static class RadialControllerConfigurationExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="RadialControllerConfiguration"/> activation factory, as <c>IRadialControllerConfigurationInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.RadialControllerConfiguration",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerConfigurationInterop);
@@ -335,6 +445,13 @@ namespace Windows.UI.Input
 
         extension(RadialControllerConfiguration)
         {
+            /// <summary>
+            /// Retrieves a <see cref="RadialControllerConfiguration"/> object bound to the active application.
+            /// </summary>
+            /// <param name="hwnd">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <returns>The resulting <see cref="RadialControllerConfiguration"/> object.</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="RadialControllerConfiguration"/> object.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/radialcontrollerinterop/nf-radialcontrollerinterop-iradialcontrollerconfigurationinterop-getforwindow"/>
             public static RadialControllerConfiguration GetForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -349,10 +466,14 @@ namespace Windows.UI.Input
         }
     }
 
+    /// <summary>
+    /// Extensions for <see cref="RadialController"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.14393.0")]
     public static class RadialControllerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="RadialController"/> activation factory, as <c>IRadialControllerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.RadialController",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerInterop);
@@ -360,6 +481,13 @@ namespace Windows.UI.Input
 
         extension(RadialController)
         {
+            /// <summary>
+            /// Instantiates a <see cref="RadialController"/> object and binds it to the active application.
+            /// </summary>
+            /// <param name="hwnd">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <returns>The resulting <see cref="RadialController"/> object.</returns>
+            /// <exception cref="Exception">Thrown if failed to create the <see cref="RadialController"/> object.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/radialcontrollerinterop/nf-radialcontrollerinterop-iradialcontrollerinterop-createforwindow"/>
             public static RadialController CreateForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -377,10 +505,14 @@ namespace Windows.UI.Input
 
 namespace Windows.UI.Input.Core
 {
+    /// <summary>
+    /// Extensions for <see cref="RadialControllerIndependentInputSource"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.15063.0")]
     public static class RadialControllerIndependentInputSourceExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="RadialControllerIndependentInputSource"/> activation factory, as <c>IRadialControllerIndependentInputSourceInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.Core.RadialControllerIndependentInputSource",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerIndependentInputSourceInterop);
@@ -388,6 +520,12 @@ namespace Windows.UI.Input.Core
 
         extension(RadialControllerIndependentInputSource)
         {
+            /// <summary>
+            /// Instantiates a <see cref="RadialControllerIndependentInputSource"/> object and binds it to the active application.
+            /// </summary>
+            /// <param name="hwnd">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <returns>The resulting <see cref="RadialControllerIndependentInputSource"/> object.</returns>
+            /// <exception cref="Exception">Thrown if failed to create the <see cref="RadialControllerIndependentInputSource"/> object.</exception>
             public static RadialControllerIndependentInputSource CreateForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -405,10 +543,14 @@ namespace Windows.UI.Input.Core
 
 namespace Windows.UI.Input.Spatial
 {
+    /// <summary>
+    /// Extensions for <see cref="SpatialInteractionManager"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10586.0")]
     public static class SpatialInteractionManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="SpatialInteractionManager"/> activation factory, as <c>ISpatialInteractionManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.Spatial.SpatialInteractionManager",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISpatialInteractionManagerInterop);
@@ -416,6 +558,13 @@ namespace Windows.UI.Input.Spatial
 
         extension(SpatialInteractionManager)
         {
+            /// <summary>
+            /// Retrieves a <see cref="SpatialInteractionManager"/> object bound to the active application.
+            /// </summary>
+            /// <param name="window">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <returns>The resulting <see cref="SpatialInteractionManager"/> object.</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="SpatialInteractionManager"/> object.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/spatialinteractionmanagerinterop/nf-spatialinteractionmanagerinterop-ispatialinteractionmanagerinterop-getforwindow"/>
             public static SpatialInteractionManager GetForWindow(nint window)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -433,10 +582,14 @@ namespace Windows.UI.Input.Spatial
 
 namespace Windows.UI.ViewManagement
 {
+    /// <summary>
+    /// Extensions for <see cref="InputPane"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class InputPaneExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="InputPane"/> activation factory, as <c>IInputPaneInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.ViewManagement.InputPane",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IInputPaneInterop);
@@ -444,6 +597,13 @@ namespace Windows.UI.ViewManagement
 
         extension(InputPane)
         {
+            /// <summary>
+            /// Gets an instance of an <see cref="InputPane"/> object for the specified window.
+            /// </summary>
+            /// <param name="appWindow">The handle to the top-level window for which to get the <see cref="InputPane"/> object (an <c>HWND</c>).</param>
+            /// <returns>The <see cref="InputPane"/> object for the specified window.</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="InputPane"/> object.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/inputpaneinterop/nf-inputpaneinterop-iinputpaneinterop-getforwindow"/>
             public static InputPane GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -458,10 +618,14 @@ namespace Windows.UI.ViewManagement
         }
     }
 
+    /// <summary>
+    /// Extensions for <see cref="UIViewSettings"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class UIViewSettingsExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="UIViewSettings"/> activation factory, as <c>IUIViewSettingsInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.ViewManagement.UIViewSettings",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUIViewSettingsInterop);
@@ -469,6 +633,13 @@ namespace Windows.UI.ViewManagement
 
         extension(UIViewSettings)
         {
+            /// <summary>
+            /// Gets a <see cref="UIViewSettings"/> object for the window of the active application.
+            /// </summary>
+            /// <param name="hwnd">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <returns>The resulting <see cref="UIViewSettings"/> object.</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="UIViewSettings"/> object.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/uiviewsettingsinterop/nf-uiviewsettingsinterop-iuiviewsettingsinterop-getforwindow"/>
             public static UIViewSettings GetForWindow(nint hwnd)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -487,10 +658,14 @@ namespace Windows.UI.ViewManagement
 namespace Windows.Graphics.Display
 {
 #if UAC_VERSION_15
+    /// <summary>
+    /// Extensions for <see cref="DisplayInformation"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.22621.0")]
     public static class DisplayInformationExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="DisplayInformation"/> activation factory, as <c>IDisplayInformationStaticsInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Graphics.Display.DisplayInformation",
             iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDisplayInformationStaticsInterop);
@@ -498,6 +673,13 @@ namespace Windows.Graphics.Display
 
         extension(DisplayInformation)
         {
+            /// <summary>
+            /// Retrieves a <see cref="DisplayInformation"/> object for the specified window.
+            /// </summary>
+            /// <param name="window">The handle to the window (an <c>HWND</c>).</param>
+            /// <returns>A new <see cref="DisplayInformation"/> object for the specified window.</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="DisplayInformation"/> object.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/windows.graphics.display.interop/nf-windows-graphics-display-interop-idisplayinformationstaticsinterop-getforwindow"/>
             public static DisplayInformation GetForWindow(nint window)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -510,6 +692,13 @@ namespace Windows.Graphics.Display
 #endif
             }
 
+            /// <summary>
+            /// Retrieves a <see cref="DisplayInformation"/> object for the specified monitor.
+            /// </summary>
+            /// <param name="monitor">The handle to the monitor (an <c>HMONITOR</c>).</param>
+            /// <returns>A new <see cref="DisplayInformation"/> object for the specified monitor.</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="DisplayInformation"/> object.</exception>
+            /// <see href="https://learn.microsoft.com/windows/win32/api/windows.graphics.display.interop/nf-windows-graphics-display-interop-idisplayinformationstaticsinterop-getformonitor"/>
             public static DisplayInformation GetForMonitor(nint monitor)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -528,10 +717,14 @@ namespace Windows.Graphics.Display
 
 namespace Windows.ApplicationModel.DataTransfer
 {
+    /// <summary>
+    /// Extensions for <see cref="DataTransferManager"/>.
+    /// </summary>
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
     public static class DataTransferManagerExtensions
     {
 #if !CSWINRT_REFERENCE_PROJECTION
+        /// <summary>The cached <see cref="DataTransferManager"/> activation factory, as <c>IDataTransferManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.ApplicationModel.DataTransfer.DataTransferManager",
             iid: in IDataTransferManagerInteropMethods.IID);
@@ -539,6 +732,12 @@ namespace Windows.ApplicationModel.DataTransfer
 
         extension(DataTransferManager)
         {
+            /// <summary>
+            /// Gets a <see cref="DataTransferManager"/> object for the window of the active application.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <returns>The resulting <see cref="DataTransferManager"/> object.</returns>
+            /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="DataTransferManager"/> object.</exception>
             public static global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -551,6 +750,11 @@ namespace Windows.ApplicationModel.DataTransfer
 #endif
             }
 
+            /// <summary>
+            /// Programmatically initiates the share UI for the specified window.
+            /// </summary>
+            /// <param name="appWindow">The handle to the window of the active application (an <c>HWND</c>).</param>
+            /// <exception cref="Exception">Thrown if failed to display the share UI.</exception>
             public static void ShowShareUIForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
@@ -568,8 +772,12 @@ namespace Windows.ApplicationModel.DataTransfer
 namespace ABI.WinRT.Interop
 {
 #if !CSWINRT_REFERENCE_PROJECTION
+    /// <summary>
+    /// ABI methods for <c>IDataTransferManagerInterop</c>.
+    /// </summary>
     internal static class IDataTransferManagerInteropMethods
     {
+        /// <summary>The IID of <c>IDataTransferManagerInterop</c> (<c>3A3DCD6C-3EAB-43DC-BCDE-45671CE800C8</c>).</summary>
         public static ref readonly Guid IID
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -594,6 +802,14 @@ namespace ABI.WinRT.Interop
             }
         }
 
+        /// <summary>
+        /// Gets a <see cref="global::Windows.ApplicationModel.DataTransfer.DataTransferManager"/> object for the window of the active application.
+        /// </summary>
+        /// <param name="thisReference">The activation factory object reference.</param>
+        /// <param name="appWindow">The handle to the window of the active application (an <c>HWND</c>).</param>
+        /// <param name="riid">The IID of the <see cref="global::Windows.ApplicationModel.DataTransfer.DataTransferManager"/> class.</param>
+        /// <returns>The resulting <see cref="global::Windows.ApplicationModel.DataTransfer.DataTransferManager"/> object.</returns>
+        /// <exception cref="Exception">Thrown if failed to retrieve the <see cref="global::Windows.ApplicationModel.DataTransfer.DataTransferManager"/> object.</exception>
         public static unsafe global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(
             WindowsRuntimeObjectReference thisReference,
             nint appWindow,
@@ -621,6 +837,12 @@ namespace ABI.WinRT.Interop
             }
         }
 
+        /// <summary>
+        /// Programmatically initiates the share UI for the specified window.
+        /// </summary>
+        /// <param name="thisReference">The activation factory object reference.</param>
+        /// <param name="appWindow">The handle to the window of the active application (an <c>HWND</c>).</param>
+        /// <exception cref="Exception">Thrown if failed to display the share UI.</exception>
         public static unsafe void ShowShareUIForWindow(WindowsRuntimeObjectReference thisReference, nint appWindow)
         {
             using WindowsRuntimeObjectReferenceValue activationFactoryValue = thisReference.AsValue();
