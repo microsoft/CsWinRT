@@ -39,6 +39,10 @@ variables:
 # Defaults to the baseline version (i.e., no-op comparison) when not overridden.
 - name: _BenchmarkCurrentCsWinRT3Version
   value: $[coalesce(variables.BenchmarkCurrentCsWinRT3Version, variables._BenchmarkBaselineCsWinRT3Version)]
+# Additional NuGet feed for benchmark packages.
+# Set BenchmarkNuGetFeed at queue time to a feed URL to use it alongside the default feed.
+- name: _BenchmarkNuGetFeed
+  value: $[coalesce(variables.BenchmarkNuGetFeed, '')]
 
 - name: _PublishCsWinMD
   value: $[coalesce(variables.PublishCsWinMD, 'false')]
