@@ -105,7 +105,9 @@
         <ControlFlowGuard Condition="'$(Configuration)'=='Release'">Guard</ControlFlowGuard>
         <!-- /Qspectre Specifies compiler generation of instructions to mitigate certain Spectre variant 1 security vulnerabilities. BinSkim asks for this. -->
         <!-- /ZH:SHA_256 Hash algorithm for file checksums in debug info -->
+        <!-- /guard:cast /d2CastGuardFailureMode:fastfail Mitigates type confusion via unsafe static downcasts. BinSkim asks for this. -->
         <AdditionalOptions>%(AdditionalOptions) /Qspectre /ZH:SHA_256</AdditionalOptions>
+        <AdditionalOptions Condition="'$(Configuration)'=='Release'">%(AdditionalOptions) /guard:cast /d2CastGuardFailureMode:fastfail</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
