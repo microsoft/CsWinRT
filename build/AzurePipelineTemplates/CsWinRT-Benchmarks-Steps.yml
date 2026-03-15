@@ -75,16 +75,17 @@ steps:
   displayName: Run Benchmarks (${{ parameters.BenchmarkMode }} mode)
   inputs:
     workingDirectory: $(Build.SourcesDirectory)\src
-    script: >-
-      dotnet run
-      --project Benchmarks\Benchmarks.csproj
-      -c Release
-      --framework net10.0-windows10.0.26100.1
-      "-p:RestoreAdditionalProjectSources=$(_BenchmarkNuGetFeed);$(_SdkNuGetFeed)"
-      -p:BenchmarkCsWinRT3Version=$(_BenchmarkBaselineCsWinRT3Version)
-      -p:BenchmarkCsWinRT2Version=$(_BenchmarkCsWinRT2Version)
-      -p:BenchmarkWindowsSdkPackageVersion=$(_BenchmarkWindowsSdkPackageVersion)
-      -- --mode ${{ parameters.BenchmarkMode }} --filter *
+    script: |
+      set "RESTORE_SOURCES=$(_BenchmarkNuGetFeed);$(_SdkNuGetFeed)"
+      dotnet run ^
+        --project Benchmarks\Benchmarks.csproj ^
+        -c Release ^
+        --framework net10.0-windows10.0.26100.1 ^
+        "-p:RestoreAdditionalProjectSources=%RESTORE_SOURCES%" ^
+        -p:BenchmarkCsWinRT3Version=$(_BenchmarkBaselineCsWinRT3Version) ^
+        -p:BenchmarkCsWinRT2Version=$(_BenchmarkCsWinRT2Version) ^
+        -p:BenchmarkWindowsSdkPackageVersion=$(_BenchmarkWindowsSdkPackageVersion) ^
+        -- --mode ${{ parameters.BenchmarkMode }} --filter *
   env:
     BENCHMARK_MODE: ${{ parameters.BenchmarkMode }}
     BENCHMARK_CSWINRT3_VERSION: $(_BenchmarkBaselineCsWinRT3Version)
