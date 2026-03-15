@@ -527,7 +527,7 @@ namespace Windows.ApplicationModel.DataTransfer
 
         extension(DataTransferManager)
         {
-            public static global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(global::System.IntPtr appWindow)
+            public static global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -539,7 +539,7 @@ namespace Windows.ApplicationModel.DataTransfer
 #endif
             }
 
-            public static void ShowShareUIForWindow(global::System.IntPtr appWindow)
+            public static void ShowShareUIForWindow(nint appWindow)
             {
 #if CSWINRT_REFERENCE_PROJECTION
                 throw null;
@@ -584,7 +584,7 @@ namespace ABI.WinRT.Interop
 
         public static unsafe global::Windows.ApplicationModel.DataTransfer.DataTransferManager GetForWindow(
             WindowsRuntimeObjectReference thisReference,
-            global::System.IntPtr appWindow,
+            nint appWindow,
             in Guid riid)
         {
             using WindowsRuntimeObjectReferenceValue activationFactoryValue = thisReference.AsValue();
@@ -596,7 +596,7 @@ namespace ABI.WinRT.Interop
             {
                 fixed (Guid* _riid = &riid)
                 {
-                    int hresult = (*(delegate* unmanaged[MemberFunction]<void*, global::System.IntPtr, Guid*, void**, int>**)thisPtr)[3](thisPtr, appWindow, _riid, &result);
+                    int hresult = (*(delegate* unmanaged[MemberFunction]<void*, nint, Guid*, void**, int>**)thisPtr)[3](thisPtr, appWindow, _riid, &result);
 
                     RestrictedErrorInfo.ThrowExceptionForHR(hresult);
                 }
@@ -609,13 +609,13 @@ namespace ABI.WinRT.Interop
             }
         }
 
-        public static unsafe void ShowShareUIForWindow(WindowsRuntimeObjectReference thisReference, global::System.IntPtr appWindow)
+        public static unsafe void ShowShareUIForWindow(WindowsRuntimeObjectReference thisReference, nint appWindow)
         {
             using WindowsRuntimeObjectReferenceValue activationFactoryValue = thisReference.AsValue();
 
             void* thisPtr = activationFactoryValue.GetThisPtrUnsafe();
 
-            int hresult = (*(delegate* unmanaged[MemberFunction]<void*, global::System.IntPtr, int>**)thisPtr)[4](thisPtr, appWindow);
+            int hresult = (*(delegate* unmanaged[MemberFunction]<void*, nint, int>**)thisPtr)[4](thisPtr, appWindow);
 
             RestrictedErrorInfo.ThrowExceptionForHR(hresult);
         }
