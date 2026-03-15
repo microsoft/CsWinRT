@@ -771,6 +771,8 @@ namespace Windows.ApplicationModel.DataTransfer
 
 namespace ABI.WinRT.Interop
 {
+    using HRESULT = int;
+
 #if !CSWINRT_REFERENCE_PROJECTION
     /// <summary>
     /// ABI methods for <c>IDataTransferManagerInterop</c>.
@@ -822,9 +824,9 @@ namespace ABI.WinRT.Interop
 
             try
             {
-                fixed (Guid* _riid = &riid)
+                fixed (Guid* iidPtr = &riid)
                 {
-                    int hresult = (*(delegate* unmanaged[MemberFunction]<void*, nint, Guid*, void**, int>**)thisPtr)[3](thisPtr, appWindow, _riid, &result);
+                    HRESULT hresult = ((delegate* unmanaged[MemberFunction]<void*, nint, Guid*, void**, HRESULT>)(*(void***)thisPtr)[3])(thisPtr, appWindow, iidPtr, &result);
 
                     RestrictedErrorInfo.ThrowExceptionForHR(hresult);
                 }
@@ -849,7 +851,7 @@ namespace ABI.WinRT.Interop
 
             void* thisPtr = activationFactoryValue.GetThisPtrUnsafe();
 
-            int hresult = (*(delegate* unmanaged[MemberFunction]<void*, nint, int>**)thisPtr)[4](thisPtr, appWindow);
+            HRESULT hresult = ((delegate* unmanaged[MemberFunction]<void*, nint, HRESULT>)(*(void***)thisPtr)[4])(thisPtr, appWindow);
 
             RestrictedErrorInfo.ThrowExceptionForHR(hresult);
         }
