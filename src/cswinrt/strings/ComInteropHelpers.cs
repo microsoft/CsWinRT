@@ -523,9 +523,6 @@ namespace Windows.ApplicationModel.DataTransfer
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.ApplicationModel.DataTransfer.DataTransferManager",
             iid: in IDataTransferManagerInteropMethods.IID);
-
-        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#Windows>IDataTransferManager")]
-        private static extern ref readonly Guid IID_IDataTransferManager([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
 #endif
 
         extension(DataTransferManager)
@@ -538,7 +535,7 @@ namespace Windows.ApplicationModel.DataTransfer
                 return global::ABI.WinRT.Interop.IDataTransferManagerInteropMethods.GetForWindow(
                     thisReference: objectReference,
                     appWindow: appWindow,
-                    riid: in IID_IDataTransferManager(null));
+                    riid: in global::ABI.InterfaceIIDs.IDataTransferManager);
 #endif
             }
 
