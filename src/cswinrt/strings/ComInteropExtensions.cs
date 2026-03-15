@@ -234,7 +234,6 @@ namespace Windows.Media.PlayTo
 namespace Windows.Security.Credentials.UI
 {
     using Windows.Foundation;
-    using Windows.Security.Credentials;
 
     /// <summary>
     /// Extensions for <see cref="UserConsentVerifier"/>.
@@ -282,6 +281,7 @@ namespace Windows.Security.Credentials.UI
 namespace Windows.Security.Authentication.Web.Core
 {
     using Windows.Foundation;
+    using Windows.Security.Credentials;
 
     /// <summary>
     /// Extensions for <see cref="WebAuthenticationCoreManager"/>.
