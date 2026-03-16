@@ -23,7 +23,6 @@
       # Microsoft.* types instead.  Temporarily include these to enable the build
       -include Windows.UI.Xaml.Interop.Type
       -include Windows.UI.Xaml.Interop.NotifyCollectionChangedAction
-      -include Windows.UI.Xaml.Markup.ContentPropertyAttribute
       -include Windows.UI.Xaml.StyleTypedPropertyAttribute
       -include Windows.UI.Xaml.TemplatePartAttribute
       -include Windows.UI.Xaml.TemplateVisualStateAttribute
