@@ -163,7 +163,7 @@ internal static class InteropImplTypeResolver
         // on the 'IPropertyValueImpl' type in 'WinRT.Runtime.dll', with this exact naming pattern.
         IMethodDefOrRef get_IIDMethod = interopReferences.WellKnownInterfaceIIDsget_IID_IPropertyValue;
         IMethodDefOrRef get_VtableMethod = interopReferences.IPropertyValueImpl.CreateMemberReference(
-            memberName: $"get_{typeName}ArrayVtable",
+            name: $"get_{typeName}ArrayVtable",
             signature: MethodSignature.CreateStatic(interopReferences.IntPtr));
 
         // Return the pair of methods from the ABI type in 'WinRT.Runtime.dll'

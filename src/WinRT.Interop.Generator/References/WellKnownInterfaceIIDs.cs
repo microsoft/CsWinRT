@@ -131,7 +131,7 @@ internal static class WellKnownInterfaceIIDs
 
         // Create the member reference from 'WellKnownInterfaceIIDs'
         return interopReferences.WellKnownInterfaceIIDs.CreateMemberReference(
-            memberName: $"get_IID_{nameSuffix}",
+            name: $"get_IID_{nameSuffix}",
             signature: MethodSignature.CreateStatic(WellKnownTypeSignatureFactory.InGuid(interopReferences)));
     }
 
