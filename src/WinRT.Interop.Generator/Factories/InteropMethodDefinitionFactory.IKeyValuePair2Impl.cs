@@ -97,7 +97,7 @@ internal partial class InteropMethodDefinitionFactory
             MemberReference get_KeyOrValueAccessorMethod = keyValuePairType
                 .ToTypeDefOrRef()
                 .CreateMemberReference(
-                    memberName: methodName,
+                    name: methodName,
                     signature: MethodSignature.CreateInstance(new GenericParameterSignature(
                         parameterType: GenericParameterType.Type,
                         index: methodName.AsSpan().SequenceEqual("get_Key"u8) ? 0 : 1)));
