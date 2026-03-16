@@ -159,9 +159,9 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition nativeObjectType)
         {
             // The 'NativeObject' is deriving from 'WindowsRuntimeAsyncActionWithProgress<<TYPE_ARGUMENT>, <IASYNC_ACTION_WITH_PROGRESS_METHODS>>'
-            TypeSignature windowsRuntimeAsyncActionWithProgress1Type = interopReferences.WindowsRuntimeAsyncActionWithProgress2.MakeGenericReferenceType(
+            TypeSignature windowsRuntimeAsyncActionWithProgress1Type = interopReferences.WindowsRuntimeAsyncActionWithProgress2.MakeGenericReferenceType([
                 actionType.TypeArguments[0],
-                actionMethodsType.ToReferenceTypeSignature());
+                actionMethodsType.ToReferenceTypeSignature()]);
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: actionType,

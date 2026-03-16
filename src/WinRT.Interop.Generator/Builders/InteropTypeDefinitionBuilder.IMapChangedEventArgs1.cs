@@ -101,9 +101,9 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition nativeObjectType)
         {
             // The 'NativeObject' is deriving from 'WindowsRuntimeMapChangedEventArgs<<KEY_TYPE>, <IMAPCHANGEDEVENTARGS_METHODS>>'
-            TypeSignature windowsRuntimeMapChangedEventArgs2Type = interopReferences.WindowsRuntimeMapChangedEventArgs2.MakeGenericReferenceType(
+            TypeSignature windowsRuntimeMapChangedEventArgs2Type = interopReferences.WindowsRuntimeMapChangedEventArgs2.MakeGenericReferenceType([
                 argsType.TypeArguments[0],
-                argsMethodsType.ToReferenceTypeSignature());
+                argsMethodsType.ToReferenceTypeSignature()]);
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: argsType,

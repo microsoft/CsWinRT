@@ -132,9 +132,9 @@ internal partial class InteropTypeDefinitionBuilder
                 }
 
                 // Create a dummy signature just to generate the mangled name for the vtable type
-                TypeSignature sharedEventHandlerType = interopReferences.EventHandler2.MakeGenericReferenceType(
+                TypeSignature sharedEventHandlerType = interopReferences.EventHandler2.MakeGenericReferenceType([
                     displaySenderType,
-                    displayArgsType);
+                    displayArgsType]);
 
                 // Construct a new specialized vtable type
                 TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.DelegateVftbl(

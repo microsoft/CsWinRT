@@ -538,11 +538,11 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IVECTOR_METHODS>>'
-            TypeSignature windowsRuntimeList4Type = interopReferences.WindowsRuntimeList4.MakeGenericReferenceType(
+            TypeSignature windowsRuntimeList4Type = interopReferences.WindowsRuntimeList4.MakeGenericReferenceType([
                 elementType,
                 emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
-                vectorMethodsType.ToReferenceTypeSignature());
+                vectorMethodsType.ToReferenceTypeSignature()]);
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: listType,

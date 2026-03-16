@@ -133,9 +133,9 @@ internal partial class InteropTypeDefinitionBuilder
                 }
 
                 // Create a dummy signature just to generate the mangled name for the vtable type
-                TypeSignature sharedDictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(
+                TypeSignature sharedDictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType([
                     displayKeyType,
-                    displayValueType);
+                    displayValueType]);
 
                 // Construct a new specialized vtable type
                 TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.IDictionary2Vftbl(
@@ -209,7 +209,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IMapMethodsImpl2.MakeGenericReferenceType(keyType, valueType).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IMapMethodsImpl2.MakeGenericReferenceType([keyType, valueType]).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(mapMethodsType);
@@ -473,7 +473,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)]))
+                        interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType])]))
             {
                 CilInstructions =
                 {
@@ -496,7 +496,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)]))
+                        interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType])]))
             {
                 CilInstructions =
                 {
@@ -539,7 +539,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)]))
+                        interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType])]))
             {
                 CilInstructions =
                 {
@@ -553,7 +553,7 @@ internal partial class InteropTypeDefinitionBuilder
             dictionaryMethodsType.Methods.Add(containsMethod);
 
             // We need to pass the 'IIterableMethods' type as a second type argument, as it's needed to enumerate key-value pairs
-            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
             TypeDefinition iterableMethodsType = emitState.LookupTypeDefinition(enumerableType, "IIterableMethods");
 
@@ -572,7 +572,7 @@ internal partial class InteropTypeDefinitionBuilder
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType).MakeSzArrayType(),
+                        interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]).MakeSzArrayType(),
                         interopReferences.Int32]))
             {
                 CilInstructions =
@@ -608,16 +608,16 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
-            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeDictionary<<KEY_TYPE>, <VALUE_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IMAP_METHODS>>'
-            TypeSignature windowsRuntimeDictionary5Type = interopReferences.WindowsRuntimeDictionary5.MakeGenericReferenceType(
+            TypeSignature windowsRuntimeDictionary5Type = interopReferences.WindowsRuntimeDictionary5.MakeGenericReferenceType([
                 keyType,
                 valueType,
                 emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
-                mapMethodsType.ToReferenceTypeSignature());
+                mapMethodsType.ToReferenceTypeSignature()]);
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: dictionaryType,
@@ -703,7 +703,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
-            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
             TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(keyValuePairType);
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
 

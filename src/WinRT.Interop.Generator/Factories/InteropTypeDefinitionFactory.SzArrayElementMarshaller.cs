@@ -39,7 +39,7 @@ internal partial class InteropTypeDefinitionFactory
             // Get the constructed 'IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller<T, TAbi>' interface type
             TypeSignature interfaceType = interopReferences
                 .IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller2
-                .MakeGenericReferenceType(elementType, elementAbiType);
+                .MakeGenericReferenceType([elementType, elementAbiType]);
 
             return ElementMarshaller(
                 arrayType: arrayType,
@@ -69,7 +69,7 @@ internal partial class InteropTypeDefinitionFactory
             // Get the constructed 'IWindowsRuntimeManagedValueTypeArrayElementMarshaller<T, TAbi>' interface type
             TypeSignature interfaceType = interopReferences
                 .IWindowsRuntimeManagedValueTypeArrayElementMarshaller2
-                .MakeGenericReferenceType(elementType, elementAbiType);
+                .MakeGenericReferenceType([elementType, elementAbiType]);
 
             // Get the element marshaller type with the common method implementations
             TypeDefinition elementMarshallerType = ElementMarshaller(
@@ -133,7 +133,7 @@ internal partial class InteropTypeDefinitionFactory
             // Get the constructed 'IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller<TKey, TValue>' interface type
             TypeSignature interfaceType = interopReferences
                 .IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller2
-                .MakeGenericReferenceType(keyType, valueType);
+                .MakeGenericReferenceType([keyType, valueType]);
 
             // If both the key and the value types are value types, it means the whole marshaller will be specialized.
             // In that case we can emit the element marshaller type as a value type as well, so the whole thing can be

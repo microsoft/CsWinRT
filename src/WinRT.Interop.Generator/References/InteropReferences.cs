@@ -2987,7 +2987,7 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToUnmanaged(TypeSignature elementType, TypeSignature abiType)
     {
         return IWindowsRuntimeManagedValueTypeArrayElementMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
@@ -3002,7 +3002,7 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeManagedValueTypeArrayElementMarshallerConvertToManaged(TypeSignature elementType, TypeSignature abiType)
     {
         return IWindowsRuntimeManagedValueTypeArrayElementMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
@@ -3017,7 +3017,7 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeManagedValueTypeArrayElementMarshallerDispose(TypeSignature elementType, TypeSignature abiType)
     {
         return IWindowsRuntimeManagedValueTypeArrayElementMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Dispose"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3032,7 +3032,7 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToUnmanaged(TypeSignature elementType, TypeSignature abiType)
     {
         return IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
@@ -3047,7 +3047,7 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeUnmanagedValueTypeArrayElementMarshallerConvertToManaged(TypeSignature elementType, TypeSignature abiType)
     {
         return IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
@@ -3062,14 +3062,14 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToUnmanaged(TypeSignature keyType, TypeSignature valueType)
     {
         return IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
                 parameterTypes: [
-                    KeyValuePair2.MakeGenericValueType(
+                    KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Type, 0),
-                        new GenericParameterSignature(GenericParameterType.Type, 1))]));
+                        new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
     /// <summary>
@@ -3080,12 +3080,12 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeKeyValuePairTypeArrayElementMarshallerConvertToManaged(TypeSignature keyType, TypeSignature valueType)
     {
         return IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
-                returnType: KeyValuePair2.MakeGenericValueType(
+                returnType: KeyValuePair2.MakeGenericValueType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]),
                 parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
     }
 
@@ -3139,7 +3139,7 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeManagedValueTypeElementMarshallerConvertToUnmanaged(TypeSignature elementType, TypeSignature abiType)
     {
         return IWindowsRuntimeManagedValueTypeElementMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
@@ -3154,7 +3154,7 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeManagedValueTypeElementMarshallerDispose(TypeSignature elementType, TypeSignature abiType)
     {
         return IWindowsRuntimeManagedValueTypeElementMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Dispose"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3169,7 +3169,7 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeUnmanagedValueTypeElementMarshallerConvertToUnmanaged(TypeSignature elementType, TypeSignature abiType)
     {
         return IWindowsRuntimeUnmanagedValueTypeElementMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
@@ -3184,14 +3184,14 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeKeyValuePairTypeElementMarshallerConvertToUnmanaged(TypeSignature keyType, TypeSignature valueType)
     {
         return IWindowsRuntimeKeyValuePairTypeElementMarshaller2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
                 parameterTypes: [
-                    KeyValuePair2.MakeGenericValueType(
+                    KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Type, 0),
-                        new GenericParameterSignature(GenericParameterType.Type, 1))]));
+                        new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
     /// <summary>
@@ -3284,7 +3284,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeManagedValueTypeArrayMarshallerConvertToUnmanaged(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeManagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3305,7 +3305,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeManagedValueTypeArrayMarshallerConvertToManaged(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeManagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0).MakeSzArrayType(),
@@ -3325,7 +3325,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeManagedValueTypeArrayMarshallerCopyToUnmanaged(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeManagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3346,7 +3346,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeManagedValueTypeArrayMarshallerCopyToManaged(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeManagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyToManaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3367,7 +3367,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeManagedValueTypeArrayMarshallerDispose(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeManagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Dispose"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3387,7 +3387,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeManagedValueTypeArrayMarshallerFree(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeManagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Free"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3407,7 +3407,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeUnmanagedValueTypeArrayMarshallerConvertToUnmanaged(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeUnmanagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3428,7 +3428,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeUnmanagedValueTypeArrayMarshallerConvertToManaged(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeUnmanagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0).MakeSzArrayType(),
@@ -3448,7 +3448,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeUnmanagedValueTypeArrayMarshallerCopyToUnmanaged(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeUnmanagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3469,7 +3469,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeUnmanagedValueTypeArrayMarshallerCopyToManaged(TypeSignature elementType, TypeSignature abiType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeUnmanagedValueTypeArrayMarshaller2
-            .MakeGenericReferenceType(elementType, abiType)
+            .MakeGenericReferenceType([elementType, abiType])
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyToManaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3569,16 +3569,16 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeKeyValuePairTypeArrayMarshallerConvertToUnmanaged(TypeSignature keyType, TypeSignature valueType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeKeyValuePairTypeArrayMarshaller2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
                     ReadOnlySpan1.MakeGenericValueType(
-                        KeyValuePair2.MakeGenericValueType(
+                        KeyValuePair2.MakeGenericValueType([
                             new GenericParameterSignature(GenericParameterType.Type, 0),
-                            new GenericParameterSignature(GenericParameterType.Type, 1))),
+                            new GenericParameterSignature(GenericParameterType.Type, 1)])),
                     _corLibTypeFactory.UInt32.MakeByReferenceType(),
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType().MakeByReferenceType()]))
             .MakeGenericInstanceMethod([elementMarshallerType]);
@@ -3593,12 +3593,12 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeKeyValuePairTypeArrayMarshallerConvertToManaged(TypeSignature keyType, TypeSignature valueType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeKeyValuePairTypeArrayMarshaller2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
-                returnType: KeyValuePair2.MakeGenericValueType(
+                returnType: KeyValuePair2.MakeGenericValueType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)).MakeSzArrayType(),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]).MakeSzArrayType(),
                 genericParameterCount: 1,
                 parameterTypes: [
                     _corLibTypeFactory.UInt32,
@@ -3615,16 +3615,16 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeKeyValuePairTypeArrayMarshallerCopyToUnmanaged(TypeSignature keyType, TypeSignature valueType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeKeyValuePairTypeArrayMarshaller2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
                     ReadOnlySpan1.MakeGenericValueType(
-                        KeyValuePair2.MakeGenericValueType(
+                        KeyValuePair2.MakeGenericValueType([
                             new GenericParameterSignature(GenericParameterType.Type, 0),
-                            new GenericParameterSignature(GenericParameterType.Type, 1))),
+                            new GenericParameterSignature(GenericParameterType.Type, 1)])),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             .MakeGenericInstanceMethod([elementMarshallerType]);
@@ -3639,7 +3639,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeKeyValuePairTypeArrayMarshallerCopyToManaged(TypeSignature keyType, TypeSignature valueType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeKeyValuePairTypeArrayMarshaller2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyToManaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3648,9 +3648,9 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType(),
                     Span1.MakeGenericValueType(
-                        KeyValuePair2.MakeGenericValueType(
+                        KeyValuePair2.MakeGenericValueType([
                             new GenericParameterSignature(GenericParameterType.Type, 0),
-                            new GenericParameterSignature(GenericParameterType.Type, 1)))]))
+                            new GenericParameterSignature(GenericParameterType.Type, 1)]))]))
             .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
@@ -3783,7 +3783,7 @@ internal sealed class InteropReferences
     public MemberReference EventHandler2EventSource_ctor(TypeSignature senderType, TypeSignature eventArgsType)
     {
         return EventHandler2EventSource
-            .MakeGenericReferenceType(senderType, eventArgsType)
+            .MakeGenericReferenceType([senderType, eventArgsType])
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
@@ -3812,7 +3812,7 @@ internal sealed class InteropReferences
     public MemberReference MapChangedEventHandler2EventSource_ctor(TypeSignature keyType, TypeSignature valueType)
     {
         return MapChangedEventHandler2EventSource
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
@@ -3957,10 +3957,10 @@ internal sealed class InteropReferences
                 genericParameterCount: 1,
                 parameterTypes: [
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    Func3.MakeGenericReferenceType(
+                    Func3.MakeGenericReferenceType([
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Method, 0),
-                        new GenericParameterSignature(GenericParameterType.Type, 1)),
+                        new GenericParameterSignature(GenericParameterType.Type, 1)]),
                     new GenericParameterSignature(GenericParameterType.Method, 0)]))
             .MakeGenericInstanceMethod([argType]);
     }
@@ -4281,12 +4281,12 @@ internal sealed class InteropReferences
     public MemberReference IAsyncOperationWithProgress2get_Progress(TypeSignature resultType, TypeSignature progressType)
     {
         return IAsyncOperationWithProgress2
-            .MakeGenericReferenceType(resultType, progressType)
+            .MakeGenericReferenceType([resultType, progressType])
             .ToTypeDefOrRef()
             .CreateMemberReference("get_Progress"u8, MethodSignature.CreateInstance(
-                returnType: AsyncOperationProgressHandler2.MakeGenericReferenceType(
+                returnType: AsyncOperationProgressHandler2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1))));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])));
     }
 
     /// <summary>
@@ -4297,13 +4297,13 @@ internal sealed class InteropReferences
     public MemberReference IAsyncOperationWithProgress2set_Progress(TypeSignature resultType, TypeSignature progressType)
     {
         return IAsyncOperationWithProgress2
-            .MakeGenericReferenceType(resultType, progressType)
+            .MakeGenericReferenceType([resultType, progressType])
             .ToTypeDefOrRef()
             .CreateMemberReference("set_Progress"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Void,
-                parameterTypes: [AsyncOperationProgressHandler2.MakeGenericReferenceType(
+                parameterTypes: [AsyncOperationProgressHandler2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
     /// <summary>
@@ -4314,12 +4314,12 @@ internal sealed class InteropReferences
     public MemberReference IAsyncOperationWithProgress2get_Completed(TypeSignature resultType, TypeSignature progressType)
     {
         return IAsyncOperationWithProgress2
-            .MakeGenericReferenceType(resultType, progressType)
+            .MakeGenericReferenceType([resultType, progressType])
             .ToTypeDefOrRef()
             .CreateMemberReference("get_Completed"u8, MethodSignature.CreateInstance(
-                returnType: AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType(
+                returnType: AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1))));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])));
     }
 
     /// <summary>
@@ -4330,13 +4330,13 @@ internal sealed class InteropReferences
     public MemberReference IAsyncOperationWithProgress2set_Completed(TypeSignature resultType, TypeSignature progressType)
     {
         return IAsyncOperationWithProgress2
-            .MakeGenericReferenceType(resultType, progressType)
+            .MakeGenericReferenceType([resultType, progressType])
             .ToTypeDefOrRef()
             .CreateMemberReference("set_Completed"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Void,
-                parameterTypes: [AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType(
+                parameterTypes: [AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
     /// <summary>
@@ -4347,7 +4347,7 @@ internal sealed class InteropReferences
     public MemberReference IAsyncOperationWithProgress2GetResults(TypeSignature resultType, TypeSignature progressType)
     {
         return IAsyncOperationWithProgress2
-            .MakeGenericReferenceType(resultType, progressType)
+            .MakeGenericReferenceType([resultType, progressType])
             .ToTypeDefOrRef()
             .CreateMemberReference("GetResults"u8, MethodSignature.CreateInstance(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0)));
@@ -4361,12 +4361,12 @@ internal sealed class InteropReferences
     public MemberReference IAsyncOperationWithProgressMethodsImpl2get_Progress(TypeSignature resultType, TypeSignature progressType)
     {
         return IAsyncOperationWithProgressMethodsImpl2
-            .MakeGenericReferenceType(resultType, progressType)
+            .MakeGenericReferenceType([resultType, progressType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Progress"u8, MethodSignature.CreateStatic(
-                returnType: AsyncOperationProgressHandler2.MakeGenericReferenceType(
+                returnType: AsyncOperationProgressHandler2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]),
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
 
@@ -4378,15 +4378,15 @@ internal sealed class InteropReferences
     public MemberReference IAsyncOperationWithProgressMethodsImpl2set_Progress(TypeSignature resultType, TypeSignature progressType)
     {
         return IAsyncOperationWithProgressMethodsImpl2
-            .MakeGenericReferenceType(resultType, progressType)
+            .MakeGenericReferenceType([resultType, progressType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Progress"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    AsyncOperationProgressHandler2.MakeGenericReferenceType(
+                    AsyncOperationProgressHandler2.MakeGenericReferenceType([
                         new GenericParameterSignature(GenericParameterType.Type, 0),
-                        new GenericParameterSignature(GenericParameterType.Type, 1))]));
+                        new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
     /// <summary>
@@ -4397,12 +4397,12 @@ internal sealed class InteropReferences
     public MemberReference IAsyncOperationWithProgressMethodsImpl2get_Completed(TypeSignature resultType, TypeSignature progressType)
     {
         return IAsyncOperationWithProgressMethodsImpl2
-            .MakeGenericReferenceType(resultType, progressType)
+            .MakeGenericReferenceType([resultType, progressType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Completed"u8, MethodSignature.CreateStatic(
-                returnType: AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType(
+                returnType: AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]),
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
 
@@ -4414,15 +4414,15 @@ internal sealed class InteropReferences
     public MemberReference IAsyncOperationWithProgressMethodsImpl2set_Completed(TypeSignature resultType, TypeSignature progressType)
     {
         return IAsyncOperationWithProgressMethodsImpl2
-            .MakeGenericReferenceType(resultType, progressType)
+            .MakeGenericReferenceType([resultType, progressType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Completed"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType(
+                    AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType([
                         new GenericParameterSignature(GenericParameterType.Type, 0),
-                        new GenericParameterSignature(GenericParameterType.Type, 1))]));
+                        new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
     /// <summary>
@@ -4433,7 +4433,7 @@ internal sealed class InteropReferences
     public MemberReference IAsyncOperationWithProgressMethodsImpl2GetResults(TypeSignature resultType, TypeSignature progressType)
     {
         return IAsyncOperationWithProgressMethodsImpl2
-            .MakeGenericReferenceType(resultType, progressType)
+            .MakeGenericReferenceType([resultType, progressType])
             .ToTypeDefOrRef()
             .CreateMemberReference("GetResults"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 0),
@@ -4595,9 +4595,9 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.UInt32,
                 genericParameterCount: 3,
                 parameterTypes: [
-                    IEnumeratorAdapter1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType(
+                    IEnumeratorAdapter1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Method, 0),
-                        new GenericParameterSignature(GenericParameterType.Method, 1))),
+                        new GenericParameterSignature(GenericParameterType.Method, 1)])),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             .MakeGenericInstanceMethod([keyType, valueType, elementMarshallerType]);
@@ -5219,9 +5219,9 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.UInt32,
                 genericParameterCount: 3,
                 parameterTypes: [
-                    IList1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType(
+                    IList1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Method, 0),
-                        new GenericParameterSignature(GenericParameterType.Method, 1))),
+                        new GenericParameterSignature(GenericParameterType.Method, 1)])),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
@@ -5448,9 +5448,9 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.UInt32,
                 genericParameterCount: 3,
                 parameterTypes: [
-                    IReadOnlyList1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType(
+                    IReadOnlyList1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Method, 0),
-                        new GenericParameterSignature(GenericParameterType.Method, 1))),
+                        new GenericParameterSignature(GenericParameterType.Method, 1)])),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
@@ -5522,7 +5522,7 @@ internal sealed class InteropReferences
     public MemberReference IMapMethodsImpl2HasKey(TypeSignature keyType, TypeSignature valueType)
     {
         return IMapMethodsImpl2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("HasKey"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
@@ -5539,7 +5539,7 @@ internal sealed class InteropReferences
     public MemberReference IMapMethodsImpl2Lookup(TypeSignature keyType, TypeSignature valueType)
     {
         return IMapMethodsImpl2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
@@ -5556,7 +5556,7 @@ internal sealed class InteropReferences
     public MemberReference IMapMethodsImpl2Insert(TypeSignature keyType, TypeSignature valueType)
     {
         return IMapMethodsImpl2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Insert"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
@@ -5574,7 +5574,7 @@ internal sealed class InteropReferences
     public MemberReference IMapMethodsImpl2Remove(TypeSignature keyType, TypeSignature valueType)
     {
         return IMapMethodsImpl2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -5591,7 +5591,7 @@ internal sealed class InteropReferences
     public MemberReference IMapViewMethodsImpl2HasKey(TypeSignature keyType, TypeSignature valueType)
     {
         return IMapViewMethodsImpl2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("HasKey"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
@@ -5608,7 +5608,7 @@ internal sealed class InteropReferences
     public MemberReference IMapViewMethodsImpl2Lookup(TypeSignature keyType, TypeSignature valueType)
     {
         return IMapViewMethodsImpl2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
@@ -5626,7 +5626,7 @@ internal sealed class InteropReferences
     public MethodSpecification IDictionaryMethods2get_Item(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapMethods)
     {
         return IDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Item"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
@@ -5646,7 +5646,7 @@ internal sealed class InteropReferences
     public MethodSpecification IDictionaryMethods2set_Item(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapMethods)
     {
         return IDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Item"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -5667,7 +5667,7 @@ internal sealed class InteropReferences
     public MethodSpecification IDictionaryMethods2Add(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapMethods)
     {
         return IDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Add"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -5688,7 +5688,7 @@ internal sealed class InteropReferences
     public MethodSpecification IDictionaryMethods2ContainsKey(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapMethods)
     {
         return IDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ContainsKey"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
@@ -5708,7 +5708,7 @@ internal sealed class InteropReferences
     public MethodSpecification IDictionaryMethods2Remove(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapMethods)
     {
         return IDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
@@ -5728,7 +5728,7 @@ internal sealed class InteropReferences
     public MethodSpecification IDictionaryMethods2TryGetValue(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapMethods)
     {
         return IDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("TryGetValue"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
@@ -5749,16 +5749,16 @@ internal sealed class InteropReferences
     public MethodSpecification IDictionaryMethods2AddKeyValuePair(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapMethods)
     {
         return IDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Add"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    KeyValuePair2.MakeGenericValueType(
+                    KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Type, 0),
-                        new GenericParameterSignature(GenericParameterType.Type, 1))]))
+                        new GenericParameterSignature(GenericParameterType.Type, 1)])]))
             .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
@@ -5771,16 +5771,16 @@ internal sealed class InteropReferences
     public MethodSpecification IDictionaryMethods2Contains(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapMethods)
     {
         return IDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Contains"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    KeyValuePair2.MakeGenericValueType(
+                    KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Type, 0),
-                        new GenericParameterSignature(GenericParameterType.Type, 1))]))
+                        new GenericParameterSignature(GenericParameterType.Type, 1)])]))
             .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
@@ -5796,7 +5796,7 @@ internal sealed class InteropReferences
         TypeDefinition iterableMethods)
     {
         return IDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyTo"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -5804,9 +5804,9 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    KeyValuePair2.MakeGenericValueType(
+                    KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Type, 0),
-                        new GenericParameterSignature(GenericParameterType.Type, 1)).MakeSzArrayType(),
+                        new GenericParameterSignature(GenericParameterType.Type, 1)]).MakeSzArrayType(),
                     _corLibTypeFactory.Int32]))
             .MakeGenericInstanceMethod([iterableMethods.ToReferenceTypeSignature()]);
     }
@@ -5820,16 +5820,16 @@ internal sealed class InteropReferences
     public MethodSpecification IDictionaryMethods2RemoveKeyValuePair(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapMethods)
     {
         return IDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    KeyValuePair2.MakeGenericValueType(
+                    KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Type, 0),
-                        new GenericParameterSignature(GenericParameterType.Type, 1))]))
+                        new GenericParameterSignature(GenericParameterType.Type, 1)])]))
             .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
@@ -5841,14 +5841,14 @@ internal sealed class InteropReferences
     public MemberReference IDictionaryAdapter2Lookup(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionaryAdapter2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
                 parameterTypes: [
-                    IDictionary2.MakeGenericReferenceType(
+                    IDictionary2.MakeGenericReferenceType([
                         new GenericParameterSignature(GenericParameterType.Type, 0),
-                        new GenericParameterSignature(GenericParameterType.Type, 1)),
+                        new GenericParameterSignature(GenericParameterType.Type, 1)]),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
@@ -5863,7 +5863,7 @@ internal sealed class InteropReferences
                 returnType: new GenericParameterSignature(GenericParameterType.Method, 0),
                 genericParameterCount: 1,
                 parameterTypes: [
-                    IDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    IDictionary2.MakeGenericReferenceType([_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)]),
                     ReadOnlySpanChar]))
             .MakeGenericInstanceMethod([valueType]);
     }
@@ -5876,13 +5876,13 @@ internal sealed class InteropReferences
     public MemberReference IDictionaryAdapter2Size(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionaryAdapter2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Size"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                parameterTypes: [IDictionary2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
     /// <summary>
@@ -5896,7 +5896,7 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
-                    IDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    IDictionary2.MakeGenericReferenceType([_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)]),
                     ReadOnlySpanChar]))
             .MakeGenericInstanceMethod([valueType]);
     }
@@ -5909,15 +5909,15 @@ internal sealed class InteropReferences
     public MemberReference IDictionaryAdapter2GetView(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionaryAdapter2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("GetView"u8, MethodSignature.CreateStatic(
-                returnType: IReadOnlyDictionary2.MakeGenericReferenceType(
+                returnType: IReadOnlyDictionary2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)),
-                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]),
+                parameterTypes: [IDictionary2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
     /// <summary>
@@ -5928,13 +5928,13 @@ internal sealed class InteropReferences
     public MemberReference IDictionaryAdapter2Insert(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionaryAdapter2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Insert"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
-                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                parameterTypes: [IDictionary2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]),
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1)]));
     }
@@ -5947,13 +5947,13 @@ internal sealed class InteropReferences
     public MemberReference IDictionaryAdapter2Remove(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionaryAdapter2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Remove"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
-                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                parameterTypes: [IDictionary2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
@@ -5968,7 +5968,7 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
-                    IDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    IDictionary2.MakeGenericReferenceType([_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)]),
                     ReadOnlySpanChar]))
             .MakeGenericInstanceMethod([valueType]);
     }
@@ -5982,7 +5982,7 @@ internal sealed class InteropReferences
     public MethodSpecification IReadOnlyDictionaryMethods2get_Item(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapViewMethods)
     {
         return IReadOnlyDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Item"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
@@ -6002,7 +6002,7 @@ internal sealed class InteropReferences
     public MethodSpecification IReadOnlyDictionaryMethods2ContainsKey(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapViewMethods)
     {
         return IReadOnlyDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ContainsKey"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
@@ -6022,7 +6022,7 @@ internal sealed class InteropReferences
     public MethodSpecification IReadOnlyDictionaryMethods2TryGetValue(TypeSignature keyType, TypeSignature valueType, TypeDefinition mapViewMethods)
     {
         return IReadOnlyDictionaryMethods2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("TryGetValue"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Boolean,
@@ -6042,14 +6042,14 @@ internal sealed class InteropReferences
     public MemberReference IReadOnlyDictionaryAdapter2Lookup(TypeSignature keyType, TypeSignature valueType)
     {
         return IReadOnlyDictionaryAdapter2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Lookup"u8, MethodSignature.CreateStatic(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
                 parameterTypes: [
-                    IReadOnlyDictionary2.MakeGenericReferenceType(
+                    IReadOnlyDictionary2.MakeGenericReferenceType([
                         new GenericParameterSignature(GenericParameterType.Type, 0),
-                        new GenericParameterSignature(GenericParameterType.Type, 1)),
+                        new GenericParameterSignature(GenericParameterType.Type, 1)]),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]));
     }
 
@@ -6064,7 +6064,7 @@ internal sealed class InteropReferences
                 returnType: new GenericParameterSignature(GenericParameterType.Method, 0),
                 genericParameterCount: 1,
                 parameterTypes: [
-                    IReadOnlyDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    IReadOnlyDictionary2.MakeGenericReferenceType([_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)]),
                     ReadOnlySpanChar]))
             .MakeGenericInstanceMethod([valueType]);
     }
@@ -6077,13 +6077,13 @@ internal sealed class InteropReferences
     public MemberReference IReadOnlyDictionaryAdapter2Size(TypeSignature keyType, TypeSignature valueType)
     {
         return IReadOnlyDictionaryAdapter2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Size"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.UInt32,
-                parameterTypes: [IReadOnlyDictionary2.MakeGenericReferenceType(
+                parameterTypes: [IReadOnlyDictionary2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
     /// <summary>
@@ -6097,7 +6097,7 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.Boolean,
                 genericParameterCount: 1,
                 parameterTypes: [
-                    IReadOnlyDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
+                    IReadOnlyDictionary2.MakeGenericReferenceType([_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)]),
                     ReadOnlySpanChar]))
             .MakeGenericInstanceMethod([valueType]);
     }
@@ -6109,12 +6109,12 @@ internal sealed class InteropReferences
     /// <param name="valueType">The input value type.</param>
     public MemberReference IReadOnlyDictionaryAdapter2Split(TypeSignature keyType, TypeSignature valueType)
     {
-        TypeSignature readOnlyDictionaryType = IReadOnlyDictionary2.MakeGenericReferenceType(
+        TypeSignature readOnlyDictionaryType = IReadOnlyDictionary2.MakeGenericReferenceType([
             new GenericParameterSignature(GenericParameterType.Type, 0),
-            new GenericParameterSignature(GenericParameterType.Type, 1));
+            new GenericParameterSignature(GenericParameterType.Type, 1)]);
 
         return IReadOnlyDictionaryAdapter2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Split"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -6132,7 +6132,7 @@ internal sealed class InteropReferences
     public MemberReference IDictionary2get_Item(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("get_Item"u8, MethodSignature.CreateInstance(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
@@ -6147,7 +6147,7 @@ internal sealed class InteropReferences
     public MemberReference IDictionary2set_Item(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("set_Item"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Void,
@@ -6164,7 +6164,7 @@ internal sealed class InteropReferences
     public MemberReference IDictionary2get_Keys(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("get_Keys"u8, MethodSignature.CreateInstance(
                 ICollection1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))));
@@ -6178,7 +6178,7 @@ internal sealed class InteropReferences
     public MemberReference IDictionary2get_Values(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("get_Values"u8, MethodSignature.CreateInstance(
                 ICollection1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 1))));
@@ -6192,7 +6192,7 @@ internal sealed class InteropReferences
     public MemberReference IDictionary2Add(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Add"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Void,
@@ -6209,7 +6209,7 @@ internal sealed class InteropReferences
     public MemberReference IDictionary2ContainsKey(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ContainsKey"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Boolean,
@@ -6224,7 +6224,7 @@ internal sealed class InteropReferences
     public MemberReference IDictionary2Remove(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("Remove"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Boolean,
@@ -6239,7 +6239,7 @@ internal sealed class InteropReferences
     public MemberReference IDictionary2TryGetValue(TypeSignature keyType, TypeSignature valueType)
     {
         return IDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("TryGetValue"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Boolean,
@@ -6256,7 +6256,7 @@ internal sealed class InteropReferences
     public MemberReference IReadOnlyDictionary2get_Item(TypeSignature keyType, TypeSignature valueType)
     {
         return IReadOnlyDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("get_Item"u8, MethodSignature.CreateInstance(
                 returnType: new GenericParameterSignature(GenericParameterType.Type, 1),
@@ -6271,7 +6271,7 @@ internal sealed class InteropReferences
     public MemberReference IReadOnlyDictionary2get_Keys(TypeSignature keyType, TypeSignature valueType)
     {
         return IReadOnlyDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("get_Keys"u8, MethodSignature.CreateInstance(
                 IEnumerable1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0))));
@@ -6285,7 +6285,7 @@ internal sealed class InteropReferences
     public MemberReference IReadOnlyDictionary2get_Values(TypeSignature keyType, TypeSignature valueType)
     {
         return IReadOnlyDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("get_Values"u8, MethodSignature.CreateInstance(
                 IEnumerable1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 1))));
@@ -6299,7 +6299,7 @@ internal sealed class InteropReferences
     public MemberReference IReadOnlyDictionary2ContainsKey(TypeSignature keyType, TypeSignature valueType)
     {
         return IReadOnlyDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ContainsKey"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Boolean,
@@ -6314,7 +6314,7 @@ internal sealed class InteropReferences
     public MemberReference IReadOnlyDictionary2TryGetValue(TypeSignature keyType, TypeSignature valueType)
     {
         return IReadOnlyDictionary2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("TryGetValue"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Boolean,
@@ -6373,13 +6373,13 @@ internal sealed class InteropReferences
     public MemberReference IObservableMap2add_MapChanged(TypeSignature keyType, TypeSignature valueType)
     {
         return IObservableMap2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("add_MapChanged"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Void,
-                parameterTypes: [MapChangedEventHandler2.MakeGenericReferenceType(
+                parameterTypes: [MapChangedEventHandler2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
     /// <summary>
@@ -6390,13 +6390,13 @@ internal sealed class InteropReferences
     public MemberReference IObservableMap2remove_MapChanged(TypeSignature keyType, TypeSignature valueType)
     {
         return IObservableMap2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("remove_MapChanged"u8, MethodSignature.CreateInstance(
                 returnType: _corLibTypeFactory.Void,
-                parameterTypes: [MapChangedEventHandler2.MakeGenericReferenceType(
+                parameterTypes: [MapChangedEventHandler2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1))]));
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])]));
     }
 
     /// <summary>
@@ -6407,12 +6407,12 @@ internal sealed class InteropReferences
     public MemberReference IObservableMapEventSourceFactory2MapChanged(TypeSignature keyType, TypeSignature valueType)
     {
         return IObservableMapEventSourceFactory2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateMemberReference("MapChanged"u8, MethodSignature.CreateStatic(
-                returnType: MapChangedEventHandler2EventSource.MakeGenericReferenceType(
+                returnType: MapChangedEventHandler2EventSource.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)),
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]),
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
 
@@ -6501,13 +6501,13 @@ internal sealed class InteropReferences
     public MemberReference DictionaryKeyCollection2_ctor(TypeSignature keyType, TypeSignature valueType)
     {
         return DictionaryKeyCollection2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                parameterTypes: [IDictionary2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1))]);
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])]);
     }
 
     /// <summary>
@@ -6518,13 +6518,13 @@ internal sealed class InteropReferences
     public MemberReference DictionaryValueCollection2_ctor(TypeSignature keyType, TypeSignature valueType)
     {
         return DictionaryValueCollection2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [IDictionary2.MakeGenericReferenceType(
+                parameterTypes: [IDictionary2.MakeGenericReferenceType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1))]);
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])]);
     }
 
     /// <summary>
@@ -6535,13 +6535,13 @@ internal sealed class InteropReferences
     public MemberReference ReadOnlyDictionaryKeyCollection2_ctor(TypeSignature keyType, TypeSignature valueType)
     {
         return ReadOnlyDictionaryKeyCollection2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [IEnumerable1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType(
+                parameterTypes: [IEnumerable1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)))]);
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]))]);
     }
 
     /// <summary>
@@ -6552,12 +6552,12 @@ internal sealed class InteropReferences
     public MemberReference ReadOnlyDictionaryValueCollection2_ctor(TypeSignature keyType, TypeSignature valueType)
     {
         return ReadOnlyDictionaryValueCollection2
-            .MakeGenericReferenceType(keyType, valueType)
+            .MakeGenericReferenceType([keyType, valueType])
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [IEnumerable1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType(
+                parameterTypes: [IEnumerable1.MakeGenericReferenceType(KeyValuePair2.MakeGenericValueType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)))]);
+                    new GenericParameterSignature(GenericParameterType.Type, 1)]))]);
     }
 }

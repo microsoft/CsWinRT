@@ -46,13 +46,13 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IObservableMapEventSourceFactory2.MakeGenericReferenceType(keyType, valueType).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IObservableMapEventSourceFactory2.MakeGenericReferenceType([keyType, valueType]).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(factoryType);
 
             // The key for the lookup below is the associated handler type (which we need to construct), not the interface type
-            TypeSignature handlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType(keyType, valueType);
+            TypeSignature handlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([keyType, valueType]);
 
             // Get the constructor for the generic event source type
             MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
@@ -66,7 +66,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "MapChanged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType(keyType, valueType),
+                    returnType: interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType([keyType, valueType]),
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
@@ -115,10 +115,10 @@ internal partial class InteropTypeDefinitionBuilder
             callbackType.Fields.Add(new FieldDefinition("Instance"u8, FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, callbackType.ToReferenceTypeSignature()));
 
             // The actual callback is of type 'Func<WindowsRuntimeObject, WindowsRuntimeObjectReference, MapChangedEventHandlerEventSource<<KEY_TYPE>, <VALUE_TYPE>>>'
-            TypeSignature funcType = interopReferences.Func3.MakeGenericReferenceType(
+            TypeSignature funcType = interopReferences.Func3.MakeGenericReferenceType([
                 interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
                 interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType(keyType, valueType));
+                interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType([keyType, valueType])]);
 
             // 'Value' field with the cached callback delegate
             callbackType.Fields.Add(new FieldDefinition("Value"u8, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly, funcType));
@@ -127,7 +127,7 @@ internal partial class InteropTypeDefinitionBuilder
             callbackType.Methods.Add(MethodDefinition.CreateDefaultConstructor(interopReferences.CorLibTypeFactory));
 
             // Get the handler type to use as key (same as above)
-            TypeSignature handlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType(keyType, valueType);
+            TypeSignature handlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([keyType, valueType]);
 
             // Get the constructor for the generic event source type (same as above)
             MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
@@ -143,7 +143,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Create"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType(keyType, valueType),
+                    returnType: interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType([keyType, valueType]),
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
@@ -205,12 +205,12 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(methodsType);
 
             // Prepare the 'MapChangedEventHandlerEventSource<<KEY_TYPE>, <VALUE_TYPE>>' signature
-            TypeSignature eventHandlerEventSourceType = interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType(keyType, valueType);
+            TypeSignature eventHandlerEventSourceType = interopReferences.MapChangedEventHandler2EventSource.MakeGenericReferenceType([keyType, valueType]);
 
             // Prepare the 'ConditionalWeakTable<WindowsRuntimeObject, MapChangedEventHandlerEventSource<<KEY_TYPE>, <VALUE_TYPE>>>' signature
-            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([
                 interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
-                eventHandlerEventSourceType);
+                eventHandlerEventSourceType]);
 
             // Define the lazy 'MapChangedTable' property for the conditional weak table
             InteropMemberDefinitionFactory.LazyVolatileReferenceDefaultConstructorReadOnlyProperty(
@@ -278,19 +278,19 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature valueType = mapType.TypeArguments[1];
 
             // Get the base interfaces for the current element type
-            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
-            TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(keyType, valueType);
+            TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType([keyType, valueType]);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeObservableMap<<KEY_TYPE>, <VALUE_TYPE>, ...>'
-            TypeSignature windowsRuntimeObservableMap2Type = interopReferences.WindowsRuntimeObservableMap7.MakeGenericReferenceType(
+            TypeSignature windowsRuntimeObservableMap2Type = interopReferences.WindowsRuntimeObservableMap7.MakeGenericReferenceType([
                 keyType,
                 valueType,
                 emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(dictionaryType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(dictionaryType, "IMapMethods").ToReferenceTypeSignature(),
-                factoryType.ToReferenceTypeSignature());
+                factoryType.ToReferenceTypeSignature()]);
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: mapType,
@@ -378,8 +378,8 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature valueType = mapType.TypeArguments[1];
 
             // Prepare all the necessary base interface types
-            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
-            TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(keyType, valueType);
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
+            TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType([keyType, valueType]);
             TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(keyValuePairType);
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
 
@@ -408,7 +408,7 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(interfaceImplType);
 
             // Prepare the 'MapChangedEventHandler<K, V>' signature
-            TypeSignature handlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType(keyType, valueType);
+            TypeSignature handlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([keyType, valueType]);
 
             // Create the 'IObservableMap<K, V>.MapChanged' add method
             MethodDefinition add_IObservableMap2MapChangedMethod = new(
@@ -486,12 +486,12 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature valueType = mapType.TypeArguments[1];
 
             // Prepare the 'MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>' signature
-            TypeSignature eventHandlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType(keyType, valueType);
+            TypeSignature eventHandlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([keyType, valueType]);
 
             // Prepare the 'ConditionalWeakTable<<MAP_TYPE>, EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>>' signature
-            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([
                 mapType,
-                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType));
+                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType)]);
 
             // Define the lazy 'MapChangedTable' property for the conditional weak table
             InteropMemberDefinitionFactory.LazyVolatileReferenceDefaultConstructorReadOnlyProperty(

@@ -44,7 +44,7 @@ internal partial class InteropMethodDefinitionFactory
             TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType);
 
             // Prepare the 'ConditionalWeakTable<<VECTOR_TYPE>, EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>>' signature
-            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(vectorType, eventRegistrationTokenTableType);
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([vectorType, eventRegistrationTokenTableType]);
 
             // Define the 'add_VectorChanged' method as follows:
             //
@@ -168,7 +168,7 @@ internal partial class InteropMethodDefinitionFactory
             TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType);
 
             // Prepare the 'ConditionalWeakTable<<VECTOR_TYPE>, EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>>' signature
-            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(vectorType, eventRegistrationTokenTableType);
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([vectorType, eventRegistrationTokenTableType]);
 
             // Define the 'remove_VectorChanged' method as follows:
             //
