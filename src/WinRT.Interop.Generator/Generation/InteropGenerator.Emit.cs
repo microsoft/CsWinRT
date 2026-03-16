@@ -47,10 +47,10 @@ internal partial class InteropGenerator
         InteropReferences interopReferences = new(module.CorLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
         InteropDefinitions interopDefinitions = new(
             interopReferences: interopReferences,
-            windowsRuntimeSdkProjectionModule: discoveryState.WinRTSdkProjectionModuleDefinition!,
-            windowsRuntimeSdkXamlProjectionModule: discoveryState.WinRTSdkXamlProjectionModuleDefinition,
-            windowsRuntimeProjectionModule: discoveryState.WinRTProjectionModuleDefinition,
-            windowsRuntimeComponentModule: discoveryState.WinRTComponentModuleDefinition);
+            windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
+            windowsRuntimeSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
+            windowsRuntimeProjectionModule: discoveryState.WindowsRuntimeProjectionModule,
+            windowsRuntimeComponentModule: discoveryState.WindowsRuntimeComponentModule);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -208,20 +208,20 @@ internal partial class InteropGenerator
         out ModuleDefinition windowsFoundationModule)
     {
         // Get the loaded module for the application .dll (this should always be available here)
-        if (!discoveryState.ModuleDefinitions.TryGetValue(args.OutputAssemblyPath, out ModuleDefinition? assemblyModule))
+        if (!discoveryState.Modules.TryGetValue(args.OutputAssemblyPath, out ModuleDefinition? assemblyModule))
         {
             throw WellKnownInteropExceptions.AssemblyModuleNotFound();
         }
 
         // Get the loaded module for the runtime .dll (this should also always be available here)
-        if ((windowsRuntimeModule = discoveryState.ModuleDefinitions.FirstOrDefault(
+        if ((windowsRuntimeModule = discoveryState.Modules.FirstOrDefault(
             predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("WinRT.Runtime.dll")).Value) is null)
         {
             throw WellKnownInteropExceptions.WinRTRuntimeModuleNotFound();
         }
 
         // Get the loaded module for the Windows SDK projection .dll (same as above)
-        if ((windowsFoundationModule = discoveryState.ModuleDefinitions.FirstOrDefault(
+        if ((windowsFoundationModule = discoveryState.Modules.FirstOrDefault(
             predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
         {
             throw WellKnownInteropExceptions.WindowsSdkProjectionModuleNotFound();
@@ -250,7 +250,7 @@ internal partial class InteropGenerator
 
                 // We need a deterministic MVID for the generated module, so we create one based on the input assemblies.
                 // This logic will produce a hash from each .NET assembly that was loaded and analyzed during discovery.
-                Mvid = MvidGenerator.CreateMvid(discoveryState.ModuleDefinitions.Keys)
+                Mvid = MvidGenerator.CreateMvid(discoveryState.Modules.Keys)
             };
 
             // Also create a containing assembly for it (needed for the emit phase). We don't actually need the assembly
@@ -2588,10 +2588,10 @@ internal partial class InteropGenerator
 
             // Next, emit all the '[IgnoresAccessChecksTo]' attributes for each type
             IgnoresAccessChecksToBuilder.AssemblyAttributes(
-                winRTSdkXamlProjectionModule: discoveryState.WinRTSdkXamlProjectionModuleDefinition,
-                winRTProjectionModule: discoveryState.WinRTProjectionModuleDefinition,
-                winRTComponentModule: discoveryState.WinRTComponentModuleDefinition,
-                referencePathModules: discoveryState.ModuleDefinitions.Values.OrderByFullyQualifiedName(),
+                winRTSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
+                winRTProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule,
+                winRTComponentModule: discoveryState.WindowsRuntimeComponentModule,
+                referencePathModules: discoveryState.Modules.Values.OrderByFullyQualifiedName(),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
