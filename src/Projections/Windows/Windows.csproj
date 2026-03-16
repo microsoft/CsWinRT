@@ -14,26 +14,22 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <!-- TODO: -include Windows -->
     <CsWinRTFilters>
 -include Windows
-# Exclude Windows.UI, Windows.UI.Text, Windows.UI.Xaml per Microsoft.Windows.SDK.WinUI.Contracts NuGet
--include Windows.UI.Popups
 -exclude Windows.UI.Colors
 -exclude Windows.UI.IColors
 -exclude Windows.UI.ColorHelper
 -exclude Windows.UI.IColorHelper
 -exclude Windows.UI.IColorHelperStatics
 -exclude Windows.UI.IColorHelperStatics2
-#-exclude Windows.UI.Text (must include Windows.UI.Text to work around WinUI nuget issues)
+-exclude Windows.UI.Text.FontWeights
+-exclude Windows.UI.Text.IFontWeights
 -exclude Windows.UI.Xaml
--exclude Windows.ApplicationModel.Store.Preview
-# Allow Windows.UI.Text, Windows.UI.Xaml types used in other namespaces
--include Windows.UI.Text.FontStretch
--include Windows.UI.Text.FontStyle
--include Windows.UI.Text.FontWeight
--include Windows.UI.Text.IFontWeights
--include Windows.UI.Text.UnderlineType
+-exclude Windows.ApplicationModel.Store.Preview.WebAuthenticationCoreManagerHelper
+-exclude Windows.ApplicationModel.Store.Preview.IWebAuthenticationCoreManagerHelper
+-include Windows.UI.Xaml.Interop
+-include Windows.UI.Xaml.Data.BindableAttribute
+-include Windows.UI.Xaml.Markup.ContentPropertyAttribute
     </CsWinRTFilters>
   </PropertyGroup>
 
