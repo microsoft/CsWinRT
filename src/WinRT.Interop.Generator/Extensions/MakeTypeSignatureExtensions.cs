@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
@@ -25,9 +26,9 @@ internal static class MakeTypeSignatureExtensions
         return typeDefOrRef.ToTypeSignature(isValueType: true);
     }
 
-    /// <inheritdoc cref="TypeDescriptorExtensions.MakeGenericInstanceType(ITypeDescriptor, bool, TypeSignature[])"/>
+    /// <inheritdoc cref="TypeDescriptorExtensions.MakeGenericInstanceType(ITypeDescriptor, bool, IEnumerable{TypeSignature})"/>
     /// <remarks>This method always returns a <see cref="TypeSignature"/> for a value type.</remarks>
-    public static GenericInstanceTypeSignature MakeGenericValueType(this ITypeDescriptor typeDescriptor, params TypeSignature[] typeArguments)
+    public static GenericInstanceTypeSignature MakeGenericValueType(this ITypeDescriptor typeDescriptor, IEnumerable<TypeSignature> typeArguments)
     {
         return typeDescriptor.MakeGenericInstanceType(isValueType: true, typeArguments);
     }
@@ -46,9 +47,9 @@ internal static class MakeTypeSignatureExtensions
         return typeDefOrRef.ToTypeSignature(isValueType: false);
     }
 
-    /// <inheritdoc cref="TypeDescriptorExtensions.MakeGenericInstanceType(ITypeDescriptor, bool, TypeSignature[])"/>
+    /// <inheritdoc cref="TypeDescriptorExtensions.MakeGenericInstanceType(ITypeDescriptor, bool, IEnumerable{TypeSignature})"/>
     /// <remarks>This method always returns a <see cref="TypeSignature"/> for a reference type.</remarks>
-    public static GenericInstanceTypeSignature MakeGenericReferenceType(this ITypeDescriptor typeDescriptor, params TypeSignature[] typeArguments)
+    public static GenericInstanceTypeSignature MakeGenericReferenceType(this ITypeDescriptor typeDescriptor, IEnumerable<TypeSignature> typeArguments)
     {
         return typeDescriptor.MakeGenericInstanceType(isValueType: false, typeArguments);
     }
