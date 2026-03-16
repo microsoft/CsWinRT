@@ -38,7 +38,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionFactory.IReadOnlyCollectionKeyValuePair2.ForwarderAttribute(
                 readOnlyCollectionType: collectionType,
-                readOnlyDictionaryType: interopReferences.IDictionary2.MakeGenericReferenceType(keyType, valueType),
+                readOnlyDictionaryType: interopReferences.IDictionary2.MakeGenericReferenceType([keyType, valueType]),
                 readOnlyListType: interopReferences.IList1.MakeGenericReferenceType(keyValuePairType),
                 interopReferences: interopReferences,
                 module: module,
@@ -65,7 +65,7 @@ internal partial class InteropTypeDefinitionBuilder
             GenericInstanceTypeSignature keyValuePairType = (GenericInstanceTypeSignature)collectionType.TypeArguments[0];
             TypeSignature keyType = keyValuePairType.TypeArguments[0];
             TypeSignature valueType = keyValuePairType.TypeArguments[1];
-            TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType(keyType, valueType);
+            TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType([keyType, valueType]);
             TypeSignature listType = interopReferences.IList1.MakeGenericReferenceType(keyValuePairType);
             TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
 

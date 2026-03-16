@@ -307,7 +307,7 @@ internal partial class InteropTypeDiscovery
                 valueType: out TypeSignature? valueSignature))
             {
                 TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                    typeSignature: interopReferences.IDictionary2.MakeGenericReferenceType(keySignature, valueSignature),
+                    typeSignature: interopReferences.IDictionary2.MakeGenericReferenceType([keySignature, valueSignature]),
                     args: args,
                     discoveryState: discoveryState,
                     interopDefinitions: interopDefinitions,
@@ -346,7 +346,7 @@ internal partial class InteropTypeDiscovery
                 valueType: out TypeSignature? valueSignature))
             {
                 TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                    typeSignature: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType(keySignature, valueSignature),
+                    typeSignature: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([keySignature, valueSignature]),
                     args: args,
                     discoveryState: discoveryState,
                     interopDefinitions: interopDefinitions,

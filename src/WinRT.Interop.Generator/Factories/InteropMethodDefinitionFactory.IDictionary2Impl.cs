@@ -117,7 +117,7 @@ internal static partial class InteropMethodDefinitionFactory
 
             // Track the method for rewrite to marshal the result value
             emitState.TrackRetValValueMethodRewrite(
-                retValType: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType(keyType, valueType),
+                retValType: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([keyType, valueType]),
                 method: getViewMethod,
                 marker: nop_convertToUnmanaged);
 
@@ -390,7 +390,7 @@ internal static partial class InteropMethodDefinitionFactory
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([dictionaryType]) },
                     { Stloc_0 },
                     { Ldloc_0 },
-                    { Callvirt, interopReferences.ICollection1Clear(interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)) },
+                    { Callvirt, interopReferences.ICollection1Clear(interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType])) },
                     { Ldc_I4_0 },
                     { Stloc_1 },
                     { Leave_S, ldloc_1_returnHResult.CreateLabel() },

@@ -113,10 +113,10 @@ internal partial class InteropTypeDefinitionBuilder
             callbackType.Fields.Add(new FieldDefinition("Instance"u8, FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, callbackType.ToReferenceTypeSignature()));
 
             // The actual callback is of type 'Func<WindowsRuntimeObject, WindowsRuntimeObjectReference, VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>>'
-            TypeSignature funcType = interopReferences.Func3.MakeGenericReferenceType(
+            TypeSignature funcType = interopReferences.Func3.MakeGenericReferenceType([
                 interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
                 interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType));
+                interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType)]);
 
             // 'Value' field with the cached callback delegate
             callbackType.Fields.Add(new FieldDefinition("Value"u8, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly, funcType));
@@ -204,9 +204,9 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature eventHandlerEventSourceType = interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType);
 
             // Prepare the 'ConditionalWeakTable<WindowsRuntimeObject, VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>>' signature
-            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([
                 interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
-                eventHandlerEventSourceType);
+                eventHandlerEventSourceType]);
 
             // Define the lazy 'VectorChangedTable' property for the conditional weak table
             InteropMemberDefinitionFactory.LazyVolatileReferenceDefaultConstructorReadOnlyProperty(
@@ -277,13 +277,13 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature listType = interopReferences.IList1.MakeGenericReferenceType(elementType);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeObservableVector<<ELEMENT_TYPE>, ...>'
-            TypeSignature windowsRuntimeObservableVector1Type = interopReferences.WindowsRuntimeObservableVector6.MakeGenericReferenceType(
+            TypeSignature windowsRuntimeObservableVector1Type = interopReferences.WindowsRuntimeObservableVector6.MakeGenericReferenceType([
                 elementType,
                 emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(listType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(listType, "IVectorMethods").ToReferenceTypeSignature(),
-                factoryType.ToReferenceTypeSignature());
+                factoryType.ToReferenceTypeSignature()]);
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: vectorType,
@@ -474,9 +474,9 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature eventHandlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
 
             // Prepare the 'ConditionalWeakTable<<VECTOR_TYPE>, EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>>' signature
-            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([
                 vectorType,
-                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType));
+                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType)]);
 
             // Define the lazy 'VectorChangedTable' property for the conditional weak table
             InteropMemberDefinitionFactory.LazyVolatileReferenceDefaultConstructorReadOnlyProperty(
