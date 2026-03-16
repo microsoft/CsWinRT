@@ -45,7 +45,7 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
         /// <summary>The cached <see cref="CoreDragDropManager"/> activation factory, as <c>IDragDropManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.ApplicationModel.DataTransfer.DragDrop.Core.CoreDragDropManager",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDragDropManagerInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IDragDropManagerInterop);
 #endif
 
         extension(CoreDragDropManager)
@@ -86,7 +86,7 @@ namespace Windows.Graphics.Printing
         /// <summary>The cached <see cref="PrintManager"/> activation factory, as <c>IPrintManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Graphics.Printing.PrintManager",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPrintManagerInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IPrintManagerInterop);
 
         /// <summary>The accessor for <c>__uuidof(IAsyncOperation&lt;bool&gt;)</c>.</summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<bool>")]
@@ -148,7 +148,7 @@ namespace Windows.Media
         /// <summary>The cached <see cref="SystemMediaTransportControls"/> activation factory, as <c>ISystemMediaTransportControlsInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Media.SystemMediaTransportControls",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISystemMediaTransportControlsInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_ISystemMediaTransportControlsInterop);
 #endif
 
         extension(SystemMediaTransportControls)
@@ -187,7 +187,7 @@ namespace Windows.Media.PlayTo
         /// <summary>The cached <see cref="PlayToManager"/> activation factory, as <c>IPlayToManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Media.PlayTo.PlayToManager",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IPlayToManagerInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IPlayToManagerInterop);
 #endif
 
         extension(PlayToManager)
@@ -245,7 +245,7 @@ namespace Windows.Security.Credentials.UI
         /// <summary>The cached <see cref="UserConsentVerifier"/> activation factory, as <c>IUserConsentVerifierInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Security.Credentials.UI.UserConsentVerifier",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUserConsentVerifierInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IUserConsentVerifierInterop);
 
         /// <summary>The accessor for <c>__uuidof(IAsyncOperation&lt;UserConsentVerificationResult&gt;)</c>.</summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Credentials-UI-UserConsentVerificationResult>")]
@@ -293,7 +293,7 @@ namespace Windows.Security.Authentication.Web.Core
         /// <summary>The cached <see cref="WebAuthenticationCoreManager"/> activation factory, as <c>IWebAuthenticationCoreManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Security.Authentication.Web.Core.WebAuthenticationCoreManager",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IWebAuthenticationCoreManagerInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IWebAuthenticationCoreManagerInterop);
 
         /// <summary>The accessor for <c>__uuidof(IAsyncOperation&lt;WebTokenRequestResult&gt;)</c>.</summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Authentication-Web-Core-WebTokenRequestResult>")]
@@ -363,7 +363,7 @@ namespace Windows.UI.ApplicationSettings
         /// <summary>The cached <see cref="AccountsSettingsPane"/> activation factory, as <c>IAccountsSettingsPaneInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.ApplicationSettings.AccountsSettingsPane",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IAccountsSettingsPaneInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IAccountsSettingsPaneInterop);
 #endif
 
         extension(AccountsSettingsPane)
@@ -440,7 +440,7 @@ namespace Windows.UI.Input
         /// <summary>The cached <see cref="RadialControllerConfiguration"/> activation factory, as <c>IRadialControllerConfigurationInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.RadialControllerConfiguration",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerConfigurationInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IRadialControllerConfigurationInterop);
 #endif
 
         extension(RadialControllerConfiguration)
@@ -476,7 +476,7 @@ namespace Windows.UI.Input
         /// <summary>The cached <see cref="RadialController"/> activation factory, as <c>IRadialControllerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.RadialController",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IRadialControllerInterop);
 #endif
 
         extension(RadialController)
@@ -515,7 +515,7 @@ namespace Windows.UI.Input.Core
         /// <summary>The cached <see cref="RadialControllerIndependentInputSource"/> activation factory, as <c>IRadialControllerIndependentInputSourceInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.Core.RadialControllerIndependentInputSource",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IRadialControllerIndependentInputSourceInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IRadialControllerIndependentInputSourceInterop);
 #endif
 
         extension(RadialControllerIndependentInputSource)
@@ -553,7 +553,7 @@ namespace Windows.UI.Input.Spatial
         /// <summary>The cached <see cref="SpatialInteractionManager"/> activation factory, as <c>ISpatialInteractionManagerInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.Input.Spatial.SpatialInteractionManager",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_ISpatialInteractionManagerInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_ISpatialInteractionManagerInterop);
 #endif
 
         extension(SpatialInteractionManager)
@@ -592,7 +592,7 @@ namespace Windows.UI.ViewManagement
         /// <summary>The cached <see cref="InputPane"/> activation factory, as <c>IInputPaneInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.ViewManagement.InputPane",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IInputPaneInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IInputPaneInterop);
 #endif
 
         extension(InputPane)
@@ -628,7 +628,7 @@ namespace Windows.UI.ViewManagement
         /// <summary>The cached <see cref="UIViewSettings"/> activation factory, as <c>IUIViewSettingsInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.UI.ViewManagement.UIViewSettings",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IUIViewSettingsInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IUIViewSettingsInterop);
 #endif
 
         extension(UIViewSettings)
@@ -668,7 +668,7 @@ namespace Windows.Graphics.Display
         /// <summary>The cached <see cref="DisplayInformation"/> activation factory, as <c>IDisplayInformationStaticsInterop</c>.</summary>
         private static readonly WindowsRuntimeObjectReference objectReference = WindowsRuntimeActivationFactory.GetActivationFactory(
             runtimeClassName: "Windows.Graphics.Display.DisplayInformation",
-            iid: in global::ABI.InterfaceIIDs.IID_WinRT_Interop_IDisplayInformationStaticsInterop);
+            iid: in global::ABI.InterfaceIIDs.IID_WindowsRuntime_Internal_IDisplayInformationStaticsInterop);
 #endif
 
         extension(DisplayInformation)
@@ -746,7 +746,7 @@ namespace Windows.ApplicationModel.DataTransfer
                 return global::ABI.WindowsRuntime.Internal.IDataTransferManagerInteropMethods.GetForWindow(
                     thisReference: objectReference,
                     appWindow: appWindow,
-                    riid: in global::ABI.InterfaceIIDs.IDataTransferManager);
+                    riid: in global::ABI.InterfaceIIDs.IID_Windows_ApplicationModel_DataTransfer_IDataTransferManager);
 #endif
             }
 
