@@ -206,6 +206,14 @@
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/SourceGenerator2Test/SourceGenerator2Test.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Tests/SourceGeneratorTest/SourceGeneratorTest.csproj">
       <Build Project="false" />
     </Project>

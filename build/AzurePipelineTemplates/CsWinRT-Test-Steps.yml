@@ -22,6 +22,18 @@ steps:
         --no-build
       testRunTitle: Unit Tests
 
+# Run Source Generator 2 Tests
+  - task: DotNetCoreCLI@2
+    displayName: Run Source Generator 2 Tests
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      command: test
+      projects: 'src/Tests/SourceGenerator2Test/SourceGenerator2Test.csproj'
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
+      testRunTitle: Source Generator 2 Tests
+
 # Run Host Tests
   - task: CmdLine@2
     displayName: Run Host Tests
