@@ -14,7 +14,6 @@ using WindowsRuntime.InteropGenerator.Discovery;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
-using WindowsRuntime.InteropGenerator.Resolvers;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
