@@ -1329,10 +1329,12 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <returns>The resulting <c>InterfaceIIDs</c> type.</returns>
     public static TypeDefinition InterfaceIIDs(InteropReferences interopReferences)
     {
-        // We're declaring an 'internal static class' type
+        // We're declaring an 'internal static class' type. This type is also used by upstream
+        // binaries (via '[UnsafeAccessor]'), so we emit it in the 'ABI' namespace (which is the
+        // same as the one used by the projection .dll-s), and we use a speakable type name.
         return new(
-            ns: null,
-            name: "<InterfaceIIDs>"u8,
+            ns: "ABI"u8,
+            name: "InterfaceIIDs"u8,
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.Object.ToTypeDefOrRef());
     }

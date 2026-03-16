@@ -243,7 +243,7 @@ if "%cswinrt_label%"=="functionaltest" exit /b 0
 rem We set the properties of the CsWinRT.nuspec here, and pass them as the -Properties option when we call `nuget pack`
 set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
-set interop_winmd=%cswinrt_bin_dir%WinRT.Interop.winmd
+set interop_winmd=%cswinrt_bin_dir%WindowsRuntime.Internal.winmd
 set net10_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.dll
 set net10_runtime_xml=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.xml
 set source_generator_roslyn4120=%this_dir%Authoring\WinRT.SourceGenerator.Roslyn4120\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll

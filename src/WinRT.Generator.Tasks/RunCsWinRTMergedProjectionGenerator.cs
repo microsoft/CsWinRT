@@ -75,7 +75,7 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     public string? AssemblyName { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to only include the Windows SDK projection (Windows and WinRT.Interop namespaces).
+    /// Gets or sets whether to only include the Windows SDK projection (Windows and WindowsRuntime.Internal namespaces).
     /// When false (the default), Windows SDK types are excluded.
     /// </summary>
     public bool WindowsSdkOnly { get; set; }
