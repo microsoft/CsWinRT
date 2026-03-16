@@ -82,7 +82,7 @@ internal static partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([dictionaryType]) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Ldloc_0 },
@@ -189,7 +189,7 @@ internal static partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([dictionaryType]) },
                     { Stloc_0 },
                     { Ldarg_3 },
                     { Ldloc_0 },
@@ -295,7 +295,7 @@ internal static partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([dictionaryType]) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { nop_parameter1Rewrite },
@@ -387,7 +387,7 @@ internal static partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(dictionaryType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([dictionaryType]) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { Callvirt, interopReferences.ICollection1Clear(interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType)) },

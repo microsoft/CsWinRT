@@ -660,7 +660,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.get_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(elementType, interopReferences.Int32));
+                signature: MethodSignature.CreateInstance(elementType, [interopReferences.Int32]));
 
             // Add and implement the 'get_Item' method
             interfaceImplType.AddMethodImplementation(
@@ -712,7 +712,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition indexOfMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.IndexOf",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.Int32, elementType));
+                signature: MethodSignature.CreateInstance(interopReferences.Int32, [elementType]));
 
             // Add and implement the 'IndexOf' method
             interfaceImplType.AddMethodImplementation(
@@ -752,7 +752,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition removeAtMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.RemoveAt",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.Void, interopReferences.Int32));
+                signature: MethodSignature.CreateInstance(interopReferences.Void, [interopReferences.Int32]));
 
             // Add and implement the 'RemoveAt' method
             interfaceImplType.AddMethodImplementation(
@@ -831,7 +831,7 @@ internal partial class InteropTypeDefinitionBuilder
                 MethodDefinition addMethod = new(
                     name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Add",
                     attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                    signature: MethodSignature.CreateInstance(interopReferences.Void, elementType));
+                    signature: MethodSignature.CreateInstance(interopReferences.Void, [elementType]));
 
                 // Add and implement the 'Add' method
                 interfaceImplType.AddMethodImplementation(
@@ -867,7 +867,7 @@ internal partial class InteropTypeDefinitionBuilder
                 MethodDefinition containsMethod = new(
                     name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Contains",
                     attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                    signature: MethodSignature.CreateInstance(interopReferences.Boolean, elementType));
+                    signature: MethodSignature.CreateInstance(interopReferences.Boolean, [elementType]));
 
                 // Add and implement the 'Contains' method
                 interfaceImplType.AddMethodImplementation(
@@ -907,7 +907,7 @@ internal partial class InteropTypeDefinitionBuilder
                 MethodDefinition removeMethod = new(
                     name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Remove",
                     attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                    signature: MethodSignature.CreateInstance(interopReferences.Boolean, elementType));
+                    signature: MethodSignature.CreateInstance(interopReferences.Boolean, [elementType]));
 
                 // Add and implement the 'Remove' method
                 interfaceImplType.AddMethodImplementation(

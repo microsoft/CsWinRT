@@ -241,7 +241,7 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([delegateType]) },
                     { nop_parameter1Rewrite },
                     { nop_parameter2Rewrite },
                     { Callvirt, interopReferences.DelegateInvoke(delegateType, module) },
@@ -360,7 +360,7 @@ internal partial class InteropTypeDefinitionBuilder
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([delegateType]) },
                     { Call, marshallerType.GetMethod("ConvertToUnmanaged"u8) },
                     { Stloc_1 },
                     { Ldloca_S, loc_1_referenceValue },
@@ -748,7 +748,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Import the 'UnboxToManaged<TCallback>' method for the delegate
             IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor =
                 interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged2
-                .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
+                .MakeGenericInstanceMethod([delegateComWrappersCallbackType.ToReferenceTypeSignature()]);
 
             // Define the 'CreateObject' method as follows:
             //
@@ -838,7 +838,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Construct a descriptor for 'WindowsRuntimeDelegateMarshaller.ConvertToManaged<<DELEGATE_CALLBACK_TYPE>>(void*)'
             IMethodDescriptor windowsRuntimeDelegateMarshallerConvertToManaged =
                 interopReferences.WindowsRuntimeDelegateMarshallerConvertToManaged
-                .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
+                .MakeGenericInstanceMethod([delegateComWrappersCallbackType.ToReferenceTypeSignature()]);
 
             // Define the 'ConvertToManaged' method as follows:
             //
@@ -885,7 +885,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Construct a descriptor for 'WindowsRuntimeDelegateMarshaller.UnboxToManaged<<DELEGATE_CALLBACK_TYPE>>(void*)'
             IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged =
                 interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged
-                .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
+                .MakeGenericInstanceMethod([delegateComWrappersCallbackType.ToReferenceTypeSignature()]);
 
             // Define the 'UnboxToManaged' method as follows:
             //

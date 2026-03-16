@@ -133,7 +133,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(interopReferences.Object) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([interopReferences.Object]) },
                     { Unbox_Any, keyValuePairType.ToTypeDefOrRef() },
                     { Stloc_1 },
                     { Ldarg_1 },

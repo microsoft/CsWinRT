@@ -100,7 +100,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(mapType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([mapType]) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Call, emitState.LookupTypeDefinition(eventHandlerType, "Marshaller").GetMethod("ConvertToManaged"u8) },
@@ -212,7 +212,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(mapType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([mapType]) },
                     { Stloc_0 },
 
                     // if (unboxedValue != null && MapChangedTable.TryGetValue(unboxedValue, out EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>> table))

@@ -1849,7 +1849,7 @@ internal sealed class InteropReferences
             parameterTypes: [
                 ReadOnlySpan1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0)),
                 ReadOnlySpan1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0))]))
-        .MakeGenericInstanceMethod(_corLibTypeFactory.Char);
+        .MakeGenericInstanceMethod([_corLibTypeFactory.Char]);
 
     /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <see cref="System.MemoryExtensions.AsSpan(string?)"/>.
@@ -3293,7 +3293,7 @@ internal sealed class InteropReferences
                     ReadOnlySpan1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     _corLibTypeFactory.UInt32.MakeByReferenceType(),
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType().MakeByReferenceType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3313,7 +3313,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3334,7 +3334,7 @@ internal sealed class InteropReferences
                     ReadOnlySpan1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3355,7 +3355,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType(),
                     Span1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3375,7 +3375,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3395,7 +3395,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3416,7 +3416,7 @@ internal sealed class InteropReferences
                     ReadOnlySpan1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     _corLibTypeFactory.UInt32.MakeByReferenceType(),
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType().MakeByReferenceType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3436,7 +3436,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3457,7 +3457,7 @@ internal sealed class InteropReferences
                     ReadOnlySpan1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3478,7 +3478,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakePointerType(),
                     Span1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3498,7 +3498,7 @@ internal sealed class InteropReferences
                     ReadOnlySpan1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     _corLibTypeFactory.UInt32.MakeByReferenceType(),
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType().MakeByReferenceType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3517,7 +3517,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3537,7 +3537,7 @@ internal sealed class InteropReferences
                     ReadOnlySpan1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3557,7 +3557,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType(),
                     Span1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3581,7 +3581,7 @@ internal sealed class InteropReferences
                             new GenericParameterSignature(GenericParameterType.Type, 1))),
                     _corLibTypeFactory.UInt32.MakeByReferenceType(),
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType().MakeByReferenceType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3603,7 +3603,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3627,7 +3627,7 @@ internal sealed class InteropReferences
                             new GenericParameterSignature(GenericParameterType.Type, 1))),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3651,7 +3651,7 @@ internal sealed class InteropReferences
                         KeyValuePair2.MakeGenericValueType(
                             new GenericParameterSignature(GenericParameterType.Type, 0),
                             new GenericParameterSignature(GenericParameterType.Type, 1)))]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3962,7 +3962,7 @@ internal sealed class InteropReferences
                         new GenericParameterSignature(GenericParameterType.Method, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1)),
                     new GenericParameterSignature(GenericParameterType.Method, 0)]))
-            .MakeGenericInstanceMethod(argType);
+            .MakeGenericInstanceMethod([argType]);
     }
 
     /// <summary>
@@ -4471,7 +4471,7 @@ internal sealed class InteropReferences
                 returnType: IEnumerator1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
                 genericParameterCount: 1,
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
-            .MakeGenericInstanceMethod(iterableMethods);
+            .MakeGenericInstanceMethod([iterableMethods]);
     }
 
     /// <summary>
@@ -4541,7 +4541,7 @@ internal sealed class InteropReferences
                     IEnumeratorAdapter1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Method, 0).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType);
+            .MakeGenericInstanceMethod([elementType]);
     }
 
     /// <summary>
@@ -4948,7 +4948,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     _corLibTypeFactory.Int32]))
-            .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([vectorMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -4968,7 +4968,7 @@ internal sealed class InteropReferences
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     _corLibTypeFactory.Int32,
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
-            .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([vectorMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -4987,7 +4987,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
-            .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([vectorMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5006,7 +5006,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
-            .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([vectorMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5026,7 +5026,7 @@ internal sealed class InteropReferences
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0).MakeSzArrayType(),
                     _corLibTypeFactory.Int32]))
-            .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([vectorMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5045,7 +5045,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
-            .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([vectorMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5064,7 +5064,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
-            .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([vectorMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5084,7 +5084,7 @@ internal sealed class InteropReferences
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     _corLibTypeFactory.Int32,
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
-            .MakeGenericInstanceMethod(vectorMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([vectorMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5163,7 +5163,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Method, 0).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType);
+            .MakeGenericInstanceMethod([elementType]);
     }
 
     /// <summary>
@@ -5392,7 +5392,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Method, 0).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType);
+            .MakeGenericInstanceMethod([elementType]);
     }
 
     /// <summary>
@@ -5511,7 +5511,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     _corLibTypeFactory.Int32]))
-            .MakeGenericInstanceMethod(vectorViewMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([vectorViewMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5634,7 +5634,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
-            .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5655,7 +5655,7 @@ internal sealed class InteropReferences
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1)]))
-            .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5676,7 +5676,7 @@ internal sealed class InteropReferences
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1)]))
-            .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5696,7 +5696,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
-            .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5716,7 +5716,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
-            .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5737,7 +5737,7 @@ internal sealed class InteropReferences
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakeByReferenceType()]))
-            .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5759,7 +5759,7 @@ internal sealed class InteropReferences
                     KeyValuePair2.MakeGenericValueType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1))]))
-            .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5781,7 +5781,7 @@ internal sealed class InteropReferences
                     KeyValuePair2.MakeGenericValueType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1))]))
-            .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5808,7 +5808,7 @@ internal sealed class InteropReferences
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1)).MakeSzArrayType(),
                     _corLibTypeFactory.Int32]))
-            .MakeGenericInstanceMethod(iterableMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([iterableMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5830,7 +5830,7 @@ internal sealed class InteropReferences
                     KeyValuePair2.MakeGenericValueType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1))]))
-            .MakeGenericInstanceMethod(mapMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -5865,7 +5865,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     IDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
                     ReadOnlySpanChar]))
-            .MakeGenericInstanceMethod(valueType);
+            .MakeGenericInstanceMethod([valueType]);
     }
 
     /// <summary>
@@ -5898,7 +5898,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     IDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
                     ReadOnlySpanChar]))
-            .MakeGenericInstanceMethod(valueType);
+            .MakeGenericInstanceMethod([valueType]);
     }
 
     /// <summary>
@@ -5970,7 +5970,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     IDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
                     ReadOnlySpanChar]))
-            .MakeGenericInstanceMethod(valueType);
+            .MakeGenericInstanceMethod([valueType]);
     }
 
     /// <summary>
@@ -5990,7 +5990,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
-            .MakeGenericInstanceMethod(mapViewMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapViewMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -6010,7 +6010,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0)]))
-            .MakeGenericInstanceMethod(mapViewMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapViewMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -6031,7 +6031,7 @@ internal sealed class InteropReferences
                     WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1).MakeByReferenceType()]))
-            .MakeGenericInstanceMethod(mapViewMethods.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([mapViewMethods.ToReferenceTypeSignature()]);
     }
 
     /// <summary>
@@ -6066,7 +6066,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     IReadOnlyDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
                     ReadOnlySpanChar]))
-            .MakeGenericInstanceMethod(valueType);
+            .MakeGenericInstanceMethod([valueType]);
     }
 
     /// <summary>
@@ -6099,7 +6099,7 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     IReadOnlyDictionary2.MakeGenericReferenceType(_corLibTypeFactory.String, new GenericParameterSignature(GenericParameterType.Method, 0)),
                     ReadOnlySpanChar]))
-            .MakeGenericInstanceMethod(valueType);
+            .MakeGenericInstanceMethod([valueType]);
     }
 
     /// <summary>

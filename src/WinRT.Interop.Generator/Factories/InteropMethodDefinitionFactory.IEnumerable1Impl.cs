@@ -78,7 +78,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumerableType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([enumerableType]) },
                     { Call, emitState.LookupMethodDefinition(enumeratorType, "get_IID") },
                     { Ldarg_1 },
                     { Call, interopReferences.IEnumerableAdapter1First(elementType) },

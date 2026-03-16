@@ -81,7 +81,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(operationType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([operationType]) },
                     { Callvirt, getResultsMethod },
                     { nop_convertToUnmanaged },
                     { Ldc_I4_0 },

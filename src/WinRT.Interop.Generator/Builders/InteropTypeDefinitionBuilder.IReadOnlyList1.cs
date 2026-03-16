@@ -322,7 +322,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyList<{elementType.FullName}>.get_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(elementType, interopReferences.Int32));
+                signature: MethodSignature.CreateInstance(elementType, [interopReferences.Int32]));
 
             // Add and implement the 'get_Item' method
             interfaceImplType.AddMethodImplementation(

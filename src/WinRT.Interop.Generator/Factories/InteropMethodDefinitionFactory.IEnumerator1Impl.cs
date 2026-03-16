@@ -111,7 +111,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumeratorType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([enumeratorType]) },
                     { Call, interopReferences.IEnumeratorAdapter1GetInstance(elementType) },
                     { Callvirt, interopReferences.IEnumeratorAdapter1get_Current(elementType) },
                     { nop_convertToUnmanaged },
@@ -241,7 +241,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_3_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumeratorType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([enumeratorType]) },
                     { Call, interopReferences.IEnumeratorAdapter1GetInstance(elementType) },
                     { Ldarg_1 },
                     { Ldarg_2 },
@@ -334,7 +334,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(enumeratorType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([enumeratorType]) },
                     { Call, interopReferences.IEnumeratorAdapter1GetInstance(elementType) },
                     { Callvirt, adapterMethod },
                     { Stind_I1 },

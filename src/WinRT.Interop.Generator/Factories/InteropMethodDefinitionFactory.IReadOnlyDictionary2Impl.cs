@@ -104,7 +104,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyDictionaryType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([readOnlyDictionaryType]) },
                     { Stloc_0 },
                     { Ldarg_2 },
                     { Ldloc_0 },
@@ -218,7 +218,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyDictionaryType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([readOnlyDictionaryType]) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Ldloc_0 },
@@ -338,7 +338,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyDictionaryType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([readOnlyDictionaryType]) },
                     { Stloc_0 },
                     { Ldarg_2 },
                     { Ldloc_0 },
@@ -459,7 +459,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyDictionaryType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([readOnlyDictionaryType]) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { Ldloca_S, loc_1_firstObject },

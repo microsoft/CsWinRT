@@ -367,7 +367,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // Construct a descriptor for 'WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<<INTERFACE_CALLBACK_TYPE>>(void*)'
         IMethodDescriptor windowsRuntimeUnsealedObjectMarshallerConvertToManaged =
             interopReferences.WindowsRuntimeUnsealedObjectMarshallerConvertToManaged
-            .MakeGenericInstanceMethod(interfaceComWrappersCallbackType.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([interfaceComWrappersCallbackType.ToReferenceTypeSignature()]);
 
         // Define the 'ConvertToManaged' method as follows:
         //
