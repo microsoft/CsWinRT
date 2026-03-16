@@ -96,7 +96,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IIterableMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IIterableMethodsImpl1.MakeGenericReferenceType([elementType]).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(iterableMethodsType);
@@ -111,7 +111,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "First"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: interopReferences.IEnumerator1.MakeGenericReferenceType(elementType),
+                    returnType: interopReferences.IEnumerator1.MakeGenericReferenceType([elementType]),
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             { NoInlining = true };
 
@@ -122,7 +122,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Get the generated 'ConvertToManaged' method to marshal the 'IEnumerator<T>' instance to managed
             MethodDefinition convertToManagedMethod = emitState.LookupTypeDefinition(
-                typeSignature: interopReferences.IEnumerator1.MakeGenericReferenceType(elementType),
+                typeSignature: interopReferences.IEnumerator1.MakeGenericReferenceType([elementType]),
                 key: "Marshaller").GetMethod("ConvertToManaged"u8);
 
             // Declare the local variables:
@@ -133,7 +133,7 @@ internal partial class InteropTypeDefinitionBuilder
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
             CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
             CilLocalVariable loc_2_enumeratorPtr = new(interopReferences.Void.MakePointerType());
-            CilLocalVariable loc_3_enumerator = new(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType));
+            CilLocalVariable loc_3_enumerator = new(interopReferences.IEnumerator1.MakeGenericReferenceType([elementType]));
 
             // Jump labels
             CilInstruction ldloca_s_0_tryStart = new(Ldloca_S, loc_0_thisValue);
@@ -239,7 +239,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "GetEnumerator"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: interopReferences.IEnumerator1.MakeGenericReferenceType(elementType),
+                    returnType: interopReferences.IEnumerator1.MakeGenericReferenceType([elementType]),
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
@@ -382,7 +382,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition enumerable1GetEnumeratorMethod = new(
                 name: $"System.Collections.Generic.IEnumerable<{elementType.FullName}>.GetEnumerator",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericReferenceType(elementType)));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerator1.MakeGenericReferenceType([elementType])));
 
             // Add and implement the 'IEnumerable<T>.GetEnumerator' method
             interfaceImplType.AddMethodImplementation(

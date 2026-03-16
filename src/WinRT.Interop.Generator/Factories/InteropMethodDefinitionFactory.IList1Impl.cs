@@ -117,7 +117,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // Track the method for rewrite to marshal the result value
             emitState.TrackRetValValueMethodRewrite(
-                retValType: interopReferences.IReadOnlyList1.MakeGenericReferenceType(elementType),
+                retValType: interopReferences.IReadOnlyList1.MakeGenericReferenceType([elementType]),
                 method: getViewMethod,
                 marker: nop_convertToUnmanaged);
 

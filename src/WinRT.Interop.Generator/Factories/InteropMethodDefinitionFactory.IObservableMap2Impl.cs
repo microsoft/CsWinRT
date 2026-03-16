@@ -42,7 +42,7 @@ internal partial class InteropMethodDefinitionFactory
             TypeSignature eventHandlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([keyType, valueType]);
 
             // Prepare the 'EventRegistrationTokenTable<MapChangedEventHandler<KEY_TYPE>, <VALUE_TYPE>>' signature
-            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType);
+            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType([eventHandlerType]);
 
             // Prepare the 'ConditionalWeakTable<<MAP_TYPE>, EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>>' signature
             TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([mapType, eventRegistrationTokenTableType]);
@@ -167,7 +167,7 @@ internal partial class InteropMethodDefinitionFactory
             TypeSignature eventHandlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([keyType, valueType]);
 
             // Prepare the 'EventRegistrationTokenTable<MapChangedEventHandler<KEY_TYPE>, <VALUE_TYPE>>' signature
-            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType);
+            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType([eventHandlerType]);
 
             // Prepare the 'ConditionalWeakTable<<MAP_TYPE>, EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>>' signature
             TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([mapType, eventRegistrationTokenTableType]);

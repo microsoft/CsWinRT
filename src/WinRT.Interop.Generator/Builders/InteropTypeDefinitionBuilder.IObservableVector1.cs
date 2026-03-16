@@ -45,13 +45,13 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IObservableVectorEventSourceFactory1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IObservableVectorEventSourceFactory1.MakeGenericReferenceType([elementType]).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(factoryType);
 
             // The key for the lookup below is the associated handler type (which we need to construct), not the interface type
-            TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
+            TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType([elementType]);
 
             // Get the constructor for the generic event source type
             MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
@@ -65,7 +65,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "VectorChanged"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 signature: MethodSignature.CreateStatic(
-                    returnType: interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType),
+                    returnType: interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType([elementType]),
                     parameterTypes: [interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
             {
                 CilInstructions =
@@ -116,7 +116,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature funcType = interopReferences.Func3.MakeGenericReferenceType([
                 interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
                 interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType)]);
+                interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType([elementType])]);
 
             // 'Value' field with the cached callback delegate
             callbackType.Fields.Add(new FieldDefinition("Value"u8, FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly, funcType));
@@ -125,7 +125,7 @@ internal partial class InteropTypeDefinitionBuilder
             callbackType.Methods.Add(MethodDefinition.CreateDefaultConstructor(interopReferences.CorLibTypeFactory));
 
             // Get the handler type to use as key (same as above)
-            TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
+            TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType([elementType]);
 
             // Get the constructor for the generic event source type (same as above)
             MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
@@ -140,7 +140,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "Create"u8,
                 attributes: MethodAttributes.Private | MethodAttributes.HideBySig,
                 signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType),
+                    returnType: interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType([elementType]),
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature()]))
@@ -201,7 +201,7 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(methodsType);
 
             // Prepare the 'VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>' signature
-            TypeSignature eventHandlerEventSourceType = interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType(elementType);
+            TypeSignature eventHandlerEventSourceType = interopReferences.VectorChangedEventHandler1EventSource.MakeGenericReferenceType([elementType]);
 
             // Prepare the 'ConditionalWeakTable<WindowsRuntimeObject, VectorChangedEventHandlerEventSource<<ELEMENT_TYPE>>>' signature
             TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([
@@ -273,8 +273,8 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature elementType = vectorType.TypeArguments[0];
 
             // Get the base interfaces for the current element type
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
-            TypeSignature listType = interopReferences.IList1.MakeGenericReferenceType(elementType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([elementType]);
+            TypeSignature listType = interopReferences.IList1.MakeGenericReferenceType([elementType]);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeObservableVector<<ELEMENT_TYPE>, ...>'
             TypeSignature windowsRuntimeObservableVector1Type = interopReferences.WindowsRuntimeObservableVector6.MakeGenericReferenceType([
@@ -384,9 +384,9 @@ internal partial class InteropTypeDefinitionBuilder
                 Interfaces =
                 {
                     new InterfaceImplementation(vectorType.ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IList1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.ICollection1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()),
-                    new InterfaceImplementation(interopReferences.IEnumerable1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IList1.MakeGenericReferenceType([elementType]).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.ICollection1.MakeGenericReferenceType([elementType]).ToTypeDefOrRef()),
+                    new InterfaceImplementation(interopReferences.IEnumerable1.MakeGenericReferenceType([elementType]).ToTypeDefOrRef()),
                     new InterfaceImplementation(interopReferences.IEnumerable)
                 }
             };
@@ -394,7 +394,7 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(interfaceImplType);
 
             // Prepare the 'VectorChangedEventHandler<T>' signature
-            TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
+            TypeSignature handlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType([elementType]);
 
             // Create the 'IObservableVector<T>.VectorChanged' add method
             MethodDefinition add_IObservableVector1VectorChangedMethod = new(
@@ -471,12 +471,12 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature elementType = vectorType.TypeArguments[0];
 
             // Prepare the 'VectorChangedEventHandler<<ELEMENT_TYPE>>' signature
-            TypeSignature eventHandlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
+            TypeSignature eventHandlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType([elementType]);
 
             // Prepare the 'ConditionalWeakTable<<VECTOR_TYPE>, EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>>' signature
             TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([
                 vectorType,
-                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType)]);
+                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType([eventHandlerType])]);
 
             // Define the lazy 'VectorChangedTable' property for the conditional weak table
             InteropMemberDefinitionFactory.LazyVolatileReferenceDefaultConstructorReadOnlyProperty(

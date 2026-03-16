@@ -194,7 +194,7 @@ internal partial class InteropTypeDefinitionFactory
             // Get the constructed 'IWindowsRuntimeReferenceTypeElementMarshaller<T>' interface type
             TypeSignature interfaceType = interopReferences
                 .IWindowsRuntimeReferenceTypeElementMarshaller1
-                .MakeGenericReferenceType(elementType);
+                .MakeGenericReferenceType([elementType]);
 
             return ElementMarshaller(
                 elementType: elementType,

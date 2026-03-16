@@ -32,7 +32,7 @@ internal partial class InteropMethodDefinitionFactory
             InteropGeneratorEmitState emitState)
         {
             TypeSignature elementType = enumerableType.TypeArguments[0];
-            TypeSignature enumeratorType = interopReferences.IEnumerator1.MakeGenericReferenceType(elementType);
+            TypeSignature enumeratorType = interopReferences.IEnumerator1.MakeGenericReferenceType([elementType]);
 
             // Define the 'First' method as follows:
             //

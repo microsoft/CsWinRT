@@ -130,7 +130,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IVectorMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IVectorMethodsImpl1.MakeGenericReferenceType([elementType]).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(vectorMethodsType);
@@ -535,7 +535,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition nativeObjectType)
         {
             TypeSignature elementType = listType.TypeArguments[0];
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([elementType]);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IVECTOR_METHODS>>'
             TypeSignature windowsRuntimeList4Type = interopReferences.WindowsRuntimeList4.MakeGenericReferenceType([
@@ -627,8 +627,8 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition interfaceImplType)
         {
             TypeSignature elementType = listType.TypeArguments[0];
-            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(elementType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
+            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType([elementType]);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([elementType]);
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
@@ -1088,7 +1088,7 @@ internal partial class InteropTypeDefinitionBuilder
                     marshallingTypeMapProxyType: null,
                     metadataTypeMapSourceType: null,
                     metadataTypeMapProxyType: null,
-                    interfaceTypeMapSourceType: interopReferences.ICollection1.MakeGenericReferenceType(elementType),
+                    interfaceTypeMapSourceType: interopReferences.ICollection1.MakeGenericReferenceType([elementType]),
                     interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
                     interopReferences: interopReferences,
                     module: module);

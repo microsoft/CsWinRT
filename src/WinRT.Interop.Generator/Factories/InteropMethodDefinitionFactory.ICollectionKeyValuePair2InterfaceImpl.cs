@@ -34,8 +34,8 @@ internal partial class InteropMethodDefinitionFactory
             TypeSignature keyType = keyValuePairType.TypeArguments[0];
             TypeSignature valueType = keyValuePairType.TypeArguments[1];
             TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType([keyType, valueType]);
-            TypeSignature listType = interopReferences.IList1.MakeGenericReferenceType(keyValuePairType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature listType = interopReferences.IList1.MakeGenericReferenceType([keyValuePairType]);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([keyValuePairType]);
 
             // Define the 'CopyTo' method as follows:
             //

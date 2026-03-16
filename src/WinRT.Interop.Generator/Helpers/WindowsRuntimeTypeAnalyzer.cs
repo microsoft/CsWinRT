@@ -122,7 +122,7 @@ internal static class WindowsRuntimeTypeAnalyzer
             foreach (TypeSignature elementInterfaceType in elementType.EnumerateAllInterfaces(interopReferences))
             {
                 // Construct the generic interface with the current element type
-                yield return genericInterfaceType.MakeGenericReferenceType(elementInterfaceType);
+                yield return genericInterfaceType.MakeGenericReferenceType([elementInterfaceType]);
 
                 // Also track any covariant combinations derived from the current element type
                 foreach (TypeSignature elementCovariantInterfaceType in EnumerateCovariantInterfaceTypesCore(
@@ -130,20 +130,20 @@ internal static class WindowsRuntimeTypeAnalyzer
                     interopReferences: interopReferences,
                     visitedTypes: visitedTypes))
                 {
-                    yield return genericInterfaceType.MakeGenericReferenceType(elementCovariantInterfaceType);
+                    yield return genericInterfaceType.MakeGenericReferenceType([elementCovariantInterfaceType]);
                 }
             }
 
             // Then, also gather all base types for the element type
             foreach (TypeSignature baseType in elementType.EnumerateBaseTypes(interopReferences))
             {
-                yield return genericInterfaceType.MakeGenericReferenceType(baseType);
+                yield return genericInterfaceType.MakeGenericReferenceType([baseType]);
             }
 
             // Lastly, make sure to also always track 'object' as a base type. This would be
             // skipped for element types being interfaces, as they have no base type. However,
             // with respect to variant conversions, 'object' is always a valid covariant type.
-            yield return genericInterfaceType.MakeGenericReferenceType(interopReferences.Object);
+            yield return genericInterfaceType.MakeGenericReferenceType([interopReferences.Object]);
 
             // We're closing this recursive sub-tree, so we can remove the current interface type
             _ = visitedTypes.Remove(interfaceType);

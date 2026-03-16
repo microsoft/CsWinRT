@@ -2049,7 +2049,7 @@ internal partial class InteropGenerator
             }
 
             // Construct the 'IReadOnlyCollection<KeyValuePair<,>>' type for processing
-            GenericInstanceTypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType(typeSignature.TypeArguments[0]);
+            GenericInstanceTypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType([typeSignature.TypeArguments[0]]);
 
             try
             {
@@ -2106,7 +2106,7 @@ internal partial class InteropGenerator
             }
 
             // Construct the 'ICollection<KeyValuePair<,>>' type for processing
-            GenericInstanceTypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(typeSignature.TypeArguments[0]);
+            GenericInstanceTypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType([typeSignature.TypeArguments[0]]);
 
             try
             {

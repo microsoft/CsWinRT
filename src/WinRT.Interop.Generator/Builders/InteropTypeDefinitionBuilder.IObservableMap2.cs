@@ -279,7 +279,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Get the base interfaces for the current element type
             TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([keyValuePairType]);
             TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType([keyType, valueType]);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeObservableMap<<KEY_TYPE>, <VALUE_TYPE>, ...>'
@@ -380,8 +380,8 @@ internal partial class InteropTypeDefinitionBuilder
             // Prepare all the necessary base interface types
             TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
             TypeSignature dictionaryType = interopReferences.IDictionary2.MakeGenericReferenceType([keyType, valueType]);
-            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(keyValuePairType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType([keyValuePairType]);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([keyValuePairType]);
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
@@ -491,7 +491,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Prepare the 'ConditionalWeakTable<<MAP_TYPE>, EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>>' signature
             TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([
                 mapType,
-                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType)]);
+                interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType([eventHandlerType])]);
 
             // Define the lazy 'MapChangedTable' property for the conditional weak table
             InteropMemberDefinitionFactory.LazyVolatileReferenceDefaultConstructorReadOnlyProperty(
