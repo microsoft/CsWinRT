@@ -60,7 +60,7 @@ stages:
     displayName: Run Benchmarks
     condition: or(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
     dependsOn: []
-    timeoutInMinutes: 240
+    timeoutInMinutes: 360
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
       StagingFolder: $(ob_outputDirectory)
