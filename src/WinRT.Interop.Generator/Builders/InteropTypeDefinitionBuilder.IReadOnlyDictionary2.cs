@@ -421,7 +421,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(valueType, keyType));
+                signature: MethodSignature.CreateInstance(valueType, [keyType]));
 
             // Add and implement the 'get_Item' method
             interfaceImplType.AddMethodImplementation(

@@ -99,7 +99,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(vectorType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([vectorType]) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Call, emitState.LookupTypeDefinition(eventHandlerType, "Marshaller").GetMethod("ConvertToManaged"u8) },
@@ -210,7 +210,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(vectorType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([vectorType]) },
                     { Stloc_0 },
 
                     // if (unboxedValue != null && VectorChangedTable.TryGetValue(unboxedValue, out EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>> table))

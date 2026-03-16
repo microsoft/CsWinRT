@@ -91,7 +91,7 @@ internal partial class InteropTypeDefinitionFactory
             MethodDefinition disposeMethod = new(
                 name: "Dispose"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                signature: MethodSignature.CreateStatic(interopReferences.Void, elementAbiType))
+                signature: MethodSignature.CreateStatic(interopReferences.Void, [elementAbiType]))
             {
                 CilInstructions =
                 {

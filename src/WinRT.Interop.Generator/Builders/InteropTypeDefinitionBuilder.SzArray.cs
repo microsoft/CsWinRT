@@ -299,7 +299,7 @@ internal partial class InteropTypeDefinitionBuilder
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(arrayType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([arrayType]) },
                     { Newobj, interopReferences.ReadOnlySpan1_ctor(arrayType) },
                     { Ldarg_1 },
                     { Ldarg_2 },
@@ -499,7 +499,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Import the 'UnboxToManaged<TCallback>' method for the array
             IMethodDescriptor windowsRuntimeArrayMarshallerUnboxToManagedDescriptor =
                 interopReferences.WindowsRuntimeArrayMarshallerUnboxToManaged
-                .MakeGenericInstanceMethod(arrayComWrappersCallbackType.ToReferenceTypeSignature());
+                .MakeGenericInstanceMethod([arrayComWrappersCallbackType.ToReferenceTypeSignature()]);
 
             // Define the 'CreateObject' method as follows:
             //
