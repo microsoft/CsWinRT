@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using WinRT;
 
 using WFC = Windows.Foundation.Collections;
 using Windows.Foundation;

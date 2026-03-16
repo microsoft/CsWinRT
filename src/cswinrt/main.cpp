@@ -513,18 +513,18 @@ ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(new Func<Type, Type>(GetM
             {
                 for (auto&& string : strings::base)
                 {
-                    if (std::string(string.name) == "ComInteropHelpers" && !settings.filter.includes("Windows"))
+                    if (std::string(string.name) == "ComInteropExtensions" && !settings.filter.includes("Windows"))
                     {
                         continue;
                     }
                     writer ws;
                     write_file_header(ws);
 
-                    if (std::string(string.name) == "ComInteropHelpers")
+                    if (std::string(string.name) == "ComInteropExtensions")
                     {
                         // Determine which COM interop helpers to include by checking whether the newer
                         // types used in the COM interop helpers are being projected or not.
-                        // The ComInteropHelpers file makes use of UAC_VERSION_* to conditionally
+                        // The ComInteropExtensions file makes use of UAC_VERSION_* to conditionally
                         // include the ones that are being projected.
                         int uapContractversion = 7;  // default to 17763
                         if (c.find("Windows.Graphics.Display.DisplayInformation"))

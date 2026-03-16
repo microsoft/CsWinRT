@@ -84,7 +84,7 @@ jobs:
         command: sign
         cp_code: '400'
         files_to_sign: |
-          native/WinRT.Interop.winmd;
+          native/WindowsRuntime.Internal.winmd;
           native/WinRT.Host.dll.mui;
         search_root: $(StagingFolder)
 

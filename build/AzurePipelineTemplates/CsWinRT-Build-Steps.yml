@@ -205,14 +205,14 @@ steps:
           cswinrt.pdb
         TargetFolder: $(StagingFolder)\native
 
-    # Stage WinRT.Interop.winmd
+    # Stage WindowsRuntime.Internal.winmd
     - task: CopyFiles@2
-      displayName: Stage WinRT.Interop.winmd
+      displayName: Stage WindowsRuntime.Internal.winmd
       condition: and(succeeded(), and(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release')))
       continueOnError: True
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\_build\$(BuildPlatform)\$(BuildConfiguration)\cswinrt\bin
-        Contents: WinRT.Interop.winmd
+        Contents: WindowsRuntime.Internal.winmd
         TargetFolder: $(StagingFolder)\native
 
     # Stage WinRT.Host

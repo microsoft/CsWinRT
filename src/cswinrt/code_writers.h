@@ -2883,7 +2883,7 @@ public %()
     {
         w.write(R"(
 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_%")]
-static extern ref readonly Guid %([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object% _);
+static extern ref readonly Guid %([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object% _);
 )",
                 bind<write_iid_guid_interop_property_name>(ifaceType),
                 bind<write_iid_guid_property_name>(ifaceType),
