@@ -1,16 +1,37 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net10.0-windows10.0.26100.0;net10.0-windows10.0.26100.1</TargetFrameworks>
     <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
     <WindowsSdkPackageVersion>$(BenchmarkWindowsSdkPackageVersion)</WindowsSdkPackageVersion>
     <CsWinRTIncludes>BenchmarkComponent</CsWinRTIncludes>
+    <_SrcDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '..', '..'))</_SrcDir>
+    <_BenchmarkComponentProject>$(_SrcDir)TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj</_BenchmarkComponentProject>
+    <_BenchmarkComponentBinDir>$(_SrcDir)_build\x64\Release\BenchmarkComponent\bin\BenchmarkComponent\</_BenchmarkComponentBinDir>
   </PropertyGroup>
+
+  <!--
+  The slnx has building the benchmark project disabled due to we consume the NuGet rather than what
+  we build here. But for development purposes, we trigger build direclty here and copy over the DLLs.
+  -->
+  <Target Name="BuildAndCopyBenchmarkComponent" BeforeTargets="ResolveAssemblyReferences"
+          Condition="'$(BuildingInsideVisualStudio)' == 'true'">
+    <MSBuild Projects="$(_BenchmarkComponentProject)"
+             Properties="Platform=x64;Configuration=Release;solutiondir=$(_SrcDir)"
+             Targets="Build" />
+    <Copy SourceFiles="$(_BenchmarkComponentBinDir)BenchmarkComponent.dll"
+          DestinationFolder="$(MSBuildProjectDirectory)"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(_BenchmarkComponentBinDir)BenchmarkComponent.winmd"
+          DestinationFolder="$(MSBuildProjectDirectory)"
+          SkipUnchangedFiles="true" />
+  </Target>
 
   <ItemGroup>
     <Reference Include="BenchmarkComponent.winmd">
       <Implementation>BenchmarkComponent.dll</Implementation>
     </Reference>
+    <CsWinRTInputs Include="$(MSBuildProjectDirectory)\BenchmarkComponent.winmd" />
 
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(BenchmarkCsWinRT3Version)" Condition="'$(TargetFramework)' == 'net10.0-windows10.0.26100.1'" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(BenchmarkCsWinRT2Version)" Condition="'$(TargetFramework)' == 'net10.0-windows10.0.26100.0'" />

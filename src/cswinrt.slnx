@@ -367,11 +367,8 @@
     <File Path="Tests/FunctionalTests/PublishProfiles/win-x64.pubxml" />
     <File Path="Tests/FunctionalTests/PublishProfiles/win-x86.pubxml" />
   </Folder>
-  <Project Path="Benchmarks/Benchmarks.csproj">
-    <Platform Solution="*|ARM" Project="x64" />
-    <Platform Solution="*|ARM64" Project="x64" />
-    <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="*|x86" Project="x64" />
+  <Project Path="Benchmarks/Benchmarks/Benchmarks.csproj">
+    <Platform Project="x64" />
     <Build Project="false" />
   </Project>
   <Project Path="Benchmarks/BenchmarkProjection/BenchmarkProjection.csproj">

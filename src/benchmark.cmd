@@ -38,7 +38,7 @@ copy /Y "%this_dir%_build\x64\Release\BenchmarkComponent\bin\BenchmarkComponent\
 
 :: Run benchmarks
 echo Running benchmarks in %MODE% mode...
-dotnet run --project "%this_dir%Benchmarks\Benchmarks.csproj" -c Release --framework net10.0-windows10.0.26100.1 -- --mode %MODE% --filter *
+dotnet run --project "%this_dir%Benchmarks\Benchmarks\Benchmarks.csproj" -c Release --framework net10.0-windows10.0.26100.1 -- --mode %MODE% --filter *
 
 :: Run ResultsComparer
 set baselinedir=%2
