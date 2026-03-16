@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="BenchmarkProjection\BenchmarkProjection.csproj" />
+    <ProjectReference Include="..\BenchmarkProjection\BenchmarkProjection.csproj" />
   </ItemGroup>
 
   <ItemGroup>

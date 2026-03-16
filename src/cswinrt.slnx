@@ -5,15 +5,9 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Benchmarks/">
-    <Project Path="Benchmarks/Benchmarks.csproj">
-      <BuildDependency Project="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
-      <BuildDependency Project="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
-      <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
-      <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
-      <Build Solution="*|ARM64" Project="false" />
+    <Project Path="Benchmarks/Benchmarks/Benchmarks.csproj">
+      <Platform Project="x64" />
+      <Build Project="false" />
     </Project>
     <Project Path="Benchmarks/BenchmarkProjection/BenchmarkProjection.csproj">
       <Build Project="false" />

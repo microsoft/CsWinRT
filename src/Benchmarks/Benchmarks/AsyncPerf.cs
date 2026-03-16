@@ -1,7 +1,10 @@
+using System;
 using System.Threading.Tasks;
 using BenchmarkComponent;
 using BenchmarkDotNet.Attributes;
-using Windows.Foundation;
+#if CSWINRT3_0
+using Windows.Foundation.Tasks;
+#endif
 
 namespace Benchmarks
 {
