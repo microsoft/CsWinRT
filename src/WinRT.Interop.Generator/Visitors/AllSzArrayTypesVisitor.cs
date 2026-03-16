@@ -57,9 +57,9 @@ internal sealed class AllSzArrayTypesVisitor : ITypeSignatureVisitor<IEnumerable
     /// <inheritdoc/>
     public IEnumerable<SzArrayTypeSignature> VisitGenericInstanceType(GenericInstanceTypeSignature signature)
     {
-        // This will recursively visit all substituted arguments in an instantiated generic type signature. For
-        // instance, if it finds 'List<(string[], string, List<int[]>)>', it will give give back 'string[]' and
-        // also recurse on all other arguments, such that the 'int[]' type signature can also be discovered.
+        // This will recursively visit all substituted arguments in an instantiated generic type signature.
+        // For instance, if it finds 'List<(string[], string, List<int[]>)>', it will give back 'string[]'
+        // and recurse on all other arguments, such that the 'int[]' type signature can also be discovered.
         return signature.TypeArguments.SelectMany(static arg => arg.AcceptVisitor(Instance));
     }
 

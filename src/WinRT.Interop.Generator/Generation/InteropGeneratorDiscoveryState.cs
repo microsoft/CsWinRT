@@ -16,14 +16,20 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// </summary>
 internal sealed class InteropGeneratorDiscoveryState
 {
-    /// <summary>Backing field for <see cref="ModuleDefinitions"/>.</summary>
-    private readonly ConcurrentDictionary<string, ModuleDefinition> _moduleDefinitions = [];
+    /// <summary>Backing field for <see cref="Modules"/>.</summary>
+    private readonly ConcurrentDictionary<string, ModuleDefinition> _modules = [];
 
-    /// <summary>Backing field for <see cref="WinRTProjectionModuleDefinition"/>.</summary>
-    private ModuleDefinition? _winRTProjectionModuleDefinition;
+    /// <summary>Backing field for <see cref="WindowsRuntimeSdkProjectionModule"/>.</summary>
+    private ModuleDefinition? _windowsRuntimeSdkProjectionModule;
 
-    /// <summary>Backing field for <see cref="WinRTComponentModuleDefinition"/>.</summary>
-    private ModuleDefinition? _winRTComponentModuleDefinition;
+    /// <summary>Backing field for <see cref="WindowsRuntimeSdkXamlProjectionModule"/>.</summary>
+    private ModuleDefinition? _windowsRuntimeSdkXamlProjectionModule;
+
+    /// <summary>Backing field for <see cref="WindowsRuntimeProjectionModule"/>.</summary>
+    private ModuleDefinition? _windowsRuntimeProjectionModule;
+
+    /// <summary>Backing field for <see cref="WindowsRuntimeComponentModule"/>.</summary>
+    private ModuleDefinition? _windowsRuntimeComponentModule;
 
     /// <summary>Backing field for <see cref="TypeHierarchyEntries"/>.</summary>
     private readonly ConcurrentDictionary<string, string> _typeHierarchyEntries = [];
@@ -114,17 +120,27 @@ internal sealed class InteropGeneratorDiscoveryState
     /// <summary>
     /// Gets the loaded modules.
     /// </summary>
-    public IReadOnlyDictionary<string, ModuleDefinition> ModuleDefinitions => _moduleDefinitions;
+    public IReadOnlyDictionary<string, ModuleDefinition> Modules => _modules;
+
+    /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Sdk.Projection.dll</c>.
+    /// </summary>
+    public ModuleDefinition? WindowsRuntimeSdkProjectionModule => _windowsRuntimeSdkProjectionModule;
+
+    /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Sdk.Xaml.Projection.dll</c>.
+    /// </summary>
+    public ModuleDefinition? WindowsRuntimeSdkXamlProjectionModule => _windowsRuntimeSdkXamlProjectionModule;
 
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Projection.dll</c>.
     /// </summary>
-    public ModuleDefinition? WinRTProjectionModuleDefinition => _winRTProjectionModuleDefinition;
+    public ModuleDefinition? WindowsRuntimeProjectionModule => _windowsRuntimeProjectionModule;
 
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for <c>WinRT.Component.dll</c>.
     /// </summary>
-    public ModuleDefinition? WinRTComponentModuleDefinition => _winRTComponentModuleDefinition;
+    public ModuleDefinition? WindowsRuntimeComponentModule => _windowsRuntimeComponentModule;
 
     /// <summary>
     /// Gets the type hierarchy entries.
@@ -231,35 +247,59 @@ internal sealed class InteropGeneratorDiscoveryState
     /// </summary>
     /// <param name="path">The assembly path.</param>
     /// <param name="module">The loaded module.</param>
-    public void TrackModuleDefinition(string path, ModuleDefinition module)
+    public void TrackModule(string path, ModuleDefinition module)
     {
         ThrowIfReadOnly();
 
-        _ = _moduleDefinitions.TryAdd(path, module);
+        _ = _modules.TryAdd(path, module);
+    }
+
+    /// <summary>
+    /// Tracks the <c>WinRT.Sdk.Projection.dll</c> loaded module definition.
+    /// </summary>
+    /// <param name="module">The loaded module.</param>
+    [MemberNotNull(nameof(_windowsRuntimeSdkProjectionModule))]
+    public void TrackWindowsRuntimeSdkProjectionModule(ModuleDefinition module)
+    {
+        ThrowIfReadOnly();
+
+        _windowsRuntimeSdkProjectionModule = module;
+    }
+
+    /// <summary>
+    /// Tracks the <c>WinRT.Sdk.Xaml.Projection.dll</c> loaded module definition.
+    /// </summary>
+    /// <param name="module">The loaded module.</param>
+    [MemberNotNull(nameof(_windowsRuntimeSdkXamlProjectionModule))]
+    public void TrackWindowsRuntimeSdkXamlProjectionModule(ModuleDefinition module)
+    {
+        ThrowIfReadOnly();
+
+        _windowsRuntimeSdkXamlProjectionModule = module;
     }
 
     /// <summary>
     /// Tracks the <c>WinRT.Projection.dll</c> loaded module definition.
     /// </summary>
     /// <param name="module">The loaded module.</param>
-    [MemberNotNull(nameof(_winRTProjectionModuleDefinition))]
-    public void TrackWinRTProjectionModuleDefinition(ModuleDefinition module)
+    [MemberNotNull(nameof(_windowsRuntimeProjectionModule))]
+    public void TrackWindowsRuntimeProjectionModule(ModuleDefinition module)
     {
         ThrowIfReadOnly();
 
-        _winRTProjectionModuleDefinition = module;
+        _windowsRuntimeProjectionModule = module;
     }
 
     /// <summary>
     /// Tracks the <c>WinRT.Component.dll</c> loaded module definition.
     /// </summary>
     /// <param name="module">The loaded module.</param>
-    [MemberNotNull(nameof(_winRTComponentModuleDefinition))]
-    public void TrackWinRTComponentModuleDefinition(ModuleDefinition module)
+    [MemberNotNull(nameof(_windowsRuntimeComponentModule))]
+    public void TrackWindowsRuntimeComponentModule(ModuleDefinition module)
     {
         ThrowIfReadOnly();
 
-        _winRTComponentModuleDefinition = module;
+        _windowsRuntimeComponentModule = module;
     }
 
     /// <summary>

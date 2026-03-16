@@ -135,6 +135,15 @@ namespace TestComponentCSharp
         void InvokeBoolChanged(Windows.Foundation.EventHandler<Boolean> boolChanged);
     };
 
+    interface IChangedHandlers
+    {
+        event ProvideUri UriChanged;
+        event ProvideInt IntChanged;
+        event Windows.Foundation.EventHandler<Boolean> BoolChanged;
+        event Windows.Foundation.EventHandler<IBoolChanged> IBoolInterfaceChanged;
+        event Windows.Foundation.TypedEventHandler<IChangedHandlers, String> StringChanged;
+    };
+
     static runtimeclass ComImports
     {
         static Object MakeObject();
@@ -313,6 +322,8 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVector<IInspectable> GetUriVectorAsIInspectableVector();
         ProvideUri GetUriDelegate();
         void AddUriHandler(IUriHandler uriHandler);
+
+        void InvokeHandlers(IChangedHandlers handlers);
 
         // Structs
         BlittableStruct BlittableStructProperty;

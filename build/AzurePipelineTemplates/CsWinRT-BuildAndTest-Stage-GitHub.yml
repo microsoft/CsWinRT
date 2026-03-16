@@ -30,6 +30,7 @@ stages:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
       ob_artifactSuffix: $(BuildConfiguration)_$(BuildPlatform)
       StagingFolder: $(ob_outputDirectory)
+
     steps:
     - checkout: self
       clean: true
@@ -45,27 +46,7 @@ stages:
         BuildConfiguration: $(BuildConfiguration)
         BuildPlatform: $(BuildPlatform) 
 
-# Run Functional Tests
-    - template: CsWinRT-FunctionalTest-Steps.yml@self
-      parameters:
-        BuildConfiguration: $(BuildConfiguration)
-        BuildPlatform: $(BuildPlatform) 
-        FunctionalTests:
-        - JsonValueFunctionCalls
-        - ClassActivation
-        - Structs
-        - Events
-        - DynamicInterfaceCasting
-        - Async
-        - DerivedClassActivation
-        - DerivedClassAsBaseClass
-        - CCW
-        - TypeMarshaling
-
     - template: CsWinRT-Test-Steps.yml@self
-      parameters:
-        BuildConfiguration: $(BuildConfiguration)
-        BuildPlatform: $(BuildPlatform) 
 
     templateContext:
       outputs:

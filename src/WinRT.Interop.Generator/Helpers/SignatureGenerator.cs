@@ -139,7 +139,7 @@ internal static partial class SignatureGenerator
 
     /// <summary>
     /// Attempts to retrieve the IID for the specified type by checking the <see cref="System.Runtime.InteropServices.GuidAttribute"/>
-    /// attribute applied to it, if presen. The type is assumed to be some projected Windows Runtime interface or delegate type.
+    /// attribute applied to it, if present. The type is assumed to be some projected Windows Runtime interface or delegate type.
     /// </summary>
     /// <param name="type">The type descriptor to try to get the IID for.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
@@ -158,12 +158,22 @@ internal static partial class SignatureGenerator
             return true;
         }
 
-        // For delegates, try to get the projected type from the projection .dll, as they will have the '[Guid]' attribute on them.
+        // For delegates, try to get the projected type from the right projection .dll, as they will have the '[Guid]' attribute on them.
         // These are only needed to generate signatures, so we hide them from the reference assemblies, as they're not useful there.
-        if (type.IsDelegate &&
-            interopDefinitions.WindowsRuntimeProjectionModule.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType))
+        if (type.IsDelegate)
         {
-            return projectedType.TryGetGuidAttribute(interopReferences, out iid);
+            // Determine the right implementation projection .dll to use for the lookup
+            ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
+                ? interopDefinitions.WindowsRuntimeSdkProjectionModule
+                : type.IsProjectedWindowsSdkXamlType
+                    ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
+                    : interopDefinitions.WindowsRuntimeProjectionModule;
+
+            // Try to get the implementation type via a fast lookup, if we did get a valid projection module
+            if (projectionModule?.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType) is true)
+            {
+                return projectedType.TryGetGuidAttribute(interopReferences, out iid);
+            }
         }
 
         iid = Guid.Empty;
@@ -186,8 +196,15 @@ internal static partial class SignatureGenerator
         InteropReferences interopReferences,
         [NotNullWhen(true)] out TypeSignature? defaultInterface)
     {
+        // Determine the right implementation projection .dll (see notes above)
+        ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
+            ? interopDefinitions.WindowsRuntimeSdkProjectionModule
+            : type.IsProjectedWindowsSdkXamlType
+                ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
+                : interopDefinitions.WindowsRuntimeProjectionModule;
+
         // Tries to get the projected type from the projection .dll, as it will have the attribute
-        if (!interopDefinitions.WindowsRuntimeProjectionModule.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType))
+        if (projectionModule?.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType) is not true)
         {
             defaultInterface = null;
 

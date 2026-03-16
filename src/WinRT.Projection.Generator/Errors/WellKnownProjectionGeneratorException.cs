@@ -31,7 +31,7 @@ internal sealed class WellKnownProjectionGeneratorException : Exception
     public override string ToString()
     {
         return InnerException is not null
-            ? $"""error {Id}: {Message} Inner exception: '{InnerException!.GetType().Name}': '{InnerException!.Message}'."""
+            ? $"""error {Id}: {Message} Inner exception: '{InnerException.GetType().Name}': '{InnerException.Message}'."""
             : $"""error {Id}: {Message}""";
     }
 }

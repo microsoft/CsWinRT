@@ -32,25 +32,41 @@ internal sealed class InteropDefinitions
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="windowsRuntimeSdkProjectionModule">The <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly for the Windows SDK (i.e. <c>WinRT.Sdk.Projection.dll</c>).</param>
+    /// <param name="windowsRuntimeSdkXamlProjectionModule">The <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly for the Windows SDK XAML types (i.e. <c>WinRT.Sdk.Xaml.Projection.dll</c>).</param>
     /// <param name="windowsRuntimeProjectionModule">The <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly (i.e. <c>WinRT.Projection.dll</c>).</param>
     /// <param name="windowsRuntimeComponentModule">The <see cref="ModuleDefinition"/> for the Windows Runtime component assembly (i.e. <c>WinRT.Component.dll</c>).</param>
     public InteropDefinitions(
         InteropReferences interopReferences,
-        ModuleDefinition windowsRuntimeProjectionModule,
+        ModuleDefinition windowsRuntimeSdkProjectionModule,
+        ModuleDefinition? windowsRuntimeSdkXamlProjectionModule,
+        ModuleDefinition? windowsRuntimeProjectionModule,
         ModuleDefinition? windowsRuntimeComponentModule)
     {
         _interopReferences = interopReferences;
         _userDefinedInterfaceEntries = [];
         _szArrayInterfaceEntries = [];
 
+        WindowsRuntimeSdkProjectionModule = windowsRuntimeSdkProjectionModule;
+        WindowsRuntimeSdkXamlProjectionModule = windowsRuntimeSdkXamlProjectionModule;
         WindowsRuntimeProjectionModule = windowsRuntimeProjectionModule;
         WindowsRuntimeComponentModule = windowsRuntimeComponentModule;
     }
 
     /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly for the Windows SDK (i.e. <c>WinRT.Sdk.Projection.dll</c>).
+    /// </summary>
+    public ModuleDefinition WindowsRuntimeSdkProjectionModule { get; }
+
+    /// <summary>
+    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly for the Windows SDK XAML types (i.e. <c>WinRT.Sdk.Xaml.Projection.dll</c>).
+    /// </summary>
+    public ModuleDefinition? WindowsRuntimeSdkXamlProjectionModule { get; }
+
+    /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly (i.e. <c>WinRT.Projection.dll</c>).
     /// </summary>
-    public ModuleDefinition WindowsRuntimeProjectionModule { get; }
+    public ModuleDefinition? WindowsRuntimeProjectionModule { get; }
 
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime component assembly (i.e. <c>WinRT.Component.dll</c>).

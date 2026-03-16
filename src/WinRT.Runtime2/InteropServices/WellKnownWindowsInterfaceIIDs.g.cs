@@ -3234,4 +3234,54 @@ internal static class WellKnownWindowsInterfaceIIDs
             return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
         }
     }
+
+    /// <summary>The IID for <c>IStorageItemHandleAccess</c> (5CA296B2-2C25-4D22-B785-B885C8201E6A).</summary>
+    public static ref readonly Guid IID_IStorageItemHandleAccess
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0xB2, 0x96, 0xA2, 0x5C,
+                0x25, 0x2C,
+                0x22, 0x4D,
+                0xB7,
+                0x85,
+                0xB8,
+                0x85,
+                0xC8,
+                0x20,
+                0x1E,
+                0x6A
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
+
+    /// <summary>The IID for <c>IStorageFolderHandleAccess</c> (DF19938F-5462-48A0-BE65-D2A3271A08D6).</summary>
+    public static ref readonly Guid IID_IStorageFolderHandleAccess
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get
+        {
+            ReadOnlySpan<byte> data =
+            [
+                0x8F, 0x93, 0x19, 0xDF,
+                0x62, 0x54,
+                0xA0, 0x48,
+                0xBE,
+                0x65,
+                0xD2,
+                0xA3,
+                0x27,
+                0x1A,
+                0x08,
+                0xD6
+            ];
+
+            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+        }
+    }
 }

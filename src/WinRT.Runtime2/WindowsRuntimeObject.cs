@@ -67,6 +67,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <param name="_">Marker parameter used to select this constructor for sealed types (unused).</param>
     /// <param name="activationFactoryObjectReference">The <see cref="WindowsRuntimeObjectReference"/> for the <c>IActivationFactory</c> instance.</param>
     /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryObjectReference"/> is <see langword="null"/>.</exception>
     /// <exception cref="ObjectDisposedException">Thrown if <paramref name="activationFactoryObjectReference"/> has been disposed.</exception>
     /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
@@ -80,7 +81,8 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationTypes.DerivedSealed _,
         WindowsRuntimeObjectReference activationFactoryObjectReference,
-        in Guid iid)
+        in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryObjectReference);
 
@@ -101,7 +103,8 @@ public abstract unsafe class WindowsRuntimeObject :
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
-            newInstanceIid: in iid);
+            newInstanceIid: in iid,
+            marshalingType: marshalingType);
     }
 
     /// <summary>
@@ -110,6 +113,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <param name="_">Marker parameter used to select this constructor for composed types (unused).</param>
     /// <param name="activationFactoryObjectReference">The <see cref="WindowsRuntimeObjectReference"/> for the <c>IActivationFactory</c> instance.</param>
     /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryObjectReference"/> is <see langword="null"/>.</exception>
     /// <exception cref="ObjectDisposedException">Thrown if <paramref name="activationFactoryObjectReference"/> has been disposed.</exception>
     /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
@@ -123,7 +127,8 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationTypes.DerivedComposed _,
         WindowsRuntimeObjectReference activationFactoryObjectReference,
-        in Guid iid)
+        in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryObjectReference);
 
@@ -157,7 +162,8 @@ public abstract unsafe class WindowsRuntimeObject :
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
-            newInstanceIid: in iid);
+            newInstanceIid: in iid,
+            marshalingType: marshalingType);
 
         // Optimization: if we are activating the current type for composition, then the returned object reference
         // will wrap the 'IInspectable' pointer for the controlling instance (ie. 'innerInterface'). In this case,
@@ -183,6 +189,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     /// <param name="activationFactoryCallback">The <see cref="WindowsRuntimeActivationFactoryCallback"/> instance to delegate activation to.</param>
     /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
     /// <param name="additionalParameters">The additional parameters to provide to <paramref name="activationFactoryCallback"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryCallback"/> is <see langword="null"/>.</exception>
     /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
@@ -192,8 +199,8 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </para>
     /// <para>
     /// Additionally, this constructor is only meant to be used when additional custom parameters are required to invoke the target factory method. If no additional
-    /// parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedSealed, WindowsRuntimeObjectReference, in Guid)"/> overload
-    /// should be used instead, as that is more efficient in case the default signature is sufficient.
+    /// parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedSealed, WindowsRuntimeObjectReference, in Guid, CreateObjectReferenceMarshalingType)"/>
+    /// overload should be used instead, as that is more efficient in case the default signature is sufficient.
     /// </para>
     /// </remarks>
     [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
@@ -203,6 +210,7 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback,
         in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType,
         params ReadOnlySpan<object?> additionalParameters)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryCallback);
@@ -221,7 +229,8 @@ public abstract unsafe class WindowsRuntimeObject :
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
-            newInstanceIid: in iid);
+            newInstanceIid: in iid,
+            marshalingType: marshalingType);
     }
 
     /// <summary>
@@ -229,6 +238,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     /// <param name="activationFactoryCallback">The <see cref="WindowsRuntimeActivationFactoryCallback"/> instance to delegate activation to.</param>
     /// <param name="iid">The IID of the default interface for the Windows Runtime class being constructed.</param>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
     /// <param name="additionalParameters">The additional parameters to provide to <paramref name="activationFactoryCallback"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="activationFactoryCallback"/> is <see langword="null"/>.</exception>
     /// <exception cref="Exception">Thrown if there's any errors when activating the underlying native object.</exception>
@@ -238,8 +248,8 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </para>
     /// <para>
     /// Additionally, this constructor is only meant to be used when additional custom parameters are required to invoke the target factory method. If no additional
-    /// parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedComposed, WindowsRuntimeObjectReference, in Guid)"/> overload
-    /// should be used instead, as that is more efficient in case the default signature is sufficient.
+    /// parameters are needed, the <see cref="WindowsRuntimeObject(WindowsRuntimeActivationTypes.DerivedComposed, WindowsRuntimeObjectReference, in Guid, CreateObjectReferenceMarshalingType)"/>
+    /// overload should be used instead, as that is more efficient in case the default signature is sufficient.
     /// </para>
     /// </remarks>
     [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
@@ -249,6 +259,7 @@ public abstract unsafe class WindowsRuntimeObject :
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback,
         in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType,
         params ReadOnlySpan<object?> additionalParameters)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryCallback);
@@ -268,7 +279,8 @@ public abstract unsafe class WindowsRuntimeObject :
             thisInstance: this,
             newInstanceUnknown: ref defaultInterface,
             innerInstanceUnknown: ref innerInterface,
-            newInstanceIid: in iid);
+            newInstanceIid: in iid,
+            marshalingType: marshalingType);
 
         // Optimization: pre-cache the inspectable object reference if possible (see detailed explanation above)
         if (!hasUnwrappableNativeObjectReference)
@@ -654,25 +666,32 @@ public abstract unsafe class WindowsRuntimeObject :
         }
 
         // First, check for 'IDynamicInterfaceCastable' casts through the Windows Runtime infrastructure
-        if (LookupDynamicInterfaceCastableImplementationInfo(
+        CustomQueryInterfaceResult dynamicQueryInterfaceResult = LookupDynamicInterfaceCastableImplementationInfo(
             interfaceType: interfaceType,
-            castResult: out DynamicInterfaceCastableResult? dynamicInterfaceCastableResult))
-        {
-            implementationType = dynamicInterfaceCastableResult!.ImplementationType.TypeHandle;
-            interfaceReference = dynamicInterfaceCastableResult.InterfaceObjectReference;
+            castResult: out DynamicInterfaceCastableResult? dynamicInterfaceCastableResult);
 
-            return true;
+        // Return the appropriate result based on the 'QueryInterface' result, if handled
+        switch (dynamicQueryInterfaceResult)
+        {
+            case CustomQueryInterfaceResult.Handled:
+                implementationType = dynamicInterfaceCastableResult!.ImplementationType.TypeHandle;
+                interfaceReference = dynamicInterfaceCastableResult.InterfaceObjectReference;
+                return true;
+            case CustomQueryInterfaceResult.Failed:
+                goto Failure;
+            case CustomQueryInterfaceResult.NotHandled:
+            default: break;
         }
 
         // Next, check to see if the target interface is a generated COM interface
-        CustomQueryInterfaceResult queryInterfaceResult = LookupGeneratedVTableInfo(
+        CustomQueryInterfaceResult generatedQueryInterfaceResult = LookupGeneratedVTableInfo(
             interfaceType: interfaceType,
             performTypeHandleCacheLookup: false,
             throwOnQueryInterfaceFailure: false,
             castResult: out GeneratedComInterfaceCastResult? generatedComInterfaceCastResult);
 
-        // Return the appropriate result based on the 'QueryInterface' result, if handled
-        switch (queryInterfaceResult)
+        // Return the appropriate result for 'QueryInterface' (same as above)
+        switch (generatedQueryInterfaceResult)
         {
             case CustomQueryInterfaceResult.Handled:
                 implementationType = generatedComInterfaceCastResult!.TableInfo.ManagedType;
@@ -683,6 +702,7 @@ public abstract unsafe class WindowsRuntimeObject :
             default: break;
         }
 
+    Failure:
         implementationType = default;
         interfaceReference = null;
 
@@ -696,12 +716,12 @@ public abstract unsafe class WindowsRuntimeObject :
     /// Looks up whether the input interface type is implemented for an <see cref="IDynamicInterfaceCastable"/> cast.
     /// </summary>
     /// <param name="interfaceType">The input interface type.</param>
-    /// <param name="castResult">The resulting <see cref="GeneratedComInterfaceCastResult"/> value, if the cast is successful.</param>
-    /// <returns>Whether <paramref name="interfaceType"/> is implemented.</returns>
+    /// <param name="castResult">The resulting <see cref="DynamicInterfaceCastableResult"/> value, if the cast is successful.</param>
+    /// <returns>A <see cref="CustomQueryInterfaceResult"/> value representing the result of this dynamic cast lookup operation.</returns>
     /// <remarks>
     /// When successful, this method will cache a <see cref="DynamicInterfaceCastableResult"/> value into <see cref="TypeHandleCache"/>.
     /// </remarks>
-    private bool LookupDynamicInterfaceCastableImplementationInfo(RuntimeTypeHandle interfaceType, out DynamicInterfaceCastableResult? castResult)
+    private CustomQueryInterfaceResult LookupDynamicInterfaceCastableImplementationInfo(RuntimeTypeHandle interfaceType, out DynamicInterfaceCastableResult? castResult)
     {
         castResult = null;
 
@@ -709,7 +729,7 @@ public abstract unsafe class WindowsRuntimeObject :
         // can fully be trimmed. In theory this path shouldn't be reachable if the feature is disabled, but this can help.
         if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
         {
-            return false;
+            return CustomQueryInterfaceResult.Failed;
         }
 
         Type type = Type.GetTypeFromHandle(interfaceType)!;
@@ -719,7 +739,7 @@ public abstract unsafe class WindowsRuntimeObject :
             interfaceType: type,
             info: out DynamicInterfaceCastableImplementationInfo? implementationInfo))
         {
-            return false;
+            return CustomQueryInterfaceResult.NotHandled;
         }
 
         WindowsRuntimeObjectReference? interfaceReference;
@@ -741,7 +761,7 @@ public abstract unsafe class WindowsRuntimeObject :
             // This interface shouldn't really be needed from this key for the lookup, but we still store it.
             if (!implementationInfo.GetDynamicInterfaceCastableForwarder().IsInterfaceImplemented(this, out interfaceReference))
             {
-                return false;
+                return CustomQueryInterfaceResult.Failed;
             }
         }
         else
@@ -752,7 +772,7 @@ public abstract unsafe class WindowsRuntimeObject :
                 iid: implementationInfo.ImplementationType.GUID,
                 objectReference: out interfaceReference))
             {
-                return false;
+                return CustomQueryInterfaceResult.Failed;
             }
         }
 
@@ -775,7 +795,7 @@ public abstract unsafe class WindowsRuntimeObject :
             castResult = (DynamicInterfaceCastableResult)effectiveCastResult;
         }
 
-        return true;
+        return CustomQueryInterfaceResult.Handled;
     }
 
     /// <summary>
@@ -785,7 +805,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <param name="performTypeHandleCacheLookup">Whether to lookup into <see cref="TypeHandleCache"/> first.</param>
     /// <param name="throwOnQueryInterfaceFailure">Whether to throw an exception of <c>QueryInterface</c> fails.</param>
     /// <param name="castResult">The resulting <see cref="GeneratedComInterfaceCastResult"/> value, if the cast is successful.</param>
-    /// <returns>Whether <paramref name="interfaceType"/> is implemented.</returns>
+    /// <returns>A <see cref="CustomQueryInterfaceResult"/> value representing the result of this dynamic cast lookup operation.</returns>
     /// <remarks>
     /// When successful, this method will cache a <see cref="GeneratedComInterfaceCastResult"/> value into <see cref="TypeHandleCache"/>.
     /// </remarks>
@@ -796,6 +816,12 @@ public abstract unsafe class WindowsRuntimeObject :
         out GeneratedComInterfaceCastResult? castResult)
     {
         castResult = null;
+
+        // Same trim-friendly check as above (see notes there)
+        if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
+        {
+            return CustomQueryInterfaceResult.Failed;
+        }
 
         // We only do the lookup if the caller hasn't already done so
         if (performTypeHandleCacheLookup && TypeHandleCache.TryGetValue(interfaceType, out object? typeHandleCacheValue))

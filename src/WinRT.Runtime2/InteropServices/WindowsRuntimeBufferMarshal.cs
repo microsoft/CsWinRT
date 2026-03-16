@@ -34,25 +34,14 @@ public static partial class WindowsRuntimeBufferMarshal
 
         // If the input buffer is a Windows Runtime object wrapper, unwrap it and use it to access the underlying buffer.
         // This will be the case for both projected Windows Runtime types, or for 'IBuffer' references obtained via IDIC.
-        if (buffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
+        if (WindowsRuntimeBufferHelpers.TryGetNativeData(buffer, out data))
         {
-            using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IBufferByteAccess);
-
-            fixed (byte** dataPtr = &data)
-            {
-                HRESULT hresult = IBufferByteAccessVftbl.BufferUnsafe(bufferByteAccessValue.GetThisPtrUnsafe(), dataPtr);
-
-                RestrictedErrorInfo.ThrowExceptionForHR(hresult);
-            }
-
             return true;
         }
 
-        // Also handle a managed instance of the pinned array buffer type from 'WinRT.Runtime.dll'
-        if (buffer is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
+        // Also handle managed buffer implementations from 'WinRT.Runtime.dll'
+        if (WindowsRuntimeBufferHelpers.TryGetManagedData(buffer, out data))
         {
-            data = pinnedArrayBuffer.Buffer;
-
             return true;
         }
 
@@ -82,7 +71,7 @@ public static partial class WindowsRuntimeBufferMarshal
             goto Failure;
         }
 
-        // Similar handling as above, but for native 'IMemoryBufferByteAccess' instances
+        // Similar handling as in 'WindowsRuntimeBufferHelpers.TryGetNativeData', but for native 'IMemoryBufferByteAccess' instances
         if (buffer is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true } bufferObject)
         {
             using WindowsRuntimeObjectReferenceValue bufferByteAccessValue = bufferObject.NativeObjectReference.AsValue(WellKnownInterfaceIIDs.IID_IMemoryBufferByteAccess);
@@ -119,6 +108,14 @@ public static partial class WindowsRuntimeBufferMarshal
         }
 
         // If buffer is backed by a managed array, return it
+        if (buffer is WindowsRuntimeExternalArrayBuffer externalArrayBuffer)
+        {
+            array = externalArrayBuffer.GetArraySegment();
+
+            return true;
+        }
+
+        // Same as above for pinned arrays as well
         if (buffer is WindowsRuntimePinnedArrayBuffer pinnedArrayBuffer)
         {
             array = pinnedArrayBuffer.GetArraySegment();

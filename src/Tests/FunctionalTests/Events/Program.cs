@@ -96,6 +96,9 @@ instance.ObjectProperty = arr;
 NotifyCollectionChangedEventHandler n = (object sender, NotifyCollectionChangedEventArgs args) => { };
 instance.ObjectProperty = n;
 
+EventHandlers eventHandlers = new EventHandlers();
+instance.InvokeHandlers(eventHandlers);
+
 return events_received == events_expected && uriMatches && boxedDelegateMatches ? 100 : 101;
 
 void Instance_Event0()
@@ -113,7 +116,7 @@ void Instance_StringPropertyChanged(Class sender, string args)
     events_received++;
 }
 
-partial class ManagedUriHandler : IUriHandler
+class ManagedUriHandler : IUriHandler
 {
     public Uri Uri { get; private set; }
 
@@ -123,7 +126,7 @@ partial class ManagedUriHandler : IUriHandler
     }
 }
 
-partial class ObservableDictionaryChangedEventArgs : IMapChangedEventArgs<string>
+class ObservableDictionaryChangedEventArgs : IMapChangedEventArgs<string>
 {
     public ObservableDictionaryChangedEventArgs(CollectionChange change, string key)
     {
@@ -133,6 +136,15 @@ partial class ObservableDictionaryChangedEventArgs : IMapChangedEventArgs<string
 
     public CollectionChange CollectionChange { get; private set; }
     public string Key { get; private set; }
+}
+
+class EventHandlers : IChangedHandlers
+{
+    public event EventHandler<bool> BoolChanged;
+    public event EventHandler<IBoolChanged> IBoolInterfaceChanged;
+    public event ProvideInt IntChanged;
+    public event EventHandler<IChangedHandlers, string> StringChanged;
+    public event ProvideUri UriChanged;
 }
 
 delegate bool TestDelegate();

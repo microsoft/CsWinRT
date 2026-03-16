@@ -188,7 +188,7 @@ internal static class BindableIListMethods
             ArgumentException.ThrowIndexOutOfArrayBounds();
         }
 
-        // We need to verify the index as we;
+        // Copy all items into the target array, at the specified starting offset
         for (int i = 0; i < sourceLength; i++)
         {
             array.SetValue(Item(thisReference, i), i + index);

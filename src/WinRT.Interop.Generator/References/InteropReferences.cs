@@ -155,11 +155,41 @@ internal sealed class InteropReferences
         publicKeyOrToken: WellKnownPublicKeyTokens.SystemNumericsVectors).Import(_corLibTypeFactory.CorLibScope);
 
     /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>System.Threading.dll</c>.
+    /// </summary>
+    /// <remarks><inheritdoc cref="SystemThreading" path="/remarks/node()"/></remarks>
+    public AssemblyReference SystemThreading => field ??= new AssemblyReference(
+        name: "System.Threading"u8,
+        version: new Version(10, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemThreading).Import(_corLibTypeFactory.CorLibScope);
+
+    /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Sdk.Projection.dll</c>.
+    /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
+    public AssemblyReference WinRTSdkProjection => field ??= new AssemblyReference(
+        name: InteropNames.WindowsRuntimeSdkProjectionAssemblyNameUtf8,
+        version: new Version(0, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: default).Import(_corLibTypeFactory.CorLibScope);
+
+    /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Sdk.Xaml.Projection.dll</c>.
+    /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
+    public AssemblyReference WinRTSdkXamlProjection => field ??= new AssemblyReference(
+        name: InteropNames.WindowsRuntimeSdkXamlProjectionAssemblyNameUtf8,
+        version: new Version(0, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: default).Import(_corLibTypeFactory.CorLibScope);
+
+    /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Projection.dll</c>.
     /// </summary>
     /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
     public AssemblyReference WinRTProjection => field ??= new AssemblyReference(
-        name: "WinRT.Projection"u8,
+        name: InteropNames.WindowsRuntimeProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
         publicKeyOrToken: default).Import(_corLibTypeFactory.CorLibScope);
@@ -517,7 +547,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Threading.Interlocked"/>.
     /// </summary>
-    public TypeReference Interlocked => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Threading"u8, "Interlocked"u8);
+    public TypeReference Interlocked => field ??= SystemThreading.CreateTypeReference("System.Threading"u8, "Interlocked"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.MemoryMarshal"/>.
@@ -665,9 +695,14 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeMetadataTypeNameAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeMetadataTypeNameAttribute"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.AttributeUsageAttribute"/>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeDefaultInterfaceAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeDefaultInterfaceAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeDefaultInterfaceAttribute"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeExclusiveToInterfaceAttribute</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeExclusiveToInterfaceAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime"u8, "WindowsRuntimeExclusiveToInterfaceAttribute"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.WindowsRuntimeMetadataAttribute</c>.
@@ -855,14 +890,14 @@ internal sealed class InteropReferences
     public TypeReference IMapViewMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IMapViewMethodsImpl`2"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableVectorMethodsImpl&lt;T&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableVectorEventSourceFactory&lt;T&gt;</c>.
     /// </summary>
-    public TypeReference IObservableVectorMethodsImpl1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableVectorMethodsImpl`1"u8);
+    public TypeReference IObservableVectorEventSourceFactory1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableVectorEventSourceFactory`1"u8);
 
     /// <summary>
-    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableMapMethodsImpl&lt;TKey, TValue&gt;</c>.
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IObservableMapEventSourceFactory&lt;TKey, TValue&gt;</c>.
     /// </summary>
-    public TypeReference IObservableMapMethodsImpl2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableMapMethodsImpl`2"u8);
+    public TypeReference IObservableMapEventSourceFactory2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IObservableMapEventSourceFactory`2"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMapChangedEventArgsMethodsImpl&lt;K&gt;</c>.
@@ -2303,13 +2338,6 @@ internal sealed class InteropReferences
     public MemberReference WindowsRuntimeComWrappersMarshallerAttribute_ctor => field ??= WindowsRuntimeComWrappersMarshallerAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="MapChangedEventHandler2EventSource"/>'s constructor.
-    /// </summary>
-    public MemberReference MapChangedEventHandler2EventSource_ctor => field ??= MapChangedEventHandler2EventSource.CreateConstructorReference(
-        corLibTypeFactory: _corLibTypeFactory,
-        parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
-
-    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute.GetOrCreateComInterfaceForObject(object)</c>.
     /// </summary>
     public MemberReference WindowsRuntimeComWrappersMarshallerAttributeGetOrCreateComInterfaceForObject => field ??= WindowsRuntimeComWrappersMarshallerAttribute
@@ -3625,6 +3653,20 @@ internal sealed class InteropReferences
                 parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
     }
 
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <see cref="MapChangedEventHandler2EventSource"/>'s constructor.
+    /// </summary>
+    /// <param name="keyType">The type of keys in the observable map.</param>
+    /// <param name="valueType">The type of values in the observable map.</param>
+    public MemberReference MapChangedEventHandler2EventSource_ctor(TypeSignature keyType, TypeSignature valueType)
+    {
+        return MapChangedEventHandler2EventSource
+            .MakeGenericReferenceType(keyType, valueType)
+            .ToTypeDefOrRef()
+            .CreateConstructorReference(
+                corLibTypeFactory: _corLibTypeFactory,
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature(), _corLibTypeFactory.Int32]);
+    }
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given nullable value type.
@@ -6106,16 +6148,14 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;.VectorChanged</c>'s getter.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
-    public MemberReference IObservableVectorMethodsImpl1VectorChanged(TypeSignature elementType)
+    public MemberReference IObservableVectorEventSourceFactory1VectorChanged(TypeSignature elementType)
     {
-        return IObservableVectorMethodsImpl1
+        return IObservableVectorEventSourceFactory1
             .MakeGenericReferenceType(elementType)
             .ToTypeDefOrRef()
             .CreateMemberReference("VectorChanged"u8, MethodSignature.CreateStatic(
                 returnType: VectorChangedEventHandler1EventSource.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Type, 0)),
-                parameterTypes: [
-                    WindowsRuntimeObject.ToReferenceTypeSignature(),
-                    WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
 
     /// <summary>
@@ -6157,18 +6197,16 @@ internal sealed class InteropReferences
     /// </summary>
     /// <param name="keyType">The type of keys.</param>
     /// <param name="valueType">The type of values.</param>
-    public MemberReference IObservableMapMethodsImpl2MapChanged(TypeSignature keyType, TypeSignature valueType)
+    public MemberReference IObservableMapEventSourceFactory2MapChanged(TypeSignature keyType, TypeSignature valueType)
     {
-        return IObservableMapMethodsImpl2
+        return IObservableMapEventSourceFactory2
             .MakeGenericReferenceType(keyType, valueType)
             .ToTypeDefOrRef()
             .CreateMemberReference("MapChanged"u8, MethodSignature.CreateStatic(
                 returnType: MapChangedEventHandler2EventSource.MakeGenericReferenceType(
                     new GenericParameterSignature(GenericParameterType.Type, 0),
                     new GenericParameterSignature(GenericParameterType.Type, 1)),
-                parameterTypes: [
-                    WindowsRuntimeObject.ToReferenceTypeSignature(),
-                    WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
+                parameterTypes: [WindowsRuntimeObjectReference.ToReferenceTypeSignature()]));
     }
 
     /// <summary>

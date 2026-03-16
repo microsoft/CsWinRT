@@ -1,8 +1,4 @@
 parameters: 
-  - name: "BuildConfiguration"
-    type: string
-  - name: "BuildPlatform"
-    type: string
   - name: "FunctionalTests"
     type: object
     default: 
@@ -16,6 +12,7 @@ parameters:
     - DerivedClassActivation
     - DerivedClassAsBaseClass
     - CCW
+    - TypeMarshaling
 
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:

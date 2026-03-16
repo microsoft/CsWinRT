@@ -129,7 +129,7 @@ public static unsafe class IInputStreamMethods
         {
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToManaged))]
             static extern IAsyncOperationWithProgress<IBuffer, uint>? ConvertToManaged(
-                [UnsafeAccessorType("ABI.Windows.Foundation.<#CsWinRT>IAsyncOperationWithProgress'2<<#CsWinRT>Windows.Storage.Streams.IBuffer|uint>Marshaller, WinRT.Interop")] object? _,
+                [UnsafeAccessorType("ABI.Windows.Foundation.<#CsWinRT>IAsyncOperationWithProgress'2<<#CsWinRT>Windows-Storage-Streams-IBuffer|uint>Marshaller, WinRT.Interop")] object? _,
                 void* value);
 
             return ConvertToManaged(null, result)!;
@@ -210,7 +210,7 @@ public static unsafe class IInputStreamImpl
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToUnmanaged))]
             static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
-                [UnsafeAccessorType("ABI.Windows.Foundation.<#CsWinRT>IAsyncOperationWithProgress'2<<#CsWinRT>Windows.Storage.Streams.IBuffer|uint>Marshaller, WinRT.Interop")] object? _,
+                [UnsafeAccessorType("ABI.Windows.Foundation.<#CsWinRT>IAsyncOperationWithProgress'2<<#CsWinRT>Windows-Storage-Streams-IBuffer|uint>Marshaller, WinRT.Interop")] object? _,
                 IAsyncOperationWithProgress<IBuffer, uint>? value);
 
             *result = ConvertToUnmanaged(null, operation).DetachThisPtrUnsafe();

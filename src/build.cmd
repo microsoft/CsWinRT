@@ -1,7 +1,7 @@
 @echo off
 if /i "%cswinrt_echo%" == "on" @echo on
 
-set CsWinRTBuildNetSDKVersion=10.0.103
+set CsWinRTBuildNetSDKVersion=10.0.104
 
 set this_dir=%~dp0
 
@@ -186,6 +186,16 @@ call :exec %dotnet_exe% test --verbosity normal --no-build --logger trx;LogFileP
 if ErrorLevel 1 (
   echo.
   echo ERROR: Source generator unit test failed, skipping NuGet pack
+  exit /b !ErrorLevel!
+)
+
+:sourcegenerator2test
+rem Running Source Generator 2 Unit Tests
+echo Running source generator 2 tests for %cswinrt_platform% %cswinrt_configuration%
+call :exec %dotnet_exe% test --verbosity normal --no-build --logger trx;LogFilePath=%~dp0sourcegenerator2test_%cswinrt_version_string%.trx %this_dir%Tests\SourceGenerator2Test\SourceGenerator2Test.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration% -- RunConfiguration.TreatNoTestsAsError=true
+if ErrorLevel 1 (
+  echo.
+  echo ERROR: Source generator 2 unit test failed, skipping NuGet pack
   exit /b !ErrorLevel!
 )
 

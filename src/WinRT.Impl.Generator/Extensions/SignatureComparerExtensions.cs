@@ -12,10 +12,12 @@ namespace WindowsRuntime.ImplGenerator;
 /// </summary>
 internal static class SignatureComparerExtensions
 {
+#pragma warning disable IDE0052 // TODO: remove this once Roslyn bug is fixed
     /// <summary>
     /// Backing field for <see cref="get_IgnoreVersion"/>.
     /// </summary>
     private static readonly SignatureComparer IgnoreVersion = new(SignatureComparisonFlags.VersionAgnostic);
+#pragma warning restore IDE0052
 
     extension(SignatureComparer comparer)
     {

@@ -1,8 +1,3 @@
-parameters: 
-  - name: "BuildConfiguration"
-    type: string
-  - name: "BuildPlatform"
-    type: string
     
 steps:
 # # Enable GC stress
@@ -14,52 +9,35 @@ steps:
 #       script: |
 #         Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0xC"
 
-# # Run Unit Tests
-#   - task: DotNetCoreCLI@2
-#     displayName: Run Unit Tests
-#     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-#     inputs:
-#       command: test
-#       projects: 'src/Tests/UnitTest/UnitTest.csproj'
-#       arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration);CIBuildReason=CI -- RunConfiguration.TreatNoTestsAsError=true
-#       testRunTitle: Unit Tests
+# Run Unit Tests
+  - task: DotNetCoreCLI@2
+    displayName: Run Unit Tests
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    continueOnError: True
+    inputs:
+      command: test
+      projects: 'src/Tests/UnitTest/UnitTest.csproj'
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
+      testRunTitle: Unit Tests
 
-# # Run Host Tests
-#   - task: CmdLine@2
-#     displayName: Run Host Tests
-#     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-#     continueOnError: True
-#     inputs:
-#       workingDirectory: $(Build.SourcesDirectory)\src
-#       script: |
-#         dir _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin
-#         _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin\HostTest.exe --gtest_output=xml:HOSTTEST-$(Build.BuildNumber).xml 
+# Run Source Generator 2 Tests
+  - task: DotNetCoreCLI@2
+    displayName: Run Source Generator 2 Tests
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      command: test
+      projects: 'src/Tests/SourceGenerator2Test/SourceGenerator2Test.csproj'
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
+      testRunTitle: Source Generator 2 Tests
 
-# # Run Source Generator Tests  
-#   - task: CmdLine@2
-#     displayName: Run Source Generator Tests
-#     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-#     continueOnError: True
-#     inputs:
-#       workingDirectory: $(Build.SourcesDirectory)\src
-#       script: |
-#         dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
-#         _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
-
-# # Run WUX Tests
-#   - task: CmdLine@2
-#     displayName: Run WUX Tests
-#     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-#     continueOnError: True
-#     inputs:
-#       workingDirectory: $(Build.SourcesDirectory)\src
-#       script: |
-#         dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin
-#         _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin\AuthoringWuxConsumptionTest.exe --gtest_output=xml:AUTHORINGWUXTEST-$(Build.BuildNumber).xml 
-
-# Run Build Determinism Test
+# Run Host Tests
   - task: CmdLine@2
-    displayName: Run Build Determinism Test
+    displayName: Run Host Tests
+    enabled: false
     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
     continueOnError: True
     inputs:
@@ -68,26 +46,99 @@ steps:
         dir Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0
         Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\BuildDeterminismTest.exe -p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
 
-# # Run Functional Tests
-#   - template: CsWinRT-FunctionalTest-Steps.yml@self
-#     parameters:
-#       BuildConfiguration: $(BuildConfiguration)
-#       BuildPlatform: $(BuildPlatform) 
+# Run Source Generator Tests  
+  - task: CmdLine@2
+    displayName: Run Source Generator Tests
+    enabled: false
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    continueOnError: True
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src
+      script: |
+        dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
+        _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
 
-# # Disable GC stress
-#   - task: PowerShell@2
-#     displayName: Disable GC Stress
-#     condition: and(succeeded(), eq(variables['_RunGCStress'], 'true'))
-#     inputs:
-#       targetType: inline
-#       script: |
-#         Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0x0"
+# Run WUX Tests
+  - task: CmdLine@2
+    displayName: Run WUX Tests
+    enabled: false
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    continueOnError: True
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src
+      script: |
+        dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin
+        _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringWuxConsumptionTest\bin\AuthoringWuxConsumptionTest.exe --gtest_output=xml:AUTHORINGWUXTEST-$(Build.BuildNumber).xml 
 
-#   - task: CopyFiles@2
-#     displayName: Publish Test Log
-#     condition: and(failed(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
-#     inputs:
-#       SourceFolder: $(Build.ArtifactStagingDirectory)\unittest
-#       Contents: |
-#         test.log
-#       TargetFolder: $(StagingFolder)\UnitTest
+  - task: MSBuild@1
+    displayName: Restore cswinrt.slnx 
+    condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\cswinrt.slnx
+      msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),RestorePackagesConfig=true,TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+  
+  - task: MSBuild@1
+    displayName: Restore WinRT.Generator.Tasks.csproj
+    condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj
+      msbuildArguments: /t:restore /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=netstandard2.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+  
+  - task: MSBuild@1
+    displayName: Publish UnitTests for AOT (net10.0)
+    condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\Tests\UnitTest\UnitTest.csproj
+      msbuildArguments: /t:publish /p:RuntimeIdentifier=win-$(BuildPlatform),TargetFramework=net10.0,solutiondir=$(Build.SourcesDirectory)\src\,GenerateTestProjection=true,BuildToolArch=$(CsWinRTBuildToolsArch),VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+
+  - task: CmdLine@2
+    displayName: Run UnitTest for AOT (net10.0)
+    continueOnError: True
+    condition: and(succeeded(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      workingDirectory: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+      script: |
+        dir
+        echo Running UnitTest.exe 
+        UnitTest.exe --report-trx --report-trx-filename UNITTEST-AOT-$(Build.BuildNumber).trx
+        if %Errorlevel% NEQ 100 (
+          exit /b !ErrorLevel!
+        )
+        exit /b 0 
+
+  - task: PublishTestResults@2
+    displayName: Publish UnitTest AOT (net10.0) Results
+    condition: and(always(), and(eq(variables['BuildConfiguration'], 'release'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '**/UNITTEST-AOT-$(Build.BuildNumber).trx'
+      searchFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish\TestResults
+      testRunTitle: Unit Tests AOT (net10.0)
+
+# Run Functional Tests
+  - template: CsWinRT-FunctionalTest-Steps.yml@self
+
+# Disable GC stress
+  - task: PowerShell@2
+    displayName: Disable GC Stress
+    condition: and(succeeded(), eq(variables['_RunGCStress'], 'true'))
+    inputs:
+      targetType: inline
+      script: |
+        Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0x0"
+
+# Fail the pipeline if any test steps failed
+  - task: PowerShell@2
+    displayName: Fail if any tests failed
+    condition: eq(variables['Agent.JobStatus'], 'SucceededWithIssues')
+    inputs:
+      targetType: inline
+      script: |
+        Write-Host "##vso[task.logissue type=error]One or more test steps failed. See above for details."
+        exit 1

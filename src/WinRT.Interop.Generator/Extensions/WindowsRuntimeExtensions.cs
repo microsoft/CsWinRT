@@ -10,6 +10,8 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
 
+#pragma warning disable IDE0046
+
 namespace WindowsRuntime.InteropGenerator;
 
 /// <summary>
@@ -61,6 +63,53 @@ internal static class WindowsRuntimeExtensions
 
     extension(ITypeDescriptor type)
     {
+        /// <summary>
+        /// Gets a value indicating whether the type is a projected Windows SDK type (not custom-mapped or manually-projected).
+        /// </summary>
+        public bool IsProjectedWindowsSdkType
+        {
+            get
+            {
+                // Types from 'Microsoft.Windows.SDK.NET.dll' belong to the SDK projection .dll. We check
+                // the declaring assembly name to reliably determine the origin of the type. We also optimize
+                // when an UTF8 value is available to avoid redundant UTF8 transcoding work.
+                //
+                // Note: we also need for 'WinRT.Sdk.Projection.dll' here, in case we got this type descriptor
+                // from a type signature used in an attribute over a resolved projected type. That is, in that
+                // case we would lose the original context for the ref assembly, and instead we'd see the scope
+                // as being from the generated implementation .dll. We still want to make sure to detect those
+                // types as projected from the right set, otherwise e.g. computing the type signature would fail.
+                if (type.Scope?.GetAssembly() is { Name: Utf8String name })
+                {
+                    return
+                        name.AsSpan().SequenceEqual(InteropNames.WindowsSDKAssemblyNameUtf8) ||
+                        name.AsSpan().SequenceEqual(InteropNames.WindowsRuntimeSdkProjectionAssemblyNameUtf8);
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the type is a projected Windows SDK XAML type (from <c>Microsoft.Windows.UI.Xaml.dll</c>).
+        /// </summary>
+        public bool IsProjectedWindowsSdkXamlType
+        {
+            get
+            {
+                // Types from 'Microsoft.Windows.UI.Xaml.dll' belong to the XAML projection .dll. Here we do the
+                // same checks as above, and also check for 'WinRT.Sdk.Xaml.projection.dll' for the same reason.
+                if (type.Scope?.GetAssembly() is { Name: Utf8String name })
+                {
+                    return
+                        name.AsSpan().SequenceEqual(InteropNames.WindowsSDKXamlAssemblyNameUtf8) ||
+                        name.AsSpan().SequenceEqual(InteropNames.WindowsRuntimeSdkXamlProjectionAssemblyNameUtf8);
+                }
+
+                return false;
+            }
+        }
+
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Guid"/> type.
         /// </summary>
@@ -591,8 +640,15 @@ internal static class WindowsRuntimeExtensions
                     return interopReferences.AbiDateTimeOffset.ToValueTypeSignature();
                 }
 
-                // Otherwise, we can rely on the blittable type being defined in the same module under the 'ABI' namespace
-                return interopReferences.WinRTProjection.CreateTypeReference(
+                // Determine the right assembly reference for this projected type
+                AssemblyReference projectionAssembly = type.IsProjectedWindowsSdkType
+                    ? interopReferences.WinRTSdkProjection
+                    : type.IsProjectedWindowsSdkXamlType
+                        ? interopReferences.WinRTSdkXamlProjection
+                        : interopReferences.WinRTProjection;
+
+                // For all types that get here, their ABI types will be in the right projection assembly, under the 'ABI' namespace
+                return projectionAssembly.CreateTypeReference(
                     ns: (Utf8String)$"ABI.{typeDefinition.Namespace}",
                     name: typeDefinition.Name!).ToValueTypeSignature();
             }

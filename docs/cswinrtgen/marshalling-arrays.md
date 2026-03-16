@@ -20,12 +20,12 @@ And a marshaller type to support this:
 ```csharp
 public static class WindowsRuntimeArrayMarshaller
 {
-    public static Array? ConvertToManaged<TCallback>(void* value, in Guid iid)
+    public static Array? UnboxToManaged<TCallback>(void* value, in Guid iid)
         where TCallback : IWindowsRuntimeArrayComWrappersCallback, allows ref struct;
 }
 ```
 
-The `ConvertToManaged` method will perform a `QueryInterface` on the input `value` pointer for the specified IID (as this method is only used to unbox arrays that are passed as opaque objects). It will then call `Value` on the ```IReferenceArray`1<T>``` interface pointer, and invoke the supplied callback to return the unboxed managed array instance.
+The `UnboxToManaged` method will perform a `QueryInterface` on the input `value` pointer for the specified IID (as this method is only used to unbox arrays that are passed as opaque objects). It will then call `Value` on the ```IReferenceArray`1<T>``` interface pointer, and invoke the supplied callback to return the unboxed managed array instance.
 
 ## Native -> managed (in `WinRT.Interop.dll`)
 
@@ -46,14 +46,16 @@ Along with this, a marshaller attribute is also needed, for unboxing arrays from
 ```csharp
 public sealed class <string>ArrayComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
-    public override object CreateObject(void* value)
+    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
     {
-        return WindowsRuntimeArrayMarshaller.ConvertToManaged<<string>ArrayComWrappersCallback>(value, in <string>ArrayImpl.IID)!;
+        wrapperFlags = default;
+
+        return WindowsRuntimeArrayMarshaller.UnboxToManaged<<string>ArrayComWrappersCallback>(value, in <string>ArrayImpl.IID)!;
     }
 }
 ```
 
-This attribute only implements `CreateObject`, and simply forwards the logic to the generated callback type.
+This attribute only implements `CreateObject` (with `CreatedWrapperFlags`), and simply forwards the logic to the generated callback type.
 
 ## CCW
 

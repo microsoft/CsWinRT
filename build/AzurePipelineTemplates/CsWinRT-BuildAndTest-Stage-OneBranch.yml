@@ -88,6 +88,17 @@ jobs:
           native/WinRT.Host.dll.mui;
         search_root: $(StagingFolder)
 
+    - task: onebranch.pipeline.signing@1
+      displayName: '🔒 Onebranch Signing for SDK projection binaries'
+      condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'), eq(variables['_GenerateSdkProjection'], 'true'))
+      inputs:
+        command: sign
+        signing_profile: external_distribution
+        files_to_sign: |
+          impl/*/WinRT.Sdk.Projection.dll;
+          impl/*/WinRT.Sdk.Xaml.Projection.dll;
+        search_root: $(StagingFolder)
+
   - job: Benchmarks
     displayName: Run Benchmarks
     condition: or(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))

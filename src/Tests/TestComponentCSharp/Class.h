@@ -202,6 +202,7 @@ namespace winrt::TestComponentCSharp::implementation
         void RaiseStringChanged();
         void CallForString(TestComponentCSharp::ProvideString const& provideString);
         void AddUriHandler(TestComponentCSharp::IUriHandler uriHandler);
+        void InvokeHandlers(TestComponentCSharp::IChangedHandlers handlers);
         hstring StringProperty2();
         void StringProperty2(hstring const& value);
         Windows::Foundation::Collections::IVector<hstring> StringsProperty();

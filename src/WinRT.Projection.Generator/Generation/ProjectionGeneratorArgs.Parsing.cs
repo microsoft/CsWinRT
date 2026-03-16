@@ -79,6 +79,9 @@ internal partial class ProjectionGeneratorArgs
             TargetFramework = GetStringArgument(argsMap, nameof(TargetFramework)),
             WindowsMetadata = GetStringArgument(argsMap, nameof(WindowsMetadata)),
             CsWinRTExePath = GetStringArgument(argsMap, nameof(CsWinRTExePath)),
+            AssemblyName = GetOptionalStringArgument(argsMap, nameof(AssemblyName), "WinRT.Projection"),
+            WindowsSdkOnly = GetOptionalBoolArgument(argsMap, nameof(WindowsSdkOnly)),
+            WindowsUIXamlProjection = GetOptionalBoolArgument(argsMap, nameof(WindowsUIXamlProjection)),
             Token = token
         };
     }
@@ -130,5 +133,38 @@ internal partial class ProjectionGeneratorArgs
         }
 
         throw WellKnownProjectionGeneratorExceptions.ResponseFileArgumentParsingError(propertyName);
+    }
+
+    /// <summary>
+    /// Parses an optional <see cref="string"/> argument, returning a default value if not present.
+    /// </summary>
+    /// <param name="argsMap">The input map with raw arguments.</param>
+    /// <param name="propertyName">The target property name.</param>
+    /// <param name="defaultValue">The default value to return if the argument is not present.</param>
+    /// <returns>The resulting argument, or <paramref name="defaultValue"/> if not found.</returns>
+    private static string GetOptionalStringArgument(Dictionary<string, string> argsMap, string propertyName, string defaultValue)
+    {
+        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        {
+            return argumentValue;
+        }
+
+        return defaultValue;
+    }
+
+    /// <summary>
+    /// Parses an optional <see cref="bool"/> argument, returning <c>false</c> if not present.
+    /// </summary>
+    /// <param name="argsMap">The input map with raw arguments.</param>
+    /// <param name="propertyName">The target property name.</param>
+    /// <returns>The resulting argument, or <c>false</c> if not found.</returns>
+    private static bool GetOptionalBoolArgument(Dictionary<string, string> argsMap, string propertyName)
+    {
+        if (argsMap.TryGetValue(GetCommandLineArgumentName(propertyName), out string? argumentValue))
+        {
+            return bool.TryParse(argumentValue, out bool result) && result;
+        }
+
+        return false;
     }
 }

@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
 using WinRT;
 
 using WFC = Windows.Foundation.Collections;
@@ -26,23 +25,23 @@ using Windows.Storage.Streams;
 using Windows.Storage.FileProperties;
 
 using System.Diagnostics;
-using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace UnitTest
 {
     using A = IEnumerable<IStringable>;
     using B = KeyValuePair<string, IAsyncOperationWithProgress</*A*/IEnumerable<IStringable>, float>>;
 
+    [TestClass]
     public class TestAPIs
     {
 
-        [Fact]
+        [TestMethod]
         public void TestCalendarAPIs()
         {
             List<string> languages = new List<string>();
             languages.Add("en-us");
             Calendar cal = new Calendar(languages);
-            Assert.NotEqual("", cal.DayOfWeekAsString());
+            Assert.AreNotEqual("", cal.DayOfWeekAsString());
         }
 
 #if ENABLE_WORKSTATION_TESTS 
@@ -74,7 +73,7 @@ namespace UnitTest
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestGeolocation()
         {
             Assert.True(InvokeGeolocation().Wait(1000));
@@ -93,7 +92,7 @@ namespace UnitTest
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TestDeviceEnumeration()
         {
             Assert.True(InvokeDeviceEnumeration().Wait(5*1000));
@@ -129,13 +128,13 @@ namespace UnitTest
             Assert.NotNull(propValue);
         }
 
-        [Fact]
+        [TestMethod]
         public void TestFileIO()
         {
             Assert.True(ValidateFileIO().Wait(5 * 1000));
         }
 
-        [Fact]
+        [TestMethod]
         public void TestJSONAPIs()
         {
             string sampleText = "{\r\n" +

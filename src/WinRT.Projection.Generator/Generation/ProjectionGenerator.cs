@@ -40,7 +40,15 @@ internal static partial class ProjectionGenerator
         // Process all .winmd references and create the .rsp file for 'cswinrt.exe'
         try
         {
-            ConsoleApp.Log($"Processing {args.WinMDPaths.Length} .winmd reference(s)");
+            // Show the appropriate message to inform users of what this generator is doing,
+            // based on the input arguments. If we don't have precompiled projections, this
+            // tool might run up to 3 times during builds, so this helps make things clearer.
+            ConsoleApp.Log(args switch
+            {
+                { WindowsSdkOnly: true, WindowsUIXamlProjection: false } => "Processing Windows SDK .winmd references",
+                { WindowsSdkOnly: true, WindowsUIXamlProjection: true } => "Processing 'Windows.UI.Xaml' .winmd references",
+                _ => $"Processing {args.WinMDPaths.Length} .winmd reference(s)"
+            });
 
             processingState = ProcessReferences(args);
         }
@@ -78,6 +86,6 @@ internal static partial class ProjectionGenerator
         }
 
         // Notify the user that generation was successful
-        ConsoleApp.Log($"Projection code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName)}.dll");
+        ConsoleApp.Log($"Projection code generated -> {Path.Combine(args.GeneratedAssemblyDirectory, args.AssemblyName)}.dll");
     }
 }

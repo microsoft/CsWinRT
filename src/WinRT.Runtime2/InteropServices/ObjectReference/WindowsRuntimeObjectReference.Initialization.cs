@@ -4,6 +4,8 @@
 using System;
 using System.Runtime.InteropServices;
 
+#pragma warning disable IDE0010, IDE0055
+
 namespace WindowsRuntime.InteropServices;
 
 /// <inheritdoc cref="WindowsRuntimeObjectReference"/>
@@ -17,6 +19,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// <param name="newInstanceUnknown">The native COM object for the base class being instantiated.</param>
     /// <param name="innerInstanceUnknown">The inner COM object, for COM aggregation scenarios.</param>
     /// <param name="newInstanceIid">The IID for the new instance.</param>
+    /// <param name="marshalingType">The marshaling type to use for the input native object (either <paramref name="newInstanceUnknown"/> or <paramref name="innerInstanceUnknown"/>).</param>
     /// <returns>A <see cref="WindowsRuntimeObjectReference"/> wrapping the input COM objects.</returns>
     /// <remarks>
     /// <para>
@@ -33,7 +36,8 @@ public unsafe partial class WindowsRuntimeObjectReference
         WindowsRuntimeObject thisInstance,
         ref void* newInstanceUnknown,
         ref void* innerInstanceUnknown,
-        in Guid newInstanceIid)
+        in Guid newInstanceIid,
+        CreateObjectReferenceMarshalingType marshalingType)
     {
         void* acquiredNewInstanceUnknown = newInstanceUnknown;
         void* acquiredInnerInstanceUnknown = innerInstanceUnknown;
@@ -58,46 +62,88 @@ public unsafe partial class WindowsRuntimeObjectReference
         // Also see: https://learn.microsoft.com/windows/win32/com/aggregation.
         void* externalComObject = isAggregation ? acquiredInnerInstanceUnknown : acquiredNewInstanceUnknown;
 
-        // We need to check whether the target COM object is free-threaded or not, as that will
-        // influence how we'll create the resulting 'WindowsRuntimeObjectReference' instance.
-        // We can do that right away, as this is the only call that might throw. We want to do
-        // this as early as possible, so we can rely on the rest of the code never throwing,
-        // which avoids the need to worry about releasing references if we fail halfway through.
-        HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(externalComObject);
+        ComObjectHelpers.ValidateMarshalingType(externalComObject, marshalingType);
 
-        // After this 'HRESULT' validation, it is critical that the rest of the code in this method never
-        // throws an exception. By that we only refer to exceptions that would be possible to handle.
-        // That is, technically speaking we are ultimately going to create a 'WindowsRuntimeObjectReference'
-        // object, which could throw 'OutOfMemoryException' in extreme circumstances. However, that is
-        // considered an error state that cannot be recovered from, so that is not a concern here.
-        if (isFreeThreaded.Failed)
+        // If marshaling type metadata support is disabled, override the value to 'Unknown' so
+        // that the runtime always queries the marshaling type at runtime (ie. the slow path).
+        if (!WindowsRuntimeFeatureSwitches.EnableMarshalingTypeMetadataSupport)
         {
-            // Before proceeding, we need to increment the reference count on the inner instance, if we're doing
-            // COM aggregation. This is part of a delicate balance of 'AddRef' and 'Release' calls on the input
-            // object, which varies based on whether we're aggregating. We basically have two possible scenarios:
-            //
-            //   1) COM aggregation: we would need to do an 'AddRef' on the inner instance (for the object reference),
-            //      and then callers of this method would do a 'Release' from a 'finally' block. We can skip that
-            //      entire pair of 'AddRef'/'Release' on the inner object in the successful case.
-            //   2) Not aggregation: we would need to do an 'AddRef' on the new instance (for the object reference),
-            //      but then we'd do an unconditional 'Release' at the end of this method. This is because the
-            //      runtime (ie. 'ComWrappers') would already be holding its own 'AddRef' on this same object, as
-            //      that is the one that will be passed to 'GetOrRegisterObjectForComInstance' below. Which means
-            //      we can skip this entire pair of 'AddRef'/'Release' calls on the new instance as well.
-            //
-            // To ensure things don't fall out of balance in the failure case, we just need to release the inner
-            // instance if we're about to return early. That's because by doing so, we wouldn't have had time to
-            // transfer the ownership to the returned object reference, which would handle releases later on.
-            // This applies to both when doing aggregation or not. That is, regardless of how the lifetime of
-            // the inner instance would've been extended, if we fail, we just need to ensure we release that object.
-            if (acquiredInnerInstanceUnknown is not null)
-            {
-                _ = IUnknownVftbl.ReleaseUnsafe(acquiredInnerInstanceUnknown);
-            }
-
-            Marshal.ThrowExceptionForHR(isFreeThreaded);
+            marshalingType = CreateObjectReferenceMarshalingType.Unknown;
         }
 
+        bool isFreeThreaded;
+
+        // Depending on the input marshaling type, we can either use a fast-path where we just trust the
+        // annotation in metadata to know whether the native object we're wrapping is free-threaded or
+        // not, or otherwise if no static type information is available, we need to query this information
+        // at runtime. This is relatively expensive (it can do up to two 'QueryInterface' calls, plus if
+        // 'IMarshal' is used, a call to 'GetUnmarshalClass'), so we want to avoid it whenever possible.
+        switch (marshalingType)
+        {
+            case CreateObjectReferenceMarshalingType.Agile:
+                isFreeThreaded = true;
+                break;
+            case CreateObjectReferenceMarshalingType.Standard:
+                isFreeThreaded = false;
+                break;
+            default:
+            {
+                // We need to check whether the target COM object is free-threaded or not, as that will
+                // influence how we'll create the resulting 'WindowsRuntimeObjectReference' instance.
+                // We can do that right away, as this is the only call that might throw. We want to do
+                // this as early as possible, so we can rely on the rest of the code never throwing,
+                // which avoids the need to worry about releasing references if we fail halfway through.
+                HRESULT hresult = ComObjectHelpers.IsFreeThreadedUnsafe(externalComObject);
+
+                // After this 'HRESULT' validation, it is critical that the rest of the code in this method never
+                // throws an exception. By that we only refer to exceptions that would be possible to handle.
+                // That is, technically speaking we are ultimately going to create a 'WindowsRuntimeObjectReference'
+                // object, which could throw 'OutOfMemoryException' in extreme circumstances. However, that is
+                // considered an error state that cannot be recovered from, so that is not a concern here.
+                if (hresult.Failed)
+                {
+                    // To ensure things don't fall out of balance in the failure case, we just need to release both instances
+                    // if we're about to return early. That's because by returning here, we have already transferred ownership,
+                    // so we're responsible to make sure we don't accidentally keep references alive (or that would leak).
+                    // This applies to both when doing aggregation or not. That is, regardless of how the lifetime of the
+                    // inner instance would've been extended, if we fail, we just need to ensure we release that object.
+                    if (acquiredNewInstanceUnknown is not null)
+                    {
+                        _ = IUnknownVftbl.ReleaseUnsafe(acquiredNewInstanceUnknown);
+                    }
+
+                    // Do the same for the inner instance as well, if we have it
+                    if (acquiredInnerInstanceUnknown is not null)
+                    {
+                        _ = IUnknownVftbl.ReleaseUnsafe(acquiredInnerInstanceUnknown);
+                    }
+
+                    Marshal.ThrowExceptionForHR(hresult);
+                }
+
+                // A successful 'HRESULT' here can be either 'S_OK' or 'S_FALSE'
+                isFreeThreaded = hresult == WellKnownErrorCodes.S_OK;
+
+                break;
+            }
+        }
+
+        // Before proceeding, we need to increment the reference count on the inner instance, if we're doing
+        // COM aggregation. This is part of a delicate balance of 'AddRef' and 'Release' calls on the input
+        // object, which varies based on whether we're aggregating. We basically have two possible scenarios:
+        //
+        //   1) COM aggregation: we would need to do an 'AddRef' on the inner instance (for the object reference),
+        //      and then callers of this method would do a 'Release' from a 'finally' block. We can skip that
+        //      entire pair of 'AddRef'/'Release' on the inner object in the successful case.
+        //   2) Not aggregation: we would need to do an 'AddRef' on the new instance (for the object reference),
+        //      but then we'd do an unconditional 'Release' at the end of this method. This is because the
+        //      runtime (ie. 'ComWrappers') would already be holding its own 'AddRef' on this same object, as
+        //      that is the one that will be passed to 'GetOrRegisterObjectForComInstance' below. Which means
+        //      we can skip this entire pair of 'AddRef'/'Release' calls on the new instance as well.
+        //
+        // So in practice, applying all of these optimizations together, we don't need to perform any 'AddRef' calls
+        // at all (in either scenario), and we only possibly need one 'Release' call at the end, if not aggregating.
+        //
         // Next, determine if the instance supports 'IReferenceTracker' (eg. for XAML scenarios).
         // Acquiring this interface is useful for:
         //
@@ -108,7 +154,15 @@ public unsafe partial class WindowsRuntimeObjectReference
         // will have the 'IReferenceTracker' implementation. Otherwise, the new instance will be used. Since the
         // inner was composed, it should answer immediately without going through the outer. Either way, the
         // reference count will go to the new instance.
-        _ = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
+        HRESULT isReferenceTracker = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
+
+        // We have seen scenarios where 'QueryInterface' is not set to 'null' on failure (for instance, both UWP XAML
+        // and WinUI 3 objects don't do this), so if the call failed we manually set the resulting pointer to 'null'.
+        // This allows the following code to rely on the pointer value to determine how to handle reference tracking.
+        if (isReferenceTracker.Failed)
+        {
+            referenceTracker = null;
+        }
 
         // Determine the flags needed for the native object wrapper (ie. RCW) creation.
         // These are the ones we'll pass to 'ComWrappers' to register the new object.
@@ -235,8 +289,9 @@ public unsafe partial class WindowsRuntimeObjectReference
             }
         }
 
-        // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'
-        if (isFreeThreaded == WellKnownErrorCodes.S_OK)
+        // Use the optimized object reference type if the input native object is free-threaded. This avoids all the
+        // additional overhead of the state to track the current context, and having to manage a lazy agile reference.
+        if (isFreeThreaded)
         {
             return new FreeThreadedObjectReference(externalComObject, externalReferenceTracker, createObjectReferenceFlags);
         }
@@ -256,19 +311,23 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// </summary>
     /// <param name="externalComObject">The external COM object to wrap in a managed object reference.</param>
     /// <param name="iid">The IID that represents the interface implemented by <paramref name="externalComObject"/>.</param>
+    /// <param name="marshalingType">The marshaling type to use for <paramref name="externalComObject"/>.</param>
     /// <returns>A <see cref="WindowsRuntimeObjectReference"/> wrapping <paramref name="externalComObject"/>.</returns>
     /// <remarks>
     /// This method is only meant to be used when creating a managed object reference around native objects. It should not
     /// be used when dealing with Windows Runtime types instantiated from C# (which includes COM aggregation scenarios too).
     /// </remarks>
-    internal static WindowsRuntimeObjectReference InitializeObjectReference(void* externalComObject, in Guid iid)
+    internal static WindowsRuntimeObjectReference InitializeObjectReference(
+        void* externalComObject,
+        in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType)
     {
         // Do a 'QueryInterface' to actually get the interface pointer we're looking for
         IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in iid, out void* interfacePtr).Assert();
 
         // Pass the interface pointer with ownership, so we can avoid a whole pair of 'AddRef' and
         // 'Release' calls, which we would've otherwise had to pay with the non-acquiring overload.
-        return InitializeObjectReferenceUnsafe(ref interfacePtr, in iid);
+        return InitializeObjectReferenceUnsafe(ref interfacePtr, in iid, marshalingType);
     }
 
     /// <summary>
@@ -276,6 +335,7 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// </summary>
     /// <param name="externalComObject">The external COM object to wrap in a managed object reference.</param>
     /// <param name="iid">The IID that represents the interface implemented by <paramref name="externalComObject"/>.</param>
+    /// <param name="marshalingType">The marshaling type to use for <paramref name="externalComObject"/>.</param>
     /// <returns>A <see cref="WindowsRuntimeObjectReference"/> wrapping <paramref name="externalComObject"/>.</returns>
     /// <remarks>
     /// <para>
@@ -287,18 +347,49 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// right interface pointer for <paramref name="iid"/>, and will therefore skip doing a <c>QueryInterface</c> call on it.
     /// </para>
     /// </remarks>
-    internal static WindowsRuntimeObjectReference InitializeObjectReferenceUnsafe(void* externalComObject, in Guid iid)
+    internal static WindowsRuntimeObjectReference InitializeObjectReferenceUnsafe(
+        void* externalComObject,
+        in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType)
     {
-        // Early free-threaded check, to handle failure cases too (see notes above)
-        HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(externalComObject);
+        ComObjectHelpers.ValidateMarshalingType(externalComObject, marshalingType);
 
-        // In theory this should never throw
-        Marshal.ThrowExceptionForHR(isFreeThreaded);
+        // Override the marshalling move to 'Unknown' if requested (see notes above)
+        if (!WindowsRuntimeFeatureSwitches.EnableMarshalingTypeMetadataSupport)
+        {
+            marshalingType = CreateObjectReferenceMarshalingType.Unknown;
+        }
+
+        bool isFreeThreaded;
+
+        // Check whether the object is free-threaded, optimizing if possible (see notes above)
+        switch (marshalingType)
+        {
+            case CreateObjectReferenceMarshalingType.Agile:
+                isFreeThreaded = true;
+                break;
+            case CreateObjectReferenceMarshalingType.Standard:
+                isFreeThreaded = false;
+                break;
+            default:
+            {
+                // Early free-threaded check, to handle failure cases too (see notes above)
+                HRESULT hresult = ComObjectHelpers.IsFreeThreadedUnsafe(externalComObject);
+
+                // In theory this should never throw
+                Marshal.ThrowExceptionForHR(hresult);
+
+                // A successful 'HRESULT' here can be either 'S_OK' or 'S_FALSE'
+                isFreeThreaded = hresult == WellKnownErrorCodes.S_OK;
+
+                break;
+            }
+        }
 
         // Try to resolve an 'IReferenceTracker' pointer (see detailed notes above)
-        _ = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
+        HRESULT isReferenceTracker = IUnknownVftbl.QueryInterfaceUnsafe(externalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
 
-        if (referenceTracker is not null)
+        if (isReferenceTracker.Succeeded)
         {
             // If we have a reference tracker, we should report an 'AddRef' on it,
             // as we're wrapping the native object in a managed object reference.
@@ -309,13 +400,17 @@ public unsafe partial class WindowsRuntimeObjectReference
             // This matches the handling of non aggregation scenarios above.
             _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
         }
+        else
+        {
+            // Ensure the 'IReferenceTracker' pointer is 'null' in case of failure (see notes above)
+            referenceTracker = null;
+        }
 
         // We're going to store the input object, so increment its ref count
         _ = IUnknownVftbl.AddRefUnsafe(externalComObject);
 
-        // Special case for free-threaded object references (see notes above).
-        // Handle 'S_OK' exactly, see notes for this inside 'IsFreeThreadedUnsafe'
-        if (isFreeThreaded == WellKnownErrorCodes.S_OK)
+        // Special case for free-threaded object references (see notes above)
+        if (isFreeThreaded)
         {
             return new FreeThreadedObjectReference(externalComObject, referenceTracker);
         }
@@ -326,43 +421,79 @@ public unsafe partial class WindowsRuntimeObjectReference
             : new ContextAwareInterfaceObjectReference(externalComObject, referenceTracker, in iid);
     }
 
-    /// <inheritdoc cref="InitializeObjectReferenceUnsafe(void*, in Guid)"/>
+    /// <inheritdoc cref="InitializeObjectReferenceUnsafe(void*, in Guid, CreateObjectReferenceMarshalingType)"/>
     /// <remarks>
-    /// This method is equivalent to <see cref="InitializeObjectReferenceUnsafe(void*, in Guid)"/>, with the only difference
-    /// that it takes ownership of <paramref name="externalComObject"/>, so callers don't need to release it on their end.
+    /// This method is equivalent to <see cref="InitializeObjectReferenceUnsafe(void*, in Guid, CreateObjectReferenceMarshalingType)"/>, with
+    /// the only difference that it takes ownership of <paramref name="externalComObject"/>, so callers don't need to release it on their end.
     /// </remarks>
-    private static WindowsRuntimeObjectReference InitializeObjectReferenceUnsafe(ref void* externalComObject, in Guid iid)
+    private static WindowsRuntimeObjectReference InitializeObjectReferenceUnsafe(
+        ref void* externalComObject,
+        in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType)
     {
         void* acquiredExternalComObject = externalComObject;
 
         externalComObject = null;
 
-        // Early free-threaded check, to handle failure cases too (see notes above). As with the rest
-        // of this method, the entire implementation should be kept in sync with the overload above.
-        HRESULT isFreeThreaded = ComObjectHelpers.IsFreeThreadedUnsafe(acquiredExternalComObject);
+        ComObjectHelpers.ValidateMarshalingType(acquiredExternalComObject, marshalingType);
 
-        // If the free-threaded check failed, make sure to release the interface pointer to avoid leaks.
-        // This matches what we do in 'InitializeFromManagedTypeUnsafe' above too to avoid this issue.
-        if (isFreeThreaded.Failed)
+        // Override the marshalling move to 'Unknown' if requested (see notes above)
+        if (!WindowsRuntimeFeatureSwitches.EnableMarshalingTypeMetadataSupport)
         {
-            _ = IUnknownVftbl.ReleaseUnsafe(acquiredExternalComObject);
+            marshalingType = CreateObjectReferenceMarshalingType.Unknown;
+        }
 
-            Marshal.ThrowExceptionForHR(isFreeThreaded);
+        bool isFreeThreaded;
+
+        // Check whether the input object is free-threaded, with a fast-path if possible (see notes above)
+        switch (marshalingType)
+        {
+            case CreateObjectReferenceMarshalingType.Agile:
+                isFreeThreaded = true;
+                break;
+            case CreateObjectReferenceMarshalingType.Standard:
+                isFreeThreaded = false;
+                break;
+            default:
+            {
+                // Early free-threaded check, to handle failure cases too (see notes above). As with the rest
+                // of this method, the entire implementation should be kept in sync with the overload above.
+                HRESULT hresult = ComObjectHelpers.IsFreeThreadedUnsafe(acquiredExternalComObject);
+
+                // If the free-threaded check failed, make sure to release the interface pointer to avoid leaks.
+                // This matches what we do in 'InitializeFromManagedTypeUnsafe' above too to avoid this issue.
+                if (hresult.Failed)
+                {
+                    _ = IUnknownVftbl.ReleaseUnsafe(acquiredExternalComObject);
+
+                    Marshal.ThrowExceptionForHR(hresult);
+                }
+
+                // A successful 'HRESULT' here can be either 'S_OK' or 'S_FALSE'
+                isFreeThreaded = hresult == WellKnownErrorCodes.S_OK;
+
+                break;
+            }
         }
 
         // Try to resolve an 'IReferenceTracker' pointer (see detailed notes above)
-        _ = IUnknownVftbl.QueryInterfaceUnsafe(acquiredExternalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
+        HRESULT isReferenceTracker = IUnknownVftbl.QueryInterfaceUnsafe(acquiredExternalComObject, in WellKnownWindowsInterfaceIIDs.IID_IReferenceTracker, out void* referenceTracker);
 
         // If we resolved a reference tracker, set it up (see notes above)
-        if (referenceTracker is not null)
+        if (isReferenceTracker.Succeeded)
         {
             _ = IReferenceTrackerVftbl.AddRefFromTrackerSourceUnsafe(referenceTracker);
 
             _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
         }
+        else
+        {
+            // Ensure the 'IReferenceTracker' pointer is 'null' in case of failure (see notes above)
+            referenceTracker = null;
+        }
 
         // Special case for free-threaded object references (see notes above)
-        if (isFreeThreaded == WellKnownErrorCodes.S_OK)
+        if (isFreeThreaded)
         {
             return new FreeThreadedObjectReference(acquiredExternalComObject, referenceTracker);
         }
