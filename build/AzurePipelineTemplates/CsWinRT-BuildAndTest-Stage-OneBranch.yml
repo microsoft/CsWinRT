@@ -97,7 +97,7 @@ jobs:
       isCustom: true
       name: 'Azure Pipelines'
       vmImage: 'windows-2022'
-    timeoutInMinutes: 120    
+    timeoutInMinutes: 240    
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
       StagingFolder: $(ob_outputDirectory)
