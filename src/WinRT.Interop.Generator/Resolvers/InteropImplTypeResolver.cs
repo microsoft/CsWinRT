@@ -33,7 +33,7 @@ internal static class InteropImplTypeResolver
         TypeDefinition implTypeDefinition = emitState.LookupTypeDefinition(type, "Impl");
         MethodDefinition get_VtableMethod = implTypeDefinition.GetMethod("get_Vtable"u8);
 
-        // The IID will be in the generated '<InterfaceIIDs>' type in 'WinRT.Interop.dll'
+        // The IID will be in the generated 'ABI.InterfaceIIDs' type in 'WinRT.Interop.dll'
         Utf8String get_IIDMethodName = $"get_IID_{InteropUtf8NameFactory.TypeName(type)}";
         MethodDefinition get_IIDMethod = interopDefinitions.InterfaceIIDs.GetMethod(get_IIDMethodName);
 

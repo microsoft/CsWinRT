@@ -90,7 +90,7 @@ namespace Windows.Graphics.Printing
 
         /// <summary>The accessor for <c>__uuidof(IAsyncOperation&lt;bool&gt;)</c>.</summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<bool>")]
-        private static extern ref readonly Guid IID_IAsyncOperation_bool([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
+        private static extern ref readonly Guid IID_IAsyncOperation_bool([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 #endif
 
         extension(PrintManager)
@@ -249,7 +249,7 @@ namespace Windows.Security.Credentials.UI
 
         /// <summary>The accessor for <c>__uuidof(IAsyncOperation&lt;UserConsentVerificationResult&gt;)</c>.</summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Credentials-UI-UserConsentVerificationResult>")]
-        private static extern ref readonly Guid IID_IAsyncOperation_UserConsentVerificationResult([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
+        private static extern ref readonly Guid IID_IAsyncOperation_UserConsentVerificationResult([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 #endif
 
         extension(UserConsentVerifier)
@@ -297,7 +297,7 @@ namespace Windows.Security.Authentication.Web.Core
 
         /// <summary>The accessor for <c>__uuidof(IAsyncOperation&lt;WebTokenRequestResult&gt;)</c>.</summary>
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#Windows>Windows-Security-Authentication-Web-Core-WebTokenRequestResult>")]
-        private static extern ref readonly Guid IID_IAsyncOperation_WebTokenRequestResult([UnsafeAccessorType("<InterfaceIIDs>, WinRT.Interop")] object _);
+        private static extern ref readonly Guid IID_IAsyncOperation_WebTokenRequestResult([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 #endif
 
         extension(WebAuthenticationCoreManager)
