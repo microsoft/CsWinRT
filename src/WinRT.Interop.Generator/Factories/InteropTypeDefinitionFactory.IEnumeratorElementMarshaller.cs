@@ -149,6 +149,35 @@ internal partial class InteropTypeDefinitionFactory
         }
 
         /// <summary>
+        /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a <see cref="System.Nullable{T}"/> type.
+        /// </summary>
+        /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <returns>The resulting element marshaller type.</returns>
+        public static TypeDefinition NullableValueType(
+            GenericInstanceTypeSignature enumeratorType,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState)
+        {
+            GenericInstanceTypeSignature elementType = (GenericInstanceTypeSignature)enumeratorType.TypeArguments[0];
+            TypeSignature underlyingType = elementType.TypeArguments[0];
+
+            // Get the constructed 'IWindowsRuntimeNullableTypeElementMarshaller<T>' interface type
+            TypeSignature interfaceType = interopReferences
+                .IWindowsRuntimeNullableTypeElementMarshaller1
+                .MakeGenericReferenceType(underlyingType);
+
+            return ElementMarshaller(
+                elementType: elementType,
+                interfaceType: interfaceType,
+                convertToUnmanagedInterfaceMethod: interopReferences.IWindowsRuntimeNullableTypeElementMarshallerConvertToUnmanaged(underlyingType),
+                isValueType: true,
+                interopReferences: interopReferences,
+                emitState: emitState);
+        }
+
+        /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the element marshaller for a reference type.
         /// </summary>
         /// <param name="enumeratorType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerator{T}"/> type.</param>

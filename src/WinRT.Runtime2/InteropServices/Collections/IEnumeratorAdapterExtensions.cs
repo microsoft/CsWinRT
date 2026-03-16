@@ -340,6 +340,55 @@ public static class IEnumeratorAdapterKeyValuePairTypeExtensions
 }
 
 /// <summary>
+/// Extensions for the <see cref="IEnumeratorAdapter{T}"/> type for <see cref="Nullable{T}"/> types.
+/// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class IEnumeratorAdapterNullableTypeExtensions
+{
+    extension<T>(IEnumeratorAdapter<T?> adapter)
+        where T : struct
+    {
+        /// <inheritdoc cref="IEnumeratorAdapterExtensions.GetMany(IEnumeratorAdapter{string}, uint, void**)"/>
+        public unsafe uint GetMany<TElementMarshaller>(uint itemsSize, void** items)
+            where TElementMarshaller : IWindowsRuntimeNullableTypeElementMarshaller<T>
+        {
+            if (itemsSize == 0)
+            {
+                return 0;
+            }
+
+            ArgumentNullException.ThrowIfNull(items);
+
+            uint index = 0;
+
+            try
+            {
+                for (; index < itemsSize & adapter.HasCurrent; index++)
+                {
+                    items[index] = TElementMarshaller.ConvertToUnmanaged(adapter.Current).DetachThisPtrUnsafe();
+
+                    _ = adapter.MoveNext();
+                }
+            }
+            catch
+            {
+                for (uint j = 0; j < index; j++)
+                {
+                    WindowsRuntimeUnknownMarshaller.Free(items[j]);
+                }
+
+                throw;
+            }
+
+            return index;
+        }
+    }
+}
+
+/// <summary>
 /// Extensions for the <see cref="IEnumeratorAdapter{T}"/> type for reference types.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,

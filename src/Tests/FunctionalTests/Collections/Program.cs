@@ -380,6 +380,35 @@ if (sum != 3)
     return 101;
 }
 
+// Exercise GetMany and array conversion on nullable collections.
+// GetNullableIntList() returns {1, null, 2}.
+var nullableIntArray = nullableIntList.ToArray();
+if (nullableIntArray.Length != 3 ||
+    nullableIntArray[0] != 1 ||
+    nullableIntArray[1] != null ||
+    nullableIntArray[2] != 2)
+{
+    return 101;
+}
+
+// Exercise CopyTo on nullable collections (triggers GetMany path)
+var nullableIntCopy = new int?[3];
+nullableIntList.CopyTo(nullableIntCopy, 0);
+if (nullableIntCopy[0] != 1 ||
+    nullableIntCopy[1] != null ||
+    nullableIntCopy[2] != 2)
+{
+    return 101;
+}
+
+// Exercise passing a managed list of nullable values through WinRT and reading it back.
+// Calculate() sums non-null values from IVector<IReference<Double>>.
+var nullableDoubleList2 = new List<double?> { null, 5, null, 10, null };
+if (instance.Calculate(nullableDoubleList2) != 15)
+{
+    return 101;
+}
+
 // Testing to ensure no exceptions from any of the analyzers while building.
 Action<int, int> s = (a, b) => { _ = a + b; };
 ActionToFunction(s)(2, 3);
