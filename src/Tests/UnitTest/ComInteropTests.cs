@@ -64,7 +64,7 @@ namespace UnitTest
         [TestMethod]
         public void TestDragDropManager()
         {
-            Assert.ThrowsExactly<COMException>(() => DragDropManager.GetForWindow(new IntPtr(0)));
+            Assert.ThrowsExactly<COMException>(() => CoreDragDropManager.GetForWindow(new IntPtr(0)));
         }
 
         [TestMethod]
