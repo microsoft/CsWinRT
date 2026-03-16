@@ -296,7 +296,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
             TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
             TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([keyValuePairType]);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeReadOnlyDictionary<<KEY_TYPE>, <VALUE_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IMAPVIEW_METHODS>>'
             TypeSignature windowsRuntimeReadOnlyDictionary5Type = interopReferences.WindowsRuntimeReadOnlyDictionary5.MakeGenericReferenceType([
@@ -391,8 +391,8 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
             TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
             TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
-            TypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType(keyValuePairType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType([keyValuePairType]);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([keyValuePairType]);
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
@@ -448,7 +448,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_KeysMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Keys",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(keyType)));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType([keyType])));
 
             // Add and implement the 'get_Keys' method
             interfaceImplType.AddMethodImplementation(
@@ -479,7 +479,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ValuesMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Values",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(valueType)));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType([valueType])));
 
             // Add and implement the 'get_Values' method
             interfaceImplType.AddMethodImplementation(

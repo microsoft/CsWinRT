@@ -288,7 +288,7 @@ internal partial class InteropMethodRewriter
             //   [2]: 'int?' (for 'length')
             CilLocalVariable loc_0_pinnedString = new(interopReferences.Char.MakeByReferenceType().MakePinnedType());
             CilLocalVariable loc_1_hstringReference = new(interopReferences.HStringReference.ToValueTypeSignature());
-            CilLocalVariable loc_2_length = new(interopReferences.Nullable1.MakeGenericValueType(interopReferences.Int32));
+            CilLocalVariable loc_2_length = new(interopReferences.Nullable1.MakeGenericValueType([interopReferences.Int32]));
 
             body.LocalVariables.Add(loc_0_pinnedString);
             body.LocalVariables.Add(loc_1_hstringReference);

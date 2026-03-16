@@ -294,7 +294,7 @@ internal partial class InteropTypeDefinitionFactory
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.Void,
                     parameterTypes: [
-                        interopReferences.ReadOnlySpan1.MakeGenericValueType(elementType),
+                        interopReferences.ReadOnlySpan1.MakeGenericValueType([elementType]),
                         interopReferences.UInt32.MakeByReferenceType(),
                         elementAbiType.MakePointerType().MakeByReferenceType()]))
             {
@@ -345,7 +345,7 @@ internal partial class InteropTypeDefinitionFactory
                     parameterTypes: [
                         interopReferences.UInt32,
                         elementAbiType.MakePointerType(),
-                        interopReferences.Span1.MakeGenericValueType(elementType)]))
+                        interopReferences.Span1.MakeGenericValueType([elementType])]))
             {
                 CilInstructions =
                 {
@@ -368,7 +368,7 @@ internal partial class InteropTypeDefinitionFactory
                 signature: MethodSignature.CreateStatic(
                     returnType: interopReferences.Void,
                     parameterTypes: [
-                        interopReferences.ReadOnlySpan1.MakeGenericValueType(elementType),
+                        interopReferences.ReadOnlySpan1.MakeGenericValueType([elementType]),
                         interopReferences.UInt32,
                         elementAbiType.MakePointerType()]))
             {

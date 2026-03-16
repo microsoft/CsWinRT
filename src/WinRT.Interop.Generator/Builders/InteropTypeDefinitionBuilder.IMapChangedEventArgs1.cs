@@ -47,7 +47,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IMapChangedEventArgsMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IMapChangedEventArgsMethodsImpl1.MakeGenericReferenceType([elementType]).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(argsMethodsType);

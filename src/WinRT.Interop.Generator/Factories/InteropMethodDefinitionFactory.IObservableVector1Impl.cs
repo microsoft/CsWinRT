@@ -38,10 +38,10 @@ internal partial class InteropMethodDefinitionFactory
             TypeSignature elementType = vectorType.TypeArguments[0];
 
             // Prepare the 'VectorChangedEventHandler<<ELEMENT_TYPE>>' signature
-            TypeSignature eventHandlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
+            TypeSignature eventHandlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType([elementType]);
 
             // Prepare the 'EventRegistrationTokenTable<VectorChangedEventHandler<ELEMENT_TYPE>>' signature
-            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType);
+            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType([eventHandlerType]);
 
             // Prepare the 'ConditionalWeakTable<<VECTOR_TYPE>, EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>>' signature
             TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([vectorType, eventRegistrationTokenTableType]);
@@ -162,10 +162,10 @@ internal partial class InteropMethodDefinitionFactory
             TypeSignature elementType = vectorType.TypeArguments[0];
 
             // Prepare the 'VectorChangedEventHandler<<ELEMENT_TYPE>>' signature
-            TypeSignature eventHandlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType(elementType);
+            TypeSignature eventHandlerType = interopReferences.VectorChangedEventHandler1.MakeGenericReferenceType([elementType]);
 
             // Prepare the 'EventRegistrationTokenTable<VectorChangedEventHandler<ELEMENT_TYPE>>' signature
-            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType);
+            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType([eventHandlerType]);
 
             // Prepare the 'ConditionalWeakTable<<VECTOR_TYPE>, EventRegistrationTokenTable<VectorChangedEventHandler<<ELEMENT_TYPE>>>' signature
             TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([vectorType, eventRegistrationTokenTableType]);

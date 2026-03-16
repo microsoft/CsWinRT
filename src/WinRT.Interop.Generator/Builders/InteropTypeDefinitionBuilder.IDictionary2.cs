@@ -554,7 +554,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We need to pass the 'IIterableMethods' type as a second type argument, as it's needed to enumerate key-value pairs
             TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([keyValuePairType]);
             TypeDefinition iterableMethodsType = emitState.LookupTypeDefinition(enumerableType, "IIterableMethods");
 
             // Define the 'CopyTo' method as follows:
@@ -609,7 +609,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
             TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([keyValuePairType]);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeDictionary<<KEY_TYPE>, <VALUE_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IMAP_METHODS>>'
             TypeSignature windowsRuntimeDictionary5Type = interopReferences.WindowsRuntimeDictionary5.MakeGenericReferenceType([
@@ -704,8 +704,8 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature keyType = dictionaryType.TypeArguments[0];
             TypeSignature valueType = dictionaryType.TypeArguments[1];
             TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
-            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(keyValuePairType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType([keyValuePairType]);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([keyValuePairType]);
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
@@ -787,7 +787,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_KeysMethod = new(
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.get_Keys",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType(keyType)))
+                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType([keyType])))
             {
                 CilInstructions =
                 {
@@ -815,7 +815,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ValuesMethod = new(
                 name: $"System.Collections.Generic.IDictionary<{keyType.FullName},{valueType.FullName}>.get_Values",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType(valueType)))
+                signature: MethodSignature.CreateInstance(interopReferences.ICollection1.MakeGenericReferenceType([valueType])))
             {
                 CilInstructions =
                 {

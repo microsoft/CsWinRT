@@ -38,7 +38,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropTypeDefinitionFactory.IReadOnlyCollectionKeyValuePair2.ForwarderAttribute(
                 readOnlyCollectionType: readOnlyCollectionType,
                 readOnlyDictionaryType: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([keyType, valueType]),
-                readOnlyListType: interopReferences.IReadOnlyList1.MakeGenericReferenceType(keyValuePairType),
+                readOnlyListType: interopReferences.IReadOnlyList1.MakeGenericReferenceType([keyValuePairType]),
                 interopReferences: interopReferences,
                 module: module,
                 forwarderAttributeType: out forwarderAttributeType);
@@ -65,8 +65,8 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature keyType = keyValuePairType.TypeArguments[0];
             TypeSignature valueType = keyValuePairType.TypeArguments[1];
             TypeSignature readOnlyDictionaryType = interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([keyType, valueType]);
-            TypeSignature readOnlyListType = interopReferences.IReadOnlyList1.MakeGenericReferenceType(keyValuePairType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature readOnlyListType = interopReferences.IReadOnlyList1.MakeGenericReferenceType([keyValuePairType]);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([keyValuePairType]);
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(

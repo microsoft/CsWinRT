@@ -84,10 +84,10 @@ internal static class TypeSignatureExtensions
                 yield return interopReferences.IList.ToReferenceTypeSignature();
                 yield return interopReferences.ICollection.ToReferenceTypeSignature();
                 yield return interopReferences.IEnumerable.ToReferenceTypeSignature();
-                yield return interopReferences.IList1.MakeGenericReferenceType(arraySignature.BaseType);
-                yield return interopReferences.ICollection1.MakeGenericReferenceType(arraySignature.BaseType);
-                yield return interopReferences.IEnumerable1.MakeGenericReferenceType(arraySignature.BaseType);
-                yield return interopReferences.IReadOnlyList1.MakeGenericReferenceType(arraySignature.BaseType);
+                yield return interopReferences.IList1.MakeGenericReferenceType([arraySignature.BaseType]);
+                yield return interopReferences.ICollection1.MakeGenericReferenceType([arraySignature.BaseType]);
+                yield return interopReferences.IEnumerable1.MakeGenericReferenceType([arraySignature.BaseType]);
+                yield return interopReferences.IReadOnlyList1.MakeGenericReferenceType([arraySignature.BaseType]);
 
                 yield break;
             }

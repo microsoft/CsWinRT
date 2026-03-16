@@ -489,7 +489,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
             mappedType: trimTarget,
-            referenceType: interopReferences.Nullable1.MakeGenericValueType(trimTarget),
+            referenceType: interopReferences.Nullable1.MakeGenericValueType([trimTarget]),
             comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
             interopReferences: interopReferences,
             module: module,
