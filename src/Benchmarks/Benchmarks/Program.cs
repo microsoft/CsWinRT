@@ -44,7 +44,8 @@ namespace Benchmarks
             var cswinrt2 = Env("BENCHMARK_CSWINRT2_VERSION", DefaultCsWinRT2Version);
             var sdk = Env("BENCHMARK_WINDOWS_SDK_VERSION", DefaultWindowsSdkVersion);
 
-            return DefaultConfig.Instance
+            return ManualConfig.Create(DefaultConfig.Instance)
+                .WithBuildTimeout(TimeSpan.FromMinutes(10))
                 .AddJob(Job.Default
                     .WithNuGet("Microsoft.Windows.CsWinRT", cswinrt3)
                     .WithArguments(new Argument[]
@@ -77,7 +78,8 @@ namespace Benchmarks
             var baselineVersion = Env("BENCHMARK_CSWINRT_BASELINE_VERSION", DefaultCsWinRT3Version);
             var sdk = Env("BENCHMARK_WINDOWS_SDK_VERSION", DefaultWindowsSdkVersion);
 
-            return DefaultConfig.Instance
+            return ManualConfig.Create(DefaultConfig.Instance)
+                .WithBuildTimeout(TimeSpan.FromMinutes(10))
                 .AddJob(Job.Default
                     .WithNuGet("Microsoft.Windows.CsWinRT", currentVersion)
                     .WithArguments(new Argument[]
