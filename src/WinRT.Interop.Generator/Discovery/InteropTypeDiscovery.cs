@@ -474,7 +474,7 @@ internal static partial class InteropTypeDiscovery
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>Whether the new interfaces could be added.</returns>
-    public static bool TryAddComponentExclusiveToInterfaceTypes(
+    private static bool TryAddComponentExclusiveToInterfaceTypes(
         TypeDefinition typeDefinition,
         TypeSignature typeSignature,
         TypeSignatureEquatableSet.Builder interfaces,
