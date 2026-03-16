@@ -4560,7 +4560,7 @@ internal sealed class InteropReferences
                     IEnumeratorAdapter1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Method, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType, abiType, elementMarshallerType);
+            .MakeGenericInstanceMethod([elementType, abiType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -4579,7 +4579,7 @@ internal sealed class InteropReferences
                     IEnumeratorAdapter1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Method, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType, abiType, elementMarshallerType);
+            .MakeGenericInstanceMethod([elementType, abiType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -4600,7 +4600,7 @@ internal sealed class InteropReferences
                         new GenericParameterSignature(GenericParameterType.Method, 1))),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(keyType, valueType, elementMarshallerType);
+            .MakeGenericInstanceMethod([keyType, valueType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -4636,7 +4636,7 @@ internal sealed class InteropReferences
                     IEnumeratorAdapter1.MakeGenericReferenceType(new GenericParameterSignature(GenericParameterType.Method, 0)),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType, elementMarshallerType);
+            .MakeGenericInstanceMethod([elementType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -5183,7 +5183,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Method, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType, abiType, elementMarshallerType);
+            .MakeGenericInstanceMethod([elementType, abiType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -5203,7 +5203,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Method, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType, abiType, elementMarshallerType);
+            .MakeGenericInstanceMethod([elementType, abiType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -5225,7 +5225,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(keyType, valueType, elementMarshallerType);
+            .MakeGenericInstanceMethod([keyType, valueType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -5263,7 +5263,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType, elementMarshallerType);
+            .MakeGenericInstanceMethod([elementType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -5412,7 +5412,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Method, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType, abiType, elementMarshallerType);
+            .MakeGenericInstanceMethod([elementType, abiType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -5432,7 +5432,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     new GenericParameterSignature(GenericParameterType.Method, 1).MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType, abiType, elementMarshallerType);
+            .MakeGenericInstanceMethod([elementType, abiType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -5454,7 +5454,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(keyType, valueType, elementMarshallerType);
+            .MakeGenericInstanceMethod([keyType, valueType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -5492,7 +5492,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(elementType, elementMarshallerType);
+            .MakeGenericInstanceMethod([elementType, elementMarshallerType]);
     }
 
     /// <summary>
