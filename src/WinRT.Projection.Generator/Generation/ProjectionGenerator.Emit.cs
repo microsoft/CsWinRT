@@ -37,7 +37,7 @@ internal partial class ProjectionGenerator
 
                 using Stream stream = File.OpenRead(file);
 
-                syntaxTrees.Add(CSharpSyntaxTree.ParseText(SourceText.From(stream), path: file));
+                syntaxTrees.Add(CSharpSyntaxTree.ParseText(SourceText.From(stream, checksumAlgorithm: SourceHashAlgorithm.Sha256), path: file));
             }
 
             // Build the references list
