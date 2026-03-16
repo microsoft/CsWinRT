@@ -424,6 +424,8 @@ namespace winrt::TestComponentCSharp::implementation
         static void UnboxAndCallProgressHandler(IInspectable const& httpProgressHandler);
         double Calculate(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<double>> const& values);
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> GetNullableIntList();
+        int32_t SumNullableIntsWithGetMany(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> const& values);
+        int32_t CountKeyValuePairsWithGetMany(winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring>> const& pairs);
 
         static int GetPropertyType(Windows::Foundation::IInspectable const& obj);
         static hstring GetName(Windows::Foundation::IInspectable const& obj);
