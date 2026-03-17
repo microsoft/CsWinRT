@@ -683,6 +683,14 @@ namespace WinRT
 
         protected override void ReleaseObjects(IEnumerable objects)
         {
+            // When 'EnableComWrappersReleaseObjects' is disabled, skip releasing objects. This can be
+            // useful in some specific scenarios where a long-lived app uses multiple windows and needs
+            // to access previously instantiated XAML objects that would've otherwise been marked as disposed.
+            if (!FeatureSwitches.EnableComWrappersReleaseObjects)
+            {
+                return;
+            }
+
             foreach (var obj in objects)
             {
                 if (ComWrappersSupport.TryUnwrapObject(obj, out var objRef))
