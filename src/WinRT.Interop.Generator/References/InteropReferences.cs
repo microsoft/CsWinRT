@@ -4595,9 +4595,9 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.UInt32,
                 genericParameterCount: 3,
                 parameterTypes: [
-                    IEnumeratorAdapter1.MakeGenericReferenceType([KeyValuePair2.MakeGenericValueType[([
+                    IEnumeratorAdapter1.MakeGenericReferenceType([KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Method, 0),
-                        new GenericParameterSignature(GenericParameterType.Method, 1)]])]),
+                        new GenericParameterSignature(GenericParameterType.Method, 1)])]),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             .MakeGenericInstanceMethod([keyType, valueType, elementMarshallerType]);
@@ -5219,9 +5219,9 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.UInt32,
                 genericParameterCount: 3,
                 parameterTypes: [
-                    IList1.MakeGenericReferenceType([KeyValuePair2.MakeGenericValueType[([
+                    IList1.MakeGenericReferenceType([KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Method, 0),
-                        new GenericParameterSignature(GenericParameterType.Method, 1)]])]),
+                        new GenericParameterSignature(GenericParameterType.Method, 1)])]),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
@@ -5448,9 +5448,9 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.UInt32,
                 genericParameterCount: 3,
                 parameterTypes: [
-                    IReadOnlyList1.MakeGenericReferenceType([KeyValuePair2.MakeGenericValueType[([
+                    IReadOnlyList1.MakeGenericReferenceType([KeyValuePair2.MakeGenericValueType([
                         new GenericParameterSignature(GenericParameterType.Method, 0),
-                        new GenericParameterSignature(GenericParameterType.Method, 1)]])]),
+                        new GenericParameterSignature(GenericParameterType.Method, 1)])]),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
@@ -6539,9 +6539,9 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [IEnumerable1.MakeGenericReferenceType([KeyValuePair2.MakeGenericValueType[([
+                parameterTypes: [IEnumerable1.MakeGenericReferenceType([KeyValuePair2.MakeGenericValueType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)]])])]);
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])])]);
     }
 
     /// <summary>
@@ -6556,8 +6556,8 @@ internal sealed class InteropReferences
             .ToTypeDefOrRef()
             .CreateConstructorReference(
                 corLibTypeFactory: _corLibTypeFactory,
-                parameterTypes: [IEnumerable1.MakeGenericReferenceType([KeyValuePair2.MakeGenericValueType[([
+                parameterTypes: [IEnumerable1.MakeGenericReferenceType([KeyValuePair2.MakeGenericValueType([
                     new GenericParameterSignature(GenericParameterType.Type, 0),
-                    new GenericParameterSignature(GenericParameterType.Type, 1)]])])]);
+                    new GenericParameterSignature(GenericParameterType.Type, 1)])])]);
     }
 }
