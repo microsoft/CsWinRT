@@ -2835,7 +2835,7 @@ private static class _%
 
             w.write(R"(
 %public unsafe %(%)
-  :base(%.Instance, %, %, [%])
+  :base(%.Instance, %, %, %)
 {
 %}
 )",
@@ -2847,7 +2847,19 @@ private static class _%
                 bind<write_constructor_callback_method_name>(method),
                 bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                 marshaling_type,
-                bind_list<write_constructor_parameter_name_with_modifier>(", ", signature.params()),
+                bind([&](writer& w)
+                {
+                    if (signature.params().empty())
+                    {
+                        w.write("default");
+                    }
+                    else
+                    {
+                        w.write("WindowsRuntimeActivationArgsReference.CreateUnsafe(new %(%))",
+                            bind<write_constructor_args_struct_name>(method),
+                            bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
+                    }
+                }),
                 [&](writer& w)
                 {
                     if (!gc_pressure_amount) return;
@@ -3152,11 +3164,12 @@ if (GetType() == typeof(%))
                     }
                     else
                     {
-                        w.write("%.Instance, %, %, [%]",
+                        w.write("%.Instance, %, %, WindowsRuntimeActivationArgsReference.CreateUnsafe(new %(%))",
                             bind<write_constructor_callback_method_name>(method),
                             bind<write_iid_guid_with_type_semantics>(default_type_semantics),
                             marshaling_type,
-                            bind_list<write_constructor_parameter_name_with_modifier>(", ", params_without_objects));
+                            bind<write_constructor_args_struct_name>(method),
+                            bind_list<write_parameter_name_with_modifier>(", ", params_without_objects));
                     }
                 }),
                 class_type.TypeName(),
@@ -3187,12 +3200,12 @@ protected %(WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectR
 {
 %}
 
-protected %(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, params ReadOnlySpan<object> additionalParameters)
+protected %(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)
   :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
 {
 %}
 
-protected %(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, params ReadOnlySpan<object> additionalParameters)
+protected %(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)
   :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)
 {
 %}
@@ -6573,19 +6586,6 @@ finally
 
         auto cache_object = bind<write_objref_type_name>(iface);
 
-        auto write_constructor_params_as_variables = [&](writer& w, method_signature const& method_sig)
-        {
-            auto const& params = method_sig.params();
-            for (size_t i = 0; i < params.size(); i++)
-            {
-                w.write("% % = %additionalParameters[%];\n",
-                    bind<write_projection_parameter_type>(params[i]),
-                    bind<write_parameter_name>(params[i]),
-                    bind<write_constructor_parameter_cast>(params[i]),
-                    i);
-            }
-        };
-
         method_signature signature{ method };
         auto [invoke_target, is_generic] = get_invoke_info(w, method);
 
@@ -6621,7 +6621,7 @@ public static readonly % Instance = new();
 
 [MethodImpl(MethodImplOptions.NoInlining)]
 public override unsafe void Invoke(
-  ReadOnlySpan<object> additionalParameters,
+  WindowsRuntimeActivationArgsReference additionalParameters,
   out void* retval)
 {
 %
@@ -6645,7 +6645,21 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 )",
                         cache_object,
-                        bind(write_constructor_params_as_variables, signature),
+                        bind([&](writer& w) {
+                            auto const& params = signature.params();
+                            if (!params.empty())
+                            {
+                                w.write("ref readonly % args = ref additionalParameters.GetValueRefUnsafe<%>();\n",
+                                    args_struct, args_struct);
+                                for (size_t i = 0; i < params.size(); i++)
+                                {
+                                    w.write("% % = args.%;\n",
+                                        bind<write_constructor_args_field_type>(params[i]),
+                                        bind<write_parameter_name>(params[i]),
+                                        bind<write_parameter_name>(params[i]));
+                                }
+                            }
+                        }),
                         bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
                 }
             }));
@@ -6660,19 +6674,6 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
         }
 
         auto cache_object = bind<write_objref_type_name>(iface);
-
-        auto write_composable_constructor_params_as_variables = [&](writer& w, method_signature const& method_sig)
-        {
-            auto const& params = method_sig.params();
-            for (size_t i = 0; i < params.size() - 2; i++)
-            {
-                w.write("% % = %additionalParameters[%];\n",
-                    bind<write_projection_parameter_type>(params[i]),
-                    bind<write_parameter_name>(params[i]),
-                    bind<write_constructor_parameter_cast>(params[i]),
-                    i);
-            }
-        };
 
         method_signature signature{ method };
         auto [invoke_target, is_generic] = get_invoke_info(w, method);
@@ -6732,7 +6733,7 @@ public static readonly % Instance = new();
 
 [MethodImpl(MethodImplOptions.NoInlining)]
 public override unsafe void Invoke(
-  ReadOnlySpan<object> additionalParameters,
+  WindowsRuntimeActivationArgsReference additionalParameters,
   WindowsRuntimeObject baseInterface,
   out void* innerInterface,
   out void* retval)
@@ -6752,7 +6753,17 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
 %
 )",
                 cache_object,
-                bind(write_composable_constructor_params_as_variables, signature),
+                bind([&](writer& w) {
+                    w.write("ref readonly % args = ref additionalParameters.GetValueRefUnsafe<%>();\n",
+                        args_struct, args_struct);
+                    for (size_t i = 0; i < user_param_count; i++)
+                    {
+                        w.write("% % = args.%;\n",
+                            bind<write_constructor_args_field_type>(all_params[i]),
+                            bind<write_parameter_name>(all_params[i]),
+                            bind<write_parameter_name>(all_params[i]));
+                    }
+                }),
                 bind<write_abi_method_call_marshalers>(invoke_target, "", is_generic, abi_marshalers, is_noexcept(method)));
             }));
     }
