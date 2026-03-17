@@ -69,6 +69,8 @@
     <!-- Set remote for source link. -->
     <AdoMirrorBuild Condition="'$(AdoMirrorBuild)' == ''">false</AdoMirrorBuild>
     <GitRepositoryRemoteName Condition="$(AdoMirrorBuild)">github</GitRepositoryRemoteName>
+    <!-- Tells NativeAOT to not ignore issues where assemblies / types fail to be resolved. -->
+    <IlcResilient>false</IlcResilient>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
