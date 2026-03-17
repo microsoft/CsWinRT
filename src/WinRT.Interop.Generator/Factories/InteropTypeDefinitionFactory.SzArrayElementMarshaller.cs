@@ -169,7 +169,7 @@ internal partial class InteropTypeDefinitionFactory
             // Get the constructed 'IWindowsRuntimeNullableTypeArrayElementMarshaller<T>' interface type
             TypeSignature interfaceType = interopReferences
                 .IWindowsRuntimeNullableTypeArrayElementMarshaller1
-                .MakeGenericReferenceType(underlyingType);
+                .MakeGenericReferenceType([underlyingType]);
 
             return ElementMarshaller(
                 arrayType: arrayType,
