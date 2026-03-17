@@ -79,6 +79,22 @@ internal partial class InteropTypeDefinitionBuilder
 
                 module.TopLevelTypes.Add(marshallerType);
             }
+            else if (elementType.IsConstructedNullableValueType(interopReferences))
+            {
+                TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.NullableValueType(
+                    arrayType: arrayType,
+                    interopReferences: interopReferences,
+                    emitState: emitState);
+
+                module.TopLevelTypes.Add(elementMarshallerType);
+
+                marshallerType = InteropTypeDefinitionFactory.SzArrayMarshaller.NullableValueType(
+                    arrayType: arrayType,
+                    elementMarshallerType: elementMarshallerType,
+                    interopReferences: interopReferences);
+
+                module.TopLevelTypes.Add(marshallerType);
+            }
             else if (elementType.IsManagedValueType(interopReferences))
             {
                 TypeDefinition elementMarshallerType = InteropTypeDefinitionFactory.SzArrayElementMarshaller.ManagedValueType(

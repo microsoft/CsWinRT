@@ -1995,6 +1995,39 @@ namespace winrt::TestComponentCSharp::implementation
         return single_threaded_vector<winrt::Windows::Foundation::IReference<int32_t>>({ 1, nullptr, 2 });
     }
 
+    int32_t Class::SumNullableIntsWithGetMany(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> const& values)
+    {
+        uint32_t size = values.Size();
+        std::vector<winrt::Windows::Foundation::IReference<int32_t>> items(size);
+        uint32_t retrieved = values.GetMany(0, items);
+        int32_t sum = 0;
+        for (uint32_t i = 0; i < retrieved; i++)
+        {
+            if (items[i])
+            {
+                sum += items[i].Value();
+            }
+        }
+        return sum;
+    }
+
+    int32_t Class::CountKeyValuePairsWithGetMany(winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring>> const& pairs)
+    {
+        auto iterator = pairs.First();
+        int32_t count = 0;
+        std::vector<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring>> items(16);
+        while (iterator.HasCurrent())
+        {
+            uint32_t retrieved = iterator.GetMany(items);
+            count += static_cast<int32_t>(retrieved);
+            if (retrieved == 0)
+            {
+                break;
+            }
+        }
+        return count;
+    }
+
     TestComponentCSharp::IProperties1 Class::NativeProperties1()
     {
         struct native_properties1 : winrt::implements<native_properties1, TestComponentCSharp::IProperties1>

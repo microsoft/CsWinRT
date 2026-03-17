@@ -860,6 +860,11 @@ internal sealed class InteropReferences
     public TypeReference IEnumeratorAdapterKeyValuePairTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IEnumeratorAdapterKeyValuePairTypeExtensions"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterNullableTypeExtensions</c>.
+    /// </summary>
+    public TypeReference IEnumeratorAdapterNullableTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IEnumeratorAdapterNullableTypeExtensions"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterReferenceTypeExtensions</c>.
     /// </summary>
     public TypeReference IEnumeratorAdapterReferenceTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IEnumeratorAdapterReferenceTypeExtensions"u8);
@@ -950,6 +955,11 @@ internal sealed class InteropReferences
     public TypeReference IListAdapterKeyValuePairTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IListAdapterKeyValuePairTypeExtensions"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterNullableTypeExtensions</c>.
+    /// </summary>
+    public TypeReference IListAdapterNullableTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IListAdapterNullableTypeExtensions"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IListAdapterReferenceTypeExtensions</c>.
     /// </summary>
     public TypeReference IListAdapterReferenceTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IListAdapterReferenceTypeExtensions"u8);
@@ -983,6 +993,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterKeyValuePairTypeExtensions</c>.
     /// </summary>
     public TypeReference IReadOnlyListAdapterKeyValuePairTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyListAdapterKeyValuePairTypeExtensions"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterNullableTypeExtensions</c>.
+    /// </summary>
+    public TypeReference IReadOnlyListAdapterNullableTypeExtensions => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReadOnlyListAdapterNullableTypeExtensions"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterReferenceTypeExtensions</c>.
@@ -1313,6 +1328,21 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeKeyValuePairTypeElementMarshaller&lt;TKey, TValue&gt;</c>.
     /// </summary>
     public TypeReference IWindowsRuntimeKeyValuePairTypeElementMarshaller2 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "IWindowsRuntimeKeyValuePairTypeElementMarshaller`2"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeNullableTypeArrayMarshaller&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeNullableTypeArrayMarshaller1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "WindowsRuntimeNullableTypeArrayMarshaller`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeNullableTypeArrayElementMarshaller&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IWindowsRuntimeNullableTypeArrayElementMarshaller1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "IWindowsRuntimeNullableTypeArrayElementMarshaller`1"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeNullableTypeElementMarshaller&lt;T&gt;</c>.
+    /// </summary>
+    public TypeReference IWindowsRuntimeNullableTypeElementMarshaller1 => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices.Marshalling"u8, "IWindowsRuntimeNullableTypeElementMarshaller`1"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.TypeArrayMarshaller</c>.
@@ -3060,6 +3090,34 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeNullableTypeArrayElementMarshaller&lt;T&gt;.ConvertToUnmanaged</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
+    public MemberReference IWindowsRuntimeNullableTypeArrayElementMarshallerConvertToUnmanaged(TypeSignature underlyingType)
+    {
+        return IWindowsRuntimeNullableTypeArrayElementMarshaller1
+            .MakeGenericReferenceType(underlyingType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+                returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                parameterTypes: [Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeNullableTypeArrayElementMarshaller&lt;T&gt;.ConvertToManaged</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
+    public MemberReference IWindowsRuntimeNullableTypeArrayElementMarshallerConvertToManaged(TypeSignature underlyingType)
+    {
+        return IWindowsRuntimeNullableTypeArrayElementMarshaller1
+            .MakeGenericReferenceType(underlyingType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
+                returnType: Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
+    }
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeReferenceTypeElementMarshaller&lt;T&gt;.ConvertToUnmanaged</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -3134,6 +3192,20 @@ internal sealed class InteropReferences
                     KeyValuePair2.MakeGenericValueType(
                         new GenericParameterSignature(GenericParameterType.Type, 0),
                         new GenericParameterSignature(GenericParameterType.Type, 1))]));
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.IWindowsRuntimeNullableTypeElementMarshaller&lt;T&gt;.ConvertToUnmanaged</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
+    public MemberReference IWindowsRuntimeNullableTypeElementMarshallerConvertToUnmanaged(TypeSignature underlyingType)
+    {
+        return IWindowsRuntimeNullableTypeElementMarshaller1
+            .MakeGenericReferenceType(underlyingType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+                returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
+                parameterTypes: [Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
     }
 
     /// <summary>
@@ -3579,6 +3651,85 @@ internal sealed class InteropReferences
                         KeyValuePair2.MakeGenericValueType(
                             new GenericParameterSignature(GenericParameterType.Type, 0),
                             new GenericParameterSignature(GenericParameterType.Type, 1)))]))
+            .MakeGenericInstanceMethod(elementMarshallerType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeNullableTypeArrayMarshaller&lt;T&gt;.ConvertToUnmanaged&lt;TElementMarshaller&gt;</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification WindowsRuntimeNullableTypeArrayMarshallerConvertToUnmanaged(TypeSignature underlyingType, TypeSignature elementMarshallerType)
+    {
+        return WindowsRuntimeNullableTypeArrayMarshaller1
+            .MakeGenericReferenceType(underlyingType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    ReadOnlySpan1.MakeGenericValueType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))),
+                    _corLibTypeFactory.UInt32.MakeByReferenceType(),
+                    _corLibTypeFactory.Void.MakePointerType().MakePointerType().MakeByReferenceType()]))
+            .MakeGenericInstanceMethod(elementMarshallerType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeNullableTypeArrayMarshaller&lt;T&gt;.ConvertToManaged&lt;TElementMarshaller&gt;</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification WindowsRuntimeNullableTypeArrayMarshallerConvertToManaged(TypeSignature underlyingType, TypeSignature elementMarshallerType)
+    {
+        return WindowsRuntimeNullableTypeArrayMarshaller1
+            .MakeGenericReferenceType(underlyingType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
+                returnType: Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)).MakeSzArrayType(),
+                genericParameterCount: 1,
+                parameterTypes: [
+                    _corLibTypeFactory.UInt32,
+                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+            .MakeGenericInstanceMethod(elementMarshallerType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeNullableTypeArrayMarshaller&lt;T&gt;.CopyToUnmanaged&lt;TElementMarshaller&gt;</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification WindowsRuntimeNullableTypeArrayMarshallerCopyToUnmanaged(TypeSignature underlyingType, TypeSignature elementMarshallerType)
+    {
+        return WindowsRuntimeNullableTypeArrayMarshaller1
+            .MakeGenericReferenceType(underlyingType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("CopyToUnmanaged"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    ReadOnlySpan1.MakeGenericValueType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))),
+                    _corLibTypeFactory.UInt32,
+                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+            .MakeGenericInstanceMethod(elementMarshallerType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeNullableTypeArrayMarshaller&lt;T&gt;.CopyToManaged&lt;TElementMarshaller&gt;</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification WindowsRuntimeNullableTypeArrayMarshallerCopyToManaged(TypeSignature underlyingType, TypeSignature elementMarshallerType)
+    {
+        return WindowsRuntimeNullableTypeArrayMarshaller1
+            .MakeGenericReferenceType(underlyingType)
+            .ToTypeDefOrRef()
+            .CreateMemberReference("CopyToManaged"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.Void,
+                genericParameterCount: 1,
+                parameterTypes: [
+                    _corLibTypeFactory.UInt32,
+                    _corLibTypeFactory.Void.MakePointerType().MakePointerType(),
+                    Span1.MakeGenericValueType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)))]))
             .MakeGenericInstanceMethod(elementMarshallerType);
     }
 
@@ -4453,6 +4604,24 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterNullableTypeExtensions.GetMany&lt;T, TElementMarshaller&gt;</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification IEnumeratorAdapterNullableTypeGetMany(TypeSignature underlyingType, TypeSignature elementMarshallerType)
+    {
+        return IEnumeratorAdapterNullableTypeExtensions
+            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.UInt32,
+                genericParameterCount: 2,
+                parameterTypes: [
+                    IEnumeratorAdapter1.MakeGenericReferenceType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0))),
+                    _corLibTypeFactory.UInt32,
+                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+            .MakeGenericInstanceMethod(underlyingType, elementMarshallerType);
+    }
+
+    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IEnumeratorAdapterReferenceTypeExtensions.GetMany&lt;T, TElementMarshaller&gt;</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -5060,6 +5229,25 @@ internal sealed class InteropReferences
     }
 
     /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IListAdapterNullableTypeExtensions.GetMany&lt;T, TElementMarshaller&gt;</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification IListAdapterNullableTypeGetMany(TypeSignature underlyingType, TypeSignature elementMarshallerType)
+    {
+        return IListAdapterNullableTypeExtensions
+            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.UInt32,
+                genericParameterCount: 2,
+                parameterTypes: [
+                    IList1.MakeGenericReferenceType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0))),
+                    _corLibTypeFactory.UInt32,
+                    _corLibTypeFactory.UInt32,
+                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+            .MakeGenericInstanceMethod(underlyingType, elementMarshallerType);
+    }
+
+    /// <summary>
     /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IListAdapterReferenceTypeExtensions.GetMany&lt;T, TElementMarshaller&gt;</c>.
     /// </summary>
     /// <param name="elementType">The input element type.</param>
@@ -5267,6 +5455,25 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             .MakeGenericInstanceMethod(keyType, valueType, elementMarshallerType);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MethodSpecification"/> for <c>WindowsRuntime.InteropServices.IReadOnlyListAdapterNullableTypeExtensions.GetMany&lt;T, TElementMarshaller&gt;</c>.
+    /// </summary>
+    /// <param name="underlyingType">The underlying value type.</param>
+    /// <param name="elementMarshallerType">The element marshaller type.</param>
+    public MethodSpecification IReadOnlyListAdapterNullableTypeGetMany(TypeSignature underlyingType, TypeSignature elementMarshallerType)
+    {
+        return IReadOnlyListAdapterNullableTypeExtensions
+            .CreateMemberReference("GetMany"u8, MethodSignature.CreateStatic(
+                returnType: _corLibTypeFactory.UInt32,
+                genericParameterCount: 2,
+                parameterTypes: [
+                    IReadOnlyList1.MakeGenericReferenceType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0))),
+                    _corLibTypeFactory.UInt32,
+                    _corLibTypeFactory.UInt32,
+                    _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
+            .MakeGenericInstanceMethod(underlyingType, elementMarshallerType);
     }
 
     /// <summary>

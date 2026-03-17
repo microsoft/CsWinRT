@@ -475,6 +475,8 @@ namespace TestComponentCSharp
 
         Double Calculate(Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Double> > values);
         Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Int32> > GetNullableIntList();
+        Int32 SumNullableIntsWithGetMany(Windows.Foundation.Collections.IVector<Windows.Foundation.IReference<Int32> > values);
+        Int32 CountKeyValuePairsWithGetMany(Windows.Foundation.Collections.IIterable<Windows.Foundation.Collections.IKeyValuePair<String, String> > pairs);
 
         // Boxing
         static Int32 UnboxInt32(Object obj);

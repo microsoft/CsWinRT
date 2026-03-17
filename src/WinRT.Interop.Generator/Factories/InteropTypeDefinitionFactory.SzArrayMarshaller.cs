@@ -125,6 +125,33 @@ internal partial class InteropTypeDefinitionFactory
         }
 
         /// <summary>
+        /// Creates a <see cref="TypeDefinition"/> for the marshaller for a <see cref="System.Nullable{T}"/> type.
+        /// </summary>
+        /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
+        /// <param name="elementMarshallerType">The element marshaller type produced by <see cref="SzArrayElementMarshaller.NullableValueType"/>.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>The resulting marshaller type.</returns>
+        public static TypeDefinition NullableValueType(
+            SzArrayTypeSignature arrayType,
+            TypeDefinition elementMarshallerType,
+            InteropReferences interopReferences)
+        {
+            GenericInstanceTypeSignature elementType = (GenericInstanceTypeSignature)arrayType.BaseType;
+            TypeSignature underlyingType = elementType.TypeArguments[0];
+            TypeSignature elementMarshallerTypeSignature = elementMarshallerType.ToTypeSignature();
+
+            return Marshaller(
+                arrayType: arrayType,
+                convertToUnmanagedMethod: interopReferences.WindowsRuntimeNullableTypeArrayMarshallerConvertToUnmanaged(underlyingType, elementMarshallerTypeSignature),
+                convertToManagedMethod: interopReferences.WindowsRuntimeNullableTypeArrayMarshallerConvertToManaged(underlyingType, elementMarshallerTypeSignature),
+                copyToUnmanagedMethod: interopReferences.WindowsRuntimeNullableTypeArrayMarshallerCopyToUnmanaged(underlyingType, elementMarshallerTypeSignature),
+                copyToManagedMethod: interopReferences.WindowsRuntimeNullableTypeArrayMarshallerCopyToManaged(underlyingType, elementMarshallerTypeSignature),
+                disposeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerDispose,
+                freeMethod: interopReferences.WindowsRuntimeUnknownArrayMarshallerFree,
+                interopReferences: interopReferences);
+        }
+
+        /// <summary>
         /// Creates a <see cref="TypeDefinition"/> for the marshaller for a reference type.
         /// </summary>
         /// <param name="arrayType">The <see cref="SzArrayTypeSignature"/> for the SZ array type.</param>
