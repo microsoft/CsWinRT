@@ -588,6 +588,7 @@ $(CsWinRTInternalProjection)
     <CsWinRTManifestFreeActivationReportOriginalException Condition="'$(CsWinRTManifestFreeActivationReportOriginalException)' == ''">false</CsWinRTManifestFreeActivationReportOriginalException>
     <CsWinRTLoadComponentsInDefaultALC Condition="'$(CsWinRTLoadComponentsInDefaultALC)' == ''">false</CsWinRTLoadComponentsInDefaultALC>
     <CsWinRTSuppressCustomPropertyNotSupportedException Condition="'$(CsWinRTSuppressCustomPropertyNotSupportedException)' == ''">false</CsWinRTSuppressCustomPropertyNotSupportedException>
+    <CsWinRTEnableComWrappersReleaseObjects Condition="'$(CsWinRTEnableComWrappersReleaseObjects)' == ''">true</CsWinRTEnableComWrappersReleaseObjects>
 
     <!--
       Note: the 'CsWinRTUseWindowsUIXamlProjections' property and associated 'CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS' feature
@@ -649,6 +650,11 @@ $(CsWinRTInternalProjection)
     <!-- CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION"
                                     Value="$(CsWinRTSuppressCustomPropertyNotSupportedException)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_COMWRAPPERS_RELEASE_OBJECTS switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_COMWRAPPERS_RELEASE_OBJECTS"
+                                    Value="$(CsWinRTEnableComWrappersReleaseObjects)"
                                     Trim="true" />
   </ItemGroup>
 
