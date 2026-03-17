@@ -3096,11 +3096,11 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeNullableTypeArrayElementMarshallerConvertToUnmanaged(TypeSignature underlyingType)
     {
         return IWindowsRuntimeNullableTypeArrayElementMarshaller1
-            .MakeGenericReferenceType(underlyingType)
+            .MakeGenericReferenceType([underlyingType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                parameterTypes: [Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
+                parameterTypes: [Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Type, 0)])]));
     }
 
     /// <summary>
@@ -3110,10 +3110,10 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeNullableTypeArrayElementMarshallerConvertToManaged(TypeSignature underlyingType)
     {
         return IWindowsRuntimeNullableTypeArrayElementMarshaller1
-            .MakeGenericReferenceType(underlyingType)
+            .MakeGenericReferenceType([underlyingType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
-                returnType: Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)),
+                returnType: Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Type, 0)]),
                 parameterTypes: [_corLibTypeFactory.Void.MakePointerType()]));
     }
 
@@ -3201,11 +3201,11 @@ internal sealed class InteropReferences
     public MemberReference IWindowsRuntimeNullableTypeElementMarshallerConvertToUnmanaged(TypeSignature underlyingType)
     {
         return IWindowsRuntimeNullableTypeElementMarshaller1
-            .MakeGenericReferenceType(underlyingType)
+            .MakeGenericReferenceType([underlyingType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: WindowsRuntimeObjectReferenceValue.ToValueTypeSignature(),
-                parameterTypes: [Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))]));
+                parameterTypes: [Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Type, 0)])]));
     }
 
     /// <summary>
@@ -3662,16 +3662,16 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeNullableTypeArrayMarshallerConvertToUnmanaged(TypeSignature underlyingType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeNullableTypeArrayMarshaller1
-            .MakeGenericReferenceType(underlyingType)
+            .MakeGenericReferenceType([underlyingType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
-                    ReadOnlySpan1.MakeGenericValueType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))),
+                    ReadOnlySpan1.MakeGenericValueType([Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Type, 0)])]),
                     _corLibTypeFactory.UInt32.MakeByReferenceType(),
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType().MakeByReferenceType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3682,15 +3682,15 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeNullableTypeArrayMarshallerConvertToManaged(TypeSignature underlyingType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeNullableTypeArrayMarshaller1
-            .MakeGenericReferenceType(underlyingType)
+            .MakeGenericReferenceType([underlyingType])
             .ToTypeDefOrRef()
             .CreateMemberReference("ConvertToManaged"u8, MethodSignature.CreateStatic(
-                returnType: Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)).MakeSzArrayType(),
+                returnType: Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Type, 0)]).MakeSzArrayType(),
                 genericParameterCount: 1,
                 parameterTypes: [
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3701,16 +3701,16 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeNullableTypeArrayMarshallerCopyToUnmanaged(TypeSignature underlyingType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeNullableTypeArrayMarshaller1
-            .MakeGenericReferenceType(underlyingType)
+            .MakeGenericReferenceType([underlyingType])
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyToUnmanaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
                 genericParameterCount: 1,
                 parameterTypes: [
-                    ReadOnlySpan1.MakeGenericValueType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0))),
+                    ReadOnlySpan1.MakeGenericValueType([Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Type, 0)])]),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -3721,7 +3721,7 @@ internal sealed class InteropReferences
     public MethodSpecification WindowsRuntimeNullableTypeArrayMarshallerCopyToManaged(TypeSignature underlyingType, TypeSignature elementMarshallerType)
     {
         return WindowsRuntimeNullableTypeArrayMarshaller1
-            .MakeGenericReferenceType(underlyingType)
+            .MakeGenericReferenceType([underlyingType])
             .ToTypeDefOrRef()
             .CreateMemberReference("CopyToManaged"u8, MethodSignature.CreateStatic(
                 returnType: _corLibTypeFactory.Void,
@@ -3729,8 +3729,8 @@ internal sealed class InteropReferences
                 parameterTypes: [
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType(),
-                    Span1.MakeGenericValueType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Type, 0)))]))
-            .MakeGenericInstanceMethod(elementMarshallerType);
+                    Span1.MakeGenericValueType([Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Type, 0)])])]))
+            .MakeGenericInstanceMethod([elementMarshallerType]);
     }
 
     /// <summary>
@@ -4615,7 +4615,7 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.UInt32,
                 genericParameterCount: 2,
                 parameterTypes: [
-                    IEnumeratorAdapter1.MakeGenericReferenceType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0))),
+                    IEnumeratorAdapter1.MakeGenericReferenceType([Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Method, 0)])]),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
             .MakeGenericInstanceMethod(underlyingType, elementMarshallerType);
@@ -5240,7 +5240,7 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.UInt32,
                 genericParameterCount: 2,
                 parameterTypes: [
-                    IList1.MakeGenericReferenceType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0))),
+                    IList1.MakeGenericReferenceType([Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Method, 0)])]),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
@@ -5469,7 +5469,7 @@ internal sealed class InteropReferences
                 returnType: _corLibTypeFactory.UInt32,
                 genericParameterCount: 2,
                 parameterTypes: [
-                    IReadOnlyList1.MakeGenericReferenceType(Nullable1.MakeGenericValueType(new GenericParameterSignature(GenericParameterType.Method, 0))),
+                    IReadOnlyList1.MakeGenericReferenceType([Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Method, 0)])]),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
