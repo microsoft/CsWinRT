@@ -28,12 +28,12 @@ public static class WindowsRuntimeActivationFactoryCallback
         /// <summary>
         /// Invokes the activation logic.
         /// </summary>
-        /// <param name="additionalParameters">The additional parameters to provide to the activation callback.</param>
+        /// <param name="additionalParameters">The <see cref="WindowsRuntimeActivationArgsReference"/> value for the additional parameters to provide to the activation callback.</param>
         /// <param name="baseInterface">The <see cref="WindowsRuntimeObject"/> instance being constructed.</param>
         /// <param name="innerInterface">The resulting non-delegating <c>IInspectable</c> object.</param>
         /// <param name="defaultInterface">The resulting default interface pointer.</param>
         public abstract unsafe void Invoke(
-            ReadOnlySpan<object?> additionalParameters,
+            WindowsRuntimeActivationArgsReference additionalParameters,
             WindowsRuntimeObject? baseInterface,
             out void* innerInterface,
             out void* defaultInterface);
@@ -52,8 +52,8 @@ public static class WindowsRuntimeActivationFactoryCallback
         /// <summary>
         /// Invokes the activation logic.
         /// </summary>
-        /// <param name="additionalParameters">The additional parameters to provide to the activation callback.</param>
+        /// <param name="additionalParameters">The <see cref="WindowsRuntimeActivationArgsReference"/> value for the additional parameters to provide to the activation callback.</param>
         /// <param name="defaultInterface">The resulting default interface pointer.</param>
-        public abstract unsafe void Invoke(ReadOnlySpan<object?> additionalParameters, out void* defaultInterface);
+        public abstract unsafe void Invoke(WindowsRuntimeActivationArgsReference additionalParameters, out void* defaultInterface);
     }
 }

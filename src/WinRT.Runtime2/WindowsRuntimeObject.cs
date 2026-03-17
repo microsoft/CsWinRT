@@ -211,7 +211,7 @@ public abstract unsafe class WindowsRuntimeObject :
         WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback,
         in Guid iid,
         CreateObjectReferenceMarshalingType marshalingType,
-        params ReadOnlySpan<object?> additionalParameters)
+        WindowsRuntimeActivationArgsReference additionalParameters)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryCallback);
 
@@ -260,7 +260,7 @@ public abstract unsafe class WindowsRuntimeObject :
         WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback,
         in Guid iid,
         CreateObjectReferenceMarshalingType marshalingType,
-        params ReadOnlySpan<object?> additionalParameters)
+        WindowsRuntimeActivationArgsReference additionalParameters)
     {
         ArgumentNullException.ThrowIfNull(activationFactoryCallback);
 
