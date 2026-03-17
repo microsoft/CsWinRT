@@ -782,6 +782,19 @@ namespace cswinrt
         }
     }
 
+    void write_constructor_args_field_type(writer& w, method_signature::param_t const& param)
+    {
+        auto semantics = get_type_semantics(param.second->Type());
+        if (get_param_category(param) == param_category::pass_array)
+        {
+            w.write("ReadOnlySpan<%>", bind<write_projection_type>(semantics));
+        }
+        else
+        {
+            write_projection_type(w, semantics);
+        }
+    }
+
     // Used as part of return type and property signatures
     void write_projected_signature(writer& w, TypeSig const& type_sig, bool is_parameter)
     {
@@ -2592,6 +2605,11 @@ remove => %;
     void write_constructor_callback_method_name(writer& w, MethodDef const& method)
     {
         w.write("%_%", method.Name(), size(method.Signature().Params()));
+    }
+
+    void write_constructor_args_struct_name(writer& w, MethodDef const& method)
+    {
+        w.write("%_%Args", method.Name(), size(method.Signature().Params()));
     }
 
     struct attributed_type
@@ -6576,6 +6594,26 @@ finally
         abi_marshalers[abi_marshalers.size() - 1].is_return = false;
 
         auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
+        auto args_struct = w.write_temp("%", bind<write_constructor_args_struct_name>(method));
+
+        // Generate the args struct for this activation factory callback, if the constructor has parameters.
+        if (!signature.params().empty())
+        {
+            w.write(R"(
+private readonly ref struct %(%)
+{
+%}
+)",
+                args_struct,
+                bind_list<write_projection_parameter>(", ", signature.params()),
+                bind_each([](writer& w, method_signature::param_t const& param) {
+                    w.write("public readonly % % = %;\n",
+                        bind<write_constructor_args_field_type>(param),
+                        bind<write_parameter_name>(param),
+                        bind<write_parameter_name>(param));
+                }, signature.params()));
+        }
+
         w.write(R"(
 private sealed class % : WindowsRuntimeActivationFactoryCallback.DerivedSealed
 {
@@ -6658,6 +6696,35 @@ void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();
         abi_marshalers[inner_inspectable_index + 1].is_return = false;
 
         auto callback_class = w.write_temp("%", bind<write_constructor_callback_method_name>(method));
+        auto args_struct = w.write_temp("%", bind<write_constructor_args_struct_name>(method));
+        auto const& all_params = signature.params();
+        size_t user_param_count = all_params.size() - 2;
+
+        // Generate the args struct for this activation factory callback.
+        // This is only called when there are user parameters (i.e. params beyond the last 2 composition params).
+        w.write(R"(
+private readonly ref struct %(%)
+{
+%}
+)",
+            args_struct,
+            bind([&](writer& w) {
+                for (size_t i = 0; i < user_param_count; i++)
+                {
+                    if (i > 0) w.write(", ");
+                    write_projection_parameter(w, all_params[i]);
+                }
+            }),
+            bind([&](writer& w) {
+                for (size_t i = 0; i < user_param_count; i++)
+                {
+                    w.write("public readonly % % = %;\n",
+                        bind<write_constructor_args_field_type>(all_params[i]),
+                        bind<write_parameter_name>(all_params[i]),
+                        bind<write_parameter_name>(all_params[i]));
+                }
+            }));
+
         w.write(R"(
 private sealed class % : WindowsRuntimeActivationFactoryCallback.DerivedComposed
 {
