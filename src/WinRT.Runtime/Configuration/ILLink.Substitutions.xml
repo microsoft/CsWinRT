@@ -41,6 +41,10 @@
       <!-- CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION switch -->
       <method signature="System.Boolean get_SuppressCustomPropertyNotSupportedException()" body="stub" value="false" feature="CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION" featurevalue="false" />
       <method signature="System.Boolean get_SuppressCustomPropertyNotSupportedException()" body="stub" value="true" feature="CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION" featurevalue="true" />
+
+      <!-- CSWINRT_ENABLE_COMWRAPPERS_RELEASE_OBJECTS switch -->
+      <method signature="System.Boolean get_EnableComWrappersReleaseObjects()" body="stub" value="false" feature="CSWINRT_ENABLE_COMWRAPPERS_RELEASE_OBJECTS" featurevalue="false" />
+      <method signature="System.Boolean get_EnableComWrappersReleaseObjects()" body="stub" value="true" feature="CSWINRT_ENABLE_COMWRAPPERS_RELEASE_OBJECTS" featurevalue="true" />
     </type>
   </assembly>
 

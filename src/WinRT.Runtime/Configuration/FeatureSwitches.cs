@@ -72,6 +72,11 @@ namespace WinRT
         private const string SuppressCustomPropertyNotSupportedExceptionPropertyName = "CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION";
 
         /// <summary>
+        /// The configuration property name for <see cref="EnableComWrappersReleaseObjects"/>.
+        /// </summary>
+        private const string EnableComWrappersReleaseObjectsPropertyName = "CSWINRT_ENABLE_COMWRAPPERS_RELEASE_OBJECTS";
+
+        /// <summary>
         /// The backing field for <see cref="EnableDynamicObjectsSupport"/>.
         /// </summary>
         private static int _enableDynamicObjectsSupport;
@@ -120,6 +125,11 @@ namespace WinRT
         /// The backing field for <see cref="SuppressCustomPropertyNotSupportedException"/>.
         /// </summary>
         private static int _suppressCustomPropertyNotSupportedException;
+
+        /// <summary>
+        /// The backing field for <see cref="EnableComWrappersReleaseObjects"/>.
+        /// </summary>
+        private static int _enableComWrappersReleaseObjects;
 
         /// <summary>
         /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
@@ -210,6 +220,20 @@ namespace WinRT
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => GetConfigurationValue(SuppressCustomPropertyNotSupportedExceptionPropertyName, ref _suppressCustomPropertyNotSupportedException, false);
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether or not <see cref="System.Runtime.InteropServices.ComWrappers.ReleaseObjects(IEnumerable)"/>
+        /// is enabled in the default <see cref="System.Runtime.InteropServices.ComWrappers"/> instance (defaults to <see langword="true"/>).
+        /// </summary>
+        /// <remarks>
+        /// Disabling this can be useful in some specific scenarios where a long-lived app uses multiple windows
+        /// and needs to access previously instantiated XAML objects that would've otherwise been marked as disposed.
+        /// </remarks>
+        public static bool EnableComWrappersReleaseObjects
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetConfigurationValue(EnableComWrappersReleaseObjectsPropertyName, ref _enableComWrappersReleaseObjects, true);
         }
 
         /// <summary>
