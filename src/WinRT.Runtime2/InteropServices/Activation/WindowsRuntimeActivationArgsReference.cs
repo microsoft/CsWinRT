@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -57,9 +57,9 @@ public readonly ref struct WindowsRuntimeActivationArgsReference
     /// <typeparam name="T">The type of arguments being used.</typeparam>
     /// <returns>The resulting <typeparamref name="T"/> arguments.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T GetValueUnsafe<T>()
+    public ref readonly T GetValueRefUnsafe<T>()
         where T : allows ref struct
     {
-        return Unsafe.As<byte, T>(ref Unsafe.AsRef(in _reference));
+        return ref Unsafe.As<byte, T>(ref Unsafe.AsRef(in _reference));
     }
 }
