@@ -9356,7 +9356,7 @@ return (%?)%.ConvertToManaged<%ComWrappersCallback>(value);
                 w.write(R"(
 if (value is not null)
 {
-return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value);
+return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();
 }
 )");
             }

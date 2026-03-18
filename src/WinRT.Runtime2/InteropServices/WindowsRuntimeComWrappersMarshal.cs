@@ -214,10 +214,10 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
 
     /// <summary>
     /// Unwraps the <see cref="WindowsRuntimeObjectReference"/> from the specified <see cref="WindowsRuntimeObject"/>
-    /// instance and returns it as a <see cref="WindowsRuntimeObjectReferenceValue"/>.
+    /// instance and returns it directly.
     /// </summary>
     /// <param name="value">The <see cref="WindowsRuntimeObject"/> instance to unwrap.</param>
-    /// <returns>A <see cref="WindowsRuntimeObjectReferenceValue"/> wrapping the native object reference from <paramref name="value"/>.</returns>
+    /// <returns>The <see cref="WindowsRuntimeObjectReference"/> wrapping the native object from <paramref name="value"/>.</returns>
     /// <remarks>
     /// <para>
     /// This method does not validate whether <paramref name="value"/> can actually be unwrapped (i.e. whether
@@ -225,8 +225,8 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     /// the caller's responsibility to ensure that the object is in a valid state for unwrapping.
     /// </para>
     /// </remarks>
-    public static WindowsRuntimeObjectReferenceValue UnwrapObjectReferenceUnsafe(WindowsRuntimeObject value)
+    public static WindowsRuntimeObjectReference UnwrapObjectReferenceUnsafe(WindowsRuntimeObject value)
     {
-        return value.NativeObjectReference.AsValue();
+        return value.NativeObjectReference;
     }
 }
