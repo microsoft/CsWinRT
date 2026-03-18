@@ -9335,6 +9335,7 @@ public static unsafe class %Marshaller
 public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
 {
 %
+return default;
 }
 
 public static %? ConvertToManaged(void* value)
@@ -9350,10 +9351,14 @@ return (%?)%.ConvertToManaged<%ComWrappersCallback>(value);
             if (sealed)
             {
                 // For projected sealed runtime classes, the RCW type is always unwrappable (as the
-                // type can never be subclassed), so we can route through WindowsRuntimeObjectMarshaller
-                // directly instead of going through the TryUnwrapObjectReference check.
+                // type can never be subclassed), so we can use UnwrapObjectReferenceUnsafe directly
+                // instead of going through the TryUnwrapObjectReference check.
                 w.write(R"(
-return WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(value);)");
+if (value is not null)
+{
+return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value);
+}
+)");
             }
             else
             {
@@ -9366,7 +9371,7 @@ if (value is IWindowsRuntimeInterface<%> windowsRuntimeInterface)
 {
 return windowsRuntimeInterface.GetInterface();
 }
-return default;)",
+)",
                         bind<write_type_name>(default_type_semantics, typedef_name_type::Projected, false));
                 }
                 else
@@ -9376,7 +9381,7 @@ if (value is not null)
 {
 return value.GetDefaultInterface();
 }
-return default;)");
+)");
                 }
             }
         }),
