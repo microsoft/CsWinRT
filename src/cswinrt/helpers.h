@@ -13,6 +13,18 @@ namespace cswinrt
         return 0 == value.compare(0, match.size(), match);
     }
 
+    // Converts a PascalCase name to camelCase (lowering the first character).
+    // Uses invariant ASCII lowering to avoid locale-dependent behavior.
+    static inline std::string to_camel_case(std::string_view const& name)
+    {
+        std::string result(name);
+        if (!result.empty() && result[0] >= 'A' && result[0] <= 'Z')
+        {
+            result[0] = result[0] - 'A' + 'a';
+        }
+        return result;
+    }
+
     static bool is_remove_overload(MethodDef const& method)
     {
         return method.SpecialName() && starts_with(method.Name(), "remove_");

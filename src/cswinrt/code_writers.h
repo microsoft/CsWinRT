@@ -9863,16 +9863,16 @@ R"(
             type.TypeName(),
             type.TypeName());
 
-        // ctor
+        // ctor (use camelCase parameter names rather than underscore-prefixed names for cleaner public API)
         w.write("public %(%)\n{\n%\n}\n",
             type.TypeName(),
             bind_list([](writer& w, auto&& field)
             {
-                w.write("% _%", field.type, field.name);
+                w.write("% %", field.type, to_camel_case(field.name));
             }, ", ", fields),
             bind_each([](writer& w, auto&& field)
             {
-                w.write("% = _%; ", field.name, field.name);
+                w.write("% = %; ", field.name, to_camel_case(field.name));
             }, fields));
 
         // properties
