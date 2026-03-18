@@ -54,6 +54,20 @@ internal static class MakeTypeSignatureExtensions
         return typeDefOrRef.ToTypeSignature(isValueType: false).MakeByReferenceType();
     }
 
+    /// <inheritdoc cref="ITypeDefOrRef.ToTypeSignature"/>
+    /// <remarks>This method always returns a <see cref="SzArrayTypeSignature"/> for a value type.</remarks>
+    public static SzArrayTypeSignature MakeValueTypeSzArrayType(this ITypeDefOrRef typeDefOrRef)
+    {
+        return typeDefOrRef.ToTypeSignature(isValueType: true).MakeSzArrayType();
+    }
+
+    /// <inheritdoc cref="ITypeDefOrRef.ToTypeSignature"/>
+    /// <remarks>This method always returns a <see cref="SzArrayTypeSignature"/> for a reference type.</remarks>
+    public static SzArrayTypeSignature MakeReferenceTypeSzArrayType(this ITypeDefOrRef typeDefOrRef)
+    {
+        return typeDefOrRef.ToTypeSignature(isValueType: false).MakeSzArrayType();
+    }
+
     /// <inheritdoc cref="TypeDescriptorExtensions.MakeGenericInstanceType(ITypeDescriptor, bool, IEnumerable{TypeSignature})"/>
     /// <remarks>This method always returns a <see cref="TypeSignature"/> for a value type.</remarks>
     public static GenericInstanceTypeSignature MakeGenericValueType(this ITypeDescriptor typeDescriptor, IEnumerable<TypeSignature> typeArguments)
