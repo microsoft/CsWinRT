@@ -56,7 +56,7 @@ internal static class InteropImplTypeResolver
         // For (non-generic) custom-mapped types, their ABI types are in 'WinRT.Runtime.dll', so we use those directly.
         // This also applies to all manually-projected interface types (e.g. 'IAsyncAction'), they have the same location.
         TypeReference typeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference($"ABI.{type.Namespace}", $"{type.Name}Impl");
-        MemberReference get_VtableMethod = typeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
+        MemberReference get_VtableMethod = typeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.IntPtr));
 
         // For custom-mapped types, the IID is in 'WellKnownInterfaceIIDs' in 'WinRT.Runtime.dll'
         MemberReference get_IIDMethod = WellKnownInterfaceIIDs.get_IID(
@@ -88,7 +88,7 @@ internal static class InteropImplTypeResolver
         // Finally, we have the base scenario of simple non-generic projected Windows Runtime interface types.
         // Those will have the marshalling code in the right implementation projection .dll that we found above.
         TypeReference implTypeReference = projectionAssembly.CreateTypeReference($"ABI.{type.Namespace}", $"{type.Name}Impl");
-        MemberReference get_VtableMethod = implTypeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
+        MemberReference get_VtableMethod = implTypeReference.CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.IntPtr));
 
         // For normal projected types, the IID is in the generated 'InterfaceIIDs' type in the merged projection
         string get_IIDMethodName = $"get_IID_{type.FullName.Replace('.', '_')}";
@@ -164,7 +164,7 @@ internal static class InteropImplTypeResolver
         IMethodDefOrRef get_IIDMethod = interopReferences.WellKnownInterfaceIIDsget_IID_IPropertyValue;
         IMethodDefOrRef get_VtableMethod = interopReferences.IPropertyValueImpl.CreateMemberReference(
             memberName: $"get_{typeName}ArrayVtable",
-            signature: MethodSignature.CreateStatic(interopReferences.CorLibTypeFactory.IntPtr));
+            signature: MethodSignature.CreateStatic(interopReferences.IntPtr));
 
         // Return the pair of methods from the ABI type in 'WinRT.Runtime.dll'
         return (get_IIDMethod, get_VtableMethod);

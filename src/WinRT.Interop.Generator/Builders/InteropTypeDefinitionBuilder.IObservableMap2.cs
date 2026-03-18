@@ -59,7 +59,7 @@ internal partial class InteropTypeDefinitionBuilder
                 comparer: SignatureComparer.IgnoreVersion,
                 parameterTypes: [
                     interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    interopReferences.CorLibTypeFactory.Int32])!;
+                    interopReferences.Int32])!;
 
             // Create the 'MapChanged' method
             MethodDefinition mapChangedMethod = new(
@@ -134,7 +134,7 @@ internal partial class InteropTypeDefinitionBuilder
                 comparer: SignatureComparer.IgnoreVersion,
                 parameterTypes: [
                     interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    interopReferences.CorLibTypeFactory.Int32])!;
+                    interopReferences.Int32])!;
 
             // Define the 'Create' method as follows:
             //

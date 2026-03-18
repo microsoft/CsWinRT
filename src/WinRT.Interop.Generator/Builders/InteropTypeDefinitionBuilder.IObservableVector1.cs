@@ -58,7 +58,7 @@ internal partial class InteropTypeDefinitionBuilder
                 comparer: SignatureComparer.IgnoreVersion,
                 parameterTypes: [
                     interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                    interopReferences.CorLibTypeFactory.Int32])!;
+                    interopReferences.Int32])!;
 
             // Create the 'VectorChanged' method
             MethodDefinition vectorChangedMethod = new(
@@ -131,7 +131,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition eventSourceConstructor = emitState.LookupTypeDefinition(handlerType, "EventSource").GetConstructor(
                 comparer: SignatureComparer.IgnoreVersion,
                 parameterTypes: [
-                    interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(), interopReferences.CorLibTypeFactory.Int32])!;
+                    interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(), interopReferences.Int32])!;
 
             // Define the 'Create' method as follows:
             //
