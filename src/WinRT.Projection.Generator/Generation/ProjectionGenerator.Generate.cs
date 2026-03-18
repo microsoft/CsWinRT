@@ -190,6 +190,14 @@ internal partial class ProjectionGenerator
             WriteWindowsSdkFilters(fileStream, args.WindowsUIXamlProjection);
         }
 
+        // If we're not in Windows SDK mode, we exclude the Windows namespace to avoid
+        // the merged projection from generating all namespaces when there are no projection references
+        // and thereby no includes / excludes passed to cswinrt. 
+        if (!isWindowsSdkMode)
+        {
+            fileStream.WriteLine("-exclude Windows");
+        }
+
         fileStream.WriteLine($"-target {args.TargetFramework}");
         fileStream.WriteLine($"-input {args.WindowsMetadata}");
         fileStream.WriteLine($"-output \"{outputFolder}\"");
