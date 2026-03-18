@@ -141,7 +141,7 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
         public static CoreDragDropManager GetForWindow(IntPtr appWindow)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(ICoreDragDropManager));
-            return (CoreDragDropManager)dragDropManagerInterop.GetForWindow(appWindow, iid);
+            return dragDropManagerInterop.GetForWindow(appWindow, iid);
         }
     }
 #endif
@@ -165,13 +165,13 @@ namespace Windows.Graphics.Printing
         public static PrintManager GetForWindow(IntPtr appWindow)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IPrintManager));
-            return (PrintManager)printManagerInterop.GetForWindow(appWindow, iid);
+            return printManagerInterop.GetForWindow(appWindow, iid);
         }
 
         public static IAsyncOperation<bool> ShowPrintUIForWindowAsync(IntPtr appWindow)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IAsyncOperation<bool>));
-            return (IAsyncOperation<bool>)printManagerInterop.ShowPrintUIForWindowAsync(appWindow, iid);
+            return printManagerInterop.ShowPrintUIForWindowAsync(appWindow, iid);
         }
     }
 #endif
@@ -195,7 +195,7 @@ namespace Windows.Media
         public static SystemMediaTransportControls GetForWindow(IntPtr appWindow)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(ISystemMediaTransportControls));
-            return (SystemMediaTransportControls)systemMediaTransportControlsInterop.GetForWindow(appWindow, iid);
+            return systemMediaTransportControlsInterop.GetForWindow(appWindow, iid);
         }
     }
 #endif
@@ -219,7 +219,7 @@ namespace Windows.Media.PlayTo
         public static PlayToManager GetForWindow(IntPtr appWindow)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IPlayToManager));
-            return (PlayToManager)playToManagerInterop.GetForWindow(appWindow, iid);
+            return playToManagerInterop.GetForWindow(appWindow, iid);
         }
 
         public static void ShowPlayToUIForWindow(IntPtr appWindow)
@@ -248,7 +248,7 @@ namespace Windows.Security.Credentials.UI
         public static IAsyncOperation<UserConsentVerificationResult> RequestVerificationForWindowAsync(IntPtr appWindow, string message)
         {
             var iid = GuidGenerator.CreateIID(typeof(IAsyncOperation<UserConsentVerificationResult>));
-            return (IAsyncOperation<UserConsentVerificationResult>)userConsentVerifierInterop.RequestVerificationForWindowAsync(appWindow, message, iid);
+            return userConsentVerifierInterop.RequestVerificationForWindowAsync(appWindow, message, iid);
         }
     }
 #endif
@@ -272,13 +272,13 @@ namespace Windows.Security.Authentication.Web.Core
         public static IAsyncOperation<WebTokenRequestResult> RequestTokenForWindowAsync(IntPtr appWindow, WebTokenRequest request)
         {
             var iid = GuidGenerator.CreateIID(typeof(IAsyncOperation<WebTokenRequestResult>));
-            return (IAsyncOperation<WebTokenRequestResult>)webAuthenticationCoreManagerInterop.RequestTokenForWindowAsync(appWindow, request, iid);
+            return webAuthenticationCoreManagerInterop.RequestTokenForWindowAsync(appWindow, request, iid);
         }
 
         public static IAsyncOperation<WebTokenRequestResult> RequestTokenWithWebAccountForWindowAsync(IntPtr appWindow, WebTokenRequest request, WebAccount webAccount)
         {
             var iid = GuidGenerator.CreateIID(typeof(IAsyncOperation<WebTokenRequestResult>));
-            return (IAsyncOperation<WebTokenRequestResult>)webAuthenticationCoreManagerInterop.RequestTokenWithWebAccountForWindowAsync(appWindow, request, webAccount, iid);
+            return webAuthenticationCoreManagerInterop.RequestTokenWithWebAccountForWindowAsync(appWindow, request, webAccount, iid);
         }
     }
 #endif
@@ -302,19 +302,19 @@ namespace Windows.UI.ApplicationSettings
         public static AccountsSettingsPane GetForWindow(IntPtr appWindow)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IAccountsSettingsPane));
-            return (AccountsSettingsPane)accountsSettingsPaneInterop.GetForWindow(appWindow, iid);
+            return accountsSettingsPaneInterop.GetForWindow(appWindow, iid);
         }
 
         public static IAsyncAction ShowManageAccountsForWindowAsync(IntPtr appWindow)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IAsyncAction));
-            return (IAsyncAction)accountsSettingsPaneInterop.ShowManageAccountsForWindowAsync(appWindow, iid);
+            return accountsSettingsPaneInterop.ShowManageAccountsForWindowAsync(appWindow, iid);
         }
 
         public static IAsyncAction ShowAddAccountForWindowAsync(IntPtr appWindow)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IAsyncAction));
-            return (IAsyncAction)accountsSettingsPaneInterop.ShowAddAccountForWindowAsync(appWindow, iid);
+            return accountsSettingsPaneInterop.ShowAddAccountForWindowAsync(appWindow, iid);
         }
     }
 #endif
@@ -339,7 +339,7 @@ namespace Windows.UI.Input
         public static RadialControllerConfiguration GetForWindow(IntPtr hwnd)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IRadialControllerConfiguration));
-            return (RadialControllerConfiguration)radialControllerConfigurationInterop.GetForWindow(hwnd, iid);
+            return radialControllerConfigurationInterop.GetForWindow(hwnd, iid);
         }
     }
 
@@ -358,7 +358,7 @@ namespace Windows.UI.Input
         public static RadialController CreateForWindow(IntPtr hwnd)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IRadialController));
-            return (RadialController)radialControllerInterop.CreateForWindow(hwnd, iid);
+            return radialControllerInterop.CreateForWindow(hwnd, iid);
         }
     }
 #endif
@@ -383,7 +383,7 @@ namespace Windows.UI.Input.Core
         public static RadialControllerIndependentInputSource CreateForWindow(IntPtr hwnd)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IRadialControllerIndependentInputSource));
-            return (RadialControllerIndependentInputSource)radialControllerIndependentInputSourceInterop.CreateForWindow(hwnd, iid);
+            return radialControllerIndependentInputSourceInterop.CreateForWindow(hwnd, iid);
         }
     }
 #endif
@@ -407,7 +407,7 @@ namespace Windows.UI.Input.Spatial
         public static SpatialInteractionManager GetForWindow(IntPtr window)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(ISpatialInteractionManager));
-            return (SpatialInteractionManager)spatialInteractionManagerInterop.GetForWindow(window, iid);
+            return spatialInteractionManagerInterop.GetForWindow(window, iid);
         }
     }
 #endif
@@ -431,7 +431,7 @@ namespace Windows.UI.ViewManagement
         public static InputPane GetForWindow(IntPtr appWindow)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IInputPane));
-            return (InputPane)inputPaneInterop.GetForWindow(appWindow, iid);
+            return inputPaneInterop.GetForWindow(appWindow, iid);
         }
     }
 
@@ -450,7 +450,7 @@ namespace Windows.UI.ViewManagement
         public static UIViewSettings GetForWindow(IntPtr hwnd)
         {
             var iid = GuidGenerator.CreateIID(typeof(IUIViewSettings));
-            return (UIViewSettings)uIViewSettingsInterop.GetForWindow(hwnd, iid);
+            return uIViewSettingsInterop.GetForWindow(hwnd, iid);
         }
     }
 #endif
@@ -474,13 +474,13 @@ namespace Windows.Graphics.Display
         public static DisplayInformation GetForWindow(IntPtr window)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IDisplayInformation));
-            return (DisplayInformation)displayInformationInterop.GetForWindow(window, iid);
+            return displayInformationInterop.GetForWindow(window, iid);
         }
 
         public static DisplayInformation GetForMonitor(IntPtr monitor)
         {
             Guid iid = GuidGenerator.CreateIID(typeof(IDisplayInformation));
-            return (DisplayInformation)displayInformationInterop.GetForMonitor(monitor, iid);
+            return displayInformationInterop.GetForMonitor(monitor, iid);
         }
     }
 #endif
