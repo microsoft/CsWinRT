@@ -9833,6 +9833,7 @@ R"(
         {
             std::string type;
             std::string name;
+            std::string param_name;
             bool is_interface;
         };
         std::vector<field_info> fields;
@@ -9842,6 +9843,7 @@ R"(
             field_info field_info{};
             field_info.type = w.write_temp("%", [&](writer& w) { write_projection_type(w, semantics); });
             field_info.name = field.Name();
+            field_info.param_name = to_camel_case(field_info.name);
             if (auto td = std::get_if<type_definition>(&semantics))
             {
                 field_info.is_interface = get_category(*td) == category::interface_type;
@@ -9868,11 +9870,11 @@ R"(
             type.TypeName(),
             bind_list([](writer& w, auto&& field)
             {
-                w.write("% %", field.type, to_camel_case(field.name));
+                w.write("% %", field.type, bind<write_escaped_identifier>(field.param_name));
             }, ", ", fields),
             bind_each([](writer& w, auto&& field)
             {
-                w.write("% = %; ", field.name, to_camel_case(field.name));
+                w.write("% = %; ", field.name, bind<write_escaped_identifier>(field.param_name));
             }, fields));
 
         // properties
