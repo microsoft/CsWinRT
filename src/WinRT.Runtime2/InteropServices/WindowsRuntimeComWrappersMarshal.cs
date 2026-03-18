@@ -4,6 +4,7 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
@@ -225,6 +226,7 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     /// the caller's responsibility to ensure that the object is in a valid state for unwrapping.
     /// </para>
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static WindowsRuntimeObjectReference UnwrapObjectReferenceUnsafe(WindowsRuntimeObject value)
     {
         return value.NativeObjectReference;
