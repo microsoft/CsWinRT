@@ -674,31 +674,25 @@ namespace cswinrt
 
     bool is_keyword(std::string_view str)
     {
-        // C# reserved keywords and contextual keywords (sorted).
+        // C# reserved keywords (sorted). Contextual keywords (e.g. 'value', 'var',
+        // 'dynamic') are intentionally excluded: they are valid identifiers outside
+        // their specific syntax contexts and do not need '@' escaping.
         // See: https://learn.microsoft.com/dotnet/csharp/language-reference/keywords
         static constexpr std::string_view keywords[] =
         {
-            "abstract",  "add",       "alias",     "allows",    "and",        "args",
-            "as",        "ascending", "async",     "await",     "base",       "bool",
-            "break",     "by",        "byte",      "case",      "catch",      "char",
-            "checked",   "class",     "const",     "continue",  "decimal",    "default",
-            "delegate",  "descending","do",        "double",    "dynamic",    "else",
-            "enum",      "equals",    "event",     "explicit",  "extension",  "extern",
-            "false",     "field",     "file",      "finally",   "fixed",      "float",
-            "for",       "foreach",   "from",      "get",       "global",     "goto",
-            "group",     "if",        "implicit",  "in",        "init",       "int",
-            "interface", "internal",  "into",      "is",        "join",       "let",
-            "lock",      "long",      "managed",   "nameof",    "namespace",  "new",
-            "nint",      "not",       "notnull",   "nuint",     "null",       "object",
-            "on",        "operator",  "or",        "orderby",   "out",        "override",
-            "params",    "partial",   "private",   "protected", "public",     "readonly",
-            "record",    "ref",       "remove",    "required",  "return",     "sbyte",
-            "scoped",    "sealed",    "select",    "set",       "short",      "sizeof",
-            "stackalloc","static",    "string",    "struct",    "switch",     "this",
-            "throw",     "true",      "try",       "typeof",    "uint",       "ulong",
-            "unchecked", "unmanaged", "unsafe",    "ushort",    "using",      "value",
-            "var",       "virtual",   "void",      "volatile",  "when",       "where",
-            "while",     "with",      "yield"
+            "abstract",  "as",       "base",     "bool",       "break",     "byte",
+            "case",      "catch",    "char",     "checked",    "class",     "const",
+            "continue",  "decimal",  "default",  "delegate",   "do",        "double",
+            "else",      "enum",     "event",    "explicit",   "extern",    "false",
+            "finally",   "fixed",    "float",    "for",        "foreach",   "goto",
+            "if",        "implicit", "in",       "int",        "interface", "internal",
+            "is",        "lock",     "long",     "namespace",  "new",       "null",
+            "object",    "operator", "out",      "override",   "params",    "private",
+            "protected", "public",   "readonly", "ref",        "return",    "sbyte",
+            "sealed",    "short",    "sizeof",   "stackalloc", "static",    "string",
+            "struct",    "switch",   "this",     "throw",      "true",      "try",
+            "typeof",    "uint",     "ulong",    "unchecked",  "unsafe",    "ushort",
+            "using",     "virtual",  "void",     "volatile",   "while"
         };
 #if 0
         assert(std::is_sorted(std::begin(keywords), std::end(keywords)));
