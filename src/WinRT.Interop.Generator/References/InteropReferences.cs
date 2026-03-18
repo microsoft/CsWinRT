@@ -4618,7 +4618,7 @@ internal sealed class InteropReferences
                     IEnumeratorAdapter1.MakeGenericReferenceType([Nullable1.MakeGenericValueType([new GenericParameterSignature(GenericParameterType.Method, 0)])]),
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(underlyingType, elementMarshallerType);
+            .MakeGenericInstanceMethod([underlyingType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -5244,7 +5244,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(underlyingType, elementMarshallerType);
+            .MakeGenericInstanceMethod([underlyingType, elementMarshallerType]);
     }
 
     /// <summary>
@@ -5473,7 +5473,7 @@ internal sealed class InteropReferences
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.UInt32,
                     _corLibTypeFactory.Void.MakePointerType().MakePointerType()]))
-            .MakeGenericInstanceMethod(underlyingType, elementMarshallerType);
+            .MakeGenericInstanceMethod([underlyingType, elementMarshallerType]);
     }
 
     /// <summary>
