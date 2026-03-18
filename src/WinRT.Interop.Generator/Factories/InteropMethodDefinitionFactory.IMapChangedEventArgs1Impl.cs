@@ -42,7 +42,7 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: interopReferences.Int32,
                     parameterTypes: [
                         interopReferences.Void.MakePointerType(),
-                        interopReferences.CollectionChange.MakePointerType()]))
+                        interopReferences.CollectionChange.MakeValueTypePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };

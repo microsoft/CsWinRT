@@ -62,7 +62,7 @@ internal static class InteropCustomAttributeFactory
     public static CustomAttribute UnmanagedCallersOnly(InteropReferences interopReferences)
     {
         // Get the 'Type[]' signature and reuse it (we need it for both the argument and the element)
-        TypeSignature typeArraySignature = interopReferences.Type.MakeSzArrayType();
+        TypeSignature typeArraySignature = interopReferences.Type.MakeReferenceTypeSzArrayType();
 
         // Create the following attribute:
         //

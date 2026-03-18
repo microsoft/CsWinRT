@@ -159,7 +159,7 @@ internal static partial class InteropTypeDefinitionBuilder
                     interopReferences.Void.MakePointerType(),
                     interopReferences.ReadOnlySpanChar,
                     interopReferences.Object.MakeByReferenceType(),
-                    interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
+                    interopReferences.CreatedWrapperFlags.MakeValueTypeByReferenceType()]))
         { CilOutParameterIndices = [3, 4] };
 
         // Add and implement 'TryCreateObject'
@@ -224,7 +224,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 returnType: interopReferences.Object,
                 parameterTypes: [
                     interopReferences.Void.MakePointerType(),
-                    interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
+                    interopReferences.CreatedWrapperFlags.MakeValueTypeByReferenceType()]))
         {
             CilOutParameterIndices = [2],
             CilInstructions =
@@ -288,7 +288,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 returnType: interopReferences.Object,
                 parameterTypes: [
                     interopReferences.Void.MakePointerType(),
-                    interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
+                    interopReferences.CreatedWrapperFlags.MakeValueTypeByReferenceType()]))
         {
             CilOutParameterIndices = [2],
             CilInstructions =
@@ -671,7 +671,7 @@ internal static partial class InteropTypeDefinitionBuilder
         _ = cctorInstructions.Add(Ret);
 
         // The 'Vtables' property type has the signature being 'ComWrappers.ComInterfaceEntry*'
-        PointerTypeSignature vtablesPropertyType = interopReferences.ComInterfaceEntry.MakePointerType();
+        PointerTypeSignature vtablesPropertyType = interopReferences.ComInterfaceEntry.MakeValueTypePointerType();
 
         // Create the 'Vtables' property
         PropertyDefinition vtablesProperty = new(

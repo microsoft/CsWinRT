@@ -480,7 +480,7 @@ internal partial class InteropTypeDefinitionBuilder
                 name: "ComputeVtables"u8,
                 attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.ComInterfaceEntry.MakePointerType(),
+                    returnType: interopReferences.ComInterfaceEntry.MakeValueTypePointerType(),
                     parameterTypes: [interopReferences.Int32.MakeByReferenceType()]))
             {
                 CilOutParameterIndices = [1],
@@ -511,7 +511,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: interopReferences.Object,
                     parameterTypes: [
                         interopReferences.Void.MakePointerType(),
-                        interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
+                        interopReferences.CreatedWrapperFlags.MakeValueTypeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilInstructions =
