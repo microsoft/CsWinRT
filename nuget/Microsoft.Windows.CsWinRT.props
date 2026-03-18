@@ -7,7 +7,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <PropertyGroup>
     <CsWinRTPath Condition="'$(CsWinRTPath)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</CsWinRTPath>
-    <CsWinRTExe>$(CsWinRTPath)cswinrt.exe</CsWinRTExe>
+    <CsWinRTExe Condition="'$(CsWinRTExe)'==''">$(CsWinRTPath)tools\win-x86\cswinrt.exe</CsWinRTExe>
+
+    <!-- This property can be used by other tooling (e.g. the XAML compiler) to opt-in for CsWinRT 3 specific settings -->
     <UsingCsWinRT3>true</UsingCsWinRT3>
 
     <!-- Wire up the .targets that should be imported before the .NET SDK -->
