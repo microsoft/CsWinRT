@@ -58,7 +58,7 @@ internal partial class InteropMethodDefinitionFactory
                     parameterTypes: [
                         interopReferences.Void.MakePointerType(),
                         interopReferences.Void.MakePointerType(),
-                        interopReferences.EventRegistrationToken.MakePointerType()]))
+                        interopReferences.EventRegistrationToken.MakeValueTypePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };

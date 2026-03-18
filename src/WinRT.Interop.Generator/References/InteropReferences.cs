@@ -2475,7 +2475,7 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [
                 Type.ToReferenceTypeSignature(),
-                TypeReference.MakeByReferenceType()]));
+                TypeReference.MakeValueTypeByReferenceType()]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>ABI.System.TypeMarshaller.Dispose</c>.
@@ -2698,7 +2698,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("ConvertToUnmanaged"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [
-                ReadOnlySpan1.MakeGenericValueType([Type.ToTypeSignature()]),
+                ReadOnlySpan1.MakeGenericValueType([Type.ToReferenceTypeSignature()]),
                 _corLibTypeFactory.UInt32.MakeByReferenceType(),
                 AbiType.ToValueTypeSignature().MakePointerType().MakeByReferenceType()]));
 
@@ -2719,7 +2719,7 @@ internal sealed class InteropReferences
         .CreateMemberReference("CopyToUnmanaged"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.Void,
             parameterTypes: [
-                ReadOnlySpan1.MakeGenericValueType([Type.ToTypeSignature()]),
+                ReadOnlySpan1.MakeGenericValueType([Type.ToReferenceTypeSignature()]),
                 _corLibTypeFactory.UInt32,
                 AbiType.ToValueTypeSignature().MakePointerType()]));
 
@@ -2732,7 +2732,7 @@ internal sealed class InteropReferences
             parameterTypes: [
                 _corLibTypeFactory.UInt32,
                 AbiType.ToValueTypeSignature().MakePointerType(),
-                Span1.MakeGenericValueType([Type.ToTypeSignature()])]));
+                Span1.MakeGenericValueType([Type.ToReferenceTypeSignature()])]));
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.Marshalling.TypeArrayMarshaller.Dispose</c>.

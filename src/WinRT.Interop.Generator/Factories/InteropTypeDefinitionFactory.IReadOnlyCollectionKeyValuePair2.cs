@@ -69,7 +69,7 @@ internal partial class InteropTypeDefinitionFactory
                     returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
-                        interopReferences.WindowsRuntimeObjectReference.MakeByReferenceType()]))
+                        interopReferences.WindowsRuntimeObjectReference.MakeReferenceTypeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilInstructions =

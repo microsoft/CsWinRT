@@ -325,7 +325,7 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerAttributeType.Methods.Add(ctor);
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
-            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.MakePointerType();
+            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.MakeValueTypePointerType();
 
             // Define the 'ComputeVtables' method as follows:
             //
@@ -397,7 +397,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: interopReferences.Object,
                     parameterTypes: [
                         interopReferences.Void.MakePointerType(),
-                        interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
+                        interopReferences.CreatedWrapperFlags.MakeValueTypeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilLocalVariables = { loc_0_interfaceValue, loc_1_managedValue },
