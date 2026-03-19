@@ -9126,25 +9126,16 @@ public static unsafe class %Marshaller
 
     void write_custom_query_interface_impl(writer& w, TypeDef const& type)
     {
+        if (settings.reference_projection)
+        {
+            return;
+        }
 
         bool has_base_class = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
         separator s{ w, " || " };
         w.write(R"(
-%protected override bool IsOverridableInterface(in Guid iid) => %%;
+protected override bool IsOverridableInterface(in Guid iid) => %%;
 )",
-            bind([&](writer& w)
-            {
-                if (settings.reference_projection)
-                {
-                     w.write(R"(
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-)");
-                     return;
-                }
-            }),
             bind_each([&](writer& w, InterfaceImpl const& iface)
             {
                 if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute"))
@@ -9303,14 +9294,10 @@ GC.RemoveMemoryPressure(%);
             {
                 if (settings.reference_projection)
                 {
-                    w.write(R"(
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-protected override bool HasUnwrappableNativeObjectReference => throw null;)");
+                    return;
                 }
-                else if (!type.Flags().Sealed())
+
+                if (!type.Flags().Sealed())
                 {
                     w.write(R"(
 protected override bool HasUnwrappableNativeObjectReference => GetType() == typeof(%);)",
