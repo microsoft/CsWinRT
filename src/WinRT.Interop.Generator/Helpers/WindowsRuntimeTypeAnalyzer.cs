@@ -143,7 +143,7 @@ internal static class WindowsRuntimeTypeAnalyzer
             // Lastly, make sure to also always track 'object' as a base type. This would be
             // skipped for element types being interfaces, as they have no base type. However,
             // with respect to variant conversions, 'object' is always a valid covariant type.
-            yield return genericInterfaceType.MakeGenericReferenceType(interopReferences.CorLibTypeFactory.Object);
+            yield return genericInterfaceType.MakeGenericReferenceType(interopReferences.Object);
 
             // We're closing this recursive sub-tree, so we can remove the current interface type
             _ = visitedTypes.Remove(interfaceType);

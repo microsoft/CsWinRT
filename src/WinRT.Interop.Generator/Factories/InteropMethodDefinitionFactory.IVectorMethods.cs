@@ -203,7 +203,7 @@ internal partial class InteropMethodDefinitionFactory
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
                         elementType,
-                        interopReferences.CorLibTypeFactory.UInt32.MakeByReferenceType()]))
+                        interopReferences.UInt32.MakeByReferenceType()]))
             {
                 NoInlining = true,
                 CilOutParameterIndices = [3]
@@ -216,8 +216,8 @@ internal partial class InteropMethodDefinitionFactory
             //   [3]: 'bool' (for the return value)
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
             CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
-            CilLocalVariable loc_2_pinnedIndex = new(interopReferences.CorLibTypeFactory.UInt32.MakeByReferenceType().MakePinnedType());
-            CilLocalVariable loc_3_result = new(interopReferences.CorLibTypeFactory.Boolean);
+            CilLocalVariable loc_2_pinnedIndex = new(interopReferences.UInt32.MakeByReferenceType().MakePinnedType());
+            CilLocalVariable loc_3_result = new(interopReferences.Boolean);
 
             // Jump labels
             CilInstruction nop_try_this = new(Nop);
@@ -333,7 +333,7 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: interopReferences.Void,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObjectReference.ToReferenceTypeSignature(),
-                        interopReferences.CorLibTypeFactory.UInt32,
+                        interopReferences.UInt32,
                         elementType]))
             { NoInlining = true };
 

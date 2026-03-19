@@ -110,7 +110,7 @@ internal readonly ref struct InteropMarshallerType
             name: "UnboxToManaged"u8,
             signature: MethodSignature.CreateStatic(
                 returnType: returnType,
-                parameterTypes: [_interopReferences.CorLibTypeFactory.Void.MakePointerType()]));
+                parameterTypes: [_interopReferences.Void.MakePointerType()]));
     }
 
     /// <summary>
@@ -122,7 +122,7 @@ internal readonly ref struct InteropMarshallerType
         return _marshallerType.GetMethodDefOrRef(
             name: "Dispose"u8,
             signature: MethodSignature.CreateStatic(
-                returnType: _interopReferences.CorLibTypeFactory.Void,
+                returnType: _interopReferences.Void,
                 parameterTypes: [_type.GetAbiType(_interopReferences)]));
     }
 }

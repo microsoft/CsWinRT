@@ -286,9 +286,9 @@ internal partial class InteropMethodRewriter
             //   [0]: 'ref char' (for the pinned 'string')
             //   [1]: 'HStringReference' (for 'hstringReference')
             //   [2]: 'int?' (for 'length')
-            CilLocalVariable loc_0_pinnedString = new(interopReferences.CorLibTypeFactory.Char.MakeByReferenceType().MakePinnedType());
+            CilLocalVariable loc_0_pinnedString = new(interopReferences.Char.MakeByReferenceType().MakePinnedType());
             CilLocalVariable loc_1_hstringReference = new(interopReferences.HStringReference.ToValueTypeSignature());
-            CilLocalVariable loc_2_length = new(interopReferences.Nullable1.MakeGenericValueType(interopReferences.CorLibTypeFactory.Int32));
+            CilLocalVariable loc_2_length = new(interopReferences.Nullable1.MakeGenericValueType(interopReferences.Int32));
 
             body.LocalVariables.Add(loc_0_pinnedString);
             body.LocalVariables.Add(loc_1_hstringReference);
@@ -328,7 +328,7 @@ internal partial class InteropMethodRewriter
                 new CilInstruction(Br_S, ldloca_s_getHStringReference.CreateLabel()),
                 ldarg_getLength,
                 new CilInstruction(Call, interopReferences.Stringget_Length),
-                new CilInstruction(Newobj, interopReferences.Nullable1_ctor(interopReferences.CorLibTypeFactory.Int32)),
+                new CilInstruction(Newobj, interopReferences.Nullable1_ctor(interopReferences.Int32)),
 
                 // HStringMarshaller.ConvertToUnmanagedUnsafe(p, length, out HStringReference hstringReference);
                 ldloca_s_getHStringReference,
@@ -381,7 +381,7 @@ internal partial class InteropMethodRewriter
             //   [0]: 'TypeReference' (for 'typeReference')
             //   [1]: 'ref byte' (for the pinned type reference)
             CilLocalVariable loc_0_typeReference = new(interopReferences.TypeReference.ToValueTypeSignature());
-            CilLocalVariable loc_1_pinnedTypeReference = new(interopReferences.CorLibTypeFactory.Byte.MakeByReferenceType().MakePinnedType());
+            CilLocalVariable loc_1_pinnedTypeReference = new(interopReferences.Byte.MakeByReferenceType().MakePinnedType());
 
             body.LocalVariables.Add(loc_0_typeReference);
             body.LocalVariables.Add(loc_1_pinnedTypeReference);

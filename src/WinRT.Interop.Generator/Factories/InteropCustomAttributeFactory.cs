@@ -181,7 +181,7 @@ internal static class InteropCustomAttributeFactory
         return new(interopReferences.TypeMapAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor_TrimTarget, new CustomAttributeSignature(
             fixedArguments: [
                 new CustomAttributeArgument(
-                    argumentType: interopReferences.CorLibTypeFactory.String,
+                    argumentType: interopReferences.String,
                     value: value),
                 new CustomAttributeArgument(
                     argumentType: interopReferences.Type.ToReferenceTypeSignature(),
@@ -236,7 +236,7 @@ internal static class InteropCustomAttributeFactory
         return new(interopReferences.TypeMapAttributeWindowsRuntimeMetadataTypeMapGroup_ctor_TrimTarget, new CustomAttributeSignature(
             fixedArguments: [
                 new CustomAttributeArgument(
-                    argumentType: interopReferences.CorLibTypeFactory.String,
+                    argumentType: interopReferences.String,
                     value: value),
                 new CustomAttributeArgument(
                     argumentType: interopReferences.Type.ToReferenceTypeSignature(),
