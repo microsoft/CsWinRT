@@ -6,7 +6,9 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Authoring/">
-    <Project Path="Authoring/CsWinMD/CsWinMD.csproj" />
+    <Project Path="Authoring/CsWinMD/CsWinMD.csproj">
+      <Build Project="false" />
+    </Project>
     <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj">
       <Build Project="false" />
     </Project>
