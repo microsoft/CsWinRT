@@ -147,7 +147,7 @@ public partial class TypeMapAssemblyTargetGenerator
                 [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup>("WinRT.Sdk.Projection")]
                 """;
 
-            context.AddSource("TypeMapAssemblyTarget.g.cs", source);
+            context.AddSource("TypeMapAssemblyTarget.Sdk.g.cs", source);
         }
 
         /// <summary>
@@ -171,7 +171,7 @@ public partial class TypeMapAssemblyTargetGenerator
                 [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup>("WinRT.Sdk.Xaml.Projection")]
                 """;
 
-            context.AddSource("TypeMapAssemblyTarget.xaml.g.cs", source);
+            context.AddSource("TypeMapAssemblyTarget.Sdk.Xaml.g.cs", source);
         }
 
         /// <summary>
@@ -195,7 +195,11 @@ public partial class TypeMapAssemblyTargetGenerator
                 [assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup>("WinRT.Projection")]
                 """;
 
-            context.AddSource("TypeMapAssemblyTarget.merged.g.cs", source);
+            // We use "external" for the type name because as far as users are concerned, these are just all projections
+            // for any Windows Runtime components being referenced. The "merged" concept is more an implementation detail.
+            // That is also why we don't use that term (we just say "projection code") in any of the output messages from
+            // the projection generator either.
+            context.AddSource("TypeMapAssemblyTarget.ExternalProjections.g.cs", source);
         }
     }
 }
