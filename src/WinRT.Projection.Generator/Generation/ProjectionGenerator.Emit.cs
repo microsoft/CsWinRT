@@ -70,14 +70,14 @@ internal partial class ProjectionGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Emit the projection .dll to disk
+        string projectionDllPath = Path.Combine(args.GeneratedAssemblyDirectory, assemblyName + ".dll");
+
         try
         {
             // Configure emit options for embedded symbols
             EmitOptions emitOptions = new(
                 debugInformationFormat: DebugInformationFormat.Embedded,
                 includePrivateMembers: true);
-
-            string projectionDllPath = Path.Combine(args.GeneratedAssemblyDirectory, assemblyName + ".dll");
 
             EmitResult result;
 
@@ -89,11 +89,18 @@ internal partial class ProjectionGenerator
 
             if (!result.Success)
             {
+                File.Delete(projectionDllPath);
+
                 throw WellKnownProjectionGeneratorExceptions.EmitDllError(result.Diagnostics);
             }
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
+            if (File.Exists(projectionDllPath))
+            {
+                File.Delete(projectionDllPath);
+            }
+
             throw WellKnownProjectionGeneratorExceptions.EmitDllError(e);
         }
     }

@@ -61,10 +61,10 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
         // Get all the names of assemblies with '[WindowsRuntimeReferenceAssembly]'
         IncrementalValuesProvider<string?> assemblyNames = executableReferences.Select(Execute.GetAssemblyNameIfWindowsRuntimeReferenceAssembly);
 
-        // Combine all matching assembly names
+        // Combine all matching assembly names and filter out the Windows SDK ones
         IncrementalValueProvider<ImmutableArray<string>> filteredAssemblyNames =
             assemblyNames
-            .Where(static name => name is not null)
+            .Where(static name => name is not null and not "Microsoft.Windows.SDK.NET" and not "Microsoft.Windows.UI.Xaml")
             .Collect()!;
 
         // Sort the assembly names
@@ -72,11 +72,19 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
            filteredAssemblyNames
            .Select(static (names, token) => names.Sort(StringComparer.Ordinal).AsEquatableArray());
 
+        // Whether the merged projection will be generated
+        IncrementalValueProvider<bool> hasMergedProjection =
+            filteredAssemblyNames
+            .Select(static (assemblyNames, token) => !assemblyNames.IsDefaultOrEmpty);
+
         // Generate the attributes for all matching assemblies
         context.RegisterImplementationSourceOutput(sortedAssemblyNames, Execute.EmitPrivateProjectionsTypeMapAssemblyTargetAttributes);
 
         // Also generate the '[TypeMapAssemblyTarget]' entry for the default items
         context.RegisterImplementationSourceOutput(isGeneratorEnabled, Execute.EmitDefaultTypeMapAssemblyTargetAttributes);
+
+        // Also generate the '[TypeMapAssemblyTarget]' entry for the merged projection
+        context.RegisterImplementationSourceOutput(hasMergedProjection, Execute.EmitMergedProjectionTypeMapAssemblyTargetAttributes);
 
         // Get whether the xaml type map attributes should be emitted.
         IncrementalValueProvider<bool> isXamlGeneratorEnabled =
