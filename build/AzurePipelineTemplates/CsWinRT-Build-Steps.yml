@@ -235,8 +235,8 @@ steps:
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator2\bin\$(BuildConfiguration)\net10.0
         Contents: |
-          WinRT.SourceGenerator2.dll
-          WinRT.SourceGenerator2.pdb
+          WinRT.SourceGenerator.dll
+          WinRT.SourceGenerator.pdb
         TargetFolder: $(StagingFolder)\net10.0
 
     # Stage Net10.0

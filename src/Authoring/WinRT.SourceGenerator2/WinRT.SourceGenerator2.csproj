@@ -17,7 +17,7 @@
     <RootNamespace>WindowsRuntime.SourceGenerator</RootNamespace>
 
     <!-- The assembly name must always be 'WinRT.SourceGenerator', for back-compatibility -->
-    <AssemblyName>WinRT.SourceGenerator2</AssemblyName>
+    <AssemblyName>WinRT.SourceGenerator</AssemblyName>
 
     <!--
       While this project does not produce a .dll that consuming projects execute at runtime, we still want to
