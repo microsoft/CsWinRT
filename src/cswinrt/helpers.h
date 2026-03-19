@@ -15,21 +15,14 @@ namespace cswinrt
 
     // Converts a PascalCase name to camelCase (lowering the first character).
     // Uses invariant ASCII lowering to avoid locale-dependent behavior.
-    // If the first character is not an uppercase ASCII letter, falls back to
-    // prepending an underscore to avoid potential collisions (e.g. '_Foo').
+    // If the first character is not an uppercase ASCII letter, the name is
+    // returned unchanged (callers should use 'this.' to disambiguate).
     static inline std::string to_camel_case(std::string_view const& name)
     {
         std::string result(name);
-        if (!result.empty())
+        if (!result.empty() && result[0] >= 'A' && result[0] <= 'Z')
         {
-            if (result[0] >= 'A' && result[0] <= 'Z')
-            {
-                result[0] = result[0] - 'A' + 'a';
-            }
-            else
-            {
-                result.insert(result.begin(), '_');
-            }
+            result[0] = result[0] - 'A' + 'a';
         }
         return result;
     }

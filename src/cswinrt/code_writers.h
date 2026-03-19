@@ -9878,7 +9878,16 @@ R"(
             }, ", ", fields),
             bind_each([](writer& w, auto&& field)
             {
-                w.write("% = %; ", field.name, bind<write_escaped_identifier>(field.param_name));
+                // When the param name matches the field name (i.e. to_camel_case couldn't
+                // change the casing), qualify the field with 'this.' to disambiguate.
+                if (field.name == field.param_name)
+                {
+                    w.write("this.% = %; ", field.name, bind<write_escaped_identifier>(field.param_name));
+                }
+                else
+                {
+                    w.write("% = %; ", field.name, bind<write_escaped_identifier>(field.param_name));
+                }
             }, fields));
 
         // properties
