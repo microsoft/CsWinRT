@@ -5078,12 +5078,20 @@ R"(
 
         auto class_name = w.write_temp("global::%.@", type.TypeNamespace(), type.TypeName());
 
+        // Clear the current namespace so that all type references (including generic
+        // type arguments) are fully qualified with 'global::'. This is needed because
+        // the names will be emitted in the 'ABI' namespace, not the original one.
+        auto saved_namespace = w._current_namespace;
+        w._current_namespace = {};
+
         for_typedef(w, get_type_semantics(default_interface), [&](auto type)
         {
             auto interface_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::CCW, true));
 
             defaultInterfaceEntries.insert({ std::move(class_name), std::move(interface_name) });
         });
+
+        w._current_namespace = saved_namespace;
     }
 
     void write_file_header(writer& w)
