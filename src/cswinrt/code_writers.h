@@ -5061,7 +5061,8 @@ R"(
             type.TypeNamespace(), type.TypeName());
     }
 
-    void write_default_interface_attribute(writer& w, TypeDef const& type)
+    void add_default_interface_entry(writer& w, TypeDef const& type,
+        concurrency::concurrent_unordered_map<std::string, std::string>& defaultInterfaceEntries)
     {
         if (settings.reference_projection)
         {
@@ -5070,11 +5071,51 @@ R"(
 
         auto default_interface = get_default_interface(type);
 
+        if (!default_interface)
+        {
+            return;
+        }
+
+        auto class_name = w.write_temp("global::%.@", type.TypeNamespace(), type.TypeName());
+
         for_typedef(w, get_type_semantics(default_interface), [&](auto type)
         {
-            w.write("[WindowsRuntimeDefaultInterfaceAttribute(typeof(%))]\n",
-                bind<write_type_name>(type, typedef_name_type::CCW, false));
+            auto interface_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::CCW, true));
+
+            defaultInterfaceEntries.insert({ std::move(class_name), std::move(interface_name) });
         });
+    }
+
+    void write_default_interfaces_class(
+        std::vector<std::pair<std::string, std::string>> const& sortedEntries)
+    {
+        if (sortedEntries.empty())
+        {
+            return;
+        }
+
+        writer w;
+        write_file_header(w);
+        w.write(R"(
+using WindowsRuntime;
+
+#pragma warning disable CSWINRT3001
+
+namespace ABI
+{
+%internal static class WindowsRuntimeDefaultInterfaces;
+}
+)",
+            bind([&](writer& w)
+            {
+                for (auto& [class_name, interface_name] : sortedEntries)
+                {
+                    w.write("[WindowsRuntimeDefaultInterface(typeof(%), typeof(%))]\n",
+                        class_name, interface_name);
+                }
+            }));
+
+        w.flush_to_file(settings.output_folder / "WindowsRuntimeDefaultInterfaces.cs");
     }
 
     void write_winrt_attribute(writer& w, TypeDef const& type)
@@ -9222,7 +9263,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
         auto gc_pressure_amount = get_gc_pressure_amount(type);
 
         w.write(R"(
-%%%%%% %class %%
+%%%%% %class %%
 {
 %
 %
@@ -9240,7 +9281,6 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             bind<write_class_winrt_classname_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
             bind<write_comwrapper_marshaller_attribute>(type),
-            bind<write_default_interface_attribute>(type),
             (settings.internal) ? "internal" : "public",
             bind<write_class_modifiers>(type),
             // class name

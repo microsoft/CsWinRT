@@ -249,11 +249,12 @@ Where <spec> is one or more of:
 
             task_group group;
             concurrency::concurrent_unordered_map<std::string, std::string> authoredTypeNameToMetadataTypeNameMap;
+            concurrency::concurrent_unordered_map<std::string, std::string> defaultInterfaceEntries;
             concurrency::concurrent_unordered_set<generic_abi_delegate> abiDelegateEntries;
             bool projectionFileWritten = false;
             for (auto&& ns_members : c.namespaces())
             {
-                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap]
+                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap, &defaultInterfaceEntries]
                 {
                     auto&& [ns, members] = ns_members;
                     std::string_view currentType = "";
@@ -343,6 +344,7 @@ Where <spec> is one or more of:
                                 else
                                 {
                                     write_class(w, type);
+                                    add_default_interface_entry(w, type, defaultInterfaceEntries);
                                     add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                     if (settings.component && componentActivatableClasses.count(type) == 1)
                                     {
@@ -470,6 +472,14 @@ Where <spec> is one or more of:
             }
 
             group.get();
+
+            if (!defaultInterfaceEntries.empty() && !settings.reference_projection)
+            {
+                std::vector<std::pair<std::string, std::string>> sortedEntries(
+                    defaultInterfaceEntries.begin(), defaultInterfaceEntries.end());
+                std::sort(sortedEntries.begin(), sortedEntries.end());
+                write_default_interfaces_class(sortedEntries);
+            }
 
             if (!authoredTypeNameToMetadataTypeNameMap.empty() && settings.component)
             {
