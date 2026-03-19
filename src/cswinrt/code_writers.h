@@ -2552,8 +2552,8 @@ remove => %;
         {
             auto [attribute_namespace, attribute_name] = attribute.TypeNamespaceAndName();
             attribute_name = attribute_name.substr(0, attribute_name.length() - "Attribute"sv.length());
-            // GCPressure, Guid, Flags, ProjectionInternal are handled separately
-            if (attribute_name == "GCPressure" || attribute_name == "Guid" || 
+            // Guid, Flags, ProjectionInternal are handled separately
+            if (attribute_name == "Guid" || 
                 attribute_name == "Flags" || attribute_name == "ProjectionInternal") continue;
             auto attribute_full = (attribute_name == "AttributeUsage") ? "System.AttributeUsage" :
                 w.write_temp("%.%", attribute_namespace, attribute_name);
@@ -2575,9 +2575,16 @@ remove => %;
                 {
                     allow_multiple = true;
                 }
-                if (attribute_name != "DefaultOverload" && attribute_name != "Overload" && 
-                    attribute_name != "AttributeUsage" && attribute_name != "ContractVersion" &&
-                    attribute_name != "Experimental")
+                // ContractVersion and GCPressure are only emitted for reference assemblies
+                if (attribute_name == "ContractVersion" || attribute_name == "GCPressure")
+                {
+                    if (!settings.reference_projection)
+                    {
+                        continue;
+                    }
+                }
+                else if (attribute_name != "DefaultOverload" && attribute_name != "Overload" && 
+                    attribute_name != "AttributeUsage" && attribute_name != "Experimental")
                 {
                     continue;
                 }
