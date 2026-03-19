@@ -3,7 +3,6 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -203,33 +202,14 @@ internal static partial class SignatureGenerator
                 ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
                 : interopDefinitions.WindowsRuntimeProjectionModule;
 
-        // Try to find the 'WindowsRuntimeDefaultInterfaces' lookup type in the ABI namespace
-        if (projectionModule?.GetTopLevelTypesLookup().TryGetValue(
-            (new Utf8String("ABI"), new Utf8String("WindowsRuntimeDefaultInterfaces")),
-            out TypeDefinition? lookupType) is not true)
+        // Use the cached default interfaces lookup for O(1) lookups by (Namespace, Name) key
+        if (projectionModule?.GetDefaultInterfacesLookup().TryGetValue(
+            (type.Namespace, type.Name),
+            out TypeSignature? signature) is true)
         {
-            defaultInterface = null;
+            defaultInterface = signature;
 
-            return false;
-        }
-
-        // Enumerate all '[WindowsRuntimeDefaultInterface]' attributes to find the one matching our type
-        foreach (CustomAttribute attribute in lookupType.CustomAttributes)
-        {
-            if (attribute.Signature is not { FixedArguments: [{ Element: TypeSignature classType }, { Element: TypeSignature interfaceType }] })
-            {
-                continue;
-            }
-
-            // Check if the class type in this attribute matches the type we're looking for
-            if (classType.Resolve() is TypeDefinition resolvedClassType &&
-                resolvedClassType.Namespace == type.Namespace &&
-                resolvedClassType.Name == type.Name)
-            {
-                defaultInterface = interfaceType;
-
-                return true;
-            }
+            return true;
         }
 
         defaultInterface = null;
