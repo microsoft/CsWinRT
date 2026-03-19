@@ -674,6 +674,10 @@ namespace cswinrt
 
     bool is_keyword(std::string_view str)
     {
+        // C# reserved keywords (sorted). Contextual keywords (e.g. 'value', 'var',
+        // 'dynamic') are intentionally excluded: they are valid identifiers outside
+        // their specific syntax contexts and do not need '@' escaping.
+        // See: https://learn.microsoft.com/dotnet/csharp/language-reference/keywords
         static constexpr std::string_view keywords[] =
         {
             "abstract",  "as",       "base",     "bool",       "break",     "byte",
@@ -9836,6 +9840,7 @@ R"(
         {
             std::string type;
             std::string name;
+            std::string param_name;
             bool is_interface;
         };
         std::vector<field_info> fields;
@@ -9845,6 +9850,7 @@ R"(
             field_info field_info{};
             field_info.type = w.write_temp("%", [&](writer& w) { write_projection_type(w, semantics); });
             field_info.name = field.Name();
+            field_info.param_name = to_camel_case(field_info.name);
             if (auto td = std::get_if<type_definition>(&semantics))
             {
                 field_info.is_interface = get_category(*td) == category::interface_type;
@@ -9866,16 +9872,25 @@ R"(
             type.TypeName(),
             type.TypeName());
 
-        // ctor
+        // ctor (use camelCase parameter names for cleaner public API)
         w.write("public %(%)\n{\n%\n}\n",
             type.TypeName(),
             bind_list([](writer& w, auto&& field)
             {
-                w.write("% _%", field.type, field.name);
+                w.write("% %", field.type, bind<write_escaped_identifier>(field.param_name));
             }, ", ", fields),
             bind_each([](writer& w, auto&& field)
             {
-                w.write("% = _%; ", field.name, field.name);
+                // When the param name matches the field name (i.e. to_camel_case couldn't
+                // change the casing), qualify the field with 'this.' to disambiguate.
+                if (field.name == field.param_name)
+                {
+                    w.write("this.% = %; ", field.name, bind<write_escaped_identifier>(field.param_name));
+                }
+                else
+                {
+                    w.write("% = %; ", field.name, bind<write_escaped_identifier>(field.param_name));
+                }
             }, fields));
 
         // properties
