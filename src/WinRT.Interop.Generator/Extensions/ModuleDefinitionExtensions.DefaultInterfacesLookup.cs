@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -27,30 +28,42 @@ internal partial class ModuleDefinitionExtensions
             key: module,
             valueFactory: static module =>
             {
+                TypeDefinition? windowsRuntimeDefaultInterfacesType = null;
+
                 // Find the 'WindowsRuntimeDefaultInterfaces' lookup type in the ABI namespace
-                if (!module.GetTopLevelTypesLookup().TryGetValue(
-                    ("ABI"u8, "WindowsRuntimeDefaultInterfaces"u8),
-                    out TypeDefinition? lookupType))
+                foreach (TypeDefinition type in module.TopLevelTypes)
+                {
+                    // Rather than using the lookup, which we don't really need here since we're only
+                    // doing a single find operation, we just scan the types to find the one we need.
+                    if (type.Namespace is Utf8String ns && ns.AsSpan().SequenceEqual("ABI"u8) &&
+                        type.Name is Utf8String name && name.AsSpan().SequenceEqual("WindowsRuntimeDefaultInterfaces"u8))
+                    {
+                        windowsRuntimeDefaultInterfacesType = type;
+
+                        break;
+                    }
+                }
+
+                // We didn't find the target type, so this module is likely invalid. We don't need
+                // to do anything here, lookups would just fail and report the correct diagnostics.
+                if (windowsRuntimeDefaultInterfacesType is null)
                 {
                     return FrozenDictionary<(Utf8String?, Utf8String?), TypeSignature>.Empty;
                 }
 
                 Dictionary<(Utf8String?, Utf8String?), TypeSignature> builder = [];
 
-                // Enumerate all attributes on the lookup type and extract runtime class / default interface pairs
-                foreach (CustomAttribute attribute in lookupType.CustomAttributes)
+                // Enumerate all attributes on the lookup type and extract runtime class to default interface pairs
+                foreach (CustomAttribute attribute in windowsRuntimeDefaultInterfacesType.CustomAttributes)
                 {
-                    // Match '[WindowsRuntimeDefaultInterface(typeof(Class), typeof(Interface))]'
+                    // Match '[WindowsRuntimeDefaultInterface(typeof(<CLASS_TYPE>), typeof(<INTERFACE_TYPE>))]'
                     if (attribute.Signature is not { FixedArguments: [{ Element: TypeSignature classType }, { Element: TypeSignature interfaceType }] })
                     {
                         continue;
                     }
 
-                    // Resolve the class type to get its namespace and name for the lookup key
-                    if (classType.Resolve() is TypeDefinition resolvedClassType)
-                    {
-                        builder[(resolvedClassType.Namespace, resolvedClassType.Name)] = interfaceType;
-                    }
+                    // Add the current pair to the map we're building
+                    builder[(classType.Namespace, classType.Name)] = interfaceType;
                 }
 
                 return builder.ToFrozenDictionary();

@@ -203,9 +203,7 @@ internal static partial class SignatureGenerator
                 : interopDefinitions.WindowsRuntimeProjectionModule;
 
         // Use the cached default interfaces lookup for O(1) lookups by (Namespace, Name) key
-        if (projectionModule?.GetDefaultInterfacesLookup().TryGetValue(
-            (type.Namespace, type.Name),
-            out TypeSignature? signature) is true)
+        if (projectionModule?.GetDefaultInterfacesLookup().TryGetValue((type.Namespace, type.Name), out TypeSignature? signature) is true)
         {
             defaultInterface = signature;
 
