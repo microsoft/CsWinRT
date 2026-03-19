@@ -5117,7 +5117,8 @@ R"(
 
         writer w;
         write_file_header(w);
-        w.write(R"(using WindowsRuntime;
+        w.write(R"(using System;
+using WindowsRuntime;
 
 #pragma warning disable CSWINRT3001
 
