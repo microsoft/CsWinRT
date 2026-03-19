@@ -9350,10 +9350,13 @@ return (%?)%.ConvertToManaged<%ComWrappersCallback>(value);
         {
             if (sealed)
             {
+                // For projected sealed runtime classes, the RCW type is always unwrappable (as the
+                // type can never be subclassed), so we can use UnwrapObjectReferenceUnsafe directly
+                // instead of going through the TryUnwrapObjectReference check.
                 w.write(R"(
-if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(value, out WindowsRuntimeObjectReference? objectReference))
+if (value is not null)
 {
-return objectReference.AsValue();
+return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();
 }
 )");
             }

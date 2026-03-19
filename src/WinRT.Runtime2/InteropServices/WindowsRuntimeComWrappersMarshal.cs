@@ -4,6 +4,7 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
@@ -14,6 +15,11 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// A marshaller with some utility methods that directly wrap <see cref="ComWrappers"/>.
 /// </summary>
+/// <remarks>
+/// No method in this class performs input validation. If any parameter is <see langword="null"/>,
+/// the code will throw <see cref="NullReferenceException"/>. It is the caller's responsibility
+/// to validate inputs before calling any method in this class.
+/// </remarks>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
@@ -205,5 +211,24 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
                 objectReference = null;
                 return false;
         }
+    }
+
+    /// <summary>
+    /// Unwraps the <see cref="WindowsRuntimeObjectReference"/> from the specified <see cref="WindowsRuntimeObject"/>
+    /// instance and returns it directly.
+    /// </summary>
+    /// <param name="value">The <see cref="WindowsRuntimeObject"/> instance to unwrap.</param>
+    /// <returns>The <see cref="WindowsRuntimeObjectReference"/> wrapping the native object from <paramref name="value"/>.</returns>
+    /// <remarks>
+    /// <para>
+    /// This method does not validate whether <paramref name="value"/> can actually be unwrapped (i.e. whether
+    /// <see cref="WindowsRuntimeObject.HasUnwrappableNativeObjectReference"/> is <see langword="true"/>). It is
+    /// the caller's responsibility to ensure that the object is in a valid state for unwrapping.
+    /// </para>
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static WindowsRuntimeObjectReference UnwrapObjectReferenceUnsafe(WindowsRuntimeObject value)
+    {
+        return value.NativeObjectReference;
     }
 }
