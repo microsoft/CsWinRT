@@ -175,7 +175,7 @@ internal partial class SignatureGenerator
         bool useWindowsUIXamlProjections)
     {
         // If we can resolve the default interface type from the projected runtime class, use it
-        if (TryGetDefaultInterfaceFromAttribute(typeDefinition, interopDefinitions, interopReferences, out TypeSignature? defaultInterface))
+        if (TryGetDefaultInterfaceFromAttribute(typeDefinition, interopDefinitions, out TypeSignature? defaultInterface))
         {
             return $"rc({typeFullName};{GetSignature(defaultInterface, interopDefinitions, interopReferences, useWindowsUIXamlProjections)})";
         }
