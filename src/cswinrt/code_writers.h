@@ -9869,7 +9869,7 @@ R"(
             type.TypeName(),
             type.TypeName());
 
-        // ctor (use camelCase parameter names rather than underscore-prefixed names for cleaner public API)
+        // ctor (use camelCase parameter names for cleaner public API)
         w.write("public %(%)\n{\n%\n}\n",
             type.TypeName(),
             bind_list([](writer& w, auto&& field)
