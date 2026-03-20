@@ -227,6 +227,70 @@ WinRT.Runtime2/
 - **T4 templates**: 6 `.tt` files generate constants (`HRESULT` codes, interface IIDs, XAML class names) and specialized marshallers (blittable array types).
 - **Feature switches**: opt-in/opt-out runtime features are controlled via `[FeatureSwitchDefinition]`-annotated properties in `WindowsRuntimeFeatureSwitches` (`Properties/WindowsRuntimeFeatureSwitches.cs`). Each switch is backed by an `AppContext` configuration property (e.g. `CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION`) and wired to an MSBuild property (e.g. `CsWinRTEnableManifestFreeActivation`) in `nuget/Microsoft.Windows.CsWinRT.targets`, which emits `RuntimeHostConfigurationOption` items with `Trim="true"`. This lets ILLink (trimming) and ILC (Native AOT) treat the switch values as constants and dead-code-eliminate all code behind disabled switches, making opt-in features fully pay-for-play.
 
+**Types projected in WinRT.Runtime:**
+
+Not all WinRT types are generated automatically by `cswinrt.exe` into SDK projection assemblies. `WinRT.Runtime` contains two categories of types that require special handling:
+
+#### Custom-mapped types
+
+These are built-in C#/.NET types that are mapped to WinRT types. Because the .NET type already exists in the BCL (and is not owned by CsWinRT), it cannot be "projected" in the usual sense. Instead, CsWinRT associates the necessary WinRT metadata with it via attributes such as `[WindowsRuntimeMappedMetadata]` and dedicated ABI marshalling code in the `ABI/System/` directory. Some of these types map to identically-named WinRT types (e.g. `int` ↔ `Int32`, `Guid` ↔ `Guid`), while others map to a different WinRT type entirely. The `EventHandler` delegate is especially noteworthy: the non-generic `System.EventHandler` is handled as a special case (see `ABI/System/EventHandler.cs`), while `System.EventHandler<TEventArgs>` maps to `Windows.Foundation.EventHandler<T>`, and `System.EventHandler<TSender, TEventArgs>` (a two-parameter generic delegate projected by CsWinRT) maps to `Windows.Foundation.TypedEventHandler<TSender, TResult>`.
+
+The following table lists all custom-mapped types where the .NET type maps to a **differently-named** WinRT type:
+
+| .NET type | WinRT type |
+|-----------|-----------|
+| `System.DateTimeOffset` | `Windows.Foundation.DateTime` |
+| `System.Exception` | `Windows.Foundation.HResult` |
+| `System.IDisposable` | `Windows.Foundation.IClosable` |
+| `System.Nullable<T>` | `Windows.Foundation.IReference<T>` |
+| `System.TimeSpan` | `Windows.Foundation.TimeSpan` |
+| `System.EventHandler<TSender, TEventArgs>` | `Windows.Foundation.TypedEventHandler<TSender, TResult>` |
+| `System.Uri` | `Windows.Foundation.Uri` |
+| `System.Type` | `Windows.UI.Xaml.Interop.TypeName` |
+| `System.IServiceProvider` | `Microsoft.UI.Xaml.IXamlServiceProvider` |
+| `System.ComponentModel.INotifyPropertyChanged` | `Microsoft.UI.Xaml.Data.INotifyPropertyChanged` |
+| `System.ComponentModel.PropertyChangedEventArgs` | `Microsoft.UI.Xaml.Data.PropertyChangedEventArgs` |
+| `System.ComponentModel.PropertyChangedEventHandler` | `Microsoft.UI.Xaml.Data.PropertyChangedEventHandler` |
+| `System.ComponentModel.INotifyDataErrorInfo` | `Microsoft.UI.Xaml.Data.INotifyDataErrorInfo` |
+| `System.ComponentModel.DataErrorsChangedEventArgs` | `Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs` |
+| `System.Windows.Input.ICommand` | `Microsoft.UI.Xaml.Input.ICommand` |
+| `System.Collections.IEnumerable` | `Microsoft.UI.Xaml.Interop.IBindableIterable` |
+| `System.Collections.IEnumerator` | `Microsoft.UI.Xaml.Interop.IBindableIterator` |
+| `System.Collections.IList` | `Microsoft.UI.Xaml.Interop.IBindableVector` |
+| `System.Collections.Specialized.INotifyCollectionChanged` | `Microsoft.UI.Xaml.Interop.INotifyCollectionChanged` |
+| `System.Collections.Specialized.NotifyCollectionChangedAction` | `Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction` |
+| `System.Collections.Specialized.NotifyCollectionChangedEventArgs` | `Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs` |
+| `System.Collections.Specialized.NotifyCollectionChangedEventHandler` | `Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler` |
+| `System.Collections.Generic.IEnumerable<T>` | `Windows.Foundation.Collections.IIterable<T>` |
+| `System.Collections.Generic.IEnumerator<T>` | `Windows.Foundation.Collections.IIterator<T>` |
+| `System.Collections.Generic.KeyValuePair<K, V>` | `Windows.Foundation.Collections.IKeyValuePair<K, V>` |
+| `System.Collections.Generic.IReadOnlyDictionary<K, V>` | `Windows.Foundation.Collections.IMapView<K, V>` |
+| `System.Collections.Generic.IDictionary<K, V>` | `Windows.Foundation.Collections.IMap<K, V>` |
+| `System.Collections.Generic.IReadOnlyList<T>` | `Windows.Foundation.Collections.IVectorView<T>` |
+| `System.Collections.Generic.IList<T>` | `Windows.Foundation.Collections.IVector<T>` |
+| `System.Numerics.Matrix3x2` | `Windows.Foundation.Numerics.Matrix3x2` |
+| `System.Numerics.Matrix4x4` | `Windows.Foundation.Numerics.Matrix4x4` |
+| `System.Numerics.Plane` | `Windows.Foundation.Numerics.Plane` |
+| `System.Numerics.Quaternion` | `Windows.Foundation.Numerics.Quaternion` |
+| `System.Numerics.Vector2` | `Windows.Foundation.Numerics.Vector2` |
+| `System.Numerics.Vector3` | `Windows.Foundation.Numerics.Vector3` |
+| `System.Numerics.Vector4` | `Windows.Foundation.Numerics.Vector4` |
+
+> **Note:** For types that map to `Microsoft.UI.Xaml.*` WinRT types, when CsWinRT is in `Windows.UI.Xaml.*` mode (`CsWinRTUseWindowsUIXamlProjections = true`) and a corresponding UWP XAML type exists, the mapping switches to that type instead. For example, `System.Windows.Input.ICommand` maps to `Windows.UI.Xaml.Input.ICommand` rather than `Microsoft.UI.Xaml.Input.ICommand`.
+
+The full mapping table (including identical-name mappings for primitives) is in `src/WinRT.Interop.Generator/Helpers/TypeMapping.cs`.
+
+#### Manually-projected types
+
+These are WinRT types that are defined directly in `WinRT.Runtime` rather than being auto-generated by `cswinrt.exe` into SDK projection assemblies. A type is manually projected when it requires customized marshalling support, or when it is referenced by additional infrastructure code that lives in `WinRT.Runtime`. For example:
+
+- **Generic collection interfaces** (`IEnumerable<T>`, `IList<T>`, `IDictionary<K,V>`, etc.) are here so that supporting adapter code (e.g. `IListAdapter<T>`, `IEnumerableMethods<T>`) and native object wrappers can live alongside them and be consumed by both projections and the interop generator.
+- **Async interfaces** (`IAsyncOperation<T>`, `IAsyncActionWithProgress<T>`, etc.) and their associated delegates are here to provide the async infrastructure (`AsyncInfo`, `EventSource<T>` specializations) that bridges WinRT async patterns to `Task`.
+- **Observable collection interfaces** (`IObservableVector<T>`, `IObservableMap<K,V>`) and their event handler delegates (`VectorChangedEventHandler<T>`, `MapChangedEventHandler<K,V>`) are here for event source wiring.
+- **Foundation types** such as `IStringable`, `Point`, `Rect`, `Size`, `PropertyType`, and `EventRegistrationToken` are here because they are referenced by marshalling infrastructure or vtable definitions within `WinRT.Runtime`.
+
+Some of these types — particularly the bindable collection interfaces (`IEnumerable`, `IList`) and XAML-related types — have **different IIDs and/or runtime class names** depending on whether `Windows.UI.Xaml.*` (UWP XAML) or `Microsoft.UI.Xaml.*` (WinUI) support is being used (controlled by the `CsWinRTUseWindowsUIXamlProjections` MSBuild property). This requires further special handling in both the generated projection code and the interop generator to ensure that the correct marshalling and metadata info is associated with them at publish time.
+
 ### 2. WinRT.SourceGenerator2 (`src/Authoring/WinRT.SourceGenerator2/`)
 
 A Roslyn incremental source generator and diagnostic analyzer package. Runs at **design time** (IntelliSense) and **build time**. It is intentionally lightweight — heavy codegen is deferred to the post-build CLI tools.
