@@ -38,7 +38,8 @@ CsWinRT/
 │   ├── WinRT.Impl.Generator/              # (4) Impl/forwarder DLL generator (cswinrtimplgen.exe)
 │   ├── WinRT.Projection.Generator/        # (5) Projection DLL generator (cswinrtprojectiongen.exe)
 │   ├── WinRT.Interop.Generator/           # (6) Interop sidecar generator (cswinrtinteropgen.exe)
-│   └── WinRT.Generator.Tasks/             # (7) MSBuild tasks for the build tools
+│   ├── WinRT.Generator.Tasks/             # (7) MSBuild tasks for the build tools
+│   └── WinRT.Sdk.Projection/              # (8) Precompiled Windows SDK projection builds
 ├── nuget/                                 # MSBuild .props/.targets for NuGet package
 ├── docs/                                  # Specifications and documentation
 └── eng/                                   # Engineering/CI infrastructure
@@ -386,6 +387,24 @@ MSBuild task wrappers that bridge the MSBuild build system with the CLI tools ab
 | `RunCsWinRTInteropGenerator` | `cswinrtinteropgen.exe` | Generate interop sidecar assembly |
 
 All tasks extend `ToolTask`, generate response files for their respective CLI tools, and support architecture selection (`win-x86`, `win-x64`, `win-arm64`).
+
+### 8. SDK projection builds (`src/WinRT.Sdk.Projection/`)
+
+A build project (not a tool) used during **official CsWinRT builds** to produce precompiled `WinRT.Sdk.Projection.dll` and `WinRT.Sdk.Xaml.Projection.dll` for each supported Windows SDK version. These precompiled .dll-s are bundled into the CsWinRT NuGet package so that consumers don't have to regenerate the entire Windows SDK projection on every publish (as described in the architecture overview).
+
+**Project settings:**
+
+- **Target**: `net10.0`, `IsAotCompatible`, `DisableRuntimeMarshalling`
+- **Assembly name**: `WinRT.Sdk.Projection` (or `WinRT.Sdk.Xaml.Projection` when `WindowsSdkXaml=true`)
+- Disables `CsWinRTGenerateProjection` and `CsWinRTGenerateInteropAssembly2` (it builds the projection itself)
+
+**How it works:**
+
+- The target Windows SDK version is passed via `/p:WindowsSdkBuild=XXXXX` (e.g. `26100`)
+- Downloads `Microsoft.Windows.SDK.Contracts` NuGet package to get the `.winmd` files for that SDK version
+- Invokes `cswinrtprojectiongen.exe` (via the `RunCsWinRTMergedProjectionGenerator` MSBuild task) with `WindowsSdkOnly=true` to produce the projection .dll
+- Output goes to a per-SDK-version subdirectory (`bin/{Configuration}/{WindowsSdkBuild}/`)
+- Built twice per SDK version: once for the base projection (`WinRT.Sdk.Projection.dll`) and once with `WindowsSdkXaml=true` for the XAML projection (`WinRT.Sdk.Xaml.Projection.dll`)
 
 ---
 

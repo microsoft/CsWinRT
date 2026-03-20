@@ -59,6 +59,12 @@ Launch parallel explore agents for each of the 7 CsWinRT 3.0 projects listed in 
    - MSBuild task classes are accurately listed
    - Task-to-tool mappings are current
 
+8. **SDK projection builds (`src/WinRT.Sdk.Projection/`)**
+   - Assembly name logic (base vs XAML) is current
+   - Windows SDK package download and WinMD sourcing is accurate
+   - Build parameters (`WindowsSdkBuild`, `WindowsSdkXaml`) are current
+   - Project settings are current
+
 ### Step 3: verify the build pipeline
 
 Analyze the `nuget/` folder to verify:
