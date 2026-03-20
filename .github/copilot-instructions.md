@@ -46,59 +46,54 @@ CsWinRT/
 
 ---
 
-## Architecture diagram
+## Architecture overview
 
 ```mermaid
 graph TD
-    subgraph "Design-Time (IntelliSense)"
-        SG["WinRT.SourceGenerator2<br/>(Roslyn source generator)"]
+    subgraph NUGET ["WinRT component NuGet package"]
+        direction TB
+        WINMD[".winmd metadata"]
+        CSWINRT["cswinrt.exe<br/><i>(CsWinRTGenerateProjection target)</i>"]
+        CS_SOURCES["Generated C# sources"]
+        CSC_LIB["csc.exe<br/><i>(compiles projection .csproj)</i>"]
+        REF_ASM["Reference assembly<br/><i>(public API surface only)</i>"]
+        IMPLGEN["cswinrtimplgen.exe"]
+        IMPL_DLL["Forwarder impl .dll<br/><i>(type forwards, no code)</i>"]
+
+        WINMD --> CSWINRT --> CS_SOURCES --> CSC_LIB --> REF_ASM --> IMPLGEN --> IMPL_DLL
     end
 
-    subgraph "Build-Time"
-        WINMD[".winmd metadata files"]
-        CSWINRT["cswinrt.exe<br/>(C++ code generator)"]
-        CSC["csc.exe<br/>(C# compiler)"]
-        IMPLGEN["cswinrtimplgen.exe<br/>(Impl generator)"]
-        PROJGEN["cswinrtprojectiongen.exe<br/>(Projection generator)"]
-    end
+    subgraph APP ["Application/library publishing"]
+        direction TB
+        MY_DLL["MyProject.dll<br/><i>(compiled app, references<br/>WinRT component packages)</i>"]
 
-    subgraph "Publish-Time"
-        INTEROPGEN["cswinrtinteropgen.exe<br/>(Interop generator)"]
-    end
-
-    subgraph "Output Assemblies"
-        RUNTIME["WinRT.Runtime.dll"]
+        PROJGEN_SDK["cswinrtprojectiongen.exe<br/><i>(1) Windows SDK types</i>"]
         SDK_PROJ["WinRT.Sdk.Projection.dll"]
+
+        PROJGEN_XAML["cswinrtprojectiongen.exe<br/><i>(2) UWP XAML types<br/>(if using Windows.UI.Xaml)</i>"]
         XAML_PROJ["WinRT.Sdk.Xaml.Projection.dll"]
+
+        PROJGEN_3P["cswinrtprojectiongen.exe<br/><i>(3) 3rd party components<br/>(if any .winmd refs)</i>"]
         MERGED_PROJ["WinRT.Projection.dll"]
-        IMPL_DLL["Impl forwarder .dll-s"]
-        INTEROP["WinRT.Interop.dll"]
-        APP["App.dll"]
+
+        INTEROPGEN["cswinrtinteropgen.exe"]
+        INTEROP["WinRT.Interop.dll<br/><i>(all marshalling code:<br/>generics, CCW, type maps)</i>"]
+
+        MY_DLL --> PROJGEN_SDK --> SDK_PROJ
+        MY_DLL --> PROJGEN_XAML --> XAML_PROJ
+        MY_DLL --> PROJGEN_3P --> MERGED_PROJ
+
+        SDK_PROJ --> INTEROPGEN
+        XAML_PROJ --> INTEROPGEN
+        MERGED_PROJ --> INTEROPGEN
+        MY_DLL --> INTEROPGEN
+        INTEROPGEN -->|"emits IL directly"| INTEROP
     end
 
-    WINMD --> CSWINRT
-    CSWINRT -->|"generates C# sources"| CSC
-    CSC --> APP
-    SG -->|"generates authoring/type map code"| CSC
-
-    WINMD --> PROJGEN
-    PROJGEN -->|"invokes cswinrt.exe + Roslyn"| SDK_PROJ
-    PROJGEN --> XAML_PROJ
-    PROJGEN --> MERGED_PROJ
-
-    APP --> IMPLGEN
-    IMPLGEN --> IMPL_DLL
-
-    APP --> INTEROPGEN
-    SDK_PROJ --> INTEROPGEN
-    XAML_PROJ --> INTEROPGEN
-    MERGED_PROJ --> INTEROPGEN
-    INTEROPGEN -->|"emits IL directly"| INTEROP
-
-    RUNTIME -.->|"referenced by all"| APP
-    RUNTIME -.-> SDK_PROJ
-    RUNTIME -.-> INTEROP
+    IMPL_DLL -.->|"referenced by app"| MY_DLL
 ```
+
+> **Precompiled SDK projections:** To speed up builds, the CsWinRT NuGet package includes precompiled `WinRT.Sdk.Projection.dll` and `WinRT.Sdk.Xaml.Projection.dll` binaries for all supported Windows SDK versions. When the CsWinRT version matches the target Windows SDK version (which is the normal case, except when using a Windows SDK preview), the projection generator skips regenerating these .dll-s entirely and uses the precompiled ones instead. This avoids the cost of running cswinrt.exe + Roslyn compilation for the entire Windows SDK on every publish.
 
 ---
 
@@ -143,23 +138,7 @@ By running the interop generator at the very end of the build process (after all
 
 ---
 
-## Build pipeline flow
-
-The CsWinRT 3.0 build pipeline runs through several phases orchestrated by MSBuild targets in the `nuget/` folder:
-
-```mermaid
-flowchart TD
-    A["Phase 1: Initialization<br/>(CsWinRT.props)"] --> B["Phase 2: Reference Setup<br/>(Remove .winmd from refs,<br/>resolve Windows metadata)"]
-    B --> C["Phase 3: Projection Generation<br/>(cswinrt.exe generates C# from .winmd)"]
-    C --> D["Phase 4: Compilation<br/>(csc.exe compiles project + generated code)"]
-    D --> E["Phase 5: Impl Generation<br/>(cswinrtimplgen.exe creates forwarder DLLs)"]
-    D --> F["Phase 6: Projection Merging<br/>(cswinrtprojectiongen.exe creates<br/>WinRT.Sdk.Projection.dll,<br/>WinRT.Sdk.Xaml.Projection.dll,<br/>WinRT.Projection.dll)"]
-    E --> G["Phase 7: Interop Generation<br/>(cswinrtinteropgen.exe creates<br/>WinRT.Interop.dll sidecar)"]
-    F --> G
-    G --> H["Phase 8: Optional Post-Processing<br/>(IIDOptimizer, NativeAOT stub exe)"]
-```
-
-### Key MSBuild properties
+## Key MSBuild properties
 
 | Property | Default | Description |
 |----------|---------|-------------|
