@@ -145,7 +145,7 @@ By running the interop generator at the very end of the build process (after all
 |----------|---------|-------------|
 | `CsWinRTEnabled` | `true` | Master switch for CsWinRT processing |
 | `CsWinRTGenerateProjection` | `true` | Run cswinrt.exe to generate C# projection code |
-| `CsWinRTGenerateInteropAssembly2` | auto (`true` for Exe/WinExe, or Library with `PublishAot=true`; otherwise `false`) | Generate interop assemblies at publish time |
+| `CsWinRTGenerateInteropAssembly2` | auto (`true` for Exe/WinExe, or Library with `PublishAot=true`) | Generate interop assemblies at publish time |
 | `CsWinRTGenerateReferenceProjection` | `false` | Generate reference-only projections (for NuGet packages) |
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode |
 | `CsWinRTUseWindowsUIXamlProjections` | `false` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
