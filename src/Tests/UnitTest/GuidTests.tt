@@ -124,6 +124,18 @@ var tests = new (string Name, string IID, string Mangled)[]
     ("IEnumerable_NullableVector2", "68cf9b6c-91fb-508d-9d94-a351e52b5e03", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector2>>"),
     ("IEnumerable_NullableVector3", "8a40ba7a-7c34-54e6-9178-1df1f39deeae", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector3>>"),
     ("IEnumerable_NullableVector4", "eb7d2b5f-56bf-53fb-82ba-413e0891acaf", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector4>>"),
+
+    // TODO: Nullable WinUI (Microsoft.UI.Xaml) types wrapped in IEnumerable<T>.
+    // These need a WinUI-enabled debug repro to compute the expected IIDs.
+    // ("IEnumerable_NullableCornerRadius", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-CornerRadius>>"),
+    // ("IEnumerable_NullableDuration", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Duration>>"),
+    // ("IEnumerable_NullableGridLength", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-GridLength>>"),
+    // ("IEnumerable_NullableThickness", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Thickness>>"),
+    // ("IEnumerable_NullableGeneratorPosition", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Controls-Primitives-GeneratorPosition>>"),
+    // ("IEnumerable_NullableMatrix", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Media-Matrix>>"),
+    // ("IEnumerable_NullableKeyTime", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Media-Animation-KeyTime>>"),
+    // ("IEnumerable_NullableRepeatBehavior", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Media-Animation-RepeatBehavior>>"),
+    // ("IEnumerable_NullableMatrix3D", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Media-Media3D-Matrix3D>>"),
 };
 
 for (int i = 0; i < tests.Length; i++)
@@ -133,11 +145,11 @@ for (int i = 0; i < tests.Length; i++)
     [TestMethod]
     public void Test_<#=tests[i].Name#>()
     {
-        Assert.AreEqual(new Guid("<#=tests[i].IID#>"), GetIID_<#=tests[i].Name#>(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#=tests[i].Mangled#>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#=tests[i].Mangled#>")]
-    private static extern ref readonly Guid GetIID_<#=tests[i].Name#>([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("<#=tests[i].IID#>"), GetIID(null));
+    }
 <#
 }
 #>

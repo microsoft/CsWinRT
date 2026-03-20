@@ -18,567 +18,567 @@ public partial class TestGuids
     [TestMethod]
     public void Test_IAsyncActionWithProgress_A()
     {
-        Assert.AreEqual(new Guid("dd725452-2da3-5103-9c7d-22ee9bb14ad3"), GetIID_IAsyncActionWithProgress_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncActionWithProgress'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncActionWithProgress'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_IAsyncActionWithProgress_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("dd725452-2da3-5103-9c7d-22ee9bb14ad3"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IAsyncOperationWithProgress_A_B()
     {
-        Assert.AreEqual(new Guid("94645425-b9e5-5b91-b509-8da4df6a8916"), GetIID_IAsyncOperationWithProgress_A_B(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
-    private static extern ref readonly Guid GetIID_IAsyncOperationWithProgress_A_B([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("94645425-b9e5-5b91-b509-8da4df6a8916"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IAsyncOperation_A()
     {
-        Assert.AreEqual(new Guid("2bd35ee6-72d9-5c5d-9827-05ebb81487ab"), GetIID_IAsyncOperation_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IAsyncOperation'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_IAsyncOperation_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("2bd35ee6-72d9-5c5d-9827-05ebb81487ab"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_AsyncActionProgressHandler_A()
     {
-        Assert.AreEqual(new Guid("c261d8d0-71ba-5f38-a239-872342253a18"), GetIID_AsyncActionProgressHandler_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>AsyncActionProgressHandler'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>AsyncActionProgressHandler'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_AsyncActionProgressHandler_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("c261d8d0-71ba-5f38-a239-872342253a18"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_AsyncActionWithProgressCompletedHandler_A()
     {
-        Assert.AreEqual(new Guid("9a0d211c-0374-5d23-9e15-eaa3570fae63"), GetIID_AsyncActionWithProgressCompletedHandler_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>AsyncActionWithProgressCompletedHandler'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>AsyncActionWithProgressCompletedHandler'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_AsyncActionWithProgressCompletedHandler_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("9a0d211c-0374-5d23-9e15-eaa3570fae63"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_AsyncOperationCompletedHandler_A()
     {
-        Assert.AreEqual(new Guid("9d534225-231f-55e7-a6d0-6c938e2d9160"), GetIID_AsyncOperationCompletedHandler_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>AsyncOperationCompletedHandler'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>AsyncOperationCompletedHandler'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_AsyncOperationCompletedHandler_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("9d534225-231f-55e7-a6d0-6c938e2d9160"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_AsyncOperationProgressHandler_A_B()
     {
-        Assert.AreEqual(new Guid("264f1e0c-abe4-590b-9d37-e1cc118ecc75"), GetIID_AsyncOperationProgressHandler_A_B(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>AsyncOperationProgressHandler'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>AsyncOperationProgressHandler'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
-    private static extern ref readonly Guid GetIID_AsyncOperationProgressHandler_A_B([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("264f1e0c-abe4-590b-9d37-e1cc118ecc75"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_AsyncOperationWithProgressCompletedHandler_A_B()
     {
-        Assert.AreEqual(new Guid("c2d078d8-ac47-55ab-83e8-123b2be5bc5a"), GetIID_AsyncOperationWithProgressCompletedHandler_A_B(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>AsyncOperationWithProgressCompletedHandler'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>AsyncOperationWithProgressCompletedHandler'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
-    private static extern ref readonly Guid GetIID_AsyncOperationWithProgressCompletedHandler_A_B([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("c2d078d8-ac47-55ab-83e8-123b2be5bc5a"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_EventHandler_A()
     {
-        Assert.AreEqual(new Guid("fa0b7d80-7efa-52df-9b69-0574ce57ada4"), GetIID_EventHandler_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>EventHandler'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>EventHandler'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_EventHandler_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("fa0b7d80-7efa-52df-9b69-0574ce57ada4"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_EventHandler_A_B()
     {
-        Assert.AreEqual(new Guid("edb31843-b4cf-56eb-925a-d4d0ce97a08d"), GetIID_EventHandler_A_B(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#Windows>EventHandler'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#Windows>EventHandler'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
-    private static extern ref readonly Guid GetIID_EventHandler_A_B([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("edb31843-b4cf-56eb-925a-d4d0ce97a08d"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_A()
     {
-        Assert.AreEqual(new Guid("96565eb9-a692-59c8-bcb5-647cde4e6c4d"), GetIID_IEnumerable_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("96565eb9-a692-59c8-bcb5-647cde4e6c4d"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerator_A()
     {
-        Assert.AreEqual(new Guid("3c9b1e27-8357-590b-8828-6e917f172390"), GetIID_IEnumerator_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerator'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerator'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_IEnumerator_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("3c9b1e27-8357-590b-8828-6e917f172390"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_KeyValuePair_A_B()
     {
-        Assert.AreEqual(new Guid("89336cd9-8b66-50a7-9759-eb88ccb2e1fe"), GetIID_KeyValuePair_A_B(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>KeyValuePair'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>KeyValuePair'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
-    private static extern ref readonly Guid GetIID_KeyValuePair_A_B([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("89336cd9-8b66-50a7-9759-eb88ccb2e1fe"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IReadOnlyDictionary_A_B()
     {
-        Assert.AreEqual(new Guid("b78f0653-fa89-59cf-ba95-726938aae666"), GetIID_IReadOnlyDictionary_A_B(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IReadOnlyDictionary'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IReadOnlyDictionary'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
-    private static extern ref readonly Guid GetIID_IReadOnlyDictionary_A_B([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("b78f0653-fa89-59cf-ba95-726938aae666"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IDictionary_A_B()
     {
-        Assert.AreEqual(new Guid("9962cd50-09d5-5c46-b1e1-3c679c1c8fae"), GetIID_IDictionary_A_B(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IDictionary'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IDictionary'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
-    private static extern ref readonly Guid GetIID_IDictionary_A_B([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("9962cd50-09d5-5c46-b1e1-3c679c1c8fae"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IReadOnlyList_A()
     {
-        Assert.AreEqual(new Guid("5f07498b-8e14-556e-9d2e-2e98d5615da9"), GetIID_IReadOnlyList_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IReadOnlyList'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IReadOnlyList'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_IReadOnlyList_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("5f07498b-8e14-556e-9d2e-2e98d5615da9"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IList_A()
     {
-        Assert.AreEqual(new Guid("0e3f106f-a266-50a1-8043-c90fcf3844f6"), GetIID_IList_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_IList_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("0e3f106f-a266-50a1-8043-c90fcf3844f6"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IMapChangedEventArgs_A()
     {
-        Assert.AreEqual(new Guid("e1aa5138-12bd-51a1-8558-698dfd070abe"), GetIID_IMapChangedEventArgs_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IMapChangedEventArgs'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IMapChangedEventArgs'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_IMapChangedEventArgs_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("e1aa5138-12bd-51a1-8558-698dfd070abe"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IObservableMap_A_B()
     {
-        Assert.AreEqual(new Guid("75f99e2a-137e-537e-a5b1-0b5a6245fc02"), GetIID_IObservableMap_A_B(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IObservableMap'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IObservableMap'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
-    private static extern ref readonly Guid GetIID_IObservableMap_A_B([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("75f99e2a-137e-537e-a5b1-0b5a6245fc02"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IObservableVector_A()
     {
-        Assert.AreEqual(new Guid("d24c289f-2341-5128-aaa1-292dd0dc1950"), GetIID_IObservableVector_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IObservableVector'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>IObservableVector'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_IObservableVector_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("d24c289f-2341-5128-aaa1-292dd0dc1950"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_MapChangedEventHandler_A_B()
     {
-        Assert.AreEqual(new Guid("19046f0b-cf81-5dec-bbb2-7cc250da8b8b"), GetIID_MapChangedEventHandler_A_B(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>MapChangedEventHandler'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>MapChangedEventHandler'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
-    private static extern ref readonly Guid GetIID_MapChangedEventHandler_A_B([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("19046f0b-cf81-5dec-bbb2-7cc250da8b8b"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_VectorChangedEventHandler_A()
     {
-        Assert.AreEqual(new Guid("a1e9acd7-e4df-5a79-aefa-de07934ab0fb"), GetIID_VectorChangedEventHandler_A(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>VectorChangedEventHandler'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#CsWinRT>VectorChangedEventHandler'1<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>>")]
-    private static extern ref readonly Guid GetIID_VectorChangedEventHandler_A([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("a1e9acd7-e4df-5a79-aefa-de07934ab0fb"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IList_Object()
     {
-        Assert.AreEqual(new Guid("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a"), GetIID_IList_Object(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<object>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<object>")]
-    private static extern ref readonly Guid GetIID_IList_Object([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IList_Uri()
     {
-        Assert.AreEqual(new Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e"), GetIID_IList_Uri(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#corlib>System-Uri>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#corlib>System-Uri>")]
-    private static extern ref readonly Guid GetIID_IList_Uri([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IList_AsyncActionCompletedHandler()
     {
-        Assert.AreEqual(new Guid("5dafe591-86dc-59aa-bfda-07f5d59fc708"), GetIID_IList_AsyncActionCompletedHandler(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#CsWinRT>Windows-Foundation-AsyncActionCompletedHandler>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#CsWinRT>Windows-Foundation-AsyncActionCompletedHandler>")]
-    private static extern ref readonly Guid GetIID_IList_AsyncActionCompletedHandler([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("5dafe591-86dc-59aa-bfda-07f5d59fc708"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IList_ComposedNonBlittableStruct()
     {
-        Assert.AreEqual(new Guid("c8477314-b257-511b-a3a1-9e4eb6385152"), GetIID_IList_ComposedNonBlittableStruct(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<TestComponentCSharp>TestComponentCSharp-ComposedNonBlittableStruct>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<TestComponentCSharp>TestComponentCSharp-ComposedNonBlittableStruct>")]
-    private static extern ref readonly Guid GetIID_IList_ComposedNonBlittableStruct([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("c8477314-b257-511b-a3a1-9e4eb6385152"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IList_IDisposable()
     {
-        Assert.AreEqual(new Guid("1bfca4f6-2c4e-5174-9869-b39d35848fcc"), GetIID_IList_IDisposable(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#corlib>System-IDisposable>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#corlib>System-IDisposable>")]
-    private static extern ref readonly Guid GetIID_IList_IDisposable([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("1bfca4f6-2c4e-5174-9869-b39d35848fcc"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IList_IWwwFormUrlDecoderEntry()
     {
-        Assert.AreEqual(new Guid("2f5fb6d3-231f-57a1-9f2a-daa7e43bf075"), GetIID_IList_IWwwFormUrlDecoderEntry(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#Windows>Windows-Foundation-IWwwFormUrlDecoderEntry>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#Windows>Windows-Foundation-IWwwFormUrlDecoderEntry>")]
-    private static extern ref readonly Guid GetIID_IList_IWwwFormUrlDecoderEntry([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("2f5fb6d3-231f-57a1-9f2a-daa7e43bf075"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IList_WwwFormUrlDecoderEntry()
     {
-        Assert.AreEqual(new Guid("1d9ba3f5-b997-5a7d-82c4-7857ecbf3a42"), GetIID_IList_WwwFormUrlDecoderEntry(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#Windows>Windows-Foundation-WwwFormUrlDecoderEntry>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#Windows>Windows-Foundation-WwwFormUrlDecoderEntry>")]
-    private static extern ref readonly Guid GetIID_IList_WwwFormUrlDecoderEntry([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("1d9ba3f5-b997-5a7d-82c4-7857ecbf3a42"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IList_Deferral()
     {
-        Assert.AreEqual(new Guid("a3c9b753-57ad-537f-9626-4ae5785473d4"), GetIID_IList_Deferral(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#Windows>Windows-Foundation-Deferral>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#Windows>Windows-Foundation-Deferral>")]
-    private static extern ref readonly Guid GetIID_IList_Deferral([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("a3c9b753-57ad-537f-9626-4ae5785473d4"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IList_DateTimeOffset()
     {
-        Assert.AreEqual(new Guid("94390dc5-e442-5870-88b6-007e232f902c"), GetIID_IList_DateTimeOffset(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#corlib>System-DateTimeOffset>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#corlib>System-DateTimeOffset>")]
-    private static extern ref readonly Guid GetIID_IList_DateTimeOffset([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("94390dc5-e442-5870-88b6-007e232f902c"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IList_Point()
     {
-        Assert.AreEqual(new Guid("c0d513a9-ec4a-5a5d-b6d5-b707defdb9f7"), GetIID_IList_Point(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#Windows>Windows-Foundation-Point>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#Windows>Windows-Foundation-Point>")]
-    private static extern ref readonly Guid GetIID_IList_Point([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("c0d513a9-ec4a-5a5d-b6d5-b707defdb9f7"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_IStringable()
     {
-        Assert.AreEqual(new Guid("88241f54-588f-529b-8344-08d8a4a3c25a"), GetIID_IEnumerable_IStringable(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_IStringable([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("88241f54-588f-529b-8344-08d8a4a3c25a"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_IBindableIterable()
     {
-        Assert.AreEqual(new Guid("af2aea1d-08d9-5ca3-9870-c43ea54b9786"), GetIID_IEnumerable_IBindableIterable(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Collections-IEnumerable>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Collections-IEnumerable>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_IBindableIterable([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("af2aea1d-08d9-5ca3-9870-c43ea54b9786"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_IBindableVector()
     {
-        Assert.AreEqual(new Guid("884f89c1-b19c-58fb-bb64-2907b5b72083"), GetIID_IEnumerable_IBindableVector(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Collections-IList>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Collections-IList>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_IBindableVector([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("884f89c1-b19c-58fb-bb64-2907b5b72083"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableBoolean()
     {
-        Assert.AreEqual(new Guid("b4e71894-d8db-5429-9cee-9e957c01a3fa"), GetIID_IEnumerable_NullableBoolean(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<bool>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<bool>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableBoolean([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("b4e71894-d8db-5429-9cee-9e957c01a3fa"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableSByte()
     {
-        Assert.AreEqual(new Guid("ca0489c7-054e-5e52-a8ab-5322a9ac9be8"), GetIID_IEnumerable_NullableSByte(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<sbyte>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<sbyte>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableSByte([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("ca0489c7-054e-5e52-a8ab-5322a9ac9be8"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableInt16()
     {
-        Assert.AreEqual(new Guid("d41c6075-62bb-54a7-aba5-b80920dddab1"), GetIID_IEnumerable_NullableInt16(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<short>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<short>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableInt16([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("d41c6075-62bb-54a7-aba5-b80920dddab1"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableInt32()
     {
-        Assert.AreEqual(new Guid("03c10a1b-b584-5081-a76d-017a80eeebfe"), GetIID_IEnumerable_NullableInt32(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<int>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<int>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableInt32([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("03c10a1b-b584-5081-a76d-017a80eeebfe"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableInt64()
     {
-        Assert.AreEqual(new Guid("ff5ca13c-3fc7-5867-9d95-c2c8d366b4ae"), GetIID_IEnumerable_NullableInt64(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<long>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<long>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableInt64([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("ff5ca13c-3fc7-5867-9d95-c2c8d366b4ae"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableByte()
     {
-        Assert.AreEqual(new Guid("b486c1cb-165b-5128-9e8e-bb0ccb6ea9d2"), GetIID_IEnumerable_NullableByte(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<byte>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<byte>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableByte([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("b486c1cb-165b-5128-9e8e-bb0ccb6ea9d2"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableUInt16()
     {
-        Assert.AreEqual(new Guid("e8985950-7e57-5c8b-b6fa-604a465d258c"), GetIID_IEnumerable_NullableUInt16(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<ushort>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<ushort>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableUInt16([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("e8985950-7e57-5c8b-b6fa-604a465d258c"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableUInt32()
     {
-        Assert.AreEqual(new Guid("1225929a-80bd-5d32-9912-a256befadb75"), GetIID_IEnumerable_NullableUInt32(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<uint>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<uint>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableUInt32([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("1225929a-80bd-5d32-9912-a256befadb75"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableUInt64()
     {
-        Assert.AreEqual(new Guid("6a8145dc-f08b-59e9-aa95-f00f7e0d133c"), GetIID_IEnumerable_NullableUInt64(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<ulong>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<ulong>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableUInt64([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("6a8145dc-f08b-59e9-aa95-f00f7e0d133c"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableSingle()
     {
-        Assert.AreEqual(new Guid("7eeb4894-d4b0-5fc0-8994-ed10b6b140a5"), GetIID_IEnumerable_NullableSingle(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<float>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<float>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableSingle([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("7eeb4894-d4b0-5fc0-8994-ed10b6b140a5"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableDouble()
     {
-        Assert.AreEqual(new Guid("8b82b07e-3cdc-5e09-8d24-b1ed4aba9dc9"), GetIID_IEnumerable_NullableDouble(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<double>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<double>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableDouble([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("8b82b07e-3cdc-5e09-8d24-b1ed4aba9dc9"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableChar()
     {
-        Assert.AreEqual(new Guid("4664e871-2a74-5091-80a9-7c57b61c0227"), GetIID_IEnumerable_NullableChar(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<char>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<char>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableChar([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("4664e871-2a74-5091-80a9-7c57b61c0227"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableGuid()
     {
-        Assert.AreEqual(new Guid("6c0e1bb4-8a19-550d-9a66-de23be625600"), GetIID_IEnumerable_NullableGuid(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Guid>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Guid>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableGuid([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("6c0e1bb4-8a19-550d-9a66-de23be625600"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableTimeSpan()
     {
-        Assert.AreEqual(new Guid("aa591268-d773-57d5-9791-7ca8d6870d45"), GetIID_IEnumerable_NullableTimeSpan(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-TimeSpan>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-TimeSpan>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableTimeSpan([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("aa591268-d773-57d5-9791-7ca8d6870d45"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableDateTimeOffset()
     {
-        Assert.AreEqual(new Guid("9e757eb6-dcaf-5aa0-8e1a-260f0ee9d183"), GetIID_IEnumerable_NullableDateTimeOffset(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-DateTimeOffset>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-DateTimeOffset>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableDateTimeOffset([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("9e757eb6-dcaf-5aa0-8e1a-260f0ee9d183"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableEventRegistrationToken()
     {
-        Assert.AreEqual(new Guid("8add533b-3c9c-5e53-b2ab-bcc2a5502e5f"), GetIID_IEnumerable_NullableEventRegistrationToken(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>WindowsRuntime-InteropServices-EventRegistrationToken>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>WindowsRuntime-InteropServices-EventRegistrationToken>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableEventRegistrationToken([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("8add533b-3c9c-5e53-b2ab-bcc2a5502e5f"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullablePoint()
     {
-        Assert.AreEqual(new Guid("e889008d-6a55-5f13-98ba-0752e40405f4"), GetIID_IEnumerable_NullablePoint(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Point>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Point>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullablePoint([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("e889008d-6a55-5f13-98ba-0752e40405f4"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableRect()
     {
-        Assert.AreEqual(new Guid("53e74ab1-1a40-514a-ae73-c48b4a7ba095"), GetIID_IEnumerable_NullableRect(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Rect>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Rect>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableRect([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("53e74ab1-1a40-514a-ae73-c48b4a7ba095"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableSize()
     {
-        Assert.AreEqual(new Guid("693ec203-656d-52f7-a649-31eea2e31a18"), GetIID_IEnumerable_NullableSize(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Size>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Size>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableSize([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("693ec203-656d-52f7-a649-31eea2e31a18"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableColor()
     {
-        Assert.AreEqual(new Guid("25224526-def3-5369-8945-b75072a638e7"), GetIID_IEnumerable_NullableColor(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#Windows>Windows-UI-Color>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#Windows>Windows-UI-Color>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableColor([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("25224526-def3-5369-8945-b75072a638e7"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullablePropertyType()
     {
-        Assert.AreEqual(new Guid("511ece22-5784-569e-bec3-dc48838e041a"), GetIID_IEnumerable_NullablePropertyType(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-PropertyType>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-PropertyType>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullablePropertyType([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("511ece22-5784-569e-bec3-dc48838e041a"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableMatrix3x2()
     {
-        Assert.AreEqual(new Guid("4b61d6df-a772-5dc1-b9fd-9622e6712018"), GetIID_IEnumerable_NullableMatrix3x2(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Matrix3x2>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Matrix3x2>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableMatrix3x2([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("4b61d6df-a772-5dc1-b9fd-9622e6712018"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableMatrix4x4()
     {
-        Assert.AreEqual(new Guid("93d192a0-6579-5e92-98ec-52abeb0590b5"), GetIID_IEnumerable_NullableMatrix4x4(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Matrix4x4>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Matrix4x4>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableMatrix4x4([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("93d192a0-6579-5e92-98ec-52abeb0590b5"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullablePlane()
     {
-        Assert.AreEqual(new Guid("78627ff3-abd5-50ef-8a66-e1224024541d"), GetIID_IEnumerable_NullablePlane(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Plane>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Plane>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullablePlane([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("78627ff3-abd5-50ef-8a66-e1224024541d"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableQuaternion()
     {
-        Assert.AreEqual(new Guid("36514ff8-a3ef-5353-ae54-029c54627f00"), GetIID_IEnumerable_NullableQuaternion(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Quaternion>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Quaternion>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableQuaternion([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("36514ff8-a3ef-5353-ae54-029c54627f00"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableVector2()
     {
-        Assert.AreEqual(new Guid("68cf9b6c-91fb-508d-9d94-a351e52b5e03"), GetIID_IEnumerable_NullableVector2(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector2>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector2>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableVector2([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("68cf9b6c-91fb-508d-9d94-a351e52b5e03"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableVector3()
     {
-        Assert.AreEqual(new Guid("8a40ba7a-7c34-54e6-9178-1df1f39deeae"), GetIID_IEnumerable_NullableVector3(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector3>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector3>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableVector3([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("8a40ba7a-7c34-54e6-9178-1df1f39deeae"), GetIID(null));
+    }
 
     [TestMethod]
     public void Test_IEnumerable_NullableVector4()
     {
-        Assert.AreEqual(new Guid("eb7d2b5f-56bf-53fb-82ba-413e0891acaf"), GetIID_IEnumerable_NullableVector4(null));
-    }
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector4>>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
-    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector4>>")]
-    private static extern ref readonly Guid GetIID_IEnumerable_NullableVector4([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+        Assert.AreEqual(new Guid("eb7d2b5f-56bf-53fb-82ba-413e0891acaf"), GetIID(null));
+    }
 }
