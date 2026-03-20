@@ -255,7 +255,7 @@ Validate `[GeneratedCustomPropertyProvider]` usage:
 
 ### 3. cswinrt.exe (`src/cswinrt/`)
 
-A **C++ command-line tool** that reads `.winmd` metadata files and generates C# projection source code for Windows Runtime types.
+A **C++ command-line tool** that reads `.winmd` metadata files and generates C# projection source code for Windows Runtime types. It uses the [WinMD NuGet package](http://aka.ms/winmd/nuget) for parsing [ECMA-335 metadata](http://www.ecma-international.org/publications/standards/Ecma-335.htm) files.
 
 **Key files:**
 
