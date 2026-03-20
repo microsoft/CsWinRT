@@ -51,8 +51,8 @@ messages, and code comments.
 
 List the key changes in the PR:
 
-- **`path/to/file.md`**: Description of what changed in this file
-- **`path/to/other/`**: Description of what changed in this directory
+- **`path/to/file.md`**: description of what changed in this file
+- **`path/to/other/`**: description of what changed in this directory
 - ...
 ```
 
@@ -125,7 +125,7 @@ architecture and make correct changes without extensive ramp-up time.
 
 ## Changes
 
-- **`path/to/file.md`**: New file with comprehensive project documentation
-- **`path/to/skill/SKILL.md`**: Skill to keep the instructions up to date
-- **`path/to/other/SKILL.md`**: Skill for adding tests to the right project
+- **`path/to/file.md`**: new file with comprehensive project documentation
+- **`path/to/skill/SKILL.md`**: skill to keep the instructions up to date
+- **`path/to/other/SKILL.md`**: skill for adding tests to the right project
 ```

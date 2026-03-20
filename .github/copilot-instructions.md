@@ -283,9 +283,9 @@ cswinrt.exe --input <.winmd files/dirs> --output <dir> [--include/--exclude pref
 1. **Projected types** (public API): the user-facing C# classes, interfaces, structs, enums, and delegates that developers use directly. Runtime classes inherit `WindowsRuntimeObject`.
 2. **ABI layer** (`namespace ABI.{Namespace}`): internal marshalling infrastructure — vtable definitions (structs with unmanaged function pointers), interface method implementations, marshaller classes.
 
-**Namespace additions** (`strings/additions/`): Extra C# code injected into specific namespaces (e.g. `Color.FromArgb()` for `Windows.UI`, XAML struct helpers for `Thickness`, `CornerRadius`, `GridLength`, etc.).
+**Namespace additions** (`strings/additions/`): extra C# code injected into specific namespaces (e.g. `Color.FromArgb()` for `Windows.UI`, XAML struct helpers for `Thickness`, `CornerRadius`, `GridLength`, etc.).
 
-**Internal interop interfaces** (`WindowsRuntime.Internal.idl`): A manually authored IDL file defining Windows SDK COM interop interfaces (e.g. `IDisplayInformationStaticsInterop`, `IPrintManagerInterop`) that are not included in standard `.winmd` metadata. This IDL is compiled to a `.winmd` that is bundled in the CsWinRT NuGet package and passed as additional input to cswinrt.exe when building Windows SDK projections. The `[ProjectionInternal]` attribute on each interface causes all generated projection code to be `internal`. User-friendly extension methods in `strings/ComInteropExtensions.cs` wrap these internal projections, exposing discoverable APIs on the associated projected types (e.g. `DisplayInformation.GetForWindow(hwnd)`, `PrintManager.ShowPrintUIForWindowAsync(hwnd)`).
+**Internal interop interfaces** (`WindowsRuntime.Internal.idl`): a manually authored IDL file defining Windows SDK COM interop interfaces (e.g. `IDisplayInformationStaticsInterop`, `IPrintManagerInterop`) that are not included in standard `.winmd` metadata. This IDL is compiled to a `.winmd` that is bundled in the CsWinRT NuGet package and passed as additional input to cswinrt.exe when building Windows SDK projections. The `[ProjectionInternal]` attribute on each interface causes all generated projection code to be `internal`. User-friendly extension methods in `strings/ComInteropExtensions.cs` wrap these internal projections, exposing discoverable APIs on the associated projected types (e.g. `DisplayInformation.GetForWindow(hwnd)`, `PrintManager.ShowPrintUIForWindowAsync(hwnd)`).
 
 ### 4. Impl generator (`src/WinRT.Impl.Generator/`)
 
@@ -335,9 +335,9 @@ A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** b
 
 **Three-phase pipeline:**
 
-1. **Process References**: Load reference assemblies via AsmResolver, generate `.rsp` response file with namespace filters
-2. **Generate Sources**: Invoke `cswinrt.exe @response.rsp` to produce C# files
-3. **Emit Assembly**: Parse generated `.cs` files with Roslyn, compile to `.dll` with `CSharpCompilation`, emit with embedded debug info
+1. **Process References**: load reference assemblies via AsmResolver, generate `.rsp` response file with namespace filters
+2. **Generate Sources**: invoke `cswinrt.exe @response.rsp` to produce C# files
+3. **Emit Assembly**: parse generated `.cs` files with Roslyn, compile to `.dll` with `CSharpCompilation`, emit with embedded debug info
 
 ### 6. Interop generator (`src/WinRT.Interop.Generator/`)
 
