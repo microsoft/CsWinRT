@@ -145,7 +145,7 @@ By running the interop generator at the very end of the build process (after all
 |----------|---------|-------------|
 | `CsWinRTEnabled` | `true` | Master switch for CsWinRT processing |
 | `CsWinRTGenerateProjection` | `true` | Run cswinrt.exe to generate C# projection code |
-| `CsWinRTGenerateInteropAssembly2` | auto (`true` for exe) | Generate interop assemblies at publish time |
+| `CsWinRTGenerateInteropAssembly2` | auto (`true` for Exe/WinExe, or Library with `PublishAot=true`; otherwise `false`) | Generate interop assemblies at publish time |
 | `CsWinRTGenerateReferenceProjection` | `false` | Generate reference-only projections (for NuGet packages) |
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode |
 | `CsWinRTUseWindowsUIXamlProjections` | `false` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
@@ -199,6 +199,9 @@ WinRT.Runtime2/
 ├── NativeObjects/                   # Managed wrappers for native Windows Runtime objects (collections, async, etc.)
 ├── Windows.Foundation/              # Manually projected foundation types
 ├── Windows.Foundation.Collections/  # Collection interfaces (IObservableVector, IObservableMap, etc.)
+├── Windows.Storage.Streams/         # Manually projected stream types
+├── Windows.UI.Xaml.Interop/         # Manually projected XAML interop types
+├── Xaml.Attributes/                 # XAML-related attribute types
 ├── Properties/                      # Exception messages and configuration (e.g. feature switches)
 └── Exceptions/                      # Exception types
 ```
@@ -243,7 +246,7 @@ A Roslyn incremental source generator and diagnostic analyzer package. Runs at *
 | `CustomPropertyProviderGenerator` | `ICustomPropertyProvider` implementations for XAML data binding. Annotate types with `[GeneratedCustomPropertyProvider]` to auto-generate property accessors. Supports both UWP and WinUI XAML. |
 | `TypeMapAssemblyTargetGenerator` | `[TypeMapAssemblyTarget]` assembly attributes for runtime type mapping in AOT scenarios. Discovers referenced Windows Runtime assemblies and registers them with the three type map groups: `WindowsRuntimeComWrappersTypeMapGroup`, `WindowsRuntimeMetadataTypeMapGroup`, `DynamicInterfaceCastableImplementationTypeMapGroup`. |
 
-**Eight diagnostic analyzers** (all errors, IDs `CSWINRT2000`–`CSWINRT2008`):
+**Four diagnostic analyzers** producing 9 diagnostics (all errors, IDs `CSWINRT2000`–`CSWINRT2008`):
 
 Validate `[GeneratedCustomPropertyProvider]` usage:
 
