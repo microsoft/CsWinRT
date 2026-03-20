@@ -355,10 +355,9 @@ A **.NET CLI tool** (`cswinrtinteropgen.exe`) published as a **Native AOT** bina
 
 **Why IL emission (not C# source generation)?**
 
-- Must access non-public types from referenced assemblies using `[IgnoresAccessChecksTo]` — not expressible in C#
-- Direct CIL emission enables bare-metal COM vtable calls with minimal overhead
-- Can generate exact COM interface contracts with `calli` instructions
-- No impact on IntelliSense (runs as post-build tool, not source generator)
+There's two reasons for this:
+- The interop generator has to emit IL so it can access non-public types from referenced assemblies using `[IgnoresAccessChecksTo]` (this is not expressible in C#), so that all types anywhere can "automatically" get marshalling support without any work needed from developers (e.g. no need to mark those types as `partial` to have the source generator from CsWinRT 2.x run on them and emit marshalling code directly in their assembly).
+- Implementing this logic as a source generator would both be incomplete (there's no way to detect everything we can detect by analyzing IL metadata directly), and also **extremely** expensive. The latter is a known issue with the source generator in CsWinRT 2.x, which causes significant slowdown in the IDE and IntelliSense performance when working on larger projects.
 
 **What it generates in `WinRT.Interop.dll`:**
 
