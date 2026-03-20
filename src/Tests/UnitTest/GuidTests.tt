@@ -10,70 +10,93 @@
 // </auto-generated>
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Windows.Foundation;
+using Windows.Foundation.Collections;
+using Windows.UI;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Media.Media3D;
+using TestComponentCSharp;
 
 namespace UnitTest;
+
+using A = IEnumerable<IStringable>;
+using B = KeyValuePair<string, IAsyncOperationWithProgress<IEnumerable<IStringable>, float>>;
 
 [TestClass]
 public partial class TestGuids
 {
 <#
+// Assembly identifier shorthands (broken up to avoid the T4 engine
+// interpreting those sequences in string literals as directives).
+string corlib = "<" + "#corlib>";
+string cswinrt = "<" + "#CsWinRT>";
+string windows = "<" + "#Windows>";
+
 // Mangled type argument shorthands:
 //   A = IEnumerable<IStringable>
 //   B = KeyValuePair<string, IAsyncOperationWithProgress<IEnumerable<IStringable>, float>>
-string a = "<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>";
-string b = "<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>";
+string a = $"{corlib}System-Collections-Generic-IEnumerable'1<{cswinrt}Windows-Foundation-IStringable>";
+string b = $"{corlib}System-Collections-Generic-KeyValuePair'2<string|{cswinrt}Windows-Foundation-IAsyncOperationWithProgress'2<{corlib}System-Collections-Generic-IEnumerable'1<{cswinrt}Windows-Foundation-IStringable>|float>>";
 
-// Each entry: (TestName, ExpectedIID, MangledAccessorName)
-var tests = new (string Name, string IID, string Mangled)[]
+// Each entry: (TestName, ExpectedIID, MangledAccessorName, CSharpType)
+// The CSharpType field is used to emit a dummy local function referencing the constructed generic type.
+// This ensures the interop generator discovers the type instantiation and emits its IID in InterfaceIIDs.
+var tests = new (string Name, string IID, string Mangled, string Type)[]
 {
     // Windows.Foundation generic interfaces
-    ("IAsyncActionWithProgress_A", "dd725452-2da3-5103-9c7d-22ee9bb14ad3", $"<#CsWinRT>IAsyncActionWithProgress'1<{a}>"),
-    ("IAsyncOperationWithProgress_A_B", "94645425-b9e5-5b91-b509-8da4df6a8916", $"<#CsWinRT>IAsyncOperationWithProgress'2<{a}|{b}>"),
-    ("IAsyncOperation_A", "2bd35ee6-72d9-5c5d-9827-05ebb81487ab", $"<#CsWinRT>IAsyncOperation'1<{a}>"),
+    ("IAsyncActionWithProgress_A", "dd725452-2da3-5103-9c7d-22ee9bb14ad3", $"{cswinrt}IAsyncActionWithProgress'1<{a}>", "IAsyncActionWithProgress<A>"),
+    ("IAsyncOperationWithProgress_A_B", "94645425-b9e5-5b91-b509-8da4df6a8916", $"{cswinrt}IAsyncOperationWithProgress'2<{a}|{b}>", "IAsyncOperationWithProgress<A, B>"),
+    ("IAsyncOperation_A", "2bd35ee6-72d9-5c5d-9827-05ebb81487ab", $"{cswinrt}IAsyncOperation'1<{a}>", "IAsyncOperation<A>"),
 
     // Windows.Foundation generic delegates
-    ("AsyncActionProgressHandler_A", "c261d8d0-71ba-5f38-a239-872342253a18", $"<#CsWinRT>AsyncActionProgressHandler'1<{a}>"),
-    ("AsyncActionWithProgressCompletedHandler_A", "9a0d211c-0374-5d23-9e15-eaa3570fae63", $"<#CsWinRT>AsyncActionWithProgressCompletedHandler'1<{a}>"),
-    ("AsyncOperationCompletedHandler_A", "9d534225-231f-55e7-a6d0-6c938e2d9160", $"<#CsWinRT>AsyncOperationCompletedHandler'1<{a}>"),
-    ("AsyncOperationProgressHandler_A_B", "264f1e0c-abe4-590b-9d37-e1cc118ecc75", $"<#CsWinRT>AsyncOperationProgressHandler'2<{a}|{b}>"),
-    ("AsyncOperationWithProgressCompletedHandler_A_B", "c2d078d8-ac47-55ab-83e8-123b2be5bc5a", $"<#CsWinRT>AsyncOperationWithProgressCompletedHandler'2<{a}|{b}>"),
+    ("AsyncActionProgressHandler_A", "c261d8d0-71ba-5f38-a239-872342253a18", $"{cswinrt}AsyncActionProgressHandler'1<{a}>", "AsyncActionProgressHandler<A>"),
+    ("AsyncActionWithProgressCompletedHandler_A", "9a0d211c-0374-5d23-9e15-eaa3570fae63", $"{cswinrt}AsyncActionWithProgressCompletedHandler'1<{a}>", "AsyncActionWithProgressCompletedHandler<A>"),
+    ("AsyncOperationCompletedHandler_A", "9d534225-231f-55e7-a6d0-6c938e2d9160", $"{cswinrt}AsyncOperationCompletedHandler'1<{a}>", "AsyncOperationCompletedHandler<A>"),
+    ("AsyncOperationProgressHandler_A_B", "264f1e0c-abe4-590b-9d37-e1cc118ecc75", $"{cswinrt}AsyncOperationProgressHandler'2<{a}|{b}>", "AsyncOperationProgressHandler<A, B>"),
+    ("AsyncOperationWithProgressCompletedHandler_A_B", "c2d078d8-ac47-55ab-83e8-123b2be5bc5a", $"{cswinrt}AsyncOperationWithProgressCompletedHandler'2<{a}|{b}>", "AsyncOperationWithProgressCompletedHandler<A, B>"),
 
     // System.EventHandler (projected from Windows.Foundation.EventHandler)
-    ("EventHandler_A", "fa0b7d80-7efa-52df-9b69-0574ce57ada4", $"<#corlib>EventHandler'1<{a}>"),
+    ("EventHandler_A", "fa0b7d80-7efa-52df-9b69-0574ce57ada4", $"{corlib}EventHandler'1<{a}>", "EventHandler<A>"),
 
     // System.EventHandler<TSender, TResult> (projected from Windows.Foundation.TypedEventHandler)
-    ("EventHandler_A_B", "edb31843-b4cf-56eb-925a-d4d0ce97a08d", $"<#Windows>EventHandler'2<{a}|{b}>"),
+    ("EventHandler_A_B", "edb31843-b4cf-56eb-925a-d4d0ce97a08d", $"{windows}EventHandler'2<{a}|{b}>", "EventHandler<A, B>"),
 
     // System.Collections.Generic interfaces
-    ("IEnumerable_A", "96565eb9-a692-59c8-bcb5-647cde4e6c4d", $"<#corlib>IEnumerable'1<{a}>"),
-    ("IEnumerator_A", "3c9b1e27-8357-590b-8828-6e917f172390", $"<#corlib>IEnumerator'1<{a}>"),
-    ("KeyValuePair_A_B", "89336cd9-8b66-50a7-9759-eb88ccb2e1fe", $"<#corlib>KeyValuePair'2<{a}|{b}>"),
-    ("IReadOnlyDictionary_A_B", "b78f0653-fa89-59cf-ba95-726938aae666", $"<#corlib>IReadOnlyDictionary'2<{a}|{b}>"),
-    ("IDictionary_A_B", "9962cd50-09d5-5c46-b1e1-3c679c1c8fae", $"<#corlib>IDictionary'2<{a}|{b}>"),
-    ("IReadOnlyList_A", "5f07498b-8e14-556e-9d2e-2e98d5615da9", $"<#corlib>IReadOnlyList'1<{a}>"),
-    ("IList_A", "0e3f106f-a266-50a1-8043-c90fcf3844f6", $"<#corlib>IList'1<{a}>"),
+    ("IEnumerable_A", "96565eb9-a692-59c8-bcb5-647cde4e6c4d", $"{corlib}IEnumerable'1<{a}>", "IEnumerable<A>"),
+    ("IEnumerator_A", "3c9b1e27-8357-590b-8828-6e917f172390", $"{corlib}IEnumerator'1<{a}>", "IEnumerator<A>"),
+    ("KeyValuePair_A_B", "89336cd9-8b66-50a7-9759-eb88ccb2e1fe", $"{corlib}KeyValuePair'2<{a}|{b}>", "KeyValuePair<A, B>"),
+    ("IReadOnlyDictionary_A_B", "b78f0653-fa89-59cf-ba95-726938aae666", $"{corlib}IReadOnlyDictionary'2<{a}|{b}>", "IReadOnlyDictionary<A, B>"),
+    ("IDictionary_A_B", "9962cd50-09d5-5c46-b1e1-3c679c1c8fae", $"{corlib}IDictionary'2<{a}|{b}>", "IDictionary<A, B>"),
+    ("IReadOnlyList_A", "5f07498b-8e14-556e-9d2e-2e98d5615da9", $"{corlib}IReadOnlyList'1<{a}>", "IReadOnlyList<A>"),
+    ("IList_A", "0e3f106f-a266-50a1-8043-c90fcf3844f6", $"{corlib}IList'1<{a}>", "IList<A>"),
 
     // Windows.Foundation.Collections interfaces and delegates
-    ("IMapChangedEventArgs_A", "e1aa5138-12bd-51a1-8558-698dfd070abe", $"<#CsWinRT>IMapChangedEventArgs'1<{a}>"),
-    ("IObservableMap_A_B", "75f99e2a-137e-537e-a5b1-0b5a6245fc02", $"<#CsWinRT>IObservableMap'2<{a}|{b}>"),
-    ("IObservableVector_A", "d24c289f-2341-5128-aaa1-292dd0dc1950", $"<#CsWinRT>IObservableVector'1<{a}>"),
-    ("MapChangedEventHandler_A_B", "19046f0b-cf81-5dec-bbb2-7cc250da8b8b", $"<#CsWinRT>MapChangedEventHandler'2<{a}|{b}>"),
-    ("VectorChangedEventHandler_A", "a1e9acd7-e4df-5a79-aefa-de07934ab0fb", $"<#CsWinRT>VectorChangedEventHandler'1<{a}>"),
+    ("IMapChangedEventArgs_A", "e1aa5138-12bd-51a1-8558-698dfd070abe", $"{cswinrt}IMapChangedEventArgs'1<{a}>", "IMapChangedEventArgs<A>"),
+    ("IObservableMap_A_B", "75f99e2a-137e-537e-a5b1-0b5a6245fc02", $"{cswinrt}IObservableMap'2<{a}|{b}>", "IObservableMap<A, B>"),
+    ("IObservableVector_A", "d24c289f-2341-5128-aaa1-292dd0dc1950", $"{cswinrt}IObservableVector'1<{a}>", "IObservableVector<A>"),
+    ("MapChangedEventHandler_A_B", "19046f0b-cf81-5dec-bbb2-7cc250da8b8b", $"{cswinrt}MapChangedEventHandler'2<{a}|{b}>", "MapChangedEventHandler<A, B>"),
+    ("VectorChangedEventHandler_A", "a1e9acd7-e4df-5a79-aefa-de07934ab0fb", $"{cswinrt}VectorChangedEventHandler'1<{a}>", "VectorChangedEventHandler<A>"),
 
     // IList<T> with various type arguments
-    ("IList_Object", "b32bdca4-5e52-5b27-bc5d-d66a1a268c2a", "<#corlib>IList'1<object>"),
-    ("IList_Uri", "0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e", "<#corlib>IList'1<<#corlib>System-Uri>"),
-    ("IList_AsyncActionCompletedHandler", "5dafe591-86dc-59aa-bfda-07f5d59fc708", "<#corlib>IList'1<<#CsWinRT>Windows-Foundation-AsyncActionCompletedHandler>"),
-    ("IList_ComposedNonBlittableStruct", "c8477314-b257-511b-a3a1-9e4eb6385152", "<#corlib>IList'1<<TestComponentCSharp>TestComponentCSharp-ComposedNonBlittableStruct>"),
-    ("IList_IDisposable", "1bfca4f6-2c4e-5174-9869-b39d35848fcc", "<#corlib>IList'1<<#corlib>System-IDisposable>"),
-    ("IList_IWwwFormUrlDecoderEntry", "2f5fb6d3-231f-57a1-9f2a-daa7e43bf075", "<#corlib>IList'1<<#Windows>Windows-Foundation-IWwwFormUrlDecoderEntry>"),
-    ("IList_WwwFormUrlDecoderEntry", "1d9ba3f5-b997-5a7d-82c4-7857ecbf3a42", "<#corlib>IList'1<<#Windows>Windows-Foundation-WwwFormUrlDecoderEntry>"),
-    ("IList_Deferral", "a3c9b753-57ad-537f-9626-4ae5785473d4", "<#corlib>IList'1<<#Windows>Windows-Foundation-Deferral>"),
-    ("IList_DateTimeOffset", "94390dc5-e442-5870-88b6-007e232f902c", "<#corlib>IList'1<<#corlib>System-DateTimeOffset>"),
-    ("IList_Point", "c0d513a9-ec4a-5a5d-b6d5-b707defdb9f7", "<#corlib>IList'1<<#Windows>Windows-Foundation-Point>"),
+    ("IList_Object", "b32bdca4-5e52-5b27-bc5d-d66a1a268c2a", $"{corlib}IList'1<object>", "IList<object>"),
+    ("IList_Uri", "0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e", $"{corlib}IList'1<{corlib}System-Uri>", "IList<Uri>"),
+    ("IList_AsyncActionCompletedHandler", "5dafe591-86dc-59aa-bfda-07f5d59fc708", $"{corlib}IList'1<{cswinrt}Windows-Foundation-AsyncActionCompletedHandler>", "IList<AsyncActionCompletedHandler>"),
+    ("IList_ComposedNonBlittableStruct", "c8477314-b257-511b-a3a1-9e4eb6385152", $"{corlib}IList'1<{"<" + "TestComponentCSharp>"}TestComponentCSharp-ComposedNonBlittableStruct>", "IList<ComposedNonBlittableStruct>"),
+    ("IList_IDisposable", "1bfca4f6-2c4e-5174-9869-b39d35848fcc", $"{corlib}IList'1<{corlib}System-IDisposable>", "IList<IDisposable>"),
+    ("IList_IWwwFormUrlDecoderEntry", "2f5fb6d3-231f-57a1-9f2a-daa7e43bf075", $"{corlib}IList'1<{windows}Windows-Foundation-IWwwFormUrlDecoderEntry>", "IList<IWwwFormUrlDecoderEntry>"),
+    ("IList_WwwFormUrlDecoderEntry", "1d9ba3f5-b997-5a7d-82c4-7857ecbf3a42", $"{corlib}IList'1<{windows}Windows-Foundation-WwwFormUrlDecoderEntry>", "IList<WwwFormUrlDecoderEntry>"),
+    ("IList_Deferral", "a3c9b753-57ad-537f-9626-4ae5785473d4", $"{corlib}IList'1<{windows}Windows-Foundation-Deferral>", "IList<Deferral>"),
+    ("IList_DateTimeOffset", "94390dc5-e442-5870-88b6-007e232f902c", $"{corlib}IList'1<{corlib}System-DateTimeOffset>", "IList<DateTimeOffset>"),
+    ("IList_Point", "c0d513a9-ec4a-5a5d-b6d5-b707defdb9f7", $"{corlib}IList'1<{windows}Windows-Foundation-Point>", "IList<Point>"),
 
     // Indirect tests for types without their own InterfaceIIDs entries.
     // Non-generic interfaces and nullable value types don't get standalone IID entries in
@@ -83,59 +106,59 @@ var tests = new (string Name, string IID, string Mangled)[]
     // IID for the wrapper confirms that the inner type's signature is also correct.
 
     // Non-generic interfaces wrapped in IEnumerable<T>
-    ("IEnumerable_IStringable", "88241f54-588f-529b-8344-08d8a4a3c25a", "<#corlib>IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>"),
-    ("IEnumerable_IBindableIterable", "af2aea1d-08d9-5ca3-9870-c43ea54b9786", "<#corlib>IEnumerable'1<<#corlib>System-Collections-IEnumerable>"),
-    ("IEnumerable_IBindableVector", "884f89c1-b19c-58fb-bb64-2907b5b72083", "<#corlib>IEnumerable'1<<#corlib>System-Collections-IList>"),
+    ("IEnumerable_IStringable", "88241f54-588f-529b-8344-08d8a4a3c25a", $"{corlib}IEnumerable'1<{cswinrt}Windows-Foundation-IStringable>", "IEnumerable<IStringable>"),
+    ("IEnumerable_IBindableIterable", "af2aea1d-08d9-5ca3-9870-c43ea54b9786", $"{corlib}IEnumerable'1<{corlib}System-Collections-IEnumerable>", "IEnumerable<IEnumerable>"),
+    ("IEnumerable_IBindableVector", "884f89c1-b19c-58fb-bb64-2907b5b72083", $"{corlib}IEnumerable'1<{corlib}System-Collections-IList>", "IEnumerable<IList>"),
 
     // Nullable primitive types wrapped in IEnumerable<T>
-    ("IEnumerable_NullableBoolean", "b4e71894-d8db-5429-9cee-9e957c01a3fa", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<bool>>"),
-    ("IEnumerable_NullableSByte", "ca0489c7-054e-5e52-a8ab-5322a9ac9be8", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<sbyte>>"),
-    ("IEnumerable_NullableInt16", "d41c6075-62bb-54a7-aba5-b80920dddab1", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<short>>"),
-    ("IEnumerable_NullableInt32", "03c10a1b-b584-5081-a76d-017a80eeebfe", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<int>>"),
-    ("IEnumerable_NullableInt64", "ff5ca13c-3fc7-5867-9d95-c2c8d366b4ae", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<long>>"),
-    ("IEnumerable_NullableByte", "b486c1cb-165b-5128-9e8e-bb0ccb6ea9d2", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<byte>>"),
-    ("IEnumerable_NullableUInt16", "e8985950-7e57-5c8b-b6fa-604a465d258c", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<ushort>>"),
-    ("IEnumerable_NullableUInt32", "1225929a-80bd-5d32-9912-a256befadb75", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<uint>>"),
-    ("IEnumerable_NullableUInt64", "6a8145dc-f08b-59e9-aa95-f00f7e0d133c", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<ulong>>"),
-    ("IEnumerable_NullableSingle", "7eeb4894-d4b0-5fc0-8994-ed10b6b140a5", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<float>>"),
-    ("IEnumerable_NullableDouble", "8b82b07e-3cdc-5e09-8d24-b1ed4aba9dc9", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<double>>"),
-    ("IEnumerable_NullableChar", "4664e871-2a74-5091-80a9-7c57b61c0227", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<char>>"),
+    ("IEnumerable_NullableBoolean", "b4e71894-d8db-5429-9cee-9e957c01a3fa", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<bool>>", "IEnumerable<bool?>"),
+    ("IEnumerable_NullableSByte", "ca0489c7-054e-5e52-a8ab-5322a9ac9be8", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<sbyte>>", "IEnumerable<sbyte?>"),
+    ("IEnumerable_NullableInt16", "d41c6075-62bb-54a7-aba5-b80920dddab1", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<short>>", "IEnumerable<short?>"),
+    ("IEnumerable_NullableInt32", "03c10a1b-b584-5081-a76d-017a80eeebfe", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<int>>", "IEnumerable<int?>"),
+    ("IEnumerable_NullableInt64", "ff5ca13c-3fc7-5867-9d95-c2c8d366b4ae", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<long>>", "IEnumerable<long?>"),
+    ("IEnumerable_NullableByte", "b486c1cb-165b-5128-9e8e-bb0ccb6ea9d2", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<byte>>", "IEnumerable<byte?>"),
+    ("IEnumerable_NullableUInt16", "e8985950-7e57-5c8b-b6fa-604a465d258c", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<ushort>>", "IEnumerable<ushort?>"),
+    ("IEnumerable_NullableUInt32", "1225929a-80bd-5d32-9912-a256befadb75", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<uint>>", "IEnumerable<uint?>"),
+    ("IEnumerable_NullableUInt64", "6a8145dc-f08b-59e9-aa95-f00f7e0d133c", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<ulong>>", "IEnumerable<ulong?>"),
+    ("IEnumerable_NullableSingle", "7eeb4894-d4b0-5fc0-8994-ed10b6b140a5", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<float>>", "IEnumerable<float?>"),
+    ("IEnumerable_NullableDouble", "8b82b07e-3cdc-5e09-8d24-b1ed4aba9dc9", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<double>>", "IEnumerable<double?>"),
+    ("IEnumerable_NullableChar", "4664e871-2a74-5091-80a9-7c57b61c0227", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<char>>", "IEnumerable<char?>"),
 
     // Nullable corlib struct types wrapped in IEnumerable<T>
-    ("IEnumerable_NullableGuid", "6c0e1bb4-8a19-550d-9a66-de23be625600", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Guid>>"),
-    ("IEnumerable_NullableTimeSpan", "aa591268-d773-57d5-9791-7ca8d6870d45", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-TimeSpan>>"),
-    ("IEnumerable_NullableDateTimeOffset", "9e757eb6-dcaf-5aa0-8e1a-260f0ee9d183", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-DateTimeOffset>>"),
+    ("IEnumerable_NullableGuid", "6c0e1bb4-8a19-550d-9a66-de23be625600", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Guid>>", "IEnumerable<Guid?>"),
+    ("IEnumerable_NullableTimeSpan", "aa591268-d773-57d5-9791-7ca8d6870d45", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-TimeSpan>>", "IEnumerable<TimeSpan?>"),
+    ("IEnumerable_NullableDateTimeOffset", "9e757eb6-dcaf-5aa0-8e1a-260f0ee9d183", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-DateTimeOffset>>", "IEnumerable<DateTimeOffset?>"),
 
     // Nullable WinRT struct types wrapped in IEnumerable<T>
-    ("IEnumerable_NullableEventRegistrationToken", "8add533b-3c9c-5e53-b2ab-bcc2a5502e5f", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>WindowsRuntime-InteropServices-EventRegistrationToken>>"),
-    ("IEnumerable_NullablePoint", "e889008d-6a55-5f13-98ba-0752e40405f4", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Point>>"),
-    ("IEnumerable_NullableRect", "53e74ab1-1a40-514a-ae73-c48b4a7ba095", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Rect>>"),
-    ("IEnumerable_NullableSize", "693ec203-656d-52f7-a649-31eea2e31a18", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Size>>"),
+    ("IEnumerable_NullableEventRegistrationToken", "8add533b-3c9c-5e53-b2ab-bcc2a5502e5f", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{cswinrt}WindowsRuntime-InteropServices-EventRegistrationToken>>", "IEnumerable<WindowsRuntime.InteropServices.EventRegistrationToken?>"),
+    ("IEnumerable_NullablePoint", "e889008d-6a55-5f13-98ba-0752e40405f4", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{cswinrt}Windows-Foundation-Point>>", "IEnumerable<Point?>"),
+    ("IEnumerable_NullableRect", "53e74ab1-1a40-514a-ae73-c48b4a7ba095", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{cswinrt}Windows-Foundation-Rect>>", "IEnumerable<Rect?>"),
+    ("IEnumerable_NullableSize", "693ec203-656d-52f7-a649-31eea2e31a18", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{cswinrt}Windows-Foundation-Size>>", "IEnumerable<Size?>"),
 
     // Nullable Windows SDK types wrapped in IEnumerable<T>
-    ("IEnumerable_NullableColor", "25224526-def3-5369-8945-b75072a638e7", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#Windows>Windows-UI-Color>>"),
-    ("IEnumerable_NullablePropertyType", "511ece22-5784-569e-bec3-dc48838e041a", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-PropertyType>>"),
+    ("IEnumerable_NullableColor", "25224526-def3-5369-8945-b75072a638e7", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{windows}Windows-UI-Color>>", "IEnumerable<Color?>"),
+    ("IEnumerable_NullablePropertyType", "511ece22-5784-569e-bec3-dc48838e041a", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{cswinrt}Windows-Foundation-PropertyType>>", "IEnumerable<PropertyType?>"),
 
     // Nullable System.Numerics types wrapped in IEnumerable<T>
-    ("IEnumerable_NullableMatrix3x2", "4b61d6df-a772-5dc1-b9fd-9622e6712018", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Matrix3x2>>"),
-    ("IEnumerable_NullableMatrix4x4", "93d192a0-6579-5e92-98ec-52abeb0590b5", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Matrix4x4>>"),
-    ("IEnumerable_NullablePlane", "78627ff3-abd5-50ef-8a66-e1224024541d", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Plane>>"),
-    ("IEnumerable_NullableQuaternion", "36514ff8-a3ef-5353-ae54-029c54627f00", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Quaternion>>"),
-    ("IEnumerable_NullableVector2", "68cf9b6c-91fb-508d-9d94-a351e52b5e03", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector2>>"),
-    ("IEnumerable_NullableVector3", "8a40ba7a-7c34-54e6-9178-1df1f39deeae", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector3>>"),
-    ("IEnumerable_NullableVector4", "eb7d2b5f-56bf-53fb-82ba-413e0891acaf", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector4>>"),
+    ("IEnumerable_NullableMatrix3x2", "4b61d6df-a772-5dc1-b9fd-9622e6712018", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Matrix3x2>>", "IEnumerable<Matrix3x2?>"),
+    ("IEnumerable_NullableMatrix4x4", "93d192a0-6579-5e92-98ec-52abeb0590b5", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Matrix4x4>>", "IEnumerable<Matrix4x4?>"),
+    ("IEnumerable_NullablePlane", "78627ff3-abd5-50ef-8a66-e1224024541d", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Plane>>", "IEnumerable<Plane?>"),
+    ("IEnumerable_NullableQuaternion", "36514ff8-a3ef-5353-ae54-029c54627f00", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Quaternion>>", "IEnumerable<Quaternion?>"),
+    ("IEnumerable_NullableVector2", "68cf9b6c-91fb-508d-9d94-a351e52b5e03", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Vector2>>", "IEnumerable<Vector2?>"),
+    ("IEnumerable_NullableVector3", "8a40ba7a-7c34-54e6-9178-1df1f39deeae", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Vector3>>", "IEnumerable<Vector3?>"),
+    ("IEnumerable_NullableVector4", "eb7d2b5f-56bf-53fb-82ba-413e0891acaf", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Vector4>>", "IEnumerable<Vector4?>"),
 
     // TODO: Nullable WinUI (Microsoft.UI.Xaml) types wrapped in IEnumerable<T>.
     // These need a WinUI-enabled debug repro to compute the expected IIDs.
-    // ("IEnumerable_NullableCornerRadius", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-CornerRadius>>"),
-    // ("IEnumerable_NullableDuration", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Duration>>"),
-    // ("IEnumerable_NullableGridLength", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-GridLength>>"),
-    // ("IEnumerable_NullableThickness", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Thickness>>"),
-    // ("IEnumerable_NullableGeneratorPosition", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Controls-Primitives-GeneratorPosition>>"),
-    // ("IEnumerable_NullableMatrix", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Media-Matrix>>"),
-    // ("IEnumerable_NullableKeyTime", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Media-Animation-KeyTime>>"),
-    // ("IEnumerable_NullableRepeatBehavior", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Media-Animation-RepeatBehavior>>"),
-    // ("IEnumerable_NullableMatrix3D", "", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<Microsoft.UI>Microsoft-UI-Xaml-Media-Media3D-Matrix3D>>"),
+    // ("IEnumerable_NullableCornerRadius", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-CornerRadius>>", "IEnumerable<CornerRadius?>"),
+    // ("IEnumerable_NullableDuration", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Duration>>", "IEnumerable<Duration?>"),
+    // ("IEnumerable_NullableGridLength", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-GridLength>>", "IEnumerable<GridLength?>"),
+    // ("IEnumerable_NullableThickness", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Thickness>>", "IEnumerable<Thickness?>"),
+    // ("IEnumerable_NullableGeneratorPosition", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Controls-Primitives-GeneratorPosition>>", "IEnumerable<GeneratorPosition?>"),
+    // ("IEnumerable_NullableMatrix", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Media-Matrix>>", "IEnumerable<Matrix?>"),
+    // ("IEnumerable_NullableKeyTime", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Media-Animation-KeyTime>>", "IEnumerable<KeyTime?>"),
+    // ("IEnumerable_NullableRepeatBehavior", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Media-Animation-RepeatBehavior>>", "IEnumerable<RepeatBehavior?>"),
+    // ("IEnumerable_NullableMatrix3D", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Media-Media3D-Matrix3D>>", "IEnumerable<Matrix3D?>"),
 };
 
 for (int i = 0; i < tests.Length; i++)
@@ -145,8 +168,13 @@ for (int i = 0; i < tests.Length; i++)
     [TestMethod]
     public void Test_<#=tests[i].Name#>()
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void Use(<#=tests[i].Type#> _) { }
+
         [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#=tests[i].Mangled#>")]
         static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+
+        Use(default!);
 
         Assert.AreEqual(new Guid("<#=tests[i].IID#>"), GetIID(null));
     }
