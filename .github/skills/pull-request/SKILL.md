@@ -83,12 +83,30 @@ To determine the current user (PR author), check `git config user.name` or `git 
 
 ## Step 7: Create the PR
 
-Use the GitHub MCP tools to create the pull request with:
-- The determined target branch (`base`)
-- The current branch (`head`)
-- The title and description
-- The labels
-- The reviewers
+Write the PR body to a **temporary file** and use `gh pr create --body-file` to avoid shell escaping issues. Do **not** pass the body inline via `--body`, as backticks and special characters in markdown get mangled by the shell (e.g. `` `path/to/file` `` becomes `\path/to/file\` when rendered).
+
+```powershell
+# Write description to temp file (no shell escaping issues)
+$body = @"
+## Summary
+...
+"@
+
+$bodyFile = [System.IO.Path]::GetTempFileName()
+Set-Content -Path $bodyFile -Value $body -Encoding utf8NoBOM
+
+# Create PR using --body-file
+gh pr create --base <target> --head <branch> --title "Title" --body-file $bodyFile --label "label" --reviewer "reviewer"
+
+# Clean up
+Remove-Item $bodyFile
+```
+
+**Important escaping rules:**
+- Always use `--body-file` instead of `--body` to pass the PR description
+- Use single backticks for inline code in the description (e.g. `` `path/to/file.md` ``), never triple backticks
+- Bold file paths use this pattern: `**\`path/to/file\`**` — but since we use `--body-file`, just write normal markdown: `` **`path/to/file`** ``
+- Do not use PowerShell string interpolation (`$variable`) inside the body; use a here-string (`@"..."@`) or write the content directly
 
 ## Example PR description
 
@@ -107,11 +125,7 @@ architecture and make correct changes without extensive ramp-up time.
 
 ## Changes
 
-- **`.github/copilot-instructions.md`**: New file with comprehensive
-  project documentation covering all 8 CsWinRT 3.0 projects, the build
-  pipeline, code conventions, and key technical concepts
-- **`.github/skills/update-copilot-instructions/SKILL.md`**: Skill to
-  keep the instructions file up to date
-- **`.github/skills/testing/SKILL.md`**: Skill for adding tests to the
-  right test project
+- **`path/to/file.md`**: New file with comprehensive project documentation
+- **`path/to/skill/SKILL.md`**: Skill to keep the instructions up to date
+- **`path/to/other/SKILL.md`**: Skill for adding tests to the right project
 ```
