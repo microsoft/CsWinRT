@@ -199,7 +199,7 @@ WinRT.Runtime2/
 ├── NativeObjects/                   # Managed wrappers for native Windows Runtime objects (collections, async, etc.)
 ├── Windows.Foundation/              # Manually projected foundation types
 ├── Windows.Foundation.Collections/  # Collection interfaces (IObservableVector, IObservableMap, etc.)
-├── Properties/                      # Exception messages and extension types
+├── Properties/                      # Exception messages and configuration (e.g. feature switches)
 └── Exceptions/                      # Exception types
 ```
 
@@ -222,6 +222,7 @@ WinRT.Runtime2/
 - **Vtable structs**: all vtables are `[StructLayout(LayoutKind.Sequential)]` structs with unmanaged function pointer fields, matching COM vtable memory layout exactly.
 - **Reference counting**: mimics COM `AddRef`/`Release` with managed lease counts and GC memory pressure tracking.
 - **T4 templates**: 6 `.tt` files generate constants (`HRESULT` codes, interface IIDs, XAML class names) and specialized marshallers (blittable array types).
+- **Feature switches**: opt-in/opt-out runtime features are controlled via `[FeatureSwitchDefinition]`-annotated properties in `WindowsRuntimeFeatureSwitches` (`Properties/WindowsRuntimeFeatureSwitches.cs`). Each switch is backed by an `AppContext` configuration property (e.g. `CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION`) and wired to an MSBuild property (e.g. `CsWinRTEnableManifestFreeActivation`) in `nuget/Microsoft.Windows.CsWinRT.targets`, which emits `RuntimeHostConfigurationOption` items with `Trim="true"`. This lets ILLink (trimming) and ILC (Native AOT) treat the switch values as constants and dead-code-eliminate all code behind disabled switches, making opt-in features fully pay-for-play.
 
 ### 2. WinRT.SourceGenerator2 (`src/Authoring/WinRT.SourceGenerator2/`)
 
