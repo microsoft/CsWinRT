@@ -130,6 +130,17 @@ flowchart LR
 
 This is the reason the build pipeline involves the "impl" generator (to produce forwarder .dll-s) and the projection generator (to produce the actual implementation .dll-s at app build time), rather than simply shipping pre-built projection .dll-s in NuGet packages.
 
+## Why the interop generator?
+
+On top of the reference projection model, CsWinRT 3.0 adds another post-build tool: the **interop generator** (`cswinrtinteropgen.exe`), which produces the `WinRT.Interop.dll` sidecar assembly. This tool exists for additional reasons beyond the ones that also apply to IL emission over C# source generation (see the _"Why IL emission (not C# source generation)?"_ paragraph in the interop generator section below).
+
+One of the core goals of CsWinRT 3.0 is to be **fully AOT-compatible**, with all vtables and COM interface data for all objects being **fully pre-initialized at publish time**. To achieve this, we need to discover every type that could possibly be marshalled across the WinRT interop boundary, and generate all marshalling code for them in advance. A source generator could have done this too, but it would only have been able to analyze **one project at a time**. That per-project limitation causes two fundamental problems:
+
+1. **Code duplication**: if multiple assemblies use the same generic instantiations (e.g. `IList<string>`, `IAsyncOperation<int>`), each project would generate its own copy of the marshalling stubs. This is a common and well-known problem with CsWinRT 2.x, leading to bloated binary sizes.
+2. **Type map conflicts**: the .NET 10 interop type map APIs do not support registering multiple entries for the same key. If two assemblies both emitted and registered marshalling code for the same generic instantiation, the application would **fail at publish time** with duplicate key errors.
+
+By running the interop generator at the very end of the build process (after all assemblies in the application have been compiled) the tool can **analyze the entire application domain at once**. It "sees the whole world": every assembly, every type, every generic instantiation used anywhere in the app. This lets it generate **deduplicated, optimized** marshalling code for exactly the set of types the application needs, with no duplication and no conflicts in the interop type map.
+
 ---
 
 ## Build pipeline flow
