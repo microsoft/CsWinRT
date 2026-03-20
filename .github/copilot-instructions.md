@@ -102,6 +102,36 @@ graph TD
 
 ---
 
+## Why reference projections?
+
+A key architectural decision in CsWinRT 3.0 is the move to **reference projections**. This adds some complexity to the build infrastructure (the impl generator, the projection generator, the multi-phase build pipeline), but it solves a fundamental ecosystem problem from CsWinRT 2.x:
+
+### The problem with CsWinRT 2.x
+
+With CsWinRT 2.x, projection implementations were baked directly into library `.dll` files. This created a real bottleneck: in order for an app to benefit from CsWinRT projection improvements, **every library it consumed also had to move to the new CsWinRT version**. App developers had to wait (sometimes a long time) and library authors often had to ship updates **solely** to pick up CsWinRT improvements, even when they had no functional changes of their own. Furthermore, we were effectively stuck supporting every historical API shape forever: removing or changing internal projection APIs could cause runtime crashes for existing projections, which meant meaningful optimizations were off the table.
+
+### How CsWinRT 3.0 solves this
+
+CsWinRT 3.0 moves all distributed projections to **reference projections**. Libraries now ship a lightweight **reference projection .dll** along with a forwarder .dll (this is needed to avoid issues related to strong-name signing of binaries). That reference projection is simply a CsWinRT-generated C# representation of the Windows Runtime API surface. It contains **no projection implementation logic**. The actual projection implementations are generated **at app build time** by CsWinRT.
+
+```mermaid
+flowchart LR
+    A["Library Author<br/><i>Distributes reference<br/>projections only</i>"] --> B["App Build (MSBuild)<br/><i>CsWinRT generates actual<br/>implementations</i>"]
+    B --> C["Final App Package<br/><i>Optimized, trimmed,<br/>AOT-ready projections</i>"]
+```
+
+**Why this matters:**
+
+- **Apps update CsWinRT version independently**, no waiting on libraries
+- **Libraries don't ship updates for CsWinRT version changes** — their reference projections remain stable
+- **Libraries don't worry about consumer CsWinRT versions** — the forwarder .dll routes to whatever projection the app generates
+- **Latest optimizations without ecosystem friction** — CsWinRT can evolve and improve projection APIs, even in minor releases, without breaking consumers
+- **Faster fixes, smaller projections, and more flexibility**, all at the same time
+
+This is the reason the build pipeline involves the "impl" generator (to produce forwarder .dll-s) and the projection generator (to produce the actual implementation .dll-s at app build time), rather than simply shipping pre-built projection .dll-s in NuGet packages.
+
+---
+
 ## Build pipeline flow
 
 The CsWinRT 3.0 build pipeline runs through several phases orchestrated by MSBuild targets in the `nuget/` folder:
