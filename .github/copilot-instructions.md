@@ -280,7 +280,7 @@ cswinrt.exe --input <.winmd files/dirs> --output <dir> [--include/--exclude pref
 
 **Namespace additions** (`strings/additions/`): Extra C# code injected into specific namespaces (e.g. `Color.FromArgb()` for `Windows.UI`, XAML struct helpers for `Thickness`, `CornerRadius`, `GridLength`, etc.).
 
-### 4. Impl Generator (`src/WinRT.Impl.Generator/`)
+### 4. Impl generator (`src/WinRT.Impl.Generator/`)
 
 A **.NET CLI tool** (`cswinrtimplgen.exe`) published as a **Native AOT** binary. Generates **forwarder/impl assemblies** that contain only type forwards (no actual code).
 
@@ -308,7 +308,7 @@ A **.NET CLI tool** (`cswinrtimplgen.exe`) published as a **Native AOT** binary.
 4. Emits `[TypeForwarder]` entries for all public top-level types, routing to the appropriate projection assembly
 5. Optionally signs with a strong-name key
 
-### 5. Projection Generator (`src/WinRT.Projection.Generator/`)
+### 5. Projection generator (`src/WinRT.Projection.Generator/`)
 
 A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** binary. Takes `.winmd` files as input, invokes `cswinrt.exe` to generate C# sources, then compiles them into a projection `.dll` using the Roslyn APIs.
 
@@ -332,7 +332,7 @@ A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** b
 2. **Generate Sources**: Invoke `cswinrt.exe @response.rsp` to produce C# files
 3. **Emit Assembly**: Parse generated `.cs` files with Roslyn, compile to `.dll` with `CSharpCompilation`, emit with embedded debug info
 
-### 6. Interop Generator (`src/WinRT.Interop.Generator/`)
+### 6. Interop generator (`src/WinRT.Interop.Generator/`)
 
 A **.NET CLI tool** (`cswinrtinteropgen.exe`) published as a **Native AOT** binary. This is the most complex build tool — it analyzes all application assemblies and produces the `WinRT.Interop.dll` sidecar containing all marshalling code.
 
@@ -368,7 +368,7 @@ There's two reasons for this:
 
 **Debug repro support**: can capture all inputs into a `.zip` file for reproducible debugging.
 
-### 7. Generator Tasks (`src/WinRT.Generator.Tasks/`)
+### 7. Generator tasks (`src/WinRT.Generator.Tasks/`)
 
 MSBuild task wrappers that bridge the MSBuild build system with the CLI tools above.
 
@@ -389,7 +389,7 @@ All tasks extend `ToolTask`, generate response files for their respective CLI to
 
 ---
 
-## NuGet Package Build Pipeline (`nuget/`)
+## NuGet package build pipeline (`nuget/`)
 
 The MSBuild integration is orchestrated through several `.props` and `.targets` files:
 
@@ -405,9 +405,9 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 
 ---
 
-## Code Style and Conventions
+## Code style and conventions
 
-### C# Projects
+### C# projects
 
 - **Language version**: C# 14.0 (`LangVersion` = `14.0` or `preview`)
 - **Nullable reference types**: enabled everywhere
@@ -421,14 +421,14 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 - **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes), `CSWINRT3001` (obsolete internal members)
 - **Strong-name signing**: all assemblies signed with `src/WinRT.Runtime2/key.snk`
 
-### C++ Project (cswinrt)
+### C++ project (cswinrt)
 
 - Warnings treated as errors (`TreatWarningAsError = true`)
 - Uses precompiled headers (`pch.h`/`pch.cpp`)
 - Character set: Unicode
 - Subsystem: Console
 
-### Naming Conventions
+### Naming conventions
 
 - C# namespaces follow the `WindowsRuntime.*` pattern (root namespace: `WindowsRuntime`)
   - `WindowsRuntime.InteropServices` for interop infrastructure
@@ -438,7 +438,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 - CLI tool assembly names are short: `cswinrt`, `cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtinteropgen`
 - C# keywords in generated identifiers are escaped with `@` prefix
 
-### Build Tool Patterns
+### Build tool patterns
 
 All three .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtinteropgen`) share common patterns:
 
@@ -452,7 +452,7 @@ All three .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtin
   - `CommandLineArgumentNameAttribute` maps properties to CLI flag names
 - Security hardening: Control Flow Guard, `IlcResilient = false` (fail on unresolved assemblies)
 
-### Error ID Ranges
+### Error ID ranges
 
 | Project | Error ID Pattern | Range |
 |---------|-----------------|-------|
@@ -464,9 +464,9 @@ All three .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtin
 
 ---
 
-## Key Technical Concepts
+## Key technical concepts
 
-### COM Interop Model
+### COM interop model
 
 CsWinRT 3.0 uses .NET's `ComWrappers` API for all COM interop:
 
@@ -474,7 +474,7 @@ CsWinRT 3.0 uses .NET's `ComWrappers` API for all COM interop:
 - **CCW (COM Callable Wrapper)**: native COM representation of managed objects. The interop generator creates interface entry tables and vtable implementations for user types implementing Windows Runtime interfaces.
 - **Vtables**: defined as `[StructLayout(LayoutKind.Sequential)]` structs with `delegate* unmanaged[MemberFunction]<...>` function pointer fields. All vtables are designed to be fully pre-initialized by the Native AOT compiler (ILC) into readonly data sections.
 
-### Type Map System
+### Type map system
 
 The runtime uses a type map infrastructure for trimming-safe marshalling:
 
@@ -484,7 +484,7 @@ The runtime uses a type map infrastructure for trimming-safe marshalling:
 
 Assembly-level `[TypeMapAssemblyTarget]` attributes (generated by the source generator) tell the runtime which assemblies contain type map entries. The interop generator emits the actual type map entries.
 
-### Projection Updates from 2.x
+### Projection updates from 2.x
 
 - `T[]` parameters → `ReadOnlySpan<T>` / `Span<T>` (leveraging C# 14 first-class spans)
 - `Point`/`Rect`/`Size` fields → `float` instead of `double`
