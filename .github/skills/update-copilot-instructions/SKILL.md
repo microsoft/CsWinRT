@@ -13,11 +13,11 @@ Read `.github/copilot-instructions.md` thoroughly before making any changes. Und
 
 ## Workflow
 
-### Step 1: Read the current instructions
+### Step 1: read the current instructions
 
 Read `.github/copilot-instructions.md` in full. Take note of every factual claim it makes: directory structures, file lists, type names, diagnostic IDs, MSBuild properties, tool behaviors, project settings, etc.
 
-### Step 2: Analyze each project in depth
+### Step 2: analyze each project in depth
 
 Launch parallel explore agents for each of the 7 CsWinRT 3.0 projects listed in the instructions. For each project, verify:
 
@@ -59,7 +59,7 @@ Launch parallel explore agents for each of the 7 CsWinRT 3.0 projects listed in 
    - MSBuild task classes are accurately listed
    - Task-to-tool mappings are current
 
-### Step 3: Verify the build pipeline
+### Step 3: verify the build pipeline
 
 Analyze the `nuget/` folder to verify:
 
@@ -68,7 +68,7 @@ Analyze the `nuget/` folder to verify:
 - Key MSBuild properties table is complete and defaults are accurate
 - Build pipeline flow described matches the actual target ordering
 
-### Step 4: Verify code style and conventions
+### Step 4: verify code style and conventions
 
 Spot-check project files to verify:
 
@@ -76,7 +76,7 @@ Spot-check project files to verify:
 - Warning suppression and code style enforcement settings
 - Naming conventions and patterns described are still used
 
-### Step 5: Update the instructions
+### Step 5: update the instructions
 
 Apply surgical edits to `.github/copilot-instructions.md` to fix any discrepancies found. Typical updates include:
 
@@ -97,7 +97,7 @@ Apply surgical edits to `.github/copilot-instructions.md` to fix any discrepanci
 - Do not add unnecessary capitalization to words in headings or prose
 </style_rules>
 
-### Step 6: Summarize changes
+### Step 6: summarize changes
 
 After editing, provide a clear summary of what was updated and why, so the user can review the changes before committing.
 
