@@ -97,7 +97,18 @@ Apply surgical edits to `.github/copilot-instructions.md` to fix any discrepanci
 - Do not add unnecessary capitalization to words in headings or prose
 </style_rules>
 
-### Step 6: summarize changes
+### Step 6: update this skill if needed
+
+If significant changes to the solution were discovered (e.g. projects added or removed, new components worth validating, changed validation criteria), also update this skill file (`.github/skills/update-copilot-instructions/SKILL.md`) to reflect those changes. In particular:
+
+- The **project list in step 2** must stay in sync with the actual projects in the solution and in the Copilot instructions. If a project is added or removed, add or remove its entry and validation steps accordingly.
+- The **validation steps** for each project should reflect what is actually worth checking. If a project gains new aspects worth validating (e.g. a new source generator, a new category of generated output, new CLI parameters), add those to the checklist. If aspects are removed, remove them.
+- The **build pipeline checks in step 3** should reflect the current set of MSBuild files and properties.
+- Any **new steps or categories of validation** discovered during the update should be added to this workflow.
+
+This ensures the skill remains useful and accurate for future runs.
+
+### Step 7: summarize changes
 
 After editing, provide a clear summary of what was updated and why, so the user can review the changes before committing.
 
