@@ -19,7 +19,7 @@ Read `.github/copilot-instructions.md` in full. Take note of every factual claim
 
 ### Step 2: analyze each project in depth
 
-Launch parallel explore agents for each of the 7 CsWinRT 3.0 projects listed in the instructions. For each project, verify:
+Launch parallel explore agents for each of the 8 CsWinRT 3.0 projects listed in the instructions. For each project, verify:
 
 1. **WinRT.Runtime (`src/WinRT.Runtime2/`)**
    - Directory structure matches what's documented

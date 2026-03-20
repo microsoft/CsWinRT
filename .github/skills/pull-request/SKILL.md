@@ -104,7 +104,7 @@ Remove-Item $bodyFile
 
 **Important escaping rules:**
 - Always use `--body-file` instead of `--body` to pass the PR description
-- Use single backticks for inline code in the description (e.g. `` `path/to/file.md` ``), never triple backticks
+- Use single backticks for inline code in the description (e.g. `` `path/to/file.md` ``). Reserve fenced triple-backtick code blocks for multi-line examples only.
 - Bold file paths use this pattern: `**\`path/to/file\`**` — but since we use `--body-file`, just write normal markdown: `` **`path/to/file`** ``
 - Do not use PowerShell string interpolation (`$variable`) inside the body; use a here-string (`@"..."@`) or write the content directly
 

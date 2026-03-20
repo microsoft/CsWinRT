@@ -50,7 +50,7 @@ Include specific trigger phrases:
 
 **Good:**
 ```yaml
-description: Review GitHub pull requests with high signal-to-noise code review. Use when user provides a GitHub PR URL, asks to review a GitHub pull request,or mentions reviewing code in GitHub.
+description: Review GitHub pull requests with high signal-to-noise code review. Use when user provides a GitHub PR URL, asks to review a GitHub pull request, or mentions reviewing code in GitHub.
 ```
 
 **Bad:**

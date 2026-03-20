@@ -13,7 +13,7 @@ Before adding tests, always check whether tests for the same functionality alrea
 
 ## Test project overview
 
-CsWinRT has 5 test project areas, each serving a different purpose:
+CsWinRT 3.0 has 5 primary test project areas, each serving a different purpose. Additional specialized test projects also exist under `src/Tests/`:
 
 ### 1. Unit tests (`src/Tests/UnitTest/`)
 
