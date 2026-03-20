@@ -401,7 +401,6 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 | `Microsoft.Windows.CsWinRT.CsWinRTGen.targets` | Post-build tools: interop generation, impl generation, merged projection generation |
 | `Microsoft.Windows.CsWinRT.Authoring.targets` | Windows Runtime component authoring: managed DLL output, WinMD generation, NuGet packaging |
 | `Microsoft.Windows.CsWinRT.Authoring.Transitive.targets` | Transitive target rules for component consumers |
-| `Microsoft.Windows.CsWinRT.IIDOptimizer.targets` | GUID optimization pass |
 
 ---
 
