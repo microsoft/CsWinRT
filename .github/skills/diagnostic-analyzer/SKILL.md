@@ -76,64 +76,7 @@ The columns are: `Rule ID | Category | Severity | Notes` (where Notes = the titl
 
 **File:** `src/Authoring/WinRT.SourceGenerator2/Diagnostics/Analyzers/MyNewAnalyzer.cs`
 
-Follow the established code pattern:
-
-```csharp
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-
-using System.Collections.Immutable;
-using System.Linq;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace WindowsRuntime.SourceGenerator.Diagnostics;
-
-/// <summary>
-/// A diagnostic analyzer that [describes what it validates].
-/// </summary>
-[DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed class MyNewAnalyzer : DiagnosticAnalyzer
-{
-    /// <inheritdoc/>
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [
-        DiagnosticDescriptors.MyNewDiagnostic];
-
-    /// <inheritdoc/>
-    public override void Initialize(AnalysisContext context)
-    {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-        context.EnableConcurrentExecution();
-
-        context.RegisterCompilationStartAction(static context =>
-        {
-            // Resolve any required symbols from the compilation
-            if (context.Compilation.GetTypeByMetadataName("Some.Required.Type") is not { } requiredType)
-            {
-                return;
-            }
-
-            context.RegisterSymbolAction(context =>
-            {
-                // Filter to relevant symbols
-                if (context.Symbol is not INamedTypeSymbol typeSymbol)
-                {
-                    return;
-                }
-
-                // Check conditions and report diagnostics
-                if (/* violation detected */)
-                {
-                    context.ReportDiagnostic(Diagnostic.Create(
-                        DiagnosticDescriptors.MyNewDiagnostic,
-                        typeSymbol.Locations.FirstOrDefault(),
-                        typeSymbol));
-                }
-            }, SymbolKind.NamedType);
-        });
-    }
-}
-```
+Use the existing analyzers in the `Diagnostics/Analyzers/` folder as reference for the code structure and patterns.
 
 **Code conventions:**
 - File-scoped namespace: `namespace WindowsRuntime.SourceGenerator.Diagnostics;`
