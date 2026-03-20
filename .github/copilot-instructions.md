@@ -1,17 +1,17 @@
-# CsWinRT 3.0 — Copilot Instructions
+# CsWinRT 3.0 — Copilot instructions
 
-## Project Overview
+## Project overview
 
-**CsWinRT** (C#/WinRT) provides the Windows Runtime (WinRT) interop stack for C# applications. It replaces the built-in WinRT interop that .NET dropped starting from .NET 5. CsWinRT 3.0 is a ground-up redesign targeting **.NET 10** with trimming and Native AOT as core architecture principles, built on the latest C# 14 language features and new .NET interop APIs.
+**CsWinRT** (C#/WinRT) provides the Windows Runtime (WinRT) interop stack for C# applications. It replaces the built-in Windows Runtime interop that .NET dropped starting from .NET 5. CsWinRT 3.0 is a ground-up redesign targeting **.NET 10** with trimming and Native AOT as core architecture principles, built on the latest C# 14 language features and new .NET interop APIs.
 
-### Core Design Principles
+### Core design principles
 
-- **AOT-first**: All features must work and be fast on Native AOT. All vtables and CCW entries should be foldable by ILC into readonly data sections.
-- **Trim-safe and trim-friendly**: All generated code is fully trimmable without user action.
-- **Security**: All vtables and COM interface entries are in readonly data sections; all native object lifetime/concurrency issues from 2.x are addressed.
-- **Performance**: Minimal overhead marshalling, zero-allocation vtables, pre-initialized type hierarchies.
-- **Modern C#**: Targets .NET 10 / C# 14, uses `Span<T>` projections, `extension` types, `allows ref struct`, `static abstract` interface members, `file`-scoped types, etc.
-- **No source generators at publish time**: Heavy code generation is done by post-build CLI tools (not source generators), so IntelliSense is never impacted.
+- **AOT-first**: all features must work and be fast on Native AOT. All vtables and CCW entries should be foldable by ILC into readonly data sections.
+- **Trim-safe and trim-friendly**: all generated code is fully trimmable without user action.
+- **Security**: all vtables and COM interface entries are in readonly data sections; all native object lifetime/concurrency issues from 2.x are addressed.
+- **Performance**: minimal overhead marshalling, zero-allocation vtables, pre-initialized type hierarchies.
+- **Modern C#**: targets .NET 10 / C# 14, uses `Span<T>` projections, `extension` types, `allows ref struct`, `static abstract` interface members, `file`-scoped types, etc.
+- **No source generators at publish time**: heavy code generation is done by post-build CLI tools (not source generators), so IntelliSense is never impacted.
 
 ### Multi-targeting
 
@@ -26,7 +26,7 @@ The `CSWINRT3_0` define constant is set when CsWinRT 3.0 is active.
 
 ---
 
-## Repository Structure (CsWinRT 3.0 Projects)
+## Repository structure (CsWinRT 3.0 projects)
 
 ```
 CsWinRT/
@@ -35,10 +35,10 @@ CsWinRT/
 │   ├── Authoring/
 │   │   └── WinRT.SourceGenerator2/        # (2) Roslyn source generator + analyzers
 │   ├── cswinrt/                           # (3) C++ code generator (cswinrt.exe)
-│   ├── WinRT.Impl.Generator/             # (4) Impl/forwarder DLL generator (cswinrtimplgen.exe)
-│   ├── WinRT.Projection.Generator/       # (5) Projection DLL generator (cswinrtprojectiongen.exe)
-│   ├── WinRT.Interop.Generator/          # (6) Interop sidecar generator (cswinrtinteropgen.exe)
-│   └── WinRT.Generator.Tasks/            # (7) MSBuild tasks for the build tools
+│   ├── WinRT.Impl.Generator/              # (4) Impl/forwarder DLL generator (cswinrtimplgen.exe)
+│   ├── WinRT.Projection.Generator/        # (5) Projection DLL generator (cswinrtprojectiongen.exe)
+│   ├── WinRT.Interop.Generator/           # (6) Interop sidecar generator (cswinrtinteropgen.exe)
+│   └── WinRT.Generator.Tasks/             # (7) MSBuild tasks for the build tools
 ├── nuget/                                 # MSBuild .props/.targets for NuGet package
 ├── docs/                                  # Specifications and documentation
 └── eng/                                   # Engineering/CI infrastructure
@@ -46,7 +46,7 @@ CsWinRT/
 
 ---
 
-## Architecture Diagram
+## Architecture diagram
 
 ```mermaid
 graph TD
@@ -102,7 +102,7 @@ graph TD
 
 ---
 
-## Build Pipeline Flow
+## Build pipeline flow
 
 The CsWinRT 3.0 build pipeline runs through several phases orchestrated by MSBuild targets in the `nuget/` folder:
 
@@ -118,7 +118,7 @@ flowchart TD
     G --> H["Phase 8: Optional Post-Processing<br/>(IIDOptimizer, NativeAOT stub exe)"]
 ```
 
-### Key MSBuild Properties
+### Key MSBuild properties
 
 | Property | Default | Description |
 |----------|---------|-------------|
@@ -126,13 +126,13 @@ flowchart TD
 | `CsWinRTGenerateProjection` | `true` | Run cswinrt.exe to generate C# projection code |
 | `CsWinRTGenerateInteropAssembly2` | auto (`true` for exe) | Generate interop assemblies at publish time |
 | `CsWinRTGenerateReferenceProjection` | `false` | Generate reference-only projections (for NuGet packages) |
-| `CsWinRTComponent` | `false` | Enable WinRT component authoring mode |
+| `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode |
 | `CsWinRTUseWindowsUIXamlProjections` | `false` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
 | `CsWinRTMergeReferencedActivationFactories` | `false` | Merge activation factories from referenced components |
 
 ---
 
-## Project Details
+## Project details
 
 ### 1. WinRT.Runtime (`src/WinRT.Runtime2/`)
 
@@ -143,7 +143,7 @@ The runtime library (`WinRT.Runtime.dll`) provides all common infrastructure for
 - **Target**: `net10.0`, C# 14, `AllowUnsafeBlocks`, `DisableRuntimeMarshalling`
 - **Root namespace**: `WindowsRuntime`
 - **Assembly name**: `WinRT.Runtime` (fixed name; other components depend on it, e.g. the UWP XAML compiler)
-- **Warnings as errors**: Release only. `EnforceCodeStyleInBuild` enabled, `AnalysisLevelStyle` = `latest-all`.
+- **Warnings as errors**: release only. `EnforceCodeStyleInBuild` enabled, `AnalysisLevelStyle` = `latest-all`.
 - **Strong-name signed** with `key.snk`
 - **AOT compatible**: `IsAotCompatible = true`
 
@@ -175,7 +175,7 @@ WinRT.Runtime2/
 │   ├── TypeMapInfo/                 # Type metadata caching
 │   ├── Vtables/                     # COM vtable struct definitions (37 vtable types)
 │   └── WeakReferences/              # Weak reference support
-├── NativeObjects/                   # Managed wrappers for native WinRT objects (collections, async, etc.)
+├── NativeObjects/                   # Managed wrappers for native Windows Runtime objects (collections, async, etc.)
 ├── Windows.Foundation/              # Manually projected foundation types
 ├── Windows.Foundation.Collections/  # Collection interfaces (IObservableVector, IObservableMap, etc.)
 ├── Properties/                      # Exception messages and extension types
@@ -187,20 +187,20 @@ WinRT.Runtime2/
 | Type | Purpose |
 |------|---------|
 | `WindowsRuntimeObject` | Abstract base class for all projected runtime classes. Implements `IDynamicInterfaceCastable`, `IUnmanagedVirtualMethodTableProvider`, `ICustomQueryInterface`. Manages native COM pointer lifetime, lazy IInspectable caching, and interface resolution. |
-| `WindowsRuntimeObjectReference` | Abstract base for native COM object lifetime management. Hierarchy includes `FreeThreadedObjectReference` (agile) and `ContextAwareObjectReference` (thread-affine). Manages AddRef/Release, GC memory pressure, reference tracker support. |
+| `WindowsRuntimeObjectReference` | Abstract base for native COM object lifetime management. Hierarchy includes `FreeThreadedObjectReference` (agile) and `ContextAwareObjectReference` (thread-affine). Manages `AddRef`/`Release`, GC memory pressure, reference tracker support. |
 | `WindowsRuntimeComWrappers` | Singleton `ComWrappers` subclass. Uses thread-local storage for fast-path marshalling. |
 | `WindowsRuntimeComWrappersMarshal` | High-level API: `TryUnwrapObjectReference()`, `IsReferenceToManagedObject()`, etc. |
 | `WindowsRuntimeObjectMarshaller` | Marshals `object` ↔ `IInspectable*`. Core `ConvertToUnmanaged`/`ConvertToManaged` methods. |
-| `EventSource<T>` | Base event source adapter for WinRT events. Specialized subclasses for `EventHandler`, `EventHandler<T>`, `TypedEventHandler<TSender, TResult>`. |
-| Collection adapters (`IListAdapter<T>`, etc.) | Bridge .NET collections (`IList<T>`, `IDictionary<K,V>`, etc.) to WinRT collections (`IVector<T>`, `IMap<K,V>`, etc.) |
+| `EventSource<T>` | Base event source adapter for Windows Runtime events. Specialized subclasses for `EventHandler`, `EventHandler<T>`, `TypedEventHandler<TSender, TResult>`. |
+| Collection adapters (`IListAdapter<T>`, etc.) | Bridge .NET collections (`IList<T>`, `IDictionary<K,V>`, etc.) to Windows Runtime collections (`IVector<T>`, `IMap<K,V>`, etc.) |
 
 **Key patterns:**
 
-- **Unsafe code**: Extensive use of `void*` for COM pointers, `delegate* unmanaged[MemberFunction]<...>` for vtable function pointers, `stackalloc`, `fixed` statements.
+- **Unsafe code**: extensive use of `void*` for COM pointers, `delegate* unmanaged[MemberFunction]<...>` for vtable function pointers, `stackalloc`, `fixed` statements.
 - **C# 14 features**: `extension(Type)` syntax for explicit extensions, `allows ref struct` constraints, `static abstract` interface members, `file`-scoped types, primary constructors.
-- **Vtable structs**: All vtables are `[StructLayout(LayoutKind.Sequential)]` structs with unmanaged function pointer fields, matching COM vtable memory layout exactly.
-- **Reference counting**: Mimics COM AddRef/Release with managed lease counts and GC memory pressure tracking.
-- **T4 templates**: 6 `.tt` files generate constants (HRESULT codes, interface IIDs, XAML class names) and specialized marshallers (blittable array types).
+- **Vtable structs**: all vtables are `[StructLayout(LayoutKind.Sequential)]` structs with unmanaged function pointer fields, matching COM vtable memory layout exactly.
+- **Reference counting**: mimics COM `AddRef`/`Release` with managed lease counts and GC memory pressure tracking.
+- **T4 templates**: 6 `.tt` files generate constants (`HRESULT` codes, interface IIDs, XAML class names) and specialized marshallers (blittable array types).
 
 ### 2. WinRT.SourceGenerator2 (`src/Authoring/WinRT.SourceGenerator2/`)
 
@@ -217,9 +217,9 @@ A Roslyn incremental source generator and diagnostic analyzer package. Runs at *
 
 | Generator | What It Generates |
 |-----------|-------------------|
-| `AuthoringExportTypesGenerator` | Activation factory infrastructure for WinRT component authoring. Emits `ManagedExports.g.cs` (with `GetActivationFactory()` method) and `NativeExports.g.cs` (with `DllGetActivationFactory()` entry point for Native AOT). Triggered when `CsWinRTComponent = true`. |
+| `AuthoringExportTypesGenerator` | Activation factory infrastructure for Windows Runtime component authoring. Emits `ManagedExports.g.cs` (with `GetActivationFactory()` method) and `NativeExports.g.cs` (with `DllGetActivationFactory()` entry point for Native AOT). Triggered when `CsWinRTComponent = true`. |
 | `CustomPropertyProviderGenerator` | `ICustomPropertyProvider` implementations for XAML data binding. Annotate types with `[GeneratedCustomPropertyProvider]` to auto-generate property accessors. Supports both UWP and WinUI XAML. |
-| `TypeMapAssemblyTargetGenerator` | `[TypeMapAssemblyTarget]` assembly attributes for runtime type mapping in AOT scenarios. Discovers referenced WinRT assemblies and registers them with the three type map groups: `WindowsRuntimeComWrappersTypeMapGroup`, `WindowsRuntimeMetadataTypeMapGroup`, `DynamicInterfaceCastableImplementationTypeMapGroup`. |
+| `TypeMapAssemblyTargetGenerator` | `[TypeMapAssemblyTarget]` assembly attributes for runtime type mapping in AOT scenarios. Discovers referenced Windows Runtime assemblies and registers them with the three type map groups: `WindowsRuntimeComWrappersTypeMapGroup`, `WindowsRuntimeMetadataTypeMapGroup`, `DynamicInterfaceCastableImplementationTypeMapGroup`. |
 
 **Eight diagnostic analyzers** (all errors, IDs `CSWINRT2000`–`CSWINRT2008`):
 
@@ -233,7 +233,7 @@ Validate `[GeneratedCustomPropertyProvider]` usage:
 
 ### 3. cswinrt.exe (`src/cswinrt/`)
 
-A **C++ command-line tool** that reads `.winmd` metadata files and generates C# projection source code for WinRT types.
+A **C++ command-line tool** that reads `.winmd` metadata files and generates C# projection source code for Windows Runtime types.
 
 **Key files:**
 
@@ -253,10 +253,10 @@ cswinrt.exe --input <.winmd files/dirs> --output <dir> [--include/--exclude pref
             [--reference_projection] [--component] [--internal] [--embedded]
 ```
 
-**Generates two layers of C# code per WinRT type:**
+**Generates two layers of C# code per Windows Runtime type:**
 
-1. **Projected types** (public API): The user-facing C# classes, interfaces, structs, enums, and delegates that developers use directly. Runtime classes inherit `WindowsRuntimeObject`.
-2. **ABI layer** (`namespace ABI.{Namespace}`): Internal marshalling infrastructure — vtable definitions (structs with unmanaged function pointers), interface method implementations, marshaller classes.
+1. **Projected types** (public API): the user-facing C# classes, interfaces, structs, enums, and delegates that developers use directly. Runtime classes inherit `WindowsRuntimeObject`.
+2. **ABI layer** (`namespace ABI.{Namespace}`): internal marshalling infrastructure — vtable definitions (structs with unmanaged function pointers), interface method implementations, marshaller classes.
 
 **Namespace additions** (`strings/additions/`): Extra C# code injected into specific namespaces (e.g. `Color.FromArgb()` for `Windows.UI`, XAML struct helpers for `Thickness`, `CornerRadius`, `GridLength`, etc.).
 
@@ -336,18 +336,18 @@ A **.NET CLI tool** (`cswinrtinteropgen.exe`) published as a **Native AOT** bina
 |----------|-------------|
 | Generic instantiation marshalling | For each `IList<T>`, `IDictionary<K,V>`, `IAsyncOperation<T>`, etc. used in the app: vtable types, native object wrappers, method implementations, interface impls, ComWrappers callbacks, marshaller attributes, proxy types |
 | SZ array type marshalling | Marshalling stubs for single-dimensional array parameters |
-| User-defined type CCW support | COM Callable Wrapper infrastructure for user types implementing WinRT interfaces: interface entries, ComWrappers marshaller attributes, proxy types, type map attributes |
+| User-defined type CCW support | COM Callable Wrapper infrastructure for user types implementing Windows Runtime interfaces: interface entries, ComWrappers marshaller attributes, proxy types, type map attributes |
 | Special XAML types | Marshalling for XAML-specific types |
 | Type hierarchy lookup | Pre-initialized type hierarchy for the entire application domain |
-| Interface mapping | Dynamic cast interface mapping for all WinRT types |
+| Interface mapping | Dynamic cast interface mapping for all Windows Runtime types |
 | `[IgnoresAccessChecksTo]` | Assembly-level attributes to bypass accessibility for non-public types |
 
 **Two-phase architecture:**
 
-1. **Discover phase**: Loads all input assemblies in parallel, scans for WinRT types, generic instantiations, user-defined types implementing WinRT interfaces. Uses visitor pattern (`AllGenericTypesVisitor`, `AllSzArrayTypesVisitor`).
-2. **Emit phase**: Creates `WinRT.Interop.dll` via AsmResolver. Uses a two-pass IL generation approach (stub creation → rewriting via `InteropMethodRewriter`), then applies IL fixups.
+1. **Discover phase**: loads all input assemblies in parallel, scans for Windows Runtime types, generic instantiations, user-defined types implementing Windows Runtime interfaces. Uses visitor pattern (`AllGenericTypesVisitor`, `AllSzArrayTypesVisitor`).
+2. **Emit phase**: creates `WinRT.Interop.dll` via AsmResolver. Uses a two-pass IL generation approach (stub creation → rewriting via `InteropMethodRewriter`), then applies IL fixups.
 
-**Debug repro support**: Can capture all inputs into a `.zip` file for reproducible debugging.
+**Debug repro support**: can capture all inputs into a `.zip` file for reproducible debugging.
 
 ### 7. Generator Tasks (`src/WinRT.Generator.Tasks/`)
 
@@ -380,7 +380,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 | `Microsoft.Windows.CsWinRT.BeforeMicrosoftNetSdk.targets` | Pre-SDK configuration: reference projection mode, activation factory merging, stub exe setup |
 | `Microsoft.Windows.CsWinRT.targets` | Main pipeline: projection generation (cswinrt.exe), reference setup, compilation integration |
 | `Microsoft.Windows.CsWinRT.CsWinRTGen.targets` | Post-build tools: interop generation, impl generation, merged projection generation |
-| `Microsoft.Windows.CsWinRT.Authoring.targets` | WinRT component authoring: managed DLL output, WinMD generation, NuGet packaging |
+| `Microsoft.Windows.CsWinRT.Authoring.targets` | Windows Runtime component authoring: managed DLL output, WinMD generation, NuGet packaging |
 | `Microsoft.Windows.CsWinRT.Authoring.Transitive.targets` | Transitive target rules for component consumers |
 | `Microsoft.Windows.CsWinRT.IIDOptimizer.targets` | GUID optimization pass |
 
@@ -391,16 +391,16 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 ### C# Projects
 
 - **Language version**: C# 14.0 (`LangVersion` = `14.0` or `preview`)
-- **Nullable reference types**: Enabled everywhere
-- **Unsafe code**: Allowed in all projects (required for COM interop)
-- **Runtime marshalling**: Disabled (`DisableRuntimeMarshalling = true`) in runtime and build tools
-- **Warnings as errors**: Release builds only (`TreatWarningsAsErrors` + `CodeAnalysisTreatWarningsAsErrors`)
+- **Nullable reference types**: enabled everywhere
+- **Unsafe code**: allowed in all projects (required for COM interop)
+- **Runtime marshalling**: disabled (`DisableRuntimeMarshalling = true`) in runtime and build tools
+- **Warnings as errors**: release builds only (`TreatWarningsAsErrors` + `CodeAnalysisTreatWarningsAsErrors`)
 - **Code style enforcement**: `EnforceCodeStyleInBuild = true`, `AnalysisLevelStyle = latest-all`
 - **Compiler strict mode**: `<Features>strict</Features>` in all projects
-- **XML documentation**: Generated for all projects
-- **`SkipLocalsInit`**: Enabled in runtime and build tools for performance
+- **XML documentation**: generated for all projects
+- **`SkipLocalsInit`**: enabled in runtime and build tools for performance
 - **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes), `CSWINRT3001` (obsolete internal members)
-- **Strong-name signing**: All assemblies signed with `src/WinRT.Runtime2/key.snk`
+- **Strong-name signing**: all assemblies signed with `src/WinRT.Runtime2/key.snk`
 
 ### C++ Project (cswinrt)
 
@@ -451,17 +451,17 @@ All three .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtin
 
 CsWinRT 3.0 uses .NET's `ComWrappers` API for all COM interop:
 
-- **RCW (Runtime Callable Wrapper)**: Managed wrapper around native COM objects. Projected runtime classes inherit `WindowsRuntimeObject`, which holds a `WindowsRuntimeObjectReference` wrapping the native `IInspectable*` pointer.
-- **CCW (COM Callable Wrapper)**: Native COM representation of managed objects. The interop generator creates interface entry tables and vtable implementations for user types implementing WinRT interfaces.
-- **Vtables**: Defined as `[StructLayout(LayoutKind.Sequential)]` structs with `delegate* unmanaged[MemberFunction]<...>` function pointer fields. All vtables are designed to be fully pre-initialized by the Native AOT compiler (ILC) into readonly data sections.
+- **RCW (Runtime Callable Wrapper)**: managed wrapper around native COM objects. Projected runtime classes inherit `WindowsRuntimeObject`, which holds a `WindowsRuntimeObjectReference` wrapping the native `IInspectable*` pointer.
+- **CCW (COM Callable Wrapper)**: native COM representation of managed objects. The interop generator creates interface entry tables and vtable implementations for user types implementing Windows Runtime interfaces.
+- **Vtables**: defined as `[StructLayout(LayoutKind.Sequential)]` structs with `delegate* unmanaged[MemberFunction]<...>` function pointer fields. All vtables are designed to be fully pre-initialized by the Native AOT compiler (ILC) into readonly data sections.
 
 ### Type Map System
 
 The runtime uses a type map infrastructure for trimming-safe marshalling:
 
-- `WindowsRuntimeComWrappersTypeMapGroup`: Maps types for ComWrappers marshalling
-- `WindowsRuntimeMetadataTypeMapGroup`: Maps types for metadata/reflection
-- `DynamicInterfaceCastableImplementationTypeMapGroup`: Maps types for dynamic interface casting
+- `WindowsRuntimeComWrappersTypeMapGroup`: maps types for ComWrappers marshalling
+- `WindowsRuntimeMetadataTypeMapGroup`: maps types for metadata/reflection
+- `DynamicInterfaceCastableImplementationTypeMapGroup`: maps types for dynamic interface casting
 
 Assembly-level `[TypeMapAssemblyTarget]` attributes (generated by the source generator) tell the runtime which assemblies contain type map entries. The interop generator emits the actual type map entries.
 
