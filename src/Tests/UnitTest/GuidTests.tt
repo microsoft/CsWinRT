@@ -74,6 +74,56 @@ var tests = new (string Name, string IID, string Mangled)[]
     ("IList_Deferral", "a3c9b753-57ad-537f-9626-4ae5785473d4", "<#corlib>IList'1<<#Windows>Windows-Foundation-Deferral>"),
     ("IList_DateTimeOffset", "94390dc5-e442-5870-88b6-007e232f902c", "<#corlib>IList'1<<#corlib>System-DateTimeOffset>"),
     ("IList_Point", "c0d513a9-ec4a-5a5d-b6d5-b707defdb9f7", "<#corlib>IList'1<<#Windows>Windows-Foundation-Point>"),
+
+    // Indirect tests for types without their own InterfaceIIDs entries.
+    // Non-generic interfaces and nullable value types don't get standalone IID entries in
+    // ABI.InterfaceIIDs (as they are not generic interface instantiations processed by the
+    // interop generator). We validate them indirectly by wrapping each in IEnumerable<T>:
+    // the parametric IID of IIterable<T> depends on T's WinRT type signature, so a correct
+    // IID for the wrapper confirms that the inner type's signature is also correct.
+
+    // Non-generic interfaces wrapped in IEnumerable<T>
+    ("IEnumerable_IStringable", "88241f54-588f-529b-8344-08d8a4a3c25a", "<#corlib>IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>"),
+    ("IEnumerable_IBindableIterable", "af2aea1d-08d9-5ca3-9870-c43ea54b9786", "<#corlib>IEnumerable'1<<#corlib>System-Collections-IEnumerable>"),
+    ("IEnumerable_IBindableVector", "884f89c1-b19c-58fb-bb64-2907b5b72083", "<#corlib>IEnumerable'1<<#corlib>System-Collections-IList>"),
+
+    // Nullable primitive types wrapped in IEnumerable<T>
+    ("IEnumerable_NullableBoolean", "b4e71894-d8db-5429-9cee-9e957c01a3fa", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<bool>>"),
+    ("IEnumerable_NullableSByte", "ca0489c7-054e-5e52-a8ab-5322a9ac9be8", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<sbyte>>"),
+    ("IEnumerable_NullableInt16", "d41c6075-62bb-54a7-aba5-b80920dddab1", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<short>>"),
+    ("IEnumerable_NullableInt32", "03c10a1b-b584-5081-a76d-017a80eeebfe", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<int>>"),
+    ("IEnumerable_NullableInt64", "ff5ca13c-3fc7-5867-9d95-c2c8d366b4ae", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<long>>"),
+    ("IEnumerable_NullableByte", "b486c1cb-165b-5128-9e8e-bb0ccb6ea9d2", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<byte>>"),
+    ("IEnumerable_NullableUInt16", "e8985950-7e57-5c8b-b6fa-604a465d258c", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<ushort>>"),
+    ("IEnumerable_NullableUInt32", "1225929a-80bd-5d32-9912-a256befadb75", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<uint>>"),
+    ("IEnumerable_NullableUInt64", "6a8145dc-f08b-59e9-aa95-f00f7e0d133c", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<ulong>>"),
+    ("IEnumerable_NullableSingle", "7eeb4894-d4b0-5fc0-8994-ed10b6b140a5", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<float>>"),
+    ("IEnumerable_NullableDouble", "8b82b07e-3cdc-5e09-8d24-b1ed4aba9dc9", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<double>>"),
+    ("IEnumerable_NullableChar", "4664e871-2a74-5091-80a9-7c57b61c0227", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<char>>"),
+
+    // Nullable corlib struct types wrapped in IEnumerable<T>
+    ("IEnumerable_NullableGuid", "6c0e1bb4-8a19-550d-9a66-de23be625600", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Guid>>"),
+    ("IEnumerable_NullableTimeSpan", "aa591268-d773-57d5-9791-7ca8d6870d45", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-TimeSpan>>"),
+    ("IEnumerable_NullableDateTimeOffset", "9e757eb6-dcaf-5aa0-8e1a-260f0ee9d183", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-DateTimeOffset>>"),
+
+    // Nullable WinRT struct types wrapped in IEnumerable<T>
+    ("IEnumerable_NullableEventRegistrationToken", "8add533b-3c9c-5e53-b2ab-bcc2a5502e5f", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>WindowsRuntime-InteropServices-EventRegistrationToken>>"),
+    ("IEnumerable_NullablePoint", "e889008d-6a55-5f13-98ba-0752e40405f4", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Point>>"),
+    ("IEnumerable_NullableRect", "53e74ab1-1a40-514a-ae73-c48b4a7ba095", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Rect>>"),
+    ("IEnumerable_NullableSize", "693ec203-656d-52f7-a649-31eea2e31a18", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-Size>>"),
+
+    // Nullable Windows SDK types wrapped in IEnumerable<T>
+    ("IEnumerable_NullableColor", "25224526-def3-5369-8945-b75072a638e7", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#Windows>Windows-UI-Color>>"),
+    ("IEnumerable_NullablePropertyType", "511ece22-5784-569e-bec3-dc48838e041a", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#CsWinRT>Windows-Foundation-PropertyType>>"),
+
+    // Nullable System.Numerics types wrapped in IEnumerable<T>
+    ("IEnumerable_NullableMatrix3x2", "4b61d6df-a772-5dc1-b9fd-9622e6712018", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Matrix3x2>>"),
+    ("IEnumerable_NullableMatrix4x4", "93d192a0-6579-5e92-98ec-52abeb0590b5", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Matrix4x4>>"),
+    ("IEnumerable_NullablePlane", "78627ff3-abd5-50ef-8a66-e1224024541d", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Plane>>"),
+    ("IEnumerable_NullableQuaternion", "36514ff8-a3ef-5353-ae54-029c54627f00", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Quaternion>>"),
+    ("IEnumerable_NullableVector2", "68cf9b6c-91fb-508d-9d94-a351e52b5e03", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector2>>"),
+    ("IEnumerable_NullableVector3", "8a40ba7a-7c34-54e6-9178-1df1f39deeae", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector3>>"),
+    ("IEnumerable_NullableVector4", "eb7d2b5f-56bf-53fb-82ba-413e0891acaf", "<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<#corlib>System-Numerics-Vector4>>"),
 };
 
 for (int i = 0; i < tests.Length; i++)
