@@ -230,6 +230,15 @@ public async Task InvalidType_Warns()
 | GC/reference tracking behavior | `ObjectLifetimeTests/` |
 | XAML visual tree element lifetime | `ObjectLifetimeTests/` |
 | WinRT component authoring patterns | `AuthoringTest/` (when enabled) |
+| Generated projection code patterns or cross-ABI control flow | Update `TestComponentCSharp/` and add tests in `UnitTest/` or `FunctionalTests/` |
+
+## Test component: TestComponentCSharp (`src/Tests/TestComponentCSharp/`)
+
+A **WinRT test component** (defined in `class.idl`, implemented in C++) that complements the general `TestComponent` from the [TestWinRT](https://github.com/microsoft/TestWinRT/) submodule. It tests scenarios specific to the C#/WinRT language projection.
+
+**When to update this project:** When you need to validate generated projection code patterns or cross-ABI control flow — e.g. a C# type calling a method on a projected object with specific parameters, and the native implementation validating the result. New types and members can be added to `class.idl` as needed.
+
+**Referenced from:** unit tests (`UnitTest/`), functional tests (`FunctionalTests/`), and projection test projects (`Projections/Test/`).
 
 ## Style rules
 
