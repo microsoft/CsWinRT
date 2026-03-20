@@ -97,6 +97,7 @@ Apply surgical edits to `.github/copilot-instructions.md` to fix any discrepanci
 
 <style_rules>
 - Use sentence case for all headings (only capitalize proper nouns and the first word)
+- Do not capitalize words after `:` unless they are proper nouns (e.g. write `**Target**: net10.0`, not `**Target**: Net10.0`)
 - Use `.dll` (lowercase) not `.DLL`
 - Write "Windows Runtime" (not "WinRT") when referring to the technology in prose, but "WinRT" is fine in type/project/tool names
 - Keep the same structure and tone as the existing document
