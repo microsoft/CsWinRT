@@ -60,13 +60,17 @@ public static readonly DiagnosticDescriptor MyNewDiagnostic = new(
 
 **File:** `src/Authoring/WinRT.SourceGenerator2/AnalyzerReleases.Shipped.md`
 
-Add a new row to the table under the `## Release 3.0.0` / `### New Rules` section:
+Add a new row to the rules table:
 
 ```markdown
 CSWINRT2XXX | WindowsRuntime.SourceGenerator | Error | Short title describing the issue
 ```
 
 The columns are: `Rule ID | Category | Severity | Notes` (where Notes = the title from the descriptor).
+
+**Which release section to use:**
+- **If the user does not specify a release version:** add the row under the `### New Rules` table of whatever the latest (topmost) release heading already in the file is.
+- **If the user specifies a new release version** (e.g. "target the upcoming 3.1 release"): add a new `## Release X.Y.Z` heading with a `### New Rules` section **above** the existing releases, and insert the row there. Follow the same markdown heading/table format used by the existing release sections.
 
 **Important:** Always edit `AnalyzerReleases.Shipped.md`, NOT `AnalyzerReleases.Unshipped.md`.
 
