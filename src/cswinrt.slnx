@@ -203,6 +203,7 @@
     </Project>
     <Project Path="Tests/CSWinMDComponent/CSWinMDComponent.vcxproj" Id="d10dc47a-db45-491c-852e-2b2165f25f86">
       <BuildDependency Project="Authoring/CsWinMD/CsWinMD.csproj" />
+      <Build Project="false" />
     </Project>
     <Project Path="Tests/DiagnosticTests/DiagnosticTests.csproj">
       <Build Project="false" />
