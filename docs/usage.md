@@ -30,9 +30,23 @@ For a full list of C#/WinRT NuGet project properties, refer to the [NuGet docume
 
 In the example diagram below, the projection project invokes **cswinrt.exe** at build time, which processes `.winmd` files in the "Contoso" namespace to generate projection source files and compiles these into an reference projection assembly named `Contoso.projection.dll` under the `ref` subfolder along with a forwarder assembly with the same name. The reference and forwarder assembly is typically distributed along with the implementation assemblies (`Contoso.*.dll`) as a NuGet package. 
 
-<img alt="Creating projection"
-    src="images/Diagram_CreateProjection.jpg"
-    width="70%" height="50%">
+```mermaid
+flowchart TD
+    subgraph build ["Generate reference projection from a component"]
+        direction LR
+        WINMD["Contoso.*.winmd"] -->|cswinrt.exe| CS["Contoso.*.cs\n(projection sources)"]
+        CS -->|csc.exe| REF["ref/Contoso.projection.dll\n(Reference Assembly)"]
+        REF -->|cswinrtimplgen.exe| FWD["Contoso.projection.dll\n(Forwarder Assembly)"]
+    end
+
+    subgraph nupkg ["Distribute as a NuGet package — Contoso.nupkg"]
+        R["ref/Contoso.projection.dll\n(Reference Assembly)"]
+        F["Contoso.projection.dll\n(Forwarder Assembly)"]
+        I["Contoso.*.dll\n(Implementation Assemblies)"]
+    end
+
+    build --> nupkg
+```
 
 ### Distributing the interop assembly
 
@@ -44,9 +58,24 @@ See the [projection sample](https://github.com/microsoft/CsWinRT/tree/master/src
 
 Application developers on .NET 10+ can reference C#/WinRT interop assemblies by adding a reference to the interop NuGet package, as shown in the diagram below. This replaces any `*.winmd` references.
 
-<img alt = "Adding projection"
-    src="images/Diagram_AddProjection.jpg"
-    width="70%" height="50%">
+```mermaid
+flowchart LR
+    subgraph proj ["MyApp.csproj"]
+        SRC["*.cs sources"]
+        NuGet["Contoso.nupkg\n(NuGet reference)"]
+    end
+
+    proj -->|csc.exe| exe
+
+    subgraph exe ["MyApp (published output)"]
+        A["MyApp.dll"]
+        B["Contoso.projection.dll\n(Forwarder → WinRT.Projection.dll)"]
+        C["Contoso.*.dll\n(Implementation)"]
+        D["WinRT.Runtime.dll"]
+        E["WinRT.Projection.dll\n(Generated at publish)"]
+        F["WinRT.Interop.dll\n(Generated at publish)"]
+    end
+```
 
 ## Author and consume a C#/WinRT component
 
