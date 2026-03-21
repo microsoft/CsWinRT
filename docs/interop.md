@@ -36,15 +36,6 @@ This performs an identity comparison: if both objects wrap native WinRT objects,
 
 ### COM object detection
 
-To check whether an object is a Windows Runtime object:
-
-```csharp
-if (obj is WindowsRuntimeObject)
-{
-    // obj is a Windows Runtime object (either native-backed or managed-authored)
-}
-```
-
 To check whether a native COM pointer is actually a CCW (callable COM wrapper) for a managed object that was marshalled to native code:
 
 ```csharp
