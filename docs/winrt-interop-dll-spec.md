@@ -51,6 +51,9 @@ Compact identifiers are prefixed with `#` to distinguish them from user-defined 
 
 For types not belonging to any well-known assembly, the implementation also checks for a `[WindowsRuntimeMetadata]` attribute on the resolved type definition. If the attribute is present, the Windows Runtime metadata name from the attribute is used as the assembly identifier instead of the actual assembly name. This allows types carrying WinRT metadata to be identified by their canonical Windows Runtime name rather than the .NET assembly they happen to live in. If the attribute is not present, the raw assembly name is used as-is.
 
+> [!NOTE]
+> Not all BCL types live in `System.Runtime`. For example, the `System.Numerics` types (`Matrix3x2`, `Matrix4x4`, `Plane`, `Quaternion`, `Vector2`, `Vector3`, `Vector4`) are in the `System.Numerics.Vectors` assembly, so their assembly identifier is `System.Numerics.Vectors` (not `#corlib`). The assembly used is always the one from the type's actual metadata scope, not the namespace.
+
 ### Examples
 
 **Primitive type**
