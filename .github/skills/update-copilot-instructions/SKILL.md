@@ -65,7 +65,15 @@ Launch parallel explore agents for each of the 8 CsWinRT 3.0 projects listed in 
    - Build parameters (`WindowsSdkBuild`, `WindowsSdkXaml`) are current
    - Project settings are current
 
-### Step 3: verify the build pipeline
+### Step 3: verify the test projects
+
+Verify the `src/Tests/` directory is accurately represented in the "Other directories" table. Check:
+
+- Test project list is current (unit tests, functional tests, source generator/analyzer tests, object lifetime tests, authoring tests, test component)
+- Test framework and project type descriptions match reality
+- No significant test projects have been added or removed
+
+### Step 4: verify the build pipeline
 
 Analyze the `nuget/` folder to verify:
 
@@ -74,7 +82,7 @@ Analyze the `nuget/` folder to verify:
 - Key MSBuild properties table is complete and defaults are accurate
 - Build pipeline flow described matches the actual target ordering
 
-### Step 4: verify code style and conventions
+### Step 5: verify code style and conventions
 
 Spot-check project files to verify:
 
@@ -82,7 +90,7 @@ Spot-check project files to verify:
 - Warning suppression and code style enforcement settings
 - Naming conventions and patterns described are still used
 
-### Step 5: update the instructions
+### Step 6: update the instructions
 
 Apply surgical edits to `.github/copilot-instructions.md` to fix any discrepancies found. Typical updates include:
 
@@ -104,7 +112,7 @@ Apply surgical edits to `.github/copilot-instructions.md` to fix any discrepanci
 - Do not add unnecessary capitalization to words in headings or prose
 </style_rules>
 
-### Step 6: update this skill if needed
+### Step 7: update this skill if needed
 
 If significant changes to the solution were discovered (e.g. projects added or removed, new components worth validating, changed validation criteria), also update this skill file (`.github/skills/update-copilot-instructions/SKILL.md`) to reflect those changes. In particular:
 
@@ -115,7 +123,7 @@ If significant changes to the solution were discovered (e.g. projects added or r
 
 This ensures the skill remains useful and accurate for future runs.
 
-### Step 7: summarize changes
+### Step 8: summarize changes
 
 After editing, provide a clear summary of what was updated and why, so the user can review the changes before committing.
 
