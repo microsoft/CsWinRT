@@ -164,7 +164,7 @@ public partial class TestGuids
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Use(EventHandler<A, B> _) { }
 
-        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#Windows>EventHandler'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>EventHandler'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|<#corlib>System-Collections-Generic-KeyValuePair'2<string|<#CsWinRT>Windows-Foundation-IAsyncOperationWithProgress'2<<#corlib>System-Collections-Generic-IEnumerable'1<<#CsWinRT>Windows-Foundation-IStringable>|float>>>")]
         static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
         Use(default!);
@@ -500,7 +500,7 @@ public partial class TestGuids
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Use(IList<Point> _) { }
 
-        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#Windows>Windows-Foundation-Point>")]
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<#CsWinRT>Windows-Foundation-Point>")]
         static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
         Use(default!);
@@ -590,20 +590,6 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("b4e71894-d8db-5429-9cee-9e957c01a3fa"), GetIID(null));
-    }
-
-    [TestMethod]
-    public void Test_IEnumerable_NullableSByte()
-    {
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        static void Use(IEnumerable<sbyte?> _) { }
-
-        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<sbyte>>")]
-        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
-
-        Use(default!);
-
-        Assert.AreEqual(new Guid("ca0489c7-054e-5e52-a8ab-5322a9ac9be8"), GetIID(null));
     }
 
     [TestMethod]

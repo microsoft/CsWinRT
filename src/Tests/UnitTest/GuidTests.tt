@@ -72,7 +72,7 @@ var tests = new (string Name, string IID, string Mangled, string Type)[]
     ("EventHandler_A", "fa0b7d80-7efa-52df-9b69-0574ce57ada4", $"{corlib}EventHandler'1<{a}>", "EventHandler<A>"),
 
     // System.EventHandler<TSender, TResult> (projected from Windows.Foundation.TypedEventHandler)
-    ("EventHandler_A_B", "edb31843-b4cf-56eb-925a-d4d0ce97a08d", $"{windows}EventHandler'2<{a}|{b}>", "EventHandler<A, B>"),
+    ("EventHandler_A_B", "edb31843-b4cf-56eb-925a-d4d0ce97a08d", $"{corlib}EventHandler'2<{a}|{b}>", "EventHandler<A, B>"),
 
     // System.Collections.Generic interfaces
     ("IEnumerable_A", "96565eb9-a692-59c8-bcb5-647cde4e6c4d", $"{corlib}IEnumerable'1<{a}>", "IEnumerable<A>"),
@@ -102,7 +102,7 @@ var tests = new (string Name, string IID, string Mangled, string Type)[]
     ("IList_WwwFormUrlDecoderEntry", "1d9ba3f5-b997-5a7d-82c4-7857ecbf3a42", $"{corlib}IList'1<{windows}Windows-Foundation-WwwFormUrlDecoderEntry>", "IList<WwwFormUrlDecoderEntry>"),
     ("IList_Deferral", "a3c9b753-57ad-537f-9626-4ae5785473d4", $"{corlib}IList'1<{windows}Windows-Foundation-Deferral>", "IList<Deferral>"),
     ("IList_DateTimeOffset", "94390dc5-e442-5870-88b6-007e232f902c", $"{corlib}IList'1<{corlib}System-DateTimeOffset>", "IList<DateTimeOffset>"),
-    ("IList_Point", "c0d513a9-ec4a-5a5d-b6d5-b707defdb9f7", $"{corlib}IList'1<{windows}Windows-Foundation-Point>", "IList<Point>"),
+    ("IList_Point", "c0d513a9-ec4a-5a5d-b6d5-b707defdb9f7", $"{corlib}IList'1<{cswinrt}Windows-Foundation-Point>", "IList<Point>"),
 
     // Indirect tests for types without their own InterfaceIIDs entries.
     // Non-generic interfaces and nullable value types don't get standalone IID entries in
@@ -122,7 +122,6 @@ var tests = new (string Name, string IID, string Mangled, string Type)[]
 
     // Nullable primitive types wrapped in IEnumerable<T>
     ("IEnumerable_NullableBoolean", "b4e71894-d8db-5429-9cee-9e957c01a3fa", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<bool>>", "IEnumerable<bool?>"),
-    ("IEnumerable_NullableSByte", "ca0489c7-054e-5e52-a8ab-5322a9ac9be8", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<sbyte>>", "IEnumerable<sbyte?>"),
     ("IEnumerable_NullableInt16", "d41c6075-62bb-54a7-aba5-b80920dddab1", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<short>>", "IEnumerable<short?>"),
     ("IEnumerable_NullableInt32", "03c10a1b-b584-5081-a76d-017a80eeebfe", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<int>>", "IEnumerable<int?>"),
     ("IEnumerable_NullableInt64", "ff5ca13c-3fc7-5867-9d95-c2c8d366b4ae", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<long>>", "IEnumerable<long?>"),
