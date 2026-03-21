@@ -13,7 +13,7 @@ Contains files that assist with publishing to Maestro.
 
 ## [`nuget`](../nuget)
 
-Contains source files for producing a C#/WinRT NuGet package, which is regularly built, signed, and published to nuget.org by Microsoft.  The C#/WinRT NuGet package contains the **cswinrt.exe** compiler and the runtime assembly, `WinRT.Runtime.dll`.
+Contains source files for producing the C#/WinRT NuGet package, which is regularly built, signed, and published to nuget.org by Microsoft. The package contains the **cswinrt.exe** projection compiler, the post-build tools (**cswinrtprojectiongen.exe**, **cswinrtimplgen.exe**, **cswinrtinteropgen.exe**), the runtime assembly (`WinRT.Runtime.dll`), precompiled SDK projection assemblies, MSBuild `.props`/`.targets` files, and the Roslyn source generator.
 
 ## [`src/Authoring`](../src/Authoring)
 

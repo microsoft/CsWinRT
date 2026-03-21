@@ -1,4 +1,6 @@
-# Private Projection Support (not supported yet)
+# Private Projection Support
+
+> **⚠️ This document has not been updated for CsWinRT 3.0.** Private projection support is a CsWinRT 2.x feature. Its status in CsWinRT 3.0 has not been determined yet.
 
 ## Overview
 

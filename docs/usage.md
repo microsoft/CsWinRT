@@ -111,8 +111,8 @@ flowchart LR
         B["Contoso.projection.dll\n(Forwarder → WinRT.Projection.dll)"]
         C["Contoso.*.dll\n(Implementation)"]
         D["WinRT.Runtime.dll"]
-        E["WinRT.Projection.dll\n(Generated at publish)"]
-        F["WinRT.Interop.dll\n(Generated at publish)"]
+        E["WinRT.Projection.dll\n(Generated at build)"]
+        F["WinRT.Interop.dll\n(Generated at build)"]
     end
 ```
 

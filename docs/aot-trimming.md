@@ -73,5 +73,4 @@ public partial class MyViewModel
 
 The source generator produces diagnostics (`CSWINRT2000`–`CSWINRT2008`) for invalid usage. See the [diagnostics reference](diagnostics/) for details.
 
-## Known issues
 
