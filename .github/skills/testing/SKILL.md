@@ -146,7 +146,7 @@ return 100;
 public void ValidClass_SomeScenario()
 {
     const string source = """
-        using WindowsRuntime.Xaml.Attributes;
+        using WindowsRuntime.Xaml;
 
         namespace MyNamespace;
 
@@ -157,11 +157,11 @@ public void ValidClass_SomeScenario()
         }
         """;
 
-    CSharpGeneratorTest<CustomPropertyProviderGenerator>.VerifySources(
-        source,
-        result: ("MyNamespace.MyType.g.cs", """
-            // expected generated code...
-            """));
+    const string result = """
+        // expected generated code...
+        """;
+
+    CSharpGeneratorTest<CustomPropertyProviderGenerator>.VerifySources(source, ("MyNamespace.MyType.g.cs", result));
 }
 ```
 
@@ -170,17 +170,14 @@ public void ValidClass_SomeScenario()
 [TestMethod]
 public async Task InvalidType_Warns()
 {
-    const string source = """
-        using WindowsRuntime.Xaml.Attributes;
-
-        namespace MyNamespace;
+    string source = """
+        using WindowsRuntime.Xaml;
 
         [GeneratedCustomPropertyProvider]
         public static class {|CSWINRT2000:MyType|} { }
         """;
 
-    await CSharpAnalyzerTest<GeneratedCustomPropertyProviderTargetTypeAnalyzer>
-        .VerifyAnalyzerAsync(source);
+    await CSharpAnalyzerTest<GeneratedCustomPropertyProviderTargetTypeAnalyzer>.VerifyAnalyzerAsync(source);
 }
 ```
 
