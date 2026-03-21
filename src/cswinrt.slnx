@@ -34,6 +34,7 @@
     <File Path="../docs/versioning.md" />
   </Folder>
   <Folder Name="/Docs/cswinrtgen/">
+    <File Path="../.github/skills/interop-generator/SKILL.md" />
     <File Path="../.github/skills/interop-generator/references/marshalling-arrays.md" />
     <File Path="../.github/skills/interop-generator/references/marshalling-generic-interfaces.md" />
     <File Path="../.github/skills/interop-generator/references/name-mangling-scheme.md" />
