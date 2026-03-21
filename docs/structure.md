@@ -17,11 +17,11 @@ Contains source files for producing a C#/WinRT NuGet package, which is regularly
 
 ## [`src/Authoring`](../src/Authoring)
 
-Contains projects for implementing authoring and hosting support.
+Contains projects for implementing authoring and hosting support, including the source generators, the WinRT host, and the cswinmd tool.
 
 ## [`src/Benchmarks`](../src/Benchmarks)
 
-Contains benchmarks written using BenchmarkDotNet to track the performance of scenarios in the generated projection.  To run the benchmarks using the CsWinRT projection, run `benchmark.cmd`.  To run the same benchmarks using the built-in WinMD support in NET Core 3.1 to compare against as a baseline, run `benchmark_winmd.cmd`.
+Contains benchmarks written using BenchmarkDotNet to track the performance of scenarios in the generated projection.  To run the benchmarks using the CsWinRT projection, run `benchmark.cmd`.
 
 ## [`src/cswinrt`](../src/cswinrt) 
 
@@ -35,13 +35,17 @@ The C#/WinRT project also contains a cswinrt.natvis script for debugging the C# 
 
 See also [Deploying .natvis files](https://docs.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects?view=vs-2015#BKMK_natvis_location).
 
+## [`src/Perf`](../src/Perf)
+
+Contains performance-related tools, including a benchmark baseline and the IID optimizer.
+
 ## [`src/Projections`](../src/Projections) 
 
 Contains several projects for generating and building projections from the Windows SDK, WinUI, Benchmark (produced by the BenchmarkComponent project), and Test metadata (produced by the TestWinRT and TestComponentCSharp projects).
 
 ## [`src/Samples`](../src/Samples) 
 
-- [`Net5ProjectionSample`](../src/Samples/Net5ProjectionSample): Contains an end-to-end sample for component authors, showing how to generate a projection from a C++/WinRT component and consume it using a NuGet package.
+- [`NetProjectionSample`](../src/Samples/NetProjectionSample): Contains an end-to-end sample for component authors, showing how to generate a projection from a C++/WinRT component and consume it using a NuGet package.
 
 - [`WinUIDesktopSample`](../src/Samples/WinUIDesktopSample): Contains an end-to-end sample app that uses the Windows SDK and WinUI projections generated above.
 
@@ -49,7 +53,7 @@ Contains several projects for generating and building projections from the Windo
 
 Contains various testing-related projects:
 
-- [`TestComponentCSharp`](../src/Tests/TestComponentCSharp): This is an implementation of a WinRT test component, defined in `class.idl` and used by the UnitTest project.  To complement the general TestComponent above, the TestComponentCSharp  tests scenarios specific to the C#/WinRT language projection.
+- [`TestComponentCSharp`](../src/Tests/TestComponentCSharp): This is an implementation of a WinRT test component, defined in `class.idl` and used by the UnitTest project.  To complement the general TestComponent above, the TestComponentCSharp tests scenarios specific to the C#/WinRT language projection.
 
 - [`UnitTest`](../src/Tests/UnitTest): Unit tests for validating the Windows SDK, WinUI, and Test projections generated above.  All pull requests should ensure that this project executes without errors.
 
@@ -59,13 +63,33 @@ Contains various testing-related projects:
 
 C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo is cloned into the root of the C#/WinRT repo, via `get_testwinrt.cmd`, so that `cswinrt.sln` can resolve its reference to `TestComponent.vcxproj`.  The resulting `TestComponent` and `BenchmarkComponent` files are consumed by the UnitTest and Benchmarks projects above.
 
-## [`src/WinRT.Runtime`](../src/WinRT.Runtime) 
+## [`src/WinRT.Generator.Tasks`](../src/WinRT.Generator.Tasks)
 
-Contains the WinRT.Runtime project for building the C#/WinRT runtime assembly, `WinRT.Runtime.dll`. The runtime assembly provides an abstraction layer over the .NET 5 runtime, and also provides Xaml reference tracking support which is necessary for WinUI 3 applications to manage memory correctly. The runtime assembly implements the following features for all projected C#/WinRT types:
+Contains MSBuild task wrappers that invoke the CsWinRT code generators (interop, projection, and forwarder/impl generators) during the build.
+
+## [`src/WinRT.Impl.Generator`](../src/WinRT.Impl.Generator)
+
+Contains the implementation generator that produces type forwarders, routing projected types to the appropriate output assemblies (`WinRT.Projection` or `WinRT.Sdk.Projection`).
+
+## [`src/WinRT.Interop.Generator`](../src/WinRT.Interop.Generator)
+
+Contains the interop code generator that produces native COM interface entries, vtable implementations, and marshalling infrastructure for authored and projected WinRT types.
+
+## [`src/WinRT.Projection.Generator`](../src/WinRT.Projection.Generator)
+
+Contains the projection code generator that produces C# projection source code from WinRT metadata (`.winmd`) files.
+
+## [`src/WinRT.Runtime2`](../src/WinRT.Runtime2) 
+
+Contains the WinRT.Runtime project for building the C#/WinRT runtime assembly, `WinRT.Runtime.dll`. The runtime assembly targets .NET 10 and provides Xaml reference tracking support which is necessary for WinUI 3 applications to manage memory correctly. The runtime assembly implements the following features for all projected C#/WinRT types:
 
 - WinRT activation and marshaling logic
 - Custom type mappings, primarily for WinUI
-- [COM Wrapper](https://docs.microsoft.com/dotnet/api/system.runtime.interopservices.comwrappers?view=net-5.0) management
-- IDynamicInterfaceCastable and ComImport casting support
+- [ComWrappers](https://docs.microsoft.com/dotnet/api/system.runtime.interopservices.comwrappers) management
+- IDynamicInterfaceCastable casting support
 - Extension methods common to projected types
+
+## [`src/WinRT.Sdk.Projection`](../src/WinRT.Sdk.Projection)
+
+Contains the project that produces the `WinRT.Sdk.Projection` assembly, which includes projected types from the `Windows.*` and `WinRT.Interop.*` namespaces.
 
