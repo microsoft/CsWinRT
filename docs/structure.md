@@ -65,19 +65,19 @@ C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/Te
 
 ## [`src/WinRT.Generator.Tasks`](../src/WinRT.Generator.Tasks)
 
-Contains MSBuild task wrappers that invoke the CsWinRT code generators (interop, projection, and forwarder/impl generators) during the build.
+Contains MSBuild task wrappers that invoke the CsWinRT code generators during the build. These tasks orchestrate the three post-build tools — the projection generator, the impl/forwarder generator, and the interop generator — and are called from the MSBuild targets in the `nuget/` directory.
 
 ## [`src/WinRT.Impl.Generator`](../src/WinRT.Impl.Generator)
 
-Contains the implementation generator that produces type forwarders, routing projected types to the appropriate output assemblies (`WinRT.Projection` or `WinRT.Sdk.Projection`).
+Contains the **forwarder assembly generator** (`cswinrtimplgen.exe`). This tool takes a reference projection assembly and produces a forwarder DLL that type-forwards all public types to the appropriate runtime assembly — either `WinRT.Sdk.Projection` (for `Windows.*` and `WinRT.Interop.*` namespaces) or `WinRT.Projection` (for all other namespaces). The forwarder assembly is distributed in NuGet packages alongside the reference projection so that consumers can compile against the reference assembly while the forwarder routes types to the actual implementations generated at app build time.
 
 ## [`src/WinRT.Interop.Generator`](../src/WinRT.Interop.Generator)
 
-Contains the interop code generator that produces native COM interface entries, vtable implementations, and marshalling infrastructure for authored and projected WinRT types.
+Contains the **interop assembly generator** (`cswinrtinteropgen.exe`). This tool runs at **app build time** after all assemblies are compiled, analyzing the entire application to generate `WinRT.Interop.dll`. This assembly contains deduplicated native COM interface entries, vtable implementations, and marshalling infrastructure for all WinRT types used across the app. Because it sees the whole application, it avoids the code duplication and type map conflicts that would occur if marshalling code were generated per-project.
 
 ## [`src/WinRT.Projection.Generator`](../src/WinRT.Projection.Generator)
 
-Contains the projection code generator that produces C# projection source code from WinRT metadata (`.winmd`) files.
+Contains the **projection assembly generator** (`cswinrtprojectiongen.exe`). This tool runs at **app build time** and produces `WinRT.Projection.dll`, which contains the actual projection implementations for all WinRT types used by the application. The forwarder assemblies from component NuGet packages route their types into this assembly. For Windows SDK types, the CsWinRT NuGet package includes precompiled `WinRT.Sdk.Projection.dll` binaries, so this tool only needs to generate projections for third-party components.
 
 ## [`src/WinRT.Runtime2`](../src/WinRT.Runtime2) 
 

@@ -2,7 +2,7 @@
 
 The [C#/WinRT NuGet package](https://www.nuget.org/packages/Microsoft.Windows.CsWinRT/) provides tooling for the following scenarios:
 
-- [Generate and distribute an interop assembly](#generate-and-distribute-an-interop-assembly)
+- [Generate and distribute a projection](#generate-and-distribute-a-projection)
 - [Author and consume a C#/WinRT component](#author-and-consume-a-cwinrt-component) (coming soon for 3.0)
 
 For more information on using the NuGet package, refer to the [NuGet documentation](../nuget/readme.md). Command line options can be displayed by running `cswinrt -?`.
@@ -19,13 +19,13 @@ CsWinRT 3.0 requires **.NET 10** or later and is supported with the new `.1` **T
 <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
 ```
 
-## Generate and distribute an interop assembly
+## Generate and distribute a projection
 
-Component authors need to build a C#/WinRT interop assembly for .NET Core consumers. The C#/WinRT NuGet package (Microsoft.Windows.CsWinRT) includes the tooling which processes the .winmd files and generates a reference projection assembly under the `ref` subfolder to represent the API surface along with a forwarder assembly. These can then be distributed for .NET Core applications (.NET 10+) to reference.
+Component authors need to build a C#/WinRT projection for .NET Core consumers. The C#/WinRT NuGet package (Microsoft.Windows.CsWinRT) includes the tooling which processes the .winmd files and generates a reference projection assembly under the `ref` subfolder to represent the API surface along with a forwarder assembly. These can then be distributed for .NET Core applications (.NET 10+) to reference.
 
-For an example of generating and distributing a projection interop assembly as a NuGet package, see the [projection sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/NetProjectionSample). Note that this sample hasn't been updated yet and will be updated once the package is released on NuGet.
+For an example of generating and distributing a projection as a NuGet package, see the [projection sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/NetProjectionSample). Note that this sample hasn't been updated yet and will be updated once the package is released on NuGet.
 
-### Generating an interop assembly
+### Generating a reference projection
 
 Component authors create a projection project, which is a C# library project that references the C#/WinRT NuGet package and the project-specific `.winmd` files you want to project, whether through a NuGet package reference, project reference, or direct file reference.
 
@@ -76,19 +76,19 @@ flowchart TD
     build --> nupkg
 ```
 
-### Distributing the interop assembly
+### Distributing the projection
 
 The reference and forwarder assembly is typically distributed along with the implementation assemblies as a NuGet package for applications to reference.
 
-- If the interop assembly is **not** distributed as a NuGet package, an application adds references to both the component interop assembly produced above and to C#/WinRT.
-- If a third party WinRT component is distributed **without** an official interop assembly, an application may add a reference to C#/WinRT to generate its own private component interop assembly, assuming that is the only projection for it.
-- There are versioning concerns related to the above scenario, so the **preferred solution** is for the third party to publish an interop assembly directly.
+- If the projection is **not** distributed as a NuGet package, an application adds references to both the component projection assembly produced above and to C#/WinRT.
+- If a third party WinRT component is distributed **without** an official projection, an application may add a reference to C#/WinRT to generate its own private component projection, assuming that is the only projection for it.
+- There are versioning concerns related to the above scenario, so the **preferred solution** is for the third party to publish a projection directly.
 
-See the [projection sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/NetProjectionSample) for an example of how to create and reference the interop NuGet package.
+See the [projection sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/NetProjectionSample) for an example of how to create and reference a projection NuGet package.
 
 ### Applications
 
-Application developers on .NET 10+ can reference C#/WinRT interop assemblies by adding a reference to the interop NuGet package. This replaces any `*.winmd` references.
+Application developers on .NET 10+ can reference C#/WinRT projection assemblies by adding a reference to the projection NuGet package. This replaces any `*.winmd` references.
 
 At **build time**, CsWinRT automatically generates additional assemblies for the application:
 
