@@ -13,11 +13,26 @@ Before making changes, always read the specific source files involved. This docu
 
 ## Overview
 
-The interop generator (`src/WinRT.Interop.Generator/`) is a command-line tool that analyzes all assemblies in a published application and emits `WinRT.Interop.dll` — a sidecar assembly containing all marshalling code needed for Windows Runtime interop. It runs at the very end of the build pipeline (after all user assemblies and projection assemblies are compiled), giving it a **whole-program view** of every type that crosses the WinRT interop boundary.
+The interop generator (`src/WinRT.Interop.Generator/`) is a command-line tool that analyzes all assemblies in a published application and emits `WinRT.Interop.dll` — a sidecar assembly containing all marshalling code needed for Windows Runtime interop. It runs at the very end of the build pipeline (after all user assemblies and projection assemblies are compiled), giving it a **whole-program view** of every type that crosses the Windows Runtime interop boundary. This enables performance optimizations (all vtables can be pre-initialized), security features (all vtables are in readonly data segments in the PE file), and usability improvements (no need to mark types as being marshalled — things "just work").
 
 **Why it exists:** See the "Why the interop generator?" section in `.github/copilot-instructions.md` for the architectural motivation. In short: it deduplicates marshalling code across assemblies, avoids type map conflicts, and enables fully pre-initialized vtables for AOT.
 
 **Key technology:** The generator uses [AsmResolver](https://github.com/Washi1337/AsmResolver) for reading and writing .NET assemblies and IL. It does **not** use `System.Reflection.Emit` or Roslyn — it directly constructs CIL metadata and instructions via AsmResolver's API.
+
+**Accessing interop APIs:** `WinRT.Interop.dll` cannot be directly referenced by any other assembly, as it is produced at the very end of the build process. All upstream assemblies that need to invoke APIs from it must do so by using [`[UnsafeAccessor]`](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.unsafeaccessorattribute) and `[UnsafeAccessorType]`. All generated projections and code within `WinRT.Runtime.dll` already use this technique. User code should never try to or need to do this manually: all of this code exists solely to support the Windows Runtime marshalling infrastructure behind the scenes.
+
+## Build infrastructure
+
+The `WinRT.Interop.dll` assembly is produced by `cswinrtinteropgen`, which is a native binary (compiled with Native AOT) invoked during build. It is invoked by the [`RunCsWinRTGenerator`](https://github.com/dotnet/sdk/blob/2ab975ef4c560f9383e897d9af4e9784798b7576/src/Tasks/Microsoft.NET.Build.Tasks/RunCsWinRTGenerator.cs) MSBuild task in the .NET SDK. This task is invoked by the [`_RunCsWinRTGenerator`](https://github.com/dotnet/sdk/blob/2ab975ef4c560f9383e897d9af4e9784798b7576/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Windows.targets#L275) target, defined in `Microsoft.NET.Windows.targets`, also in the .NET SDK.
+
+### Version compatibility
+
+`cswinrtinteropgen` must be versioned with the `WinRT.Runtime.dll` assembly it was compiled for. Not doing so will result in undefined behavior (e.g. failures to run the tool, or runtime crashes). To ensure these versions always match, the .NET SDK selects the right version of `cswinrtinteropgen` after all reference assemblies are resolved:
+
+- If a project **does not** reference CsWinRT, then `cswinrtinteropgen` is loaded from the Windows SDK projections targeting pack.
+- If CsWinRT **is** referenced (directly or transitively), then `cswinrtinteropgen` is loaded from that package, but only if the `WinRT.Runtime.dll` binary from that package has a higher version than the one in the Windows SDK projections package being referenced. This correctly handles cases where a dependent project might have a reference to an outdated CsWinRT package.
+
+This version matching is critical because `cswinrtinteropgen` relies on "implementation details only" APIs in `WinRT.Runtime.dll` — APIs which are public, hidden, and marked as `[Obsolete]`, and which are exclusively meant to be consumed by generated code produced by `cswinrtinteropgen`. These APIs might change at any time without following semantic versioning for CsWinRT. For instance, they are crucial to support marshalling generic Windows Runtime collection interfaces, and the code in `WinRT.Interop.dll` makes heavy use of them in this scenario.
 
 ## Project settings
 
@@ -78,13 +93,13 @@ WinRT.Interop.Generator/
 │   └── InteropGeneratorEmitState.cs        # Thread-safe emit phase state
 ├── Helpers/                                # Utility classes
 │   ├── GuidGenerator.cs                    # IID computation (SHA1-based, RFC 4122 v5)
-│   ├── SignatureGenerator.cs               # WinRT type signature strings
+│   ├── SignatureGenerator.cs               # Windows Runtime type signature strings
 │   ├── SignatureGenerator.Primitives.cs    # Primitive type signatures (i4, u4, f8, etc.)
 │   ├── SignatureGenerator.Projections.cs   # Projected type signatures (pinterface, struct, etc.)
-│   ├── TypeMapping.cs                      # Managed ↔ WinRT type mapping registry (~70 types)
+│   ├── TypeMapping.cs                      # Managed ↔ Windows Runtime type mapping registry (~70 types)
 │   ├── TypeExclusions.cs                   # Types excluded from processing
 │   ├── MvidGenerator.cs                    # Deterministic MVID from input assemblies
-│   ├── RuntimeClassNameGenerator.cs        # WinRT runtime class name generation
+│   ├── RuntimeClassNameGenerator.cs        # Windows Runtime class name generation
 │   ├── MetadataTypeNameGenerator.cs        # Metadata type name formatting
 │   ├── WindowsRuntimeTypeAnalyzer.cs       # Type hierarchy and covariance analysis
 │   ├── InteropGeneratorJsonSerializerContext.cs # JSON serializer for debug repros
@@ -244,14 +259,14 @@ The generator processes two categories of assemblies:
 - `WinRT.Component.dll` — Authored component projections (optional)
 
 **Type exclusions** (`Helpers/TypeExclusions.cs`):
-- `System.Threading.Tasks.Task<T>` — Cannot be marshalled across WinRT boundary
+- `System.Threading.Tasks.Task<T>` — Cannot be marshalled across Windows Runtime boundary
 - `System.Collections.Concurrent.ConditionalWeakTable<,>` — Memory semantics conflict
 
 **Type inclusion criteria:**
 - Must be a projected Windows Runtime type (marked with `[WindowsRuntimeMetadata]` or similar)
 - Generic types must be fully constructed (no open generic parameters)
 - Type hierarchy must be fully resolvable (no missing dependencies)
-- Must not be a managed-only type (types that never cross the WinRT boundary)
+- Must not be a managed-only type (types that never cross the Windows Runtime boundary)
 
 ## Discovery phase
 
@@ -303,7 +318,7 @@ The core of discovery — finds all constructed generic types used anywhere in t
 | `IAsyncOperationWithProgress<T,P>` | Both progress and completion handlers |
 
 **For managed generic types** (`TryTrackManagedGenericTypeInstance`):
-- `Span<T>` and `ReadOnlySpan<T>` where `T` is a WinRT type → construct `SzArrayType` and route to array discovery
+- `Span<T>` and `ReadOnlySpan<T>` where `T` is a Windows Runtime type → construct `SzArrayType` and route to array discovery
 - All other types → route to `TryTrackExposedUserDefinedType`
 
 ### User-defined type discovery (`TryTrackExposedUserDefinedType`)
@@ -586,17 +601,17 @@ The returned `InteropMarshallerType` (a `readonly ref struct`) provides access t
 
 Central registry of managed ↔ Windows Runtime type mappings. Contains three `FrozenDictionary` instances:
 
-- **`ProjectionTypeMapping`** (~70+ entries) — Maps managed type full names to `(WinRT namespace, WinRT name, optional signature)`. Includes all custom-mapped types from `.github/copilot-instructions.md` plus identical-name mappings for primitives.
+- **`ProjectionTypeMapping`** (~70+ entries) — Maps managed type full names to `(Windows Runtime namespace, Windows Runtime name, optional signature)`. Includes all custom-mapped types from `.github/copilot-instructions.md` plus identical-name mappings for primitives.
 - **`FundamentalTypeMapping`** — Maps primitive type names (Boolean→Boolean, Byte→UInt8, Int32→Int32, etc.)
 - **`WindowsUIXamlTypeMapping`** — Alternative mappings when `CsWinRTUseWindowsUIXamlProjections = true` (e.g., `ICommand` → `Windows.UI.Xaml.Input.ICommand` instead of `Microsoft.UI.Xaml.Input.ICommand`)
 
 Key methods:
-- `TryFindMappedTypeName()` — Returns the WinRT type name for a managed type
-- `TryFindMappedTypeSignature()` — Returns the hardcoded WinRT signature for a type (used by `SignatureGenerator`)
+- `TryFindMappedTypeName()` — Returns the Windows Runtime type name for a managed type
+- `TryFindMappedTypeSignature()` — Returns the hardcoded Windows Runtime signature for a type (used by `SignatureGenerator`)
 
 ## References (`References/`)
 
-- **`InteropReferences`** — Central registry of 100+ cached type/method references from core libraries (`System.Runtime`, `System.Memory`, etc.) and the WinRT runtime. Properties are lazy-initialized (`??=` pattern).
+- **`InteropReferences`** — Central registry of 100+ cached type/method references from core libraries (`System.Runtime`, `System.Memory`, etc.) and the `WinRT.Runtime` assembly. Properties are lazy-initialized (`??=` pattern).
 - **`InteropDefinitions`** — Tracks generated type definitions in the output assembly. Includes `RvaFields` (for IID data), `InterfaceIIDs` (holder type for IID properties), and per-interface generated types.
 - **`InteropNames`** — String constants for well-known assembly names (`WinRT.Runtime.dll`, `WinRT.Interop.dll`, etc.), including UTF-8 versions for zero-copy comparison.
 - **`InteropValues`** — CsWinRT strong-name public key data.
@@ -658,7 +673,7 @@ The generated `WinRT.Interop.dll` does not operate in isolation — it works in 
 1. Generated code emits `[TypeMap<WindowsRuntimeComWrappersTypeMapGroup>]`, `[TypeMap<WindowsRuntimeMetadataTypeMapGroup>]`, and `[TypeMap<DynamicInterfaceCastableImplementationTypeMapGroup>]` attributes
 2. These are consumed at runtime by `WindowsRuntimeComWrappers` for marshalling dispatch
 
-For detailed control flow of generic interface marshalling, see `docs/cswinrtgen/marshalling-generic-interfaces.md`. For array marshalling, see `docs/cswinrtgen/marshalling-arrays.md`.
+For detailed control flow of generic interface marshalling, see `docs/cswinrtgen/marshalling-generic-interfaces.md`. For array marshalling, see `docs/cswinrtgen/marshalling-arrays.md`. For the generated type name mangling scheme, see `docs/cswinrtgen/name-mangling-scheme.md`.
 
 ## Key patterns and conventions
 
@@ -668,6 +683,8 @@ Generated types use angle-bracket mangling to avoid conflicts with user types:
 - Type names: `<AssemblyName>TypeName` (e.g., `<WinRT.Interop>IListImpl`)
 - ABI namespace: `ABI.{original.namespace}` (e.g., `ABI.System.Collections.Generic`)
 - `InteropUtf8NameFactory` handles all name generation
+
+For the full specification of the name mangling scheme (including rules for primitives, generics, arrays, nested types, character substitutions, and a formal ANTLR4 grammar), see `docs/cswinrtgen/name-mangling-scheme.md`.
 
 ### Thread safety
 
