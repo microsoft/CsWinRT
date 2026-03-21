@@ -151,81 +151,105 @@ internal static class WellKnownInterfaceIIDs
     {
         guid = interfaceType switch
         {
-            // Shared types
+            // Windows.Foundation types
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IDisposable)
                 => new Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.Nullable1)
+                => new Guid("61C17706-2D65-11E0-9AE8-D48564015472"),
+
+            // Windows.Foundation event handlers
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.EventHandler)
                 => new Guid("C50898F6-C536-5F47-8583-8B2C2438A13B"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.EventHandler1)
                 => new Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.EventHandler2)
                 => new Guid("9DE1C534-6AE1-11E0-84E1-18A905BCC53F"),
+
+            // Windows.Foundation async interfaces
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncOperation1)
+                => new Guid("9FC2B0BB-E446-44E2-AA61-9CAB8F636AF2"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncOperationWithProgress2)
+                => new Guid("B5D036D7-E297-498F-BA60-0289E76E23DD"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncActionWithProgress1)
+                => new Guid("1F6DB258-E803-48A1-9546-EB7353398884"),
+
+            // Windows.Foundation async delegates
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncActionCompletedHandler)
+                => new Guid("A4ED5C81-76C9-40BD-8BE6-B1D90FB20AE7"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncActionProgressHandler1)
+                => new Guid("6D844858-0CFF-4590-AE89-95A5A5C8B4B8"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncActionWithProgressCompletedHandler1)
+                => new Guid("9C029F91-CC84-44FD-AC26-0A6C4E555281"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationCompletedHandler1)
+                => new Guid("FCDCF02C-E5D8-4478-915A-4D90B74B83A5"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationProgressHandler2)
+                => new Guid("55690902-0AAB-421A-8778-F8CE5026D758"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationWithProgressCompletedHandler2)
+                => new Guid("E85DF41D-6AA7-46E3-A8E2-F009D840C627"),
+
+            // Windows.Foundation.Collections interfaces
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.KeyValuePair2)
                 => new Guid("02B51929-C1C4-4A7E-8940-0312B5C18500"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable1)
                 => new Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator1)
                 => new Guid("6A79E863-4300-459A-9966-CBB660963EE1"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationWithProgressCompletedHandler2)
-                => new Guid("E85DF41D-6AA7-46E3-A8E2-F009D840C627"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationCompletedHandler1)
-                => new Guid("FCDCF02C-E5D8-4478-915A-4D90B74B83A5"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.MapChangedEventHandler2)
-                => new Guid("179517F3-94EE-41F8-BDDC-768A895544F3"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList1)
                 => new Guid("913337E9-11A1-4345-A3A2-4E7F956E222D"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IReadOnlyList1)
                 => new Guid("BBE1FA4C-B0E3-4583-BAEF-1F1B2E483E56"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IReadOnlyDictionary2)
-                => new Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IDictionary2)
                 => new Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.Nullable1)
-                => new Guid("61C17706-2D65-11E0-9AE8-D48564015472"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncActionWithProgress1)
-                => new Guid("1F6DB258-E803-48A1-9546-EB7353398884"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncOperationWithProgress2)
-                => new Guid("B5D036D7-E297-498F-BA60-0289E76E23DD"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncOperationProgressHandler2)
-                => new Guid("55690902-0AAB-421A-8778-F8CE5026D758"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncActionWithProgressCompletedHandler1)
-                => new Guid("9C029F91-CC84-44FD-AC26-0A6C4E555281"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IReadOnlyDictionary2)
+                => new Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IObservableVector1)
                 => new Guid("5917EB53-50B4-4A0D-B309-65862B3F1DBC"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IObservableMap2)
                 => new Guid("65DF2BF5-BF39-41B5-AEBC-5A9D865E472B"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncOperation1)
-                => new Guid("9FC2B0BB-E446-44E2-AA61-9CAB8F636AF2"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.VectorChangedEventHandler1)
-                => new Guid("0C051752-9FBF-4C70-AA0C-0E4C82D9A761"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.AsyncActionProgressHandler1)
-                => new Guid("6D844858-0CFF-4590-AE89-95A5A5C8B4B8"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IMapChangedEventArgs1)
-                => new Guid("9939F4DF-050A-4C0F-AA60-77075F9C4777"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IVectorChangedEventArgs)
                 => new Guid("575933DF-34FE-4480-AF15-07691F3D5D9B"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IMapChangedEventArgs1)
+                => new Guid("9939F4DF-050A-4C0F-AA60-77075F9C4777"),
 
-            // XAML types
+            // Windows.Foundation.Collections delegates
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.VectorChangedEventHandler1)
+                => new Guid("0C051752-9FBF-4C70-AA0C-0E4C82D9A761"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.MapChangedEventHandler2)
+                => new Guid("179517F3-94EE-41F8-BDDC-768A895544F3"),
+
+            // XAML interfaces (bindable collections)
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerable)
                 => new Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IEnumerator)
                 => new Guid("6A1D6C07-076D-49F2-8314-F52C9C9A8331"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IList)
                 => new Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged) && useWindowsUIXamlProjections
-                => new Guid("28B167D5-1A31-465B-9B25-D5C3AE686C40"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged)
-                => new Guid("530155E1-28A5-5693-87CE-30724D95A06D"),
+
+            // XAML interfaces (data binding and commands)
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyPropertyChanged) && useWindowsUIXamlProjections
                 => new Guid("CF75D69C-F2F4-486B-B302-BB4C09BAEBFA"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyPropertyChanged)
                 => new Guid("90B17601-B065-586E-83D9-9ADC3A695284"),
-            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.ICommand)
-                => new Guid("E5AF3542-CA67-4081-995B-709DD13792DF"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyDataErrorInfo)
                 => new Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged) && useWindowsUIXamlProjections
+                => new Guid("28B167D5-1A31-465B-9B25-D5C3AE686C40"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.INotifyCollectionChanged)
+                => new Guid("530155E1-28A5-5693-87CE-30724D95A06D"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.ICommand)
+                => new Guid("E5AF3542-CA67-4081-995B-709DD13792DF"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IServiceProvider)
                 => new Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB"),
+
+            // XAML delegates
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.PropertyChangedEventHandler) && useWindowsUIXamlProjections
+                => new Guid("50F19C16-0A22-4D8E-A089-1EA9951657D2"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.PropertyChangedEventHandler)
+                => new Guid("E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.NotifyCollectionChangedEventHandler) && useWindowsUIXamlProjections
+                => new Guid("CA10B37C-F382-4591-8557-5E24965279B0"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.NotifyCollectionChangedEventHandler)
+                => new Guid("8B0909DC-2005-5D93-BF8A-725F017BAA8D"),
             _ => Guid.Empty
         };
 
