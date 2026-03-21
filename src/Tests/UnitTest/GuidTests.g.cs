@@ -20,6 +20,8 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Media3D;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using TestComponentCSharp;
 
 namespace UnitTest;
@@ -381,6 +383,34 @@ public partial class TestGuids
     }
 
     [TestMethod]
+    public void Test_IList_NotifyCollectionChangedEventHandler()
+    {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void Use(IList<NotifyCollectionChangedEventHandler> _) { }
+
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<System-ObjectModel>System-Collections-Specialized-NotifyCollectionChangedEventHandler>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+
+        Use(default!);
+
+        Assert.AreEqual(new Guid("c196c8b3-c597-53da-94c3-ec63aa2abdb5"), GetIID(null));
+    }
+
+    [TestMethod]
+    public void Test_IList_PropertyChangedEventHandler()
+    {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void Use(IList<PropertyChangedEventHandler> _) { }
+
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IList'1<<System-ObjectModel>System-ComponentModel-PropertyChangedEventHandler>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+
+        Use(default!);
+
+        Assert.AreEqual(new Guid("74b00599-79ae-5ebd-9c1c-3d9cae3f971b"), GetIID(null));
+    }
+
+    [TestMethod]
     public void Test_IList_ComposedNonBlittableStruct()
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -518,6 +548,34 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("884f89c1-b19c-58fb-bb64-2907b5b72083"), GetIID(null));
+    }
+
+    [TestMethod]
+    public void Test_IEnumerable_NotifyCollectionChangedEventHandler()
+    {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void Use(IEnumerable<NotifyCollectionChangedEventHandler> _) { }
+
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<System-ObjectModel>System-Collections-Specialized-NotifyCollectionChangedEventHandler>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+
+        Use(default!);
+
+        Assert.AreEqual(new Guid("5608aa8b-dd8d-56a4-86db-4c223a1ce8b6"), GetIID(null));
+    }
+
+    [TestMethod]
+    public void Test_IEnumerable_PropertyChangedEventHandler()
+    {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void Use(IEnumerable<PropertyChangedEventHandler> _) { }
+
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<System-ObjectModel>System-ComponentModel-PropertyChangedEventHandler>")]
+        static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
+
+        Use(default!);
+
+        Assert.AreEqual(new Guid("d80b2894-23a6-5e94-b3e4-bb5be4c87a67"), GetIID(null));
     }
 
     [TestMethod]

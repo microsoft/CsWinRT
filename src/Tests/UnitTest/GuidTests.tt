@@ -24,6 +24,8 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Media3D;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using TestComponentCSharp;
 
 namespace UnitTest;
@@ -90,6 +92,8 @@ var tests = new (string Name, string IID, string Mangled, string Type)[]
     ("IList_Object", "b32bdca4-5e52-5b27-bc5d-d66a1a268c2a", $"{corlib}IList'1<object>", "IList<object>"),
     ("IList_Uri", "0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e", $"{corlib}IList'1<{corlib}System-Uri>", "IList<Uri>"),
     ("IList_AsyncActionCompletedHandler", "5dafe591-86dc-59aa-bfda-07f5d59fc708", $"{corlib}IList'1<{cswinrt}Windows-Foundation-AsyncActionCompletedHandler>", "IList<AsyncActionCompletedHandler>"),
+    ("IList_NotifyCollectionChangedEventHandler", "c196c8b3-c597-53da-94c3-ec63aa2abdb5", $"{corlib}IList'1<{"<" + "System-ObjectModel>"}System-Collections-Specialized-NotifyCollectionChangedEventHandler>", "IList<NotifyCollectionChangedEventHandler>"),
+    ("IList_PropertyChangedEventHandler", "74b00599-79ae-5ebd-9c1c-3d9cae3f971b", $"{corlib}IList'1<{"<" + "System-ObjectModel>"}System-ComponentModel-PropertyChangedEventHandler>", "IList<PropertyChangedEventHandler>"),
     ("IList_ComposedNonBlittableStruct", "c8477314-b257-511b-a3a1-9e4eb6385152", $"{corlib}IList'1<{"<" + "TestComponentCSharp>"}TestComponentCSharp-ComposedNonBlittableStruct>", "IList<ComposedNonBlittableStruct>"),
     ("IList_IDisposable", "1bfca4f6-2c4e-5174-9869-b39d35848fcc", $"{corlib}IList'1<{corlib}System-IDisposable>", "IList<IDisposable>"),
     ("IList_IWwwFormUrlDecoderEntry", "2f5fb6d3-231f-57a1-9f2a-daa7e43bf075", $"{corlib}IList'1<{windows}Windows-Foundation-IWwwFormUrlDecoderEntry>", "IList<IWwwFormUrlDecoderEntry>"),
@@ -109,6 +113,10 @@ var tests = new (string Name, string IID, string Mangled, string Type)[]
     ("IEnumerable_IStringable", "88241f54-588f-529b-8344-08d8a4a3c25a", $"{corlib}IEnumerable'1<{cswinrt}Windows-Foundation-IStringable>", "IEnumerable<IStringable>"),
     ("IEnumerable_IBindableIterable", "af2aea1d-08d9-5ca3-9870-c43ea54b9786", $"{corlib}IEnumerable'1<{corlib}System-Collections-IEnumerable>", "IEnumerable<IEnumerable>"),
     ("IEnumerable_IBindableVector", "884f89c1-b19c-58fb-bb64-2907b5b72083", $"{corlib}IEnumerable'1<{corlib}System-Collections-IList>", "IEnumerable<IList>"),
+
+    // Non-generic delegates wrapped in IEnumerable<T>
+    ("IEnumerable_NotifyCollectionChangedEventHandler", "5608aa8b-dd8d-56a4-86db-4c223a1ce8b6", $"{corlib}IEnumerable'1<{"<" + "System-ObjectModel>"}System-Collections-Specialized-NotifyCollectionChangedEventHandler>", "IEnumerable<NotifyCollectionChangedEventHandler>"),
+    ("IEnumerable_PropertyChangedEventHandler", "d80b2894-23a6-5e94-b3e4-bb5be4c87a67", $"{corlib}IEnumerable'1<{"<" + "System-ObjectModel>"}System-ComponentModel-PropertyChangedEventHandler>", "IEnumerable<PropertyChangedEventHandler>"),
 
     // Nullable primitive types wrapped in IEnumerable<T>
     ("IEnumerable_NullableBoolean", "b4e71894-d8db-5429-9cee-9e957c01a3fa", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<bool>>", "IEnumerable<bool?>"),
