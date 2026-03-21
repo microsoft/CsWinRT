@@ -42,7 +42,7 @@ public partial class TestGuids
 string corlib = "<" + "#corlib>";
 string cswinrt = "<" + "#CsWinRT>";
 string windows = "<" + "#Windows>";
-string numerics = "<System.Numerics.Vectors>";
+string numerics = "<System-Numerics-Vectors>";
 string testcomp = "<TestComponentCSharp>";
 
 // Mangled type argument shorthands:
@@ -160,15 +160,15 @@ var tests = new (string Name, string IID, string Mangled, string Type)[]
 
     // TODO: Nullable WinUI (Microsoft.UI.Xaml) types wrapped in IEnumerable<T>.
     // These need a WinUI-enabled debug repro to compute the expected IIDs.
-    // ("IEnumerable_NullableCornerRadius", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-CornerRadius>>", "IEnumerable<CornerRadius?>"),
-    // ("IEnumerable_NullableDuration", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Duration>>", "IEnumerable<Duration?>"),
-    // ("IEnumerable_NullableGridLength", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-GridLength>>", "IEnumerable<GridLength?>"),
-    // ("IEnumerable_NullableThickness", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Thickness>>", "IEnumerable<Thickness?>"),
-    // ("IEnumerable_NullableGeneratorPosition", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Controls-Primitives-GeneratorPosition>>", "IEnumerable<GeneratorPosition?>"),
-    // ("IEnumerable_NullableMatrix", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Media-Matrix>>", "IEnumerable<Matrix?>"),
-    // ("IEnumerable_NullableKeyTime", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Media-Animation-KeyTime>>", "IEnumerable<KeyTime?>"),
-    // ("IEnumerable_NullableRepeatBehavior", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Media-Animation-RepeatBehavior>>", "IEnumerable<RepeatBehavior?>"),
-    // ("IEnumerable_NullableMatrix3D", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft.UI>"}Microsoft-UI-Xaml-Media-Media3D-Matrix3D>>", "IEnumerable<Matrix3D?>"),
+    // ("IEnumerable_NullableCornerRadius", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft-UI>"}Microsoft-UI-Xaml-CornerRadius>>", "IEnumerable<CornerRadius?>"),
+    // ("IEnumerable_NullableDuration", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft-UI>"}Microsoft-UI-Xaml-Duration>>", "IEnumerable<Duration?>"),
+    // ("IEnumerable_NullableGridLength", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft-UI>"}Microsoft-UI-Xaml-GridLength>>", "IEnumerable<GridLength?>"),
+    // ("IEnumerable_NullableThickness", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft-UI>"}Microsoft-UI-Xaml-Thickness>>", "IEnumerable<Thickness?>"),
+    // ("IEnumerable_NullableGeneratorPosition", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft-UI>"}Microsoft-UI-Xaml-Controls-Primitives-GeneratorPosition>>", "IEnumerable<GeneratorPosition?>"),
+    // ("IEnumerable_NullableMatrix", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft-UI>"}Microsoft-UI-Xaml-Media-Matrix>>", "IEnumerable<Matrix?>"),
+    // ("IEnumerable_NullableKeyTime", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft-UI>"}Microsoft-UI-Xaml-Media-Animation-KeyTime>>", "IEnumerable<KeyTime?>"),
+    // ("IEnumerable_NullableRepeatBehavior", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft-UI>"}Microsoft-UI-Xaml-Media-Animation-RepeatBehavior>>", "IEnumerable<RepeatBehavior?>"),
+    // ("IEnumerable_NullableMatrix3D", "", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{"<" + "Microsoft-UI>"}Microsoft-UI-Xaml-Media-Media3D-Matrix3D>>", "IEnumerable<Matrix3D?>"),
 };
 
 for (int i = 0; i < tests.Length; i++)

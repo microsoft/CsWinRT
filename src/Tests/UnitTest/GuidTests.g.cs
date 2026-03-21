@@ -878,7 +878,7 @@ public partial class TestGuids
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Use(IEnumerable<Matrix3x2?> _) { }
 
-        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System.Numerics.Vectors>System-Numerics-Matrix3x2>>")]
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System-Numerics-Vectors>System-Numerics-Matrix3x2>>")]
         static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
         Use(default!);
@@ -892,7 +892,7 @@ public partial class TestGuids
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Use(IEnumerable<Matrix4x4?> _) { }
 
-        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System.Numerics.Vectors>System-Numerics-Matrix4x4>>")]
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System-Numerics-Vectors>System-Numerics-Matrix4x4>>")]
         static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
         Use(default!);
@@ -906,7 +906,7 @@ public partial class TestGuids
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Use(IEnumerable<Plane?> _) { }
 
-        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System.Numerics.Vectors>System-Numerics-Plane>>")]
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System-Numerics-Vectors>System-Numerics-Plane>>")]
         static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
         Use(default!);
@@ -920,7 +920,7 @@ public partial class TestGuids
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Use(IEnumerable<Quaternion?> _) { }
 
-        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System.Numerics.Vectors>System-Numerics-Quaternion>>")]
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System-Numerics-Vectors>System-Numerics-Quaternion>>")]
         static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
         Use(default!);
@@ -934,7 +934,7 @@ public partial class TestGuids
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Use(IEnumerable<Vector2?> _) { }
 
-        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System.Numerics.Vectors>System-Numerics-Vector2>>")]
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System-Numerics-Vectors>System-Numerics-Vector2>>")]
         static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
         Use(default!);
@@ -948,7 +948,7 @@ public partial class TestGuids
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Use(IEnumerable<Vector3?> _) { }
 
-        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System.Numerics.Vectors>System-Numerics-Vector3>>")]
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System-Numerics-Vectors>System-Numerics-Vector3>>")]
         static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
         Use(default!);
@@ -962,7 +962,7 @@ public partial class TestGuids
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void Use(IEnumerable<Vector4?> _) { }
 
-        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System.Numerics.Vectors>System-Numerics-Vector4>>")]
+        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_IID_<#corlib>IEnumerable'1<<#corlib>System-Nullable'1<<System-Numerics-Vectors>System-Numerics-Vector4>>")]
         static extern ref readonly Guid GetIID([UnsafeAccessorType("ABI.InterfaceIIDs, WinRT.Interop")] object _);
 
         Use(default!);
