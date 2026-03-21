@@ -1,31 +1,18 @@
-# `WinRT.Interop.dll` public API specification
+# Interop generator name mangling scheme
 
-## Overview
+This document specifies the name mangling scheme used by the interop generator (`cswinrtinteropgen`) to produce unique type names in `WinRT.Interop.dll`. The scheme is designed to ensure that generated type names are unique, compact, and descriptive. It uses a combination of assembly names, namespaces, and type names to construct the final mangled name. The scheme handles primitive types, user-defined types, and generic types, including nested generics.
 
-The `WinRT.Interop.dll` is a dynamically generated assembly providing additional marshalling code for applications and libraries that require interop with WinRT APIs. This assembly is generated on the fly after build, by an MSBuild task bundled with CsWinRT. This allows the interop .dll to leverage from global-program-view info, as it can see all types in the entire application domain. This enables several performance optimizations (eg. all vtables can be pre-initialized), security features (all vtables will be in readonly data segments in the PE file), and usability improvements (no need to mark types as being marshalled, things will "just work").
+The implementation is in `InteropUtf8NameFactory` (`src/WinRT.Interop.Generator/Factories/InteropUtf8NameFactory.cs`).
 
-This document provides the specification for the public API of this interop .dll, allowing other projects to rely on these generated members being present and having the detailed format and signature. All generated code not documented here is considered an implementation detail, which can (and will) change at any time, without following semantic versioning.
-
-> [!NOTE]
-> The interop .dll cannot be referenced by any other assembly (as it is produced at the very end of the build process), so all upstream assemblies that need to invoke APIs from it must do so by using [`[UnsafeAccessor]`](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.unsafeaccessorattribute) and `[UnsafeAccessorType]`. All generated projections and code within `WinRT.Runtime.dll` will use this technique to access all of these interop APIs. User code should never try to or need to do this manually: all of this code exists solely to support the WinRT marshalling infrastructure behind the scenes.
-
-## Build infrastructure
-
-The `WinRT.Interop.dll` assembly is produced by `cswinrtinteropgen`, which is the interop assembly generator bundled with CsWinRT and the Windows SDK projections. It is a native binary (compiled with Native AOT) that is invoked during build and produces this interop assembly, specialized for the library or application being compiled. The tool is invoked by the [`RunCsWinRTGenerator`](https://github.com/dotnet/sdk/blob/2ab975ef4c560f9383e897d9af4e9784798b7576/src/Tasks/Microsoft.NET.Build.Tasks/RunCsWinRTGenerator.cs) task, which is in the .NET SDK. This task is invoked by the [`_RunCsWinRTGenerator`](https://github.com/dotnet/sdk/blob/2ab975ef4c560f9383e897d9af4e9784798b7576/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Windows.targets#L275) target, which is defined in `Microsoft.NET.Windows.targets`, also in the .NET SDK.
-
-Note that `cswinrtinteropgen` must be versioned with the `WinRT.Runtime.dll` assembly it was compiled for. Not doing so will result in undefined behavior (eg. failures to run the tool, or runtime crashes). To ensure the assembly versions of these two assemblies always match, the .NET SDK has logic that will select the right version of `cswinrtinteropgen` after all reference assemblies are resolved, which allows dealing with multiple transitive versions with different assembly versions. That is, if a project doesn't have a reference to CsWinRT, then `cswinrtinteropgen` will be loaded from the Windows SDK projections targeting pack. If CsWinRT is referenced (directly or transitively), then `cswinrtinteropgen` will be loaded from that package, but only if the `WinRT.Runtime.dll` binary from that package has a higher version than the one in the Windows SDK projections package being referenced. This correctly handles cases where a dependent project might have a reference to an outdated CsWinRT package.
-
-The .NET SDK takes care of all of this work. As a result, `cswinrtinteropgen` can always rely on its version matching the version of `WinRT.Runtime.dll`. This is critical to allow using "implementation details only" APIs in `WinRT.Runtime.dll`: APIs which are public, hidden, and marked as `[Obsolete]`, which are exclusively meant to be consumed by generated code produced by `cswinrtinteropgen`. These APIs might change at any time without following semantic versioning for CsWinRT. For instance, these are crucial to support marshalling generic Windows Runtime collection interfaces, and the code in `WinRT.Interop.dll` makes heavy use of them in this scenario.
-
-## Name mangling scheme
-
-The name mangling scheme for interop types is designed to ensure that generated type names are unique, compact, and descriptive. It uses a combination of assembly names, namespaces, and type names to construct the final mangled name. The scheme handles primitive types, user-defined types, and generic types, including nested generics.
+## Mangled namespace
 
 The **mangled namespace** for a given type is defined as follows:
 
 1. **No namespace**: if the input type has no namespace, the generated namespace defaults to `ABI`.
 2. **Existing namespace**: if the input type has a namespace, the generated namespace prepends `ABI.` to the original namespace.
 3. **Nested types**: if the input type is nested, the namespace is derived from the outermost declaring type (i.e. the top-level enclosing type), using the same rules above.
+
+## Mangled type name
 
 The **mangled type name** for a given type is defined as follows:
 
@@ -42,6 +29,8 @@ All `.` characters in the final mangled name are replaced with `-` characters. A
 > 
 > The `` ` `` character replacement is done to avoid issues with tooling, such as ILSpy, which assume that all types with `` ` `` in their name are generic types. The generated types for marshalling generic types are not themselves generic, which causes these tools to incorrectly interpret the type metadata.
 
+## Well-known assemblies
+
 These are the well-known assemblies and their compact identifiers:
 - `System.Runtime`: `#corlib`
 - `Microsoft.Windows.SDK.NET` or `Microsoft.Windows.UI.Xaml`: `#Windows`
@@ -54,7 +43,7 @@ For types not belonging to any well-known assembly, the implementation also chec
 > [!NOTE]
 > Not all BCL types live in `System.Runtime`. For example, the `System.Numerics` types (`Matrix3x2`, `Matrix4x4`, `Plane`, `Quaternion`, `Vector2`, `Vector3`, `Vector4`) are in the `System.Numerics.Vectors` assembly, so their assembly identifier is `System-Numerics-Vectors` (not `#corlib`) after the `.` → `-` substitution. The assembly used is always the one from the type's actual metadata scope, not the namespace.
 
-### Examples
+## Examples
 
 **Primitive type**
 
@@ -106,7 +95,7 @@ For types not belonging to any well-known assembly, the implementation also chec
 - Type: `System.Int32[][]`
 - Mangled name: `ABI.System.<<int>Array>Array`
 
-### ANTLR4 name mangling rules
+## ANTLR4 name mangling rules
 
 Below is the full specification of the name mangling scheme using ANTLR4 syntax:
 
