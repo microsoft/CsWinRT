@@ -390,7 +390,7 @@ For each discovered type, the generator emits some or all of these components:
 - **Proxy type** — `[WindowsRuntimeClassName]` + marshaller attribute for type map registration
 - **Type map attributes** — `[TypeMap<*TypeMapGroup>]` attributes for all three type map groups
 
-For additional details on generic interface code generation, see `docs/cswinrtgen/marshalling-generic-interfaces.md`.
+For additional details on generic interface code generation, see `references/marshalling-generic-interfaces.md`.
 
 **Per SZ array type (e.g., `string[]`):**
 - **Array marshaller** — `ConvertToManaged`/`ConvertToUnmanaged`/`CopyToManaged`/`CopyToUnmanaged`/`Free`
@@ -398,7 +398,7 @@ For additional details on generic interface code generation, see `docs/cswinrtge
 - **Array impl type** — `IReferenceArray` vtable with `get_Value` CCW method
 - **Proxy + marshaller attribute** — For opaque object marshalling
 
-For additional details on array code generation, see `docs/cswinrtgen/marshalling-arrays.md`.
+For additional details on array code generation, see `references/marshalling-arrays.md`.
 
 **Per user-defined type:**
 - **Interface entries type** — Struct listing all COM interface vtable entries
@@ -673,7 +673,7 @@ The generated `WinRT.Interop.dll` does not operate in isolation — it works in 
 1. Generated code emits `[TypeMap<WindowsRuntimeComWrappersTypeMapGroup>]`, `[TypeMap<WindowsRuntimeMetadataTypeMapGroup>]`, and `[TypeMap<DynamicInterfaceCastableImplementationTypeMapGroup>]` attributes
 2. These are consumed at runtime by `WindowsRuntimeComWrappers` for marshalling dispatch
 
-For detailed control flow of generic interface marshalling, see `docs/cswinrtgen/marshalling-generic-interfaces.md`. For array marshalling, see `docs/cswinrtgen/marshalling-arrays.md`. For the generated type name mangling scheme, see `docs/cswinrtgen/name-mangling-scheme.md`.
+For detailed control flow of generic interface marshalling, see `references/marshalling-generic-interfaces.md`. For array marshalling, see `references/marshalling-arrays.md`. For the generated type name mangling scheme, see `references/name-mangling-scheme.md`.
 
 ## Key patterns and conventions
 
@@ -684,7 +684,7 @@ Generated types use angle-bracket mangling to avoid conflicts with user types:
 - ABI namespace: `ABI.{original.namespace}` (e.g., `ABI.System.Collections.Generic`)
 - `InteropUtf8NameFactory` handles all name generation
 
-For the full specification of the name mangling scheme (including rules for primitives, generics, arrays, nested types, character substitutions, and a formal ANTLR4 grammar), see `docs/cswinrtgen/name-mangling-scheme.md`.
+For the full specification of the name mangling scheme (including rules for primitives, generics, arrays, nested types, character substitutions, and a formal ANTLR4 grammar), see `references/name-mangling-scheme.md`.
 
 ### Thread safety
 
