@@ -42,6 +42,8 @@ public partial class TestGuids
 string corlib = "<" + "#corlib>";
 string cswinrt = "<" + "#CsWinRT>";
 string windows = "<" + "#Windows>";
+string numerics = "<System.Numerics.Vectors>";
+string testcomp = "<TestComponentCSharp>";
 
 // Mangled type argument shorthands:
 //   A = IEnumerable<IStringable>
@@ -94,7 +96,7 @@ var tests = new (string Name, string IID, string Mangled, string Type)[]
     ("IList_AsyncActionCompletedHandler", "5dafe591-86dc-59aa-bfda-07f5d59fc708", $"{corlib}IList'1<{cswinrt}Windows-Foundation-AsyncActionCompletedHandler>", "IList<AsyncActionCompletedHandler>"),
     ("IList_NotifyCollectionChangedEventHandler", "c196c8b3-c597-53da-94c3-ec63aa2abdb5", $"{corlib}IList'1<{"<" + "System-ObjectModel>"}System-Collections-Specialized-NotifyCollectionChangedEventHandler>", "IList<NotifyCollectionChangedEventHandler>"),
     ("IList_PropertyChangedEventHandler", "74b00599-79ae-5ebd-9c1c-3d9cae3f971b", $"{corlib}IList'1<{"<" + "System-ObjectModel>"}System-ComponentModel-PropertyChangedEventHandler>", "IList<PropertyChangedEventHandler>"),
-    ("IList_ComposedNonBlittableStruct", "c8477314-b257-511b-a3a1-9e4eb6385152", $"{corlib}IList'1<{"<" + "TestComponentCSharp>"}TestComponentCSharp-ComposedNonBlittableStruct>", "IList<ComposedNonBlittableStruct>"),
+    ("IList_ComposedNonBlittableStruct", "c8477314-b257-511b-a3a1-9e4eb6385152", $"{corlib}IList'1<{testcomp}TestComponentCSharp-ComposedNonBlittableStruct>", "IList<ComposedNonBlittableStruct>"),
     ("IList_IDisposable", "1bfca4f6-2c4e-5174-9869-b39d35848fcc", $"{corlib}IList'1<{corlib}System-IDisposable>", "IList<IDisposable>"),
     ("IList_IWwwFormUrlDecoderEntry", "2f5fb6d3-231f-57a1-9f2a-daa7e43bf075", $"{corlib}IList'1<{windows}Windows-Foundation-IWwwFormUrlDecoderEntry>", "IList<IWwwFormUrlDecoderEntry>"),
     ("IList_WwwFormUrlDecoderEntry", "1d9ba3f5-b997-5a7d-82c4-7857ecbf3a42", $"{corlib}IList'1<{windows}Windows-Foundation-WwwFormUrlDecoderEntry>", "IList<WwwFormUrlDecoderEntry>"),
@@ -148,13 +150,13 @@ var tests = new (string Name, string IID, string Mangled, string Type)[]
     ("IEnumerable_NullablePropertyType", "511ece22-5784-569e-bec3-dc48838e041a", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{cswinrt}Windows-Foundation-PropertyType>>", "IEnumerable<PropertyType?>"),
 
     // Nullable System.Numerics types wrapped in IEnumerable<T>
-    ("IEnumerable_NullableMatrix3x2", "4b61d6df-a772-5dc1-b9fd-9622e6712018", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Matrix3x2>>", "IEnumerable<Matrix3x2?>"),
-    ("IEnumerable_NullableMatrix4x4", "93d192a0-6579-5e92-98ec-52abeb0590b5", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Matrix4x4>>", "IEnumerable<Matrix4x4?>"),
-    ("IEnumerable_NullablePlane", "78627ff3-abd5-50ef-8a66-e1224024541d", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Plane>>", "IEnumerable<Plane?>"),
-    ("IEnumerable_NullableQuaternion", "36514ff8-a3ef-5353-ae54-029c54627f00", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Quaternion>>", "IEnumerable<Quaternion?>"),
-    ("IEnumerable_NullableVector2", "68cf9b6c-91fb-508d-9d94-a351e52b5e03", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Vector2>>", "IEnumerable<Vector2?>"),
-    ("IEnumerable_NullableVector3", "8a40ba7a-7c34-54e6-9178-1df1f39deeae", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Vector3>>", "IEnumerable<Vector3?>"),
-    ("IEnumerable_NullableVector4", "eb7d2b5f-56bf-53fb-82ba-413e0891acaf", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{corlib}System-Numerics-Vector4>>", "IEnumerable<Vector4?>"),
+    ("IEnumerable_NullableMatrix3x2", "4b61d6df-a772-5dc1-b9fd-9622e6712018", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{numerics}System-Numerics-Matrix3x2>>", "IEnumerable<Matrix3x2?>"),
+    ("IEnumerable_NullableMatrix4x4", "93d192a0-6579-5e92-98ec-52abeb0590b5", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{numerics}System-Numerics-Matrix4x4>>", "IEnumerable<Matrix4x4?>"),
+    ("IEnumerable_NullablePlane", "78627ff3-abd5-50ef-8a66-e1224024541d", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{numerics}System-Numerics-Plane>>", "IEnumerable<Plane?>"),
+    ("IEnumerable_NullableQuaternion", "36514ff8-a3ef-5353-ae54-029c54627f00", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{numerics}System-Numerics-Quaternion>>", "IEnumerable<Quaternion?>"),
+    ("IEnumerable_NullableVector2", "68cf9b6c-91fb-508d-9d94-a351e52b5e03", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{numerics}System-Numerics-Vector2>>", "IEnumerable<Vector2?>"),
+    ("IEnumerable_NullableVector3", "8a40ba7a-7c34-54e6-9178-1df1f39deeae", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{numerics}System-Numerics-Vector3>>", "IEnumerable<Vector3?>"),
+    ("IEnumerable_NullableVector4", "eb7d2b5f-56bf-53fb-82ba-413e0891acaf", $"{corlib}IEnumerable'1<{corlib}System-Nullable'1<{numerics}System-Numerics-Vector4>>", "IEnumerable<Vector4?>"),
 
     // TODO: Nullable WinUI (Microsoft.UI.Xaml) types wrapped in IEnumerable<T>.
     // These need a WinUI-enabled debug repro to compute the expected IIDs.
