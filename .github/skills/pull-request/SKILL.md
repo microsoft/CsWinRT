@@ -81,7 +81,22 @@ Always add these reviewers (unless one of them is the PR author):
 
 To determine the current user (PR author), check `git config user.name` or `git config user.email` and match against the GitHub usernames.
 
-## Step 7: Create the PR
+## Step 7: Push the branch with upstream tracking
+
+Before creating the PR, **always push the branch with `-u`** to set upstream tracking:
+
+```powershell
+git push -u origin <branch>
+```
+
+The `-u` (short for `--set-upstream`) flag is **critical**. Without it:
+- GitHub Desktop won't recognize that the local branch tracks the remote one, showing a "branch already exists" error when trying to check it out
+- GitHub Desktop will report the branch as "not pushed" even though it exists on the remote
+- Other Git GUIs may also show the branch in a broken state
+
+The `gh pr create` command pushes the branch automatically, but it does **not** set upstream tracking on the local branch. Always push with `-u` explicitly first.
+
+## Step 8: Create the PR
 
 Write the PR body to a **temporary file** and use `gh pr create --body-file` to avoid shell escaping issues. Do **not** pass the body inline via `--body`, as backticks and special characters in markdown get mangled by the shell (e.g. `` `path/to/file` `` becomes `\path/to/file\` when rendered).
 
