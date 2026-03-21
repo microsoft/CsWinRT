@@ -32,11 +32,11 @@
     <File Path="../docs/usage.md" />
     <File Path="../docs/version-history.md" />
     <File Path="../docs/versioning.md" />
-    <File Path="../docs/winrt-interop-dll-spec.md" />
   </Folder>
   <Folder Name="/Docs/cswinrtgen/">
-    <File Path="../docs/cswinrtgen/marshalling-arrays.md" />
-    <File Path="../docs/cswinrtgen/marshalling-generic-interfaces.md" />
+    <File Path="../.github/skills/interop-generator/references/marshalling-arrays.md" />
+    <File Path="../.github/skills/interop-generator/references/marshalling-generic-interfaces.md" />
+    <File Path="../.github/skills/interop-generator/references/name-mangling-scheme.md" />
   </Folder>
   <Folder Name="/Docs/diagnostics/">
     <File Path="../docs/diagnostics/cswinrt30001.md" />
