@@ -228,6 +228,14 @@ internal static class WellKnownInterfaceIIDs
                 => new Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA"),
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IServiceProvider)
                 => new Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.NotifyCollectionChangedEventHandler) && useWindowsUIXamlProjections
+                => new Guid("CA10B37C-F382-4591-8557-5E24965279B0"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.NotifyCollectionChangedEventHandler)
+                => new Guid("8B0909DC-2005-5D93-BF8A-725F017BAA8D"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.PropertyChangedEventHandler) && useWindowsUIXamlProjections
+                => new Guid("50F19C16-0A22-4D8E-A089-1EA9951657D2"),
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.PropertyChangedEventHandler)
+                => new Guid("E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D"),
             _ => Guid.Empty
         };
 
