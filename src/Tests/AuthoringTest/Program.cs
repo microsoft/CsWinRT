@@ -1133,6 +1133,12 @@ namespace AuthoringTest
         public event PropertyChangedEventHandler PropertyChanged;
     }
 
+    public sealed class CustomNotifyPropertyChangedAndChanging : INotifyPropertyChanged, INotifyPropertyChanging
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangingEventHandler PropertyChanging;
+    }
+
     public sealed class CustomCommand : ICommand
     {
         public event EventHandler CanExecuteChanged;
