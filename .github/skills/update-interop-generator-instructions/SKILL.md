@@ -141,6 +141,7 @@ If the changes to the interop generator are significant enough to affect the des
 
 - `docs/cswinrtgen/marshalling-generic-interfaces.md` — Generic interface marshalling design
 - `docs/cswinrtgen/marshalling-arrays.md` — Array marshalling design
+- `docs/cswinrtgen/name-mangling-scheme.md` — Name mangling scheme for generated interop types
 
 These docs describe the *design* of the generated code patterns. If the actual generated code has diverged from what these docs describe (e.g., new types generated, changed API patterns, renamed infrastructure types), update the docs to match.
 
