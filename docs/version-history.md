@@ -1,6 +1,15 @@
 ## Version History
 
-The following table maps the CsWinRT version used in corresponding .NET SDK and Windows App SDK versions. The Windows SDK package update version is the version of the Microsoft.Windows.SDK.NET.Ref package implicitly referenced by the .NET SDK version(s). 
+### CsWinRT 3.0
+
+CsWinRT 3.0 is a redesign targeting .NET 10, with Native AOT and trimming as core architecture principles. It is fundamentally incompatible with CsWinRT 2.x. See the [CsWinRT 3.0 spec](cswinrt3.0-spec.md) for details on the new architecture and breaking changes.
+
+| CsWinRT version | .NET SDK version(s) | Notes |
+|-|-|-|
+
+### CsWinRT 2.x
+
+The following table maps the CsWinRT 2.x version used in corresponding .NET SDK and Windows App SDK versions. The Windows SDK package update version is the version of the Microsoft.Windows.SDK.NET.Ref package implicitly referenced by the .NET SDK version(s). 
 
 A minor (or major) version update to the CsWinRT version (e.g., 1.5.0 -> 1.6.1) indicates an Assembly Version change. There are 2 scenarios where app consumers or component authors will be affected by Assembly Version changes: 
 

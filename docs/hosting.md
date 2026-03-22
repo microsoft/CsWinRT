@@ -1,5 +1,7 @@
 # Managed Component Hosting
 
+> **⚠️ This document has not been updated for CsWinRT 3.0.** The instructions below apply to CsWinRT 2.x.
+
 ## Overview
 This document describes the behavior and implementation of WinRT.Host.dll, a native DLL which provides hosting for managed C#/WinRT runtime components.  WinRT.Host.dll may be explicitly registered with an ActivatableClass manifest entry, or it may be renamed to support manifest-free activation.  The details of how WinRT.Host.dll resolves and forwards activation requests are described below.
 
