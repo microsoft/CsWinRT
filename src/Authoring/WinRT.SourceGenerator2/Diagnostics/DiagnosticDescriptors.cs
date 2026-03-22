@@ -126,4 +126,17 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Indexers used with '[GeneratedCustomPropertyProvider]' must be instance indexers, not static indexers.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a cast to a <see cref="System.Runtime.InteropServices.ComImportAttribute"/> interface type.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ComImportInterfaceCast = new(
+        id: "CSWINRT2009",
+        title: "Cast to '[ComImport]' type not supported",
+        messageFormat: """The type '{0}' used in a cast operation is a '[ComImport]' interface, which is not compatible with Windows Runtime objects marshalled by CsWinRT. Consider using the COM generators to define the interface, or manually handling the interface query on the underlying native object.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Types used in cast operations must not be '[ComImport]' interfaces, as they are not compatible with Windows Runtime objects marshalled by CsWinRT.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }

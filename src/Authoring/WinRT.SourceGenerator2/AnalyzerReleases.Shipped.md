@@ -15,3 +15,4 @@ CSWINRT2005 | WindowsRuntime.SourceGenerator | Error | Null indexer type in '[Ge
 CSWINRT2006 | WindowsRuntime.SourceGenerator | Error | Property name not found for '[GeneratedCustomPropertyProvider]'
 CSWINRT2007 | WindowsRuntime.SourceGenerator | Error | Indexer type not found for '[GeneratedCustomPropertyProvider]'
 CSWINRT2008 | WindowsRuntime.SourceGenerator | Error | Static indexer for '[GeneratedCustomPropertyProvider]'
+CSWINRT2009 | WindowsRuntime.SourceGenerator | Warning | Cast to '[ComImport]' type not supported
