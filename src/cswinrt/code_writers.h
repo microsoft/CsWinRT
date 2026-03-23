@@ -5039,17 +5039,6 @@ R"(
             type.TypeNamespace(), type.TypeName());
     }
 
-    void write_class_winrt_classname_attribute(writer& w, TypeDef const& type)
-    {
-        if (settings.reference_projection)
-        {
-            return;
-        }
-
-        w.write("[WindowsRuntimeClassName(\"%\")]\n",
-            bind<write_type_name>(type, typedef_name_type::NonProjected, true));
-    }
-
     void write_comwrapper_marshaller_attribute(writer& w, TypeDef const& type)
     {
         if (settings.reference_projection)
@@ -9222,7 +9211,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
         auto gc_pressure_amount = get_gc_pressure_amount(type);
 
         w.write(R"(
-%%%%%% %class %%
+%%%%% %class %%
 {
 %
 %
@@ -9237,7 +9226,6 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 }
 )",
             bind<write_winrt_metadata_attribute>(type),
-            bind<write_class_winrt_classname_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
             bind<write_comwrapper_marshaller_attribute>(type),
             bind<write_default_interface_attribute>(type),
