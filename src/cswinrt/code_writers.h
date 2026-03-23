@@ -2552,8 +2552,8 @@ remove => %;
         {
             auto [attribute_namespace, attribute_name] = attribute.TypeNamespaceAndName();
             attribute_name = attribute_name.substr(0, attribute_name.length() - "Attribute"sv.length());
-            // Guid, Flags, ProjectionInternal are handled separately
-            if (attribute_name == "Guid" || 
+            // GCPressure, Guid, Flags, ProjectionInternal are handled separately
+            if (attribute_name == "GCPressure" || attribute_name == "Guid" || 
                 attribute_name == "Flags" || attribute_name == "ProjectionInternal") continue;
             auto attribute_full = (attribute_name == "AttributeUsage") ? "System.AttributeUsage" :
                 w.write_temp("%.%", attribute_namespace, attribute_name);
@@ -2575,8 +2575,8 @@ remove => %;
                 {
                     allow_multiple = true;
                 }
-                // ContractVersion and GCPressure are only emitted for reference assemblies
-                if (attribute_name == "ContractVersion" || attribute_name == "GCPressure")
+                // ContractVersion is only emitted for reference assemblies
+                if (attribute_name == "ContractVersion")
                 {
                     if (!settings.reference_projection)
                     {
