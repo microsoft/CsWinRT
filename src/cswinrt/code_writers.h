@@ -401,11 +401,18 @@ namespace cswinrt
 
     void write_type_name(writer& w, type_semantics const& semantics, typedef_name_type const& nameType = typedef_name_type::Projected, bool forceWriteNamespace = false)
     {
+        // When forcing namespace qualification, temporarily clear the current namespace
+        // so that all type references (including generic type arguments) are fully qualified.
+        auto saved_namespace = forceWriteNamespace ? w._current_namespace : std::string_view{};
+        if (forceWriteNamespace) w._current_namespace = {};
+
         for_typedef(w, semantics, [&](auto type)
         {
             write_typedef_name(w, type, nameType, forceWriteNamespace);
             write_type_params(w, type);
         });
+
+        if (forceWriteNamespace) w._current_namespace = saved_namespace;
     }
 
     auto write_type_name_temp(writer& w, type_semantics const& type, char const* format = "%", typedef_name_type const& nameType = typedef_name_type::Projected)
@@ -5078,20 +5085,12 @@ R"(
 
         auto class_name = w.write_temp("global::%.@", type.TypeNamespace(), type.TypeName());
 
-        // Clear the current namespace so that all type references (including generic
-        // type arguments) are fully qualified with 'global::'. This is needed because
-        // the names will be emitted in the 'ABI' namespace, not the original one.
-        auto saved_namespace = w._current_namespace;
-        w._current_namespace = {};
-
         for_typedef(w, get_type_semantics(default_interface), [&](auto type)
         {
             auto interface_name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::CCW, true));
 
             defaultInterfaceEntries.insert({ std::move(class_name), std::move(interface_name) });
         });
-
-        w._current_namespace = saved_namespace;
     }
 
     void write_file_header(writer& w)
