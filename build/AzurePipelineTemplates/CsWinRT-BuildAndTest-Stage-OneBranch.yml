@@ -65,7 +65,7 @@ jobs:
         signing_profile: external_distribution
         files_to_sign: |
           native/cswinrt.exe;
-          net10.0/WinRT.SourceGenerator2.dll;
+          net10.0/WinRT.SourceGenerator.dll;
           net10.0/WinRT.Host.Shim.dll;
           net10.0/WinRT.Runtime.dll;
           native/WinRT.Host.dll;

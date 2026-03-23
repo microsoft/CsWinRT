@@ -6,7 +6,9 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Authoring/">
-    <Project Path="Authoring/CsWinMD/CsWinMD.csproj" />
+    <Project Path="Authoring/CsWinMD/CsWinMD.csproj">
+      <Build Project="false" />
+    </Project>
     <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj">
       <Build Project="false" />
     </Project>
@@ -14,11 +16,6 @@
       <Platform Solution="*|ARM" Project="Win32" />
       <Build Solution="*|ARM" Project="false" />
     </Project>
-    <Project Path="Authoring/WinRT.SourceGenerator.Roslyn4080/WinRT.SourceGenerator.Roslyn4080.csproj">
-      <Build Project="false" />
-    </Project>
-    <Project Path="Authoring/WinRT.SourceGenerator.Roslyn4120/WinRT.SourceGenerator.Roslyn4120.csproj" />
-    <Project Path="Authoring/WinRT.SourceGenerator/WinRT.SourceGenerator.shproj" />
     <Project Path="Authoring/WinRT.SourceGenerator2/WinRT.SourceGenerator2.csproj" />
   </Folder>
   <Folder Name="/Docs/">
@@ -206,6 +203,7 @@
     </Project>
     <Project Path="Tests/CSWinMDComponent/CSWinMDComponent.vcxproj" Id="d10dc47a-db45-491c-852e-2b2165f25f86">
       <BuildDependency Project="Authoring/CsWinMD/CsWinMD.csproj" />
+      <Build Project="false" />
     </Project>
     <Project Path="Tests/DiagnosticTests/DiagnosticTests.csproj">
       <Build Project="false" />
@@ -229,9 +227,6 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
-    </Project>
-    <Project Path="Tests/SourceGeneratorTest/SourceGeneratorTest.csproj">
-      <Build Project="false" />
     </Project>
     <Project Path="Tests/TestComponentCSharp/TestComponentCSharp.vcxproj" Id="7e3a9ab3-8cbb-4b9c-ba76-0fe7108dcaeb">
       <BuildDependency Project="cswinrt/cswinrt.vcxproj" />
