@@ -1187,6 +1187,7 @@ namespace Generator
         private static bool NeedVtableOnLookupTable(SyntaxNode node)
         {
             return (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Arguments.Count != 0) ||
+                    (node is BaseObjectCreationExpressionSyntax objectCreation && objectCreation.ArgumentList?.Arguments.Count > 0) ||
                     node is AssignmentExpressionSyntax ||
                     node is VariableDeclarationSyntax ||
                     node is PropertyDeclarationSyntax ||
@@ -1245,6 +1246,33 @@ namespace Generator
                         // The method parameter can be declared as params which means
                         // an array of arguments can be passed for it and it is the
                         // last argument.
+                        if (!methodSymbol.Parameters[paramsIdx].IsParams)
+                        {
+                            paramsIdx++;
+                        }
+                    }
+                }
+            }
+            // Same as the InvocationExpressionSyntax case above, but for object creation expressions
+            // (i.e., constructor calls like 'new WinRTType(args)'). Without this, when a managed type
+            // (e.g. List<KeyValuePair<string, string>>) is passed as an argument to a WinRT constructor,
+            // the source generator would not detect it and would not generate the necessary CCW vtable entries.
+            else if (context.Node is BaseObjectCreationExpressionSyntax objectCreation &&
+                     objectCreation.ArgumentList is { Arguments.Count: > 0 })
+            {
+                var creationSymbol = context.SemanticModel.GetSymbolInfo(objectCreation).Symbol;
+                if (creationSymbol is IMethodSymbol methodSymbol &&
+                    (isWinRTClassOrInterface(methodSymbol.ContainingSymbol, true) ||
+                     SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly)))
+                {
+                    for (int idx = 0, paramsIdx = 0; idx < objectCreation.ArgumentList.Arguments.Count; idx++)
+                    {
+                        if (methodSymbol.Parameters[paramsIdx].RefKind != RefKind.Out)
+                        {
+                            var argumentType = context.SemanticModel.GetTypeInfo(objectCreation.ArgumentList.Arguments[idx].Expression);
+                            AddVtableAttributesForType(argumentType, methodSymbol.Parameters[paramsIdx].Type);
+                        }
+
                         if (!methodSymbol.Parameters[paramsIdx].IsParams)
                         {
                             paramsIdx++;

@@ -37,6 +37,10 @@
       <!-- CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS switch -->
       <method signature="System.Boolean get_UseWindowsUIXamlProjections()" body="stub" value="false" feature="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" featurevalue="false" />
       <method signature="System.Boolean get_UseWindowsUIXamlProjections()" body="stub" value="true" feature="CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS" featurevalue="true" />
+
+      <!-- CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION switch -->
+      <method signature="System.Boolean get_SuppressCustomPropertyNotSupportedException()" body="stub" value="false" feature="CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION" featurevalue="false" />
+      <method signature="System.Boolean get_SuppressCustomPropertyNotSupportedException()" body="stub" value="true" feature="CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION" featurevalue="true" />
     </type>
   </assembly>
 
