@@ -9255,7 +9255,26 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
             {
                 if (settings.reference_projection)
                 {
-                   return;
+                    // If no constructors will be emitted by write_attributed_types, we need to emit
+                    // a private constructor to prevent the C# compiler from auto-generating a public
+                    // default constructor. Activatable factories always emit constructors. Composable
+                    // factories only emit constructors when the factory interface has methods (some
+                    // composable factory interfaces are empty, with composition handled by the base class).
+                    bool has_constructors = false;
+                    for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+                    {
+                        if (factory.activatable ||
+                            (factory.composable && factory.type && size(factory.type.MethodList()) > 0))
+                        {
+                            has_constructors = true;
+                            break;
+                        }
+                    }
+                    if (!has_constructors)
+                    {
+                        w.write("private %() { throw null; }\n", type_name);
+                    }
+                    return;
                 }
 
                 w.write(R"(
