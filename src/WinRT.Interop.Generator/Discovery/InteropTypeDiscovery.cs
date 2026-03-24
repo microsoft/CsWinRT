@@ -56,7 +56,7 @@ internal static partial class InteropTypeDiscovery
         }
 
         // We need to resolve the base type to be able to look up attributes on it
-        if (!baseType.IsFullyResolvable(out _))
+        if (!baseType.IsFullyResolvable(out TypeDefinition? baseTypeDefinition))
         {
             WellKnownInteropExceptions.WindowsRuntimeClassTypeNotResolvedWarning(baseType, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -64,9 +64,9 @@ internal static partial class InteropTypeDiscovery
         }
 
         // If the base type is also a projected Windows Runtime type, track it
-        if (baseType.IsProjectedWindowsRuntimeType)
+        if (baseTypeDefinition.IsProjectedWindowsRuntimeType)
         {
-            discoveryState.TrackTypeHierarchyEntry(typeDefinition.FullName, baseType.FullName);
+            discoveryState.TrackTypeHierarchyEntry(typeDefinition.FullName, baseTypeDefinition.FullName);
         }
     }
 

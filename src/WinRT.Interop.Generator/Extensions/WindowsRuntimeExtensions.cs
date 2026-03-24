@@ -22,12 +22,6 @@ internal static class WindowsRuntimeExtensions
     extension(IHasCustomAttribute member)
     {
         /// <summary>
-        /// Checks whether a <see cref="IHasCustomAttribute"/> represents a projected Windows Runtime type.
-        /// </summary>
-        /// <returns>Whether the type represents a projected Windows Runtime type.</returns>
-        public bool IsProjectedWindowsRuntimeType => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
-
-        /// <summary>
         /// Checks whether a <see cref="IHasCustomAttribute"/> (expected to be an <see cref="AssemblyDefinition"/>) represents a Windows Runtime reference assembly.
         /// </summary>
         /// <returns>Whether the module represents a Windows Runtime reference assembly.</returns>
