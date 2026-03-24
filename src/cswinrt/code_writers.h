@@ -9279,7 +9279,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
         auto gc_pressure_amount = get_gc_pressure_amount(type);
 
         w.write(R"(
-%%%%% %class %%
+%%%% %class %%
 {
 %
 %
