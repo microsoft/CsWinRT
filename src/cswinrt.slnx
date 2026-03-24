@@ -32,30 +32,35 @@
     <File Path="../docs/usage.md" />
     <File Path="../docs/version-history.md" />
     <File Path="../docs/versioning.md" />
-    <File Path="../docs/winrt-interop-dll-spec.md" />
-  </Folder>
-  <Folder Name="/Docs/cswinrtgen/">
-    <File Path="../docs/cswinrtgen/marshalling-arrays.md" />
-    <File Path="../docs/cswinrtgen/marshalling-generic-interfaces.md" />
   </Folder>
   <Folder Name="/Docs/diagnostics/">
     <File Path="../docs/diagnostics/cswinrt30001.md" />
   </Folder>
   <Folder Name="/Docs/images/">
     <File Path="../docs/images/AuthorPackage_VS.png" />
-    <File Path="../docs/images/Diagram_AddProjection.jpg" />
-    <File Path="../docs/images/Diagram_CreateProjection.jpg" />
   </Folder>
   <Folder Name="/Files/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
     <File Path=".gitignore" />
-    <File Path="benchmark.cmd" />
-    <File Path="build.cmd" />
-    <File Path="cswinrt/PreviousPlatforms.linq" />
-    <File Path="Directory.Build.props" />
-    <File Path="Directory.Build.targets" />
-    <File Path="get_testwinrt.cmd" />
+    <File Path="CODE_OF_CONDUCT.md" />
+    <File Path="CONTRIBUTING.md" />
+    <File Path="global.json" />
+    <File Path="LICENSE" />
+    <File Path="nuget.config" />
     <File Path="README.md" />
-    <File Path="Strings.props" />
+    <File Path="SECURITY.md" />
+  </Folder>
+  <Folder Name="/Files/src/">
+    <File Path="../src/benchmark.cmd" />
+    <File Path="../src/benchmark_winmd.cmd" />
+    <File Path="../src/build.cmd" />
+    <File Path="../src/Directory.Build.props" />
+    <File Path="../src/Directory.Build.targets" />
+    <File Path="../src/Directory.Packages.props" />
+    <File Path="../src/get_buildtools.ps1" />
+    <File Path="../src/get_testwinrt.cmd" />
+    <File Path="../src/Strings.props" />
   </Folder>
   <Folder Name="/Nuget/">
     <File Path="../nuget/LICENSE" />
