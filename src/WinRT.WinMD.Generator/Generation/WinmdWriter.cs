@@ -192,7 +192,7 @@ internal sealed class WinmdWriter
                 continue;
             }
 
-            AddCustomAttributesFromInput(declaration.InputType, declaration.OutputType);
+            CopyCustomAttributes(declaration.InputType, declaration.OutputType);
         }
 
         // Phase 4: Add overload attributes for methods with the same name
@@ -557,14 +557,17 @@ internal sealed class WinmdWriter
             TypeAttributes.Class |
             TypeAttributes.BeforeFieldInit;
 
-        if (inputType.IsSealed || inputType.IsAbstract)
+        // Sealed for: sealed classes and static classes (abstract+sealed in metadata)
+        // WinRT doesn't support abstract base classes, so non-static abstract classes
+        // are treated as regular unsealed runtime classes
+        if (inputType.IsSealed)
         {
             typeAttributes |= TypeAttributes.Sealed;
         }
 
-        if (inputType.IsAbstract && !inputType.IsSealed)
+        // In C#, static classes are both abstract and sealed in metadata
+        if (inputType.IsAbstract && inputType.IsSealed)
         {
-            // Static class in C# is abstract sealed
             typeAttributes |= TypeAttributes.Abstract;
         }
 
@@ -705,7 +708,7 @@ internal sealed class WinmdWriter
 
     private void AddSynthesizedInterfaces(TypeDefinition inputType, TypeDefinition classOutputType, TypeDeclaration classDeclaration)
     {
-        // TODO: bool isStaticClass = inputType.IsAbstract && inputType.IsSealed;
+        // Static vs non-static member filtering is handled below per-member
 
         // Collect members that come from interface implementations
         HashSet<string> membersFromInterfaces = [];
@@ -986,6 +989,9 @@ internal sealed class WinmdWriter
         }
 
         outputType.Methods.Add(outputMethod);
+
+        // Copy custom attributes from the input method
+        CopyCustomAttributes(inputMethod, outputMethod);
     }
 
     private void AddMethodToClass(TypeDefinition outputType, MethodDefinition inputMethod)
@@ -1041,6 +1047,9 @@ internal sealed class WinmdWriter
         }
 
         outputType.Methods.Add(outputMethod);
+
+        // Copy custom attributes from the input method
+        CopyCustomAttributes(inputMethod, outputMethod);
     }
 
     private void AddPropertyToType(TypeDefinition outputType, PropertyDefinition inputProperty, bool isInterfaceParent)
@@ -1119,6 +1128,9 @@ internal sealed class WinmdWriter
         }
 
         outputType.Properties.Add(outputProperty);
+
+        // Copy custom attributes from the input property
+        CopyCustomAttributes(inputProperty, outputProperty);
     }
 
     private void AddEventToType(TypeDefinition outputType, EventDefinition inputEvent, bool isInterfaceParent)
@@ -1197,6 +1209,9 @@ internal sealed class WinmdWriter
         }
 
         outputType.Events.Add(outputEvent);
+
+        // Copy custom attributes from the input event
+        CopyCustomAttributes(inputEvent, outputEvent);
     }
 
     #endregion
@@ -1567,27 +1582,146 @@ internal sealed class WinmdWriter
         return Version.Parse(_version).Major;
     }
 
-    private static void AddCustomAttributesFromInput(TypeDefinition inputType, TypeDefinition outputType)
+    /// <summary>
+    /// Copies custom attributes from a source metadata element to a target metadata element,
+    /// filtering out attributes that are handled separately by the generator or not meaningful for WinMD.
+    /// </summary>
+    private void CopyCustomAttributes(IHasCustomAttribute source, IHasCustomAttribute target)
     {
-        // Currently unused but reserved for future custom attribute encoding
-        _ = outputType;
-
-        foreach (CustomAttribute attr in inputType.CustomAttributes)
+        foreach (CustomAttribute attr in source.CustomAttributes)
         {
-            string? attrTypeName = attr.Constructor?.DeclaringType?.FullName;
-
-            // Skip attributes that shouldn't be in the WinMD
-            if (attrTypeName is "System.Runtime.InteropServices.GuidAttribute" or
-                "WinRT.GeneratedBindableCustomPropertyAttribute" or
-                "System.Runtime.CompilerServices.NullableAttribute" or
-                "System.Runtime.CompilerServices.NullableContextAttribute")
+            if (!ShouldCopyAttribute(attr))
             {
                 continue;
             }
 
-            // For now, skip complex attributes — they require deeper encoding logic
-            // TODO: Port full custom attribute encoding in a later phase
+            MemberReference? importedCtor = ImportAttributeConstructor(attr.Constructor);
+            if (importedCtor == null)
+            {
+                continue;
+            }
+
+            CustomAttributeSignature clonedSig = CloneAttributeSignature(attr.Signature);
+            target.CustomAttributes.Add(new CustomAttribute(importedCtor, clonedSig));
         }
+    }
+
+    /// <summary>
+    /// Determines whether a custom attribute should be copied to the output WinMD.
+    /// </summary>
+    private static bool ShouldCopyAttribute(CustomAttribute attr)
+    {
+        string? attrTypeName = attr.Constructor?.DeclaringType?.FullName;
+
+        if (attrTypeName is null)
+        {
+            return false;
+        }
+
+        // Skip attributes already handled separately by the generator
+        if (attrTypeName is
+            "System.Runtime.InteropServices.GuidAttribute" or
+            "WinRT.GeneratedBindableCustomPropertyAttribute" or
+            "Windows.Foundation.Metadata.VersionAttribute")
+        {
+            return false;
+        }
+
+        // Skip compiler-generated attributes not meaningful for WinMD
+        if (attrTypeName.StartsWith("System.Runtime.CompilerServices.", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        // Skip non-public attribute types (if resolvable)
+        TypeDefinition? attrTypeDef = attr.Constructor?.DeclaringType?.Resolve();
+        if (attrTypeDef != null && !attrTypeDef.IsPublic && !attrTypeDef.IsNestedPublic)
+        {
+            return false;
+        }
+
+        // Skip attributes with unreadable signatures
+        return attr.Signature != null;
+    }
+
+    /// <summary>
+    /// Imports an attribute constructor reference into the output module.
+    /// </summary>
+    private MemberReference? ImportAttributeConstructor(ICustomAttributeType? ctor)
+    {
+        if (ctor?.DeclaringType == null || ctor.Signature is not MethodSignature methodSig)
+        {
+            return null;
+        }
+
+        ITypeDefOrRef importedType = ImportTypeReference(ctor.DeclaringType);
+
+        TypeSignature[] mappedParams = [.. methodSig.ParameterTypes
+            .Select(MapTypeSignatureToOutput)];
+
+        MethodSignature importedSig = MethodSignature.CreateInstance(
+            _outputModule.CorLibTypeFactory.Void,
+            mappedParams);
+
+        return new MemberReference(importedType, ".ctor", importedSig);
+    }
+
+    /// <summary>
+    /// Clones a custom attribute signature, remapping type references to the output module.
+    /// </summary>
+    private CustomAttributeSignature CloneAttributeSignature(CustomAttributeSignature? inputSig)
+    {
+        if (inputSig == null)
+        {
+            return new CustomAttributeSignature();
+        }
+
+        CustomAttributeSignature outputSig = new();
+
+        foreach (CustomAttributeArgument arg in inputSig.FixedArguments)
+        {
+            outputSig.FixedArguments.Add(CloneAttributeArgument(arg));
+        }
+
+        foreach (CustomAttributeNamedArgument namedArg in inputSig.NamedArguments)
+        {
+            TypeSignature mappedArgType = MapTypeSignatureToOutput(namedArg.Argument.ArgumentType);
+            CustomAttributeArgument clonedInnerArg = CloneAttributeArgument(namedArg.Argument);
+
+            outputSig.NamedArguments.Add(new CustomAttributeNamedArgument(
+                namedArg.MemberType,
+                namedArg.MemberName,
+                mappedArgType,
+                clonedInnerArg));
+        }
+
+        return outputSig;
+    }
+
+    /// <summary>
+    /// Clones a single custom attribute argument, remapping type references.
+    /// </summary>
+    private CustomAttributeArgument CloneAttributeArgument(CustomAttributeArgument arg)
+    {
+        TypeSignature mappedType = MapTypeSignatureToOutput(arg.ArgumentType);
+        CustomAttributeArgument clonedArg = new(mappedType);
+
+        if (arg.IsNullArray)
+        {
+            clonedArg.IsNullArray = true;
+        }
+        else
+        {
+            foreach (object? element in arg.Elements)
+            {
+                // Type-valued elements are stored as TypeSignature and need remapping
+                clonedArg.Elements.Add(element is TypeSignature typeSig
+                    ? MapTypeSignatureToOutput(typeSig)
+                    : element);
+            }
+        }
+
+        return clonedArg;
     }
 
     #endregion
