@@ -11,42 +11,63 @@ namespace WindowsRuntime.WinMDGenerator.Errors;
 internal static class WellKnownWinMDExceptions
 {
     /// <summary>
-    /// Creates an exception for a response file read error.
+    /// The prefix for all errors produced by this tool.
     /// </summary>
-    public static Exception ResponseFileReadError(Exception inner)
+    public const string ErrorPrefix = "CSWINRTWINMDGEN";
+
+    /// <summary>
+    /// Some exception was thrown when trying to read the response file.
+    /// </summary>
+    public static Exception ResponseFileReadError(Exception exception)
     {
-        return new InvalidOperationException("Failed to read the response file.", inner);
+        return Exception(1, "Failed to read the response file to run 'cswinrtwinmdgen'.", exception);
     }
 
     /// <summary>
-    /// Creates an exception for a malformed response file.
+    /// The input response file is malformed.
     /// </summary>
     public static Exception MalformedResponseFile()
     {
-        return new InvalidOperationException("The response file is malformed.");
+        return Exception(2, "The response file is malformed and contains invalid content.");
     }
 
     /// <summary>
-    /// Creates an exception for a response file argument parsing error.
+    /// Failed to parse an argument from the response file.
     /// </summary>
-    public static Exception ResponseFileArgumentParsingError(string propertyName, Exception? inner = null)
+    public static Exception ResponseFileArgumentParsingError(string argumentName, Exception? exception = null)
     {
-        return new InvalidOperationException($"Failed to parse the '{propertyName}' argument from the response file.", inner);
+        return Exception(3, $"Failed to parse argument '{argumentName}' from response file.", exception);
     }
 
     /// <summary>
-    /// Creates an exception for a WinMD generation error.
+    /// Some exception was thrown when trying to load the input assembly.
     /// </summary>
-    public static Exception WinMDGenerationError(Exception inner)
+    public static Exception InputAssemblyLoadError(Exception exception)
     {
-        return new InvalidOperationException("Failed to generate the WinMD file.", inner);
+        return Exception(4, "Failed to load the input assembly.", exception);
     }
 
     /// <summary>
-    /// Creates an exception for a WinMD write error.
+    /// Failed to generate the WinMD file.
     /// </summary>
-    public static Exception WinMDWriteError(Exception inner)
+    public static Exception WinMDGenerationError(Exception exception)
     {
-        return new InvalidOperationException("Failed to write the WinMD file.", inner);
+        return Exception(5, "Failed to generate the WinMD file.", exception);
+    }
+
+    /// <summary>
+    /// Failed to write the WinMD file to disk.
+    /// </summary>
+    public static Exception WinMDWriteError(Exception exception)
+    {
+        return Exception(6, "Failed to write the WinMD file to disk.", exception);
+    }
+
+    /// <summary>
+    /// Creates a new exception with the specified id and message.
+    /// </summary>
+    private static Exception Exception(int id, string message, Exception? innerException = null)
+    {
+        return new WellKnownWinMDException($"{ErrorPrefix}{id:0000}", message, innerException);
     }
 }
