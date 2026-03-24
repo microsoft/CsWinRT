@@ -98,13 +98,31 @@ Copyright (C) Microsoft Corporation. All rights reserved.
           Returns="@(AllItemsFullPathWithTargetPath)">
 
     <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">
-      
+
+      <!-- Collect the target paths of runtime-specific assets. When a NuGet package has assemblies
+           in both lib/ and runtimes/ folders, we only include the runtimes/ version to avoid
+           duplicate payload errors (https://github.com/microsoft/CsWinRT/issues/2052). -->
+      <_CsWinRTRuntimeAssetTargetPaths Include="@(ReferenceCopyLocalPaths -> '%(DestinationSubDirectory)%(Filename)%(Extension)')"
+        Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime'" />
+
       <!-- Make sure all managed binaries/projections are shared across project references made by native apps -->
       <AllItemsFullPathWithTargetPath Include="@(ReferenceCopyLocalPaths)" 
-        Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime' or '%(ReferenceCopyLocalPaths.CopyLocal)' == 'true'">
+        Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime'">
         <TargetPath>%(ReferenceCopyLocalPaths.DestinationSubDirectory)%(ReferenceCopyLocalPaths.Filename)%(ReferenceCopyLocalPaths.Extension)</TargetPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </AllItemsFullPathWithTargetPath>
+
+      <!-- For non-runtime CopyLocal references, deduplicate against runtime assets by target path.
+           Items are keyed by target path so Remove can match against _CsWinRTRuntimeAssetTargetPaths. -->
+      <_CsWinRTCopyLocalCandidates Include="@(ReferenceCopyLocalPaths -> '%(DestinationSubDirectory)%(Filename)%(Extension)')"
+        Condition="'%(ReferenceCopyLocalPaths.CopyLocal)' == 'true' and '%(ReferenceCopyLocalPaths.AssetType)' != 'runtime'">
+        <_OriginalIdentity>%(ReferenceCopyLocalPaths.Identity)</_OriginalIdentity>
+        <TargetPath>%(ReferenceCopyLocalPaths.DestinationSubDirectory)%(ReferenceCopyLocalPaths.Filename)%(ReferenceCopyLocalPaths.Extension)</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </_CsWinRTCopyLocalCandidates>
+      <_CsWinRTCopyLocalCandidates Remove="@(_CsWinRTRuntimeAssetTargetPaths)" />
+
+      <AllItemsFullPathWithTargetPath Include="@(_CsWinRTCopyLocalCandidates -> '%(_OriginalIdentity)')" />
 
     </ItemGroup>
 
