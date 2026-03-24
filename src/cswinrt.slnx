@@ -428,4 +428,5 @@
   <Project Path="WinRT.Sdk.Projection/WinRT.Sdk.Projection.csproj">
     <Build Project="false" />
   </Project>
+  <Project Path="WinRT.WinMD.Generator/WinRT.WinMD.Generator.csproj" />
 </Solution>
