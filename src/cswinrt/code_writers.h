@@ -2582,9 +2582,16 @@ remove => %;
                 {
                     allow_multiple = true;
                 }
-                if (attribute_name != "DefaultOverload" && attribute_name != "Overload" && 
-                    attribute_name != "AttributeUsage" && attribute_name != "ContractVersion" &&
-                    attribute_name != "Experimental")
+                // ContractVersion is only emitted for reference assemblies
+                if (attribute_name == "ContractVersion")
+                {
+                    if (!settings.reference_projection)
+                    {
+                        continue;
+                    }
+                }
+                else if (attribute_name != "DefaultOverload" && attribute_name != "Overload" && 
+                    attribute_name != "AttributeUsage" && attribute_name != "Experimental")
                 {
                     continue;
                 }
