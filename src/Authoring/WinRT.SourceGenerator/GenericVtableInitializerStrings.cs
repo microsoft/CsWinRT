@@ -1169,6 +1169,11 @@ namespace Generator
                  {
                      try
                      {
+                         // Guard against null event args from native callers (see https://github.com/microsoft/CsWinRT/issues/1988).
+                         if (@event == IntPtr.Zero)
+                         {
+                             return 0; // S_OK
+                         }
                          {{staticMethodsClass}}.Abi_Invoke(thisPtr, MarshalInterface<{{senderInterface}}>.FromAbi(sender), MarshalInterface<{{changedEventArgsInterface}}>.FromAbi(@event));
                      }
                      catch (global::System.Exception __exception__)
