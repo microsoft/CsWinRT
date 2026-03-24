@@ -693,6 +693,43 @@ internal static class WindowsRuntimeExtensions
     extension(TypeDefinition type)
     {
         /// <summary>
+        /// Checks whether a <see cref="TypeDefinition"/> represents a projected Windows Runtime type.
+        /// </summary>
+        /// <returns>Whether the type represents a projected Windows Runtime type.</returns>
+        /// <remarks>
+        /// <para>
+        /// This check uses two strategies:
+        /// <list type="number">
+        ///   <item>
+        ///     <b>Assembly identity</b>: if the containing assembly is marked with <c>[WindowsRuntimeReferenceAssembly]</c>,
+        ///     then all types in that assembly are projected Windows Runtime types. This is the primary check for types coming
+        ///     from Windows Runtime reference assemblies (e.g. <c>Microsoft.Windows.SDK.NET.dll</c>).
+        ///   </item>
+        ///   <item>
+        ///     <b>Attribute fallback</b>: if the assembly check does not match, the type is checked for the presence of the
+        ///     <c>[WindowsRuntimeMetadata]</c> attribute directly. This covers types from merged projection .dll-s
+        ///     (e.g. <c>WinRT.Sdk.Projection.dll</c>, and manually projected types defined in <c>WinRT.Runtime.dll</c>.
+        ///     This attribute is skipped for reference assemblies, as it's considered a private implementation detail.
+        ///   </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        public bool IsProjectedWindowsRuntimeType
+        {
+            get
+            {
+                // Check whether the containing assembly is a Windows Runtime reference assembly
+                if (type.DeclaringModule?.Assembly is { IsWindowsRuntimeReferenceAssembly: true })
+                {
+                    return true;
+                }
+
+                // Fallback: check for the '[WindowsRuntimeMetadata]' attribute on the type itself
+                return type.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntime, WellKnownMetadataNames.WindowsRuntimeMetadataAttribute);
+            }
+        }
+
+        /// <summary>
         /// Checks whether a <see cref="TypeDefinition"/> represents a projected Windows Runtime class type.
         /// </summary>
         public bool IsProjectedWindowsRuntimeClassType
