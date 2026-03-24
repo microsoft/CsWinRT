@@ -156,6 +156,7 @@ internal sealed class AssemblyAnalyzer
 
     /// <summary>
     /// Gets the full qualified name for an <see cref="ITypeDefOrRef"/>.
+    /// For nested <see cref="TypeDefinition"/> types, uses the effective namespace from the declaring type chain.
     /// </summary>
     internal static string GetQualifiedName(ITypeDefOrRef type)
     {
@@ -165,7 +166,12 @@ internal sealed class AssemblyAnalyzer
             name += $"`{td.GenericParameters.Count}";
         }
 
-        return type.Namespace is { Value: { Length: > 0 } ns }
+        // For TypeDefinition, use GetEffectiveNamespace to handle nested types
+        string? ns = type is TypeDefinition typeDef
+            ? GetEffectiveNamespace(typeDef)
+            : type.Namespace?.Value;
+
+        return ns is { Length: > 0 }
             ? $"{ns}.{name}"
             : name;
     }

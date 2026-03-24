@@ -833,6 +833,16 @@ internal sealed class WinmdWriter
             if ((interfaceType == SynthesizedInterfaceType.Static && isStatic) ||
                 (interfaceType == SynthesizedInterfaceType.Default && !isStatic))
             {
+                // For default interface, skip properties already provided by an implemented interface
+                if (interfaceType == SynthesizedInterfaceType.Default)
+                {
+                    string getterName = "get_" + property.Name!.Value;
+                    if (membersFromInterfaces.Contains(getterName))
+                    {
+                        continue;
+                    }
+                }
+
                 hasMembers = true;
                 AddPropertyToType(synthesizedInterface, property, isInterfaceParent: true);
             }
@@ -852,6 +862,16 @@ internal sealed class WinmdWriter
             if ((interfaceType == SynthesizedInterfaceType.Static && isStatic) ||
                 (interfaceType == SynthesizedInterfaceType.Default && !isStatic))
             {
+                // For default interface, skip events already provided by an implemented interface
+                if (interfaceType == SynthesizedInterfaceType.Default)
+                {
+                    string adderName = "add_" + evt.Name!.Value;
+                    if (membersFromInterfaces.Contains(adderName))
+                    {
+                        continue;
+                    }
+                }
+
                 hasMembers = true;
                 AddEventToType(synthesizedInterface, evt, isInterfaceParent: true);
             }
@@ -1337,7 +1357,7 @@ internal sealed class WinmdWriter
 
             // Otherwise create a type reference
             return GetOrCreateTypeReference(
-                typeDef.Namespace?.Value ?? "",
+                AssemblyAnalyzer.GetEffectiveNamespace(typeDef) ?? "",
                 typeDef.Name!.Value,
                 _inputModule.Assembly?.Name?.Value ?? "mscorlib");
         }
