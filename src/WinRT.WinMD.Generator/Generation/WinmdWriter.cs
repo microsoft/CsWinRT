@@ -313,7 +313,7 @@ internal sealed class WinmdWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "Enum", "mscorlib");
 
         TypeDefinition outputType = new(
-            inputType.Namespace?.Value,
+            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
             inputType.Name!.Value,
             typeAttributes,
             baseType);
@@ -390,7 +390,7 @@ internal sealed class WinmdWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "MulticastDelegate", "mscorlib");
 
         TypeDefinition outputType = new(
-            inputType.Namespace?.Value,
+            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
             inputType.Name!.Value,
             typeAttributes,
             baseType);
@@ -466,7 +466,7 @@ internal sealed class WinmdWriter
             TypeAttributes.Abstract;
 
         TypeDefinition outputType = new(
-            inputType.Namespace?.Value,
+            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
             inputType.Name!.Value,
             typeAttributes);
 
@@ -530,7 +530,7 @@ internal sealed class WinmdWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "ValueType", "mscorlib");
 
         TypeDefinition outputType = new(
-            inputType.Namespace?.Value,
+            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
             inputType.Name!.Value,
             typeAttributes,
             baseType);
@@ -602,7 +602,7 @@ internal sealed class WinmdWriter
         }
 
         TypeDefinition outputType = new(
-            inputType.Namespace?.Value,
+            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
             inputType.Name!.Value,
             typeAttributes,
             baseType);
@@ -773,7 +773,7 @@ internal sealed class WinmdWriter
         HashSet<string> membersFromInterfaces)
     {
         bool hasMembers = false;
-        string ns = inputType.Namespace?.Value ?? "";
+        string ns = AssemblyAnalyzer.GetEffectiveNamespace(inputType) ?? "";
         string className = inputType.Name!.Value;
         string interfaceName = GetSynthesizedInterfaceName(className, interfaceType);
 

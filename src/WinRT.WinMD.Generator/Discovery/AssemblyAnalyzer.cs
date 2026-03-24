@@ -39,19 +39,33 @@ internal sealed class AssemblyAnalyzer
 
         foreach (TypeDefinition type in _inputModule.TopLevelTypes)
         {
-            if (!IsPublicType(type))
-            {
-                continue;
-            }
-
-            // We include classes, interfaces, structs, enums, and delegates
-            if (type.IsClass || type.IsInterface || type.IsValueType || type.IsEnum || IsDelegate(type))
-            {
-                publicTypes.Add(type);
-            }
+            CollectPublicTypes(type, publicTypes);
         }
 
         return publicTypes;
+    }
+
+    /// <summary>
+    /// Recursively collects public types, including nested public types.
+    /// </summary>
+    private static void CollectPublicTypes(TypeDefinition type, List<TypeDefinition> publicTypes)
+    {
+        if (!IsPublicType(type))
+        {
+            return;
+        }
+
+        // We include classes, interfaces, structs, enums, and delegates
+        if (type.IsClass || type.IsInterface || type.IsValueType || type.IsEnum || IsDelegate(type))
+        {
+            publicTypes.Add(type);
+        }
+
+        // Recurse into nested types
+        foreach (TypeDefinition nestedType in type.NestedTypes)
+        {
+            CollectPublicTypes(nestedType, publicTypes);
+        }
     }
 
     /// <summary>
@@ -97,7 +111,34 @@ internal sealed class AssemblyAnalyzer
     }
 
     /// <summary>
+    /// Gets the effective namespace of a type. For nested types, this walks up the
+    /// declaring type chain since nested types have no namespace of their own in metadata.
+    /// </summary>
+    internal static string? GetEffectiveNamespace(TypeDefinition type)
+    {
+        if (type.Namespace is { Value.Length: > 0 })
+        {
+            return type.Namespace.Value;
+        }
+
+        // For nested types, walk up to the declaring type to find the namespace
+        TypeDefinition? current = type.DeclaringType;
+        while (current != null)
+        {
+            if (current.Namespace is { Value.Length: > 0 })
+            {
+                return current.Namespace.Value;
+            }
+
+            current = current.DeclaringType;
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Gets the full qualified name of a type, including generic arity.
+    /// For nested types, uses the effective namespace from the declaring type chain.
     /// </summary>
     internal static string GetQualifiedName(TypeDefinition type)
     {
@@ -107,7 +148,8 @@ internal sealed class AssemblyAnalyzer
             name += $"`{type.GenericParameters.Count}";
         }
 
-        return type.Namespace is { Value: { Length: > 0 } ns }
+        string? ns = GetEffectiveNamespace(type);
+        return ns is { Length: > 0 }
             ? $"{ns}.{name}"
             : name;
     }
