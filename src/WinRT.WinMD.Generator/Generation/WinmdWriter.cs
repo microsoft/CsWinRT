@@ -224,7 +224,22 @@ internal sealed class WinmdWriter
                 continue;
             }
 
-            // Name and parameter count matches, match found.
+            // Match parameter types
+            bool parametersMatch = true;
+            for (int i = 0; i < (classMethod.Signature?.ParameterTypes.Count ?? 0); i++)
+            {
+                if (classMethod.Signature!.ParameterTypes[i].FullName != interfaceMethod.Signature!.ParameterTypes[i].FullName)
+                {
+                    parametersMatch = false;
+                    break;
+                }
+            }
+
+            if (!parametersMatch)
+            {
+                continue;
+            }
+
             return classMethod;
         }
 
@@ -458,7 +473,7 @@ internal sealed class WinmdWriter
         // Add methods
         foreach (MethodDefinition method in inputType.Methods)
         {
-            if (!method.IsPublic && method.IsPrivate)
+            if (!method.IsPublic)
             {
                 continue;
             }
@@ -655,14 +670,31 @@ internal sealed class WinmdWriter
             hasDefaultConstructor = true;
         }
 
-        // Add interface implementations
+        // Add interface implementations (excluding mapped and unmappable interfaces)
         foreach (InterfaceImplementation impl in inputType.Interfaces)
         {
-            if (impl.Interface != null && IsPubliclyAccessible(impl.Interface))
+            if (impl.Interface == null || !IsPubliclyAccessible(impl.Interface))
             {
-                ITypeDefOrRef outputInterfaceRef = ImportTypeReference(impl.Interface);
-                outputType.Interfaces.Add(new InterfaceImplementation(outputInterfaceRef));
+                continue;
             }
+
+            string interfaceName = GetInterfaceQualifiedName(impl.Interface);
+
+            // Skip interfaces that have a WinRT mapping — they'll be added as their
+            // mapped equivalents by ProcessCustomMappedInterfaces below
+            if (_mapper.HasMappingForType(interfaceName))
+            {
+                continue;
+            }
+
+            // Skip .NET interfaces that have no WinRT equivalent
+            if (TypeMapper.ImplementedInterfacesWithoutMapping.Contains(interfaceName))
+            {
+                continue;
+            }
+
+            ITypeDefOrRef outputInterfaceRef = ImportTypeReference(impl.Interface);
+            outputType.Interfaces.Add(new InterfaceImplementation(outputInterfaceRef));
         }
 
         _outputModule.TopLevelTypes.Add(outputType);
