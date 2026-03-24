@@ -1075,13 +1075,13 @@ namespace cswinrt
     void write_method(writer& w, method_signature signature, std::string_view method_name,
         std::string_view return_type, std::string_view method_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv,
-        std::string_view platform_attribute = ""sv,
+        std::string_view type_attributes = ""sv,
         std::optional<std::pair<type_semantics, MethodDef>> paramsForStaticMethodCall = {})
     {
         w.write(R"(
 %%%% %(%) => %;
 )",
-            platform_attribute,
+            type_attributes,
             access_spec,
             method_spec,
             return_type,
@@ -1198,7 +1198,7 @@ namespace cswinrt
     }
 
     void write_class_method(writer& w, MethodDef const& method, TypeDef const& class_type, 
-        bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute,
+        bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view type_attributes,
         std::optional<type_semantics> call_static_method)
     {
         if (method.SpecialName())
@@ -1263,7 +1263,7 @@ namespace cswinrt
         {
             write_method(w, signature, method.Name(), return_type, 
                 static_method_params.has_value() ? w.write_temp("%", bind<write_objref_type_name>(static_method_params.value().first)) : interface_member, 
-                access_spec, method_spec, platform_attribute, static_method_params);
+                access_spec, method_spec, type_attributes, static_method_params);
         }
 
         // If overridable or private, we need to generate the explcit method
@@ -1271,7 +1271,7 @@ namespace cswinrt
         {
             w.write(R"(
 %% %.%(%) => %;)",
-                platform_attribute,
+                type_attributes,
                 bind<write_projection_return_type>(signature),
                 bind<write_type_name>(method.Parent(), typedef_name_type::CCW, false),
                 method.Name(),
@@ -1303,7 +1303,7 @@ namespace cswinrt
     void write_property(writer& w, std::string_view external_prop_name, std::string_view prop_name,
         std::string_view prop_type, std::string_view getter_target, std::string_view setter_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv,
-        std::string_view getter_platform = ""sv, std::string_view setter_platform = ""sv,
+        std::string_view getter_type_attributes = ""sv, std::string_view setter_type_attributes = ""sv,
         std::optional<std::pair<type_semantics, Property>> const& params_for_static_getter = {}, std::optional<std::pair<type_semantics, Property>> const& params_for_static_setter = {})
     {
         if (setter_target.empty() && !params_for_static_setter.has_value())
@@ -1311,7 +1311,7 @@ namespace cswinrt
             w.write(R"(
 %%%% % => %;
 )",
-                getter_platform,
+                getter_type_attributes,
                 access_spec,
                 method_spec,
                 prop_type,
@@ -1330,12 +1330,12 @@ namespace cswinrt
             return;
         }
 
-        std::string_view property_platform = ""sv;
-        if (getter_platform == setter_platform)
+        std::string_view property_type_attributes = ""sv;
+        if (getter_type_attributes == setter_type_attributes)
         {
-            property_platform = getter_platform;
-            getter_platform = ""sv;
-            setter_platform = ""sv;
+            property_type_attributes = getter_type_attributes;
+            getter_type_attributes = ""sv;
+            setter_type_attributes = ""sv;
         }
 
         w.write(R"(
@@ -1345,12 +1345,12 @@ namespace cswinrt
 %set => %;
 }
 )",
-            property_platform,
+            property_type_attributes,
             access_spec,
             method_spec,
             prop_type,
             external_prop_name,
-            getter_platform, 
+            getter_type_attributes, 
             bind([&](writer& w) {
                 if (params_for_static_getter.has_value())
                 {
@@ -1362,7 +1362,7 @@ namespace cswinrt
                     w.write("%.%", getter_target, prop_name);
                 }
                 }),
-            setter_platform,
+            setter_type_attributes,
             bind([&](writer& w) {
                 if (params_for_static_setter.has_value())
                 {
@@ -1476,7 +1476,7 @@ private % Make_%()
     }
 
     void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view event_target,
-        std::string_view access_spec = ""sv, std::string_view method_spec = ""sv, std::string_view platform_attribute = ""sv,
+        std::string_view access_spec = ""sv, std::string_view method_spec = ""sv, std::string_view type_attributes = ""sv,
         std::optional<std::tuple<type_semantics, Event, bool>> paramsForStaticMethodCall = {})
     {
         auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
@@ -1498,7 +1498,7 @@ add => %;
 remove => %;
 }
 )",
-            platform_attribute,
+            type_attributes,
             access_spec,
             method_spec,
             event_type,
@@ -1534,7 +1534,7 @@ remove => %;
         write_event(w, write_explicit_name(w, iface, evt.Name()), evt, write_as_cast(w, iface, as_abi));
     }
 
-    void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute = ""sv, std::optional<type_semantics> call_static_method = {})
+    void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view type_attributes = ""sv, std::optional<type_semantics> call_static_method = {})
     {
         auto visibility = "public ";
 
@@ -1554,7 +1554,7 @@ remove => %;
         {
             write_event(w, event.Name(), event,
                 call_static_method.has_value() ? w.write_temp("%", bind<write_objref_type_name>(call_static_method.value())) : interface_member, 
-                visibility, ""sv, platform_attribute, call_static_method.has_value() ? std::optional(std::tuple(call_static_method.value(), event, false)) : std::nullopt);
+                visibility, ""sv, type_attributes, call_static_method.has_value() ? std::optional(std::tuple(call_static_method.value(), event, false)) : std::nullopt);
         }
 
         // If overridable or private, we need to generate the explicit event
@@ -1567,7 +1567,7 @@ remove => %;
                 is_private ? interface_member : "this",
                 ""sv,
                 ""sv,
-                platform_attribute,
+                type_attributes,
                 std::nullopt);
         }
     }
@@ -1811,9 +1811,28 @@ remove => %;
         w.write("[global::System.Runtime.Versioning.SupportedOSPlatform(%)]\n", platform);
     }
 
-    std::string write_platform_attribute_temp(writer& w, TypeDef const& type)
+    void write_experimental_attribute(writer& w, std::pair<CustomAttribute, CustomAttribute> const& custom_attributes)
     {
-        return w.write_temp("%", bind<write_platform_attribute>(type.CustomAttribute()));
+        if (settings.netstandard_compat)
+        {
+            return;
+        }
+        for (auto&& attribute : custom_attributes)
+        {
+            auto [attribute_namespace, attribute_name] = attribute.TypeNamespaceAndName();
+            if (attribute_namespace == "Windows.Foundation.Metadata" && attribute_name == "ExperimentalAttribute")
+            {
+                w.write("[global::System.Diagnostics.CodeAnalysis.Experimental(\"WinRT0001\")]\n");
+                return;
+            }
+        }
+    }
+
+    std::string write_type_attributes_temp(writer& w, TypeDef const& type)
+    {
+        return w.write_temp("%%",
+            bind<write_platform_attribute>(type.CustomAttribute()),
+            bind<write_experimental_attribute>(type.CustomAttribute()));
     }
 
     void write_custom_attributes(writer& w, std::pair<CustomAttribute, CustomAttribute> const& custom_attributes, bool enable_platform_attrib)
@@ -2101,7 +2120,7 @@ private static class _%
             auto cache_object = w.write_temp("%", bind<write_objref_type_name>(factory_type));
 
             auto gc_pressure_amount = get_gc_pressure_amount(class_type);
-            auto platform_attribute = write_platform_attribute_temp(w, factory_type);
+            auto type_attributes = write_type_attributes_temp(w, factory_type);
             for (auto&& method : factory_type.MethodList())
             {
                 method_signature signature{ method };
@@ -2121,7 +2140,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 }))())
 {
 )",
-                        platform_attribute,
+                        type_attributes,
                         class_type.TypeName(),
                         bind_list<write_projection_parameter>(", ", signature.params()),
                         default_interface_name,
@@ -2155,7 +2174,7 @@ finally
 MarshalInspectable<object>.DisposeAbi(ptr); 
 }
 )",
-                        platform_attribute,
+                        type_attributes,
                         class_type.TypeName(),
                         bind_list<write_projection_parameter>(", ", signature.params()),
                         has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
@@ -2390,7 +2409,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
             }
             else
             {
-                auto platform_attribute = write_platform_attribute_temp(w, composable_type);
+                auto type_attributes = write_type_attributes_temp(w, composable_type);
 
                 w.write(R"(
 %% %(%)%
@@ -2409,7 +2428,7 @@ Marshal.Release(inner);
 }
 }
 )",
-                    platform_attribute, 
+                    type_attributes, 
                     visibility,
                     class_type.TypeName(),
                     bind_list<write_projection_parameter>(", ", params_without_objects),
@@ -2432,7 +2451,7 @@ Marshal.Release(inner);
         }
     }
 
-    void write_static_factory_method(writer& w, MethodDef const& method, std::string_view method_target, std::string_view platform_attribute = ""sv)
+    void write_static_factory_method(writer& w, MethodDef const& method, std::string_view method_target, std::string_view type_attributes = ""sv)
     {
         if (method.SpecialName())
         {
@@ -2442,10 +2461,10 @@ Marshal.Release(inner);
         auto return_type = w.write_temp("%", [&](writer& w) {
             write_projection_return_type(w, signature);
             });
-        write_method(w, signature, method.Name(), return_type, method_target, "public "sv, ""sv, platform_attribute, std::nullopt);
+        write_method(w, signature, method.Name(), return_type, method_target, "public "sv, ""sv, type_attributes, std::nullopt);
     }
 
-    void write_static_method(writer& w, MethodDef const& method, std::string_view method_target, std::string_view platform_attribute = ""sv)
+    void write_static_method(writer& w, MethodDef const& method, std::string_view method_target, std::string_view type_attributes = ""sv)
     {
         if (method.SpecialName())
         {
@@ -2455,28 +2474,28 @@ Marshal.Release(inner);
         auto return_type = w.write_temp("%", [&](writer& w) {
             write_projection_return_type(w, signature);
         });
-        write_method(w, signature, method.Name(), return_type, method_target, "public "sv, "static "sv, platform_attribute, std::optional(std::pair(method.Parent(), method)));
+        write_method(w, signature, method.Name(), return_type, method_target, "public "sv, "static "sv, type_attributes, std::optional(std::pair(method.Parent(), method)));
     }
 
-    void write_static_factory_property(writer& w, Property const& prop, std::string_view prop_target, std::string_view platform_attribute = ""sv)
+    void write_static_factory_property(writer& w, Property const& prop, std::string_view prop_target, std::string_view type_attributes = ""sv)
     {
         auto [getter, setter] = get_property_methods(prop);
         auto getter_target = getter ? prop_target : "";
         auto setter_target = setter ? prop_target : "";
         write_property(w, prop.Name(), prop.Name(), write_prop_type(w, prop),
-            getter_target, setter_target, "public "sv, ""sv, platform_attribute, platform_attribute,
+            getter_target, setter_target, "public "sv, ""sv, type_attributes, type_attributes,
             std::nullopt,
             std::nullopt);
     }
 
-    void write_static_factory_event(writer& w, Event const& event, std::string_view event_target, std::string_view platform_attribute = ""sv)
+    void write_static_factory_event(writer& w, Event const& event, std::string_view event_target, std::string_view type_attributes = ""sv)
     {
-        write_event(w, event.Name(), event, event_target, "public "sv, ""sv, platform_attribute, std::nullopt);
+        write_event(w, event.Name(), event, event_target, "public "sv, ""sv, type_attributes, std::nullopt);
     }
 
-    void write_static_event(writer& w, Event const& event, std::string_view event_target, std::string_view platform_attribute = ""sv)
+    void write_static_event(writer& w, Event const& event, std::string_view event_target, std::string_view type_attributes = ""sv)
     {
-        write_event(w, event.Name(), event, event_target, "public "sv, "static "sv, platform_attribute, std::optional(std::tuple(event.Parent(), event, true)));
+        write_event(w, event.Name(), event, event_target, "public "sv, "static "sv, type_attributes, std::optional(std::tuple(event.Parent(), event, true)));
     }
 
     void write_static_members(writer& w, TypeDef const& class_type)
@@ -2490,9 +2509,9 @@ Marshal.Release(inner);
                 write_static_objref_definition(w, factory.type, class_type);
                 auto cache_object = w.write_temp("%", bind<write_objref_type_name>(factory.type));
 
-                auto platform_attribute = write_platform_attribute_temp(w, factory.type);
-                w.write_each<write_static_method>(factory.type.MethodList(), cache_object, platform_attribute);
-                w.write_each<write_static_event>(factory.type.EventList(), cache_object, platform_attribute);
+                auto type_attributes = write_type_attributes_temp(w, factory.type);
+                w.write_each<write_static_method>(factory.type.MethodList(), cache_object, type_attributes);
+                w.write_each<write_static_event>(factory.type.EventList(), cache_object, type_attributes);
 
                 // Merge property getters/setters, since such may be defined across interfaces
                 for (auto&& prop : factory.type.PropertyList())
@@ -2503,28 +2522,28 @@ Marshal.Release(inner);
                     auto [prop_targets, inserted] = properties.try_emplace(std::string(prop.Name()),
                         prop_type,
                         getter ? cache_object : "",
-                        getter ? platform_attribute : "",
+                        getter ? type_attributes : "",
                         setter ? cache_object : "",
-                        setter ? platform_attribute : "",
+                        setter ? type_attributes : "",
                         !getter ? std::nullopt : std::optional(std::pair(prop.Parent(), prop)),
                         !setter ? std::nullopt : std::optional(std::pair(prop.Parent(), prop))
                     );
                     if (!inserted)
                     {
-                        auto& [property_type, getter_target, getter_platform, setter_target, setter_platform, getter_prop, setter_prop] = prop_targets->second;
+                        auto& [property_type, getter_target, getter_type_attributes, setter_target, setter_type_attributes, getter_prop, setter_prop] = prop_targets->second;
                         XLANG_ASSERT(property_type == prop_type);
                         if (getter)
                         {
                             XLANG_ASSERT(getter_target.empty());
                             getter_target = cache_object;
-                            getter_platform = platform_attribute;
+                            getter_type_attributes = type_attributes;
                             getter_prop = std::optional(std::pair(prop.Parent(), prop));
                         }
                         if (setter)
                         {
                             XLANG_ASSERT(setter_target.empty());
                             setter_target = cache_object;
-                            setter_platform = platform_attribute;
+                            setter_type_attributes = type_attributes;
                             setter_prop = std::optional(std::pair(prop.Parent(), prop));
                         }
                         XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
@@ -2536,9 +2555,9 @@ Marshal.Release(inner);
         // Write properties with merged accessors
         for (auto& [prop_name, prop_data] : properties)
         {
-            auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, getter_prop, setter_prop] = prop_data;
+            auto& [prop_type, getter_target, getter_type_attributes, setter_target, setter_type_attributes, getter_prop, setter_prop] = prop_data;
             write_property(w, prop_name, prop_name, prop_type,
-                getter_target, setter_target, "public "sv, "static "sv, getter_platform, setter_platform,
+                getter_target, setter_target, "public "sv, "static "sv, getter_type_attributes, setter_type_attributes,
                 getter_prop,
                 setter_prop);
         }
@@ -3324,10 +3343,10 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                 return;
             }
 
-            auto platform_attribute = write_platform_attribute_temp(w, interface_type);
+            auto type_attributes = write_type_attributes_temp(w, interface_type);
 
-            w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics_for_abi_call) : std::nullopt);
-            w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics_for_abi_call) : std::nullopt);
+            w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, target, type_attributes, call_static_method ? std::optional(semantics_for_abi_call) : std::nullopt);
+            w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, type_attributes, call_static_method ? std::optional(semantics_for_abi_call) : std::nullopt);
 
             // Merge property getters/setters, since such may be defined across interfaces
             for (auto&& prop : interface_type.PropertyList())
@@ -3340,9 +3359,9 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                 auto [prop_targets, inserted] = properties.try_emplace(property_name,
                     prop_type,
                     getter ? target : "",
-                    getter ? platform_attribute : "",
+                    getter ? type_attributes : "",
                     setter ? target : "",
-                    setter ? platform_attribute : "",
+                    setter ? type_attributes : "",
                     is_overridable_interface,
                     !is_protected_interface && !is_overridable_interface, // By default, an overridable member is protected.
                     is_private,
@@ -3351,20 +3370,20 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                 );
                 if (!inserted)
                 {
-                    auto& [property_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, _, getter_prop, setter_prop] = prop_targets->second;
+                    auto& [property_type, getter_target, getter_type_attributes, setter_target, setter_type_attributes, is_overridable, is_public, _, getter_prop, setter_prop] = prop_targets->second;
                     XLANG_ASSERT(property_type == prop_type);
                     if (getter)
                     {
                         XLANG_ASSERT(getter_target.empty());
                         getter_target = target;
-                        getter_platform = platform_attribute;
+                        getter_type_attributes = type_attributes;
                         getter_prop = call_static_method ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt;
                     }
                     if (setter)
                     {
                         XLANG_ASSERT(setter_target.empty());
                         setter_target = target;
-                        setter_platform = platform_attribute;
+                        setter_type_attributes = type_attributes;
                         setter_prop = call_static_method ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt;
                     }
                     is_overridable |= is_overridable_interface;
@@ -3375,26 +3394,26 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                 if (is_overridable_interface || is_private)
                 {
                     w.write("\n%% %.% {%%}",
-                        platform_attribute,
+                        type_attributes,
                         prop_type,
                         bind<write_type_name>(interface_type, typedef_name_type::CCW, false),
                         prop.Name(),
                         bind([&](writer& w)
                         {
                             bool base_getter{};
-                            std::string base_getter_platform_attribute{};
+                            std::string base_getter_type_attributes{};
                             TypeDef getter_property_iface;
                             if (!getter)
                             {
                                 auto property_interface = find_property_interface(w, interface_type, prop.Name());
                                 base_getter = property_interface.second;
                                 getter_property_iface = property_interface.first;
-                                base_getter_platform_attribute = write_platform_attribute_temp(w, property_interface.first);
+                                base_getter_type_attributes = write_type_attributes_temp(w, property_interface.first);
 
                             }
                             if (getter || base_getter)
                             {
-                                w.write("%get => %; ", base_getter_platform_attribute, bind([&](writer& w) {
+                                w.write("%get => %; ", base_getter_type_attributes, bind([&](writer& w) {
                                     if (call_static_method)
                                     {
                                         auto iface = base_getter ? getter_property_iface : prop.Parent();
@@ -3462,14 +3481,14 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
         // Write properties with merged accessors
         for (auto& [prop_name, prop_data] : properties)
         {
-            auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, is_private, getter_prop, setter_prop] = prop_data;
+            auto& [prop_type, getter_target, getter_type_attributes, setter_target, setter_type_attributes, is_overridable, is_public, is_private, getter_prop, setter_prop] = prop_data;
             if (is_private) continue;
             std::string_view access_spec = is_public ? "public "sv : "protected "sv;
             std::string_view method_spec = is_overridable ? "virtual "sv : ""sv;
             write_property(w, prop_name, prop_name, prop_type, 
                 getter_prop.has_value() ? w.write_temp("%", bind<write_objref_type_name>(getter_prop.value().first)) : getter_target,
                 setter_prop.has_value() ? w.write_temp("%", bind<write_objref_type_name>(setter_prop.value().first)) : setter_target,
-                access_spec, method_spec, getter_platform, setter_platform, getter_prop, setter_prop);
+                access_spec, method_spec, getter_type_attributes, setter_type_attributes, getter_prop, setter_prop);
         }
     }
 

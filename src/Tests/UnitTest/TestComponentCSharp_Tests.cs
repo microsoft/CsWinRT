@@ -3611,11 +3611,13 @@ namespace UnitTest
         }
 
         // Manually verify warning for experimental.
+#pragma warning disable WinRT0001 // Experimental
         private void TestExperimentAttribute()
         {
             CustomExperimentClass custom = new CustomExperimentClass();
             custom.f();
         }
+#pragma warning restore WinRT0001
 
         void OnDeviceAdded(DeviceWatcher sender, DeviceInformation args)
         {
