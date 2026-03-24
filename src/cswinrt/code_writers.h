@@ -5038,6 +5038,11 @@ R"(
 
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
     {
+        if (settings.reference_projection)
+        {
+            return;
+        }
+
         std::filesystem::path db_path(type.get_database().path());
         w.write("[WindowsRuntimeMetadata(\"%\")]\n", db_path.stem().string());
     }

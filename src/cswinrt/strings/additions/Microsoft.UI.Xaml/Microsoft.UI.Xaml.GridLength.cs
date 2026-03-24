@@ -3,8 +3,8 @@ namespace Microsoft.UI.Xaml
 {
     using global::Windows.Foundation;
 
-    [WindowsRuntimeMetadata("Microsoft.UI")]
 #if !CSWINRT_REFERENCE_PROJECTION
+    [WindowsRuntimeMetadata("Microsoft.UI")]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.GridLength>")]
     [ABI.Microsoft.UI.Xaml.GridLengthComWrappersMarshaller]
 #endif
