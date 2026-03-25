@@ -13,6 +13,20 @@ namespace cswinrt
         return 0 == value.compare(0, match.size(), match);
     }
 
+    // Converts a PascalCase name to camelCase (lowering the first character).
+    // Uses invariant ASCII lowering to avoid locale-dependent behavior.
+    // If the first character is not an uppercase ASCII letter, the name is
+    // returned unchanged (callers should use 'this.' to disambiguate).
+    static inline std::string to_camel_case(std::string_view const& name)
+    {
+        std::string result(name);
+        if (!result.empty() && result[0] >= 'A' && result[0] <= 'Z')
+        {
+            result[0] = result[0] - 'A' + 'a';
+        }
+        return result;
+    }
+
     static bool is_remove_overload(MethodDef const& method)
     {
         return method.SpecialName() && starts_with(method.Name(), "remove_");
@@ -60,7 +74,7 @@ namespace cswinrt
 
     bool is_projection_internal(TypeDef const& type)
     {
-        return has_attribute(type, "WinRT.Interop"sv, "ProjectionInternalAttribute"sv);
+        return has_attribute(type, "WindowsRuntime.Internal"sv, "ProjectionInternalAttribute"sv);
     }
 
     bool is_flags_enum(TypeDef const& type)
@@ -816,12 +830,6 @@ namespace cswinrt
                     { "Matrix3DHelper" },
                 }
             },
-            { "WinRT.Interop",
-                {
-                    { "HWND", "System", "IntPtr" },
-                    { "ProjectionInternalAttribute" },
-                }
-            },
             { "Windows.Foundation",
                 {
                     { "AsyncActionCompletedHandler", "Windows.Foundation", "AsyncActionCompletedHandler" },
@@ -981,6 +989,12 @@ namespace cswinrt
                     { "IMatrix3DHelperStatics" },
                     { "Matrix3D", "Windows.UI.Xaml.Media.Media3D", "Matrix3D", false, false, true },
                     { "Matrix3DHelper" },
+                }
+            },
+            { "WindowsRuntime.Internal",
+                {
+                    { "HWND", "System", "IntPtr" },
+                    { "ProjectionInternalAttribute" },
                 }
             },
         };
@@ -1679,6 +1693,26 @@ namespace cswinrt
             }
         }
         return gc_pressure_amount;
+    }
+
+    std::string_view get_marshaling_type_name(TypeDef const& classType)
+    {
+        if (auto marshaling_attr = get_attribute(classType, "Windows.Foundation.Metadata"sv, "MarshalingBehaviorAttribute"sv))
+        {
+            auto sig = marshaling_attr.Value();
+            auto const& fixed_args = sig.FixedArgs();
+            XLANG_ASSERT(fixed_args.size() == 1);
+
+            auto marshaling_type = std::get<int32_t>(std::get<ElemSig::EnumValue>(std::get<ElemSig>(fixed_args[0].value).value).value);
+
+            switch (marshaling_type)
+            {
+            case 2: return "CreateObjectReferenceMarshalingType.Agile"sv;
+            case 3: return "CreateObjectReferenceMarshalingType.Standard"sv;
+            }
+        }
+
+        return "CreateObjectReferenceMarshalingType.Unknown"sv;
     }
 
     struct generic_abi_delegate

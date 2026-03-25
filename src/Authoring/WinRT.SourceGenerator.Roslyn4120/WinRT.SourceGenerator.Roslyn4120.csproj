@@ -1,6 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <Import Project="..\WinRT.SourceGenerator\WinRT.SourceGenerator.props" />
-  <Import Project="..\WinRT.SourceGenerator\WinRT.SourceGenerator.projitems" Label="Shared" />
-
-</Project>

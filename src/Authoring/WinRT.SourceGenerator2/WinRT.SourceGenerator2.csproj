@@ -6,18 +6,18 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <!--
-	  Suppress the following warning:
-	  "RS1041: This compiler extension should not be implemented in an assembly with target framework
-	  '.NET 10.0'. References to other target frameworks will cause the compiler to behave unpredictably."
-	  Using .NET 10 is fine for the scenarios we need to support.
-	-->
+      Suppress the following warning:
+      "RS1041: This compiler extension should not be implemented in an assembly with target framework
+      '.NET 10.0'. References to other target frameworks will cause the compiler to behave unpredictably."
+      Using .NET 10 is fine for the scenarios we need to support.
+    -->
     <NoWarn>$(NoWarn);RS1041</NoWarn>
 
     <!-- 'WindowsRuntime' is the root namespace, with the name being consistent with eg. 'System.Runtime.InteropServices.WindowsRuntime' -->
     <RootNamespace>WindowsRuntime.SourceGenerator</RootNamespace>
 
     <!-- The assembly name must always be 'WinRT.SourceGenerator', for back-compatibility -->
-    <AssemblyName>WinRT.SourceGenerator2</AssemblyName>
+    <AssemblyName>WinRT.SourceGenerator</AssemblyName>
 
     <!--
       While this project does not produce a .dll that consuming projects execute at runtime, we still want to
@@ -40,6 +40,9 @@
 
     <!-- Enforce all code style rules during build (this replaces referencing Microsoft.CodeAnalysis.CSharp.CodeStyle) -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- Suppress ref safety warnings in unsafe contexts (same as in the runtime) -->
+    <NoWarn>$(NoWarn);CS8500</NoWarn>
 
     <!-- Enable the compiler strict mode (same as in the runtime) -->
     <Features>strict</Features>
@@ -68,6 +71,12 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\WinRT.Runtime2\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <!-- Additional files with the Roslyn analyzer rules -->
+  <ItemGroup>
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="5.0.0-2.final" PrivateAssets="all" />

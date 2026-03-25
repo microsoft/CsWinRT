@@ -432,6 +432,65 @@ public static class IReadOnlyListAdapterKeyValuePairTypeExtensions
 }
 
 /// <summary>
+/// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for <see cref="Nullable{T}"/> types.
+/// </summary>
+[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
+    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
+    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
+[EditorBrowsable(EditorBrowsableState.Never)]
+public static class IReadOnlyListAdapterNullableTypeExtensions
+{
+    extension<T>(IReadOnlyListAdapter<T?>)
+        where T : struct
+    {
+        /// <inheritdoc cref="IReadOnlyListAdapterExtensions.GetMany(IReadOnlyList{string}, uint, uint, void**)"/>
+        public static unsafe uint GetMany<TElementMarshaller>(IReadOnlyList<T?> list, uint startIndex, uint itemsSize, void** items)
+            where TElementMarshaller : IWindowsRuntimeNullableTypeElementMarshaller<T>
+        {
+            int count = list.Count;
+
+            if (startIndex == count)
+            {
+                return 0;
+            }
+
+            ArgumentOutOfRangeException.ThrowIfIndexLargerThanMaxValue(startIndex, count);
+
+            if (itemsSize == 0)
+            {
+                return 0;
+            }
+
+            ArgumentNullException.ThrowIfNull(items);
+
+            int itemCount = int.Min((int)itemsSize, count - (int)startIndex);
+            int i = 0;
+
+            try
+            {
+                // Same as with 'string' above, but with the provided marshaller
+                for (; i < itemCount; i++)
+                {
+                    items[i] = TElementMarshaller.ConvertToUnmanaged(list[i + (int)startIndex]).DetachThisPtrUnsafe();
+                }
+            }
+            catch
+            {
+                // Make sure to release all marshalled values so far (this shouldn't ever throw)
+                for (int j = 0; j < i; j++)
+                {
+                    WindowsRuntimeUnknownMarshaller.Free(items[j]);
+                }
+
+                throw;
+            }
+
+            return (uint)itemCount;
+        }
+    }
+}
+
+/// <summary>
 /// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for reference types.
 /// </summary>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,

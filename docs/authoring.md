@@ -1,5 +1,7 @@
 # Authoring C#/WinRT Components
 
+> **⚠️ This document has not been updated for CsWinRT 3.0.** The instructions below apply to CsWinRT 2.x. Authoring support for CsWinRT 3.0 is coming soon.
+
 **Note**: C#/WinRT authoring support is in preview. See [Known Issues and Troubleshooting](#known-issues-and-troubleshooting) below for more details on what is supported.
 
 ## Overview

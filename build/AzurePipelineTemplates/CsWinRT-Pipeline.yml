@@ -9,6 +9,8 @@ variables:
 - template: CsWinRT-OneBranchVariables.yml
   parameters:
     debug: ${{ parameters.debug }}
+- name: GenerateSdkProjection
+  value: 'true'
 
 name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
 

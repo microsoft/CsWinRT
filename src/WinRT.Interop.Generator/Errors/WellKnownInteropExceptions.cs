@@ -371,7 +371,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException IObservableVectorTypeCodeGenerationError(TypeSignature elementType, Exception exception)
     {
-        return Exception(41, $"Failed to generate marshalling code for 'IObservableVector<T>' type '{elementType}'.", exception);
+        return Exception(42, $"Failed to generate marshalling code for 'IObservableVector<T>' type '{elementType}'.", exception);
     }
 
     /// <summary>
@@ -379,7 +379,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException IObservableMapTypeCodeGenerationError(TypeSignature elementType, Exception exception)
     {
-        return Exception(42, $"Failed to generate marshalling code for 'IObservableMap<K, V>' type '{elementType}'.", exception);
+        return Exception(43, $"Failed to generate marshalling code for 'IObservableMap<K, V>' type '{elementType}'.", exception);
     }
 
     /// <summary>
@@ -387,7 +387,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException DynamicImplementationDetailTypeCodeGenerationError(Exception exception)
     {
-        return Exception(43, $"Failed to generate marshalling code for some dynamic implementation detail type.", exception);
+        return Exception(44, $"Failed to generate marshalling code for some dynamic implementation detail type.", exception);
     }
 
     /// <summary>
@@ -395,7 +395,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException IAsyncActionWithProgressTypeCodeGenerationError(TypeSignature actionType, Exception exception)
     {
-        return Exception(44, $"Failed to generate marshalling code for 'IAsyncActionWithProgress<TResult>' type '{actionType}'.", exception);
+        return Exception(45, $"Failed to generate marshalling code for 'IAsyncActionWithProgress<TResult>' type '{actionType}'.", exception);
     }
 
     /// <summary>
@@ -403,7 +403,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException IAsyncOperationTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
-        return Exception(45, $"Failed to generate marshalling code for 'IAsyncOperation<TResult>' type '{operationType}'.", exception);
+        return Exception(46, $"Failed to generate marshalling code for 'IAsyncOperation<TResult>' type '{operationType}'.", exception);
     }
 
     /// <summary>
@@ -411,7 +411,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException IAsyncOperationWithProgressTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
-        return Exception(46, $"Failed to generate marshalling code for 'IAsyncOperationWithProgress<TResult, TProgress>' type '{operationType}'.", exception);
+        return Exception(47, $"Failed to generate marshalling code for 'IAsyncOperationWithProgress<TResult, TProgress>' type '{operationType}'.", exception);
     }
 
     /// <summary>
@@ -419,7 +419,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(Exception exception)
     {
-        return Exception(47, $"Failed to generate type map entries for some dynamic custom-mapped types.", exception);
+        return Exception(48, $"Failed to generate type map entries for some dynamic custom-mapped types.", exception);
     }
 
     /// <summary>
@@ -427,7 +427,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(TypeSignature type)
     {
-        return Exception(48, $"Failed to resolve the associated 'ComWrappersMarshallerAttribute' type for the custom-mapped type '{type}'.");
+        return Exception(49, $"Failed to resolve the associated 'ComWrappersMarshallerAttribute' type for the custom-mapped type '{type}'.");
     }
 
     /// <summary>
@@ -435,7 +435,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropWarning InterfaceImplementationTypeNotResolvedWarning(TypeSignature interfaceType, TypeSignature type)
     {
-        return Warning(49, $"Failed to resolve interface type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
+        return Warning(50, $"Failed to resolve interface type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
@@ -443,7 +443,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropWarning GeneratedComInterfaceImplementationTypeNotFoundWarning(TypeDefinition interfaceType, TypeDefinition type)
     {
-        return Warning(50, $"Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
+        return Warning(51, $"Failed to resolve the generated 'System.Runtime.InteropServices.Marshalling.IIUnknownInterfaceType' implementation for the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
@@ -451,7 +451,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException InvalidCustomMappedTypeForWellKnownInterfaceIIDs(ITypeDescriptor interfaceType)
     {
-        return Exception(51, $"Type '{interfaceType}' is not a valid well-known custom-mapped interface type: its IID could not be retrieved.");
+        return Exception(52, $"Type '{interfaceType}' is not a valid well-known custom-mapped interface type: its IID could not be retrieved.");
     }
 
     /// <summary>
@@ -459,7 +459,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException IReadOnlyCollectionKeyValuePairTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
-        return Exception(52, $"Failed to generate marshalling code for 'IReadOnlyCollection<KeyValuePair<TResult, TProgress>>' type '{operationType}'.", exception);
+        return Exception(53, $"Failed to generate marshalling code for 'IReadOnlyCollection<KeyValuePair<TResult, TProgress>>' type '{operationType}'.", exception);
     }
 
     /// <summary>
@@ -467,7 +467,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException ICollectionKeyValuePairTypeCodeGenerationError(TypeSignature operationType, Exception exception)
     {
-        return Exception(53, $"Failed to generate marshalling code for 'ICollection<KeyValuePair<TKey, TValue>>' type '{operationType}'.", exception);
+        return Exception(54, $"Failed to generate marshalling code for 'ICollection<KeyValuePair<TKey, TValue>>' type '{operationType}'.", exception);
     }
 
     /// <summary>
@@ -475,7 +475,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static Exception TypeSignatureGenerationError(TypeSignature type)
     {
-        return Exception(54, $"Failed to generate the type signature for type '{type}'.");
+        return Exception(55, $"Failed to generate the type signature for type '{type}'.");
     }
 
     /// <summary>
@@ -483,7 +483,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException EmitStateChangeAfterMakeReadOnlyError()
     {
-        return Exception(55, "An attempt was made to mutate the generator emit state after it was made readonly.");
+        return Exception(56, "An attempt was made to mutate the generator emit state after it was made readonly.");
     }
 
     /// <summary>
@@ -491,7 +491,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodRewriteError(TypeSignature type, MethodDefinition method, Exception exception)
     {
-        return Exception(56, $"Failed to perform two-pass rewrite of method '{method}' to marshal type '{type}'.", exception);
+        return Exception(57, $"Failed to perform two-pass rewrite of method '{method}' to marshal type '{type}'.", exception);
     }
 
     /// <summary>
@@ -499,7 +499,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodRewriteMissingBodyError(MethodDefinition method)
     {
-        return Exception(57, $"Generated interop method '{method}' is missing an IL method body, two-pass rewrite cannot be performed.");
+        return Exception(58, $"Generated interop method '{method}' is missing an IL method body, two-pass rewrite cannot be performed.");
     }
 
     /// <summary>
@@ -507,7 +507,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodRewriteMarkerInstructionNotFoundError(CilInstruction marker, MethodDefinition method)
     {
-        return Exception(58, $"Marker instruction '{marker.OpCode.Code}' not found in generated interop method '{method}'.");
+        return Exception(59, $"Marker instruction '{marker.OpCode.Code}' not found in generated interop method '{method}'.");
     }
 
     /// <summary>
@@ -515,7 +515,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodRewriteSourceLocalNotFoundError(CilLocalVariable source, MethodDefinition method)
     {
-        return Exception(59, $"Local variable of type '{source.VariableType}' not found in generated interop method '{method}'.");
+        return Exception(60, $"Local variable of type '{source.VariableType}' not found in generated interop method '{method}'.");
     }
 
     /// <summary>
@@ -523,7 +523,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException KeyValuePairTypeSharedCodeGenerationError(Exception exception)
     {
-        return Exception(60, $"Failed to generate shared marshalling code for 'KeyValuePair<,>' types.", exception);
+        return Exception(61, $"Failed to generate shared marshalling code for 'KeyValuePair<,>' types.", exception);
     }
 
     /// <summary>
@@ -531,7 +531,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropWarning GeneratedComInterfaceGuidAttributeNotFoundWarning(TypeDefinition interfaceType, TypeDefinition type)
     {
-        return Warning(61, $"Failed to resolve the '[Guid]' attribute for the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
+        return Warning(62, $"Failed to resolve the '[Guid]' attribute for the '[GeneratedComInterface]' type '{interfaceType}' while processing type '{type}': the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
@@ -539,7 +539,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropWarning UserDefinedTypeNotFullyResolvedWarning(ITypeDefOrRef baseType, TypeDefinition type)
     {
-        return Warning(62, $"Failed to resolve the base type '{baseType}' in the type hierarchy for user-defined type '{type}': marshalling code for it will not be generated.");
+        return Warning(63, $"Failed to resolve the base type '{baseType}' in the type hierarchy for user-defined type '{type}': marshalling code for it will not be generated.");
     }
 
     /// <summary>
@@ -547,7 +547,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException GeneratedComInterfaceReservedGuidError(TypeDefinition interfaceType, TypeDefinition type, Guid iid, string interfaceName)
     {
-        return Exception(63, $"The '[GeneratedComInterface]' type '{interfaceType}' found while processing type '{type}' is using IID '{iid.ToString().ToUpperInvariant()}' (which maps to the '{interfaceName}' interface): this interface is implicitly implemented and cannot be overridden.");
+        return Exception(64, $"The '[GeneratedComInterface]' type '{interfaceType}' found while processing type '{type}' is using IID '{iid.ToString().ToUpperInvariant()}' (which maps to the '{interfaceName}' interface): this interface is implicitly implemented and cannot be overridden.");
     }
 
     /// <summary>
@@ -555,7 +555,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropWarning GenericTypeSignatureNotResolvedError(TypeSignature typeSignature, ModuleDefinition module)
     {
-        return Warning(64, $"Failed to resolve the generic type signature '{typeSignature}' while processing module '{module}': marshalling code for it will not be generated.");
+        return Warning(65, $"Failed to resolve the generic type signature '{typeSignature}' while processing module '{module}': marshalling code for it will not be generated.");
     }
 
     /// <summary>
@@ -563,7 +563,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropWarning SzArrayTypeSignatureNotResolvedError(TypeSignature typeSignature, ModuleDefinition module)
     {
-        return Warning(65, $"Failed to resolve the SZ array type signature '{typeSignature}' while processing module '{module}': marshalling code for it will not be generated.");
+        return Warning(66, $"Failed to resolve the SZ array type signature '{typeSignature}' while processing module '{module}': marshalling code for it will not be generated.");
     }
 
     /// <summary>
@@ -571,7 +571,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropWarning WindowsRuntimeClassTypeNotResolvedWarning(ITypeDefOrRef baseType, TypeDefinition classType)
     {
-        return Warning(66, $"Failed to resolve the base type '{baseType}' for Windows Runtime class type '{classType}': runtime casts to the base type will not work if the type is trimmed.");
+        return Warning(67, $"Failed to resolve the base type '{baseType}' for Windows Runtime class type '{classType}': runtime casts to the base type will not work if the type is trimmed.");
     }
 
     /// <summary>
@@ -579,7 +579,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodRewriteSourceLocalTypeMismatchError(TypeSignature localType, TypeSignature returnType, MethodDefinition method)
     {
-        return Exception(67, $"Local variable of type '{localType}' cannot be used to marshal a value of type '{returnType}' in generated interop method '{method}'.");
+        return Exception(68, $"Local variable of type '{localType}' cannot be used to marshal a value of type '{returnType}' in generated interop method '{method}'.");
     }
 
     /// <summary>
@@ -587,7 +587,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodRewriteParameterIndexNotValidError(int parameterIndex, MethodDefinition method)
     {
-        return Exception(68, $"Parameter index '{parameterIndex}' was not valid for generated interop method '{method}'.");
+        return Exception(69, $"Parameter index '{parameterIndex}' was not valid for generated interop method '{method}'.");
     }
 
     /// <summary>
@@ -595,7 +595,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodRewriteSourceParameterTypeMismatchError(TypeSignature parameterType, TypeSignature returnType, MethodDefinition method)
     {
-        return Exception(69, $"Parameter variable of type '{parameterType}' cannot be used to marshal a value of type '{returnType}' in generated interop method '{method}'.");
+        return Exception(70, $"Parameter variable of type '{parameterType}' cannot be used to marshal a value of type '{returnType}' in generated interop method '{method}'.");
     }
 
     /// <summary>
@@ -603,7 +603,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodRewriteDisposeNotAvailableError(TypeSignature parameterType, MethodDefinition method)
     {
-        return Exception(70, $"Value of type '{parameterType}' in generated interop method '{method}' cannot be disposed, as it is an unmanaged (or blittable) value type.");
+        return Exception(71, $"Value of type '{parameterType}' in generated interop method '{method}' cannot be disposed, as it is an unmanaged (or blittable) value type.");
     }
 
     /// <summary>
@@ -611,7 +611,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException PrimaryWindowsRuntimeInterfaceNotFoundError(TypeSignature userDefinedType)
     {
-        return Exception(71, $"Failed to resolve primary Windows Runtime interface for user-defined type '{userDefinedType}'.");
+        return Exception(72, $"Failed to resolve primary Windows Runtime interface for user-defined type '{userDefinedType}'.");
     }
 
     /// <summary>
@@ -621,7 +621,7 @@ internal static class WellKnownInteropExceptions
     /// <param name="key">The key.</param>
     public static WellKnownInteropException AddingDuplicateTrackedMethodDefinition(TypeSignature typeSignature, string key)
     {
-        return Exception(72, $"Duplicate tracked method definition for signature '{typeSignature}' and key '{key}'.");
+        return Exception(73, $"Duplicate tracked method definition for signature '{typeSignature}' and key '{key}'.");
     }
 
     /// <summary>
@@ -631,7 +631,7 @@ internal static class WellKnownInteropExceptions
     /// <param name="key">The key.</param>
     public static WellKnownInteropException TrackedMethodDefinitionLookupError(TypeSignature typeSignature, string key)
     {
-        return Exception(73, $"Failed to find a tracked method definition for signature '{typeSignature}' and key '{key}'.");
+        return Exception(74, $"Failed to find a tracked method definition for signature '{typeSignature}' and key '{key}'.");
     }
 
     /// <summary>
@@ -639,7 +639,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException EmitMetadataAssemblyAttributesError(Exception exception)
     {
-        return Exception(74, "Failed to emit the metadata assembly attributes for the interop assembly.", exception);
+        return Exception(75, "Failed to emit the metadata assembly attributes for the interop assembly.", exception);
     }
 
     /// <summary>
@@ -647,7 +647,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodFixupMissingBodyError(MethodDefinition method)
     {
-        return Exception(75, $"Generated interop method '{method}' is missing an IL method body, fixups cannot be applied.");
+        return Exception(76, $"Generated interop method '{method}' is missing an IL method body, fixups cannot be applied.");
     }
 
     /// <summary>
@@ -655,7 +655,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodFixupInvalidExceptionHandlerLabels(MethodDefinition method)
     {
-        return Exception(76, $"Generated interop method '{method}' has invalid exception handler labels, fixups cannot be applied.");
+        return Exception(77, $"Generated interop method '{method}' has invalid exception handler labels, fixups cannot be applied.");
     }
 
     /// <summary>
@@ -663,7 +663,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodFixupInvalidBranchInstructionLabels(MethodDefinition method)
     {
-        return Exception(77, $"Generated interop method '{method}' has invalid branch instruction labels, fixups cannot be applied.");
+        return Exception(78, $"Generated interop method '{method}' has invalid branch instruction labels, fixups cannot be applied.");
     }
 
     /// <summary>
@@ -671,7 +671,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException MethodFixupError(InteropMethodFixup fixup, MethodDefinition method, Exception exception)
     {
-        return Exception(78, $"Failed to apply fixup '{fixup.GetType()}' to method '{method}'.", exception);
+        return Exception(79, $"Failed to apply fixup '{fixup.GetType()}' to method '{method}'.", exception);
     }
 
     /// <summary>
@@ -679,7 +679,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static Exception RuntimeClassNameGenerationError(TypeSignature type)
     {
-        return Exception(79, $"Failed to generate the runtime class name for type '{type}'.");
+        return Exception(80, $"Failed to generate the runtime class name for type '{type}'.");
     }
 
     /// <summary>
@@ -687,7 +687,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException NonProjectedTypeComWrappersMarshallerAttributeTypeResolveError(TypeReference attributeType, string nativeType)
     {
-        return Exception(80, $"Failed to resolve the 'ComWrappersMarshallerAttribute' type '{attributeType}' for a non-projected Windows Runtime type '{nativeType}'.");
+        return Exception(81, $"Failed to resolve the 'ComWrappersMarshallerAttribute' type '{attributeType}' for a non-projected Windows Runtime type '{nativeType}'.");
     }
 
     /// <summary>
@@ -695,7 +695,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException CustomMappedTypeMethodsTypeResolveError(TypeSignature type)
     {
-        return Exception(81, $"Failed to resolve the associated 'Methods' type for the custom-mapped type '{type}'.");
+        return Exception(82, $"Failed to resolve the associated 'Methods' type for the custom-mapped type '{type}'.");
     }
 
     /// <summary>
@@ -703,7 +703,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropWarning ArrayTypeElementTypeNotFullyResolvedWarning(ITypeDefOrRef baseType, TypeDefinition type)
     {
-        return Warning(82, $"Failed to resolve the base type '{baseType}' in the type hierarchy for element type '{type}': marshalling code for corresponding SZ arrays will not be generated.");
+        return Warning(83, $"Failed to resolve the base type '{baseType}' in the type hierarchy for element type '{type}': marshalling code for corresponding SZ arrays will not be generated.");
     }
 
     /// <summary>
@@ -711,7 +711,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropWarning GeneratedComInterfaceDuplicateIidWarning(TypeDefinition interfaceType, TypeDefinition type, Guid iid)
     {
-        return Warning(83, $"Failed to validate the '[GeneratedComInterface]' type '{interfaceType}' on type '{type}', because the type already implements another interface with IID '{iid.ToString().ToUpperInvariant()}': the interface will not be included in the set of available COM interface entries.");
+        return Warning(84, $"Failed to validate the '[GeneratedComInterface]' type '{interfaceType}' on type '{type}', because the type already implements another interface with IID '{iid.ToString().ToUpperInvariant()}': the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
@@ -719,7 +719,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropWarning ExceededNumberOfExposedWindowsRuntimeInterfaceTypesWarning(TypeSignature type)
     {
-        return Warning(84, $"Exposed type '{type}' exceeded the maximum limit of 128 projected Windows Runtime interfaces implemented: all exceeding interfaces will not be included in the set of available COM interface entries.");
+        return Warning(85, $"Exposed type '{type}' exceeded the maximum limit of 128 projected Windows Runtime interfaces implemented: all exceeding interfaces will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>
@@ -727,7 +727,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException ReservedDllNameReferenceError(string dllName)
     {
-        return Exception(85, $"Invalid .dll reference to the reserved .dll name '{dllName}': it is not valid to reference .dll-s with a name starting with the 'WinRT.' prefix.");
+        return Exception(86, $"Invalid .dll reference to the reserved .dll name '{dllName}': it is not valid to reference .dll-s with a name starting with the 'WinRT.' prefix.");
     }
 
     /// <summary>
@@ -735,7 +735,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException ReservedDllOriginalPathMismatch(string dllName)
     {
-        return Exception(86, $"The reserved '{dllName}' assembly has a mismatching path with the item supplied via '$(ReferencePath)'.");
+        return Exception(87, $"The reserved '{dllName}' assembly has a mismatching path with the item supplied via '$(ReferencePath)'.");
     }
 
     /// <summary>
@@ -743,7 +743,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException ReservedDllOriginalPathMismatchFromDebugRepro(string dllName)
     {
-        return Exception(87, $"The reserved '{dllName}' assembly has a mismatching path with the item supplied via '$(ReferencePath)': the debug repro cannot be generated.");
+        return Exception(88, $"The reserved '{dllName}' assembly has a mismatching path with the item supplied via '$(ReferencePath)': the debug repro cannot be generated.");
     }
 
     /// <summary>
@@ -751,7 +751,7 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException DebugReproMissingFileEntryMapping(string path)
     {
-        return Exception(88, $"The debug repro file entry with path '{path}' is missing its assembly path mapping.");
+        return Exception(89, $"The debug repro file entry with path '{path}' is missing its assembly path mapping.");
     }
 
     /// <summary>
@@ -759,7 +759,23 @@ internal static class WellKnownInteropExceptions
     /// </summary>
     public static WellKnownInteropException DebugReproUnrecognizedFileEntry(string path)
     {
-        return Exception(89, $"The debug repro file entry with path '{path}' was not recognized.");
+        return Exception(90, $"The debug repro file entry with path '{path}' was not recognized.");
+    }
+
+    /// <summary>
+    /// Missing .dll reference to the <c>WinRT.Component.dll</c> assembly.
+    /// </summary>
+    public static WellKnownInteropException EnsureWindowsRuntimeComponentModuleError()
+    {
+        return Exception(91, "Missing .dll reference to the 'WinRT.Component.dll' assembly, which is required to produce marshalling code for the current project.");
+    }
+
+    /// <summary>
+    /// An implementation for an interface for an authored type has an invalid name.
+    /// </summary>
+    public static WellKnownInteropWarning ComponentTypeExclusiveToInterfaceInvalidFullNameError(TypeDefinition interfaceType, TypeDefinition type)
+    {
+        return Warning(92, $"The '[exclusiveto]' interface type implementation '{interfaceType}' for type '{type}' has an invalid full name: the interface will not be included in the set of available COM interface entries.");
     }
 
     /// <summary>

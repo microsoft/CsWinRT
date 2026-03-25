@@ -1,0 +1,173 @@
+// Modern IDL 3.0: https://docs.microsoft.com/en-us/uwp/midl-3/intro
+
+// Note: the projection generated for this metadata should be internal, and only
+// accessed indirectly with the user-friendly wrappers in ComInteropExtensions.cs.
+namespace WindowsRuntime.Internal
+{
+    // C#/WinRT provides support for generating internal interface projections
+    [attributeusage(target_interface)]
+    [attributename("ProjectionInternal")]
+    attribute ProjectionInternalAttribute
+    {
+    }
+
+    // C#/WinRT provides a custom mapping of WindowsRuntime.Internal.HWND to System.IntPtr
+    struct HWND
+    {
+        Int32 unused;
+    };
+
+    // accountssettingspaneinterop.idl (see: https://learn.microsoft.com/windows/win32/api/accountssettingspaneinterop/)
+    [uuid(D3EE12AD-3865-4362-9746-B75A682DF0E6), ProjectionInternal]
+    interface IAccountsSettingsPaneInterop
+    {
+        Windows.UI.ApplicationSettings.AccountsSettingsPane GetForWindow(
+            HWND appWindow,
+            ref const GUID riid); // __uuidof(AccountSettingsPanel)
+
+        Windows.Foundation.IAsyncAction ShowManageAccountsForWindowAsync(
+            HWND appWindow,
+            ref const GUID riid); // __uuidof(IAsyncAction)
+
+        Windows.Foundation.IAsyncAction ShowAddAccountForWindowAsync(
+            HWND appWindow,
+            ref const GUID riid); // __uuidof(IAsyncAction)
+    }
+
+    // dragdropinterop.idl (see: https://learn.microsoft.com/windows/win32/api/dragdropinterop/)
+    [uuid(5AD8CBA7-4C01-4DAC-9074-827894292D63), ProjectionInternal]
+    interface IDragDropManagerInterop
+    {
+        Windows.ApplicationModel.DataTransfer.DragDrop.Core.CoreDragDropManager GetForWindow(
+            HWND hwnd,
+            ref const GUID riid); // __uuidof(CoreDragDropManager)
+    }
+
+    // inputpaneinterop.idl (see: https://learn.microsoft.com/windows/win32/api/inputpaneinterop/)
+    [uuid(75CF2C57-9195-4931-8332-F0B409E916AF), ProjectionInternal]
+    interface IInputPaneInterop
+    {
+        Windows.UI.ViewManagement.InputPane GetForWindow(
+            HWND appWindow,
+            ref const GUID riid); // __uuidof(InputPane)
+    }
+
+    // PlayToManagerInterop.idl (see: https://learn.microsoft.com/windows/win32/api/playtomanagerinterop/)
+    [uuid(24394699-1F2C-4EB3-8CD7-0EC1DA42A540), ProjectionInternal]
+    interface IPlayToManagerInterop
+    {
+        Windows.Media.PlayTo.PlayToManager GetForWindow(
+            HWND appWindow,
+            ref const GUID riid); // __uuidof(PlayToManager)
+
+        void ShowPlayToUIForWindow(
+            HWND appWindow);
+    }
+
+    // PrintManagerInterop.idl (see: https://learn.microsoft.com/windows/win32/api/printmanagerinterop/)
+    [uuid(c5435a42-8d43-4e7b-a68a-ef311e392087), ProjectionInternal]
+    interface IPrintManagerInterop
+    {
+        Windows.Graphics.Printing.PrintManager GetForWindow(
+            HWND appWindow,
+            ref const GUID riid); // __uuidof(PrintManager)
+
+        Windows.Foundation.IAsyncOperation<Boolean> ShowPrintUIForWindowAsync(
+            HWND appWindow,
+            ref const GUID riid); // __uuidof(IAsyncOperation<Boolean>)
+    }
+
+    // RadialControllerInterop.idl (see: https://learn.microsoft.com/windows/win32/api/radialcontrollerinterop/)
+    [uuid(1B0535C9-57AD-45C1-9D79-AD5C34360513), ProjectionInternal]
+    interface IRadialControllerInterop
+    {
+        Windows.UI.Input.RadialController CreateForWindow(
+            HWND hwnd,
+            ref const GUID riid); // __uuidof(RadialController)
+    }
+
+    [uuid(787cdaac-3186-476d-87e4-b9374a7b9970), ProjectionInternal]
+    interface IRadialControllerConfigurationInterop
+    {
+        Windows.UI.Input.RadialControllerConfiguration GetForWindow(
+            HWND hwnd,
+            ref const GUID riid); // __uuidof(RadialControllerConfiguration)
+    }
+
+    [uuid(3D577EFF-4CEE-11E6-B535-001BDC06AB3B), ProjectionInternal]
+    interface IRadialControllerIndependentInputSourceInterop
+    {
+        Windows.UI.Input.Core.RadialControllerIndependentInputSource CreateForWindow(
+            HWND hwnd,
+            ref const GUID riid); // __uuidof(RadialControllerIndependentInputSource)
+    }
+
+    // SpatialInteractionManagerInterop.idl (see: https://learn.microsoft.com/windows/win32/api/spatialinteractionmanagerinterop/)
+    // This interop interface is duplicated by IHolographicSpaceInterop, which has the same IID
+    [uuid(5C4EE536-6A98-4B86-A170-587013D6FD4B), ProjectionInternal]
+    interface ISpatialInteractionManagerInterop
+    {
+        Windows.UI.Input.Spatial.SpatialInteractionManager GetForWindow(
+            HWND window,
+            ref const GUID riid); // __uuidof(SpatialInteractionManager)
+    }
+
+    // SystemMediaTransportControlsInterop.idl (see: https://learn.microsoft.com/windows/win32/api/systemmediatransportcontrolsinterop/)
+    [uuid(ddb0472d-c911-4a1f-86d9-dc3d71a95f5a), ProjectionInternal]
+    interface ISystemMediaTransportControlsInterop
+    {
+        Windows.Media.SystemMediaTransportControls GetForWindow(
+            HWND appWindow,
+            ref const GUID riid); // __uuidof(SystemMediaTransportControls)
+    }
+
+    // UIViewSettingsInterop.idl (see: https://learn.microsoft.com/windows/win32/api/uiviewsettingsinterop/)
+    [uuid(3694dbf9-8f68-44be-8ff5-195c98ede8a6), ProjectionInternal]
+    interface IUIViewSettingsInterop
+    {
+        Windows.UI.ViewManagement.UIViewSettings GetForWindow(
+            HWND hwnd,
+            ref const GUID riid); // __uuidof(UIViewSettings)
+    }
+
+    // UserConsentVerifierInterop.idl (see: https://learn.microsoft.com/windows/win32/api/userconsentverifierinterop/)
+    [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C), ProjectionInternal]
+    interface IUserConsentVerifierInterop
+    {
+        Windows.Foundation.IAsyncOperation<Windows.Security.Credentials.UI.UserConsentVerificationResult> RequestVerificationForWindowAsync(
+            HWND appWindow,
+            String message,
+            ref const GUID riid); // __uuidof(IAsyncOperation<UserConsentVerificationResult>)     
+    }
+
+    // WebAuthenticationCoreManagerInterop.idl (see: https://learn.microsoft.com/windows/win32/api/webauthenticationcoremanagerinterop/)
+    [uuid(F4B8E804-811E-4436-B69C-44CB67B72084), ProjectionInternal]
+    interface IWebAuthenticationCoreManagerInterop
+    {
+        Windows.Foundation.IAsyncOperation<Windows.Security.Authentication.Web.Core.WebTokenRequestResult> RequestTokenForWindowAsync(
+            HWND appWindow,
+            Windows.Security.Authentication.Web.Core.WebTokenRequest request, 
+            ref const GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult>)    
+
+        Windows.Foundation.IAsyncOperation<Windows.Security.Authentication.Web.Core.WebTokenRequestResult> RequestTokenWithWebAccountForWindowAsync(
+            HWND appWindow,
+            Windows.Security.Authentication.Web.Core.WebTokenRequest request,
+            Windows.Security.Credentials.WebAccount webAccount,
+            ref const GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult>)
+    }
+
+    // WindowsGraphicsDisplayInterop.idl (see: https://learn.microsoft.com/windows/win32/api/windows.graphics.display.interop/)
+#if UAC_VERSION > 14
+    [uuid(7449121C-382B-4705-8DA7-A795BA482013), ProjectionInternal]
+    interface IDisplayInformationStaticsInterop
+    {
+        Windows.Graphics.Display.DisplayInformation GetForWindow(
+            HWND window,
+            ref const GUID riid); // __uuidof(DisplayInformation)
+
+        Windows.Graphics.Display.DisplayInformation GetForMonitor(
+            HWND monitor,
+            ref const GUID riid); // __uuidof(DisplayInformation)
+    }
+#endif
+}

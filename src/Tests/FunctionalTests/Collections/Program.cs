@@ -380,6 +380,26 @@ if (sum != 3)
     return 101;
 }
 
+// GetNullableIntList() returns {1, null, 2}.
+var nullableIntArray = nullableIntList.ToArray();
+if (nullableIntArray.Length != 3 ||
+    nullableIntArray[0] != 1 ||
+    nullableIntArray[1] != null ||
+    nullableIntArray[2] != 2)
+{
+    return 101;
+}
+
+// Exercise CopyTo on nullable collections
+var nullableIntCopy = new int?[3];
+nullableIntList.CopyTo(nullableIntCopy, 0);
+if (nullableIntCopy[0] != 1 ||
+    nullableIntCopy[1] != null ||
+    nullableIntCopy[2] != 2)
+{
+    return 101;
+}
+
 // Testing to ensure no exceptions from any of the analyzers while building.
 Action<int, int> s = (a, b) => { _ = a + b; };
 ActionToFunction(s)(2, 3);
@@ -445,6 +465,59 @@ var objectArr = (object[])instance.BoxedObjectArray;
 if (objectArr.Length != 2 || objectArr[0] is not Class c || c != instance || objectArr[1] is not Class c2 || c2 != instance)
 {
     return 105;
+}
+
+// Exercise GetMany on nullable collections.
+// SumNullableIntsWithGetMany calls IVector::GetMany on the managed CCW,
+// which exercises the Nullable<T> element marshaller.
+var nullableIntListManaged = new List<int?> { 1, null, 2, null, 3 };
+if (instance.SumNullableIntsWithGetMany(nullableIntListManaged) != 6)
+{
+    return 101;
+}
+
+// Also test with all-null and empty lists to cover edge cases.
+var allNullList = new List<int?> { null, null, null };
+if (instance.SumNullableIntsWithGetMany(allNullList) != 0)
+{
+    return 101;
+}
+
+var emptyNullableList = new List<int?>();
+if (instance.SumNullableIntsWithGetMany(emptyNullableList) != 0)
+{
+    return 101;
+}
+
+// Exercise passing a managed list of nullable values through WinRT and reading it back.
+// Calculate() sums non-null values from IVector<IReference<Double>>.
+var nullableDoubleList2 = new List<double?> { null, 5, null, 10, null };
+if (instance.Calculate(nullableDoubleList2) != 15)
+{
+    return 101;
+}
+
+// Exercise GetMany on KeyValuePair collections.
+// CountKeyValuePairsWithGetMany calls IIterator::GetMany on the managed CCW,
+// which exercises the KeyValuePair<K,V> element marshaller.
+var kvpDict = new Dictionary<string, string>
+{
+    ["a"] = "1",
+    ["b"] = "2",
+    ["c"] = "3",
+    ["d"] = "4",
+    ["e"] = "5"
+};
+if (instance.CountKeyValuePairsWithGetMany(kvpDict) != 5)
+{
+    return 101;
+}
+
+// Also test with empty dictionary.
+var emptyDict = new Dictionary<string, string>();
+if (instance.CountKeyValuePairsWithGetMany(emptyDict) != 0)
+{
+    return 101;
 }
 
 return 100;

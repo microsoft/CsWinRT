@@ -13,6 +13,7 @@ steps:
   - task: DotNetCoreCLI@2
     displayName: Run Unit Tests
     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    continueOnError: True
     inputs:
       command: test
       projects: 'src/Tests/UnitTest/UnitTest.csproj'
@@ -20,6 +21,18 @@ steps:
         /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
         --no-build
       testRunTitle: Unit Tests
+
+# Run Source Generator 2 Tests
+  - task: DotNetCoreCLI@2
+    displayName: Run Source Generator 2 Tests
+    condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+    inputs:
+      command: test
+      projects: 'src/Tests/SourceGenerator2Test/SourceGenerator2Test.csproj'
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
+      testRunTitle: Source Generator 2 Tests
 
 # Run Host Tests
   - task: CmdLine@2
@@ -32,6 +45,18 @@ steps:
       script: |
         dir _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin
         _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin\HostTest.exe --gtest_output=xml:HOSTTEST-$(Build.BuildNumber).xml 
+
+# Run BuildDeterminism Tests. TODO: Disabled for now until BuildDeterminismTest.exe transient failures can be solved.
+  # - task: CmdLine@2
+  #   displayName: Run BuildDeterminism Tests
+  #   enabled: false
+  #   condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+  #   continueOnError: True
+  #   inputs:
+  #     workingDirectory: $(Build.SourcesDirectory)\src
+  #     script: |
+  #       dir Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0
+  #       Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\BuildDeterminismTest.exe -p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
 
 # Run Source Generator Tests  
   - task: CmdLine@2
@@ -119,3 +144,13 @@ steps:
       targetType: inline
       script: |
         Write-Host "##vso[task.setvariable variable=DOTNET_GCStress;]0x0"
+
+# Fail the pipeline if any test steps failed
+  - task: PowerShell@2
+    displayName: Fail if any tests failed
+    condition: eq(variables['Agent.JobStatus'], 'SucceededWithIssues')
+    inputs:
+      targetType: inline
+      script: |
+        Write-Host "##vso[task.logissue type=error]One or more test steps failed. See above for details."
+        exit 1

@@ -7,8 +7,9 @@
     </PropertyGroup>
     <Message Text="Producing winmd for %(CSWinMDComponent.Identity)" Importance="High" />
     <Message Text="$(CsWinMDPath) -i %(CSWinMDComponent.FullPath) -o $(CsWinMDOutputPath) -a $(RootNamespace)" Importance="High" />
-    <MakeDir Directories="$(CSWinMDOutputPath)" />
-    <Exec Command="$(CsWinMDPath) -i %(CSWinMDComponent.FullPath) -o $(CsWinMDOutputPath) -a $(RootNamespace)" />
+    <MakeDir Directories="$(CSWinMDOutputPath)" />    
+    <!--TODO: re-enable this when supported again-->
+    <!--<Exec Command="$(CsWinMDPath) -i %(CSWinMDComponent.FullPath) -o $(CsWinMDOutputPath) -a $(RootNamespace)" />-->
   </Target>
 
   <Target Name="CSWinMDInsertComponentWinMD" AfterTargets="GetCppWinRTMdMergeInputs" BeforeTargets="CppWinRTMakeComponentProjection;CppWinRTMergeProjectWinMDInputs">

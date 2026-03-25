@@ -35,6 +35,25 @@ internal sealed partial class ProjectionGeneratorArgs
     [CommandLineArgumentName("--cswinrt-exe-path")]
     public required string CsWinRTExePath { get; init; }
 
+    /// <summary>Gets the output assembly name. Defaults to 'WinRT.Projection'.</summary>
+    [CommandLineArgumentName("--assembly-name")]
+    public string AssemblyName { get; init; } = "WinRT.Projection";
+
+    /// <summary>
+    /// Gets whether to only include the Windows SDK projection (Windows and WindowsRuntime.Internal namespaces).
+    /// When 'false' (the default), the Windows SDK types are excluded and only non-Windows
+    /// projection types are included.
+    /// </summary>
+    [CommandLineArgumentName("--windows-sdk-only")]
+    public bool WindowsSdkOnly { get; init; }
+
+    /// <summary>
+    /// Gets whether to generate the Windows.UI.Xaml projection (WinRT.Sdk.Xaml.Projection).
+    /// When 'true', the tool includes the Windows.UI.Xaml namespace filters.
+    /// </summary>
+    [CommandLineArgumentName("--windows-ui-xaml-projection")]
+    public bool WindowsUIXamlProjection { get; init; }
+
     /// <summary>Gets the token for the operation.</summary>
     public required CancellationToken Token { get; init; }
 }

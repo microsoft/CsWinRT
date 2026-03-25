@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using WinRT;
 
 using WFC = Windows.Foundation.Collections;
 using Windows.Foundation;
@@ -21,7 +20,6 @@ using Windows.Devices.Enumeration;
 using Windows.Data.Json;
 
 using Windows.Storage;
-using Windows.Storage.Buffers;
 using Windows.Storage.Streams;
 using Windows.Storage.FileProperties;
 

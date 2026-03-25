@@ -158,12 +158,22 @@ internal static partial class SignatureGenerator
             return true;
         }
 
-        // For delegates, try to get the projected type from the projection .dll, as they will have the '[Guid]' attribute on them.
+        // For delegates, try to get the projected type from the right projection .dll, as they will have the '[Guid]' attribute on them.
         // These are only needed to generate signatures, so we hide them from the reference assemblies, as they're not useful there.
-        if (type.IsDelegate &&
-            interopDefinitions.WindowsRuntimeProjectionModule.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType))
+        if (type.IsDelegate)
         {
-            return projectedType.TryGetGuidAttribute(interopReferences, out iid);
+            // Determine the right implementation projection .dll to use for the lookup
+            ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
+                ? interopDefinitions.WindowsRuntimeSdkProjectionModule
+                : type.IsProjectedWindowsSdkXamlType
+                    ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
+                    : interopDefinitions.WindowsRuntimeProjectionModule;
+
+            // Try to get the implementation type via a fast lookup, if we did get a valid projection module
+            if (projectionModule?.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType) is true)
+            {
+                return projectedType.TryGetGuidAttribute(interopReferences, out iid);
+            }
         }
 
         iid = Guid.Empty;
@@ -173,36 +183,31 @@ internal static partial class SignatureGenerator
 
     /// <summary>
     /// Attempts to retrieve the default interface signature from the <c>[WindowsRuntimeDefaultInterface]</c>
-    /// attribute applied to the specified type, which is assumed to be some projected Windows Runtime class.
+    /// attribute on the <c>WindowsRuntimeDefaultInterfaces</c> lookup type in the projection assembly, for the
+    /// specified type, which is assumed to be some projected Windows Runtime class.
     /// </summary>
     /// <param name="type">The type definition to inspect for the default interface attribute.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="defaultInterface">The <see cref="TypeSignature"/> instance for the default interface for <paramref name="type"/>, if found.</param>
     /// <returns>Whether <paramref name="defaultInterface"/> was successfully retrieved.</returns>
     private static bool TryGetDefaultInterfaceFromAttribute(
         TypeDefinition type,
         InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
         [NotNullWhen(true)] out TypeSignature? defaultInterface)
     {
-        // Tries to get the projected type from the projection .dll, as it will have the attribute
-        if (!interopDefinitions.WindowsRuntimeProjectionModule.GetTopLevelTypesLookup().TryGetValue((type.Namespace, type.Name), out TypeDefinition? projectedType))
+        // Determine the right implementation projection .dll (see notes above)
+        ModuleDefinition? projectionModule = type.IsProjectedWindowsSdkType
+            ? interopDefinitions.WindowsRuntimeSdkProjectionModule
+            : type.IsProjectedWindowsSdkXamlType
+                ? interopDefinitions.WindowsRuntimeSdkXamlProjectionModule
+                : interopDefinitions.WindowsRuntimeProjectionModule;
+
+        // Use the cached default interfaces lookup for O(1) lookups by (Namespace, Name) key
+        if (projectionModule?.GetDefaultInterfacesLookup().TryGetValue((type.Namespace, type.Name), out TypeSignature? signature) is true)
         {
-            defaultInterface = null;
+            defaultInterface = signature;
 
-            return false;
-        }
-
-        // Try to lookup '[WindowsRuntimeDefaultInterface]' from the projected type, if we found it
-        if (projectedType.TryGetCustomAttribute(interopReferences.WindowsRuntimeDefaultInterfaceAttribute, out CustomAttribute? customAttribute))
-        {
-            if (customAttribute.Signature is { FixedArguments: [{ Element: TypeSignature signature }, ..] })
-            {
-                defaultInterface = signature;
-
-                return true;
-            }
+            return true;
         }
 
         defaultInterface = null;

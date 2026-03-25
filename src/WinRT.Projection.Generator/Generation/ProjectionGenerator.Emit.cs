@@ -15,8 +15,6 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 /// <inheritdoc cref="ProjectionGenerator"/>
 internal partial class ProjectionGenerator
 {
-    private const string ProjectionAssemblyName = "WinRT.Projection";
-
     /// <summary>
     /// Runs the emit logic for the generator.
     /// </summary>
@@ -24,6 +22,7 @@ internal partial class ProjectionGenerator
     /// <param name="processingState">The state from the processing phase.</param>
     private static void Emit(ProjectionGeneratorArgs args, ProjectionGeneratorProcessingState processingState)
     {
+        string assemblyName = args.AssemblyName;
         CSharpCompilation compilation;
 
         // Create the Roslyn compilation from the generated projection sources
@@ -38,7 +37,7 @@ internal partial class ProjectionGenerator
 
                 using Stream stream = File.OpenRead(file);
 
-                syntaxTrees.Add(CSharpSyntaxTree.ParseText(SourceText.From(stream), path: file));
+                syntaxTrees.Add(CSharpSyntaxTree.ParseText(SourceText.From(stream, checksumAlgorithm: SourceHashAlgorithm.Sha256), path: file));
             }
 
             // Build the references list
@@ -53,7 +52,7 @@ internal partial class ProjectionGenerator
 
             // Create the compilation
             compilation = CSharpCompilation.Create(
-                ProjectionAssemblyName,
+                assemblyName,
                 syntaxTrees,
                 references,
                 new CSharpCompilationOptions(
@@ -71,14 +70,14 @@ internal partial class ProjectionGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Emit the projection .dll to disk
+        string projectionDllPath = Path.Combine(args.GeneratedAssemblyDirectory, assemblyName + ".dll");
+
         try
         {
             // Configure emit options for embedded symbols
             EmitOptions emitOptions = new(
                 debugInformationFormat: DebugInformationFormat.Embedded,
                 includePrivateMembers: true);
-
-            string projectionDllPath = Path.Combine(args.GeneratedAssemblyDirectory, ProjectionAssemblyName + ".dll");
 
             EmitResult result;
 
@@ -90,11 +89,18 @@ internal partial class ProjectionGenerator
 
             if (!result.Success)
             {
+                File.Delete(projectionDllPath);
+
                 throw WellKnownProjectionGeneratorExceptions.EmitDllError(result.Diagnostics);
             }
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
+            if (File.Exists(projectionDllPath))
+            {
+                File.Delete(projectionDllPath);
+            }
+
             throw WellKnownProjectionGeneratorExceptions.EmitDllError(e);
         }
     }

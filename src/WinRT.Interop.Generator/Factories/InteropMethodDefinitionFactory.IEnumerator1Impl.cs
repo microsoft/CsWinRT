@@ -172,6 +172,9 @@ internal partial class InteropMethodDefinitionFactory
                     keyType: ((GenericInstanceTypeSignature)elementType).TypeArguments[0],
                     valueType: ((GenericInstanceTypeSignature)elementType).TypeArguments[1],
                     elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
+                _ when elementType.IsConstructedNullableValueType(interopReferences) => interopReferences.IEnumeratorAdapterNullableTypeGetMany(
+                    underlyingType: ((GenericInstanceTypeSignature)elementType).TypeArguments[0],
+                    elementMarshallerType: emitState.LookupTypeDefinition(elementType, "ElementMarshaller").ToTypeSignature()),
                 _ when elementType.IsManagedValueType(interopReferences) => interopReferences.IEnumeratorAdapterManagedValueTypeGetMany(
                     elementType: elementType,
                     abiType: elementType.GetAbiType(interopReferences),

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Windows.Storage.IO
+namespace Windows.Storage
 {
     using global::System;
     using global::System.Diagnostics;

@@ -58,7 +58,7 @@ internal partial class InteropMethodDefinitionFactory
             //   [2]: 'bool' (for 'result')
             CilLocalVariable loc_0_thisValue = new(interopReferences.WindowsRuntimeObjectReferenceValue.ToValueTypeSignature());
             CilLocalVariable loc_1_thisPtr = new(interopReferences.Void.MakePointerType());
-            CilLocalVariable loc_2_result = new(interopReferences.CorLibTypeFactory.Boolean);
+            CilLocalVariable loc_2_result = new(interopReferences.Boolean);
 
             // Jump labels
             CilInstruction nop_try_this = new(Nop);

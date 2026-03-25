@@ -55,7 +55,8 @@
     <BuildOutDir Condition="'$(BuildOutDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
     <CsWinRTPath>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', 'cswinrt', 'bin'))</CsWinRTPath>
     <CsWinRTPath Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)_build', 'x86', '$(Configuration)', 'cswinrt', 'bin'))</CsWinRTPath>
-    <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$(CsWinRTPath)WinRT.Interop.winmd</CsWinRTInteropMetadata>
+    <CsWinRTExe>$(CsWinRTPath)cswinrt.exe</CsWinRTExe>
+    <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$(CsWinRTPath)WindowsRuntime.Internal.winmd</CsWinRTInteropMetadata>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj' or '$(MSBuildProjectExtension)' == '.wapproj'">
@@ -66,7 +67,16 @@
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <!-- Hash algorithm for file checksums in debug info -->
     <ChecksumAlgorithm>SHA256</ChecksumAlgorithm>
+    <!-- Set remote for source link. -->
+    <AdoMirrorBuild Condition="'$(AdoMirrorBuild)' == ''">false</AdoMirrorBuild>
+    <GitRepositoryRemoteName Condition="$(AdoMirrorBuild)">github</GitRepositoryRemoteName>
+    <!-- Tells NativeAOT to not ignore issues where assemblies / types fail to be resolved. -->
+    <IlcResilient>false</IlcResilient>
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -105,7 +115,10 @@
         <ControlFlowGuard Condition="'$(Configuration)'=='Release'">Guard</ControlFlowGuard>
         <!-- /Qspectre Specifies compiler generation of instructions to mitigate certain Spectre variant 1 security vulnerabilities. BinSkim asks for this. -->
         <!-- /ZH:SHA_256 Hash algorithm for file checksums in debug info -->
+        <!-- /guard:cast /d2CastGuardFailureMode:fastfail Mitigates type confusion via unsafe static downcasts. BinSkim asks for this.
+             Requires non-incremental LTCG (LinkTimeCodeGeneration=UseLinkTimeCodeGeneration). -->
         <AdditionalOptions>%(AdditionalOptions) /Qspectre /ZH:SHA_256</AdditionalOptions>
+        <AdditionalOptions Condition="'$(Configuration)'=='Release'">%(AdditionalOptions) /guard:cast /d2CastGuardFailureMode:fastfail</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>

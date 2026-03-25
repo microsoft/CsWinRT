@@ -564,6 +564,15 @@ internal partial class InteropTypeDefinitionBuilder
 
                 module.TopLevelTypes.Add(elementMarshallerType);
             }
+            else if (elementType.IsConstructedNullableValueType(interopReferences))
+            {
+                elementMarshallerType = InteropTypeDefinitionFactory.IEnumeratorElementMarshaller.NullableValueType(
+                    enumeratorType: enumeratorType,
+                    interopReferences: interopReferences,
+                    emitState: emitState);
+
+                module.TopLevelTypes.Add(elementMarshallerType);
+            }
             else if (elementType.IsManagedValueType(interopReferences))
             {
                 elementMarshallerType = InteropTypeDefinitionFactory.IEnumeratorElementMarshaller.ManagedValueType(

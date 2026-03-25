@@ -64,6 +64,30 @@ steps:
         echo ##vso[task.setvariable variable=VersionNumber;]%VersionNumber%
         echo ##vso[task.setvariable variable=NugetVersion;]%NugetVersion%
 
+  # Conditionally add SDK projection entries to nuspec when generating
+  - task: PowerShell@2
+    displayName: Add SDK projection entries to nuspec
+    condition: eq(variables['_GenerateSdkProjection'], 'true')
+    inputs:
+      targetType: inline
+      script: |
+        $nuspecPath = "$(Build.SourcesDirectory)\nuget\Microsoft.Windows.CsWinRT.nuspec"
+        $implEntries = @"
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\17763\WinRT.Sdk.Projection.dll" target="impl\net10\17763\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\17763\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\17763\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\18362\WinRT.Sdk.Projection.dll" target="impl\net10\18362\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\18362\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\18362\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\19041\WinRT.Sdk.Projection.dll" target="impl\net10\19041\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\19041\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\19041\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\22000\WinRT.Sdk.Projection.dll" target="impl\net10\22000\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\22000\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\22000\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\22621\WinRT.Sdk.Projection.dll" target="impl\net10\22621\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\22621\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\22621\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\26100\WinRT.Sdk.Projection.dll" target="impl\net10\26100\"/>
+            <file src="$(Build.SourcesDirectory)\release_x86\impl\26100\WinRT.Sdk.Xaml.Projection.dll" target="impl\net10\26100\"/>
+        "@
+        (Get-Content $nuspecPath -Raw).Replace('  </files>', "$implEntries`n  </files>") | Set-Content $nuspecPath
+
   # NuGet Pack
   - task: NuGetCommand@2
     displayName: NuGet pack
@@ -71,7 +95,7 @@ steps:
       command: pack
       searchPatternPack: nuget/Microsoft.Windows.CsWinRT.nuspec
       configurationToPack: Release
-      buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\release_x86\native\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\release_x86\native\WinRT.Interop.winmd;net10_runtime=$(Build.SourcesDirectory)\release_x86\net10.0\WinRT.Runtime.dll;net10_runtime_xml=$(Build.SourcesDirectory)\release_x86\net10.0\WinRT.Runtime.xml;source_generator=$(Build.SourcesDirectory)\release_x86\net10.0\WinRT.SourceGenerator2.dll;winrt_shim=$(Build.SourcesDirectory)\release_x86\net10.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll;winrt_host_resource_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll.mui;winrt_host_resource_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll.mui;winrt_host_resource_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll.mui;cswinrtinteropgen_x64=$(Build.SourcesDirectory)\release_x64\net10.0\native\cswinrtinteropgen.exe;cswinrtinteropgen_arm64=$(Build.SourcesDirectory)\release_arm64\net10.0\native\cswinrtinteropgen.exe;cswinrtimplgen_x64=$(Build.SourcesDirectory)\release_x64\net10.0\native\cswinrtimplgen.exe;cswinrtimplgen_arm64=$(Build.SourcesDirectory)\release_arm64\net10.0\native\cswinrtimplgen.exe;cswinrtprojectiongen_x64=$(Build.SourcesDirectory)\release_x64\net10.0\native\cswinrtprojectiongen.exe;cswinrtprojectiongen_arm64=$(Build.SourcesDirectory)\release_arm64\net10.0\native\cswinrtprojectiongen.exe;run_cswinrt_generator_task=$(Build.SourcesDirectory)\release_x86\netstandard2.0\WinRT.Generator.Tasks.dll
+      buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\release_x86\native\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\release_x86\native\WindowsRuntime.Internal.winmd;net10_runtime=$(Build.SourcesDirectory)\release_x86\net10.0\WinRT.Runtime.dll;net10_runtime_xml=$(Build.SourcesDirectory)\release_x86\net10.0\WinRT.Runtime.xml;source_generator=$(Build.SourcesDirectory)\release_x86\net10.0\WinRT.SourceGenerator.dll;winrt_shim=$(Build.SourcesDirectory)\release_x86\net10.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll;winrt_host_resource_x86=$(Build.SourcesDirectory)\release_x86\native\WinRT.Host.dll.mui;winrt_host_resource_x64=$(Build.SourcesDirectory)\release_x64\native\WinRT.Host.dll.mui;winrt_host_resource_arm64=$(Build.SourcesDirectory)\release_arm64\native\WinRT.Host.dll.mui;cswinrtinteropgen_x64=$(Build.SourcesDirectory)\release_x64\net10.0\native\cswinrtinteropgen.exe;cswinrtinteropgen_arm64=$(Build.SourcesDirectory)\release_arm64\net10.0\native\cswinrtinteropgen.exe;cswinrtimplgen_x64=$(Build.SourcesDirectory)\release_x64\net10.0\native\cswinrtimplgen.exe;cswinrtimplgen_arm64=$(Build.SourcesDirectory)\release_arm64\net10.0\native\cswinrtimplgen.exe;cswinrtprojectiongen_x64=$(Build.SourcesDirectory)\release_x64\net10.0\native\cswinrtprojectiongen.exe;cswinrtprojectiongen_arm64=$(Build.SourcesDirectory)\release_arm64\net10.0\native\cswinrtprojectiongen.exe;run_cswinrt_generator_task=$(Build.SourcesDirectory)\release_x86\netstandard2.0\WinRT.Generator.Tasks.dll
       packDestination: $(ob_outputDirectory)\packages
 
   - task: NuGetCommand@2

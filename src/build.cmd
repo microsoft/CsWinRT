@@ -189,6 +189,16 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
+:sourcegenerator2test
+rem Running Source Generator 2 Unit Tests
+echo Running source generator 2 tests for %cswinrt_platform% %cswinrt_configuration%
+call :exec %dotnet_exe% test --verbosity normal --no-build --logger trx;LogFilePath=%~dp0sourcegenerator2test_%cswinrt_version_string%.trx %this_dir%Tests\SourceGenerator2Test\SourceGenerator2Test.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration% -- RunConfiguration.TreatNoTestsAsError=true
+if ErrorLevel 1 (
+  echo.
+  echo ERROR: Source generator 2 unit test failed, skipping NuGet pack
+  exit /b !ErrorLevel!
+)
+
 :hosttest
 rem Run WinRT.Host tests
 echo Running cswinrt host tests for %cswinrt_platform% %cswinrt_configuration%
@@ -233,11 +243,11 @@ if "%cswinrt_label%"=="functionaltest" exit /b 0
 rem We set the properties of the CsWinRT.nuspec here, and pass them as the -Properties option when we call `nuget pack`
 set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
-set interop_winmd=%cswinrt_bin_dir%WinRT.Interop.winmd
+set interop_winmd=%cswinrt_bin_dir%WindowsRuntime.Internal.winmd
 set net10_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.dll
 set net10_runtime_xml=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.xml
 set source_generator_roslyn4120=%this_dir%Authoring\WinRT.SourceGenerator.Roslyn4120\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
-set source_generator=%this_dir%Authoring\WinRT.SourceGenerator2\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator2.dll
+set source_generator=%this_dir%Authoring\WinRT.SourceGenerator2\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll.mui
 set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net10.0\WinRT.Host.Shim.dll

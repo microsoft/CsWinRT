@@ -4,14 +4,22 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+
+#pragma warning disable CS1573
 
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// A marshaller with some utility methods that directly wrap <see cref="ComWrappers"/>.
 /// </summary>
+/// <remarks>
+/// No method in this class performs input validation. If any parameter is <see langword="null"/>,
+/// the code will throw <see cref="NullReferenceException"/>. It is the caller's responsibility
+/// to validate inputs before calling any method in this class.
+/// </remarks>
 [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
     DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
     UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
@@ -37,7 +45,28 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     /// </remarks>
     public static WindowsRuntimeObjectReference CreateObjectReference(void* externalComObject, in Guid iid, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.InitializeObjectReference(externalComObject, in iid);
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.InitializeObjectReference(
+            externalComObject: externalComObject,
+            iid: in iid,
+            marshalingType: CreateObjectReferenceMarshalingType.Unknown);
+
+        wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() is null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
+
+        return objectReference;
+    }
+
+    /// <inheritdoc cref="CreateObjectReference(void*, in Guid, out CreatedWrapperFlags)"/>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
+    public static WindowsRuntimeObjectReference CreateObjectReference(
+        void* externalComObject,
+        in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType,
+        out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.InitializeObjectReference(
+            externalComObject: externalComObject,
+            iid: in iid,
+            marshalingType: marshalingType);
 
         wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() is null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
 
@@ -58,8 +87,8 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     /// be used when dealing with Windows Runtime types instantiated from C# (which includes COM aggregation scenarios too).
     /// </para>
     /// <para>
-    /// Unlike <see cref="CreateObjectReference"/>, this method assumes <paramref name="externalComObject"/> is exactly the
-    /// right interface pointer for <paramref name="iid"/>, and will therefore skip doing a <c>QueryInterface</c> call on it.
+    /// Unlike <see cref="CreateObjectReferenceValue(void*, in Guid)"/>, this method assumes <paramref name="externalComObject"/> is exactly
+    /// the right interface pointer for <paramref name="iid"/>, and will therefore skip doing a <c>QueryInterface</c> call on it.
     /// </para>
     /// <para>
     /// This method should only be used to create <see cref="WindowsRuntimeObjectReference"/> in projection scenarios.
@@ -67,7 +96,28 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     /// </remarks>
     public static WindowsRuntimeObjectReference CreateObjectReferenceUnsafe(void* externalComObject, in Guid iid, out CreatedWrapperFlags wrapperFlags)
     {
-        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.InitializeObjectReferenceUnsafe(externalComObject, in iid);
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.InitializeObjectReferenceUnsafe(
+            externalComObject: externalComObject,
+            iid: in iid,
+            marshalingType: CreateObjectReferenceMarshalingType.Unknown);
+
+        wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() is null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
+
+        return objectReference;
+    }
+
+    /// <inheritdoc cref="CreateObjectReferenceUnsafe(void*, in Guid, out CreatedWrapperFlags)"/>
+    /// <param name="marshalingType">The <see cref="CreateObjectReferenceMarshalingType"/> value available in metadata for the type being marshalled.</param>
+    public static WindowsRuntimeObjectReference CreateObjectReferenceUnsafe(
+        void* externalComObject,
+        in Guid iid,
+        CreateObjectReferenceMarshalingType marshalingType,
+        out CreatedWrapperFlags wrapperFlags)
+    {
+        WindowsRuntimeObjectReference objectReference = WindowsRuntimeObjectReference.InitializeObjectReferenceUnsafe(
+            externalComObject: externalComObject,
+            iid: in iid,
+            marshalingType: marshalingType);
 
         wrapperFlags = objectReference.GetReferenceTrackerPtrUnsafe() is null ? CreatedWrapperFlags.None : CreatedWrapperFlags.TrackerObject;
 
@@ -161,5 +211,24 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
                 objectReference = null;
                 return false;
         }
+    }
+
+    /// <summary>
+    /// Unwraps the <see cref="WindowsRuntimeObjectReference"/> from the specified <see cref="WindowsRuntimeObject"/>
+    /// instance and returns it directly.
+    /// </summary>
+    /// <param name="value">The <see cref="WindowsRuntimeObject"/> instance to unwrap.</param>
+    /// <returns>The <see cref="WindowsRuntimeObjectReference"/> wrapping the native object from <paramref name="value"/>.</returns>
+    /// <remarks>
+    /// <para>
+    /// This method does not validate whether <paramref name="value"/> can actually be unwrapped (i.e. whether
+    /// <see cref="WindowsRuntimeObject.HasUnwrappableNativeObjectReference"/> is <see langword="true"/>). It is
+    /// the caller's responsibility to ensure that the object is in a valid state for unwrapping.
+    /// </para>
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static WindowsRuntimeObjectReference UnwrapObjectReferenceUnsafe(WindowsRuntimeObject value)
+    {
+        return value.NativeObjectReference;
     }
 }

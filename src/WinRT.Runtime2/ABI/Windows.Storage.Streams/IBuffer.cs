@@ -69,7 +69,7 @@ file abstract unsafe class IBufferComWrappersCallback : IWindowsRuntimeUnsealedO
                 iid: in WellKnownWindowsInterfaceIIDs.IID_IBuffer,
                 wrapperFlags: out wrapperFlags);
 
-            wrapperObject = new WindowsRuntimeBuffer(objectReference);
+            wrapperObject = new global::WindowsRuntime.WindowsRuntimeBuffer(objectReference);
 
             return true;
         }
@@ -89,7 +89,7 @@ file abstract unsafe class IBufferComWrappersCallback : IWindowsRuntimeUnsealedO
             iid: in WellKnownWindowsInterfaceIIDs.IID_IBuffer,
             wrapperFlags: out wrapperFlags);
 
-        return new WindowsRuntimeBuffer(objectReference);
+        return new global::WindowsRuntime.WindowsRuntimeBuffer(objectReference);
     }
 }
 

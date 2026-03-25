@@ -19,6 +19,17 @@
     <CsWinRTFilters>
 -exclude Windows
 -include Windows.UI.Xaml
+-include Windows.UI.Colors
+-include Windows.UI.ColorHelper
+-include Windows.UI.IColorHelper
+-include Windows.UI.IColors
+-include Windows.UI.Text.FontWeights
+-include Windows.UI.Text.IFontWeights
+-include Windows.ApplicationModel.Store.Preview.WebAuthenticationCoreManagerHelper
+-include Windows.ApplicationModel.Store.Preview.IWebAuthenticationCoreManagerHelper
+-exclude Windows.UI.Xaml.Interop
+-exclude Windows.UI.Xaml.Data.BindableAttribute
+-exclude Windows.UI.Xaml.Markup.ContentPropertyAttribute
     </CsWinRTFilters>
   </PropertyGroup>
  

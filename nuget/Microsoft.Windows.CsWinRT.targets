@@ -267,16 +267,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 @(CsWinRTIncludeItems->'-include %(Identity)', '&#x0d;&#x0a;')
       </CsWinRTFilters>
 
-      <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WinRT.Interop.winmd'))</CsWinRTInteropMetadata>
+      <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WindowsRuntime.Internal.winmd'))</CsWinRTInteropMetadata>
       <CsWinRTIncludeWinRTInterop Condition="$(CsWinRTFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTFilters.Contains('-include Windows&#x0a;'))">
 -input $(CsWinRTInteropMetadata)
--include WinRT.Interop
+-include WindowsRuntime.Internal
       </CsWinRTIncludeWinRTInterop>
 
 
       <CsWinRTPrivateIncludeWinRTInterop Condition="$(CsWinRTPrivateFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTPrivateFilters.Contains('-include Windows&#x0a;'))">
 -input $(CsWinRTInteropMetadata)
--include WinRT.Interop
+-include WindowsRuntime.Internal
       </CsWinRTPrivateIncludeWinRTInterop>
 
       <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-internal</CsWinRTInternalProjection>
@@ -594,6 +594,8 @@ $(CsWinRTInternalProjection)
     <CsWinRTManifestFreeActivationReportOriginalException Condition="'$(CsWinRTManifestFreeActivationReportOriginalException)' == ''">false</CsWinRTManifestFreeActivationReportOriginalException>
     <CsWinRTEnableXamlTypeMarshalling Condition="'$(CsWinRTEnableXamlTypeMarshalling)' == ''">true</CsWinRTEnableXamlTypeMarshalling>
     <CsWinRTLoadComponentsInDefaultALC Condition="'$(CsWinRTLoadComponentsInDefaultALC)' == ''">false</CsWinRTLoadComponentsInDefaultALC>
+    <CsWinRTEnableMarshalingTypeValidation Condition="'$(CsWinRTEnableMarshalingTypeValidation)' == ''">false</CsWinRTEnableMarshalingTypeValidation>
+    <CsWinRTEnableMarshalingTypeMetadataSupport Condition="'$(CsWinRTEnableMarshalingTypeMetadataSupport)' == ''">true</CsWinRTEnableMarshalingTypeMetadataSupport>
 
     <!--
       Note: the 'CsWinRTUseWindowsUIXamlProjections' property and associated 'CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS' feature
@@ -627,6 +629,16 @@ $(CsWinRTInternalProjection)
     <!-- CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC"
                                     Value="$(CsWinRTLoadComponentsInDefaultALC)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_MARSHALING_TYPE_VALIDATION switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_MARSHALING_TYPE_VALIDATION"
+                                    Value="$(CsWinRTEnableMarshalingTypeValidation)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_MARSHALING_TYPE_METADATA_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_MARSHALING_TYPE_METADATA_SUPPORT"
+                                    Value="$(CsWinRTEnableMarshalingTypeMetadataSupport)"
                                     Trim="true" />
   </ItemGroup>
 

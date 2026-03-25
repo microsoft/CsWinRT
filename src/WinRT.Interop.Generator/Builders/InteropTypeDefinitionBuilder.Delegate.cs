@@ -158,9 +158,9 @@ internal partial class InteropTypeDefinitionBuilder
             if (isSenderReferenceType)
             {
                 GetOrCreateVftbl(
-                    senderType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                    senderType: interopReferences.Void.MakePointerType(),
                     argsType: argsType.GetAbiType(interopReferences),
-                    displaySenderType: interopReferences.CorLibTypeFactory.Object,
+                    displaySenderType: interopReferences.Object,
                     displayArgsType: argsType,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -171,9 +171,9 @@ internal partial class InteropTypeDefinitionBuilder
             {
                 GetOrCreateVftbl(
                     senderType: senderType.GetAbiType(interopReferences),
-                    argsType: interopReferences.CorLibTypeFactory.Void.MakePointerType(),
+                    argsType: interopReferences.Void.MakePointerType(),
                     displaySenderType: senderType,
-                    displayArgsType: interopReferences.CorLibTypeFactory.Object,
+                    displayArgsType: interopReferences.Object,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,

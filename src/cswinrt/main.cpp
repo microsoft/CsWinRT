@@ -197,6 +197,7 @@ Where <spec> is one or more of:
             // Write GUID properties out to InterfaceIIDs static class
             if (!settings.reference_projection)
             {
+                bool iid_written = false;
                 std::set<TypeDef> interfacesFromClassesEmitted;
                 writer guidWriter("ABI");
                 guidWriter.write_begin_interface_iids();
@@ -214,6 +215,9 @@ Where <spec> is one or more of:
                                 continue;
                             }
                         }
+
+                        iid_written = true;
+
                         switch (get_category(type))
                         {
                         case category::delegate_type:
@@ -236,17 +240,21 @@ Where <spec> is one or more of:
                     }
                 }
                 guidWriter.write_end_interface_iids();
-                auto filename = guidWriter.write_temp("%.cs", "GeneratedInterfaceIIDs");
-                guidWriter.flush_to_file(settings.output_folder / filename);
+                if (iid_written)
+                {
+                    auto filename = guidWriter.write_temp("%.cs", "GeneratedInterfaceIIDs");
+                    guidWriter.flush_to_file(settings.output_folder / filename);
+                }
             }
 
             task_group group;
-            concurrency::concurrent_unordered_map<std::string, std::string> typeNameToEventDefinitionMap, typeNameToBaseTypeMap, authoredTypeNameToMetadataTypeNameMap;
+            concurrency::concurrent_unordered_map<std::string, std::string> authoredTypeNameToMetadataTypeNameMap;
+            concurrency::concurrent_unordered_map<std::string, std::string> defaultInterfaceEntries;
             concurrency::concurrent_unordered_set<generic_abi_delegate> abiDelegateEntries;
             bool projectionFileWritten = false;
             for (auto&& ns_members : c.namespaces())
             {
-                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToEventDefinitionMap, &typeNameToBaseTypeMap, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap]
+                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap, &defaultInterfaceEntries]
                 {
                     auto&& [ns, members] = ns_members;
                     std::string_view currentType = "";
@@ -258,6 +266,8 @@ Where <spec> is one or more of:
 
                         if (!settings.reference_projection)
                         {
+                            write_pragma_disable_IL2026(w);
+
                             for (auto&& [name, type] : members.types)
                             {
                                 currentType = name;
@@ -279,41 +289,33 @@ Where <spec> is one or more of:
                                     // For both static and attributes, we don't need to pass them across the ABI.
                                     if (!is_static(type) && !is_attribute_type(type))
                                     {
-                                        write_pragma_disable_IL2026(w);
                                         write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, false);
-                                        write_pragma_restore_IL2026(w);
                                     }
                                     break;
                                 case category::delegate_type:
-                                    write_pragma_disable_IL2026(w);
                                     write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
                                     write_winrt_windowsmetadata_typemapgroup_assembly_attribute(w, type);
-                                    write_pragma_restore_IL2026(w);
                                     break;
                                 case category::enum_type:
-                                    write_pragma_disable_IL2026(w);
                                     write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
                                     write_winrt_windowsmetadata_typemapgroup_assembly_attribute(w, type);
-                                    write_pragma_restore_IL2026(w);
                                     break;
                                 case category::interface_type:
-                                    write_pragma_disable_IL2026(w);
                                     write_winrt_idic_typemapgroup_assembly_attribute(w, type);
                                     write_winrt_windowsmetadata_typemapgroup_assembly_attribute(w, type);
-                                    write_pragma_restore_IL2026(w);
                                     break;
                                 case category::struct_type:
                                     // Similarly for API contracts, we don't expect them to be passed across the ABI.
                                     if (!is_api_contract_type(type))
                                     {
-                                        write_pragma_disable_IL2026(w);
                                         write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);
                                         write_winrt_windowsmetadata_typemapgroup_assembly_attribute(w, type);
-                                        write_pragma_restore_IL2026(w);
                                     }
                                     break;
                                 }
                             }
+
+                            write_pragma_restore_IL2026(w);
                         }
 
                         currentType = "";
@@ -342,6 +344,7 @@ Where <spec> is one or more of:
                                 else
                                 {
                                     write_class(w, type);
+                                    add_default_interface_entry(w, type, defaultInterfaceEntries);
                                     add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                     if (settings.component && componentActivatableClasses.count(type) == 1)
                                     {
@@ -470,45 +473,12 @@ Where <spec> is one or more of:
 
             group.get();
 
-            writer eventHelperWriter("WinRT");
-            write_file_header(eventHelperWriter);
-            eventHelperWriter.write("using System;\nnamespace WinRT\n{\n%\n}", bind([&](writer& w) {
-                for (auto&& [key, value] : typeNameToEventDefinitionMap)
-                {
-                    w.write("%", value);
-                }
-            }));
-            // eventHelperWriter.flush_to_file(settings.output_folder / "WinRTEventHelpers.cs");
-
-            if (!typeNameToBaseTypeMap.empty())
+            if (!defaultInterfaceEntries.empty() && !settings.reference_projection)
             {
-                writer baseTypeWriter("WinRT");
-                write_file_header(baseTypeWriter);
-                baseTypeWriter.write(R"(namespace WinRT
-{
-internal static class ProjectionTypesInitializer
-{
-internal static readonly System.Collections.Generic.Dictionary<string, string> TypeNameToBaseTypeNameMapping = new System.Collections.Generic.Dictionary<string, string>(%, System.StringComparer.Ordinal)
-{
-%
-};
-
-[System.Runtime.CompilerServices.ModuleInitializer]
-internal static void InitializeProjectionTypes()
-{
-ComWrappersSupport.RegisterProjectionTypeBaseTypeMapping(TypeNameToBaseTypeNameMapping);
-}
-}
-})",
-typeNameToBaseTypeMap.size(),
-bind([&](writer& w) {
-                        for (auto&& [key, value] : typeNameToBaseTypeMap)
-                        {
-                            w.write(R"(["%"] = "%",)", key, value);
-                            w.write("\n");
-                        }
-    }));
-                baseTypeWriter.flush_to_file(settings.output_folder / "WinRTBaseTypeMappingHelper.cs");
+                std::vector<std::pair<std::string, std::string>> sortedEntries(
+                    defaultInterfaceEntries.begin(), defaultInterfaceEntries.end());
+                std::sort(sortedEntries.begin(), sortedEntries.end());
+                write_default_interfaces_class(sortedEntries);
             }
 
             if (!authoredTypeNameToMetadataTypeNameMap.empty() && settings.component)
@@ -553,18 +523,18 @@ ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(new Func<Type, Type>(GetM
             {
                 for (auto&& string : strings::base)
                 {
-                    if (std::string(string.name) == "ComInteropHelpers" && !settings.filter.includes("Windows"))
+                    if (std::string(string.name) == "ComInteropExtensions" && !settings.filter.includes("Windows"))
                     {
                         continue;
                     }
                     writer ws;
                     write_file_header(ws);
 
-                    if (std::string(string.name) == "ComInteropHelpers")
+                    if (std::string(string.name) == "ComInteropExtensions")
                     {
                         // Determine which COM interop helpers to include by checking whether the newer
                         // types used in the COM interop helpers are being projected or not.
-                        // The ComInteropHelpers file makes use of UAC_VERSION_* to conditionally
+                        // The ComInteropExtensions file makes use of UAC_VERSION_* to conditionally
                         // include the ones that are being projected.
                         int uapContractversion = 7;  // default to 17763
                         if (c.find("Windows.Graphics.Display.DisplayInformation"))

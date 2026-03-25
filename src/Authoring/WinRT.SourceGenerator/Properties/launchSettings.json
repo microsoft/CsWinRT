@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "WinRT.SourceGenerator": {
-      "commandName": "DebugRoslynComponent",
-      "targetProject": "..\\..\\Projections\\Windows\\Windows.csproj"
-    }
-  }
-}
