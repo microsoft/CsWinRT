@@ -13,7 +13,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTest", "Tests\UnitTest\
 		{AE3B0611-2FBB-42AB-A245-B4E79868A5F9} = {AE3B0611-2FBB-42AB-A245-B4E79868A5F9}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "prebuild", "cswinrt\prebuild\prebuild.vcxproj", "{9F6A959A-9F34-43BD-99E7-DF816A5D6904}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cswinrt", "cswinrt\cswinrt.vcxproj", "{6ACFD2B2-E8AA-4CD4-AAD8-213CE8BB2637}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904} = {9F6A959A-9F34-43BD-99E7-DF816A5D6904}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{96495AB4-2D86-47D1-A174-27D0B436DC98}"
 	ProjectSection(SolutionItems) = preProject
@@ -25,8 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{96495AB4
 		get_testwinrt.cmd = get_testwinrt.cmd
 		cswinrt\PreviousPlatforms.linq = cswinrt\PreviousPlatforms.linq
 		README.md = README.md
-		Strings.props = Strings.props
-	EndProjectSection
+EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestComponent", "TestWinRT\TestComponent\TestComponent.vcxproj", "{2954F343-85A7-46F5-A3F3-F106FDD13900}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -217,6 +221,20 @@ Global
 		{9A9F52CA-F624-43A4-B5EF-C50861F584C2}.Release|x64.Build.0 = Release|x64
 		{9A9F52CA-F624-43A4-B5EF-C50861F584C2}.Release|x86.ActiveCfg = Release|x86
 		{9A9F52CA-F624-43A4-B5EF-C50861F584C2}.Release|x86.Build.0 = Release|x86
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Debug|ARM.ActiveCfg = Debug|Win32
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Debug|ARM64.Build.0 = Debug|Win32
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Debug|x64.ActiveCfg = Debug|x64
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Debug|x64.Build.0 = Debug|x64
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Debug|x86.ActiveCfg = Debug|Win32
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Debug|x86.Build.0 = Debug|Win32
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Release|ARM.ActiveCfg = Release|Win32
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Release|ARM64.ActiveCfg = Release|Win32
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Release|ARM64.Build.0 = Release|Win32
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Release|x64.ActiveCfg = Release|x64
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Release|x64.Build.0 = Release|x64
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Release|x86.ActiveCfg = Release|Win32
+		{9F6A959A-9F34-43BD-99E7-DF816A5D6904}.Release|x86.Build.0 = Release|Win32
 		{6ACFD2B2-E8AA-4CD4-AAD8-213CE8BB2637}.Debug|ARM.ActiveCfg = Debug|Win32
 		{6ACFD2B2-E8AA-4CD4-AAD8-213CE8BB2637}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{6ACFD2B2-E8AA-4CD4-AAD8-213CE8BB2637}.Debug|ARM64.Build.0 = Debug|Win32

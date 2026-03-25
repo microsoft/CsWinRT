@@ -4,13 +4,12 @@
 #include "helpers.h"
 #include "type_writers.h"
 #include "code_writers.h"
-#include <concurrent_unordered_map.h>
-#include <concurrent_unordered_set.h>
+#include "concurrent_containers.h"
 
 namespace cswinrt
 {
     using namespace std::literals;
-    using namespace std::experimental::filesystem;
+    using namespace std::filesystem;
     using namespace winmd::reader;
 
     inline auto get_start_time()
@@ -195,8 +194,8 @@ Where <spec> is one or more of:
 
             task_group group;
 
-            concurrency::concurrent_unordered_map<std::string, std::string> typeNameToEventDefinitionMap, typeNameToBaseTypeMap, authoredTypeNameToMetadataTypeNameMap;
-            concurrency::concurrent_unordered_set<generic_abi_delegate> abiDelegateEntries;
+            cswinrt::concurrent_unordered_map<std::string, std::string> typeNameToEventDefinitionMap, typeNameToBaseTypeMap, authoredTypeNameToMetadataTypeNameMap;
+            cswinrt::concurrent_unordered_set<generic_abi_delegate> abiDelegateEntries;
             bool projectionFileWritten = false;
             for (auto&& ns_members : c.namespaces())
             {
@@ -376,17 +375,19 @@ Where <spec> is one or more of:
 
             group.get();
 
+            auto eventDefinitions = typeNameToEventDefinitionMap.consume();
             writer eventHelperWriter("WinRT");
             write_file_header(eventHelperWriter);
             eventHelperWriter.write("using System;\nnamespace WinRT\n{\n%\n}", bind([&](writer& w) {
-                for (auto&& [key, value] : typeNameToEventDefinitionMap)
+                for (auto&& [key, value] : eventDefinitions)
                 {
                     w.write("%", value);
                 }
             }));
             eventHelperWriter.flush_to_file(settings.output_folder / "WinRTEventHelpers.cs");
 
-            if (!typeNameToBaseTypeMap.empty())
+            auto baseTypes = typeNameToBaseTypeMap.consume();
+            if (!baseTypes.empty())
             {
                 writer baseTypeWriter("WinRT");
                 write_file_header(baseTypeWriter);
@@ -406,9 +407,9 @@ ComWrappersSupport.RegisterProjectionTypeBaseTypeMapping(TypeNameToBaseTypeNameM
 }
 }
 })",
-typeNameToBaseTypeMap.size(),
+baseTypes.size(),
 bind([&](writer& w) {
-                        for (auto&& [key, value] : typeNameToBaseTypeMap)
+                        for (auto&& [key, value] : baseTypes)
                         {
                             w.write(R"(["%"] = "%",)", key, value);
                             w.write("\n");
@@ -417,7 +418,8 @@ bind([&](writer& w) {
                 baseTypeWriter.flush_to_file(settings.output_folder / "WinRTBaseTypeMappingHelper.cs");
             }
 
-            if (!abiDelegateEntries.empty() && settings.netstandard_compat)
+            auto abiDelegates = abiDelegateEntries.consume();
+            if (!abiDelegates.empty() && settings.netstandard_compat)
             {
                 writer baseTypeWriter("WinRT");
                 write_file_header(baseTypeWriter);
@@ -439,7 +441,7 @@ internal static void InitializeAbiDelegates()
 }
 })",
                 bind([&](writer& w) {
-                    for (auto&& entry : abiDelegateEntries)
+                    for (auto&& entry : abiDelegates)
                     {
                         w.write("Projections.RegisterAbiDelegate(%, typeof(%));\n", entry.abi_delegate_types, entry.abi_delegate_name);
                     }
@@ -450,7 +452,7 @@ internal static void InitializeAbiDelegates()
                     }
                 }),
                 bind([&](writer& w) {
-                    for (auto&& entry : abiDelegateEntries)
+                    for (auto&& entry : abiDelegates)
                     {
                         w.write("%\n", entry.abi_delegate_declaration);
                     }
@@ -480,7 +482,8 @@ namespace WinRT.GenericTypeInstantiations
                 genericTypeInstantiationWriter.flush_to_file(settings.output_folder / "WinRTGenericTypeInstantiations.cs");
             }
 
-            if (!authoredTypeNameToMetadataTypeNameMap.empty() && settings.component)
+            auto authoredTypes = authoredTypeNameToMetadataTypeNameMap.consume();
+            if (!authoredTypes.empty() && settings.component)
             {
                 writer metadataMappingTypeWriter("WinRT");
                 write_file_header(metadataMappingTypeWriter);
@@ -509,7 +512,7 @@ ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(new Func<Type, Type>(GetM
 }
 })",
                 bind([&](writer& w) {
-                        for (auto&& [key, value] : authoredTypeNameToMetadataTypeNameMap)
+                        for (auto&& [key, value] : authoredTypes)
                         {
                             w.write(R"(Type _ when type == typeof(%) => typeof(%),)", key, value);
                             w.write("\n");
