@@ -19,7 +19,7 @@ Check both open and closed issues before filing a new one. If none matches your 
 * Have a question not answered in the docs
     * → [Post a Discussion](https://github.com/microsoft/CsWinRT/discussions)
 * Want to propose or confirm a planned feature
-    * → [Post a Discussion](https://github.com/microsoft/CsWinRT/discussions)
+    * → [Post a Discussion](https://github.com/microsoft/CsWinRT/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=)
 
 ### What to Describe
 
