@@ -695,6 +695,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             StringBuilder stdoutBuilder = new();
             StringBuilder stderrBuilder = new();
 
+            // Handle receiving stdio lines
             process.OutputDataReceived += (_, e) =>
             {
                 if (e.Data is not null)
@@ -703,6 +704,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
                 }
             };
 
+            // Handle receiving stderr lines
             process.ErrorDataReceived += (_, e) =>
             {
                 if (e.Data is not null)
@@ -711,6 +713,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
                 }
             };
 
+            // Start reading asynchronously and then block until the process completes
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
             process.WaitForExit();
