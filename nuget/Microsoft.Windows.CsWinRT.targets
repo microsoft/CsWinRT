@@ -390,11 +390,18 @@ $(CsWinRTInternalProjection)
                        Defaults to $(UseUwpTools).
       Platform       - Target platform (arm64, x64, x86). Defaults to the resolved
                        platform from $(Platform) / $(PlatformTarget).
+      SourceText     - Inline C source code for the stub. When set, this text is
+                       written to a .c file and compiled. Takes precedence over
+                       SourceFile and the default source template.
+      SourceFile     - Path to a custom .c source file for the stub. When set, it
+                       is copied and compiled. Takes precedence over the default
+                       source template, but is overridden by SourceText.
 
     Example:
       <ItemGroup>
         <CsWinRTStubExe Include="MyApp.Console" OutputType="Exe" />
         <CsWinRTStubExe Include="MyApp.Windowed" OutputType="WinExe" />
+        <CsWinRTStubExe Include="MyApp.Custom" SourceFile="src\CustomStub.c" />
       </ItemGroup>
     ============================================================
   -->

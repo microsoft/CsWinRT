@@ -62,6 +62,23 @@ namespace Microsoft.NET.Build.Tasks;
 ///       Defaults to <see cref="DefaultPlatform"/>.
 ///     </description>
 ///   </item>
+///   <item>
+///     <term><c>SourceText</c></term>
+///     <description>
+///       Inline C source code to use for this stub. When set, the text is written
+///       to a <c>.c</c> file in the intermediate directory and compiled. Takes
+///       precedence over <c>SourceFile</c> and the default <see cref="SourceFilePath"/>.
+///     </description>
+///   </item>
+///   <item>
+///     <term><c>SourceFile</c></term>
+///     <description>
+///       Path to a custom <c>.c</c> source file to use for this stub. When set,
+///       the file is copied to the intermediate directory and compiled. Takes
+///       precedence over the default <see cref="SourceFilePath"/>, but is
+///       overridden by <c>SourceText</c> if both are specified.
+///     </description>
+///   </item>
 /// </list>
 /// </remarks>
 public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
@@ -72,16 +89,20 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     /// <remarks>
     /// <para>
     /// The item identity (<c>Include</c>) is the stub name (used as the output <c>.exe</c> filename).
-    /// Supported metadata: <c>OutputType</c>, <c>Win32Manifest</c>, <c>AppContainer</c>, <c>Platform</c>.
+    /// Supported metadata: <c>OutputType</c>, <c>Win32Manifest</c>, <c>AppContainer</c>, <c>Platform</c>,
+    /// <c>SourceText</c>, <c>SourceFile</c>.
     /// </para>
     /// </remarks>
     [Required]
     public ITaskItem[]? StubExes { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to the <c>.c</c> source file used for building the stub executable.
+    /// Gets or sets the path to the default <c>.c</c> source file used for building stub executables.
     /// </summary>
-    [Required]
+    /// <remarks>
+    /// This is used as a fallback when a stub item does not specify <c>SourceText</c> or <c>SourceFile</c>
+    /// metadata. If all items provide their own source, this property can be left empty.
+    /// </remarks>
     public string? SourceFilePath { get; set; }
 
     /// <summary>
@@ -242,13 +263,6 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             return false;
         }
 
-        if (string.IsNullOrEmpty(SourceFilePath) || !File.Exists(SourceFilePath))
-        {
-            Log.LogError("The stub .exe source file '{0}' does not exist.", SourceFilePath);
-
-            return false;
-        }
-
         if (string.IsNullOrEmpty(NativeLibraryPath) || !File.Exists(NativeLibraryPath))
         {
             Log.LogError("The native library '{0}' does not exist.", NativeLibraryPath);
@@ -323,6 +337,8 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         string win32Manifest = GetMetadataOrDefault(stubExe, "Win32Manifest", DefaultWin32Manifest ?? "");
         bool appContainer = GetBooleanMetadataOrDefault(stubExe, "AppContainer", DefaultAppContainer);
         string platform = GetMetadataOrDefault(stubExe, "Platform", DefaultPlatform ?? "");
+        string sourceText = stubExe.GetMetadata("SourceText");
+        string sourceFile = stubExe.GetMetadata("SourceFile");
 
         // Validate the platform
         if (!UseEnvironmentalTools &&
@@ -352,8 +368,45 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         // Ensure the intermediate directory exists
         Directory.CreateDirectory(stubIntermediateDir);
 
-        // Copy the .c source template into the working directory with the stub-specific name
-        File.Copy(SourceFilePath!, sourceFilePath, overwrite: true);
+        // Resolve the source for this stub:
+        //   1. SourceText metadata: write inline text to the .c file
+        //   2. SourceFile metadata: copy the specified file
+        //   3. Default SourceFilePath: copy the default template from the NuGet package
+        if (!string.IsNullOrEmpty(sourceText))
+        {
+            File.WriteAllText(sourceFilePath, sourceText);
+        }
+        else if (!string.IsNullOrEmpty(sourceFile))
+        {
+            if (!File.Exists(sourceFile))
+            {
+                Log.LogError("The source file '{0}' specified for stub '{1}' does not exist.", sourceFile, stubName);
+
+                return false;
+            }
+
+            File.Copy(sourceFile, sourceFilePath, overwrite: true);
+        }
+        else if (!string.IsNullOrEmpty(SourceFilePath))
+        {
+            if (!File.Exists(SourceFilePath))
+            {
+                Log.LogError("The default stub .exe source file '{0}' does not exist.", SourceFilePath);
+
+                return false;
+            }
+
+            File.Copy(SourceFilePath, sourceFilePath, overwrite: true);
+        }
+        else
+        {
+            Log.LogError(
+                "No source was specified for stub '{0}'. Set 'SourceText' or 'SourceFile' metadata on the item, " +
+                "or provide a default source file via the 'SourceFilePath' task parameter.",
+                stubName);
+
+            return false;
+        }
 
         // Delete any previously-generated broken .exe in the destination (see https://github.com/dotnet/runtime/issues/111313)
         if (File.Exists(binaryDestinationFilePath))
