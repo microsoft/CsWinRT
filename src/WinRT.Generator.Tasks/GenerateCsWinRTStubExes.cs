@@ -67,7 +67,7 @@ namespace Microsoft.NET.Build.Tasks;
 ///     <description>
 ///       Inline C source code to use for this stub. When set, the text is written
 ///       to a <c>.c</c> file in the intermediate directory and compiled. Takes
-///       precedence over <c>SourceFile</c> and the default <see cref="SourceFilePath"/>.
+///       precedence over <c>SourceFile</c> and the default <see cref="DefaultSourceFilePath"/>.
 ///     </description>
 ///   </item>
 ///   <item>
@@ -75,7 +75,7 @@ namespace Microsoft.NET.Build.Tasks;
 ///     <description>
 ///       Path to a custom <c>.c</c> source file to use for this stub. When set,
 ///       the file is copied to the intermediate directory and compiled. Takes
-///       precedence over the default <see cref="SourceFilePath"/>, but is
+///       precedence over the default <see cref="DefaultSourceFilePath"/>, but is
 ///       overridden by <c>SourceText</c> if both are specified.
 ///     </description>
 ///   </item>
@@ -103,7 +103,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     /// This is used as a fallback when a stub item does not specify <c>SourceText</c> or <c>SourceFile</c>
     /// metadata. If all items provide their own source, this property can be left empty.
     /// </remarks>
-    public string? SourceFilePath { get; set; }
+    public string? DefaultSourceFilePath { get; set; }
 
     /// <summary>
     /// Gets or sets the path to the <c>.lib</c> file produced by the Native AOT toolchain,
@@ -371,7 +371,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         // Resolve the source for this stub:
         //   1. SourceText metadata: write inline text to the .c file
         //   2. SourceFile metadata: copy the specified file
-        //   3. Default SourceFilePath: copy the default template from the NuGet package
+        //   3. Default DefaultSourceFilePath: copy the default template from the NuGet package
         if (!string.IsNullOrEmpty(sourceText))
         {
             File.WriteAllText(sourceFilePath, sourceText);
@@ -387,22 +387,22 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
 
             File.Copy(sourceFile, sourceFilePath, overwrite: true);
         }
-        else if (!string.IsNullOrEmpty(SourceFilePath))
+        else if (!string.IsNullOrEmpty(DefaultSourceFilePath))
         {
-            if (!File.Exists(SourceFilePath))
+            if (!File.Exists(DefaultSourceFilePath))
             {
-                Log.LogError("The default stub .exe source file '{0}' does not exist.", SourceFilePath);
+                Log.LogError("The default stub .exe source file '{0}' does not exist.", DefaultSourceFilePath);
 
                 return false;
             }
 
-            File.Copy(SourceFilePath, sourceFilePath, overwrite: true);
+            File.Copy(DefaultSourceFilePath, sourceFilePath, overwrite: true);
         }
         else
         {
             Log.LogError(
                 "No source was specified for stub '{0}'. Set 'SourceText' or 'SourceFile' metadata on the item, " +
-                "or provide a default source file via the 'SourceFilePath' task parameter.",
+                "or provide a default source file via the 'DefaultSourceFilePath' task parameter.",
                 stubName);
 
             return false;

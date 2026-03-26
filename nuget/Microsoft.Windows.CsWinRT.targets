@@ -557,7 +557,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Invoke the task to generate all stub .exe files -->
     <GenerateCsWinRTStubExes
       StubExes="@(CsWinRTStubExe)"
-      SourceFilePath="$(_StubExeOriginalSourceFilePath)"
+      DefaultSourceFilePath="$(_StubExeOriginalSourceFilePath)"
       NativeLibraryPath="$(_StubExeNativeLibraryPath)"
       IntermediateOutputDirectory="$(_StubExeGeneratedFilesDir)"
       DestinationDirectory="$(_StubExeDestinationDir)"
