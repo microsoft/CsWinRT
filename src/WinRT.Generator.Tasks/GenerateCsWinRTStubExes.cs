@@ -255,7 +255,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             return false;
         }
 
-        List<ITaskItem> generatedItems = new();
+        List<ITaskItem> generatedItems = [];
 
         foreach (ITaskItem stubExe in StubExes!)
         {
@@ -265,7 +265,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             }
         }
 
-        GeneratedStubExes = generatedItems.ToArray();
+        GeneratedStubExes = [.. generatedItems];
 
         return true;
     }
