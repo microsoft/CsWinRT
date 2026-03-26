@@ -388,8 +388,6 @@ $(CsWinRTInternalProjection)
                        generation is suppressed. Defaults to the project's $(Win32Manifest).
       AppContainer   - 'true' to set /APPCONTAINER for UWP apps.
                        Defaults to $(UseUwpTools).
-      Platform       - Target platform (arm64, x64, x86). Defaults to the resolved
-                       platform from $(Platform) / $(PlatformTarget).
       SourceText     - Inline C source code for the stub. When set, this text is
                        written to a .c file and compiled. Takes precedence over
                        SourceFile and the default source template.
@@ -474,7 +472,7 @@ $(CsWinRTInternalProjection)
       <_WindowsSdk-um-LibPath>$([System.IO.Path]::Combine($(_WindowsSdkLibPath), 'um', '$(_StubExePlatform)'))</_WindowsSdk-um-LibPath>
 
       <!-- Additional PATH for Windows SDK build tools (mt.exe, rc.exe) that aren't alongside link.exe -->
-      <_StubExeAdditionalPath Condition="'$(WindowsSDKBuildToolsBinVersionedArchFolder)' != ''">$(PATH);$(WindowsSDKBuildToolsBinVersionedArchFolder)</_StubExeAdditionalPath>
+      <_StubExeAdditionalPath Condition="'$(WindowsSDKBuildToolsBinVersionedArchFolder)' != ''">$(WindowsSDKBuildToolsBinVersionedArchFolder)</_StubExeAdditionalPath>
     </PropertyGroup>
 
     <!-- Ensure the intermediate output directory exists -->

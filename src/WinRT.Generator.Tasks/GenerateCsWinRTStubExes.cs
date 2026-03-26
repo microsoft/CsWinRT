@@ -53,13 +53,6 @@ namespace Microsoft.NET.Build.Tasks;
 ///     </description>
 ///   </item>
 ///   <item>
-///     <term><c>Platform</c></term>
-///     <description>
-///       The target platform (<c>x64</c>, <c>x86</c>, or <c>arm64</c>).
-///       Defaults to <see cref="DefaultPlatform"/>.
-///     </description>
-///   </item>
-///   <item>
 ///     <term><c>SourceText</c></term>
 ///     <description>
 ///       Inline C source code to use for this stub. When set, the text is written
@@ -86,7 +79,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     /// <remarks>
     /// <para>
     /// The item identity (<c>Include</c>) is the stub name (used as the output <c>.exe</c> filename).
-    /// Supported metadata: <c>OutputType</c>, <c>Win32Manifest</c>, <c>AppContainer</c>, <c>Platform</c>,
+    /// Supported metadata: <c>OutputType</c>, <c>Win32Manifest</c>, <c>AppContainer</c>,
     /// <c>SourceText</c>, <c>SourceFile</c>.
     /// </para>
     /// </remarks>
@@ -179,11 +172,13 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     public string? WindowsSdkUmLibPath { get; set; }
 
     /// <summary>
-    /// Gets or sets additional directories to prepend to the <c>PATH</c> when invoking <c>cl.exe</c>.
+    /// Gets or sets an additional <c>PATH</c> fragment to append when invoking <c>cl.exe</c>.
     /// </summary>
     /// <remarks>
     /// This is used when not using environmental tools and the Windows SDK build tools directory
-    /// (containing <c>mt.exe</c> and <c>rc.exe</c>) is not already on the <c>PATH</c>.
+    /// (containing <c>mt.exe</c> and <c>rc.exe</c>) is not already on the <c>PATH</c>. The value is
+    /// appended to the existing <c>PATH</c> and may contain one or more semicolon-separated directories.
+    /// Callers should not include the current <c>PATH</c> (for example, via <c>$(PATH)</c>) in this value.
     /// </remarks>
     public string? AdditionalPath { get; set; }
 
@@ -227,8 +222,12 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     public bool DefaultAppContainer { get; set; }
 
     /// <summary>
-    /// Gets or sets the default platform for stubs that don't specify one.
+    /// Gets or sets the target platform for all stubs.
     /// </summary>
+    /// <remarks>
+    /// The platform controls architecture-specific linker flags such as <c>/CETCOMPAT</c>.
+    /// Valid values are <c>arm64</c>, <c>x64</c>, and <c>x86</c>.
+    /// </remarks>
     public string? DefaultPlatform { get; set; }
 
     /// <summary>
@@ -317,11 +316,30 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         if (!UseEnvironmentalTools)
         {
             if (string.IsNullOrEmpty(MsvcIncludePath) || !Directory.Exists(MsvcIncludePath) ||
-                string.IsNullOrEmpty(WindowsSdkUcrtIncludePath) || !Directory.Exists(WindowsSdkUcrtIncludePath))
+                string.IsNullOrEmpty(WindowsSdkUcrtIncludePath) || !Directory.Exists(WindowsSdkUcrtIncludePath) ||
+                string.IsNullOrEmpty(WindowsSdkUmIncludePath) || !Directory.Exists(WindowsSdkUmIncludePath) ||
+                string.IsNullOrEmpty(MsvcLibPath) || !Directory.Exists(MsvcLibPath) ||
+                string.IsNullOrEmpty(WindowsSdkUcrtLibPath) || !Directory.Exists(WindowsSdkUcrtLibPath) ||
+                string.IsNullOrEmpty(WindowsSdkUmLibPath) || !Directory.Exists(WindowsSdkUmLibPath))
             {
                 Log.LogError(
-                    "Failed to find the paths for the include folders to pass to MSVC, which are needed to compile stub executables. " +
+                    "Failed to find the paths for the include and library folders to pass to MSVC, which are needed to compile stub executables. " +
                     "Try setting 'CsWinRTUseEnvironmentalTools' and building from a Visual Studio Developer Command Prompt (or PowerShell) session.");
+
+                return false;
+            }
+
+            // Validate the platform when not using environmental tools
+            string platform = DefaultPlatform ?? "";
+
+            if (!string.Equals(platform, "arm64", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(platform, "x64", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(platform, "x86", StringComparison.OrdinalIgnoreCase))
+            {
+                Log.LogError(
+                    "Invalid platform '{0}'. Make sure to set 'Platform' to either 'arm64', 'x64', or 'x86'. " +
+                    "Alternatively, try setting 'CsWinRTUseEnvironmentalTools' and building from a Visual Studio Developer Command Prompt (or PowerShell) session.",
+                    platform);
 
                 return false;
             }
@@ -348,18 +366,13 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     {
         string stubName = stubExe.ItemSpec;
 
-        // Validate the platform
-        string platform = GetMetadataOrDefault(stubExe, "Platform", DefaultPlatform ?? "");
-
-        if (!UseEnvironmentalTools &&
-            !string.Equals(platform, "arm64", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(platform, "x64", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(platform, "x86", StringComparison.OrdinalIgnoreCase))
+        // Validate that the stub name is a simple file name (no path separators, no '..' traversal, no invalid chars)
+        if (string.IsNullOrEmpty(stubName) ||
+            stubName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+            stubName.Contains(".."))
         {
             Log.LogError(
-                "Invalid platform '{0}' for stub '{1}'. Make sure to set 'Platform' to either 'arm64', 'x64', or 'x86'. " +
-                "Alternatively, try setting 'CsWinRTUseEnvironmentalTools' and building from a Visual Studio Developer Command Prompt (or PowerShell) session.",
-                platform,
+                "Invalid stub name '{0}'. The stub name must be a simple file name without path separators or invalid characters.",
                 stubName);
 
             return false;
@@ -418,9 +431,15 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         string outputType = GetMetadataOrDefault(stubExe, "OutputType", DefaultOutputType ?? "Exe");
         string win32Manifest = GetMetadataOrDefault(stubExe, "Win32Manifest", DefaultWin32Manifest ?? "");
         bool appContainer = GetBooleanMetadataOrDefault(stubExe, "AppContainer", DefaultAppContainer);
-        string platform = GetMetadataOrDefault(stubExe, "Platform", DefaultPlatform ?? "");
+        string platform = DefaultPlatform ?? "";
         string sourceText = stubExe.GetMetadata("SourceText");
         string sourceFile = stubExe.GetMetadata("SourceFile");
+
+        // Resolve manifest path to full path so it works regardless of working directory
+        if (!string.IsNullOrEmpty(win32Manifest))
+        {
+            win32Manifest = Path.GetFullPath(win32Manifest);
+        }
 
         // Prepare paths for the intermediate working directory for this stub
         string stubIntermediateDir = Path.Combine(IntermediateOutputDirectory!, stubName);
@@ -432,27 +451,37 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
 
         Log.LogMessage(MessageImportance.Normal, "Generating stub .exe '{0}'", stubName);
 
-        // Ensure the intermediate directory exists
-        Directory.CreateDirectory(stubIntermediateDir);
+        try
+        {
+            // Ensure the intermediate and destination directories exist
+            Directory.CreateDirectory(stubIntermediateDir);
+            Directory.CreateDirectory(DestinationDirectory!);
 
-        // Write the source for this stub (priority: SourceText > SourceFile > DefaultSourceFilePath)
-        if (!string.IsNullOrEmpty(sourceText))
-        {
-            File.WriteAllText(sourceFilePath, sourceText);
-        }
-        else if (!string.IsNullOrEmpty(sourceFile))
-        {
-            File.Copy(sourceFile, sourceFilePath, overwrite: true);
-        }
-        else
-        {
-            File.Copy(DefaultSourceFilePath!, sourceFilePath, overwrite: true);
-        }
+            // Write the source for this stub (priority: SourceText > SourceFile > DefaultSourceFilePath)
+            if (!string.IsNullOrEmpty(sourceText))
+            {
+                File.WriteAllText(sourceFilePath, sourceText);
+            }
+            else if (!string.IsNullOrEmpty(sourceFile))
+            {
+                File.Copy(sourceFile, sourceFilePath, overwrite: true);
+            }
+            else
+            {
+                File.Copy(DefaultSourceFilePath!, sourceFilePath, overwrite: true);
+            }
 
-        // Delete any previously-generated broken .exe in the destination (see https://github.com/dotnet/runtime/issues/111313)
-        if (File.Exists(binaryDestinationFilePath))
+            // Delete any previously-generated broken .exe in the destination (see https://github.com/dotnet/runtime/issues/111313)
+            if (File.Exists(binaryDestinationFilePath))
+            {
+                File.Delete(binaryDestinationFilePath);
+            }
+        }
+        catch (Exception ex)
         {
-            File.Delete(binaryDestinationFilePath);
+            Log.LogError("Failed to prepare files for stub .exe '{0}': {1}", stubName, ex.Message);
+
+            return false;
         }
 
         // Build the MSVC command-line arguments
@@ -554,7 +583,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         // See: https://learn.microsoft.com/cpp/build/reference/manifest-create-side-by-side-assembly-manifest
         if (!string.IsNullOrEmpty(win32Manifest))
         {
-            args.AppendFormat("/MANIFEST:EMBED /MANIFESTINPUT:{0} ", win32Manifest);
+            args.Append("/MANIFEST:EMBED /MANIFESTINPUT:\"").Append(win32Manifest).Append("\" ");
         }
         else
         {
@@ -661,20 +690,43 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
                 return false;
             }
 
-            string stdout = process.StandardOutput.ReadToEnd();
-            string stderr = process.StandardError.ReadToEnd();
+            // Read stdout and stderr concurrently to avoid deadlocks from full pipe buffers.
+            // See: https://learn.microsoft.com/dotnet/api/system.diagnostics.process.standardoutput#remarks
+            StringBuilder stdoutBuilder = new();
+            StringBuilder stderrBuilder = new();
 
+            process.OutputDataReceived += (_, e) =>
+            {
+                if (e.Data is not null)
+                {
+                    stdoutBuilder.AppendLine(e.Data);
+                }
+            };
+
+            process.ErrorDataReceived += (_, e) =>
+            {
+                if (e.Data is not null)
+                {
+                    stderrBuilder.AppendLine(e.Data);
+                }
+            };
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
             process.WaitForExit();
 
+            string stdout = stdoutBuilder.ToString().TrimEnd();
+            string stderr = stderrBuilder.ToString().TrimEnd();
+
             // Log compiler output
-            if (!string.IsNullOrWhiteSpace(stdout))
+            if (stdout.Length > 0)
             {
-                Log.LogMessage(MessageImportance.Normal, stdout.TrimEnd());
+                Log.LogMessage(MessageImportance.Normal, stdout);
             }
 
-            if (!string.IsNullOrWhiteSpace(stderr))
+            if (stderr.Length > 0)
             {
-                Log.LogWarning("{0}", stderr.TrimEnd());
+                Log.LogWarning("{0}", stderr);
             }
 
             if (process.ExitCode != 0)
