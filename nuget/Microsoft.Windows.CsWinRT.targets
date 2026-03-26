@@ -498,7 +498,7 @@ $(CsWinRTInternalProjection)
       AdditionalPath="$(_StubExeAdditionalPath)"
       IsDebugConfiguration="$([MSBuild]::ValueOrDefault('$(Configuration)', '') == 'Debug')"
       ControlFlowGuard="$([MSBuild]::ValueOrDefault('$(ControlFlowGuard)', '') == 'Guard')"
-      CETCompat="$(CETCompat)"
+      CETCompat="$([MSBuild]::ValueOrDefault('$(CETCompat)', '') != 'false')"
       DefaultOutputType="$(OutputType)"
       DefaultWin32Manifest="$(_StubExeWin32ManifestPath)"
       DefaultAppContainer="$(UseUwpTools)"

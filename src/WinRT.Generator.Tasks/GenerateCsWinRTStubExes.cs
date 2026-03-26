@@ -205,16 +205,13 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     public bool ControlFlowGuard { get; set; }
 
     /// <summary>
-    /// Gets or sets the CET compatibility mode.
+    /// Gets or sets whether CET shadow stack compatibility is enabled.
     /// </summary>
     /// <remarks>
-    /// <para>Maps to the <c>CETCompat</c> MSBuild property.</para>
-    /// <list type="bullet">
-    ///   <item>Empty or non-<c>"false"</c>: CET shadow stack is enabled (for x64).</item>
-    ///   <item><c>"false"</c>: CET shadow stack is disabled.</item>
-    /// </list>
+    /// When <see langword="true"/> (the default), the <c>/CETCOMPAT</c> linker flag is set for x64 targets.
+    /// Maps to the <c>CETCompat</c> MSBuild property.
     /// </remarks>
-    public string? CETCompat { get; set; }
+    public bool CETCompat { get; set; } = true;
 
     /// <summary>
     /// Gets or sets the default output type for stubs that don't specify one.
@@ -561,7 +558,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         }
 
         // Configure CET shadow stack compatibility (https://learn.microsoft.com/cpp/build/reference/cetcompat)
-        bool cetEnabled = !string.Equals(CETCompat, "false", StringComparison.OrdinalIgnoreCase);
+        bool cetEnabled = CETCompat;
         bool isX64 = string.Equals(platform, "x64", StringComparison.OrdinalIgnoreCase);
 
         if (isX64)
