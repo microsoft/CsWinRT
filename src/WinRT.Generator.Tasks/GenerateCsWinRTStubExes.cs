@@ -253,6 +253,32 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     /// <inheritdoc/>
     public override bool Execute()
     {
+        if (!ValidateParameters())
+        {
+            return false;
+        }
+
+        List<ITaskItem> generatedItems = new();
+
+        foreach (ITaskItem stubExe in StubExes!)
+        {
+            if (!GenerateStubExe(stubExe, generatedItems))
+            {
+                return false;
+            }
+        }
+
+        GeneratedStubExes = generatedItems.ToArray();
+
+        return true;
+    }
+
+    /// <summary>
+    /// Validates all task parameters and input items upfront, before any compilation begins.
+    /// </summary>
+    /// <returns><see langword="true"/> if all parameters and items are valid; otherwise, <see langword="false"/>.</returns>
+    private bool ValidateParameters()
+    {
         if (StubExes is not { Length: > 0 })
         {
             Log.LogError("No stub executables were specified.");
@@ -304,40 +330,30 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             }
         }
 
-        List<ITaskItem> generatedItems = new();
-
+        // Validate each input item
         foreach (ITaskItem stubExe in StubExes)
         {
-            if (!GenerateStubExe(stubExe, generatedItems))
+            if (!ValidateStubExeItem(stubExe))
             {
                 return false;
             }
         }
 
-        GeneratedStubExes = generatedItems.ToArray();
-
         return true;
     }
 
     /// <summary>
-    /// Generates a single stub <c>.exe</c> for the given item.
+    /// Validates a single <see cref="ITaskItem"/> describing a stub to generate.
     /// </summary>
-    /// <param name="stubExe">The <see cref="ITaskItem"/> describing the stub to generate.</param>
-    /// <param name="generatedItems">The list to add generated output items to.</param>
-    /// <returns><see langword="true"/> if the stub was generated successfully; otherwise, <see langword="false"/>.</returns>
-    private bool GenerateStubExe(ITaskItem stubExe, List<ITaskItem> generatedItems)
+    /// <param name="stubExe">The item to validate.</param>
+    /// <returns><see langword="true"/> if the item is valid; otherwise, <see langword="false"/>.</returns>
+    private bool ValidateStubExeItem(ITaskItem stubExe)
     {
         string stubName = stubExe.ItemSpec;
 
-        // Resolve per-stub metadata, falling back to defaults
-        string outputType = GetMetadataOrDefault(stubExe, "OutputType", DefaultOutputType ?? "Exe");
-        string win32Manifest = GetMetadataOrDefault(stubExe, "Win32Manifest", DefaultWin32Manifest ?? "");
-        bool appContainer = GetBooleanMetadataOrDefault(stubExe, "AppContainer", DefaultAppContainer);
-        string platform = GetMetadataOrDefault(stubExe, "Platform", DefaultPlatform ?? "");
-        string sourceText = stubExe.GetMetadata("SourceText");
-        string sourceFile = stubExe.GetMetadata("SourceFile");
-
         // Validate the platform
+        string platform = GetMetadataOrDefault(stubExe, "Platform", DefaultPlatform ?? "");
+
         if (!UseEnvironmentalTools &&
             !string.Equals(platform, "arm64", StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(platform, "x64", StringComparison.OrdinalIgnoreCase) &&
@@ -352,6 +368,63 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             return false;
         }
 
+        // Validate the source: one of SourceText, SourceFile, or DefaultSourceFilePath must be available
+        string sourceText = stubExe.GetMetadata("SourceText");
+        string sourceFile = stubExe.GetMetadata("SourceFile");
+
+        if (!string.IsNullOrEmpty(sourceText))
+        {
+            // Inline source text is always valid
+        }
+        else if (!string.IsNullOrEmpty(sourceFile))
+        {
+            if (!File.Exists(sourceFile))
+            {
+                Log.LogError("The source file '{0}' specified for stub '{1}' does not exist.", sourceFile, stubName);
+
+                return false;
+            }
+        }
+        else if (!string.IsNullOrEmpty(DefaultSourceFilePath))
+        {
+            if (!File.Exists(DefaultSourceFilePath))
+            {
+                Log.LogError("The default stub .exe source file '{0}' does not exist.", DefaultSourceFilePath);
+
+                return false;
+            }
+        }
+        else
+        {
+            Log.LogError(
+                "No source was specified for stub '{0}'. Set 'SourceText' or 'SourceFile' metadata on the item, " +
+                "or provide a default source file via the 'DefaultSourceFilePath' task parameter.",
+                stubName);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Generates a single stub <c>.exe</c> for the given item.
+    /// </summary>
+    /// <param name="stubExe">The <see cref="ITaskItem"/> describing the stub to generate (must be pre-validated).</param>
+    /// <param name="generatedItems">The list to add generated output items to.</param>
+    /// <returns><see langword="true"/> if the stub was generated successfully; otherwise, <see langword="false"/>.</returns>
+    private bool GenerateStubExe(ITaskItem stubExe, List<ITaskItem> generatedItems)
+    {
+        string stubName = stubExe.ItemSpec;
+
+        // Resolve per-stub metadata, falling back to defaults
+        string outputType = GetMetadataOrDefault(stubExe, "OutputType", DefaultOutputType ?? "Exe");
+        string win32Manifest = GetMetadataOrDefault(stubExe, "Win32Manifest", DefaultWin32Manifest ?? "");
+        bool appContainer = GetBooleanMetadataOrDefault(stubExe, "AppContainer", DefaultAppContainer);
+        string platform = GetMetadataOrDefault(stubExe, "Platform", DefaultPlatform ?? "");
+        string sourceText = stubExe.GetMetadata("SourceText");
+        string sourceFile = stubExe.GetMetadata("SourceFile");
+
         // Prepare paths for the intermediate working directory for this stub
         string stubIntermediateDir = Path.Combine(IntermediateOutputDirectory!, stubName);
         string sourceFileName = stubName + ".c";
@@ -365,44 +438,18 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         // Ensure the intermediate directory exists
         Directory.CreateDirectory(stubIntermediateDir);
 
-        // Resolve the source for this stub:
-        //   1. SourceText metadata: write inline text to the .c file
-        //   2. SourceFile metadata: copy the specified file
-        //   3. Default DefaultSourceFilePath: copy the default template from the NuGet package
+        // Write the source for this stub (priority: SourceText > SourceFile > DefaultSourceFilePath)
         if (!string.IsNullOrEmpty(sourceText))
         {
             File.WriteAllText(sourceFilePath, sourceText);
         }
         else if (!string.IsNullOrEmpty(sourceFile))
         {
-            if (!File.Exists(sourceFile))
-            {
-                Log.LogError("The source file '{0}' specified for stub '{1}' does not exist.", sourceFile, stubName);
-
-                return false;
-            }
-
             File.Copy(sourceFile, sourceFilePath, overwrite: true);
-        }
-        else if (!string.IsNullOrEmpty(DefaultSourceFilePath))
-        {
-            if (!File.Exists(DefaultSourceFilePath))
-            {
-                Log.LogError("The default stub .exe source file '{0}' does not exist.", DefaultSourceFilePath);
-
-                return false;
-            }
-
-            File.Copy(DefaultSourceFilePath, sourceFilePath, overwrite: true);
         }
         else
         {
-            Log.LogError(
-                "No source was specified for stub '{0}'. Set 'SourceText' or 'SourceFile' metadata on the item, " +
-                "or provide a default source file via the 'DefaultSourceFilePath' task parameter.",
-                stubName);
-
-            return false;
+            File.Copy(DefaultSourceFilePath!, sourceFilePath, overwrite: true);
         }
 
         // Delete any previously-generated broken .exe in the destination (see https://github.com/dotnet/runtime/issues/111313)
