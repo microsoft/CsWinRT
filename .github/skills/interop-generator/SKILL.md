@@ -1,6 +1,6 @@
 ---
 name: interop-generator
-description: Work with, answer questions about, edit, debug, or extend the CsWinRT interop generator (cswinrtinteropgen.exe) that produces WinRT.Interop.dll. Also use whenever the user asks anything related to the interop generator.
+description: Use whenever the user mentions the interop generator (cswinrtinteropgen.exe, which produces WinRT.Interop.dll) in any context — debugging, extending, or just understanding how it works.
 ---
 
 # CsWinRT interop generator (`cswinrtinteropgen.exe`)
