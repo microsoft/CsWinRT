@@ -272,6 +272,46 @@ The `GetInstance` method efficiently retrieves or creates adapter instances usin
 
 For the `GetMany` method and other type-specific operations, extension methods on `IEnumeratorAdapter<T>` are provided in the runtime, with specialized overloads for different element type categories (blittable value types, managed value types, unmanaged value types, key-value pairs, reference types, strings, objects, etc.).
 
+### Collection element marshallers
+
+For `GetMany` CCW methods, the runtime's collection adapter extension types (`IEnumeratorAdapterExtensions`, `IListAdapterExtensions`, `IReadOnlyListAdapterExtensions`) accept a `TElementMarshaller` generic type parameter to perform per-element managed → ABI conversion. This follows the same strategy pattern used for SZ array element marshallers (see `references/marshalling-arrays.md`), but with a key difference: **collection element marshallers are one-way** (managed → ABI only), whereas array element marshallers are bidirectional.
+
+**Runtime interfaces** (in `WinRT.Runtime.dll`, under `InteropServices/Marshalling/Collections/`):
+
+| Interface | Element type | Members |
+|-----------|-------------|---------|
+| `IWindowsRuntimeReferenceTypeElementMarshaller<T>` | Reference types | `ConvertToUnmanaged(T?)` |
+| `IWindowsRuntimeManagedValueTypeElementMarshaller<T, TAbi>` | Managed value types | `ConvertToUnmanaged(T)`, `Dispose(TAbi)` |
+| `IWindowsRuntimeUnmanagedValueTypeElementMarshaller<T, TAbi>` | Unmanaged value types | `ConvertToUnmanaged(T)` |
+| `IWindowsRuntimeKeyValuePairTypeElementMarshaller<TKey, TValue>` | `KeyValuePair<K,V>` | `ConvertToUnmanaged(KeyValuePair<K,V>)` |
+| `IWindowsRuntimeNullableTypeElementMarshaller<T>` | `Nullable<T>` | `ConvertToUnmanaged(T?)` |
+
+These are `static abstract` interfaces, `[Obsolete]`, and `[EditorBrowsable(Never)]` — implementation details consumed only by generated code.
+
+**Runtime consumer example** — a `GetMany` extension method on `IEnumeratorAdapterExtensions`:
+
+```csharp
+public unsafe uint GetMany<TElementMarshaller>(uint itemsSize, void** items)
+    where TElementMarshaller : IWindowsRuntimeReferenceTypeElementMarshaller<T>;
+```
+
+Similar overloads exist constrained to each of the other element marshaller interfaces. `IListAdapterExtensions` and `IReadOnlyListAdapterExtensions` also provide matching `GetMany<TElementMarshaller>` methods.
+
+**Generated element marshaller types** (in `WinRT.Interop.dll`):
+
+The interop generator emits concrete element marshaller types via `InteropTypeDefinitionFactory.IEnumeratorElementMarshaller`, with the same 5 factory methods as for SZ arrays: `ReferenceType()`, `ManagedValueType()`, `UnmanagedValueType()`, `KeyValuePair()`, `NullableValueType()`. The generated types:
+
+- Implement the matching `IWindowsRuntime*ElementMarshaller<T>` interface
+- Are emitted as `sealed struct` (value types) or `abstract class` (reference types), same as for array element marshallers
+- Contain a `ConvertToUnmanaged(...)` stub method (rewritten during pass 2)
+- Are named `<EncodedTypeName>ElementMarshaller`
+- Are **emitted by the `IEnumerator<T>` builder** and tracked in emit state via `emitState.TrackTypeDefinition(elementMarshallerType, elementType, "ElementMarshaller")`
+- Are **reused by the `IList<T>` and `IReadOnlyList<T>` method factories** via `emitState.LookupTypeDefinition(elementType, "ElementMarshaller")` — they are not re-emitted
+
+The same element type categories that skip element marshallers for arrays also skip them for collections: blittable value types, `object`, `string`, `Type`, and `Exception` use specialized direct paths.
+
+**Why one-way?** Collection `GetMany` methods copy items from a managed collection *out* to a native buffer. The reverse direction (native → managed) is handled by the RCW `Methods` types (e.g., `IIteratorMethodsImpl<T>.Current`), which use the full two-pass rewrite pipeline directly — they don't go through element marshallers.
+
 We can now move on to the actual CCW implementation. As with all interfaces, we'll need a vtable:
 
 ```csharp
