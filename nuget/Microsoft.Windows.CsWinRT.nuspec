@@ -13,6 +13,7 @@
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <license type="file">LICENSE</license>
     <projectUrl>https://github.com/microsoft/cswinrt</projectUrl>
+    <repository type="git" url="https://github.com/microsoft/cswinrt.git" branch="$branch$" commit="$commit$" />
     <dependencies>
       <group targetFramework=".NET10.0" />
     </dependencies>
