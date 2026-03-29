@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -20,12 +19,18 @@ namespace Windows.Foundation;
 /// Contains number values that represent the location and size of a rectangle.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.rect"/>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Rect>")]
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeReferenceType(typeof(Rect?))]
+#endif
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#if !REFERENCE_ASSEMBLY
 [ABI.Windows.Foundation.RectComWrappersMarshaller]
+#endif
 public struct Rect : IEquatable<Rect>, IFormattable
 {
     /// <summary>
@@ -291,6 +296,7 @@ public struct Rect : IEquatable<Rect>, IFormattable
     /// <inheritdoc/>
     public override readonly string ToString()
     {
+#if !REFERENCE_ASSEMBLY
         if (IsEmpty)
         {
             return "Empty";
@@ -299,11 +305,15 @@ public struct Rect : IEquatable<Rect>, IFormattable
         char separator = TokenizerHelper.GetNumericListSeparator(null);
 
         return $"{X}{separator}{Y}{separator}{Width}{separator}{Height}";
+#else
+        throw null!;
+#endif
     }
 
     /// <inheritdoc/>
     public readonly string ToString(string? format, IFormatProvider? formatProvider)
     {
+#if !REFERENCE_ASSEMBLY
         // Fast path if both arguments are 'null'
         if (format is null && formatProvider is null)
         {
@@ -328,6 +338,9 @@ public struct Rect : IEquatable<Rect>, IFormattable
         handler.AppendFormatted(Height, format);
 
         return handler.ToStringAndClear();
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -364,4 +377,3 @@ public struct Rect : IEquatable<Rect>, IFormattable
     /// <returns><see langword="true"/> if <paramref name="left"/> and <paramref name="right"/> are not equal, otherwise <see langword="false"/>.</returns>
     public static bool operator !=(Rect left, Rect right) => !left.Equals(right);
 }
-#endif

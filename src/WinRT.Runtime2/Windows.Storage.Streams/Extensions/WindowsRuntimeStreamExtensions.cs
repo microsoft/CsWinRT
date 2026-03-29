@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.IO;
 using WindowsRuntime;
@@ -14,6 +13,7 @@ namespace Windows.Storage.Streams;
 /// </summary>
 public static class WindowsRuntimeStreamExtensions
 {
+#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Converts a Windows Runtime <see cref="IInputStream"/> to a managed <see cref="Stream"/>.
     /// </summary>
@@ -130,5 +130,17 @@ public static class WindowsRuntimeStreamExtensions
 
         return (IRandomAccessStream)WindowsRuntimeStreamMapping.AsNativeStream(stream);
     }
-}
+#else
+#pragma warning disable CS1591
+    public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream) { throw null!; }
+    public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream, int bufferSize) { throw null!; }
+    public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream) { throw null!; }
+    public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream, int bufferSize) { throw null!; }
+    public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream) { throw null!; }
+    public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream, int bufferSize) { throw null!; }
+    public static IInputStream AsInputStream(this Stream stream) { throw null!; }
+    public static IOutputStream AsOutputStream(this Stream stream) { throw null!; }
+    public static IRandomAccessStream AsRandomAccessStream(this Stream stream) { throw null!; }
+#pragma warning restore CS1591
 #endif
+}

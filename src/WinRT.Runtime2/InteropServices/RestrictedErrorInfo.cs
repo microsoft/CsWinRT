@@ -1,7 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
+#if REFERENCE_ASSEMBLY
+#pragma warning disable IDE0380
+#endif
+
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -17,6 +20,7 @@ namespace WindowsRuntime.InteropServices;
 /// <see href="https://learn.microsoft.com/windows/win32/api/restrictederrorinfo/nn-restrictederrorinfo-irestrictederrorinfo"/>.
 public static unsafe class RestrictedErrorInfo
 {
+#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Converts an <c>HRESULT</c> error code to a corresponding <see cref="Exception"/> object.
     /// </summary>
@@ -440,5 +444,12 @@ public static unsafe class RestrictedErrorInfo
             _ = WindowsRuntimeImports.RoReportUnhandledError(restrictedErrorInfoValuePtr);
         }
     }
-}
+#else
+#pragma warning disable CS1591, IDE0380
+    public static Exception? GetExceptionForHR(HRESULT errorCode) { throw null!; }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ThrowExceptionForHR(HRESULT errorCode) { throw null!; }
+    public static HRESULT GetHRForException(Exception? exception) { throw null!; }
+#pragma warning restore CS1591, IDE0380
 #endif
+}

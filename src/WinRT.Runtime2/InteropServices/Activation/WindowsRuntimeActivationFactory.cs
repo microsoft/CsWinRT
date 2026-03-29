@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -51,6 +50,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         }
     }
 
+#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Gets the activation factory for a Windows Runtime type with the specified runtime class name.
     /// </summary>
@@ -95,16 +95,21 @@ public static unsafe class WindowsRuntimeActivationFactory
 
         return WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactory, in iid)!;
     }
+#endif
 
     /// <returns>A pointer to the activation factory for the specified Windows Runtime type.</returns>
     /// <inheritdoc cref="GetActivationFactory(string)"/>
     public static void* GetActivationFactoryUnsafe(string runtimeClassName)
     {
+#if !REFERENCE_ASSEMBLY
         HRESULT hresult = GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in *(Guid*)null, out void* activationFactory);
 
         ThrowIfActivationFailed(runtimeClassName, hresult);
 
         return activationFactory;
+#else
+        throw null!;
+#endif
     }
 
     /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to return.</param>
@@ -112,13 +117,18 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <inheritdoc cref="GetActivationFactory(string)"/>
     public static void* GetActivationFactoryUnsafe(string runtimeClassName, in Guid iid)
     {
+#if !REFERENCE_ASSEMBLY
         HRESULT hresult = GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in iid, out void* activationFactory);
 
         ThrowIfActivationFailed(runtimeClassName, hresult);
 
         return activationFactory;
+#else
+        throw null!;
+#endif
     }
 
+#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Tries to get the activation factory for a Windows Runtime type with the specified runtime class name.
     /// </summary>
@@ -163,12 +173,17 @@ public static unsafe class WindowsRuntimeActivationFactory
 
         return true;
     }
+#endif
 
     /// <param name="activationFactory">A pointer to the activation factory for the specified Windows Runtime type, if successfully retrieved.</param>
     /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
     public static bool TryGetActivationFactoryUnsafe(string runtimeClassName, out void* activationFactory)
     {
+#if !REFERENCE_ASSEMBLY
         return GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in *(Guid*)null, out activationFactory).Succeeded;
+#else
+        throw null!;
+#endif
     }
 
     /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to wrap in the returned object reference.</param>
@@ -176,9 +191,14 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
     public static bool TryGetActivationFactoryUnsafe(string runtimeClassName, in Guid iid, out void* activationFactory)
     {
+#if !REFERENCE_ASSEMBLY
         return GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in iid, out activationFactory).Succeeded;
+#else
+        throw null!;
+#endif
     }
 
+#if !REFERENCE_ASSEMBLY
     /// <inheritdoc cref="TryGetActivationFactoryUnsafe(string, in Guid, out void*)"/>
     private static HRESULT GetActivationFactoryFromAnySourceUnsafe(string runtimeClassName, in Guid iid, out void* activationFactory)
     {
@@ -369,5 +389,5 @@ public static unsafe class WindowsRuntimeActivationFactory
             ThrowException(runtimeClassName, hresult);
         }
     }
-}
 #endif
+}

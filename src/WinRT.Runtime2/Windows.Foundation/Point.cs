@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -18,12 +17,18 @@ namespace Windows.Foundation;
 /// Represents X and Y coordinate values that define a point in a two-dimensional plane.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.point"/>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Point>")]
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeReferenceType(typeof(Point?))]
+#endif
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#if !REFERENCE_ASSEMBLY
 [ABI.Windows.Foundation.PointComWrappersMarshaller]
+#endif
 public struct Point : IEquatable<Point>, IFormattable
 {
     /// <summary>
@@ -83,14 +88,19 @@ public struct Point : IEquatable<Point>, IFormattable
     /// <inheritdoc/>
     public override readonly string ToString()
     {
+#if !REFERENCE_ASSEMBLY
         char separator = TokenizerHelper.GetNumericListSeparator(null);
 
         return $"{X}{separator}{Y}";
+#else
+        throw null!;
+#endif
     }
 
     /// <inheritdoc/>
     public readonly string ToString(string? format, IFormatProvider? formatProvider)
     {
+#if !REFERENCE_ASSEMBLY
         // Fast path if both arguments are 'null'
         if (format is null && formatProvider is null)
         {
@@ -111,6 +121,9 @@ public struct Point : IEquatable<Point>, IFormattable
         handler.AppendFormatted(Y, format);
 
         return handler.ToStringAndClear();
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -131,4 +144,3 @@ public struct Point : IEquatable<Point>, IFormattable
     /// <remarks>Two <see cref="Point"/> values are equal if each component in <paramref name="left"/> is equal to the corresponding component in <paramref name="right"/>.</remarks>
     public static bool operator !=(Point left, Point right) => !left.Equals(right);
 }
-#endif

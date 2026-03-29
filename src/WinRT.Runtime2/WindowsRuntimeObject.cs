@@ -1,7 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
+#if REFERENCE_ASSEMBLY
+#pragma warning disable IDE0380
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -25,11 +28,15 @@ namespace WindowsRuntime;
 /// <remarks>
 /// This type should only be used as a base type by generated projected types.
 /// </remarks>
-public abstract unsafe class WindowsRuntimeObject :
+public abstract unsafe class WindowsRuntimeObject
+#if !REFERENCE_ASSEMBLY
+    :
     IDynamicInterfaceCastable,
     IUnmanagedVirtualMethodTableProvider,
     ICustomQueryInterface
+#endif
 {
+#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// The lazy-loaded, cached object reference for <c>IInspectable</c> for the current object.
     /// </summary>
@@ -45,7 +52,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// The lazy-loaded cache of additional data associated to type handles.
     /// </summary>
     private volatile ConcurrentDictionary<RuntimeTypeHandle, object>? _typeHandleCache;
-
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters.
     /// </summary>
@@ -937,6 +943,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// A dummy type to use for caching adaptive <see cref="IEnumerable"/> object references in <see cref="TryGetObjectReferenceForIEnumerableInterfaceInstance"/>.
     /// </summary>
     private static class IEnumerableInstance;
+#endif
 }
 
 /// <summary>
@@ -957,4 +964,3 @@ file static class WindowsRuntimeObjectExceptions
             $"In this configuration, runtime casts on Windows Runtime objects will only work if the managed object implements the target interface in metadata.");
     }
 }
-#endif

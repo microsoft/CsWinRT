@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices.Marshalling;
 
@@ -37,9 +36,13 @@ public static class RestrictedErrorInfoExceptionMarshaller
     /// </remarks>
     public static HRESULT ConvertToUnmanaged(Exception value)
     {
+#if !REFERENCE_ASSEMBLY
         RestrictedErrorInfo.SetErrorInfo(value);
 
         return RestrictedErrorInfo.GetHRForException(value);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -52,4 +55,3 @@ public static class RestrictedErrorInfoExceptionMarshaller
         return RestrictedErrorInfo.GetExceptionForHR(value);
     }
 }
-#endif

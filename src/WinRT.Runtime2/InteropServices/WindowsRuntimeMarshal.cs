@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -17,6 +16,7 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 public static unsafe class WindowsRuntimeMarshal
 {
+#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Checks whether two objects are the same, or represent the same underlying native object.
     /// </summary>
@@ -157,5 +157,15 @@ public static unsafe class WindowsRuntimeMarshal
     {
         WindowsRuntimeUnknownMarshaller.Free(value);
     }
-}
+#else
+#pragma warning disable CS1591
+    public static bool NativeReferenceEquals(object? left, object? right) { throw null!; }
+    public static bool IsReferenceToManagedObject(void* externalComObject) { throw null!; }
+    public static bool TryGetManagedObject(void* externalComObject, [NotNullWhen(true)] out object? result) { throw null!; }
+    public static bool TryGetNativeObject([NotNullWhen(true)] object? managedObject, out void* result) { throw null!; }
+    public static void* ConvertToUnmanaged(object? managedObject) { throw null!; }
+    public static object? ConvertToManaged(void* value) { throw null!; }
+    public static void Free(void* value) { throw null!; }
+#pragma warning restore CS1591
 #endif
+}

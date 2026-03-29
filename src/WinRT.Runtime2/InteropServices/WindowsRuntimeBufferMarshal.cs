@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics.CodeAnalysis;
 using Windows.Foundation;
@@ -28,6 +27,7 @@ public static partial class WindowsRuntimeBufferMarshal
     /// </remarks>
     public static unsafe bool TryGetDataUnsafe([NotNullWhen(true)] IBuffer? buffer, out byte* data)
     {
+#if !REFERENCE_ASSEMBLY
         if (buffer is null)
         {
             goto Failure;
@@ -50,6 +50,9 @@ public static partial class WindowsRuntimeBufferMarshal
         data = null;
 
         return false;
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -67,6 +70,7 @@ public static partial class WindowsRuntimeBufferMarshal
     /// </remarks>
     public static unsafe bool TryGetDataUnsafe([NotNullWhen(true)] IMemoryBufferReference? buffer, out byte* data, out uint capacity)
     {
+#if !REFERENCE_ASSEMBLY
         if (buffer is null)
         {
             goto Failure;
@@ -93,6 +97,9 @@ public static partial class WindowsRuntimeBufferMarshal
         capacity = 0;
 
         return false;
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -130,4 +137,3 @@ public static partial class WindowsRuntimeBufferMarshal
         return false;
     }
 }
-#endif
