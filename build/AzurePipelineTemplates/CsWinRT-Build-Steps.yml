@@ -251,6 +251,25 @@ steps:
           WinRT.Runtime.xml
         TargetFolder: $(StagingFolder)\net10.0
 
+    # Build WinRT.Runtime reference assembly with implementation detail types stripped out
+    - task: VSBuild@1
+      displayName: Build WinRT.Runtime reference assembly
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\WinRT.Runtime2\WinRT.Runtime.csproj
+        msbuildArgs: /p:VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),ProduceReferenceAssembly=true,ContinuousIntegrationBuild=true
+        platform: $(BuildPlatform)
+        configuration: $(BuildConfiguration)
+
+    # Stage WinRT.Runtime reference assembly
+    - task: CopyFiles@2
+      displayName: Stage WinRT.Runtime reference assembly
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime2\obj\$(BuildPlatform)\$(BuildConfiguration)\net10.0\ref
+        Contents: WinRT.Runtime.dll
+        TargetFolder: $(StagingFolder)\net10.0\ref
+
     # Stage WinRT.Host.Shim
     - task: CopyFiles@2 
       displayName: Stage WinRT.Host.Shim
