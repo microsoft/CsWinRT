@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -39,3 +40,4 @@ internal static class BindableIEnumerableMethods
         return enumerator;
     }
 }
+#endif

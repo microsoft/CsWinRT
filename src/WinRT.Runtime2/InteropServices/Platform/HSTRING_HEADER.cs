@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 // Ported from https://github.com/terrafx/terrafx.interop.windows.
 // Defined in 'winrt/hstring.h' in the Windows SDK for Windows 10.0.26100.0.
 
@@ -30,3 +31,4 @@ internal struct HSTRING_HEADER
         internal nuint Reserved1_1;
     }
 }
+#endif

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Runtime.InteropServices;
@@ -11,7 +11,9 @@ namespace Windows.Foundation.Collections;
 /// Provides data for the changed event of a map collection.
 /// </summary>
 /// <typeparam name="K">The type of keys in the map.</typeparam>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [Guid("9939F4DF-050A-4C0F-AA60-77075F9C4777")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IMapChangedEventArgs<K>

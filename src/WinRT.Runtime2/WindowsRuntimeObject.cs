@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -45,7 +46,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     private volatile ConcurrentDictionary<RuntimeTypeHandle, object>? _typeHandleCache;
 
-#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters.
     /// </summary>
@@ -314,7 +314,6 @@ public abstract unsafe class WindowsRuntimeObject :
         UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal virtual bool HasUnwrappableNativeObjectReference => UnreachableException.Throw();
-#endif
 
     /// <summary>
     /// Gets the lazy-loaded, cached object reference for <c>IInspectable</c> for the current object.
@@ -361,7 +360,6 @@ public abstract unsafe class WindowsRuntimeObject :
         }
     }
 
-#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Determines whether a given interface is an overridable interface for the current type.
     /// </summary>
@@ -425,7 +423,6 @@ public abstract unsafe class WindowsRuntimeObject :
             implementationType: out _,
             interfaceReference: out interfaceReference);
     }
-#endif
 
     /// <summary>
     /// Retrieves a <see cref="WindowsRuntimeObjectReference"/> object for the <see cref="IEnumerable"/> interface.
@@ -963,3 +960,4 @@ file static class WindowsRuntimeObjectExceptions
             $"In this configuration, runtime casts on Windows Runtime objects will only work if the managed object implements the target interface in metadata.");
     }
 }
+#endif

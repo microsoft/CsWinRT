@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -15,7 +15,9 @@ namespace Windows.Foundation.Metadata;
 /// <remarks>
 /// This type is required for ABI projection of the value types and delegates, but marshalling it is not supported.
 /// </remarks>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]

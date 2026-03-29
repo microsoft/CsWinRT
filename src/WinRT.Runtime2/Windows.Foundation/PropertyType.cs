@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Runtime.Versioning;
@@ -11,12 +11,16 @@ namespace Windows.Foundation;
 /// Specifies property value types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.propertytype"/>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.PropertyType>")]
 [WindowsRuntimeReferenceType(typeof(PropertyType?))]
+#endif
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#if !REFERENCE_ASSEMBLY
 [ABI.Windows.Foundation.PropertyTypeComWrappersMarshaller]
+#endif
 public enum PropertyType
 {
     /// <summary>

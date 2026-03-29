@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -25,3 +26,4 @@ internal unsafe struct IIteratorVftbl
     public delegate* unmanaged[MemberFunction]<void*, bool*, HRESULT> MoveNext;
     public delegate* unmanaged[MemberFunction]<void*, uint, void*, uint*, HRESULT> GetMany;
 }
+#endif

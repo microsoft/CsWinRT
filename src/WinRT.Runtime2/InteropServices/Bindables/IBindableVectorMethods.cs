@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Runtime.CompilerServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
@@ -157,3 +158,4 @@ internal static unsafe class IBindableVectorMethods
         RestrictedErrorInfo.ThrowExceptionForHR(((IBindableVectorVftbl*)*(void***)thisPtr)->Clear(thisPtr));
     }
 }
+#endif

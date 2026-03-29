@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -16,12 +16,16 @@ namespace Windows.Foundation;
 /// Represents number values that specify a height and width.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.size"/>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Size>")]
 [WindowsRuntimeReferenceType(typeof(Size?))]
+#endif
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#if !REFERENCE_ASSEMBLY
 [ABI.Windows.Foundation.SizeComWrappersMarshaller]
+#endif
 public struct Size : IEquatable<Size>, IFormattable
 {
     /// <summary>

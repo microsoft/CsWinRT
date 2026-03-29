@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -363,3 +364,4 @@ public struct Rect : IEquatable<Rect>, IFormattable
     /// <returns><see langword="true"/> if <paramref name="left"/> and <paramref name="right"/> are not equal, otherwise <see langword="false"/>.</returns>
     public static bool operator !=(Rect left, Rect right) => !left.Equals(right);
 }
+#endif

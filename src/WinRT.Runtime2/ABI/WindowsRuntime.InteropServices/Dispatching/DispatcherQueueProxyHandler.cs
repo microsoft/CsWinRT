@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
@@ -86,3 +87,4 @@ internal static unsafe class DispatcherQueueProxyHandlerImpl
         return WellKnownErrorCodes.S_OK;
     }
 }
+#endif

@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -43,3 +44,4 @@ file sealed class WindowsRuntimeObjectComWrappersCallbackHost<TCallback> : Windo
         return TCallback.CreateObject(value, out wrapperFlags);
     }
 }
+#endif

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -11,10 +11,12 @@ namespace WindowsRuntime.InteropServices;
 /// Represents a reference to a delegate that receives change notifications.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.eventregistrationtoken"/>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.EventRegistrationToken>")]
 [WindowsRuntimeReferenceType(typeof(EventRegistrationToken?))]
 [ABI.WindowsRuntime.InteropServices.EventRegistrationTokenComWrappersMarshaller]
+#endif
 public struct EventRegistrationToken : IEquatable<EventRegistrationToken>
 {
     /// <summary>

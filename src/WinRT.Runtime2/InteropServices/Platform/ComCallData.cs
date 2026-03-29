@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 namespace WindowsRuntime.InteropServices;
 
 /// <see href="https://docs.rs/windows-sys/latest/windows_sys/Win32/System/Com/struct.ComCallData.html"/>
@@ -14,3 +15,4 @@ internal unsafe struct ComCallData
     /// </summary>
     public void* pUserDefined;
 }
+#endif

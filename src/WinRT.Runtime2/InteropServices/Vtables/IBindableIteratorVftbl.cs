@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -33,3 +34,4 @@ internal unsafe struct IBindableIteratorVftbl
     // by anyone. If called, it will return 'E_NOTIMPL'.
     public delegate* unmanaged[MemberFunction]<void*, uint, void**, uint*, HRESULT> GetMany;
 }
+#endif

@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -281,3 +282,4 @@ internal static class StreamOperationsImplementation
         return AsyncInfo.Run(FlushCoreAsync);
     }
 }
+#endif

@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -60,3 +61,4 @@ internal unsafe struct IPropertyValueVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint*, Size**, HRESULT> GetSizeArray;
     public delegate* unmanaged[MemberFunction]<void*, uint*, Rect**, HRESULT> GetRectArray;
 }
+#endif

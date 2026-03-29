@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -284,3 +285,4 @@ internal sealed unsafe class FreeThreadedMarshaler
         Marshal.ThrowExceptionForHR(hresult);
     }
 }
+#endif

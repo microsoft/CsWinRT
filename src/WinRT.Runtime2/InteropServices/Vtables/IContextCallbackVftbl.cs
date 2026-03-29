@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -42,3 +43,4 @@ internal unsafe struct IContextCallbackVftbl
         return ((IContextCallbackVftbl*)*(void***)thisPtr)->ContextCallback(thisPtr, pfnCallback, pParam, riid, iMethod, pUnk);
     }
 }
+#endif

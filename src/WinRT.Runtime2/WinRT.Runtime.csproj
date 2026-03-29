@@ -95,6 +95,15 @@
   -->
   <PropertyGroup Condition="'$(ProduceReferenceAssembly)' == 'true'">
     <DefineConstants>$(DefineConstants);REFERENCE_ASSEMBLY</DefineConstants>
+
+    <!--
+      Suppress warnings that only appear when building the reference assembly, due to types being
+      excluded via '#if !REFERENCE_ASSEMBLY'. These are expected and harmless in the reference assembly:
+        - CS1574: XML comment 'cref' references types that are excluded from the reference assembly.
+        - CS8597: Thrown value may be null (in stubs with 'throw null' bodies).
+        - IDE0005: Unused 'using' directives (some usings are only needed by excluded code).
+    -->
+    <NoWarn>$(NoWarn);CS1574;CS8597;IDE0005</NoWarn>
   </PropertyGroup>
     
   <!--

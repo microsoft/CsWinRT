@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Windows.Foundation.Metadata;
@@ -13,6 +13,8 @@ namespace Windows.Foundation;
 /// <typeparam name="TProgress">The type of progress information.</typeparam>
 /// <param name="asyncInfo">The asynchronous action.</param>
 /// <param name="progressInfo">The progress information.</param>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public delegate void AsyncOperationProgressHandler<TResult, TProgress>(IAsyncOperationWithProgress<TResult, TProgress> asyncInfo, TProgress progressInfo);

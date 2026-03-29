@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
 using Windows.Foundation;
 
@@ -40,3 +41,4 @@ internal sealed class StreamFlushAsyncResult : StreamOperationAsyncResult
         ProcessCompletedOperation((IAsyncOperation<bool>)completedOperation, out numberOfBytesProcessed);
     }
 }
+#endif

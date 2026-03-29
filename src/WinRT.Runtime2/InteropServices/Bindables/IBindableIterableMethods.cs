@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Collections;
 using System.Runtime.CompilerServices;
 using WindowsRuntime.InteropServices.Marshalling;
@@ -38,3 +39,4 @@ internal static unsafe class IBindableIterableMethods
         }
     }
 }
+#endif

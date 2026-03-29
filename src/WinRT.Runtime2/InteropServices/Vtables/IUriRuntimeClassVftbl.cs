@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -54,3 +55,4 @@ internal unsafe struct IUriRuntimeClassVftbl
         return ((IUriRuntimeClassVftbl*)*(void***)thisPtr)->get_RawUri(thisPtr, result);
     }
 }
+#endif

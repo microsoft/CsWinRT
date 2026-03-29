@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -26,3 +27,4 @@ internal unsafe struct IAsyncActionWithProgressVftbl
     public delegate* unmanaged[MemberFunction]<void*, void**, HRESULT> get_Completed;
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> GetResults;
 }
+#endif

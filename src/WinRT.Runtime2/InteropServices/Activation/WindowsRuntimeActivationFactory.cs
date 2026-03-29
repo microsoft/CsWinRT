@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -50,7 +51,6 @@ public static unsafe class WindowsRuntimeActivationFactory
         }
     }
 
-#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Gets the activation factory for a Windows Runtime type with the specified runtime class name.
     /// </summary>
@@ -95,7 +95,6 @@ public static unsafe class WindowsRuntimeActivationFactory
 
         return WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactory, in iid)!;
     }
-#endif
 
     /// <returns>A pointer to the activation factory for the specified Windows Runtime type.</returns>
     /// <inheritdoc cref="GetActivationFactory(string)"/>
@@ -120,7 +119,6 @@ public static unsafe class WindowsRuntimeActivationFactory
         return activationFactory;
     }
 
-#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Tries to get the activation factory for a Windows Runtime type with the specified runtime class name.
     /// </summary>
@@ -165,7 +163,6 @@ public static unsafe class WindowsRuntimeActivationFactory
 
         return true;
     }
-#endif
 
     /// <param name="activationFactory">A pointer to the activation factory for the specified Windows Runtime type, if successfully retrieved.</param>
     /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
@@ -373,3 +370,4 @@ public static unsafe class WindowsRuntimeActivationFactory
         }
     }
 }
+#endif

@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -130,3 +131,4 @@ public struct Point : IEquatable<Point>, IFormattable
     /// <remarks>Two <see cref="Point"/> values are equal if each component in <paramref name="left"/> is equal to the corresponding component in <paramref name="right"/>.</remarks>
     public static bool operator !=(Point left, Point right) => !left.Equals(right);
 }
+#endif

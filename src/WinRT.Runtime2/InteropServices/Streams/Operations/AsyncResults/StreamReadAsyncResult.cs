@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics;
 using System.Runtime.Versioning;
@@ -61,3 +62,4 @@ internal sealed class StreamReadAsyncResult : StreamOperationAsyncResult
         ProcessCompletedOperation((IAsyncOperationWithProgress<IBuffer, uint>)completedOperation, out numberOfBytesProcessed);
     }
 }
+#endif

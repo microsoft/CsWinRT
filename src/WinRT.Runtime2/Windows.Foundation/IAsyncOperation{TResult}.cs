@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Runtime.InteropServices;
@@ -18,7 +18,9 @@ namespace Windows.Foundation;
 /// progress and have a result use another interface, <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/>.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperation-1"/>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [Guid("9FC2B0BB-E446-44E2-AA61-9CAB8F636AF2")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IAsyncOperation<TResult> : IAsyncInfo

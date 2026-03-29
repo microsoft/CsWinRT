@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -37,3 +38,4 @@ internal sealed unsafe class WindowsRuntimeComWrappersMarshallerAttributePlaceho
         return null!;
     }
 }
+#endif

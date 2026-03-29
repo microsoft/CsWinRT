@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics.CodeAnalysis;
 using Windows.Storage.Streams;
@@ -175,3 +176,4 @@ internal static class WindowsRuntimeBufferHelpers
         return false;
     }
 }
+#endif

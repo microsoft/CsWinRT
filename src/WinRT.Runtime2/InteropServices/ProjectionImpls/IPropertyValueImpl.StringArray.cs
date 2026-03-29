@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -121,3 +122,4 @@ file static unsafe class StringArrayPropertyValueImpl
         }
     }
 }
+#endif

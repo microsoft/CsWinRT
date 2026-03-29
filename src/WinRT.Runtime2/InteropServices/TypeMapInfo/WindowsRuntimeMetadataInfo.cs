@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -225,3 +226,4 @@ internal sealed class WindowsRuntimeMetadataInfo
         return null;
     }
 }
+#endif

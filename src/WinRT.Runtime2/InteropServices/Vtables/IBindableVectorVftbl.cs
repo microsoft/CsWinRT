@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -34,3 +35,4 @@ internal unsafe struct IBindableVectorVftbl
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> RemoveAtEnd;
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> Clear;
 }
+#endif

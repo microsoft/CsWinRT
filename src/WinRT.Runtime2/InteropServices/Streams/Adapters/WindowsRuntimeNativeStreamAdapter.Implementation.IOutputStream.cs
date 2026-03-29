@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.IO;
 using System.Runtime.Versioning;
@@ -33,3 +34,4 @@ internal partial class WindowsRuntimeNativeStreamAdapter
         return StreamOperationsImplementation.FlushAsync(managedStream);
     }
 }
+#endif

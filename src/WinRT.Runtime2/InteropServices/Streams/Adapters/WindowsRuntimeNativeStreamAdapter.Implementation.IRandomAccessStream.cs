@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -108,3 +109,4 @@ internal partial class WindowsRuntimeNativeStreamAdapter
         throw NotSupportedException.GetCloningNotSupportedException("CloneStream");
     }
 }
+#endif
