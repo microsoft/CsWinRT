@@ -111,9 +111,9 @@ file static unsafe class DataErrorsChangedEventArgsRuntimeClassFactory
     /// <summary>
     /// The singleton instance for the activation factory.
     /// </summary>
-    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
-        "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs",
-        in WellKnownWindowsInterfaceIIDs.IID_DataErrorsChangedEventArgsRuntimeClassFactory);
+    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeObjectReference.GetActivationFactory(
+        runtimeClassName: "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs",
+        iid: in WellKnownWindowsInterfaceIIDs.IID_DataErrorsChangedEventArgsRuntimeClassFactory);
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.ComponentModel.DataErrorsChangedEventArgs"/>.
