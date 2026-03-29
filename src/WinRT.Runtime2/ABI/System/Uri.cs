@@ -111,9 +111,9 @@ file static unsafe class UriRuntimeClassFactory
     /// <summary>
     /// The singleton instance for the activation factory.
     /// </summary>
-    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
-        "Windows.Foundation.Uri",
-        in WellKnownWindowsInterfaceIIDs.IID_UriRuntimeClassFactory);
+    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeObjectReference.GetActivationFactory(
+        runtimeClassName: "Windows.Foundation.Uri",
+        iid: in WellKnownWindowsInterfaceIIDs.IID_UriRuntimeClassFactory);
 
     /// <summary>
     /// Creates a new native instance for <see cref="global::System.Uri"/>.

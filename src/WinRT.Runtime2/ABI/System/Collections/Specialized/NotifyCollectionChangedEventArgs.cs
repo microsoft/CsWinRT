@@ -200,7 +200,7 @@ file static unsafe class NotifyCollectionChangedEventArgsRuntimeClassFactory
     /// <summary>
     /// The singleton instance for the activation factory.
     /// </summary>
-    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
+    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeObjectReference.GetActivationFactory(
         runtimeClassName: WellKnownXamlRuntimeClassNames.NotifyCollectionChangedEventArgs,
         iid: in WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChangedEventArgsFactory);
 
