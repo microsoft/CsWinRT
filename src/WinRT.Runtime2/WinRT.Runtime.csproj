@@ -88,6 +88,14 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <!--
+    When producing a reference assembly, define 'REFERENCE_ASSEMBLY'. This is used to completely strip
+    out the private implementation detail types from the reference assembly, so they're further hidden.
+  -->
+  <PropertyGroup Condition="'$(ProduceReferenceAssembly)' == 'true'">
+    <DefineConstants>$(DefineConstants);REFERENCE_ASSEMBLY</DefineConstants>
+  </PropertyGroup>
     
   <!--
     Emit the [SupportedOSVersion] attribute if needed. Note that the .NET SDK already emits this attribute
