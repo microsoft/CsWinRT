@@ -88,6 +88,25 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <!--
+    When producing a reference assembly for packaging, define 'REFERENCE_ASSEMBLY'. This is used to
+    completely strip out the private implementation detail types from the reference assembly, so they're
+    further hidden. This is conditioned on 'CsWinRTBuildReferenceAssembly' (and NOT 'ProduceReferenceAssembly'),
+    because 'ProduceReferenceAssembly' is set to 'true' by default by the .NET SDK for library projects. The
+    stripping should only happen during the explicit reference assembly build step for NuGet packaging.
+  -->
+  <PropertyGroup Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
+    <DefineConstants>$(DefineConstants);REFERENCE_ASSEMBLY</DefineConstants>
+
+    <!--
+      Suppress warnings that only appear when building the reference assembly, due to types being
+      excluded via '#if !REFERENCE_ASSEMBLY'. These are expected and harmless in the reference assembly:
+        - CS8597: Thrown value may be null (in stubs with 'throw null' bodies).
+        - IDE0005: Unused 'using' directives (some usings are only needed by excluded code).
+    -->
+    <NoWarn>$(NoWarn);CS8597;IDE0005</NoWarn>
+  </PropertyGroup>
     
   <!--
     Emit the [SupportedOSVersion] attribute if needed. Note that the .NET SDK already emits this attribute
