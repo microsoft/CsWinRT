@@ -257,7 +257,7 @@ steps:
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
         solution: $(Build.SourcesDirectory)\src\WinRT.Runtime2\WinRT.Runtime.csproj
-        msbuildArgs: /p:VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),ProduceReferenceAssembly=true,ContinuousIntegrationBuild=true
+        msbuildArgs: /p:VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),CsWinRTBuildReferenceAssembly=true,ContinuousIntegrationBuild=true
         platform: $(BuildPlatform)
         configuration: $(BuildConfiguration)
 

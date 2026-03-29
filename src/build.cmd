@@ -114,11 +114,11 @@ rem skip tests for now
 goto :build_runtime_ref
 
 :build_runtime_ref
-rem Build WinRT.Runtime with ProduceReferenceAssembly to generate the reference assembly with
+rem Build WinRT.Runtime with CsWinRTBuildReferenceAssembly to generate the reference assembly with
 rem implementation detail types stripped out. The reference assembly is produced separately from
 rem the main solution build so it can be staged before the implementation assembly overwrites it.
 echo Building WinRT.Runtime reference assembly
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;ProduceReferenceAssembly=true %this_dir%WinRT.Runtime2\WinRT.Runtime.csproj
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;CsWinRTBuildReferenceAssembly=true %this_dir%WinRT.Runtime2\WinRT.Runtime.csproj
 if ErrorLevel 1 (
   echo.
   echo ERROR: Reference assembly build failed

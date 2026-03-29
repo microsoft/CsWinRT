@@ -90,10 +90,13 @@
   </PropertyGroup>
 
   <!--
-    When producing a reference assembly, define 'REFERENCE_ASSEMBLY'. This is used to completely strip
-    out the private implementation detail types from the reference assembly, so they're further hidden.
+    When producing a reference assembly for packaging, define 'REFERENCE_ASSEMBLY'. This is used to
+    completely strip out the private implementation detail types from the reference assembly, so they're
+    further hidden. This is conditioned on 'CsWinRTBuildReferenceAssembly' (and NOT 'ProduceReferenceAssembly'),
+    because 'ProduceReferenceAssembly' is set to 'true' by default by the .NET SDK for library projects. The
+    stripping should only happen during the explicit reference assembly build step for NuGet packaging.
   -->
-  <PropertyGroup Condition="'$(ProduceReferenceAssembly)' == 'true'">
+  <PropertyGroup Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
     <DefineConstants>$(DefineConstants);REFERENCE_ASSEMBLY</DefineConstants>
 
     <!--
