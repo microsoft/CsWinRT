@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -42,3 +43,4 @@ public static unsafe class WindowsRuntimeUnsealedObjectMarshaller
             unsealedObjectComWrappersCallback: WindowsRuntimeUnsealedObjectComWrappersCallback.GetInstance<TCallback>());
     }
 }
+#endif

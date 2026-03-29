@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -25,3 +26,4 @@ public interface IObservableMapEventSourceFactory<TKey, TValue>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablemap-2.mapchanged"/>
     static abstract ABI.Windows.Foundation.Collections.MapChangedEventHandlerEventSource<TKey, TValue> MapChanged(WindowsRuntimeObjectReference thisReference);
 }
+#endif

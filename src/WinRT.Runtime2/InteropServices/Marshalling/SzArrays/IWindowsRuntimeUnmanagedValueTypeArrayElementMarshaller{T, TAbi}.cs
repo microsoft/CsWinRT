@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -33,3 +34,4 @@ public interface IWindowsRuntimeUnmanagedValueTypeArrayElementMarshaller<T, TAbi
     /// <returns>The marshalled managed value.</returns>
     static abstract T ConvertToManaged(TAbi value);
 }
+#endif

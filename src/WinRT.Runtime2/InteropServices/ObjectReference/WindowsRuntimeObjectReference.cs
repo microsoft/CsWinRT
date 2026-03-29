@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -153,3 +154,4 @@ public abstract unsafe partial class WindowsRuntimeObjectReference : IDisposable
     /// <returns>The value to return from <see cref="IsInCurrentContext"/>.</returns>
     private protected abstract bool DerivedIsInCurrentContext();
 }
+#endif

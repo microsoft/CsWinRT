@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -23,3 +24,4 @@ public struct HStringHeader
     /// </remarks>
     internal HSTRING_HEADER._Reserved_e__Union _reserved;
 }
+#endif

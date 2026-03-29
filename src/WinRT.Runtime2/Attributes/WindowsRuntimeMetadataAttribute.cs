@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -37,3 +38,4 @@ public sealed class WindowsRuntimeMetadataAttribute : Attribute
     /// </summary>
     public string Name { get; }
 }
+#endif

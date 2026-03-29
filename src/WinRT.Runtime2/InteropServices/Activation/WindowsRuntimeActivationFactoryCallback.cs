@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -57,3 +58,4 @@ public static class WindowsRuntimeActivationFactoryCallback
         public abstract unsafe void Invoke(WindowsRuntimeActivationArgsReference additionalParameters, out void* defaultInterface);
     }
 }
+#endif

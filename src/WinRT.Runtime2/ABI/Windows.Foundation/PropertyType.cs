@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -126,3 +127,4 @@ internal sealed unsafe class PropertyTypeComWrappersMarshallerAttribute : Window
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<PropertyType>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPropertyType);
     }
 }
+#endif

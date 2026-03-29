@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using Windows.Foundation;
@@ -56,3 +57,4 @@ public interface IAsyncActionWithProgressMethodsImpl<TProgress>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1.getresults"/>
     static abstract void GetResults(WindowsRuntimeObjectReference thisReference);
 }
+#endif

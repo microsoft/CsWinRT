@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -35,3 +36,4 @@ public interface IMapViewMethodsImpl<K, V>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.imapview-2.haskey"/>
     static abstract bool HasKey(WindowsRuntimeObjectReference thisReference, K key);
 }
+#endif

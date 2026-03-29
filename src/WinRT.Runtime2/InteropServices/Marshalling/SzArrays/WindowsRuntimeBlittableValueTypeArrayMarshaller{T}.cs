@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -98,3 +99,4 @@ public static unsafe class WindowsRuntimeBlittableValueTypeArrayMarshaller<T>
         new ReadOnlySpan<T>(source, (int)size).CopyTo(destination);
     }
 }
+#endif

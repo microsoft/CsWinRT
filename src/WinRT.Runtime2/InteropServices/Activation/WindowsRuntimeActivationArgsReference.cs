@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -63,3 +64,4 @@ public readonly ref struct WindowsRuntimeActivationArgsReference
         return ref Unsafe.As<byte, T>(ref Unsafe.AsRef(in _reference));
     }
 }
+#endif

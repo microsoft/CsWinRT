@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -24,3 +25,4 @@ public interface IMapChangedEventArgsMethodsImpl<K>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.imapchangedeventargs-1.index"/>
     static abstract K Key(WindowsRuntimeObjectReference thisReference);
 }
+#endif

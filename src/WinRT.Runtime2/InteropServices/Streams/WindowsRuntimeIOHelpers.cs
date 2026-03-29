@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -79,3 +80,4 @@ public static class WindowsRuntimeIOHelpers
         userBuffer.Length = resultBuffer.Length;
     }
 }
+#endif

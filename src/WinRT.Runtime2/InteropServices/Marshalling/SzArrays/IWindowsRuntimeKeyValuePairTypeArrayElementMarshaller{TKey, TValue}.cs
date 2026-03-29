@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -32,3 +33,4 @@ public unsafe interface IWindowsRuntimeKeyValuePairTypeArrayElementMarshaller<TK
     /// <returns>The marshalled managed value.</returns>
     static abstract KeyValuePair<TKey, TValue> ConvertToManaged(void* value);
 }
+#endif

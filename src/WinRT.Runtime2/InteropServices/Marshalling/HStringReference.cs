@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -33,3 +34,4 @@ public unsafe ref struct HStringReference
     /// </remarks>
     public readonly HSTRING HString => _hstring;
 }
+#endif

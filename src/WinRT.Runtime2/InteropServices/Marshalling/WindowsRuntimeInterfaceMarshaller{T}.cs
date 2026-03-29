@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -220,3 +221,4 @@ public static unsafe class WindowsRuntimeInterfaceMarshaller<T>
         RestrictedErrorInfo.ThrowExceptionForHR(hresult);
     }
 }
+#endif

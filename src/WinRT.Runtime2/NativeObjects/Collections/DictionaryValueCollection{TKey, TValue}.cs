@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -168,3 +169,4 @@ public sealed class DictionaryValueCollection<TKey, TValue> : ICollection<TValue
         }
     }
 }
+#endif
