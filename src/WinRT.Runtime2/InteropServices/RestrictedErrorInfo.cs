@@ -20,7 +20,6 @@ namespace WindowsRuntime.InteropServices;
 /// <see href="https://learn.microsoft.com/windows/win32/api/restrictederrorinfo/nn-restrictederrorinfo-irestrictederrorinfo"/>.
 public static unsafe class RestrictedErrorInfo
 {
-#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Converts an <c>HRESULT</c> error code to a corresponding <see cref="Exception"/> object.
     /// </summary>
@@ -34,8 +33,14 @@ public static unsafe class RestrictedErrorInfo
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
     public static Exception? GetExceptionForHR(HRESULT errorCode)
     {
+#if !REFERENCE_ASSEMBLY
         return GetExceptionForHR(errorCode, out _);
+#else
+        throw null!;
+#endif
     }
+
+#if !REFERENCE_ASSEMBLY
 
     /// <inheritdoc cref="GetExceptionForHR(int)"/>
     /// <param name="errorCode">The <c>HRESULT</c> to be converted.</param>
@@ -181,6 +186,7 @@ public static unsafe class RestrictedErrorInfo
 
         return exception;
     }
+#endif
 
     /// <summary>
     /// Throws the appropriate exception for an <c>HRESULT</c> error code, if it represents a failure.
@@ -196,6 +202,7 @@ public static unsafe class RestrictedErrorInfo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowExceptionForHR(HRESULT errorCode)
     {
+#if !REFERENCE_ASSEMBLY
         if (errorCode.Failed)
         {
             Throw(errorCode);
@@ -216,6 +223,9 @@ public static unsafe class RestrictedErrorInfo
                 throw exception;
             }
         }
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -230,6 +240,7 @@ public static unsafe class RestrictedErrorInfo
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
     public static HRESULT GetHRForException(Exception? exception)
     {
+#if !REFERENCE_ASSEMBLY
         // If the input exception is 'null', we always just map to 'S_OK'
         if (exception is null)
         {
@@ -254,8 +265,12 @@ public static unsafe class RestrictedErrorInfo
         }
 
         return WellKnownExceptionMappings.GetHRForNativeOrManagedErrorCode(hresult);
+#else
+        throw null!;
+#endif
     }
 
+#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Stores info on the input exception through the <c>IRestrictedErrorInfo</c> infrastructure, to retrieve it later.
     /// </summary>
@@ -444,12 +459,5 @@ public static unsafe class RestrictedErrorInfo
             _ = WindowsRuntimeImports.RoReportUnhandledError(restrictedErrorInfoValuePtr);
         }
     }
-#else
-#pragma warning disable CS1591, IDE0380
-    public static Exception? GetExceptionForHR(HRESULT errorCode) { throw null!; }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowExceptionForHR(HRESULT errorCode) { throw null!; }
-    public static HRESULT GetHRForException(Exception? exception) { throw null!; }
-#pragma warning restore CS1591, IDE0380
 #endif
 }

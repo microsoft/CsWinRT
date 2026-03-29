@@ -13,7 +13,6 @@ namespace Windows.Storage.Streams;
 /// </summary>
 public static class WindowsRuntimeStreamExtensions
 {
-#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Converts a Windows Runtime <see cref="IInputStream"/> to a managed <see cref="Stream"/>.
     /// </summary>
@@ -22,7 +21,11 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeStream"/> is <see langword="null"/>.</exception>
     public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream)
     {
+#if !REFERENCE_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStreamForRead), forceBufferSize: false);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -35,7 +38,11 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="bufferSize"/> is negative.</exception>
     public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream, int bufferSize)
     {
+#if !REFERENCE_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, bufferSize, nameof(AsStreamForRead), forceBufferSize: true);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -46,7 +53,11 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeStream"/> is <see langword="null"/>.</exception>
     public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream)
     {
+#if !REFERENCE_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStreamForWrite), forceBufferSize: false);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -59,7 +70,11 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="bufferSize"/> is negative.</exception>
     public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream, int bufferSize)
     {
+#if !REFERENCE_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, bufferSize, nameof(AsStreamForWrite), forceBufferSize: true);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -70,7 +85,11 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="windowsRuntimeStream"/> is <see langword="null"/>.</exception>
     public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream)
     {
+#if !REFERENCE_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, WindowsRuntimeIOHelpers.DefaultBufferSize, nameof(AsStream), forceBufferSize: false);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -83,7 +102,11 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="bufferSize"/> is negative.</exception>
     public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream, int bufferSize)
     {
+#if !REFERENCE_ASSEMBLY
         return WindowsRuntimeStreamMapping.AsManagedStream(windowsRuntimeStream, bufferSize, nameof(AsStream), forceBufferSize: true);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -95,10 +118,14 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="NotSupportedException">Thrown if <paramref name="stream"/> does not support reading.</exception>
     public static IInputStream AsInputStream(this Stream stream)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(stream);
         NotSupportedException.ThrowIfStreamCannotConvertToInputStream(stream.CanRead);
 
         return (IInputStream)WindowsRuntimeStreamMapping.AsNativeStream(stream);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -110,10 +137,14 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="NotSupportedException">Thrown if <paramref name="stream"/> does not support writing.</exception>
     public static IOutputStream AsOutputStream(this Stream stream)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(stream);
         NotSupportedException.ThrowIfStreamCannotConvertToOutputStream(stream.CanWrite);
 
         return (IOutputStream)WindowsRuntimeStreamMapping.AsNativeStream(stream);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -125,22 +156,13 @@ public static class WindowsRuntimeStreamExtensions
     /// <exception cref="NotSupportedException">Thrown if <paramref name="stream"/> does not support seeking.</exception>
     public static IRandomAccessStream AsRandomAccessStream(this Stream stream)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(stream);
         NotSupportedException.ThrowIfStreamCannotConvertToRandomAccessStream(stream.CanSeek);
 
         return (IRandomAccessStream)WindowsRuntimeStreamMapping.AsNativeStream(stream);
-    }
 #else
-#pragma warning disable CS1591
-    public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream) { throw null!; }
-    public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream, int bufferSize) { throw null!; }
-    public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream) { throw null!; }
-    public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream, int bufferSize) { throw null!; }
-    public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream) { throw null!; }
-    public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream, int bufferSize) { throw null!; }
-    public static IInputStream AsInputStream(this Stream stream) { throw null!; }
-    public static IOutputStream AsOutputStream(this Stream stream) { throw null!; }
-    public static IRandomAccessStream AsRandomAccessStream(this Stream stream) { throw null!; }
-#pragma warning restore CS1591
+        throw null!;
 #endif
+    }
 }
