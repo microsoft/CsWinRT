@@ -2759,7 +2759,7 @@ private static WindowsRuntimeObjectReference %
         {
             return __%;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory("%");
+        return field = WindowsRuntimeObjectReference.GetActivationFactory("%");
     }
 }
 )",
@@ -2800,7 +2800,7 @@ private static WindowsRuntimeObjectReference %
         {
             return __%;
         }
-        return field = WindowsRuntimeActivationFactory.GetActivationFactory("%", %);
+        return field = WindowsRuntimeObjectReference.GetActivationFactory("%", %);
     }
 }
 )",
