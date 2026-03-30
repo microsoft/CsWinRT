@@ -35,7 +35,6 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <exception cref="InvalidOperationException">Thrown if a resolver has already been set.</exception>
     public static void SetWindowsRuntimeActivationHandler(WindowsRuntimeActivationHandler activationHandler)
     {
-#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(activationHandler);
 
         // Set the new handler, if this is the first time the method is called
@@ -49,9 +48,6 @@ public static unsafe class WindowsRuntimeActivationFactory
         {
             throw new InvalidOperationException("The activation handler has already been set (it can only be set once).");
         }
-#else
-        throw null!;
-#endif
     }
 
     /// <summary>
@@ -77,15 +73,11 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <exception cref="Exception">Thrown for any failure to activate the specified type (the exact exception type might be a derived type).</exception>
     public static void* GetActivationFactoryUnsafe(string runtimeClassName)
     {
-#if !REFERENCE_ASSEMBLY
         HRESULT hresult = GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in *(Guid*)null, out void* activationFactory);
 
         ThrowIfActivationFailed(runtimeClassName, hresult);
 
         return activationFactory;
-#else
-        throw null!;
-#endif
     }
 
     /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to return.</param>
@@ -93,15 +85,11 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <inheritdoc cref="GetActivationFactoryUnsafe(string)"/>
     public static void* GetActivationFactoryUnsafe(string runtimeClassName, in Guid iid)
     {
-#if !REFERENCE_ASSEMBLY
         HRESULT hresult = GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in iid, out void* activationFactory);
 
         ThrowIfActivationFailed(runtimeClassName, hresult);
 
         return activationFactory;
-#else
-        throw null!;
-#endif
     }
 
     /// <summary>
@@ -113,11 +101,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <remarks><inheritdoc cref="GetActivationFactoryUnsafe(string)" path="/remarks/node()"/></remarks>
     public static bool TryGetActivationFactoryUnsafe(string runtimeClassName, out void* activationFactory)
     {
-#if !REFERENCE_ASSEMBLY
         return GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in *(Guid*)null, out activationFactory).Succeeded;
-#else
-        throw null!;
-#endif
     }
 
     /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to wrap in the returned object reference.</param>
@@ -125,11 +109,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <inheritdoc cref="TryGetActivationFactoryUnsafe(string, out void*)"/>
     public static bool TryGetActivationFactoryUnsafe(string runtimeClassName, in Guid iid, out void* activationFactory)
     {
-#if !REFERENCE_ASSEMBLY
         return GetActivationFactoryFromAnySourceUnsafe(runtimeClassName, in iid, out activationFactory).Succeeded;
-#else
-        throw null!;
-#endif
     }
 
     /// <inheritdoc cref="TryGetActivationFactoryUnsafe(string, in Guid, out void*)"/>
