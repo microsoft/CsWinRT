@@ -284,7 +284,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// This value is <see langword="false"/> in aggregation scenarios, as the instance that should be marshalled
     /// to native is the derived managed type for the projected class, and not the inner object for the base type.
     /// </remarks>
-    protected internal virtual bool HasUnwrappableNativeObjectReference => UnreachableException.Throw();
+    protected internal abstract bool HasUnwrappableNativeObjectReference { get; }
 
     /// <summary>
     /// Gets the lazy-loaded, cached object reference for <c>IInspectable</c> for the current object.
@@ -336,10 +336,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     /// <param name="iid">The interface to check.</param>
     /// <returns>Whether the interface represented by <paramref name="iid"/> is an overridable interface for the current type.</returns>
-    protected virtual bool IsOverridableInterface(in Guid iid)
-    {
-        return UnreachableException.Throw();
-    }
+    protected abstract bool IsOverridableInterface(in Guid iid);
 
     /// <summary>
     /// Retrieves a <see cref="WindowsRuntimeObjectReference"/> object for the specified interface.
