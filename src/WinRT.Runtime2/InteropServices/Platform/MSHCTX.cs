@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 namespace WindowsRuntime.InteropServices;
 
 /// <see href="https://learn.microsoft.com/windows/win32/api/wtypesbase/ne-wtypesbase-mshctx"/>
@@ -14,4 +13,3 @@ internal enum MSHCTX
     MSHCTX_CROSSCTX = 4,
     MSHCTX_CONTAINER = 5
 }
-#endif

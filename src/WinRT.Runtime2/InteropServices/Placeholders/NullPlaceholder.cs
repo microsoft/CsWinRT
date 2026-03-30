@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -36,4 +35,3 @@ internal sealed class NullPlaceholder
     {
     }
 }
-#endif

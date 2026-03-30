@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System.Collections;
 
 namespace WindowsRuntime.InteropServices;
@@ -16,4 +15,3 @@ internal interface IEnumeratorAdapter
     /// </summary>
     IEnumerator Enumerator { get; }
 }
-#endif

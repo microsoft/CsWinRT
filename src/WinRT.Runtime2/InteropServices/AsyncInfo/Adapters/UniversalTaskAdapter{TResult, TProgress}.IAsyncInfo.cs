@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -221,4 +220,3 @@ internal partial class UniversalTaskAdapter<
         }
     }
 }
-#endif

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 
 namespace WindowsRuntime.InteropServices;
@@ -19,4 +18,3 @@ internal enum HANDLE_OPTIONS : uint
     HO_OVERLAPPED = 0x40000000,
     HO_WRITE_THROUGH = 0x80000000
 }
-#endif

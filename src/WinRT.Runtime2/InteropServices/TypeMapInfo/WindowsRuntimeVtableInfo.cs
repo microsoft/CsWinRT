@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -32,4 +31,3 @@ internal sealed unsafe class WindowsRuntimeVtableInfo
     /// </summary>
     public int Count { get; }
 }
-#endif

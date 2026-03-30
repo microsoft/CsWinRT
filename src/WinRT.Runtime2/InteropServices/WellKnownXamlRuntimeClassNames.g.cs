@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.CompilerServices;
 
@@ -76,4 +75,3 @@ internal static class WellKnownXamlRuntimeClassNames
             : "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs";
     }
 }
-#endif

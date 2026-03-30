@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 
 namespace WindowsRuntime.InteropServices;
@@ -15,4 +14,3 @@ internal enum HANDLE_SHARING_OPTIONS : uint
     HSO_SHARE_WRITE = 0x2,
     HSO_SHARE_DELETE = 0x4
 }
-#endif

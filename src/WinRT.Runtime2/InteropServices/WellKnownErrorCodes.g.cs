@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 namespace WindowsRuntime.InteropServices;
 
 /// <inheritdoc cref="WellKnownErrorCodes"/>
@@ -142,4 +141,3 @@ internal static class WellKnownErrorCodes
     /// <summary>Cannot execute script.</summary>
     public const HRESULT JSCRIPT_E_CANTEXECUTE = unchecked((int)0x89020001);
 }
-#endif
