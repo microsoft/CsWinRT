@@ -34,6 +34,23 @@ The `WinRT.Interop.dll` assembly is produced by `cswinrtinteropgen`, which is a 
 
 This version matching is critical because `cswinrtinteropgen` relies on internal implementation detail APIs in `WinRT.Runtime.dll` — APIs which are public in the implementation assembly but excluded from the reference assembly (via `#if !REFERENCE_ASSEMBLY`), and which are exclusively meant to be consumed by generated code produced by `cswinrtinteropgen`. These APIs might change at any time without following semantic versioning for CsWinRT. For instance, they are crucial to support marshalling generic Windows Runtime collection interfaces, and the code in `WinRT.Interop.dll` makes heavy use of them in this scenario.
 
+### Private implementation detail APIs
+
+`WinRT.Runtime.dll` is shipped as two assemblies in the CsWinRT NuGet package: a **reference assembly** (in `ref\net10.0\`) that exposes only the versioned public API surface, and an **implementation assembly** (in `lib\net10.0\`) that contains the full set of types and members. Many types in the implementation assembly are "public" only because generated code in other assemblies (produced by `cswinrt.exe` and `cswinrtinteropgen`) needs to call them — they are not part of the stable API contract. These types are stripped from the reference assembly via `#if !REFERENCE_ASSEMBLY`, so consumers never see them.
+
+The interop generator receives a reference to the **implementation** `WinRT.Runtime.dll` (not the reference assembly) so that it can resolve and emit calls to these internal APIs. Examples of private implementation detail types that the interop generator uses heavily include:
+
+- **Vtable structs** (`IVectorVftbl`, `IMapVftbl`, `IIterableVftbl`, etc.) — the interop generator emits static readonly vtable fields for each projected interface, populated with function pointers to marshalling stubs.
+- **Collection adapters and methods** (`IListAdapter<T>`, `IDictionaryMethods<TKey, TValue>`, `IEnumerableMethods<T>`, etc.) — generated native object wrappers delegate collection operations to these adapter types.
+- **Marshalling infrastructure** (`WindowsRuntimeObjectMarshaller`, `HStringMarshaller`, `WindowsRuntimeInterfaceMarshaller<T>`, array marshallers, etc.) — generated marshalling stubs call these to convert between managed and native representations.
+- **Object reference types** (`WindowsRuntimeObjectReference`, `WindowsRuntimeObjectReferenceValue`, `CreateObjectReferenceMarshalingType`) — generated code uses these for COM pointer lifecycle management.
+- **ComWrappers callbacks** (`IWindowsRuntimeObjectComWrappersCallback`, `WindowsRuntimeComWrappersMarshal`) — generated CCW vtable entries and type map registrations use these.
+- **Type map groups** (`WindowsRuntimeComWrappersTypeMapGroup`, `WindowsRuntimeMetadataTypeMapGroup`, `DynamicInterfaceCastableImplementationTypeMapGroup`) — generated type map registrations target these groups.
+- **Projection implementations** (`IPropertyValueImpl`, `IStringableImpl`, `IMarshalImpl`, etc.) — generated code wires up these implementations in CCW vtables.
+- **ABI types** (under `ABI.*` namespaces) — per-type marshalling definitions and event source types.
+
+All of these types are referenced extensively throughout the interop generator's builder and factory classes (in `Builders/` and `Factories/`). When modifying these types in `WinRT.Runtime`, the corresponding interop generator code must be updated in lockstep — which is why the version matching described above is essential.
+
 ## Project settings
 
 - **Target**: `net10.0`, C# 14, `AllowUnsafeBlocks`
