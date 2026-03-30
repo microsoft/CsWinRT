@@ -17,10 +17,10 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 public static unsafe class WindowsRuntimeActivationFactory
 {
+#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// The registered hook into activation to hook/mock activation of Windows Runtime types.
     /// </summary>
-#if !REFERENCE_ASSEMBLY
     private static volatile WindowsRuntimeActivationHandler? activationHandler;
 
     /// <summary>

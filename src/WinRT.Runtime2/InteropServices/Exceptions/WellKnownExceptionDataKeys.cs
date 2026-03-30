@@ -28,6 +28,7 @@ internal static class WellKnownExceptionDataKeys
     /// </summary>
     public const string RestrictedCapabilitySid = "RestrictedCapabilitySid";
 
+#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// The <c>"__RestrictedErrorObjectReference"</c> key for the stored <see cref="WindowsRuntimeObjectReference"/> instance (undocumented).
     /// </summary>
@@ -37,6 +38,7 @@ internal static class WellKnownExceptionDataKeys
     /// The <c>"__HasRestrictedLanguageErrorObject"</c> key indicating whether there's a stored <see cref="WindowsRuntimeObjectReference"/> instance (undocumented).
     /// </summary>
     public const string HasRestrictedLanguageErrorObject = "__HasRestrictedLanguageErrorObject";
+#endif
 
     /// <summary>
     /// The <c>"__InternalCsWinRTException"</c> key for the internal stored <see cref="System.Exception"/> instance (undocumented).

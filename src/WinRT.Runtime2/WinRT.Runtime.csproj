@@ -105,10 +105,8 @@
         - CS8597: Thrown value may be null (in stubs with 'throw null' bodies).
         - IDE0005: Unused 'using' directives (some usings are only needed by excluded code).
         - IDE0380: 'unsafe' modifier is unnecessary (some types have 'unsafe' for excluded members).
-        - CS1574: XML comment has cref attribute that could not be resolved (some crefs reference excluded types).
-        - CS1587: XML comment is not placed on a valid language element (some doc comments precede excluded members).
     -->
-    <NoWarn>$(NoWarn);CS8597;IDE0005;IDE0380;CS1574;CS1587</NoWarn>
+    <NoWarn>$(NoWarn);CS8597;IDE0005;IDE0380</NoWarn>
   </PropertyGroup>
     
   <!--

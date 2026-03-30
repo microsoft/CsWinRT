@@ -16,9 +16,9 @@ namespace WindowsRuntime.InteropServices;
 /// convert to an actual <see langword="null"/> value. 3rd-party code should never see or receive instances of this type.
 /// </para>
 /// <para>
-/// An example of where this is used is by <see cref="ABI.System.Exception"/>. Because exceptions are marshalled to <see langword="null"/>
-/// when the native <c>HRESULT</c> is <c>0</c>, the object marshaller for them could potentially return <see langword="null"/> if the
-/// input object were some <c>IReference`1</c> wrapping such an error code. Instead, that marshaller can use <see cref="NullPlaceholder"/>.
+/// An example of where this is used is by the <see cref="System.Exception"/> ABI type. Because exceptions are marshalled to <see langword="null"/>
+/// when the native <c>HRESULT</c> is <c>0</c>, the object marshaller for them could potentially return <see langword="null"/> if the input object
+/// were some <c>IReference`1</c> wrapping such an error code. Instead, that marshaller can use <see cref="NullPlaceholder"/>.
 /// </para>
 /// </remarks>
 internal sealed class NullPlaceholder

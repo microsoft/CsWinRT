@@ -36,10 +36,10 @@ public static unsafe class RestrictedErrorInfo
 #endif
     }
 
+#if !REFERENCE_ASSEMBLY
     /// <inheritdoc cref="GetExceptionForHR(int)"/>
     /// <param name="errorCode">The <c>HRESULT</c> to be converted.</param>
     /// <param name="restoredExceptionFromGlobalState">restoredExceptionFromGlobalState Out param.</param>
-#if !REFERENCE_ASSEMBLY
     private static Exception? GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
     {
         // If the 'HRESULT' indicates success, there is no exception to return
