@@ -167,6 +167,7 @@ The runtime library (`WinRT.Runtime.dll`) provides all common infrastructure for
 - **Warnings as errors**: release only. `EnforceCodeStyleInBuild` enabled, `AnalysisLevelStyle` = `latest-all`.
 - **Strong-name signed** with `key.snk`
 - **AOT compatible**: `IsAotCompatible = true`
+- **Reference assembly**: the project is built twice for NuGet packaging. With `CsWinRTBuildReferenceAssembly=true`, it produces a reference assembly (for `ref\net10.0\` in the NuGet) that strips all private implementation detail types and members via `#if !REFERENCE_ASSEMBLY`. The normal build produces the full implementation assembly (for `lib\net10.0\`). This replaces the previous approach of marking implementation details with `[Obsolete]` and `[EditorBrowsable(Never)]` attributes.
 
 **Directory structure:**
 
@@ -506,7 +507,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 - **Compiler strict mode**: `<Features>strict</Features>` in all projects
 - **XML documentation**: generated for all projects
 - **`SkipLocalsInit`**: enabled in runtime and build tools for performance
-- **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes), `CSWINRT3001` (obsolete internal members)
+- **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes)
 - **Strong-name signing**: all assemblies signed with `src/WinRT.Runtime2/key.snk`
 
 ### C++ project (cswinrt)
@@ -548,7 +549,6 @@ All three .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtin
 | Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0010`, `9999` |
 | Projection Generator | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0008`, `9999` |
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | Various, `9999` |
-| Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` |
 
 ---
 
