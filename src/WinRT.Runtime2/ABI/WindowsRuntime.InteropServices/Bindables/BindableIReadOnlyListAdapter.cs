@@ -3,10 +3,8 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
@@ -88,10 +86,6 @@ file static class BindableIReadOnlyListAdapterInterfaceEntriesImpl
 /// <summary>
 /// A custom <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> implementation for <see cref="BindableIReadOnlyListAdapter"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed unsafe class BindableIReadOnlyListAdapterComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>

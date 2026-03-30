@@ -3,7 +3,6 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
@@ -12,10 +11,6 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// A marshaller for arrays of <see cref="Nullable{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The underlying value type of the nullable type.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeNullableTypeArrayMarshaller<T>
     where T : struct
 {

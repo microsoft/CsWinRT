@@ -3,7 +3,6 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -13,10 +12,6 @@ namespace WindowsRuntime.InteropServices;
 /// <remarks>
 /// This interface is only meant to be used to support marshalling code for generic instantiations.
 /// </remarks>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public interface IWindowsRuntimeInterface
 {
     /// <summary>

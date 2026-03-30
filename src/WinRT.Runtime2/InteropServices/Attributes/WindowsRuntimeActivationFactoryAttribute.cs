@@ -3,7 +3,6 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -11,10 +10,6 @@ namespace WindowsRuntime.InteropServices;
 /// Indicates the authored Windows Runtime class type that a given activation factory is for.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class WindowsRuntimeActivationFactoryAttribute : Attribute
 {
     /// <summary>

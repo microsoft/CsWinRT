@@ -3,7 +3,6 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -42,10 +41,6 @@ file static class IDisposable;
 /// <summary>
 /// Marshaller for <see cref="global::System.IDisposable"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IDisposableMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
@@ -64,10 +59,6 @@ public static unsafe class IDisposableMarshaller
 /// <summary>
 /// Interop methods for <see cref="global::System.IDisposable"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IDisposableMethods
 {
     /// <see cref="global::System.IDisposable.Dispose"/>
@@ -100,10 +91,6 @@ internal unsafe struct IDisposableVftbl
 /// <summary>
 /// The <see cref="global::System.IDisposable"/> implementation.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class IDisposableImpl
 {
     /// <summary>

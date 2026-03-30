@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -36,10 +35,6 @@ file static class DataErrorsChangedEventArgs;
 /// <summary>
 /// Marshaller for <see cref="global::System.ComponentModel.DataErrorsChangedEventArgs"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class DataErrorsChangedEventArgsMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>

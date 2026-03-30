@@ -2,18 +2,12 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Methods for <c>Windows.Foundation.Collections.IMapView&lt;K, V&gt;</c> types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IMapViewMethods
 {
     /// <summary>

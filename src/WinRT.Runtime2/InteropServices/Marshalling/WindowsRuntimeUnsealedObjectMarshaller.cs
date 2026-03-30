@@ -2,18 +2,12 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
 /// A marshaller for unsealed Windows Runtime objects.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class WindowsRuntimeUnsealedObjectMarshaller
 {
     /// <summary>

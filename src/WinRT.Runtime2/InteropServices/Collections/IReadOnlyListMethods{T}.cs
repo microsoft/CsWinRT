@@ -3,7 +3,6 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 
 #pragma warning disable CS1573
 
@@ -13,10 +12,6 @@ namespace WindowsRuntime.InteropServices;
 /// Methods for <see cref="System.Collections.Generic.IReadOnlyList{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListMethods<T>
 {
     /// <inheritdoc cref="System.Collections.Generic.IReadOnlyList{T}.this"/>

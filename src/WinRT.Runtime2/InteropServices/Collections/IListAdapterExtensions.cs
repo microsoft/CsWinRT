@@ -4,7 +4,6 @@
 #if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
@@ -12,10 +11,6 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Extensions for the <see cref="IListAdapter{T}"/> type.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IListAdapterExtensions
 {
     // Note: all the extensions in this file exactly match the ones in 'IReadOnlyListAdapterExtensions'.
@@ -227,10 +222,6 @@ public static class IListAdapterExtensions
 /// <summary>
 /// Extensions for the <see cref="IListAdapter{T}"/> type for blittable value types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IListAdapterBlittableValueTypeExtensions
 {
     extension<T>(IListAdapter<T>)
@@ -270,10 +261,6 @@ public static class IListAdapterBlittableValueTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IListAdapter{T}"/> type for unmanaged value types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IListAdapterUnmanagedValueTypeExtensions
 {
     extension<T, TAbi>(IListAdapter<T>)
@@ -315,10 +302,6 @@ public static class IListAdapterUnmanagedValueTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IListAdapter{T}"/> type for managed value types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IListAdapterManagedValueTypeExtensions
 {
     extension<T, TAbi>(IListAdapter<T>)
@@ -375,10 +358,6 @@ public static class IListAdapterManagedValueTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IListAdapter{T}"/> type for <see cref="KeyValuePair{TKey, TValue}"/> types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IListAdapterKeyValuePairTypeExtensions
 {
     extension<TKey, TValue>(IListAdapter<KeyValuePair<TKey, TValue>>)
@@ -433,10 +412,6 @@ public static class IListAdapterKeyValuePairTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IListAdapter{T}"/> type for <see cref="Nullable{T}"/> types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IListAdapterNullableTypeExtensions
 {
     extension<T>(IListAdapter<T?>)
@@ -492,10 +467,6 @@ public static class IListAdapterNullableTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IListAdapter{T}"/> type for reference types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IListAdapterReferenceTypeExtensions
 {
     extension<T>(IListAdapter<T>)

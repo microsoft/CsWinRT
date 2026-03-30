@@ -3,7 +3,6 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using ABI.Windows.Foundation;
@@ -20,10 +19,6 @@ namespace WindowsRuntime;
 /// <typeparam name="TIAsyncOperationWithProgressMethods">The <see cref="IAsyncOperationWithProgressMethodsImpl{TResult, TProgress}"/> implementation type.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1"/>
 [WindowsRuntimeManagedOnlyType]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class WindowsRuntimeAsyncOperationWithProgress<TResult, TProgress, TIAsyncOperationWithProgressMethods> : WindowsRuntimeObject,
     IAsyncOperationWithProgress<TResult, TProgress>,
     IWindowsRuntimeInterface<IAsyncOperationWithProgress<TResult, TProgress>>,
@@ -61,10 +56,6 @@ public abstract class WindowsRuntimeAsyncOperationWithProgress<TResult, TProgres
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -121,10 +112,6 @@ public abstract class WindowsRuntimeAsyncOperationWithProgress<TResult, TProgres
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected override bool IsOverridableInterface(in Guid iid)
     {
         return false;

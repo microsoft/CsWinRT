@@ -3,7 +3,6 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -40,10 +39,6 @@ namespace ABI.System;
 [WindowsRuntimeMappedType(typeof(global::System.DateTimeOffset))]
 [WindowsRuntimeReferenceType(typeof(global::System.DateTimeOffset?))]
 [DateTimeOffsetComWrappersMarshaller]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public struct DateTimeOffset
 {
     /// <summary>
@@ -56,10 +51,6 @@ public struct DateTimeOffset
 /// <summary>
 /// Marshaller for <see cref="global::System.DateTimeOffset"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class DateTimeOffsetMarshaller
 {
     /// <summary>

@@ -3,7 +3,6 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime;
 
@@ -17,10 +16,6 @@ namespace WindowsRuntime;
     AttributeTargets.Enum,
     AllowMultiple = false,
     Inherited = false)]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class WindowsRuntimeReferenceTypeAttribute : Attribute
 {
     /// <summary>

@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -51,10 +50,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     /// <param name="nativeObjectReference">The inner Windows Runtime object reference to wrap in the current instance.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="nativeObjectReference"/> is <see langword="null"/>.</exception>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected WindowsRuntimeObject(WindowsRuntimeObjectReference nativeObjectReference)
     {
         ArgumentNullException.ThrowIfNull(nativeObjectReference);
@@ -75,10 +70,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <remarks>
     /// This constructor should only be used when activating sealed types (both projected and user-defined types).
     /// </remarks>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationTypes.DerivedSealed _,
         WindowsRuntimeObjectReference activationFactoryObjectReference,
@@ -121,10 +112,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <remarks>
     /// This constructor should only be used when activating composable types (both projected and user-defined types).
     /// </remarks>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationTypes.DerivedComposed _,
         WindowsRuntimeObjectReference activationFactoryObjectReference,
@@ -204,10 +191,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// overload should be used instead, as that is more efficient in case the default signature is sufficient.
     /// </para>
     /// </remarks>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback,
         in Guid iid,
@@ -253,10 +236,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// overload should be used instead, as that is more efficient in case the default signature is sufficient.
     /// </para>
     /// </remarks>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected WindowsRuntimeObject(
         WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback,
         in Guid iid,
@@ -296,10 +275,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <remarks>
     /// This object reference should point to an <c>IInspectable</c> native object.
     /// </remarks>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal WindowsRuntimeObjectReference NativeObjectReference { get; }
 
     /// <summary>
@@ -309,10 +284,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// This value is <see langword="false"/> in aggregation scenarios, as the instance that should be marshalled
     /// to native is the derived managed type for the projected class, and not the inner object for the base type.
     /// </remarks>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal virtual bool HasUnwrappableNativeObjectReference => UnreachableException.Throw();
 
     /// <summary>
@@ -365,10 +336,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// </summary>
     /// <param name="iid">The interface to check.</param>
     /// <returns>Whether the interface represented by <paramref name="iid"/> is an overridable interface for the current type.</returns>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected virtual bool IsOverridableInterface(in Guid iid)
     {
         return UnreachableException.Throw();
@@ -380,10 +347,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <param name="interfaceType">The type handle for the interface to retrieve the object reference for.</param>
     /// <returns>The resulting <see cref="WindowsRuntimeObjectReference"/> object.</returns>
     /// <exception cref="Exception">Thrown if the interface specified by <paramref name="interfaceType"/> is not implemented.</exception>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     public WindowsRuntimeObjectReference GetObjectReferenceForInterface(RuntimeTypeHandle interfaceType)
     {
         // Throw an exception if we couldn't resolve the interface reference
@@ -412,10 +375,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// <param name="interfaceType">The type handle for the interface to retrieve the object reference for.</param>
     /// <param name="interfaceReference">The resulting <see cref="WindowsRuntimeObjectReference"/> object, if the interface could be retrieved.</param>
     /// <returns>Whether <paramref name="interfaceReference"/> could be retrieved successfully.</returns>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     public bool TryGetObjectReferenceForInterface(RuntimeTypeHandle interfaceType, [NotNullWhen(true)] out WindowsRuntimeObjectReference? interfaceReference)
     {
         return TryGetCastResult(

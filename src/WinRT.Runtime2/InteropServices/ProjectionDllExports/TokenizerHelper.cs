@@ -3,7 +3,6 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 using System.Globalization;
 
 namespace WindowsRuntime.InteropServices;
@@ -11,10 +10,6 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Helper class for tokenizing used by generated projections.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class TokenizerHelper
 {
     /// <summary>

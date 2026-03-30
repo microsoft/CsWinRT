@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -11,10 +9,6 @@ namespace WindowsRuntime.InteropServices;
 /// An interface for implementations of <c>Windows.Foundation.Collections.IVector&lt;T&gt;</c> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public interface IVectorMethodsImpl<T>
 {
     /// <summary>

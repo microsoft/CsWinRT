@@ -2,10 +2,8 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -19,10 +17,6 @@ namespace WindowsRuntime.InteropServices;
 /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
 /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.imapview-2"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IDictionaryAdapter<TKey, TValue>
 {
     /// <summary>

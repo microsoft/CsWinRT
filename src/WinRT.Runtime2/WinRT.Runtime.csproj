@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>14.0</LangVersion>
@@ -80,9 +80,6 @@
       'Microsoft.CodeAnalysis.CSharp.Symbols.PublicModel.NonErrorNamedTypeSymbol' to type 'Microsoft.CodeAnalysis.IMethodSymbol'.'.".
     -->
     <NoWarn>$(NoWarn);AD0001</NoWarn>
-
-    <!-- Ignore warnings for '[Obsolete]' members that are a private implementation detail (since they're allowed here) -->
-    <NoWarn>$(NoWarn);CSWINRT3001</NoWarn>
 
     <!-- Enable strong name signing -->
     <SignAssembly>true</SignAssembly>

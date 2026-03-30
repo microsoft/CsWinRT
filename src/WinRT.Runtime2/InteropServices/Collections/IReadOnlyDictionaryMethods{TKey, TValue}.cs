@@ -4,7 +4,6 @@
 #if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable CS1573
@@ -16,10 +15,6 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the read-only dictionary.</typeparam>
 /// <typeparam name="TValue">The type of values in the read-only dictionary.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyDictionaryMethods<TKey, TValue>
 {
     /// <inheritdoc cref="IReadOnlyDictionary{TKey, TValue}.this"/>

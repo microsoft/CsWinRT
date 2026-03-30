@@ -4,7 +4,6 @@
 #if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
@@ -12,10 +11,6 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListAdapterExtensions
 {
     extension(IReadOnlyListAdapter<string>)
@@ -229,10 +224,6 @@ public static class IReadOnlyListAdapterExtensions
 /// <summary>
 /// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for blittable value types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListAdapterBlittableValueTypeExtensions
 {
     extension<T>(IReadOnlyListAdapter<T>)
@@ -272,10 +263,6 @@ public static class IReadOnlyListAdapterBlittableValueTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for unmanaged value types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListAdapterUnmanagedValueTypeExtensions
 {
     extension<T, TAbi>(IReadOnlyListAdapter<T>)
@@ -317,10 +304,6 @@ public static class IReadOnlyListAdapterUnmanagedValueTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for managed value types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListAdapterManagedValueTypeExtensions
 {
     extension<T, TAbi>(IReadOnlyListAdapter<T>)
@@ -377,10 +360,6 @@ public static class IReadOnlyListAdapterManagedValueTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for <see cref="KeyValuePair{TKey, TValue}"/> types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListAdapterKeyValuePairTypeExtensions
 {
     extension<TKey, TValue>(IReadOnlyListAdapter<KeyValuePair<TKey, TValue>>)
@@ -435,10 +414,6 @@ public static class IReadOnlyListAdapterKeyValuePairTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for <see cref="Nullable{T}"/> types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListAdapterNullableTypeExtensions
 {
     extension<T>(IReadOnlyListAdapter<T?>)
@@ -494,10 +469,6 @@ public static class IReadOnlyListAdapterNullableTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IReadOnlyListAdapter{T}"/> type for reference types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListAdapterReferenceTypeExtensions
 {
     extension<T>(IReadOnlyListAdapter<T>)
