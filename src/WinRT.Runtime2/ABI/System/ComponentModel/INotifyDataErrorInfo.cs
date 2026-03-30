@@ -45,10 +45,6 @@ file static class INotifyDataErrorInfo;
 /// <summary>
 /// Marshaller for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyDataErrorInfoMarshaller
 {
     /// <inheritdoc cref="WindowsRuntimeObjectMarshaller.ConvertToUnmanaged"/>
@@ -69,10 +65,6 @@ public static unsafe class INotifyDataErrorInfoMarshaller
 /// <summary>
 /// Interop methods for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyDataErrorInfoMethods
 {
     /// <summary>
@@ -175,10 +167,6 @@ internal unsafe struct INotifyDataErrorInfoVftbl
 /// <summary>
 /// The <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/> implementation.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class INotifyDataErrorInfoImpl
 {
     /// <summary>

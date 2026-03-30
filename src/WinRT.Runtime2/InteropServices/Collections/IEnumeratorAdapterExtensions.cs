@@ -4,7 +4,6 @@
 #if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using WindowsRuntime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
@@ -12,10 +11,6 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Extensions for the <see cref="IEnumeratorAdapter{T}"/> type.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IEnumeratorAdapterExtensions
 {
     // Note: all the extensions in this file match the ones in 'IReadOnlyListAdapterExtensions',
@@ -171,10 +166,6 @@ public static class IEnumeratorAdapterExtensions
 /// <summary>
 /// Extensions for the <see cref="IEnumeratorAdapter{T}"/> type for blittable value types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IEnumeratorAdapterBlittableValueTypeExtensions
 {
     extension<T>(IEnumeratorAdapter<T> adapter)
@@ -207,10 +198,6 @@ public static class IEnumeratorAdapterBlittableValueTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IEnumeratorAdapter{T}"/> type for unmanaged value types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IEnumeratorAdapterUnmanagedValueTypeExtensions
 {
     extension<T, TAbi>(IEnumeratorAdapter<T> adapter)
@@ -245,10 +232,6 @@ public static class IEnumeratorAdapterUnmanagedValueTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IEnumeratorAdapter{T}"/> type for managed value types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IEnumeratorAdapterManagedValueTypeExtensions
 {
     extension<T, TAbi>(IEnumeratorAdapter<T> adapter)
@@ -295,10 +278,6 @@ public static class IEnumeratorAdapterManagedValueTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IEnumeratorAdapter{T}"/> type for <see cref="KeyValuePair{TKey, TValue}"/> types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IEnumeratorAdapterKeyValuePairTypeExtensions
 {
     extension<TKey, TValue>(IEnumeratorAdapter<KeyValuePair<TKey, TValue>> adapter)
@@ -343,10 +322,6 @@ public static class IEnumeratorAdapterKeyValuePairTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IEnumeratorAdapter{T}"/> type for <see cref="Nullable{T}"/> types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IEnumeratorAdapterNullableTypeExtensions
 {
     extension<T>(IEnumeratorAdapter<T?> adapter)
@@ -392,10 +367,6 @@ public static class IEnumeratorAdapterNullableTypeExtensions
 /// <summary>
 /// Extensions for the <see cref="IEnumeratorAdapter{T}"/> type for reference types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IEnumeratorAdapterReferenceTypeExtensions
 {
     extension<T>(IEnumeratorAdapter<T> adapter)

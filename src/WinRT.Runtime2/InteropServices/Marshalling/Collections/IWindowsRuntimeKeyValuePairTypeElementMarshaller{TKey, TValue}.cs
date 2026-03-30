@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
@@ -13,10 +11,6 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// </summary>
 /// <typeparam name="TKey">The type of the key.</typeparam>
 /// <typeparam name="TValue">The type of the value.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public interface IWindowsRuntimeKeyValuePairTypeElementMarshaller<TKey, TValue>
 {
     /// <summary>

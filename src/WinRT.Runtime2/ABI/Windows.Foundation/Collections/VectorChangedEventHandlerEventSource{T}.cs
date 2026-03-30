@@ -2,10 +2,7 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
-using System.ComponentModel;
 using Windows.Foundation.Collections;
-using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 
 namespace ABI.Windows.Foundation.Collections;
@@ -14,10 +11,6 @@ namespace ABI.Windows.Foundation.Collections;
 /// An <see cref="EventSource{T}"/> implementation for <see cref="VectorChangedEventHandler{T}"/>.
 /// </summary>
 /// <typeparam name="T">The type of elements in the observable vector.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract unsafe class VectorChangedEventHandlerEventSource<T> : EventSource<VectorChangedEventHandler<T>>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>

@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -11,10 +9,6 @@ namespace WindowsRuntime.InteropServices;
 /// Specifies the marshaling type to use to marshal a given Windows Runtime object, specifically when creating a <see cref="WindowsRuntimeObjectReference"/> instance.
 /// </summary>
 /// <seealso href="https://learn.microsoft.com/uwp/api/windows.foundation.metadata.marshalingtype"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public enum CreateObjectReferenceMarshalingType
 {
     /// <summary>

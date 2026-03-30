@@ -5,7 +5,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable IDE0046
@@ -18,10 +17,6 @@ namespace WindowsRuntime.InteropServices;
 /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
 /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.imapview-2"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class IReadOnlyDictionarySplitAdapter<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
 {
     /// <summary>

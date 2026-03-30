@@ -5,7 +5,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace WindowsRuntime;
 
@@ -14,10 +13,6 @@ namespace WindowsRuntime;
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the read-only dictionary.</typeparam>
 /// <typeparam name="TValue">The type of values in the read-only dictionary.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class ReadOnlyDictionaryValueCollection<TKey, TValue> : IEnumerable<TValue>
 {
     /// <summary>
@@ -52,10 +47,6 @@ public sealed class ReadOnlyDictionaryValueCollection<TKey, TValue> : IEnumerabl
     /// <summary>
     /// The <see cref="IEnumerator{T}"/> implementation for <see cref="ReadOnlyDictionaryValueCollection{TKey, TValue}"/>.
     /// </summary>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     public sealed class Enumerator : IEnumerator<TValue>
     {
         /// <summary>

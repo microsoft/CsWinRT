@@ -4,7 +4,6 @@
 #if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -15,10 +14,6 @@ namespace WindowsRuntime.InteropServices;
 /// sourcing Windows Runtime style events from managed code. This only supports events for CCW objects.
 /// </summary>
 /// <typeparam name="T">The event handler type to use in the table.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class EventRegistrationTokenTable<T>
     where T : MulticastDelegate
 {

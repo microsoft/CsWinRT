@@ -5,7 +5,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 #pragma warning disable IDE0032
@@ -17,10 +16,6 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iiterator-1"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class IEnumeratorAdapter<T> : IEnumerator<T>, IEnumeratorAdapter
 {
     /// <summary>

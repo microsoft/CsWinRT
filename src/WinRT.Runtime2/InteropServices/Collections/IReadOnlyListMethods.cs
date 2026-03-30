@@ -3,17 +3,12 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Methods for <see cref="System.Collections.Generic.IReadOnlyList{T}"/> types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static class IReadOnlyListMethods
 {
     /// <inheritdoc cref="System.Collections.Generic.IReadOnlyCollection{T}.Count"/>

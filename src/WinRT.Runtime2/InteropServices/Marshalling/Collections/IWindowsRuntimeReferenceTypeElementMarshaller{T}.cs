@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
@@ -11,10 +9,6 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// An interface for marshalling collection elements to native.
 /// </summary>
 /// <typeparam name="T">The type of elements in the array.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public interface IWindowsRuntimeReferenceTypeElementMarshaller<T>
     where T : class
 {

@@ -3,7 +3,6 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 using Windows.Foundation.Collections;
 using WindowsRuntime.InteropServices;
 
@@ -16,10 +15,6 @@ namespace WindowsRuntime;
 /// <typeparam name="TIMapChangedEventArgsMethods">The <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> implementation type.</typeparam>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1"/>
 [WindowsRuntimeManagedOnlyType]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class WindowsRuntimeMapChangedEventArgs<TKey, TIMapChangedEventArgsMethods> : WindowsRuntimeObject,
     IMapChangedEventArgs<TKey>,
     IWindowsRuntimeInterface<IMapChangedEventArgs<TKey>>
@@ -36,10 +31,6 @@ public abstract class WindowsRuntimeMapChangedEventArgs<TKey, TIMapChangedEventA
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -55,10 +46,6 @@ public abstract class WindowsRuntimeMapChangedEventArgs<TKey, TIMapChangedEventA
     }
 
     /// <inheritdoc/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
     protected sealed override bool IsOverridableInterface(in Guid iid)
     {
         return false;

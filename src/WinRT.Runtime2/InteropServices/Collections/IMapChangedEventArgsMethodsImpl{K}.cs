@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -11,10 +9,6 @@ namespace WindowsRuntime.InteropServices;
 /// An interface for implementations of <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> types.
 /// </summary>
 /// <typeparam name="K">The type of keys in the map.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public interface IMapChangedEventArgsMethodsImpl<K>
 {
     /// <summary>

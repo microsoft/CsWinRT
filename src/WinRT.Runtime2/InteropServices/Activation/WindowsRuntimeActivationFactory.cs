@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -50,55 +49,8 @@ public static unsafe class WindowsRuntimeActivationFactory
         }
     }
 
-#if !REFERENCE_ASSEMBLY
-    /// <summary>
-    /// Gets the activation factory for a Windows Runtime type with the specified runtime class name.
-    /// </summary>
-    /// <param name="runtimeClassName">The runtime class name of the type to activate (ie. the fully qualified type name).</param>
-    /// <returns>A <see cref="WindowsRuntimeObjectReference"/> instance wrapping an instance of the activation factory for the specified Windows Runtime type.</returns>
-    /// <remarks>
-    /// <para>
-    /// This method will try to activate the target type as follows:
-    /// <list type="bullet">
-    ///   <item>If <see cref="SetWindowsRuntimeActivationHandler"/> has been called, the registered activation handler will be used first.</item>
-    ///   <item>Otherwise, <a href="https://learn.microsoft.com/windows/win32/api/roapi/nf-roapi-rogetactivationfactory"><c>RoGetActivationFactory</c></a> will be used.</item>
-    ///   <item>Otherwise, the manifest-free fallback path will be used to try to resolve the target .dll to load based on <paramref name="runtimeClassName"/>.</item>
-    /// </list>
-    /// </para>
-    /// <para>
-    /// Note that if <c>CsWinRTEnableManifestFreeActivation</c> is disabled, the manifest-free fallback path will not be used. In that
-    /// scenario, failure to activate the type after the first two steps will result in failure to resolve the activation factory.
-    /// </para>
-    /// </remarks>
-    /// <exception cref="NotSupportedException">Thrown if <paramref name="runtimeClassName"/> is not registered, <c>CsWinRTEnableManifestFreeActivation</c> is disabled, and <c>CsWinRTManifestFreeActivationReportOriginalException</c> is not set.</exception>
-    /// <exception cref="Exception">Thrown for any failure to activate the specified type (the exact exception type might be a derived type).</exception>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public static WindowsRuntimeObjectReference GetActivationFactory(string runtimeClassName)
-    {
-        void* activationFactory = GetActivationFactoryUnsafe(runtimeClassName);
-
-        return WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactory, in WellKnownWindowsInterfaceIIDs.IID_IActivationFactory)!;
-    }
-
-    /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to wrap in the returned object reference.</param>
-    /// <inheritdoc cref="GetActivationFactory(string)"/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public static WindowsRuntimeObjectReference GetActivationFactory(string runtimeClassName, in Guid iid)
-    {
-        void* activationFactory = GetActivationFactoryUnsafe(runtimeClassName, in iid);
-
-        return WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactory, in iid)!;
-    }
-#endif
-
     /// <returns>A pointer to the activation factory for the specified Windows Runtime type.</returns>
-    /// <inheritdoc cref="GetActivationFactory(string)"/>
+    /// <inheritdoc cref="WindowsRuntimeObjectReference.GetActivationFactory(string)"/>
     public static void* GetActivationFactoryUnsafe(string runtimeClassName)
     {
 #if !REFERENCE_ASSEMBLY
@@ -114,7 +66,7 @@ public static unsafe class WindowsRuntimeActivationFactory
 
     /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to return.</param>
     /// <returns>A pointer to the activation factory for the specified Windows Runtime type.</returns>
-    /// <inheritdoc cref="GetActivationFactory(string)"/>
+    /// <inheritdoc cref="WindowsRuntimeObjectReference.GetActivationFactory(string)"/>
     public static void* GetActivationFactoryUnsafe(string runtimeClassName, in Guid iid)
     {
 #if !REFERENCE_ASSEMBLY
@@ -128,55 +80,8 @@ public static unsafe class WindowsRuntimeActivationFactory
 #endif
     }
 
-#if !REFERENCE_ASSEMBLY
-    /// <summary>
-    /// Tries to get the activation factory for a Windows Runtime type with the specified runtime class name.
-    /// </summary>
-    /// <param name="runtimeClassName">The runtime class name of the type to activate (ie. the fully qualified type name).</param>
-    /// <param name="activationFactory">A <see cref="WindowsRuntimeObjectReference"/> instance wrapping an instance of the activation factory for the specified Windows Runtime type, if successfully retrieved.</param>
-    /// <returns>Whether <paramref name="activationFactory"/> was successfully retrieved.</returns>
-    /// <remarks><inheritdoc cref="GetActivationFactory(string)" path="/remarks/node()"/></remarks>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public static bool TryGetActivationFactory(string runtimeClassName, [NotNullWhen(true)] out WindowsRuntimeObjectReference? activationFactory)
-    {
-        if (!TryGetActivationFactoryUnsafe(runtimeClassName, out void* activationFactoryPtr))
-        {
-            activationFactory = null;
-
-            return false;
-        }
-
-        activationFactory = WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactoryPtr, in WellKnownWindowsInterfaceIIDs.IID_IActivationFactory)!;
-
-        return true;
-    }
-
-    /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to wrap in the returned object reference.</param>
-    /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
-    [Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-        DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-        UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public static bool TryGetActivationFactory(string runtimeClassName, in Guid iid, [NotNullWhen(true)] out WindowsRuntimeObjectReference? activationFactory)
-    {
-        if (!TryGetActivationFactoryUnsafe(runtimeClassName, in iid, out void* activationFactoryPtr))
-        {
-            activationFactory = null;
-
-            return false;
-        }
-
-        activationFactory = WindowsRuntimeObjectReference.AttachUnsafe(ref activationFactoryPtr, in iid)!;
-
-        return true;
-    }
-#endif
-
     /// <param name="activationFactory">A pointer to the activation factory for the specified Windows Runtime type, if successfully retrieved.</param>
-    /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
+    /// <inheritdoc cref="WindowsRuntimeObjectReference.TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
     public static bool TryGetActivationFactoryUnsafe(string runtimeClassName, out void* activationFactory)
     {
 #if !REFERENCE_ASSEMBLY
@@ -188,7 +93,7 @@ public static unsafe class WindowsRuntimeActivationFactory
 
     /// <param name="iid">The IID of the interface pointer (from the resolved activation factory) to wrap in the returned object reference.</param>
     /// <param name="activationFactory">A pointer to the activation factory for the specified Windows Runtime type, if successfully retrieved.</param>
-    /// <inheritdoc cref="TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
+    /// <inheritdoc cref="WindowsRuntimeObjectReference.TryGetActivationFactory(string, out WindowsRuntimeObjectReference?)"/>
     public static bool TryGetActivationFactoryUnsafe(string runtimeClassName, in Guid iid, out void* activationFactory)
     {
 #if !REFERENCE_ASSEMBLY
@@ -346,7 +251,7 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <summary>
     /// Throws an exception if getting the activation factory failed.
     /// </summary>
-    /// <param name="runtimeClassName"><inheritdoc cref="GetActivationFactory(string)" path="/param[@name='runtimeClassName']/node()"/></param>
+    /// <param name="runtimeClassName"><inheritdoc cref="WindowsRuntimeObjectReference.GetActivationFactory(string)" path="/param[@name='runtimeClassName']/node()"/></param>
     /// <param name="hresult">The <c>HRESULT</c> for the activation factory retrieval result.</param>
     /// <exception cref="NotSupportedException">Thrown if activation failed due to type not being registered, <c>CsWinRTEnableManifestFreeActivation</c> is disabled, and <c>CsWinRTManifestFreeActivationReportOriginalException</c> is not set.</exception>
     /// <exception cref="Exception">Thrown for any other failure case.</exception>

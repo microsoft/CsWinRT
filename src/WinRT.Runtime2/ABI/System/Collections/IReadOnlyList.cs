@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
@@ -23,10 +21,6 @@ namespace ABI.System.Collections;
 /// type will be generated at compile time, as its runtime class name will depend on the XAML configuration being used.
 /// </para>
 /// </remarks>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed unsafe class IReadOnlyListComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
 {
     /// <inheritdoc/>

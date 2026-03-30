@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -12,10 +10,6 @@ namespace WindowsRuntime.InteropServices;
 /// </summary>
 /// <typeparam name="K">The type of keys in the map.</typeparam>
 /// <typeparam name="V">The type of values in the map.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public interface IMapViewMethodsImpl<K, V>
 {
     /// <summary>

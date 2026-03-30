@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
 using System.ComponentModel;
-using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 
 namespace ABI.System.ComponentModel;
@@ -12,10 +10,6 @@ namespace ABI.System.ComponentModel;
 /// <summary>
 /// An <see cref="EventSource{T}"/> implementation for <see cref="PropertyChangedEventHandler"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed unsafe class PropertyChangedEventHandlerEventSource : EventSource<PropertyChangedEventHandler>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>

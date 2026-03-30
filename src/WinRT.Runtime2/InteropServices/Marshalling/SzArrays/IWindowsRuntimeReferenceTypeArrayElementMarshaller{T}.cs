@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 #if !REFERENCE_ASSEMBLY
-using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
@@ -11,10 +9,6 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// An interface for marshalling implementations to support <see cref="WindowsRuntimeReferenceTypeArrayMarshaller{T}"/>.
 /// </summary>
 /// <typeparam name="T">The type of elements in the array.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public unsafe interface IWindowsRuntimeReferenceTypeArrayElementMarshaller<T>
     where T : class
 {

@@ -3,7 +3,6 @@
 
 #if !REFERENCE_ASSEMBLY
 using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -40,10 +39,6 @@ namespace ABI.System;
 [WindowsRuntimeMappedType(typeof(global::System.TimeSpan))]
 [WindowsRuntimeReferenceType(typeof(global::System.TimeSpan?))]
 [TimeSpanComWrappersMarshaller]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public struct TimeSpan
 {
     /// <summary>
@@ -56,10 +51,6 @@ public struct TimeSpan
 /// <summary>
 /// Marshaller for <see cref="global::System.TimeSpan"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class TimeSpanMarshaller
 {
     /// <summary>
