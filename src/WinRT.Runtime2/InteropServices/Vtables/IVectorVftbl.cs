@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -35,3 +36,4 @@ internal unsafe struct IVectorVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint, void*, uint*, HRESULT> GetMany;
     public delegate* unmanaged[MemberFunction]<void*, uint, void*, HRESULT> ReplaceAll;
 }
+#endif

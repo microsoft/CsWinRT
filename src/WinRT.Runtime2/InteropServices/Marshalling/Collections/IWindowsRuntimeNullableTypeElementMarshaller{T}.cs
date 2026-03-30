@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -24,3 +25,4 @@ public interface IWindowsRuntimeNullableTypeElementMarshaller<T>
     /// <returns>The marshalled native value.</returns>
     static abstract WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(T? value);
 }
+#endif

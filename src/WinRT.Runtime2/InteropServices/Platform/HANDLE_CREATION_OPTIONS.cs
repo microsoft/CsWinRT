@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 namespace WindowsRuntime.InteropServices;
 
 /// <see href="https://learn.microsoft.com/windows/win32/api/windowsstoragecom/ne-windowsstoragecom-handle_creation_options"/>
@@ -12,3 +13,4 @@ internal enum HANDLE_CREATION_OPTIONS : uint
     HCO_OPEN_ALWAYS = 0x4,
     HCO_TRUNCATE_EXISTING = 0x5
 }
+#endif

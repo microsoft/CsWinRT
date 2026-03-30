@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -22,3 +23,4 @@ internal unsafe struct IStringableVftbl
     public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, HRESULT> GetTrustLevel;
     public new delegate* unmanaged[MemberFunction]<void*, HSTRING*, HRESULT> ToString;
 }
+#endif

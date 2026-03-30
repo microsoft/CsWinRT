@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 namespace WindowsRuntime.InteropServices;
 
 /// <see href="https://learn.microsoft.com/windows/win32/api/wtypesbase/ne-wtypesbase-mshlflags"/>
@@ -15,3 +16,4 @@ internal enum MSHLFLAGS
     MSHLFLAGS_RESERVED3 = 32,
     MSHLFLAGS_RESERVED4 = 64
 }
+#endif

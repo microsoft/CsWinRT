@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 namespace WindowsRuntime.InteropServices;
 
 /// <see href="https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-formatmessagew#parameters"/>
@@ -14,3 +15,4 @@ internal static class FORMAT
     public const int FORMAT_MESSAGE_ARGUMENT_ARRAY = 0x00002000;
     public const int FORMAT_MESSAGE_MAX_WIDTH_MASK = 0x000000FF;
 }
+#endif

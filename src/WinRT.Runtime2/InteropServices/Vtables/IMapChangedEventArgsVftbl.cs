@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -24,3 +25,4 @@ internal unsafe struct IMapChangedEventArgsVftbl
     public delegate* unmanaged[MemberFunction]<void*, CollectionChange*, HRESULT> get_CollectionChange;
     public delegate* unmanaged[MemberFunction]<void*, void*, HRESULT> get_Key;
 }
+#endif

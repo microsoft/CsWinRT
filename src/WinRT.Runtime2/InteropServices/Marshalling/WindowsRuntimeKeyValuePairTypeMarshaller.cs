@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -35,3 +36,4 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeMarshaller
         return new((void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(value, flags, in iid));
     }
 }
+#endif

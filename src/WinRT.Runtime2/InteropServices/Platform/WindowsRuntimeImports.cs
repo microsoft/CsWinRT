@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -110,3 +111,4 @@ internal static unsafe partial class WindowsRuntimeImports
     [LibraryImport("api-ms-win-core-winrt-robuffer-l1-1-0.dll")]
     public static partial HRESULT RoGetBufferMarshaler(void** bufferMarshaler);
 }
+#endif

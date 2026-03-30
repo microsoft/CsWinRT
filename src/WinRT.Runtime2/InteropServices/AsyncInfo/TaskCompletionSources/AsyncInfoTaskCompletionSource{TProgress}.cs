@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -180,3 +181,4 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
         _asyncInfoRegistration.Dispose();
     }
 }
+#endif

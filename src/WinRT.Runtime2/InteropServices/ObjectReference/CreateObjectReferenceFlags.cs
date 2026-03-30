@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 
@@ -42,3 +43,4 @@ internal enum CreateObjectReferenceFlags
     /// </summary>
     PreventReleaseFromTrackerSourceOnDispose = 0x1 << 2
 }
+#endif

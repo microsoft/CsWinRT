@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.CompilerServices;
 
@@ -123,3 +124,4 @@ internal static unsafe class ComObjectHelpers
         PerformValidation(thisPtr, marshalingType);
     }
 }
+#endif

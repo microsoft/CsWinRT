@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.IO;
 
 namespace WindowsRuntime.InteropServices;
@@ -45,3 +46,4 @@ internal static class StreamOperationOptimizationExtensions
         }
     }
 }
+#endif

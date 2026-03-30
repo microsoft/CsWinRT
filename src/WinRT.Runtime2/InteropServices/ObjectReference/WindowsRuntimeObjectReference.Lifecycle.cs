@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System;
@@ -371,3 +372,4 @@ public unsafe partial class WindowsRuntimeObjectReference
         }
     }
 }
+#endif

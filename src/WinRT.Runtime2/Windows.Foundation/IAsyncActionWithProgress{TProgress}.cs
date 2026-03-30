@@ -18,7 +18,9 @@ namespace Windows.Foundation;
 /// of these as there are methods that use <see cref="IAsyncAction"/>, whose APIs don't report progress and don't have a result.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1"/>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [Guid("1F6DB258-E803-48A1-9546-EB7353398884")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IAsyncActionWithProgress<TProgress> : IAsyncInfo

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,3 +26,4 @@ public interface IWindowsRuntimeKeyValuePairTypeElementMarshaller<TKey, TValue>
     /// <returns>The marshalled native value.</returns>
     static abstract WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(KeyValuePair<TKey, TValue> value);
 }
+#endif

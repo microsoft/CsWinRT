@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -61,3 +62,4 @@ public interface IVectorMethodsImpl<T>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivector-1.insertat"/>
     static abstract void InsertAt(WindowsRuntimeObjectReference thisReference, uint index, T value);
 }
+#endif

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -29,3 +30,4 @@ public abstract class DynamicInterfaceCastableForwarderAttribute : Attribute
     /// <param name="interfaceReference">The resulting <see cref="WindowsRuntimeObjectReference"/> for the effective interface, if available.</param>
     public abstract bool IsInterfaceImplemented(WindowsRuntimeObject thisObject, [NotNullWhen(true)] out WindowsRuntimeObjectReference? interfaceReference);
 }
+#endif

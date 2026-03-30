@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Runtime.InteropServices.Marshalling;
 
 namespace WindowsRuntime.InteropServices;
@@ -121,3 +122,4 @@ internal static unsafe class IRestrictedErrorInfoMethods
         }
     }
 }
+#endif

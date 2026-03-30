@@ -24,6 +24,7 @@ public static unsafe class WindowsRuntimeMarshal
     /// <returns>Whether <paramref name="left"/> and <paramref name="right"/> are the same object or wrap the same underlying native object.</returns>
     public static bool NativeReferenceEquals(object? left, object? right)
     {
+#if !REFERENCE_ASSEMBLY
         if (ReferenceEquals(left, right))
         {
             return true;
@@ -46,6 +47,9 @@ public static unsafe class WindowsRuntimeMarshal
         }
 
         return false;
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -57,6 +61,7 @@ public static unsafe class WindowsRuntimeMarshal
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsReferenceToManagedObject(void* externalComObject)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(externalComObject);
 
         IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)*(void***)externalComObject;
@@ -66,6 +71,9 @@ public static unsafe class WindowsRuntimeMarshal
             unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface &&
             unknownVftbl->AddRef == runtimeVftbl->AddRef &&
             unknownVftbl->Release == runtimeVftbl->Release;
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -76,6 +84,7 @@ public static unsafe class WindowsRuntimeMarshal
     /// <returns>Whether <paramref name="externalComObject"/> was a reference to a managed object, and <paramref name="result"/> could be retrieved.</returns>
     public static bool TryGetManagedObject(void* externalComObject, [NotNullWhen(true)] out object? result)
     {
+#if !REFERENCE_ASSEMBLY
         // If the input pointer is a reference to a managed object, we can resolve the original managed object
         if (externalComObject is not null && IsReferenceToManagedObject(externalComObject))
         {
@@ -87,6 +96,9 @@ public static unsafe class WindowsRuntimeMarshal
         result = null;
 
         return false;
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -97,6 +109,7 @@ public static unsafe class WindowsRuntimeMarshal
     /// <returns>Whether <paramref name="managedObject"/> was a reference to a native object, and <paramref name="result"/> could be retrieved.</returns>
     public static bool TryGetNativeObject([NotNullWhen(true)] object? managedObject, out void* result)
     {
+#if !REFERENCE_ASSEMBLY
         // If the input object is wrapping a native object, we can unwrap it and return it after incrementing its reference count
         if (WindowsRuntimeComWrappersMarshal.TryUnwrapObjectReference(managedObject, out WindowsRuntimeObjectReference? objectReference))
         {
@@ -108,6 +121,9 @@ public static unsafe class WindowsRuntimeMarshal
         result = null;
 
         return false;
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -128,7 +144,11 @@ public static unsafe class WindowsRuntimeMarshal
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToUnmanaged"/>
     public static void* ConvertToUnmanaged(object? managedObject)
     {
+#if !REFERENCE_ASSEMBLY
         return WindowsRuntimeUnknownMarshaller.ConvertToUnmanaged(managedObject).DetachThisPtrUnsafe();
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -140,7 +160,11 @@ public static unsafe class WindowsRuntimeMarshal
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToManaged"/>
     public static object? ConvertToManaged(void* value)
     {
+#if !REFERENCE_ASSEMBLY
         return WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -154,6 +178,10 @@ public static unsafe class WindowsRuntimeMarshal
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.Free"/>
     public static void Free(void* value)
     {
+#if !REFERENCE_ASSEMBLY
         WindowsRuntimeUnknownMarshaller.Free(value);
+#else
+        throw null!;
+#endif
     }
 }

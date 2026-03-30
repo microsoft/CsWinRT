@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -268,3 +269,4 @@ file static class WindowsRuntimeTypeHierarchyData
         [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop")] object? _,
         int length);
 }
+#endif

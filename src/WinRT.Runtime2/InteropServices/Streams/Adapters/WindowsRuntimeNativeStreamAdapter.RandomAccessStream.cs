@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.IO;
 using Windows.Storage.Streams;
 
@@ -24,3 +25,4 @@ internal partial class WindowsRuntimeNativeStreamAdapter
         }
     }
 }
+#endif

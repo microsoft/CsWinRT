@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Collections.Concurrent;
 using System;
 using System.Threading;
@@ -286,3 +287,4 @@ file readonly struct CachesFactoryArgs(
     /// </summary>
     public readonly WeakReference<object> State = state;
 }
+#endif

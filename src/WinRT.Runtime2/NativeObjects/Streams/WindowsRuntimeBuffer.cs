@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using Windows.Storage.Streams;
@@ -58,3 +59,4 @@ internal sealed class WindowsRuntimeBuffer : WindowsRuntimeObject, IBuffer, IWin
         return false;
     }
 }
+#endif

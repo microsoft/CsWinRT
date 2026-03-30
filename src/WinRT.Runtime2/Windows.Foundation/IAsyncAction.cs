@@ -17,7 +17,9 @@ namespace Windows.Foundation;
 /// by <see cref="Completed"/> is invoked, and this is the only result from the action.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncaction"/>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [Guid("5A648006-843A-4DA9-865B-9D26E5DFAD7B")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IAsyncAction : IAsyncInfo

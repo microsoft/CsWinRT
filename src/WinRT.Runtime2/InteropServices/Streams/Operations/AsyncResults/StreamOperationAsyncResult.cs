@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -400,3 +401,4 @@ internal abstract class StreamOperationAsyncResult : IAsyncResult
         WindowsRuntimeIOHelpers.GetExceptionDispatchInfo(exception).Throw();
     }
 }
+#endif

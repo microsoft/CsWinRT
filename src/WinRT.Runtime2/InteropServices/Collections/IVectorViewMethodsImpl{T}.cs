@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -25,3 +26,4 @@ public interface IVectorViewMethodsImpl<T>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.ivectorview-1.getat"/>
     static abstract T GetAt(WindowsRuntimeObjectReference thisReference, uint index);
 }
+#endif

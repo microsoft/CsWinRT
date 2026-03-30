@@ -14,12 +14,16 @@ namespace Windows.Storage.Streams;
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.storage.streams.inputstreamoptions"/>
 [Flags]
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Storage.Streams.InputStreamOptions>")]
 [WindowsRuntimeReferenceType(typeof(InputStreamOptions?))]
+#endif
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
+#if !REFERENCE_ASSEMBLY
 [ABI.Windows.Storage.Streams.InputStreamOptionsComWrappersMarshaller]
+#endif
 public enum InputStreamOptions : uint
 {
     /// <summary>

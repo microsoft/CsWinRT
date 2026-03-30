@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 
 namespace WindowsRuntime.InteropServices;
@@ -51,3 +52,4 @@ internal sealed unsafe class ContextAwareInspectableObjectReference : ContextAwa
     {
     }
 }
+#endif

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Threading.Tasks;
 
 namespace WindowsRuntime.InteropServices;
@@ -19,3 +20,4 @@ internal abstract class UniversalTaskAdapter
     /// </remarks>
     public abstract Task? Task { get; }
 }
+#endif

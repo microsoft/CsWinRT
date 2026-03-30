@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
@@ -25,3 +26,4 @@ internal unsafe partial interface IWeakReference
     [PreserveSig]
     HRESULT Resolve(in Guid interfaceId, out void* weakReference);
 }
+#endif

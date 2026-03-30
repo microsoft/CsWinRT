@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 
@@ -21,3 +22,4 @@ internal unsafe struct IDispatcherQueueHandlerVftbl
     public delegate* unmanaged[MemberFunction]<void*, uint> Release;
     public delegate* unmanaged[MemberFunction]<void*, HRESULT> Invoke;
 }
+#endif

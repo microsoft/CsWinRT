@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using Windows.Foundation;
@@ -41,3 +42,4 @@ public interface IAsyncOperationMethodsImpl<TResult>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperation-1.getresults"/>
     static abstract TResult GetResults(WindowsRuntimeObjectReference thisReference);
 }
+#endif

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.Versioning;
 using System.Threading;
@@ -81,3 +82,4 @@ internal sealed class TaskAdapter<TResult> : UniversalTaskAdapter<
         handler(this, asyncStatus);
     }
 }
+#endif

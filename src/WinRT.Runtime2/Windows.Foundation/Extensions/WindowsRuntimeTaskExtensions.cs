@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
@@ -380,3 +381,4 @@ public static class WindowsRuntimeTaskExtensions
         return new TaskAdapter<TResult>(source, cancellationTokenSource: null);
     }
 }
+#endif

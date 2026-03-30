@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -43,3 +44,4 @@ internal static class WellKnownExceptionDataKeys
     /// </summary>
     public const string InternalCsWinRTException = "__InternalCsWinRTException";
 }
+#endif

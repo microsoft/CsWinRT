@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -53,3 +54,4 @@ public interface IMapMethodsImpl<K, V>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.imap-2.remove"/>
     static abstract void Remove(WindowsRuntimeObjectReference thisReference, K key);
 }
+#endif

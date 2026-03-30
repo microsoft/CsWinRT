@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -24,3 +25,4 @@ public interface IObservableVectorEventSourceFactory<T>
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.iobservablevector-1.vectorchanged"/>
     static abstract ABI.Windows.Foundation.Collections.VectorChangedEventHandlerEventSource<T> VectorChanged(WindowsRuntimeObjectReference thisReference);
 }
+#endif

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -12,3 +13,4 @@ namespace WindowsRuntime.InteropServices;
 /// using <see cref="ValueTypePlaceholder"/> offers better performance.
 /// </remarks>
 internal abstract class ReferenceTypePlaceholder;
+#endif

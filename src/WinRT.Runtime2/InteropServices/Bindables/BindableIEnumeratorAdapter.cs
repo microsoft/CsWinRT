@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -184,3 +185,4 @@ file sealed class BindableIEnumeratorAdapterFactory
         return new(enumerator);
     }
 }
+#endif

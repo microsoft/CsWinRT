@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 
 #pragma warning disable CS1573
@@ -195,3 +196,4 @@ internal static class BindableIListMethods
         }
     }
 }
+#endif

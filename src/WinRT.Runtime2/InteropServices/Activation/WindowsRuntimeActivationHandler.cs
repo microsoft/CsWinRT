@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 
 namespace WindowsRuntime.InteropServices;
@@ -21,3 +22,4 @@ namespace WindowsRuntime.InteropServices;
 /// </para>
 /// </remarks>
 public unsafe delegate HRESULT WindowsRuntimeActivationHandler(string runtimeClassName, in Guid iid, out void* activationFactory);
+#endif

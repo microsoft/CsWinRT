@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 
@@ -19,3 +20,4 @@ internal unsafe struct IRestrictedErrorInfoVftbl
     public delegate* unmanaged[MemberFunction]<void*, char**, HRESULT*, char**, char**, HRESULT> GetErrorDetails;
     public delegate* unmanaged[MemberFunction]<void*, char**, HRESULT> GetReference;
 }
+#endif

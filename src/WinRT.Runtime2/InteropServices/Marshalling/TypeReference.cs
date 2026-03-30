@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -68,3 +69,4 @@ public unsafe ref struct TypeReference
         return ref Unsafe.As<char, byte>(ref Unsafe.AsRef(in Name!.GetPinnableReference()));
     }
 }
+#endif

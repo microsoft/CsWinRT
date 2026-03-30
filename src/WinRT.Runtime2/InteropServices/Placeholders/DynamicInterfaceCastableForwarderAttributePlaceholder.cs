@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Diagnostics.CodeAnalysis;
 
 namespace WindowsRuntime.InteropServices;
@@ -23,3 +24,4 @@ internal sealed class DynamicInterfaceCastableForwarderAttributePlaceholder : Dy
         return false;
     }
 }
+#endif

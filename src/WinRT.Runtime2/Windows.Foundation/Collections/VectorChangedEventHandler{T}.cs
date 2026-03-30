@@ -12,6 +12,8 @@ namespace Windows.Foundation.Collections;
 /// <typeparam name="T">The type of elements in the observable vector.</typeparam>
 /// <param name="sender">The observable vector that changed.</param>
 /// <param name="event">The description of the change that occurred in the vector.</param>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public delegate void VectorChangedEventHandler<T>(IObservableVector<T> sender, IVectorChangedEventArgs @event);

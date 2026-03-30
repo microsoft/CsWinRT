@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 
@@ -147,3 +148,4 @@ public unsafe partial class WindowsRuntimeObjectReference
             : new ContextAwareInterfaceObjectReference(acquiredThisPtr, referenceTrackerPtr: null, iid: in iid);
     }
 }
+#endif

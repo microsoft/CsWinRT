@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -180,3 +181,4 @@ public static unsafe class WindowsRuntimeManagedValueTypeArrayMarshaller<T, TAbi
         Marshal.FreeCoTaskMem((nint)array);
     }
 }
+#endif

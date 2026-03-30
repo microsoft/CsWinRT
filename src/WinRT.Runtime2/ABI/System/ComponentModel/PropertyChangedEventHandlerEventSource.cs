@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using WindowsRuntime;
@@ -53,3 +54,4 @@ public sealed unsafe class PropertyChangedEventHandlerEventSource : EventSource<
         }
     }
 }
+#endif

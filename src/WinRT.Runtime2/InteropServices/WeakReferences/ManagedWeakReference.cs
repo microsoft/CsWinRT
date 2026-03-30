@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
@@ -57,3 +58,4 @@ internal sealed unsafe partial class ManagedWeakReference : IWeakReference
         return WellKnownErrorCodes.S_OK;
     }
 }
+#endif

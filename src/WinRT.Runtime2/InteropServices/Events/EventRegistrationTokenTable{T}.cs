@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -178,3 +179,4 @@ public sealed class EventRegistrationTokenTable<T>
         return hashCode == 0 ? 0x5FC74196 : hashCode;
     }
 }
+#endif

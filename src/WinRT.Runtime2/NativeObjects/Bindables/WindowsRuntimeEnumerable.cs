@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections;
 using System.ComponentModel;
@@ -54,3 +55,4 @@ internal sealed class WindowsRuntimeEnumerable : WindowsRuntimeObject, IEnumerab
         return false;
     }
 }
+#endif

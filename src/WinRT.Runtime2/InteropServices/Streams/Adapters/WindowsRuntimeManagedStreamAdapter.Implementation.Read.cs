@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Buffers;
 using System.Diagnostics;
@@ -336,3 +337,4 @@ internal partial class WindowsRuntimeManagedStreamAdapter
         return Read(new Span<byte>(ref result)) == 0 ? -1 : result;
     }
 }
+#endif

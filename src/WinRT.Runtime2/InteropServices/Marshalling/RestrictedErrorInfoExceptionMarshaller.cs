@@ -36,9 +36,13 @@ public static class RestrictedErrorInfoExceptionMarshaller
     /// </remarks>
     public static HRESULT ConvertToUnmanaged(Exception value)
     {
+#if !REFERENCE_ASSEMBLY
         RestrictedErrorInfo.SetErrorInfo(value);
 
         return RestrictedErrorInfo.GetHRForException(value);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -48,6 +52,10 @@ public static class RestrictedErrorInfoExceptionMarshaller
     /// <returns>A managed exception.</returns>
     public static Exception? ConvertToManaged(HRESULT value)
     {
+#if !REFERENCE_ASSEMBLY
         return RestrictedErrorInfo.GetExceptionForHR(value);
+#else
+        throw null!;
+#endif
     }
 }

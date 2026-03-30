@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -1497,3 +1498,4 @@ internal static class WindowsRuntimeExceptionExtensions
         }
     }
 }
+#endif

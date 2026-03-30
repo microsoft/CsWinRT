@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics;
 #if DEBUG
@@ -274,3 +275,4 @@ internal static class WindowsRuntimeStreamMapping
     }
 #endif
 }
+#endif

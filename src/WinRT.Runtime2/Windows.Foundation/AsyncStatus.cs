@@ -11,12 +11,16 @@ namespace Windows.Foundation;
 /// Represents the status for an asynchronous operation.
 /// </summary>
 /// <see href="https://learn.microsoft.com/windows/win32/api/asyncinfo/ne-asyncinfo-asyncstatus"/>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.AsyncStatus>")]
 [WindowsRuntimeReferenceType(typeof(AsyncStatus?))]
+#endif
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#if !REFERENCE_ASSEMBLY
 [ABI.Windows.Foundation.AsyncStatusComWrappersMarshaller]
+#endif
 public enum AsyncStatus
 {
     /// <summary>

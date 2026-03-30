@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
@@ -62,3 +63,4 @@ file sealed class WindowsRuntimeUnsealedObjectComWrappersCallbackHost<TCallback>
         return TCallback.CreateObject(value, out wrapperFlags);
     }
 }
+#endif

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -143,3 +144,4 @@ internal sealed class WindowsRuntimePinnedArrayBuffer : IBuffer
         return MemoryMarshal.CreateSpan(ref Unsafe.Add(ref pinnedData, _offset), _capacity);
     }
 }
+#endif

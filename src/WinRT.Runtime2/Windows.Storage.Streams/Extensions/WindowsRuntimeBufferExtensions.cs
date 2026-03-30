@@ -59,6 +59,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="ArgumentException">Thrown if the specified range is not valid, or if <paramref name="capacity"/> is less than the specified range.</exception>
     public static IBuffer AsBuffer(this byte[] source, int offset, int length, int capacity)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
@@ -68,6 +69,9 @@ public static class WindowsRuntimeBufferExtensions
         ArgumentException.ThrowIfInsufficientBufferCapacity(capacity, length);
 
         return new WindowsRuntimeExternalArrayBuffer(source, offset, length, capacity);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -107,6 +111,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static void CopyTo(this ReadOnlySpan<byte> source, IBuffer destination, uint destinationIndex)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(destination);
         ArgumentException.ThrowIfBufferIndexExceedsCapacity(destinationIndex, destination.Capacity);
         ArgumentException.ThrowIfInsufficientSpaceInTargetBuffer(destination.Capacity, destinationIndex, (uint)source.Length);
@@ -133,6 +138,9 @@ public static class WindowsRuntimeBufferExtensions
         {
             destination.Length = destinationIndex + (uint)source.Length;
         }
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -214,6 +222,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static void CopyTo(this IBuffer source, uint sourceIndex, Span<byte> destination, int count)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentException.ThrowIfBufferIndexExceedsLength(sourceIndex, source.Length);
@@ -233,6 +242,9 @@ public static class WindowsRuntimeBufferExtensions
         sourceSpan.CopyTo(destination);
 
         GC.KeepAlive(source);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -306,6 +318,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on either input buffer fails.</exception>
     public static void CopyTo(this IBuffer source, uint sourceIndex, IBuffer destination, uint destinationIndex, uint count)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(destination);
         ArgumentException.ThrowIfBufferIndexExceedsLength(sourceIndex, source.Length);
@@ -336,6 +349,9 @@ public static class WindowsRuntimeBufferExtensions
         {
             destination.Length = destinationIndex + count;
         }
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -349,10 +365,14 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static byte[] ToArray(this IBuffer source)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfBufferLengthExceedsArrayMaxLength(source.Length);
 
         return ToArray(source, sourceIndex: 0, count: (int)source.Length);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -372,6 +392,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on the input buffer fails.</exception>
     public static byte[] ToArray(this IBuffer source, uint sourceIndex, int count)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentException.ThrowIfBufferIndexExceedsLength(sourceIndex, source.Length);
@@ -388,6 +409,9 @@ public static class WindowsRuntimeBufferExtensions
         source.CopyTo(sourceIndex: sourceIndex, destination, destinationIndex: 0, count: count);
 
         return destination;
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -410,6 +434,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on either input buffer fails.</exception>
     public static unsafe bool IsSameData(this IBuffer buffer, [NotNullWhen(true)] IBuffer? otherBuffer)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(buffer);
 
         if (otherBuffer is null)
@@ -453,6 +478,9 @@ public static class WindowsRuntimeBufferExtensions
         // If we got here, it means the buffer is some unrecognized instance we don't know how to unwrap.
         // Since we're just interested in checking whether the data is the same, we don't need to throw.
         return false;
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -469,6 +497,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="UnauthorizedAccessException">Thrown if the underlying array that <paramref name="stream"/> is used can't be accessed.</exception>
     public static IBuffer GetWindowsRuntimeBuffer(this MemoryStream stream)
     {
+#if !REFERENCE_ASSEMBLY
         // Note: the naming inconsistency with 'byte[].AsBuffer' is intentional. This extension method will appear on
         // 'MemoryStream', so consistency with method names on 'MemoryStream' is more important. There we already have
         // an API called 'GetBuffer,' which returns the underlying array.
@@ -486,6 +515,9 @@ public static class WindowsRuntimeBufferExtensions
         Debug.Assert(stream.Capacity <= int.MaxValue);
 
         return new WindowsRuntimeExternalArrayBuffer(arraySegment.Array!, arraySegment.Offset, (int)stream.Length, stream.Capacity);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -523,6 +555,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="UnauthorizedAccessException">Thrown if the underlying array that <paramref name="stream"/> is used can't be accessed.</exception>
     public static IBuffer GetWindowsRuntimeBuffer(this MemoryStream stream, int position, int length)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(stream);
         ArgumentOutOfRangeException.ThrowIfNegative(position);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
@@ -539,6 +572,9 @@ public static class WindowsRuntimeBufferExtensions
         int bufferLength = Math.Max(0, Math.Min(length, (int)stream.Length - position));
 
         return new WindowsRuntimeExternalArrayBuffer(arraySegment.Array!, bufferOffset, bufferLength, bufferCapacity);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -551,6 +587,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on either input buffer fails.</exception>
     public static unsafe Stream AsStream(this IBuffer source)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
 
         // If the buffer is backed by a managed array, create a stream around it
@@ -567,6 +604,9 @@ public static class WindowsRuntimeBufferExtensions
 
         // The buffer is not one we can wrap in a stream
         throw ArgumentException.GetInvalidIBufferInstanceException();
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -580,6 +620,7 @@ public static class WindowsRuntimeBufferExtensions
     /// <exception cref="Exception">Thrown if invoking <see href="https://learn.microsoft.com/windows/win32/api/robuffer/nf-robuffer-ibufferbyteaccess-buffer"><c>IBufferByteAccess.Buffer</c></see> on either input buffer fails.</exception>
     public static byte GetByte(this IBuffer source, uint byteOffset)
     {
+#if !REFERENCE_ASSEMBLY
         ArgumentNullException.ThrowIfNull(source);
         ArgumentException.ThrowIfBufferOffsetOutOfRange(byteOffset, source.Length);
 
@@ -590,5 +631,8 @@ public static class WindowsRuntimeBufferExtensions
         GC.KeepAlive(source);
 
         return value;
+#else
+        throw null!;
+#endif
     }
 }

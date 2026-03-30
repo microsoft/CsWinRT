@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -278,3 +279,4 @@ file interface IStringableInterfaceImpl : global::Windows.Foundation.IStringable
         return IStringableMethods.ToString(thisReference);
     }
 }
+#endif

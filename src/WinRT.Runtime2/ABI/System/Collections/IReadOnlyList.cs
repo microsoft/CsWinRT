@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -39,3 +40,4 @@ public sealed unsafe class IReadOnlyListComWrappersMarshallerAttribute : Windows
         return new WindowsRuntimeReadOnlyList(valueReference);
     }
 }
+#endif

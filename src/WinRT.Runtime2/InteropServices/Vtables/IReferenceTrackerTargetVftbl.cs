@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -46,3 +47,4 @@ internal unsafe struct IReferenceTrackerVftblTargetVftbl
         return ((IReferenceTrackerVftblTargetVftbl*)*(void***)thisPtr)->ReleaseFromReferenceTracker(thisPtr);
     }
 }
+#endif

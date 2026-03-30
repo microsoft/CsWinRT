@@ -29,12 +29,17 @@ public static unsafe class RestrictedErrorInfo
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
     public static Exception? GetExceptionForHR(HRESULT errorCode)
     {
+#if !REFERENCE_ASSEMBLY
         return GetExceptionForHR(errorCode, out _);
+#else
+        throw null!;
+#endif
     }
 
     /// <inheritdoc cref="GetExceptionForHR(int)"/>
     /// <param name="errorCode">The <c>HRESULT</c> to be converted.</param>
     /// <param name="restoredExceptionFromGlobalState">restoredExceptionFromGlobalState Out param.</param>
+#if !REFERENCE_ASSEMBLY
     private static Exception? GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
     {
         // If the 'HRESULT' indicates success, there is no exception to return
@@ -191,6 +196,7 @@ public static unsafe class RestrictedErrorInfo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowExceptionForHR(HRESULT errorCode)
     {
+#if !REFERENCE_ASSEMBLY
         if (errorCode.Failed)
         {
             Throw(errorCode);
@@ -211,6 +217,9 @@ public static unsafe class RestrictedErrorInfo
                 throw exception;
             }
         }
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -225,6 +234,7 @@ public static unsafe class RestrictedErrorInfo
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
     public static HRESULT GetHRForException(Exception? exception)
     {
+#if !REFERENCE_ASSEMBLY
         // If the input exception is 'null', we always just map to 'S_OK'
         if (exception is null)
         {
@@ -249,6 +259,9 @@ public static unsafe class RestrictedErrorInfo
         }
 
         return WellKnownExceptionMappings.GetHRForNativeOrManagedErrorCode(hresult);
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -439,4 +452,5 @@ public static unsafe class RestrictedErrorInfo
             _ = WindowsRuntimeImports.RoReportUnhandledError(restrictedErrorInfoValuePtr);
         }
     }
+#endif
 }

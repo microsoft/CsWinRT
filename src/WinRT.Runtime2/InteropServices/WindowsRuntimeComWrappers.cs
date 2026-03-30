@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections;
 using System.Diagnostics;
@@ -496,3 +497,4 @@ file static class WindowsRuntimeComWrappersExceptions
             $"This scenario should never be hit. Please file an issue at https://github.com/microsoft/CsWinRT.");
     }
 }
+#endif

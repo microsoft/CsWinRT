@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -32,3 +33,4 @@ public interface IWindowsRuntimeManagedValueTypeElementMarshaller<T, TAbi>
     /// <param name="value">The unmanaged value to dispose.</param>
     static abstract void Dispose(TAbi value);
 }
+#endif

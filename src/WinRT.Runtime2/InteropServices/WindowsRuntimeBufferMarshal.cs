@@ -27,6 +27,7 @@ public static partial class WindowsRuntimeBufferMarshal
     /// </remarks>
     public static unsafe bool TryGetDataUnsafe([NotNullWhen(true)] IBuffer? buffer, out byte* data)
     {
+#if !REFERENCE_ASSEMBLY
         if (buffer is null)
         {
             goto Failure;
@@ -49,6 +50,9 @@ public static partial class WindowsRuntimeBufferMarshal
         data = null;
 
         return false;
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -66,6 +70,7 @@ public static partial class WindowsRuntimeBufferMarshal
     /// </remarks>
     public static unsafe bool TryGetDataUnsafe([NotNullWhen(true)] IMemoryBufferReference? buffer, out byte* data, out uint capacity)
     {
+#if !REFERENCE_ASSEMBLY
         if (buffer is null)
         {
             goto Failure;
@@ -92,6 +97,9 @@ public static partial class WindowsRuntimeBufferMarshal
         capacity = 0;
 
         return false;
+#else
+        throw null!;
+#endif
     }
 
     /// <summary>
@@ -102,6 +110,7 @@ public static partial class WindowsRuntimeBufferMarshal
     /// <returns>Whether <paramref name="array"/> was successfully retrieved.</returns>
     public static bool TryGetArray([NotNullWhen(true)] IBuffer? buffer, out ArraySegment<byte> array)
     {
+#if !REFERENCE_ASSEMBLY
         if (buffer is null)
         {
             goto Failure;
@@ -127,5 +136,8 @@ public static partial class WindowsRuntimeBufferMarshal
         array = default;
 
         return false;
+#else
+        throw null!;
+#endif
     }
 }

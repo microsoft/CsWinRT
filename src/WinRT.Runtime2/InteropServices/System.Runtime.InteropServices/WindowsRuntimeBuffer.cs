@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using Windows.Storage.Streams;
 
@@ -93,3 +94,4 @@ public static class WindowsRuntimeBuffer
         return new WindowsRuntimePinnedArrayBuffer(pinnedData, offset: 0, length, capacity);
     }
 }
+#endif

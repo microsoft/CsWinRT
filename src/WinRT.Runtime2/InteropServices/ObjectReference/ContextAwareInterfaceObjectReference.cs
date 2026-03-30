@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 
 #pragma warning disable IDE0032
@@ -60,3 +61,4 @@ internal sealed unsafe class ContextAwareInterfaceObjectReference : ContextAware
     /// </summary>
     public ref readonly Guid Iid => ref _iid;
 }
+#endif

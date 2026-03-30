@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -90,3 +91,4 @@ public static unsafe class IStorageItemHandleAccessMethods
         return new(interopHandle, ownsHandle: true);
     }
 }
+#endif

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -31,3 +32,4 @@ public unsafe interface IWindowsRuntimeReferenceTypeArrayElementMarshaller<T>
     /// <returns>The resulting managed object.</returns>
     static abstract T? ConvertToManaged(void* value);
 }
+#endif

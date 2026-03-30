@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using WindowsRuntime.InteropServices;
 
@@ -36,3 +37,4 @@ internal sealed class XamlParseException : Exception
         HResult = WellKnownErrorCodes.E_XAMLPARSEFAILED;
     }
 }
+#endif

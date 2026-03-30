@@ -13,6 +13,8 @@ namespace Windows.Foundation.Collections;
 /// <typeparam name="V">The type of values in the observable map.</typeparam>
 /// <param name="sender">The observable map that changed.</param>
 /// <param name="event">The description of the change that occurred in the map.</param>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public delegate void MapChangedEventHandler<K, V>(IObservableMap<K, V> sender, IMapChangedEventArgs<K> @event);

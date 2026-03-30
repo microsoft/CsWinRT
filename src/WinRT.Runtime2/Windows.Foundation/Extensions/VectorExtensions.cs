@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Numerics;
 using System.Runtime.Versioning;
 
@@ -52,3 +53,4 @@ public static class VectorExtensions
         return new(size.Width, size.Height);
     }
 }
+#endif

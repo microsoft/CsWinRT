@@ -13,7 +13,9 @@ namespace Windows.Foundation.Collections;
 /// Notifies listeners of changes to the vector.
 /// </summary>
 /// <typeparam name="T">The type of elements in the observable vector.</typeparam>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [Guid("5917EB53-50B4-4A0D-B309-65862B3F1DBC")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IObservableVector<T> : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable

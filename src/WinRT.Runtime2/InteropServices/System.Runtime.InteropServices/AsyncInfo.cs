@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.Versioning;
 using System.Threading;
@@ -278,3 +279,4 @@ public static class AsyncInfo
         return new TaskWithProgressAdapter<TResult, TProgress>(default(CanceledTaskPlaceholder));
     }
 }
+#endif

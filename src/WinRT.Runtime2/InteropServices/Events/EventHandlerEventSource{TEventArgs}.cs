@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 
@@ -46,3 +47,4 @@ public abstract unsafe class EventHandlerEventSource<TEventArgs> : EventSource<E
         }
     }
 }
+#endif

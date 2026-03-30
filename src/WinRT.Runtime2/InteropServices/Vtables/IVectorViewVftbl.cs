@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
@@ -30,3 +31,4 @@ internal unsafe struct IVectorViewVftbl
     public delegate* unmanaged[MemberFunction]<void*, void*, uint*, HRESULT> IndexOf;
     public delegate* unmanaged[MemberFunction]<void*, uint, void*, uint*, HRESULT> GetMany;
 }
+#endif

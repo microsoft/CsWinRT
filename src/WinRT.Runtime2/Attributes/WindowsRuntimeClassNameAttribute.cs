@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 
 namespace WindowsRuntime;
@@ -40,3 +41,4 @@ public sealed class WindowsRuntimeClassNameAttribute : Attribute
     /// </summary>
     public string RuntimeClassName { get; }
 }
+#endif

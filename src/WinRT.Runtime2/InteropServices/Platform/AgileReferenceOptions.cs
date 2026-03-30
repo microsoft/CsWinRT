@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
 
 namespace WindowsRuntime.InteropServices;
@@ -12,3 +13,4 @@ internal enum AgileReferenceOptions
     AGILEREFERENCE_DEFAULT = 0,
     AGILEREFERENCE_DELAYEDMARSHAL = 1
 }
+#endif

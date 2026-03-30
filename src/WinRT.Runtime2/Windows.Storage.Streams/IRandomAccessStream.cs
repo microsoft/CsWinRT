@@ -12,7 +12,9 @@ namespace Windows.Storage.Streams;
 /// <summary>
 /// Supports random access of data in input and output streams.
 /// </summary>
+#if !REFERENCE_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+#endif
 [Guid("905A0FE1-BC53-11DF-8C49-001E4FC686DA")]
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
 public interface IRandomAccessStream : IDisposable, IInputStream, IOutputStream

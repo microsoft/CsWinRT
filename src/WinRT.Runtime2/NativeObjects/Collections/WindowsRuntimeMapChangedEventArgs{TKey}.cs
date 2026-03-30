@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !REFERENCE_ASSEMBLY
 using System;
 using System.ComponentModel;
 using Windows.Foundation.Collections;
@@ -63,3 +64,4 @@ public abstract class WindowsRuntimeMapChangedEventArgs<TKey, TIMapChangedEventA
         return false;
     }
 }
+#endif
