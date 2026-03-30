@@ -486,7 +486,6 @@ public abstract unsafe class WindowsRuntimeObject :
                 return false;
         }
     }
-
 #endif
 
     /// <inheritdoc/>
@@ -919,7 +918,6 @@ public abstract unsafe class WindowsRuntimeObject :
     /// A dummy type to use for caching adaptive <see cref="IEnumerable"/> object references in <see cref="TryGetObjectReferenceForIEnumerableInterfaceInstance"/>.
     /// </summary>
     private static class IEnumerableInstance;
-
 #endif
 }
 
