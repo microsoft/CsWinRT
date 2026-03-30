@@ -48,6 +48,7 @@ public abstract unsafe class WindowsRuntimeObject :
     /// The lazy-loaded cache of additional data associated to type handles.
     /// </summary>
     private volatile ConcurrentDictionary<RuntimeTypeHandle, object>? _typeHandleCache;
+
     /// <summary>
     /// Creates a <see cref="WindowsRuntimeObject"/> instance with the specified parameters.
     /// </summary>
