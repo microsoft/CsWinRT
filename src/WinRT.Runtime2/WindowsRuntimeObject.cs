@@ -27,13 +27,10 @@ namespace WindowsRuntime;
 /// <remarks>
 /// This type should only be used as a base type by generated projected types.
 /// </remarks>
-public abstract unsafe class WindowsRuntimeObject
-#if !REFERENCE_ASSEMBLY
-    :
+public abstract unsafe class WindowsRuntimeObject :
     IDynamicInterfaceCastable,
     IUnmanagedVirtualMethodTableProvider,
     ICustomQueryInterface
-#endif
 {
 #if !REFERENCE_ASSEMBLY
     /// <summary>
@@ -489,10 +486,12 @@ public abstract unsafe class WindowsRuntimeObject
                 return false;
         }
     }
+#endif
 
     /// <inheritdoc/>
     RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
     {
+#if !REFERENCE_ASSEMBLY
         // Fail immediately if the feature switch is disabled, to ensure all related code can be trimmed
         if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
         {
@@ -517,11 +516,15 @@ public abstract unsafe class WindowsRuntimeObject
 
         // Otherwise we don't have an implementation type, so this cast can't possibly succeed
         return default;
+#else
+        throw null!;
+#endif
     }
 
     /// <inheritdoc/>
     bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
     {
+#if !REFERENCE_ASSEMBLY
         // Early feature switch check to improve trimming (same as above)
         if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
         {
@@ -540,11 +543,15 @@ public abstract unsafe class WindowsRuntimeObject
             interfaceType: interfaceType,
             implementationType: out _,
             interfaceReference: out _);
+#else
+        throw null!;
+#endif
     }
 
     /// <inheritdoc/>
     VirtualMethodTableInfo IUnmanagedVirtualMethodTableProvider.GetVirtualMethodTableInfoForKey(Type type)
     {
+#if !REFERENCE_ASSEMBLY
         if (LookupGeneratedVTableInfo(
             interfaceType: type.TypeHandle,
             performTypeHandleCacheLookup: true,
@@ -563,11 +570,15 @@ public abstract unsafe class WindowsRuntimeObject
         }
 
         return new(castResult!.TableInfo.ThisPtr, castResult.TableInfo.Table);
+#else
+        throw null!;
+#endif
     }
 
     /// <inheritdoc/>
     CustomQueryInterfaceResult ICustomQueryInterface.GetInterface(ref Guid iid, out nint ppv)
     {
+#if !REFERENCE_ASSEMBLY
         // We explicitly don't handle overridable interfaces, as well as 'IInspectable' and 'IWeakReferenceSource'.
         // This last one in particular must be ignored to avoid issues when an RCW object is used as a target
         // for a 'WeakReference' object. Lastly, we also need to not handle this 'QueryInterface' request when
@@ -589,8 +600,12 @@ public abstract unsafe class WindowsRuntimeObject
         return NativeObjectReference.TryAsUnsafe(in iid, out ppv)
             ? CustomQueryInterfaceResult.Handled
             : CustomQueryInterfaceResult.NotHandled;
+#else
+        throw null!;
+#endif
     }
 
+#if !REFERENCE_ASSEMBLY
     /// <summary>
     /// Tries to get an object reference without additional lookups.
     /// </summary>
