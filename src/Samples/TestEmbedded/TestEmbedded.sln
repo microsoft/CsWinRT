@@ -24,7 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net6App", "Net6App\Net6App.csproj", "{1FD2F1DA-ACF3-408F-BD13-9D1BA24833E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net8App", "Net8App\Net8App.csproj", "{1FD2F1DA-ACF3-408F-BD13-9D1BA24833E0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetCore3App", "NetCore3App\NetCore3App.csproj", "{9B147973-329B-4331-8207-B6832696D01A}"
 EndProject
@@ -32,7 +32,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTestEmbedded", "UnitTes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetFrameworkApp", "NetFrameworkApp\NetFrameworkApp.csproj", "{6A457D15-4080-4CCA-9980-D418C2EE2BDF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net6App.Bootstrap", "Net6App.Bootstrap\Net6App.Bootstrap.csproj", "{D2D4B83C-1E8B-44F0-BCC3-217B6D9141FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net8App.Bootstrap", "Net8App.Bootstrap\Net8App.Bootstrap.csproj", "{D2D4B83C-1E8B-44F0-BCC3-217B6D9141FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

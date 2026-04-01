@@ -6,9 +6,9 @@
         <RootNamespace>ObjectLifetimeTests.Lifted</RootNamespace>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <Platforms>x86;x64;arm64</Platforms>
-        <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+        <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
         <EnableMsixTooling>True</EnableMsixTooling>
-        <PublishProfile>win10-$(Platform).pubxml</PublishProfile>
+        <PublishProfile>win-$(Platform).pubxml</PublishProfile>
         <PrepareMsixPackageDependsOn></PrepareMsixPackageDependsOn>
         <PublishReadyToRun>false</PublishReadyToRun>
         <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
@@ -16,6 +16,7 @@
         <UseWinUI>true</UseWinUI>
         <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
         <UseRidGraph>true</UseRidGraph>
+        <AppxIncludeWindowsMetadataReferenceFromProjectReferences>false</AppxIncludeWindowsMetadataReferenceFromProjectReferences>
     </PropertyGroup>
     <ItemGroup>
         <None Remove="Images\LockScreenLogo.scale-200.png" />
@@ -36,6 +37,8 @@
     </ItemGroup>
     <ItemGroup>
         <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
+        <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Windows" />
+        <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Xaml" />
         <RuntimeHostConfigurationOption Include="System.Runtime.Loader.UseRidGraph" Value="true" />
     </ItemGroup>
     <ItemGroup>
@@ -53,16 +56,11 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.TestPlatform.TestHost">
-            <Version>17.3.2</Version>
             <ExcludeAssets>build</ExcludeAssets>
         </PackageReference>
-        <PackageReference Include="MSTest.TestAdapter">
-            <Version>2.2.10</Version>
-        </PackageReference>
-        <PackageReference Include="MSTest.TestFramework">
-            <Version>2.2.10</Version>
-        </PackageReference>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="MSTest.TestAdapter"/>
+        <PackageReference Include="MSTest.TestFramework"/>
+        <PackageReference Include="Newtonsoft.Json" />
     </ItemGroup>
 
     <ItemGroup>
@@ -71,9 +69,12 @@
     </ItemGroup>
     
     <ItemGroup>
-        <PackageReference Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWinAppSDKVersion)" GeneratePathProperty="true">
+        <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" GeneratePathProperty="true">
             <ExcludeAssets>compile</ExcludeAssets>
         </PackageReference>
-    </ItemGroup>
+        <PackageReference Include="Microsoft.Web.WebView2">
+            <ExcludeAssets>all</ExcludeAssets>
+        </PackageReference>
+	</ItemGroup>
    
 </Project>

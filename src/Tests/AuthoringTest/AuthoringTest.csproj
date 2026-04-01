@@ -5,10 +5,16 @@
     <Platforms>x64;x86</Platforms>
     <CsWinRTComponent>true</CsWinRTComponent>
     <IsTrimmable>true</IsTrimmable>
+    <TargetPlatformResourceVersion>10.0.18362.0</TargetPlatformResourceVersion>
     <!-- CsWinRTEnableLogging helps to diagnose generation issues -->
     <!-- <CsWinRTEnableLogging>true</CsWinRTEnableLogging> -->
     <!--<CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources>--> 
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+	  
+    <!-- Using x86 to test compilation of this option -->
+    <CsWinRTGenerateOverridedClassNameActivationFactory Condition="'$(Platform)' == 'x86'">true</CsWinRTGenerateOverridedClassNameActivationFactory>
+
+    <CsWinRTGenerateManagedDllGetActivationFactory>true</CsWinRTGenerateManagedDllGetActivationFactory>
 	  
     <!--
       Don't fail builds for well known warnings in the authoring tests that are expected:
@@ -21,23 +27,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWinAppSDKVersion)" GeneratePathProperty="true">
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" />
+    <PackageReference Include="Microsoft.Web.WebView2">
       <ExcludeAssets>all</ExcludeAssets>
     </PackageReference>
-    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WindowsAppSDK)\lib\uap10.0\Microsoft.Windows.ApplicationModel.Resources.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WindowsAppSDK)\lib\uap10.0.18362\Microsoft.Foundation.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WindowsAppSDK)\lib\uap10.0.18362\Microsoft.Graphics.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WindowsAppSDK)\lib\uap10.0\Microsoft.Windows.System.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WindowsAppSDK)\lib\uap10.0\Microsoft.UI.Text.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WindowsAppSDK)\lib\uap10.0\Microsoft.UI.Xaml.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WindowsAppSDK)\lib\uap10.0.18362\Microsoft.UI.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WindowsAppSDK)\lib\uap10.0\Microsoft.Web.WebView2.Core.winmd" />
   </ItemGroup>
   
   <ItemGroup>    
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />    
     <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
-    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator.Roslyn4080\WinRT.SourceGenerator.Roslyn4080.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />

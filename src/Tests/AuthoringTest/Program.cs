@@ -205,6 +205,8 @@ namespace AuthoringTest
     {
         public int Number { get; } = 4;
         public string Value => "CsWinRT";
+        public CustomWWW Url => null;
+        public CustomPropertyStructType CustomPropertyStructType => new CustomPropertyStructType();
     }
 
     [GeneratedBindableCustomProperty]
@@ -623,6 +625,7 @@ namespace AuthoringTest
         }
     }
 
+    [WinRTRuntimeClassName("AuthoringTest.DisposableClassImpl")]
     public sealed class DisposableClass : IDisposable
     {
         public bool IsDisposed { get; set; }
@@ -738,6 +741,7 @@ namespace AuthoringTest
         }
     }
 
+    [WinRTRuntimeClassName("AuthoringTest.CustomReadOnlyDictionaryImpl")]
     public sealed class CustomReadOnlyDictionary : IReadOnlyDictionary<string, BasicStruct>
     {
         private readonly CustomDictionary _dictionary;
@@ -986,6 +990,7 @@ namespace AuthoringTest
         }
     }
 
+    [WinRTRuntimeClassName("AuthoringTest.StaticClassImpl")]
     public static class StaticClass
     {
         public static int GetNumber()
@@ -1126,6 +1131,12 @@ namespace AuthoringTest
     public sealed class CustomNotifyPropertyChanged : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+    }
+
+    public sealed class CustomNotifyPropertyChangedAndChanging : INotifyPropertyChanged, INotifyPropertyChanging
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangingEventHandler PropertyChanging;
     }
 
     public sealed class CustomCommand : ICommand
@@ -1980,6 +1991,7 @@ namespace AuthoringTest
         }
     }
 
+    [WinRTRuntimeClassName("AuthoringTest.NonActivatableFactoryImpl")]
     public static class NonActivatableFactory
     {
         public static NonActivatableType Create()

@@ -275,6 +275,8 @@ namespace TestComponentCSharp
         void CallForStringPair(ProvideStringPair provideStringPair);
         event Windows.Foundation.EventHandler<Windows.Foundation.Collections.IKeyValuePair<String, String> > StringPairPropertyChanged;
 
+        Windows.Foundation.Collections.IKeyValuePair<EnumValue, EnumStruct> EnumPairProperty;
+
         Windows.Foundation.Collections.IVector<IInspectable> GetUriVectorAsIInspectableVector();
         ProvideUri GetUriDelegate();
         void AddUriHandler(IUriHandler uriHandler);
@@ -382,6 +384,8 @@ namespace TestComponentCSharp
         void CopyProperties(IProperties1 src);
         void CopyPropertiesViaWeakReference(IProperties1 src);
 
+        Boolean CheckForBindableObjectInterface(Microsoft.UI.Xaml.Interop.IBindableIterable iterable);
+
         // Async
         void CompleteAsync(); // Completes the in-flight async operation successfully
         void CompleteAsync(Int32 hr); // Completes the in-flight async operation with a failed HRESULT
@@ -441,6 +445,17 @@ namespace TestComponentCSharp
         static Object BoxedEnum{ get; };
         static Object BoxedEventHandler{ get; };
         static void UnboxAndCallProgressHandler(Object httpProgressHandler);
+        static Object BoxedStringArray{ get; };
+        static Object BoxedInt32Array{ get; };
+        static Object BoxedTimeSpanArray{ get; };
+        Object BoxedObjectArray{ get; };
+
+        static Int32 UnboxInt32UsingPropertyValue(Object obj);
+        static String UnboxStringUsingPropertyValue(Object obj);
+        static Windows.Foundation.Rect UnboxRectUsingPropertyValue(Object obj);
+        static Int32[] UnboxInt32ArrayUsingPropertyValue(Object obj);
+        static Boolean[] UnboxBooleanArrayUsingPropertyValue(Object obj);
+        static Windows.Foundation.Point[] UnboxPointArrayUsingPropertyValue(Object obj);
 
         static Int32 GetPropertyType(Object obj);
         static String GetName(Object obj);
@@ -492,7 +507,7 @@ namespace TestComponentCSharp
     }
 
     [threading(sta), marshaling_behavior(standard)]
-    runtimeclass NonAgileClass
+    runtimeclass NonAgileClass : Microsoft.UI.Xaml.Input.ICommand
     {
         NonAgileClass();
         void Observe(Microsoft.UI.Xaml.Interop.IBindableObservableVector vector);

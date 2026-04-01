@@ -142,15 +142,7 @@ namespace WinRT
             // pressure rather than tracking all the IObjectReferences that are connected
             // to the same object and only releasing the memory pressure once all of them
             // have been finalized.
-#if NET
-            // Disable on AOT for now until dotnet runtime #104583 is addressed to avoid making the issue happen more often.
-            if (RuntimeFeature.IsDynamicCodeCompiled)
-            {
-                GC.AddMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-            }
-#else
             GC.AddMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-#endif
         }
 
         ~IObjectReference()
@@ -393,15 +385,9 @@ namespace WinRT
                 }
 
                 DisposeTrackerSource();
-#if NET
-                // Disable on AOT for now until dotnet runtime #104583 is addressed to avoid making the issue happen more often.
-                if (RuntimeFeature.IsDynamicCodeCompiled)
-                {
-                    GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-                }
-#else
+
+                // Remove the same memory pressure added in the constructor (see notes there)
                 GC.RemoveMemoryPressure(ComWrappersSupport.GC_PRESSURE_BASE);
-#endif
 
                 Volatile.Write(ref _disposedFlags, DISPOSE_COMPLETED);
             }
@@ -554,6 +540,27 @@ namespace WinRT
                 thisPtr = IntPtr.Zero;
                 return obj;
             }
+        }
+
+        /// <summary>
+        /// Creates an <see cref="ObjectReference{T}"/> instance for a COM pointer to an agile object, without validation.
+        /// </summary>
+        /// <param name="thisPtr">The COM pointer to wrap.</param>
+        /// <returns>The resulting <see cref="ObjectReference{T}"/> instance.</returns>
+        /// <remarks>
+        /// This method will not validate that the target COM object is actually free-threaded.
+        /// It is the responsibility of callers to ensure only free-threaded objects are used.
+        /// </remarks>
+        internal static ObjectReference<T> AttachFreeThreadedUnsafe(ref IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            var obj = new ObjectReference<T>(thisPtr);
+            thisPtr = IntPtr.Zero;
+            return obj;
         }
 
         public static ObjectReference<T> Attach(ref IntPtr thisPtr, Guid iid)

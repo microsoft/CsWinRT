@@ -9,7 +9,7 @@ This sample demonstrates how to do the following:
 ## Requirements
 
 * [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) with the Universal Windows Platform development workload installed. In **Installation Details** > **Universal Windows Platform development**, check the **C++ (v14x) Universal Windows Platform tools** option.
-* [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
+* [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 * nuget.exe 5.8.0-preview.2 or later (for command line MSBuild)
 
 **Note**: This sample uses .NET 6 and therefore requires Visual Studio 2022 to build and run. If you prefer, you can use Visual Studio 2019 and modify the sample to target [.NET 5](https://dotnet.microsoft.com/download/dotnet/5.0). To do this, you will need to modify the `TargetFramework` and the *nuspec* file in the `SimpleMathProjection` project to target `net5.0-windows10.0.19041.0`.

@@ -47,7 +47,7 @@ Here is an example project file for a library cross-targeting and embedding a C#
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0-windows;net5.0-windows;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows;net5.0-windows;netstandard2.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
   </PropertyGroup>
 

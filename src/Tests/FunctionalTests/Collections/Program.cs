@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading;
 using test_component_derived.Nested;
 using TestComponentCSharp;
+using Windows.Foundation;
+using Windows.Web.Http;
 
 var instance = new Class();
 
@@ -36,6 +38,84 @@ float[] floatArr2 = new float[floatArr.Length];
 float[] outFloatArr;
 float[] retFloatArr = instance2.Array9(floatArr, floatArr2, out outFloatArr);
 if (!AllEqual(floatArr, floatArr2, outFloatArr, retFloatArr))
+{
+    return 101;
+}
+
+string[] stringArr = new string[] { "apples", "oranges", "pears" };
+string[] stringArr2 = new string[stringArr.Length];
+string[] outStringArr;
+string[] retStringArr = instance2.Array12(stringArr, stringArr2, out outStringArr);
+if (!AllEqual(stringArr, stringArr2, outStringArr, retStringArr))
+{
+    return 101;
+}
+
+TestComponent.Blittable[] blittableArr = new TestComponent.Blittable[] {
+                new TestComponent.Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(TestComponent.ITests).GUID),
+                new TestComponent.Blittable(10, 20, 30, 40, -50, -60, -70, 80.0f, 90.0, typeof(IStringable).GUID)
+            };
+TestComponent.Blittable[] blittableArr2 = new TestComponent.Blittable[blittableArr.Length];
+TestComponent.Blittable[] outBlittableArr;
+TestComponent.Blittable[] retBlittableArr = instance2.Array13(blittableArr, blittableArr2, out outBlittableArr);
+if (!AllEqual(blittableArr, blittableArr2, outBlittableArr, retBlittableArr))
+{
+    return 101;
+}
+
+#if NET9_0_OR_GREATER
+
+TestComponent.NonBlittable[] nonBlittableArr = new TestComponent.NonBlittable[] {
+                new TestComponent.NonBlittable(false, 'X', "First", (long?)PropertyValue.CreateInt64(123)),
+                new TestComponent.NonBlittable(true, 'Y', "Second", (long?)PropertyValue.CreateInt64(456)),
+                new TestComponent.NonBlittable(false, 'Z', "Third", (long?)PropertyValue.CreateInt64(789))
+            };
+TestComponent.NonBlittable[] nonBlittableArr2 = new TestComponent.NonBlittable[nonBlittableArr.Length];
+TestComponent.NonBlittable[] outNonBlittableArr;
+TestComponent.NonBlittable[] retNonBlittableArr = instance2.Array14(nonBlittableArr, nonBlittableArr2, out outNonBlittableArr);
+if (!AllEqual(nonBlittableArr, nonBlittableArr2, outNonBlittableArr, retNonBlittableArr))
+{
+    return 101;
+}
+
+TestComponent.Nested[] nestedArr = new TestComponent.Nested[]{
+                new TestComponent.Nested(
+                    new TestComponent.Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(TestComponent.ITests).GUID),
+                    new TestComponent.NonBlittable(false, 'X', "First", (long?)PropertyValue.CreateInt64(123))),
+                new TestComponent.Nested(
+                    new TestComponent.Blittable(10, 20, 30, 40, -50, -60, -70, 80.0f, 90.0, typeof(IStringable).GUID),
+                    new TestComponent.NonBlittable(true, 'Y', "Second", (long?)PropertyValue.CreateInt64(456))),
+                new TestComponent.Nested(
+                    new TestComponent.Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(WinRT.IInspectable).GUID),
+                    new TestComponent.NonBlittable(false, 'Z', "Third", (long?)PropertyValue.CreateInt64(789)))
+            };
+TestComponent.Nested[] nestedArr2 = new TestComponent.Nested[nestedArr.Length];
+TestComponent.Nested[] outNestedArr;
+TestComponent.Nested[] retNestedArr = instance2.Array15(nestedArr, nestedArr2, out outNestedArr);
+if (!AllEqual(nestedArr, nestedArr2, outNestedArr, retNestedArr))
+{
+    return 101;
+}
+
+EnumValue[] enumArr = new EnumValue[] { EnumValue.One, EnumValue.Two };
+instance.EnumsProperty = enumArr;
+EnumValue[] retEnumArr = instance.EnumsProperty;
+if (!AllEqual(enumArr, retEnumArr))
+{
+    return 101;
+}
+
+#endif
+
+IStringable[] stringableArr = new IStringable[] {
+                Windows.Data.Json.JsonValue.CreateNumberValue(3),
+                Windows.Data.Json.JsonValue.CreateNumberValue(4),
+                Windows.Data.Json.JsonValue.CreateNumberValue(5.0)
+            };
+IStringable[] stringableArr2 = new IStringable[stringableArr.Length];
+IStringable[] outStringableArr;
+IStringable[] retStringableArr = instance2.Array16(stringableArr, stringableArr2, out outStringableArr);
+if (!AllEqual(stringableArr, stringableArr2, outStringableArr, retStringableArr))
 {
     return 101;
 }
@@ -72,6 +152,22 @@ if (propertySet["beta"] is not string str || str != "second")
     return 101;
 }
 
+propertySet.Add("test", new short[] { 1, 2, 3, 4 });
+if (propertySet["test"] is not short[] shortArray || shortArray.Length != 4)
+{
+    return 101;
+}
+
+if (propertySet["delta"] is not byte[] byteArray || byteArray.Length != 4 || byteArray[1] != 2)
+{
+    return 101;
+}
+
+if (propertySet["echo"] is not Point[] pointArray || pointArray.Length != 3 || pointArray[1].X != 2 || pointArray[1].Y != 2)
+{
+    return 101;
+}
+
 var types = Class.ListOfTypes;
 if (types.Count != 2 || types[0] != typeof(Class))
 {
@@ -92,8 +188,22 @@ if (observableCollection != instance.BindableIterableProperty)
     return 101;
 }
 
+var typeList = new List<Type>();
+instance.BindableIterableProperty = typeList;
+if (typeList != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
+var stringList = new List<string>();
+instance.BindableIterableProperty = stringList;
+if (stringList != instance.BindableIterableProperty)
+{
+    return 101;
+}
+
 var profile = Windows.Networking.Connectivity.NetworkInformation.GetInternetConnectionProfile();
-var names = profile.GetNetworkNames();
+var names = profile?.GetNetworkNames();
 
 List<string> networkNames = new();
 if (names?.Count > 0)
@@ -242,6 +352,37 @@ if (sum != 7)
     return 101;
 }
 
+// Regression test for https://github.com/microsoft/CsWinRT/issues/2337:
+// passing a generic managed collection to a WinRT constructor should
+// generate the necessary CCW vtable entries even when the local is 'var'.
+sum = 0;
+
+var intLinkedList = new LinkedList<int>();
+intLinkedList.AddLast(3);
+intLinkedList.AddLast(5);
+intLinkedList.AddLast(7);
+var customIterableTest4 = new CustomIterableTest(intLinkedList);
+foreach (var i in customIterableTest4)
+{
+    sum += i;
+}
+
+if (sum != 15)
+{
+    return 101;
+}
+
+// Exact regression test for https://github.com/microsoft/CsWinRT/issues/2337:
+// HttpFormUrlEncodedContent takes IIterable<IKeyValuePair<String, String>> in
+// its constructor. Passing a List<KeyValuePair<string, string>> declared with
+// 'var' must generate the required CCW vtable entries for the AOT scenario.
+var pairs = new List<KeyValuePair<string, string>>
+{
+    new KeyValuePair<string, string>("aaa", "1234"),
+    new KeyValuePair<string, string>("bbb", "5678")
+};
+using var bodyContent = new HttpFormUrlEncodedContent(pairs);
+
 var nullableDoubleList = new List<double?>() { 1, 2, null, 3, 4, null};
 var result = instance.Calculate(nullableDoubleList);
 if (result != 10)
@@ -286,6 +427,54 @@ if (intToListDict[2].Count != 2 || intToListDict[2].First() != EnumValue.One)
 if (intToListDict[4].Count != 1 || intToListDict[4].First() != EnumValue.Two)
 {
     return 101;
+}
+
+// Make sure for collections of value types that they don't project IEnumerable<object>
+// as it isn't a covariant interface.
+if (instance.CheckForBindableObjectInterface(new List<int>()) ||
+    instance.CheckForBindableObjectInterface(new List<EnumValue>()) ||
+    instance.CheckForBindableObjectInterface(new List<System.DateTimeOffset>()) ||
+    instance.CheckForBindableObjectInterface(new Dictionary<string, System.DateTimeOffset>()))
+{
+    return 102;
+}
+
+// Make sure for collections of object types that they do project IEnumerable<object>
+// as it is an covariant interface.
+if (!instance.CheckForBindableObjectInterface(new List<object>()) ||
+    !instance.CheckForBindableObjectInterface(new List<CustomClass>()) ||
+    !instance.CheckForBindableObjectInterface(new List<Class>()) ||
+    !instance.CheckForBindableObjectInterface(new List<IProperties1>()))
+{
+    return 103;
+}
+
+var stringArr3 = (string[])Class.BoxedStringArray;
+if (stringArr3.Length != 3 || stringArr3[0] != "one" || stringArr3[1] != "two" || stringArr3[2] != "three")
+{
+    return 104;
+}
+
+var intArr = (int[])Class.BoxedInt32Array;
+if (intArr.Length != 3 || intArr[0] != 1 || intArr[1] != 2 || intArr[2] != 3)
+{
+    return 104;
+}
+
+#if NET9_0_OR_GREATER
+
+var timeSpanArr = (TimeSpan[])Class.BoxedTimeSpanArray;
+if (timeSpanArr.Length != 2 || timeSpanArr[0] != TimeSpan.FromSeconds(10) || timeSpanArr[1] != TimeSpan.FromSeconds(20))
+{
+    return 105;
+}
+
+#endif
+
+var objectArr = (object[])instance.BoxedObjectArray;
+if (objectArr.Length != 2 || objectArr[0] is not Class c || c != instance || objectArr[1] is not Class c2 || c2 != instance)
+{
+    return 105;
 }
 
 return 100;

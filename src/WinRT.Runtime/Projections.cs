@@ -78,6 +78,9 @@ namespace WinRT
             
             RegisterCustomAbiTypeMappingNoLock(typeof(Nullable<>), typeof(ABI.System.Nullable<>), "Windows.Foundation.IReference`1");
 
+            // We only use IReferenceArray on AOT for runtime class name to projected type lookup, so avoiding the ABI type to not root that.
+            CustomAbiTypeNameToTypeMappings.Add("Windows.Foundation.IReferenceArray`1", typeof(Windows.Foundation.IReferenceArray<>));
+
             RegisterCustomAbiTypeMappingNoLock(typeof(DateTimeOffset), typeof(ABI.System.DateTimeOffset), "Windows.Foundation.DateTime");
             RegisterCustomAbiTypeMappingNoLock(typeof(Exception), typeof(ABI.System.Exception), "Windows.Foundation.HResult");
             RegisterCustomAbiTypeMappingNoLock(typeof(TimeSpan), typeof(ABI.System.TimeSpan), "Windows.Foundation.TimeSpan");
@@ -502,7 +505,7 @@ namespace WinRT
                 }
             }
 
-            Type baseType = type.BaseType;
+            Type baseType = type.IsInterface ? typeof(object) : type.BaseType;
             while (baseType != null)
             {
                 if (IsTypeWindowsRuntimeTypeNoArray(baseType))
@@ -735,6 +738,8 @@ namespace WinRT
             [new Type[] { typeof(void*), typeof(IntPtr), typeof(ABI.System.Type), typeof(int) }] = typeof(Interop._invoke_IntPtr_Type),
             [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(IntPtr), typeof(int) }] = typeof(Interop._invoke_Type_IntPtr),
             [new Type[] { typeof(void*), typeof(ABI.System.Type), typeof(ABI.System.Type), typeof(int) }] = typeof(Interop._invoke_Type_Type),
+            // IKeyValuePair
+            [new Type[] { typeof(IntPtr), typeof(IntPtr*), typeof(int) }] = typeof(Interop._get_Key_IntPtr),
         };
 
         public static void RegisterAbiDelegate(Type[] delegateSignature, Type delegateType)

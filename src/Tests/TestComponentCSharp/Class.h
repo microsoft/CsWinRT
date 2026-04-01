@@ -59,6 +59,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Uri>> _uriChanged;
         Windows::Foundation::Collections::IKeyValuePair<hstring, hstring> _stringPair;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>>> _stringPairChanged;
+        Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> _enumPair;
         ComposedBlittableStruct _blittableStruct{};
         ComposedNonBlittableStruct _nonBlittableStruct{};
         std::vector<int32_t> _ints{ 1, 2, 3 };
@@ -233,6 +234,8 @@ namespace winrt::TestComponentCSharp::implementation
         void CallForStringPair(TestComponentCSharp::ProvideStringPair const& provideStringPair);
         winrt::event_token StringPairPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>> const& handler);
         void StringPairPropertyChanged(winrt::event_token const& token) noexcept;
+        Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> EnumPairProperty();
+        void EnumPairProperty(Windows::Foundation::Collections::IKeyValuePair<TestComponentCSharp::EnumValue, TestComponentCSharp::EnumStruct> const& value);
         TestComponentCSharp::ProvideUri GetUriDelegate() noexcept;
         BlittableStruct BlittableStructProperty();
         void BlittableStructProperty(BlittableStruct const& value);
@@ -337,6 +340,8 @@ namespace winrt::TestComponentCSharp::implementation
         void CopyProperties(TestComponentCSharp::IProperties1 const& src);
         void CopyPropertiesViaWeakReference(TestComponentCSharp::IProperties1 const& src);
 
+        bool CheckForBindableObjectInterface(Microsoft::UI::Xaml::Interop::IBindableIterable const& iterable);
+
         void CompleteAsync();
         void CompleteAsync(int32_t hr);
         void AdvanceAsync(int32_t delta);
@@ -407,6 +412,13 @@ namespace winrt::TestComponentCSharp::implementation
         static com_array<bool> UnboxBooleanArray(IInspectable const& obj);
         static com_array<hstring> UnboxStringArray(IInspectable const& obj);
 
+        static int32_t UnboxInt32UsingPropertyValue(IInspectable const& obj);
+        static hstring UnboxStringUsingPropertyValue(IInspectable const& obj);
+        static Windows::Foundation::Rect UnboxRectUsingPropertyValue(IInspectable const& obj);
+        static com_array<int32_t> UnboxInt32ArrayUsingPropertyValue(IInspectable const& obj);
+        static com_array<bool> UnboxBooleanArrayUsingPropertyValue(IInspectable const& obj);
+        static com_array<Windows::Foundation::Point> UnboxPointArrayUsingPropertyValue(IInspectable const& obj);
+ 
         static void UnboxAndCallProgressHandler(IInspectable const& httpProgressHandler);
         double Calculate(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<double>> const& values);
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<int32_t>> GetNullableIntList();
@@ -429,6 +441,10 @@ namespace winrt::TestComponentCSharp::implementation
         static Windows::Foundation::IInspectable BoxedDelegate();
         static Windows::Foundation::IInspectable BoxedEnum();
         static Windows::Foundation::IInspectable BoxedEventHandler();
+        static Windows::Foundation::IInspectable BoxedStringArray();
+        static Windows::Foundation::IInspectable BoxedInt32Array();
+        static Windows::Foundation::IInspectable BoxedTimeSpanArray();
+        Windows::Foundation::IInspectable BoxedObjectArray();
 
         hstring Catch(hstring const& params, hstring& locks);
 

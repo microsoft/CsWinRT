@@ -126,12 +126,9 @@ namespace cswinrt
         template <typename... Args>
         void write_printf(char const* format, Args const&... args)
         {
-            // Measure the required size first (excluding null terminator)
-            int const needed = std::snprintf(nullptr, 0, format, args...);
-            assert(needed >= 0);
-            std::string buffer(static_cast<size_t>(needed), '\0');
-            std::snprintf(buffer.data(), buffer.size() + 1, format, args...);
-            write(std::string_view{ buffer.data(), static_cast<size_t>(needed) });
+            char buffer[1024];
+            size_t const size = sprintf_s(buffer, format, args...);
+            write(std::string_view{ buffer, size });
         }
 
         template <auto F, typename List, typename... Args>
@@ -152,6 +149,14 @@ namespace cswinrt
         {
             printf("%.*s", static_cast<int>(m_first.size()), m_first.data());
             printf("%.*s", static_cast<int>(m_second.size()), m_second.data());
+            m_first.clear();
+            m_second.clear();
+        }
+
+        void flush_to_console_error() noexcept
+        {
+            fprintf(stderr, "%.*s", static_cast<int>(m_first.size()), m_first.data());
+            fprintf(stderr, "%.*s", static_cast<int>(m_second.size()), m_second.data());
             m_first.clear();
             m_second.clear();
         }

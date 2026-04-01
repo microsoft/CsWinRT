@@ -45,6 +45,21 @@ namespace WinRT
             projectionTypeNameToBaseTypeNameMappings.Add(typeNameToBaseTypeNameMapping);
         }
 
+        public static void RegisterBaseTypeForTypeName(string runtimeClassName, Type baseType)
+        {
+            baseRcwTypeCache.AddOrUpdate(runtimeClassName, baseType,
+                (runtimeClassName, existingBaseType) =>
+                {
+                    if (existingBaseType is null || existingBaseType.IsAssignableFrom(baseType))
+                    {
+                        // Only update the entry if there is no entry or
+                        // the new statically known base type is more derived than the current one.
+                        return baseType;
+                    }
+                    return existingBaseType;
+                });
+        }
+
         public static Type FindRcwTypeByNameCached(string runtimeClassName)
         {
             // Try to get the given type name. If it is not found, the type might have been trimmed.
@@ -60,9 +75,9 @@ namespace WinRT
                         int count = projectionTypeNameToBaseTypeNameMappings.Count;
                         for (int i = 0; i < count; i++)
                         {
-                            if (projectionTypeNameToBaseTypeNameMappings[i].ContainsKey(runtimeClassName))
+                            if (projectionTypeNameToBaseTypeNameMappings[i].TryGetValue(runtimeClassName, out string value))
                             {
-                                return FindRcwTypeByNameCached(projectionTypeNameToBaseTypeNameMappings[i][runtimeClassName]);
+                                return FindRcwTypeByNameCached(value);
                             }
                         }
 
@@ -261,6 +276,15 @@ namespace WinRT
                 }
 
 #if NET
+                if (resolvedType == typeof(Windows.Foundation.IReferenceArray<>))
+                {
+                    var referenceArrayType = ABI.Windows.Foundation.IReferenceArrayType.GetTypeAsArrayType(genericTypes[0]);
+                    if (referenceArrayType is not null)
+                    {
+                        return referenceArrayType;
+                    }
+                }
+
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
                     foreach (var type in genericTypes)

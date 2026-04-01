@@ -251,6 +251,7 @@ namespace Generator
             "System.Collections.Generic.IReadOnlyCollection`1",
             "System.Collections.ICollection",
             "System.Collections.IEnumerator",
+            "System.ComponentModel.INotifyPropertyChanging",
             "System.IEquatable`1",
             "System.Runtime.InteropServices.ICustomQueryInterface",
             "System.Runtime.InteropServices.IDynamicInterfaceCastable",
@@ -269,6 +270,8 @@ namespace Generator
         private readonly Dictionary<string, TypeDeclaration> typeDefinitionMapping;
         private TypeDeclaration currentTypeDeclaration;
 
+        private readonly Dictionary<string, string> overridedRuntimeClassNameMappings;
+
         private Logger Logger { get; }
 
         public WinRTTypeWriter(
@@ -286,6 +289,7 @@ namespace Generator
             typeReferenceMapping = new Dictionary<string, TypeReferenceHandle>(StringComparer.Ordinal);
             assemblyReferenceMapping = new Dictionary<string, EntityHandle>(StringComparer.Ordinal);
             typeDefinitionMapping = new Dictionary<string, TypeDeclaration>(StringComparer.Ordinal);
+            overridedRuntimeClassNameMappings = new Dictionary<string, string>(StringComparer.Ordinal);
 
             CreteAssembly();
         }
@@ -1621,6 +1625,7 @@ namespace Generator
         private void AddGuidAttribute(EntityHandle parentHandle, string name)
         {
             Guid guid;
+            // CodeQL [SM02196] WinRT uses UUID v5 SHA1 to generate Guids for parameterized types. Not used for authentication and must not change.
             using (SHA1 sha = new SHA1CryptoServiceProvider())
             {
                 var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(name));
@@ -1642,6 +1647,18 @@ namespace Generator
             else
             {
                 AddGuidAttribute(parentHandle, symbol.ToString());
+            }
+        }
+
+        private void RecordWinRTRuntimeClassNameAttribute(ISymbol symbol)
+        {
+            string qualifiedName = QualifiedName(symbol);
+            if (symbol.TryGetAttributeWithType(Model.Compilation.GetTypeByMetadataName("WinRT.WinRTRuntimeClassNameAttribute"), out AttributeData attribute)
+                    && attribute is { ConstructorArguments.IsDefaultOrEmpty: false }
+                    && attribute.ConstructorArguments[0].Value is string runtimeClassName
+                    && !overridedRuntimeClassNameMappings.ContainsKey(qualifiedName))
+            {
+                overridedRuntimeClassNameMappings[qualifiedName] = runtimeClassName;
             }
         }
 
@@ -2133,6 +2150,7 @@ namespace Generator
                         typeDeclaration.Handle,
                         (uint)GetVersion(type, true),
                         null);
+                    RecordWinRTRuntimeClassNameAttribute(type);
                 }
                 AddSynthesizedInterfaces(typeDeclaration);
 
@@ -2461,11 +2479,13 @@ namespace Generator
                 if (interfaceType == SynthesizedInterfaceType.Factory)
                 {
                     AddActivatableAttribute(classDeclaration.Handle, (uint)GetVersion(classSymbol, true), qualifiedInterfaceName);
+                    RecordWinRTRuntimeClassNameAttribute(classSymbol);
                 }
                 else if (interfaceType == SynthesizedInterfaceType.Static)
                 {
                     classDeclaration.StaticInterface = qualifiedInterfaceName;
                     AddStaticAttribute(classDeclaration.Handle, (uint)GetVersion(classSymbol, true), qualifiedInterfaceName);
+                    RecordWinRTRuntimeClassNameAttribute(classSymbol);
                 }
             }
         }
@@ -2509,6 +2529,11 @@ namespace Generator
             else if (treatAsProjectedType)
             {
                 // Prioritize any mapped types before treating an attribute as a projected type.
+                AddProjectedType(type);
+            }
+            // Check if CsWinRT component projected type from another project.
+            else if (Model.Compilation.GetTypeByMetadataName(GeneratorHelper.GetAuthoringMetadataTypeName(qualifiedName)) != null)
+            {
                 AddProjectedType(type);
             }
             else
@@ -2797,6 +2822,59 @@ namespace Generator
             {
                 WinRTAotSourceGenerator.GenerateVtableLookupTable(context.AddSource, (vtableAttributesToAddOnLookupTable.ToImmutableArray(), (new CsWinRTAotOptimizerProperties(true, true, true, false), escapedAssemblyName)), true);
             }
+        }
+
+        /// <summary>
+        /// Generates the overrided class name activation factory for a WinRT component.
+        /// </summary>
+        /// <param name="context">The <see cref="GeneratorExecutionContext"/> value to use to produce source files.</param>
+        public void GenerateOverridedClassNameActivationFactory(GeneratorExecutionContext context)
+        {
+            if (!context.GetCsWinRTGenerateOverridedClassNameActivationFactory())
+            {
+                return;
+            }
+
+            string parameterType = context.IsNet7OrGreater() ? "ReadOnlySpan<char>" : "string";
+
+            StringBuilder builder = new();
+
+            builder.AppendLine($$"""
+                // <auto-generated/>
+                #pragma warning disable
+                
+                namespace WinRT
+                {
+                    using global::System;
+
+                    /// <inheritdoc cref="Module"/>
+                    unsafe partial class Module
+                    {
+
+                        private static partial IntPtr GetActivationFactoryPartial({{parameterType}} runtimeClassId)
+                        {
+                            switch (runtimeClassId)
+                            {
+                """);
+
+            foreach (var mapping in overridedRuntimeClassNameMappings)
+            {
+                builder.AppendLine($$"""
+                                case "{{mapping.Value}}":
+                                    return global::ABI.Impl.{{mapping.Key}}ServerActivationFactory.Make();
+                    """);
+            }
+
+            builder.Append("""
+                            default:
+                                return IntPtr.Zero;
+                            }
+                        }
+                    }
+                }
+                """);
+
+            context.AddSource("PartialActivationFactory.g.cs", builder.ToString());
         }
 
         public bool IsPublic(ISymbol symbol)

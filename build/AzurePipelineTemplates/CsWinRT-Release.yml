@@ -1,0 +1,39 @@
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: OneBranch.Pipelines/GovernedTemplates
+    ref: refs/heads/main
+  pipelines:
+  - pipeline: CsWinRT
+    source: CsWinRT Official (OneBranch)
+extends:
+  template: v2/OneBranch.Official.CrossPlat.yml@templates
+  parameters:
+    release:
+      category: NonAzure
+
+    stages:
+    - stage: 'Publish'  
+      displayName: 'Publish to NuGet'
+      variables:
+        ob_release_environment: Production
+        
+      jobs:
+      - job: ReleaseJob
+        templateContext:
+          inputs:
+          - input: pipelineArtifact
+            pipeline: CsWinRT
+            artifactName: drop_Nuget_PublishTo_CsWinRT_InternalFeed
+        pool:
+          type: release
+
+        steps:
+        - task: NuGetCommand@2
+          displayName: 'NuGet Push'
+          inputs:
+            command: push
+            packagesToPush: '$(Pipeline.Workspace)\packages\Microsoft.Windows.CsWinRT.*.nupkg'
+            nuGetFeedType: external
+            publishFeedCredentials: 'C#/WinRT NuGet 3'

@@ -1,0 +1,71 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Authors>Microsoft Corporation</Authors>
+    <Company>Microsoft Corporation</Company>
+    <Product>C#/WinRT</Product>
+    <PackageId>WinRT.SourceGenerator</PackageId>
+    <FileVersion>$(VersionNumber)</FileVersion>
+    <Version>$(VersionNumber)</Version>
+    <AssemblyVersion>$(VersionNumber)</AssemblyVersion>
+    <InformationalVersion>$(VersionNumber)</InformationalVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Description>C#/WinRT Authoring Source Generator Preview $(VersionString)</Description>
+    <AssemblyTitle>C#/WinRT Authoring Source Generator Preview v$(VersionString)</AssemblyTitle>
+    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+    <!--
+      While this project does not produce a .dll that consuming projects execute at runtime, we still want to
+      include debugging information, to make it easier to debug the generator themselves in case of issues.
+      Rather than using portable .pdb files, we just embed them, to ensure debuggers will load them correctly.
+      Using portable .pdb-s results in Visual Studio not automatically loading them when attaching a debugger
+      to the Roslyn code analysis process to try to debug the generators, forcing to pick the path manually.
+    -->
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <!--
+    The CsWinRT source generators rely on Roslyn multi-targeting to support multiple versions of the Microsoft.CodeAnalysis.CSharp package.
+    This package reference actually needs a matching version of Roslyn to be available for consumers of the source generator, so if we always
+    used the latest version, the CsWinRT would just fail to load for users of eg. an older version of Visual Studio. Thankfully, Roslyn
+    supports analyzers that bundle multiple versions in the same NuGet package, each in a subfolder with a name matching the Roslyn version.
+    To leverage this, we compute the 'CsWinRTSourceGeneratorRoslynVersion' property based on target project, so that the CsWinRT can build
+    it multiple times with multiple versions during packing, to then extract each .dll and copy it to the right NuGet package folder.
+    
+    This setup and architecture for multi-targeting source generators is ported from https://github.com/CommunityToolkit/dotnet.
+  -->
+  <PropertyGroup>
+
+    <!-- Set the assembly name to always be the same, regardless of the Roslyn version being targeted (cut the trailing ".RoslynXYZW" suffix) -->
+    <AssemblyName>$(MSBuildProjectName.Substring(0, $([MSBuild]::Subtract($(MSBuildProjectName.Length), 11))))</AssemblyName>
+
+    <!--
+      Get the Roslyn version to use from the name of the project importing this .props file.
+      All projects will use the "<PROJECT_NAME>.Roslyn<MAJOR><MINOR><PATCH>.csproj" naming scheme.
+      Note that "<MINOR>" always uses two digits, not just one.
+    -->
+    <CsWinRTSourceGeneratorRoslynMajorVersion>$(MSBuildProjectName.Substring($([MSBuild]::Subtract($(MSBuildProjectName.Length), 4)), 1))</CsWinRTSourceGeneratorRoslynMajorVersion>
+    <CsWinRTSourceGeneratorRoslynMinorVersion>$(MSBuildProjectName.Substring($([MSBuild]::Subtract($(MSBuildProjectName.Length), 3)), 2))</CsWinRTSourceGeneratorRoslynMinorVersion>
+    <CsWinRTSourceGeneratorRoslynPatchVersion>$(MSBuildProjectName.Substring($([MSBuild]::Subtract($(MSBuildProjectName.Length), 1)), 1))</CsWinRTSourceGeneratorRoslynPatchVersion>
+    <CsWinRTSourceGeneratorRoslynVersion>$(CsWinRTSourceGeneratorRoslynMajorVersion).$(CsWinRTSourceGeneratorRoslynMinorVersion).$(CsWinRTSourceGeneratorRoslynPatchVersion)</CsWinRTSourceGeneratorRoslynVersion>
+
+    <!-- Also define "ROSLYN_<MAJOR>_<MINOR>_OR_GREATER" build constants, so the generator code can multi-target whenever needed and add any required polyfills -->
+    <DefineConstants Condition="$([MSBuild]::VersionGreaterThanOrEquals($(CsWinRTSourceGeneratorRoslynVersion), 4.8.0))">$(DefineConstants);ROSLYN_4_8_0_OR_GREATER</DefineConstants>
+    <DefineConstants Condition="$([MSBuild]::VersionGreaterThanOrEquals($(CsWinRTSourceGeneratorRoslynVersion), 4.12.0))">$(DefineConstants);ROSLYN_4_12_0_OR_GREATER</DefineConstants>
+
+    <!-- Disable the removed rules analyzer for older Roslyn versions (as we might not support all diagnostics) -->
+    <NoWarn Condition="$([MSBuild]::VersionLessThan($(CsWinRTSourceGeneratorRoslynVersion), 4.12.0))">$(NoWarn);RS2003</NoWarn>
+</PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="$(CsWinRTSourceGeneratorRoslynVersion)" PrivateAssets="all" />
+    <PackageReference Include="PolySharp" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

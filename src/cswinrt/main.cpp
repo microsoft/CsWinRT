@@ -34,7 +34,7 @@ namespace cswinrt
         { "include", 0, option::no_max, "<prefix>", "One or more prefixes to include in projection" },
         { "exclude", 0, option::no_max, "<prefix>", "One or more prefixes to exclude from projection" },
         { "addition_exclude", 0, option::no_max, "<prefix>", "One or more namespace prefixes to exclude from the projection additions" },
-        { "target", 0, 1, "<net8.0|net7.0|net6.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with .NET 6." },
+        { "target", 0, 1, "<net8.0|netstandard2.0>", "Target TFM for projection (.NET 8 is the default)" },
         { "component", 0, 0, {}, "Generate component projection." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "internal", 0, 0, {}, "Generates a private projection."},
@@ -42,6 +42,7 @@ namespace cswinrt
         { "public_enums", 0, 0, {}, "Used with embedded option to generate enums as public"},
         { "public_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces public in the projection (default is internal)"},
         { "idic_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces support IDynamicInterfaceCastable (IDIC) for RCW scenarios (default is false)"},
+        { "partial_factory", 0, 0, {}, "Allows to provide an additional component activation factory (default is false)"},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
     };
@@ -94,18 +95,23 @@ Where <spec> is one or more of:
 
         settings.verbose = args.exists("verbose");
         auto target = args.value("target");
-        if (!target.empty() && target != "netstandard2.0" && !starts_with(target, "net5.0") && !starts_with(target, "net6.0") && !starts_with(target, "net7.0") && !starts_with(target, "net8.0"))
+        if (!target.empty() && target != "netstandard2.0" && !starts_with(target, "net8.0"))
         {
             throw usage_exception();
         }
+        else if (target.empty())
+        {
+            // Default to .NET 8 if no explicit target is set
+            target = "net8.0";
+        }
         settings.netstandard_compat = target == "netstandard2.0";
-        settings.net7_0_or_greater = starts_with(target, "net7.0") || starts_with(target, "net8.0");
         settings.component = args.exists("component");
         settings.internal = args.exists("internal");
         settings.embedded = args.exists("embedded");
         settings.public_enums = args.exists("public_enums");
         settings.public_exclusiveto = args.exists("public_exclusiveto");
         settings.idic_exclusiveto = args.exists("idic_exclusiveto");
+        settings.partial_factory = args.exists("partial_factory");
         settings.input = args.files("input", database::is_database);
 
         for (auto && include : args.values("include"))
@@ -350,7 +356,7 @@ Where <spec> is one or more of:
                     {
                         writer console;
                         console.write("error: '%' when processing %%%\n", e.what(), ns, currentType.empty() ? "" : ".", currentType);
-                        console.flush_to_console();
+                        console.flush_to_console_error();
                         throw;
                     }
                 });
@@ -394,7 +400,7 @@ internal static readonly System.Collections.Generic.Dictionary<string, string> T
 };
 
 [System.Runtime.CompilerServices.ModuleInitializer]
-internal static void InitalizeProjectionTypes()
+internal static void InitializeProjectionTypes()
 {
 ComWrappersSupport.RegisterProjectionTypeBaseTypeMapping(TypeNameToBaseTypeNameMapping);
 }
@@ -424,7 +430,7 @@ internal static class AbiDelegatesInitializer
 {
 
 [System.Runtime.CompilerServices.ModuleInitializer]
-internal static void InitalizeAbiDelegates()
+internal static void InitializeAbiDelegates()
 {
 %
 }
@@ -541,6 +547,8 @@ ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(new Func<Type, Type>(GetM
         {
             w.write(" error: %\n", e.what());
             result = 1;
+            w.flush_to_console_error();
+            return result;
         }
 
         w.flush_to_console();

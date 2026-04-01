@@ -35,6 +35,11 @@ namespace ABI.WinRT.Interop
         {
         }
 
+        public EventHandlerEventSource(IObjectReference objectReference, int vtableIndexForAddHandler)
+            : base(objectReference, vtableIndexForAddHandler)
+        {
+        }
+
         /// <inheritdoc/>
         protected override ObjectReferenceValue CreateMarshaler(EventHandler<T> del) =>
             ABI.System.EventHandler<T>.CreateMarshaler2(del);

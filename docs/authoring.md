@@ -15,7 +15,7 @@ It is recommended to use .NET 6 and Visual Studio 2022 for C#/WinRT authoring sc
       ```xml
       <PropertyGroup>
             <!-- Choose your TargetFramework for the desired Windows SDK version -->
-            <TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
+            <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
       </PropertyGroup>
       ```
 
@@ -66,9 +66,9 @@ To make your component available as a NuGet package, it is important to include 
             target="build\MyAuthoredComponent.targets" />
       
       <!-- Include the managed DLLs -->
-      <file src="C:\Path\To\CsWinRT\NugetDir\lib\net6.0\WinRT.Host.Shim.dll"                                  
+      <file src="C:\Path\To\CsWinRT\NugetDir\lib\net8.0\WinRT.Host.Shim.dll"                                  
             target="lib\$(TargetFramework)\WinRT.Host.Shim.dll" />  
-      <file src="C:\Path\To\CsWinRT\NugetDir\lib\net6.0\WinRT.Runtime.dll"                                  
+      <file src="C:\Path\To\CsWinRT\NugetDir\lib\net8.0\WinRT.Runtime.dll"                                  
             target="lib\$(TargetFramework)\WinRT.Runtime.dll" />
       
       <!-- Include the native DLLs -->

@@ -14,6 +14,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTDetectDependentAuthoringWinMDs Condition="'$(CsWinRTDetectDependentAuthoringWinMDs)'==''">true</CsWinRTDetectDependentAuthoringWinMDs>
     <GetCopyToOutputDirectoryItemsDependsOn>$(GetCopyToOutputDirectoryItemsDependsOn);CsWinRTAuthoring_AddManagedDependencies</GetCopyToOutputDirectoryItemsDependsOn>
     <CsWinRTEnableLogging>$(CsWinRTEnableLogging)</CsWinRTEnableLogging>
+
+    <!-- Set the additional activation factory generation based on WinRTRuntimeClassName attribute to not be opt-in by default -->
+    <CsWinRTGenerateOverridedClassNameActivationFactory Condition="'$(CsWinRTGenerateOverridedClassNameActivationFactory)' != 'true'">false</CsWinRTGenerateOverridedClassNameActivationFactory>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -33,6 +36,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
     <CompilerVisibleProperty Include="CsWinRTGenerateProjection" />
     <CompilerVisibleProperty Include="CsWinRTAuthoringInputs" />
+    <CompilerVisibleProperty Include="CsWinRTGenerateOverridedClassNameActivationFactory" />
   </ItemGroup>
 
   <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
@@ -62,7 +66,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   --> 
   <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'"> 
 
-    <None Condition="Exists('$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
+    <None Condition="Exists('$(CsWinRTPath)lib\net8.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net8.0\WinRT.Host.Shim.dll">
       <TargetPath>WinRT.Host.Shim.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -284,7 +288,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     -->
     <ItemGroup Condition="'$(CsWinRTAotExportsEnabled)' != 'true'">
 
-      <Content  Include="$(CsWinRTPath)lib\net6.0\WinRT.Host.Shim.dll">
+      <Content  Include="$(CsWinRTPath)lib\net8.0\WinRT.Host.Shim.dll">
         <Pack>true</Pack>
         <PackagePath>lib\$(TargetFramework)</PackagePath>
       </Content>

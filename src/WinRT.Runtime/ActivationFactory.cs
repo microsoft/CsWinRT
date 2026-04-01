@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using WinRT.Interop;
@@ -190,6 +191,10 @@ namespace WinRT
         }
     }
 
+#nullable enable
+    /// <summary>
+    /// Provides support for activating WinRT types.
+    /// </summary>
 #if EMBED
     internal
 #else
@@ -201,9 +206,24 @@ namespace WinRT
         /// <summary>
         /// This provides a hook into activation to hook/mock activation of WinRT types.
         /// </summary>
-        public static Func<string, Guid, IntPtr> ActivationHandler { get; set; }
+        public static Func<string, Guid, IntPtr>? ActivationHandler { get; set; }
 #endif
 
+        /// <summary>
+        /// Activates a WinRT type with the specified runtime class name.
+        /// </summary>
+        /// <param name="typeName">The ID of the activatable class (the fully qualified type name).</param>
+        /// <returns>An <see cref="IObjectReference"/> instance wrapping an instance of the activated WinRT type.</returns>
+        /// <exception cref="NotSupportedException">Thrown if <paramref name="typeName"/> is not registered, <c>CsWinRTEnableManifestFreeActivation</c> is disabled, and <c>CsWinRTManifestFreeActivationReportOriginalException</c> is not set.</exception>
+        /// <exception cref="Exception">Thrown for any failure to activate the specified type (the exact exception type might be a derived type).</exception>
+        /// <remarks>
+        /// This method will try to activate the target type as follows:
+        /// <list type="bullet">
+        ///   <item>If <see cref="ActivationHandler"/> is set, it will be used first.</item>
+        ///   <item>Otherwise, <a href="https://learn.microsoft.com/windows/win32/api/roapi/nf-roapi-rogetactivationfactory"><c>RoGetActivationFactory</c></a> will be used.</item>
+        ///   <item>Otherwise, the manifest-free fallback path will be used to try to resolve the target .dll to load based on <paramref name="typeName"/>.</item>
+        /// </list>
+        /// </remarks>
         public static IObjectReference Get(string typeName)
         {
 #if NET
@@ -227,28 +247,18 @@ namespace WinRT
                 return factory;
             }
 
-            var moduleName = typeName;
-            while (true)
-            {
-                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
-                if (lastSegment <= 0)
-                {
-                    Marshal.ThrowExceptionForHR(hr);
-                }
-                moduleName = moduleName.Remove(lastSegment);
+            ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(typeName, hr);
 
-                DllModule module = null;
-                if (DllModule.TryLoad(moduleName + ".dll", out module))
-                {
-                    (factory, hr) = module.GetActivationFactory(typeName);
-                    if (factory != null)
-                    {
-                        return factory;
-                    }
-                }
-            }
+            return ManifestFreeGet(typeName, hr);
         }
 
+        /// <summary>
+        /// Activates a WinRT type with the specified runtime class name and interface ID.
+        /// </summary>
+        /// <param name="typeName">The ID of the activatable class (the fully qualified type name).</param>
+        /// <param name="iid">The interface ID to use to dispatch the activated type.</param>
+        /// <returns>An <see cref="IObjectReference"/> instance wrapping an instance of the activated WinRT type, dispatched with the specified interface ID.</returns>
+        /// <inheritdoc cref="Get(string)"/>
 #if NET
         public static IObjectReference Get(string typeName, Guid iid)
 #else
@@ -276,6 +286,10 @@ namespace WinRT
             {
                 return factory;
             }
+
+            ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(typeName, hr);
+
+            return ManifestFreeGet(typeName, iid, hr);
 #else
             ObjectReference<I> factory;
             (factory, hr) = WinRTModule.GetActivationFactory<I>(typeName, iid);
@@ -283,8 +297,16 @@ namespace WinRT
             {
                 return factory;
             }
-#endif
 
+            ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(typeName, hr);
+
+            return ManifestFreeGet<I>(typeName, iid, hr);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static IObjectReference ManifestFreeGet(string typeName, int hr)
+        {
             var moduleName = typeName;
             while (true)
             {
@@ -295,8 +317,36 @@ namespace WinRT
                 }
                 moduleName = moduleName.Remove(lastSegment);
 
-                DllModule module = null;
+                DllModule? module = null;
                 if (DllModule.TryLoad(moduleName + ".dll", out module))
+                {
+                    (ObjectReference<IUnknownVftbl> factory, hr) = module.GetActivationFactory(typeName);
+                    if (factory != null)
+                    {
+                        return factory;
+                    }
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+#if NET
+        private static IObjectReference ManifestFreeGet(string typeName, Guid iid, int hr)
+#else
+        private static ObjectReference<I> ManifestFreeGet<I>(string typeName, Guid iid, int hr)
+#endif
+        {
+            var moduleName = typeName;
+            while (true)
+            {
+                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
+                if (lastSegment <= 0)
+                {
+                    Marshal.ThrowExceptionForHR(hr);
+                }
+                moduleName = moduleName.Remove(lastSegment);
+
+                if (DllModule.TryLoad(moduleName + ".dll", out DllModule module))
                 {
                     ObjectReference<IUnknownVftbl> activationFactory;
                     (activationFactory, hr) = module.GetActivationFactory(typeName);
@@ -315,8 +365,43 @@ namespace WinRT
             }
         }
 
+        private static void ThrowIfClassNotRegisteredAndManifestFreeActivationDisabled(string typeName, int hr)
+        {
+            // If manifest free activation is enabled, we never throw here.
+            // Callers will always try the fallback path if we didn't succeed.
+            if (FeatureSwitches.EnableManifestFreeActivation)
+            {
+                return;
+            }
+
+            // Throw the exception directly, if the user requested to preserve it
+            if (FeatureSwitches.ManifestFreeActivationReportOriginalException)
+            {
+                Marshal.ThrowExceptionForHR(hr);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static Exception GetException(string typeName, int hr)
+            {
+                Exception exception = Marshal.GetExceptionForHR(hr)!;
+
+                if (hr == ExceptionHelpers.REGDB_E_CLASSNOTREG)
+                {
+                    throw new NotSupportedException(
+                        $"Failed to activate type with runtime class name '{typeName}' with 'RoGetActivationFactory' (it returned 0x80040154, ie. 'REGDB_E_CLASSNOTREG'). Make sure to add the activatable class id for the type " +
+                        "to the APPX manifest, or enable the manifest free activation fallback path by setting the 'CsWinRTEnableManifestFreeActivation' property (note: the fallback path incurs a performance hit).", exception);
+                }
+
+                return exception;
+            }
+
+            // Explicit throw so the JIT can see it and correctly optimize for always throwing paths.
+            // The exception instantiation is in a separate method so that codegen remains separate.
+            throw GetException(typeName, hr);
+        }
+
 #if NET
-        private static IObjectReference GetFromActivationHandler(string typeName, Guid iid)
+        private static IObjectReference? GetFromActivationHandler(string typeName, Guid iid)
         {
             var activationHandler = ActivationHandler;
             if (activationHandler != null)
@@ -340,4 +425,5 @@ namespace WinRT
         }
 #endif
     }
+#nullable restore
 }

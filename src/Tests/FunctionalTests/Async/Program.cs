@@ -76,7 +76,7 @@ handle = null;
 var getFolderFromPathAsync = Windows.Storage.StorageFolder.GetFolderFromPathAsync(folderPath);
 getFolderFromPathAsync.Completed += (s, e) => 
 {
-    handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(s.GetResults(), "Async.pdb", FileMode.Open, FileAccess.Read);
+    handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(s.GetResults(), "TestComponent.dll", FileMode.Open, FileAccess.Read);
 };
 await Task.Delay(1000);
 if (handle is null)

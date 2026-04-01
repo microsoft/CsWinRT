@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Net8App": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

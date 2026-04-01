@@ -1,7 +1,7 @@
 {
   "profiles": {
     "ObjectLifetimeTests.Lifted": {
-      "commandName": "AppContainer",
+      "commandName": "MsixPackage",
       "DebugEngine": "Mixed"
     }
   }

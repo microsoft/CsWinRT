@@ -91,4 +91,23 @@ namespace winrt::TestComponentCSharp::implementation
         *put_abi(handler) = make<NonAgileDelegate>().detach();               
         vector.VectorChanged(handler);
     }
+
+    winrt::event_token NonAgileClass::CanExecuteChanged(winrt::Windows::Foundation::EventHandler<winrt::Windows::Foundation::IInspectable> const& handler)
+    {
+        return _event.add(handler);
+    }
+
+    void NonAgileClass::CanExecuteChanged(winrt::event_token const& token) noexcept
+    {
+        _event.remove(token);
+    }
+
+    bool NonAgileClass::CanExecute(winrt::Windows::Foundation::IInspectable const& parameter)
+    {
+        return true;
+    }
+
+    void NonAgileClass::Execute(winrt::Windows::Foundation::IInspectable const& parameter)
+    {
+    }
 }

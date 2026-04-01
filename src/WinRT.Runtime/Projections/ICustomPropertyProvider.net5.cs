@@ -407,10 +407,15 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    throw new NotSupportedException(
-                        $"ICustomProperty support used by XAML binding for type '{target.GetType()}' (property '{_name}') requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
+                    if (!FeatureSwitches.SuppressCustomPropertyNotSupportedException)
+                    {
+                        throw new NotSupportedException(
+                            $"ICustomProperty support used by XAML binding for type '{target.GetType()}' (property '{_name}') requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
+                            $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
+                    }
 
-                        $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
+                    *result = default;
+                    return 0;
                 }
 
                 GetCustomPropertyForJit(target, _name, result);
@@ -460,9 +465,15 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 if (!RuntimeFeature.IsDynamicCodeCompiled)
                 {
-                    throw new NotSupportedException(
-                        $"ICustomProperty support used by XAML binding for type '{target.GetType()}' (indexer with parameter of type '{_type}') requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
-                        $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
+                    if (!FeatureSwitches.SuppressCustomPropertyNotSupportedException)
+                    {
+                        throw new NotSupportedException(
+                            $"ICustomProperty support used by XAML binding for type '{target.GetType()}' (indexer with parameter of type '{_type}') requires the type to marked with 'WinRT.GeneratedBindableCustomPropertyAttribute'. " +
+                            $"If this is a built-in type or a type that can't be marked, a wrapper type should be used around it that is marked to enable this support.");
+                    }
+
+                    *result = default;
+                    return 0;
                 }
 
                 // Intentionally declare this here to avoid marshalling this value entirely on AOT,

@@ -202,15 +202,8 @@ namespace ABI.System.ComponentModel
 
     internal sealed unsafe class PropertyChangedEventSource : global::ABI.WinRT.Interop.EventSource<global::System.ComponentModel.PropertyChangedEventHandler>
     {
-        internal PropertyChangedEventSource(
-            IObjectReference objectReference,
-#if NET
-            delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int> addHandler,
-#else
-            delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out EventRegistrationToken, int> addHandler,
-#endif
-            delegate* unmanaged[Stdcall]<IntPtr, EventRegistrationToken, int> removeHandler)
-            : base(objectReference, addHandler, removeHandler)
+        internal PropertyChangedEventSource(IObjectReference objectReference, int vtableIndexForAddHandler)
+            : base(objectReference, vtableIndexForAddHandler)
         {
         }
 

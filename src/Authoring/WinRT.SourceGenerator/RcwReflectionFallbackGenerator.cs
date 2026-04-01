@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -331,7 +332,17 @@ public sealed class RcwReflectionFallbackGenerator : IIncrementalGenerator
                 return false;
             }
 
-            return other.Reference.GetMetadataId() == Reference.GetMetadataId();
+            try
+            {
+                return other.Reference.GetMetadataId() == Reference.GetMetadataId();
+            }
+            catch (FileNotFoundException)
+            {
+                // MissingMetadataReference will throw when GetMetadataId() is called (see
+                // https://github.com/microsoft/CsWinRT/issues/1897). In that case, fall
+                // back to assuming the two references are not equal.
+                return false;
+            }
         }
     }
 

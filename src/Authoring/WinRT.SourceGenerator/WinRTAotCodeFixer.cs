@@ -119,7 +119,7 @@ namespace WinRT.SourceGenerator
                                 (implementsWinRTInterfaces || implementsCustomMappedInterfaces))
                             {
                                 // Based on the warning level, emit as a warning or as an info.
-                                var diagnosticDescriptor = (csWinRTAotWarningLevel == 2 || (csWinRTAotWarningLevel == 1 && implementsWinRTInterfaces)) ?
+                                var diagnosticDescriptor = (csWinRTAotWarningLevel >= 2 || (csWinRTAotWarningLevel == 1 && implementsWinRTInterfaces)) ?
                                     WinRTRules.ClassNotAotCompatibleWarning : WinRTRules.ClassNotAotCompatibleInfo;
                                 context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, namedType.Locations[0], namedType.Name));
                             }
@@ -127,7 +127,7 @@ namespace WinRT.SourceGenerator
                             if (!allowUnsafe && implementsGenericInterfaces)
                             {
                                 // Based on the warning level, emit as a warning or as an info.
-                                var diagnosticDescriptor = (csWinRTAotWarningLevel == 2 || (csWinRTAotWarningLevel == 1 && implementsWinRTInterfaces)) ?
+                                var diagnosticDescriptor = (csWinRTAotWarningLevel >= 2 || (csWinRTAotWarningLevel == 1 && implementsWinRTInterfaces)) ?
                                     WinRTRules.ClassEnableUnsafeWarning : WinRTRules.ClassEnableUnsafeInfo;
                                 context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, namedType.Locations[0], namedType.Name));
                             }
@@ -400,7 +400,7 @@ namespace WinRT.SourceGenerator
                     void ReportEnableUnsafeDiagnostic(Action<Diagnostic> reportDiagnostic, ISymbol symbol, Location location, bool implementsWinRTInterfaces)
                     {
                         // Based on the warning level, emit as a warning or as an info.
-                        var diagnosticDescriptor = (csWinRTAotWarningLevel == 2 || (csWinRTAotWarningLevel == 1 && implementsWinRTInterfaces)) ?
+                        var diagnosticDescriptor = (csWinRTAotWarningLevel >= 2 || (csWinRTAotWarningLevel == 1 && implementsWinRTInterfaces)) ?
                             WinRTRules.ClassEnableUnsafeWarning : WinRTRules.ClassEnableUnsafeInfo;
                         reportDiagnostic(Diagnostic.Create(diagnosticDescriptor, location, symbol));
                     }

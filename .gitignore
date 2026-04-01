@@ -4,6 +4,7 @@
 *_i.c
 *_p.c
 *.c
+!nuget/sources/*.c
 *.winmd
 *test*.xml
 obj

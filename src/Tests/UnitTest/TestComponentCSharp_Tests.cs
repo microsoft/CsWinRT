@@ -270,6 +270,7 @@ namespace UnitTest
             Assert.True(stream.Length == 2);
         }
 
+#if !NET47
         [Fact]
         public void TestBufferAsStreamUsingAsBufferWithOffset()
         {
@@ -304,6 +305,7 @@ namespace UnitTest
             Assert.Equal((byte)0x06, arr[2]);
             Assert.Equal((byte)0x07, arr[3]);
         }
+#endif
 
         [Fact]
         public void TestBufferAsStreamWithEmptyBuffer()
@@ -699,7 +701,7 @@ namespace UnitTest
         [Fact]
         public void TestStorageFile()
         {
-            Assert.True(TestStorageFileAsync().Wait(1000));
+            Assert.True(TestStorageFileAsync().Wait(5000));
         }
 
         async Task TestStorageFolderAsync()
@@ -713,7 +715,7 @@ namespace UnitTest
         [Fact]
         public void TestStorageFolder()
         {
-            Assert.True(TestStorageFolderAsync().Wait(1000));
+            Assert.True(TestStorageFolderAsync().Wait(5000));
         }
 
         async Task InvokeWriteBufferAsync()
@@ -963,6 +965,10 @@ namespace UnitTest
             TestObject.StringPairPropertyChanged +=
                 (object sender, KeyValuePair<string, string> value) => Assert.Equal(expected, value);
             TestObject.RaiseStringPairChanged();
+
+            var expected2 = new KeyValuePair<EnumValue, EnumStruct>(EnumValue.Two, new EnumStruct() { value = EnumValue.One });
+            TestObject.EnumPairProperty = expected2;
+            Assert.Equal(expected2, TestObject.EnumPairProperty);
         }
 
         [Fact]
@@ -985,6 +991,15 @@ namespace UnitTest
             TestObject.ObjectProperty = nested;
             var out_nested = (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<string, string>>)TestObject.ObjectProperty;
             Assert.Equal(nested, out_nested);
+
+            // Test projected types in generic of KeyValuePair
+            TestObject.ObjectProperty = new KeyValuePair<string, IProperties1>("one", new Class());
+            TestObject.ObjectProperty = new KeyValuePair<string, Class>("two", new Class());
+            TestObject.ObjectProperty = new KeyValuePair<string, IDisposable>("two", new CustomDisposableTest());
+
+            // Test non-projected types in generic of KeyValuePair
+            TestObject.ObjectProperty = new KeyValuePair<string, PlatformID>("two", PlatformID.Win32NT);
+            TestObject.ObjectProperty = new KeyValuePair<string, Random>("two", new Random());
 
             var strings_in = new[] { "hello", "world" };
             TestObject.StringsProperty = strings_in;
@@ -1448,6 +1463,7 @@ namespace UnitTest
             Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
         }
 
+#if !NET47
         [Fact]
         public unsafe void TestMarshalString_FromAbiUnsafe()
         {
@@ -1479,6 +1495,7 @@ namespace UnitTest
             Assert.True(Unsafe.Add(ref MemoryMarshal.GetReference(span), span.Length) == '\0');
             MarshalString.DisposeAbi(hstr);
         }
+#endif
 
         [Fact]
         public void TestFundamentalGeneric()
@@ -2748,6 +2765,39 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestUnboxingUsingPropertyValue()
+        {
+            int i = 24;
+            Assert.Equal(i, Class.UnboxInt32UsingPropertyValue(i));
+
+            uint j = 42;
+            Assert.Equal((int)j, Class.UnboxInt32UsingPropertyValue(j));
+
+            System.Nullable<int> k = new System.Nullable<int>(34);
+            Assert.Equal(k, Class.UnboxInt32UsingPropertyValue(k));
+
+            string s = "Hello!";
+            Assert.Equal(s, Class.UnboxStringUsingPropertyValue(s));
+
+            Guid guid = new("36AA48DD-ACBB-4570-B12A-86BF71D09A12");
+            Assert.Equal("36AA48DD-ACBB-4570-B12A-86BF71D09A12", Class.UnboxStringUsingPropertyValue(guid), true);
+
+            Assert.Throws<InvalidCastException>(() => Class.UnboxInt32UsingPropertyValue(s));
+
+            Rect rect = new Rect(1, 2, 3, 4);
+            Assert.Equal(rect, Class.UnboxRectUsingPropertyValue(rect));
+
+            int[] iArr = new[] { 42, 0, -23 };
+            Assert.Equal(iArr, (IEnumerable<int>)Class.UnboxInt32ArrayUsingPropertyValue(iArr));
+
+            bool[] bArr = new[] { true, false, false };
+            Assert.Equal((IEnumerable<bool>)bArr, Class.UnboxBooleanArrayUsingPropertyValue(bArr));
+
+            Point[] pArr = new[] { new Point(1, 3), new Point(2, 4) };
+            Assert.Equal((IEnumerable<Point>)pArr, Class.UnboxPointArrayUsingPropertyValue(pArr));
+        }
+
+        [Fact]
         public void TestListOfTypes()
         {
             var types = Class.ListOfTypes;
@@ -2832,6 +2882,24 @@ namespace UnitTest
         {
             using var ccw = ComWrappersSupport.CreateCCWForObject(new List<ManagedType>());
             using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
+        }
+
+        [Fact]
+        public void TestForIterableObject()
+        {
+            // Make sure for collections of value types that they don't project IEnumerable<object>
+            // as it isn't a covariant interface.
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<int>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<EnumValue>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new List<System.DateTimeOffset>()));
+            Assert.False(TestObject.CheckForBindableObjectInterface(new Dictionary<string, System.DateTimeOffset>()));
+
+            // Make sure for collections of object types that they do project IEnumerable<object>
+            // as it is an covariant interface.
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<object>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<Class>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<IProperties1>()));
+            Assert.True(TestObject.CheckForBindableObjectInterface(new List<ManagedType2>()));
         }
 
         internal class ManagedType2 : List<ManagedType2> { }
@@ -2932,6 +3000,9 @@ namespace UnitTest
             public void AcquireObject()
             {
                 Assert.Equal(ApartmentState.STA, Thread.CurrentThread.GetApartmentState());
+                nonAgileClass = new NonAgileClass();
+                nonAgileClass.CanExecuteChanged += NonAgileClass_Event;
+
                 nonAgileObject = new Windows.UI.Popups.PopupMenu();
                 nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test"));
                 nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test2"));
@@ -2943,6 +3014,7 @@ namespace UnitTest
 
                 // Object gets proxied to the apartment.
                 Assert.Equal(2, proxyObject.Commands.Count);
+
                 agileReference.Dispose();
             }
 
@@ -2952,6 +3024,10 @@ namespace UnitTest
                 Assert.Equal(ApartmentState.MTA, Thread.CurrentThread.GetApartmentState());
                 proxyObject = agileReference.Get();
                 Assert.Equal(2, proxyObject.Commands.Count);
+
+                // Remove the event handler from a different context from what it was initially added in
+                // to make sure we can unsubscribe from the event via the proxy in non agile scenarios.
+                nonAgileClass.CanExecuteChanged -= NonAgileClass_Event;
 
                 valueAcquired.Set();
             }
@@ -2963,11 +3039,16 @@ namespace UnitTest
                 Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands);
             }
 
+            public void NonAgileClass_Event(object sender, object e)
+            {
+            }
+
             private Windows.UI.Popups.PopupMenu nonAgileObject;
             private Windows.UI.Popups.PopupMenu proxyObject;
-            private AgileReference<Windows.UI.Popups.PopupMenu> agileReference, agileReference2;
+            private AgileReference<Windows.UI.Popups.PopupMenu> agileReference;
             private readonly AutoResetEvent objectAcquired = new AutoResetEvent(false);
             private readonly AutoResetEvent valueAcquired = new AutoResetEvent(false);
+            private NonAgileClass nonAgileClass;
         }
 
 

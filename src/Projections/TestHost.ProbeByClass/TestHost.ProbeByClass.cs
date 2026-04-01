@@ -7,107 +7,20 @@ using System.Text;
 using Windows.Foundation;
 using WinRT;
 
-
-#region Temporary, until authoring support generates activation factory support
-
-namespace Windows.Foundation
-{
-    [global::WinRT.WindowsRuntimeType]
-    [Guid("00000035-0000-0000-c000-000000000046")]
-    [WindowsRuntimeHelperType(typeof(global::ABI.Windows.Foundation.IActivationFactory))]
-    internal interface IActivationFactory
-    {
-        Object ActivateInstance();
-    }
-}
-
-namespace ABI.Windows.Foundation
-{
-#if !NET
-    [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
-#endif
-    [Guid("00000035-0000-0000-c000-000000000046")]
-    internal class IActivationFactory : global::Windows.Foundation.IActivationFactory
-    {
-        public unsafe delegate int ActivateInstance_0(IntPtr thisPtr, out IntPtr instance);
-
-        [Guid("00000035-0000-0000-c000-000000000046")]
-        public struct Vftbl
-        {
-            internal IInspectable.Vftbl IInspectableVftbl;
-            public ActivateInstance_0 ActivateInstance_0;
-
-            private static readonly Vftbl AbiToProjectionVftable;
-            public static readonly IntPtr AbiToProjectionVftablePtr;
-            static unsafe Vftbl()
-            {
-                AbiToProjectionVftable = new Vftbl
-                {
-                    IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    ActivateInstance_0 = Do_Abi_ActivateInstance_0
-                };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
-                AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
-            }
-
-            private static unsafe int Do_Abi_ActivateInstance_0(IntPtr thisPtr, out IntPtr instance)
-            {
-                object __instance = default;
-                instance = default;
-                try
-                {
-                    __instance = global::WinRT.ComWrappersSupport.FindObject<global::Windows.Foundation.IActivationFactory>(thisPtr).ActivateInstance();
-                    instance = MarshalInspectable<object>.FromManaged(__instance);
-                }
-                catch (Exception __exception__)
-                {
-                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
-                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
-                }
-                return 0;
-            }
-        }
-        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr, global::WinRT.Interop.IID.IID_IActivationFactory);
-
-        protected readonly ObjectReference<Vftbl> _obj;
-        public IObjectReference ObjRef { get => _obj; }
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public IActivationFactory(IObjectReference obj) : this(obj.As<Vftbl>(global::WinRT.Interop.IID.IID_IActivationFactory)) { }
-        internal IActivationFactory(ObjectReference<Vftbl> obj)
-        {
-            _obj = obj;
-        }
-
-        public unsafe object ActivateInstance()
-        {
-            IntPtr __retval = default;
-            try
-            {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ActivateInstance_0(ThisPtr, out __retval));
-                return MarshalInspectable<object>.FromAbi(__retval);
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeAbi(__retval);
-            }
-        }
-    }
-}
-
 namespace WinRT.Host
 {
-    internal class ActivationFactory : IActivationFactory
+    internal partial class ActivationFactory : WinRT.Interop.IActivationFactory
     {
         public ConstructorInfo Constructor { get; private set; }
 
         public ActivationFactory(ConstructorInfo constructor) => Constructor = constructor;
 
-        public object ActivateInstance() => Constructor.Invoke(null);
+        public IntPtr ActivateInstance()
+        {
+            return MarshalInspectable<object>.FromManaged(Constructor.Invoke(null));
+        }
     }
 }
-
-#endregion
 
 namespace WinRT
 {
@@ -140,7 +53,7 @@ namespace WinRT
 
 namespace TestHost
 {
-    public class ProbeByClass : IStringable
+    public partial class ProbeByClass : IStringable
     {
 #if NET
         [UnconditionalSuppressMessage("SingleFile", "IL3000", Justification = "We're not publishing this test as single file.")]

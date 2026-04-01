@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Platforms>x64;x86</Platforms>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+    <CsWinRTWindowsMetadata>sdk</CsWinRTWindowsMetadata>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestEmbeddedLibrary\TestEmbeddedLibrary.csproj" />
+  </ItemGroup>
+</Project>

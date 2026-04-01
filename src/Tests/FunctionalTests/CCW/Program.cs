@@ -754,6 +754,7 @@ sealed partial class Language2
     }
     public string PrivateSet { get; private set; } = "PrivateSet";
     public static double StaticDouble { get; set; } = 4.0;
+    public ManagedProperties ManagedProperties { get; set; } = new(4);
 }
 
 [GeneratedBindableCustomProperty]

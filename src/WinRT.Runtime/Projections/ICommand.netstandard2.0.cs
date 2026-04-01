@@ -146,11 +146,7 @@ namespace ABI.System.Windows.Input
         public ICommand(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
-
-            _CanExecuteChanged =
-                new EventHandlerEventSource(_obj,
-                _obj.Vftbl.add_CanExecuteChanged_0,
-                _obj.Vftbl.remove_CanExecuteChanged_1);
+            _CanExecuteChanged = new EventHandlerEventSource(_obj, 6);
         }
 
 

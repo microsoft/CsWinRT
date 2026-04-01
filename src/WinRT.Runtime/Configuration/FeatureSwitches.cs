@@ -52,9 +52,24 @@ namespace WinRT
         private const string EnableIDynamicInterfaceCastableSupportPropertyName = "CSWINRT_ENABLE_IDYNAMICINTERFACECASTABLE";
 
         /// <summary>
+        /// The configuration property name for <see cref="EnableManifestFreeActivation"/>.
+        /// </summary>
+        private const string EnableManifestFreeActivationPropertyName = "CSWINRT_ENABLE_MANIFEST_FREE_ACTIVATION";
+
+        /// <summary>
+        /// The configuration property name for <see cref="ManifestFreeActivationReportOriginalException"/>.
+        /// </summary>
+        private const string ManifestFreeActivationReportOriginalExceptionPropertyName = "CSWINRT_MANIFEST_FREE_ACTIVATION_REPORT_ORIGINAL_EXCEPTION";
+
+        /// <summary>
         /// The configuration property name for <see cref="UseWindowsUIXamlProjections"/>.
         /// </summary>
         private const string UseWindowsUIXamlProjectionsPropertyName = "CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS";
+
+        /// <summary>
+        /// The configuration property name for <see cref="SuppressCustomPropertyNotSupportedException"/>.
+        /// </summary>
+        private const string SuppressCustomPropertyNotSupportedExceptionPropertyName = "CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION";
 
         /// <summary>
         /// The backing field for <see cref="EnableDynamicObjectsSupport"/>.
@@ -87,9 +102,24 @@ namespace WinRT
         private static int _enableIDynamicInterfaceCastableSupport;
 
         /// <summary>
+        /// The backing field for <see cref="EnableManifestFreeActivation"/>.
+        /// </summary>
+        private static int _enableManifestFreeActivation;
+
+        /// <summary>
+        /// The backing field for <see cref="ManifestFreeActivationReportOriginalException"/>.
+        /// </summary>
+        private static int _manifestFreeActivationReportOriginalException;
+
+        /// <summary>
         /// The backing field for <see cref="UseWindowsUIXamlProjections"/>.
         /// </summary>
         private static int _useWindowsUIXamlProjections;
+
+        /// <summary>
+        /// The backing field for <see cref="SuppressCustomPropertyNotSupportedException"/>.
+        /// </summary>
+        private static int _suppressCustomPropertyNotSupportedException;
 
         /// <summary>
         /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
@@ -146,12 +176,40 @@ namespace WinRT
         }
 
         /// <summary>
+        /// Gets a value indicating whether or not manifest free WinRT activation is supported (defaults to <see langword="true"/>).
+        /// </summary>
+        public static bool EnableManifestFreeActivation
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetConfigurationValue(EnableManifestFreeActivationPropertyName, ref _enableManifestFreeActivation, true);
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether or not the original exception should be thrown if activation fails when <see cref="EnableManifestFreeActivation"/> is disabled (defaults to <see langword="false"/>).
+        /// </summary>
+        public static bool ManifestFreeActivationReportOriginalException
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetConfigurationValue(ManifestFreeActivationReportOriginalExceptionPropertyName, ref _manifestFreeActivationReportOriginalException, false);
+        }
+
+        /// <summary>
         /// Gets a value indicating whether to project .NET types to their <c>Windows.UI.Xaml</c> equivalents instead of their <c>Microsoft.UI.Xaml</c> equivalents.
         /// </summary>
         public static bool UseWindowsUIXamlProjections
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => GetConfigurationValue(UseWindowsUIXamlProjectionsPropertyName, ref _useWindowsUIXamlProjections, false);
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether to suppress the <see cref="NotSupportedException"/> thrown when a type does not implement
+        /// <c>IBindableCustomPropertyImplementation</c> on AOT, and return <see langword="null"/> instead (defaults to <see langword="false"/>).
+        /// </summary>
+        public static bool SuppressCustomPropertyNotSupportedException
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetConfigurationValue(SuppressCustomPropertyNotSupportedExceptionPropertyName, ref _suppressCustomPropertyNotSupportedException, false);
         }
 
         /// <summary>

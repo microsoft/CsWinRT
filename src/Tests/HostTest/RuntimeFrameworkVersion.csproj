@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-     <TargetFramework>net6.0</TargetFramework> 
+     <TargetFramework>net8.0</TargetFramework> 
   </PropertyGroup>
 
   <Target Name="GetRuntimeFrameworkVersion" Outputs="$(RuntimeFrameworkVersion)">
     <ItemGroup>
       <NetCoreAppRuntimeFrameworkVersion 
           Condition="%(KnownFrameworkReference.Identity) == 'Microsoft.NETCore.App' and
-            %(KnownFrameworkReference.TargetFramework) == 'netcoreapp6.0'" 
+            %(KnownFrameworkReference.TargetFramework) == 'netcoreapp8.0'" 
           Include="@(KnownFrameworkReference->Metadata('DefaultRuntimeFrameworkVersion')->Distinct())">
       </NetCoreAppRuntimeFrameworkVersion>
     </ItemGroup>

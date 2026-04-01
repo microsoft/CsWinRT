@@ -130,7 +130,7 @@ namespace ABI.System
             }
         }
 
-        internal static unsafe void CopyManagedArray(global::System.Type[] array, IntPtr data)
+        public static unsafe void CopyManagedArray(global::System.Type[] array, IntPtr data)
         {
             if (array is null)
             {
