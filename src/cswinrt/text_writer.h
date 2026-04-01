@@ -126,9 +126,12 @@ namespace cswinrt
         template <typename... Args>
         void write_printf(char const* format, Args const&... args)
         {
-            char buffer[128];
-            size_t const size = sprintf_s(buffer, format, args...);
-            write(std::string_view{ buffer, size });
+            // Measure the required size first (excluding null terminator)
+            int const needed = std::snprintf(nullptr, 0, format, args...);
+            assert(needed >= 0);
+            std::string buffer(static_cast<size_t>(needed), '\0');
+            std::snprintf(buffer.data(), buffer.size() + 1, format, args...);
+            write(std::string_view{ buffer.data(), static_cast<size_t>(needed) });
         }
 
         template <auto F, typename List, typename... Args>
