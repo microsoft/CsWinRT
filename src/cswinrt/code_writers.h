@@ -3395,15 +3395,22 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                             if (getter || base_getter)
                             {
                                 w.write("%get => %; ", base_getter_platform_attribute, bind([&](writer& w) {
-                                    if (call_static_method)
+                                    if (is_private)
                                     {
-                                        auto iface = base_getter ? getter_property_iface : prop.Parent();
-                                        w.write("%", bind<write_abi_get_property_static_method_call>(iface, prop,
-                                            w.write_temp("%", bind<write_objref_type_name>(iface))));
+                                        if (call_static_method)
+                                        {
+                                            auto iface = base_getter ? getter_property_iface : prop.Parent();
+                                            w.write("%", bind<write_abi_get_property_static_method_call>(iface, prop,
+                                                w.write_temp("%", bind<write_objref_type_name>(iface))));
+                                        }
+                                        else
+                                        {
+                                            w.write("%.%", target, prop.Name());
+                                        }
                                     }
                                     else
                                     {
-                                        w.write("%%", is_private ? target + "." : "", prop.Name());
+                                        w.write("%", prop.Name());
                                     }
                                     }));
                             }
@@ -3413,14 +3420,21 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                             if (setter)
                             {
                                 w.write("set => %;", bind([&](writer& w) {
-                                    if (call_static_method)
+                                    if (is_private)
                                     {
-                                        w.write("%", bind<write_abi_set_property_static_method_call>(prop.Parent(), prop,
-                                            w.write_temp("%", bind<write_objref_type_name>(prop.Parent()))));
+                                        if (call_static_method)
+                                        {
+                                            w.write("%", bind<write_abi_set_property_static_method_call>(prop.Parent(), prop,
+                                                w.write_temp("%", bind<write_objref_type_name>(prop.Parent()))));
+                                        }
+                                        else
+                                        {
+                                            w.write("%.% = value", target, prop.Name());
+                                        }
                                     }
                                     else
                                     {
-                                        w.write("%% = value", is_private ? target + "." : "", prop.Name());
+                                        w.write("% = value", prop.Name());
                                     }
                                     }));
                             }
