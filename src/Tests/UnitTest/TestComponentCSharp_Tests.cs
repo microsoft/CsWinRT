@@ -574,6 +574,17 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestNullableTypeProperty()
+        {
+            // IReference<TypeName> should project as System.Type (not Nullable<Type>)
+            Assert.Null(TestObject.NullableTypeProperty);
+            TestObject.NullableTypeProperty = typeof(int);
+            Assert.Equal(typeof(int), TestObject.NullableTypeProperty);
+            TestObject.NullableTypeProperty = null;
+            Assert.Null(TestObject.NullableTypeProperty);
+        }
+
+        [Fact]
         public void TestVectorCastConversion()
         {
             var vector = TestObject.GetUriVectorAsIInspectableVector();

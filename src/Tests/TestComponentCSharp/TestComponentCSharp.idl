@@ -173,6 +173,7 @@ namespace TestComponentCSharp
         Windows.UI.Xaml.Interop.TypeName TypeProperty{ get; set; };
         String GetTypePropertyAbiName();
         String GetTypePropertyKind();
+        Windows.Foundation.IReference<Windows.UI.Xaml.Interop.TypeName> NullableTypeProperty{ get; set; };
 
         // static
         static Int32 StaticIntProperty;

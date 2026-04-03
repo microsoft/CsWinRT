@@ -390,6 +390,23 @@ namespace cswinrt
             [&](generic_type_instance const& type)
             {
                 auto guard{ w.push_generic_args(type) };
+                // IReference<T> maps to Nullable<T>, but Nullable<T> requires T to be a value type.
+                // When T is a WinRT struct that projects to a C# reference type (TypeName -> Type,
+                // HResult -> Exception), emit just the projected T instead of Nullable<T>.
+                if (type.generic_type.TypeNamespace() == "Windows.Foundation"
+                    && type.generic_type.TypeName() == "IReference`1"
+                    && type.generic_args.size() == 1)
+                {
+                    auto& arg = type.generic_args[0];
+                    if (auto arg_type = std::get_if<type_definition>(&arg);
+                        arg_type
+                        && ((arg_type->TypeNamespace() == "Windows.UI.Xaml.Interop" && arg_type->TypeName() == "TypeName")
+                            || (arg_type->TypeNamespace() == "Windows.Foundation" && arg_type->TypeName() == "HResult")))
+                    {
+                        write_projection_type_for_name_type(w, arg, nameType);
+                        return;
+                    }
+                }
                 w.write("%<%>",
                     bind<write_projection_type_for_name_type>(type.generic_type, nameType),
                     bind_list<write_projection_type_for_name_type>(", ", type.generic_args, nameType));

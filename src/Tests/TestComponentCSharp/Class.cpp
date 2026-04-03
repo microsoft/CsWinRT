@@ -251,6 +251,16 @@ namespace winrt::TestComponentCSharp::implementation
         }
     }
 
+    Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName> Class::NullableTypeProperty()
+    {
+        return _nullableTypeProperty;
+    }
+
+    void Class::NullableTypeProperty(Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName> value)
+    {
+        _nullableTypeProperty = value;
+    }
+
     Windows::UI::Xaml::Interop::TypeName TypeProperty()
     {
         return Windows::UI::Xaml::Interop::TypeName();

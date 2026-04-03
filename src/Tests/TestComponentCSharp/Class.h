@@ -14,6 +14,9 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::UI::Xaml::Interop::TypeName TypeProperty();
         winrt::hstring GetTypePropertyAbiName();
         winrt::hstring GetTypePropertyKind();
+        Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName> _nullableTypeProperty{ nullptr };
+        Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName> NullableTypeProperty();
+        void NullableTypeProperty(Windows::Foundation::IReference<Windows::UI::Xaml::Interop::TypeName> value);
 
         winrt::event<EventHandler0> _event0;
         winrt::event<EventHandler1> _event1;
