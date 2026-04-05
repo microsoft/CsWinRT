@@ -1190,7 +1190,7 @@ namespace cswinrt
             return v.contract_version < contract_version;
         });
 
-        if ((versionItr == std::end(versions)) || (versionItr->contract_version != contract_version))
+        if (versionItr == std::end(versions))
         {
             return {};
         }
