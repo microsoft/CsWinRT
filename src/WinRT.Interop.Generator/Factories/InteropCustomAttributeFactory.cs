@@ -151,7 +151,7 @@ internal static class InteropCustomAttributeFactory
         InteropReferences interopReferences)
     {
         // Get the constructor taking 'assemblyName' as a string argument
-        MethodDefinition ctor = interopDefinitions.IgnoresAccessChecksToAttribute.GetConstructor(interopReferences.String)!;
+        MethodDefinition ctor = interopDefinitions.IgnoresAccessChecksToAttribute.GetConstructor([interopReferences.String])!;
 
         // Create the following attribute:
         //
