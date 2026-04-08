@@ -3553,7 +3553,6 @@ namespace UnitTest
         }
 #endif
 
-#if NET
         [Fact]
         public void TestOverridable()
         {
@@ -3586,7 +3585,6 @@ namespace UnitTest
                 MethodWasCalled = true;
             }
         }
-#endif
 
         [Fact]
         public void TestObjectFunctions()
