@@ -281,7 +281,7 @@ internal static partial class ImplGenerator
                 }
 
                 implModule.Assembly!.CustomAttributes.Add(new CustomAttribute(
-                    constructor: (ICustomAttributeType)assemblyAttribute.Constructor!.ImportWith(implModule.DefaultImporter),
+                    constructor: assemblyAttribute.Constructor!,
                     signature: assemblyAttribute.Signature));
             }
 
@@ -294,7 +294,7 @@ internal static partial class ImplGenerator
                 }
 
                 implModule.CustomAttributes.Add(new CustomAttribute(
-                    constructor: (ICustomAttributeType)moduleAttribute.Constructor!.ImportWith(implModule.DefaultImporter),
+                    constructor: moduleAttribute.Constructor!,
                     signature: moduleAttribute.Signature));
             }
         }
@@ -369,7 +369,7 @@ internal static partial class ImplGenerator
 
                 // Emit the type forwards for all public (projected) types
                 implModule.ExportedTypes.Add(new ExportedType(
-                    implementation: implementationAssembly.ImportWith(implModule.DefaultImporter),
+                    implementation: implementationAssembly,
                     ns: exportedType.Namespace,
                     name: exportedType.Name)
                 {
