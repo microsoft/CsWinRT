@@ -10,10 +10,13 @@ using System.Reflection;
 using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE;
 using WindowsRuntime.InteropGenerator.Discovery;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
+
+#pragma warning disable IDE0046
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -29,15 +32,27 @@ internal partial class InteropGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
+        // Get the .NET runtime version that the output .dll is targeting
+        DotNetRuntimeInfo targetRuntime = GetTargetRuntimeInfo(args);
+
+        args.Token.ThrowIfCancellationRequested();
+
         // Get the set of assemblies to actually process (filtered from all input assemblies)
         string[] assembliesToProcess = GetAssembliesToProcess(args);
 
         // Initialize the assembly resolver (we need to reuse this to allow caching)
         PathAssemblyResolver pathAssemblyResolver = new(assembliesToProcess);
 
+        args.Token.ThrowIfCancellationRequested();
+
+        // Create the runtime context that we'll reuse for the entire generation. This will internally
+        // use our assembly resolver, and it will also take care of caching all loaded modules. Every
+        // module load will go through this object, rather than using the assembly resolver directly.
+        RuntimeContext runtimeContext = new(targetRuntime, pathAssemblyResolver);
+
         // Initialize the state, which contains all the discovered info we'll use for generation.
         // No additional parameters will be passed to later steps: all the info is in this object.
-        InteropGeneratorDiscoveryState discoveryState = new() { AssemblyResolver = pathAssemblyResolver };
+        InteropGeneratorDiscoveryState discoveryState = new() { RuntimeContext = runtimeContext };
 
         // First, load the special 'WinRT.Sdk.Projection.dll', 'WinRT.Sdk.Xaml.Projection.dll', 'WinRT.Projection.dll'
         // and 'WinRT.Component.dll' modules (the last three are optional). These are necessary for surfacing some
@@ -80,6 +95,40 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Gets the <see cref="DotNetRuntimeInfo"/> for the target output assembly.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <returns>The <see cref="DotNetRuntimeInfo"/> for the target output assembly.</returns>
+    private static DotNetRuntimeInfo GetTargetRuntimeInfo(InteropGeneratorArgs args)
+    {
+        PEImage outputAssemblyImage;
+
+        // Load the output assembly as a PE image (we don't need the full .NET module yet)
+        try
+        {
+            outputAssemblyImage = PEImage.FromFile(args.OutputAssemblyPath);
+        }
+        catch (Exception e)
+        {
+            throw WellKnownInteropExceptions.OutputAssemblyLoadError(args.OutputAssemblyPath, e);
+        }
+
+        // Probe the .NET runtime version for the output .dll (which might be greater than that of 'WinRT.Runtime.dll')
+        if (!TargetRuntimeProber.TryGetLikelyTargetRuntime(outputAssemblyImage, out DotNetRuntimeInfo targetRuntime))
+        {
+            throw WellKnownInteropExceptions.OutputAssemblyRuntimeVersionNotFound(args.OutputAssemblyPath);
+        }
+
+        // Validate that the probed runtime version is valid
+        if (!targetRuntime.IsNetCoreApp || targetRuntime.Version < new Version(10, 0))
+        {
+            throw WellKnownInteropExceptions.OutputAssemblyRuntimeVersionNotSupported(args.OutputAssemblyPath, targetRuntime);
+        }
+
+        return targetRuntime;
+    }
+
+    /// <summary>
     /// Loads the special WinRT module definitions.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
@@ -87,7 +136,7 @@ internal partial class InteropGenerator
     private static void LoadWinRTModules(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState)
     {
         // Load the 'WinRT.Sdk.Projection.dll' module, this should always be available
-        ModuleDefinition winRTSdkProjectionModule = ModuleDefinition.FromFile(args.WinRTSdkProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+        ModuleDefinition winRTSdkProjectionModule = discoveryState.RuntimeContext.LoadModule(args.WinRTSdkProjectionAssemblyPath);
 
         discoveryState.TrackWindowsRuntimeSdkProjectionModule(winRTSdkProjectionModule);
 
@@ -96,7 +145,7 @@ internal partial class InteropGenerator
         // Load the 'WinRT.Sdk.Xaml.Projection.dll' module, if available
         if (args.WinRTSdkXamlProjectionAssemblyPath is not null)
         {
-            ModuleDefinition winRTSdkXamlProjectionModule = ModuleDefinition.FromFile(args.WinRTSdkXamlProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+            ModuleDefinition winRTSdkXamlProjectionModule = discoveryState.RuntimeContext.LoadModule(args.WinRTSdkXamlProjectionAssemblyPath);
 
             discoveryState.TrackWindowsRuntimeSdkXamlProjectionModule(winRTSdkXamlProjectionModule);
 
@@ -106,7 +155,7 @@ internal partial class InteropGenerator
         // Load the 'WinRT.Projection.dll' module, if available
         if (args.WinRTProjectionAssemblyPath is not null)
         {
-            ModuleDefinition winRTProjectionModule = ModuleDefinition.FromFile(args.WinRTProjectionAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+            ModuleDefinition winRTProjectionModule = discoveryState.RuntimeContext.LoadModule(args.WinRTProjectionAssemblyPath);
 
             discoveryState.TrackWindowsRuntimeProjectionModule(winRTProjectionModule);
 
@@ -116,7 +165,7 @@ internal partial class InteropGenerator
         // Load the 'WinRT.Component.dll' module, if available
         if (args.WinRTComponentAssemblyPath is not null)
         {
-            ModuleDefinition winRTComponentModule = ModuleDefinition.FromFile(args.WinRTComponentAssemblyPath, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+            ModuleDefinition winRTComponentModule = discoveryState.RuntimeContext.LoadModule(args.WinRTComponentAssemblyPath);
 
             discoveryState.TrackWindowsRuntimeComponentModule(winRTComponentModule);
         }
@@ -171,7 +220,7 @@ internal partial class InteropGenerator
         // Try to load the .dll at the current path
         try
         {
-            module = ModuleDefinition.FromFile(path, ((PathAssemblyResolver)discoveryState.AssemblyResolver).ReaderParameters);
+            module = discoveryState.RuntimeContext.LoadModule(path);
         }
         catch (BadImageFormatException)
         {
