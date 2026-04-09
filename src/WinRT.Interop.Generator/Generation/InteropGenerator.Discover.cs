@@ -488,9 +488,9 @@ internal partial class InteropGenerator
         AssemblyReference windowsSdkProjectionAssembly = new("Microsoft.Windows.SDK.NET"u8, new Version(10, 0, 0, 0));
 
         // Set the public keys, as it's needed to ensure references compare as equals as expected
-        windowsRuntimeAssembly.PublicKeyOrToken = InteropValues.PublicKeyData;
+        windowsRuntimeAssembly.PublicKeyOrToken = InteropValues.CsWinRTPublicKeyData;
         windowsRuntimeAssembly.HasPublicKey = true;
-        windowsSdkProjectionAssembly.PublicKeyOrToken = InteropValues.PublicKeyData;
+        windowsSdkProjectionAssembly.PublicKeyOrToken = InteropValues.WindowsSdkProjectionPublicKeyData;
         windowsSdkProjectionAssembly.HasPublicKey = true;
 
         // Validate that the module has a runtime context, which is required
