@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -475,7 +474,6 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="module">The module currently being analyzed.</param>
     /// <returns>The <see cref="InteropReferences"/> instance to use for the discovery phase.</returns>
-    [SuppressMessage("Style", "IDE0059", Justification = "Creating the 'AssemblyDefinition'-s is used to bind them to the contained modules.")]
     private static InteropReferences CreateDiscoveryInteropReferences(ModuleDefinition module)
     {
         // Create the interop references scoped to this module, which we need to lookup some references from
@@ -484,14 +482,12 @@ internal partial class InteropGenerator
         // type and member references to APIs defined in that module, so this is good enough for this scenario.
         // We also do the same for the Windows Runtime projection assembly, the exact version doesn't matter.
         Version windowsRuntimeVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
-        AssemblyReference windowsRuntimeAssembly = new("WinRT.Runtime"u8, windowsRuntimeVersion);
-        AssemblyReference windowsSdkProjectionAssembly = new("Microsoft.Windows.SDK.NET"u8, new Version(10, 0, 0, 0));
-
-        // Set the public keys, as it's needed to ensure references compare as equals as expected
-        windowsRuntimeAssembly.PublicKeyOrToken = InteropValues.CsWinRTPublicKeyData;
-        windowsRuntimeAssembly.HasPublicKey = true;
-        windowsSdkProjectionAssembly.PublicKeyOrToken = InteropValues.WindowsSdkProjectionPublicKeyData;
-        windowsSdkProjectionAssembly.HasPublicKey = true;
+        AssemblyReference windowsRuntimeAssembly = new("WinRT.Runtime"u8, windowsRuntimeVersion)
+        {
+            // Set the public keys, as it's needed to ensure references compare as equals as expected
+            PublicKeyOrToken = InteropValues.CsWinRTPublicKeyData,
+            HasPublicKey = true
+        };
 
         // Validate that the module has a runtime context, which is required
         // for reference resolution (this should just always be the case).
