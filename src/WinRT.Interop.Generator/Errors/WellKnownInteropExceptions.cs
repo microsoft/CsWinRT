@@ -787,6 +787,30 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to load the output assembly as a PE image.
+    /// </summary>
+    public static WellKnownInteropException OutputAssemblyLoadError(string path, Exception exception)
+    {
+        return Exception(94, $"Failed to load the output assembly '{path}' as a PE image (this might mean that its path was not valid).", exception);
+    }
+
+    /// <summary>
+    /// Failed to probe the .NET runtime version from the output assembly.
+    /// </summary>
+    public static WellKnownInteropException OutputAssemblyRuntimeVersionNotFound(string path)
+    {
+        return Exception(95, $"Failed to probe the .NET runtime version from the output assembly '{path}'.");
+    }
+
+    /// <summary>
+    /// The probed .NET runtime version from the output assembly is not supported.
+    /// </summary>
+    public static WellKnownInteropException OutputAssemblyRuntimeVersionNotSupported(string path, DotNetRuntimeInfo targetRuntime)
+    {
+        return Exception(96, $"The probed .NET runtime version '{targetRuntime}' from the output assembly '{path}' is not supported. The minimum supported version is .NET 10.0.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
