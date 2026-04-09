@@ -637,7 +637,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Mul },
                     { Conv_I },
                     { Add },
-                    { CilInstruction.CreateLdind(elementAbiType) },
+                    { CilInstruction.CreateLdind(elementAbiType, interopReferences.RuntimeContext) },
                     { nop_convertToManaged },
                     { Callvirt, interopReferences.ICollection1Add(elementType) },
 

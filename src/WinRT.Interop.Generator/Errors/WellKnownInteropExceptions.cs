@@ -779,6 +779,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// The module doesn't have an associated runtime context.
+    /// </summary>
+    public static WellKnownInteropException ModuleMissingRuntimeContext(ModuleDefinition module)
+    {
+        return Exception(93, $"Module '{module}' cannot be analyzed, as it was loaded without a valid runtime context.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

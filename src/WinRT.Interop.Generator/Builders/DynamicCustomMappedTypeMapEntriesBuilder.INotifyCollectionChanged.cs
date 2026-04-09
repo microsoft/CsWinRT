@@ -36,8 +36,8 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(interfaceType),
-                name: InteropUtf8NameFactory.TypeName(interfaceType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(interfaceType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(interfaceType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {

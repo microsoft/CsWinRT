@@ -71,8 +71,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(collectionType),
-                name: InteropUtf8NameFactory.TypeName(collectionType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(collectionType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(collectionType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {

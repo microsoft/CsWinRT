@@ -21,14 +21,15 @@ internal static class InteropUtf8NameFactory
     /// Gets the namespace for a generated interop type.
     /// </summary>
     /// <param name="typeSignature">The source <see cref="TypeSignature"/> for the type to generate.</param>
+    /// <param name="runtimeContext">The context to assume when resolving types.</param>
     /// <returns>The namespace to use.</returns>
-    public static Utf8String TypeNamespace(TypeSignature typeSignature)
+    public static Utf8String TypeNamespace(TypeSignature typeSignature, RuntimeContext? runtimeContext)
     {
         // Special case for nested types: these don't have a namespace, as the namespace is only
         // on the declaring type. So, find the outer-most declaring type to read the namespace.
         if (typeSignature.TopLevelDeclaringType is ITypeDescriptor declaringType)
         {
-            return TypeNamespace(declaringType.ToTypeSignature());
+            return TypeNamespace(declaringType.ToTypeSignature(runtimeContext), runtimeContext);
         }
 
         // Special case when there's no namespace: just put the generated types under 'ABI'.
@@ -54,9 +55,10 @@ internal static class InteropUtf8NameFactory
     /// Gets the name for a generated interop type.
     /// </summary>
     /// <param name="typeSignature">The source <see cref="TypeSignature"/> for the type to generate.</param>
+    /// <param name="runtimeContext">The context to assume when resolving types.</param>
     /// <param name="nameSuffix">The optional name suffix to use.</param>
     /// <returns>The name to use.</returns>
-    public static Utf8String TypeName(TypeSignature typeSignature, string? nameSuffix = null)
+    public static Utf8String TypeName(TypeSignature typeSignature, RuntimeContext? runtimeContext, string? nameSuffix = null)
     {
         DefaultInterpolatedStringHandler interpolatedStringHandler = new(literalLength: 2, formattedCount: 1);
 
@@ -64,6 +66,7 @@ internal static class InteropUtf8NameFactory
         static void AppendTypeName(
             ref DefaultInterpolatedStringHandler interpolatedStringHandler,
             TypeSignature typeSignature,
+            RuntimeContext? runtimeContext,
             int depth)
         {
             // Special case for well known type identifiers (eg. 'string', 'int', etc.)
@@ -79,15 +82,20 @@ internal static class InteropUtf8NameFactory
             {
                 interpolatedStringHandler.AppendLiteral("<");
 
-                AppendTypeName(ref interpolatedStringHandler, arrayTypeSignature.BaseType, depth);
+                AppendTypeName(ref interpolatedStringHandler, arrayTypeSignature.BaseType, runtimeContext, depth);
 
                 interpolatedStringHandler.AppendLiteral(">Array");
             }
             else
             {
+                Utf8String assemblyName = AssemblyNameOrWellKnownIdentifier(
+                    assemblyName: typeSignature.Scope!.GetAssembly()!.Name!,
+                    typeSignature: typeSignature,
+                    runtimeContext: runtimeContext);
+
                 // Each type name uses this format: '<ASSEMBLY_NAME>TYPE_NAME'
                 interpolatedStringHandler.AppendLiteral("<");
-                interpolatedStringHandler.AppendFormatted(AssemblyNameOrWellKnownIdentifier(typeSignature.Scope!.GetAssembly()!.Name, typeSignature));
+                interpolatedStringHandler.AppendFormatted(assemblyName);
                 interpolatedStringHandler.AppendLiteral(">");
 
                 // Extract the generic type if we have a generic signature, or use the type signature directly
@@ -100,7 +108,7 @@ internal static class InteropUtf8NameFactory
                 // type descriptor here, because we also want to detect arrays with an element type that's generic.
                 if (typeSignature is GenericInstanceTypeSignature genericInstanceTypeSignature)
                 {
-                    AppendTypeArguments(ref interpolatedStringHandler, genericInstanceTypeSignature, depth);
+                    AppendTypeArguments(ref interpolatedStringHandler, genericInstanceTypeSignature, runtimeContext, depth);
                 }
             }
         }
@@ -149,6 +157,7 @@ internal static class InteropUtf8NameFactory
         static void AppendTypeArguments(
             ref DefaultInterpolatedStringHandler interpolatedStringHandler,
             GenericInstanceTypeSignature type,
+            RuntimeContext? runtimeContext,
             int depth)
         {
             interpolatedStringHandler.AppendLiteral("<");
@@ -163,14 +172,14 @@ internal static class InteropUtf8NameFactory
 
                 // Append the type argument with the same format as the root type. This is
                 // important to ensure that nested generic types will be handled correctly.
-                AppendTypeName(ref interpolatedStringHandler, typeArgumentSignature, depth: depth + 1);
+                AppendTypeName(ref interpolatedStringHandler, typeArgumentSignature, runtimeContext, depth: depth + 1);
             }
 
             interpolatedStringHandler.AppendLiteral(">");
         }
 
         // Append the full type name first
-        AppendTypeName(ref interpolatedStringHandler, typeSignature, depth: 0);
+        AppendTypeName(ref interpolatedStringHandler, typeSignature, runtimeContext, depth: 0);
 
         // Append the suffix, if we have one
         interpolatedStringHandler.AppendFormatted(nameSuffix);
@@ -195,9 +204,13 @@ internal static class InteropUtf8NameFactory
     /// </summary>
     /// <param name="assemblyName">The input assembly name to convert.</param>
     /// <param name="typeSignature">The type signature for which to convert.</param>
+    /// <param name="runtimeContext">The context to assume when resolving the type.</param>
     /// <returns>The resulting assembly name to use.</returns>
     [return: NotNullIfNotNull(nameof(assemblyName))]
-    private static Utf8String? AssemblyNameOrWellKnownIdentifier(Utf8String? assemblyName, TypeSignature typeSignature)
+    private static Utf8String? AssemblyNameOrWellKnownIdentifier(
+        Utf8String? assemblyName,
+        TypeSignature typeSignature,
+        RuntimeContext? runtimeContext)
     {
         // Replace some assembly names with well known constants, to make the names more compact
         return assemblyName switch
@@ -205,7 +218,7 @@ internal static class InteropUtf8NameFactory
             { Value: "System.Runtime" } => "#corlib"u8,
             { Value: "Microsoft.Windows.SDK.NET" or "Microsoft.Windows.UI.Xaml" } => "#Windows"u8,
             { Value: "WinRT.Runtime" } => "#CsWinRT"u8,
-            _ => typeSignature.GetWindowsRuntimeMetadataName() ?? assemblyName
+            _ => typeSignature.GetWindowsRuntimeMetadataName(runtimeContext) ?? assemblyName
         };
     }
 

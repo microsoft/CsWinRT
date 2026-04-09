@@ -40,8 +40,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // We're declaring an 'internal abstract class' type
             interfaceType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "Interface"),
+                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -104,8 +104,8 @@ internal partial class InteropTypeDefinitionBuilder
             if (!isKeyReferenceType && !isValueReferenceType)
             {
                 vftblType = WellKnownTypeDefinitionFactory.IDictionary2Vftbl(
-                    ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                    name: InteropUtf8NameFactory.TypeName(dictionaryType, "Vftbl"),
+                    ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
                     interopReferences: interopReferences);
@@ -139,8 +139,8 @@ internal partial class InteropTypeDefinitionBuilder
 
                 // Construct a new specialized vtable type
                 TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.IDictionary2Vftbl(
-                    ns: InteropUtf8NameFactory.TypeNamespace(sharedDictionaryType),
-                    name: InteropUtf8NameFactory.TypeName(sharedDictionaryType, "Vftbl"),
+                    ns: InteropUtf8NameFactory.TypeNamespace(sharedDictionaryType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(sharedDictionaryType, interopReferences.RuntimeContext, "Vftbl"),
                     keyType: keyType,
                     valueType: valueType,
                     interopReferences: interopReferences);
@@ -204,8 +204,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             mapMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "IMapMethods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "IMapMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -288,8 +288,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             dictionaryMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -647,7 +647,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(dictionaryType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(dictionaryType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: dictionaryType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -709,8 +709,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -993,8 +993,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType),
-                name: InteropUtf8NameFactory.TypeName(dictionaryType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(dictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(dictionaryType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

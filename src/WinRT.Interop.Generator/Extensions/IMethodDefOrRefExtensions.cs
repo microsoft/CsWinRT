@@ -17,8 +17,9 @@ internal static class IMethodDefOrRefExtensions
         /// <summary>
         /// Enumerates all types that are visible from a given method (e.g. return type, parameter types, etc.).
         /// </summary>
+        /// <param name="runtimeContext">The context to assume when resolving types.</param>
         /// <returns>The visible types for the given method.</returns>
-        public IEnumerable<TypeSignature> EnumerateAllVisibleTypes()
+        public IEnumerable<TypeSignature> EnumerateAllVisibleTypes(RuntimeContext? runtimeContext)
         {
             // Visit the method signature, if available
             if (method.Signature is MethodSignature signature)
@@ -33,7 +34,7 @@ internal static class IMethodDefOrRefExtensions
             }
 
             // Also visit the method definition, if we can resolve it
-            if (method.Resolve() is MethodDefinition definition)
+            if (method.TryResolve(runtimeContext, out MethodDefinition? definition))
             {
                 // Process all declared locals first
                 foreach (TypeSignature localType in definition.EnumerateLocalVariableTypes())
@@ -44,13 +45,13 @@ internal static class IMethodDefOrRefExtensions
                 // Look for all 'newobj' instructions and gather the object types
                 foreach (ITypeDefOrRef objectType in definition.EnumerateNewobjTypes())
                 {
-                    yield return objectType.ToTypeSignature();
+                    yield return objectType.ToTypeSignature(runtimeContext);
                 }
 
-                // Look for all 'newarr' instructions and gather the element types
+                // Look for all 'newarr' instructions and gather the array types
                 foreach (ITypeDefOrRef elementType in definition.EnumerateNewarrElementTypes())
                 {
-                    yield return elementType.MakeSzArrayType();
+                    yield return elementType.ToTypeSignature(runtimeContext).MakeSzArrayType();
                 }
             }
         }

@@ -42,7 +42,7 @@ internal static partial class InteropTypeDefinitionBuilder
         out MethodDefinition get_IidMethod)
     {
         IID(
-            name: InteropUtf8NameFactory.TypeName(interfaceType),
+            name: InteropUtf8NameFactory.TypeName(interfaceType, interopReferences.RuntimeContext),
             interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             iid: GuidGenerator.CreateIID(interfaceType, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
@@ -96,8 +96,8 @@ internal static partial class InteropTypeDefinitionBuilder
     {
         // We're declaring an 'internal sealed class' type
         nativeObjectType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "NativeObject"),
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "NativeObject"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: nativeObjectBaseType.ToTypeDefOrRef());
 
@@ -133,8 +133,8 @@ internal static partial class InteropTypeDefinitionBuilder
     {
         // We're declaring an 'internal abstract class' type
         callbackType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersCallback"),
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "ComWrappersCallback"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.Object.ToTypeDefOrRef())
         {
@@ -264,8 +264,8 @@ internal static partial class InteropTypeDefinitionBuilder
     {
         // We're declaring an 'internal sealed class' type
         marshallerType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersMarshallerAttribute"),
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "ComWrappersMarshallerAttribute"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -327,8 +327,8 @@ internal static partial class InteropTypeDefinitionBuilder
     {
         // We're declaring an 'internal static class' type
         marshallerType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "Marshaller"),
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "Marshaller"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -724,8 +724,8 @@ internal static partial class InteropTypeDefinitionBuilder
         // emit '[WindowsRuntimeMetadataTypeName]', to support mapping the generic interface name
         // when marshalling 'TypeName' instances. Nobody would need a runtime class name here.
         Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(interfaceType),
-            name: InteropUtf8NameFactory.TypeName(interfaceType),
+            ns: InteropUtf8NameFactory.TypeNamespace(interfaceType, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(interfaceType, interopReferences.RuntimeContext),
             mappedMetadata: null,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(interfaceType, useWindowsUIXamlProjections),
@@ -850,7 +850,7 @@ internal static partial class InteropTypeDefinitionBuilder
         bool useWindowsUIXamlProjections)
     {
         TypeMapAttributes(
-            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, useWindowsUIXamlProjections),
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
             metadataTypeName: null,
             externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
             externalTypeMapTrimTargetType: interfaceType,

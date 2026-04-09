@@ -80,7 +80,7 @@ internal partial class InteropTypeDefinitionBuilder
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
-                name: InteropUtf8NameFactory.TypeName(userDefinedType, "InterfaceEntriesImpl"),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopReferences.RuntimeContext, "InterfaceEntriesImpl"),
                 entriesFieldType: interfaceEntriesType,
                 interopReferences: interopReferences,
                 module: module,
@@ -108,7 +108,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
-                name: InteropUtf8NameFactory.TypeName(userDefinedType, "ComWrappersMarshallerAttribute"),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopReferences.RuntimeContext, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -186,7 +186,7 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections,
             out TypeDefinition proxyType)
         {
-            TypeDefinition userDefinedTypeDefinition = userDefinedType.Resolve()!;
+            TypeDefinition userDefinedTypeDefinition = userDefinedType.Resolve(module.RuntimeContext);
 
             // If the user-defined type has '[WindowsRuntimeClassName]', then it means it's using a custom runtime
             // class name, which we want to preserve. In this case, just emit '[WindowsRuntimeMappedType]' on the
@@ -194,8 +194,8 @@ internal partial class InteropTypeDefinitionBuilder
             if (userDefinedTypeDefinition.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute))
             {
                 InteropTypeDefinitionBuilder.Proxy(
-                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType),
-                    name: InteropUtf8NameFactory.TypeName(userDefinedType),
+                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopReferences.RuntimeContext),
                     mappedMetadata: null,
                     runtimeClassName: null,
                     metadataTypeName: null,
@@ -221,10 +221,10 @@ internal partial class InteropTypeDefinitionBuilder
 
                 // Otherwise, we'll use the runtime class name of the first implemented Windows Runtime interface
                 InteropTypeDefinitionBuilder.Proxy(
-                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType),
-                    name: InteropUtf8NameFactory.TypeName(userDefinedType),
+                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopReferences.RuntimeContext),
                     mappedMetadata: null,
-                    runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, useWindowsUIXamlProjections),
+                    runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                     metadataTypeName: null,
                     mappedType: null,
                     referenceType: null,

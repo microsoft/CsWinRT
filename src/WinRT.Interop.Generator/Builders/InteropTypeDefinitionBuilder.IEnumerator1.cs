@@ -41,7 +41,7 @@ internal partial class InteropTypeDefinitionBuilder
             out MethodDefinition get_IidMethod)
         {
             InteropTypeDefinitionBuilder.IID(
-                name: InteropUtf8NameFactory.TypeName(enumeratorType),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, interopReferences.RuntimeContext),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 iid: GuidGenerator.CreateIID(enumeratorType, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
@@ -72,8 +72,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             iteratorMethodsType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
-                name: InteropUtf8NameFactory.TypeName(enumeratorType, "IIteratorMethods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, interopReferences.RuntimeContext, "IIteratorMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -224,8 +224,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             enumeratorMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
-                name: InteropUtf8NameFactory.TypeName(enumeratorType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -320,7 +320,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(enumeratorType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(enumeratorType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: enumeratorType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -378,8 +378,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
-                name: InteropUtf8NameFactory.TypeName(enumeratorType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -646,8 +646,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType),
-                name: InteropUtf8NameFactory.TypeName(enumeratorType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(enumeratorType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(enumeratorType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: interopDefinitions.IEnumerator1Vftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

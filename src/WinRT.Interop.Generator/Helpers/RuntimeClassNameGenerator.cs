@@ -18,15 +18,16 @@ internal static class RuntimeClassNameGenerator
     /// applying known type-name mappings and recursively formatting generic arguments.
     /// </summary>
     /// <param name="type">The <see cref="TypeSignature"/> to generate the Windows Runtime class name for.</param>
+    /// <param name="runtimeContext">The context to assume when resolving the type.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
     /// <returns>The resulting Windows Runtime class name for <paramref name="type"/>.</returns>
-    public static string GetRuntimeClassName(TypeSignature type, bool useWindowsUIXamlProjections)
+    public static string GetRuntimeClassName(TypeSignature type, RuntimeContext? runtimeContext, bool useWindowsUIXamlProjections)
     {
         DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
 
         // We need to be able to resolve the type definition to determine whether we need
         // to wrap the metadata type name within "IReference`1<...>" (e.g. for delegates).
-        if (type.Resolve() is not TypeDefinition typeDefinition)
+        if (!type.TryResolve(runtimeContext, out TypeDefinition? typeDefinition))
         {
             throw WellKnownInteropExceptions.RuntimeClassNameGenerationError(type);
         }

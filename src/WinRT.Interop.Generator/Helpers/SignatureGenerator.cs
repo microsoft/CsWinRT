@@ -40,7 +40,7 @@ internal static partial class SignatureGenerator
 
         // We need to be able to resolve the type definition to compute several kinds of signatures.
         // Also, all input type signatures here are expected to be resolvable, so validate that too.
-        if (type.Resolve() is not TypeDefinition typeDefinition)
+        if (!type.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? typeDefinition))
         {
             goto Failure;
         }
@@ -123,7 +123,7 @@ internal static partial class SignatureGenerator
         }
 
         // If we can resolve the type, try to retrieve the IID from the '[Guid]' attribute on it
-        if (type.Resolve() is TypeDefinition typeDefinition)
+        if (type.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? typeDefinition))
         {
             return TryGetIIDFromAttribute(
                 typeDefinition,

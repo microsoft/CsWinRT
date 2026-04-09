@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
@@ -77,9 +78,10 @@ internal static class CilInstructionExtensions
         /// Create a new instruction storing a value indirectly to a target location.
         /// </summary>
         /// <param name="type">The type of value to store.</param>
+        /// <param name="runtimeContext">The context to assume when resolving the type.</param>
         /// <returns>The instruction.</returns>
         [SuppressMessage("Style", "IDE0072", Justification = "We use 'stobj' for all other possible types.")]
-        public static CilInstruction CreateStind(TypeSignature type)
+        public static CilInstruction CreateStind(TypeSignature type, RuntimeContext? runtimeContext)
         {
             return type.ElementType switch
             {
@@ -95,7 +97,7 @@ internal static class CilInstructionExtensions
                 ElementType.U8 => new CilInstruction(Stind_I8),
                 ElementType.R4 => new CilInstruction(Stind_R4),
                 ElementType.R8 => new CilInstruction(Stind_R8),
-                ElementType.ValueType when type.Resolve() is { IsClass: true, IsEnum: true } => new CilInstruction(Stind_I4),
+                ElementType.ValueType when type.Resolve(runtimeContext) is { IsClass: true, IsEnum: true } => new CilInstruction(Stind_I4),
                 ElementType.I => new CilInstruction(Stind_I),
                 _ => new CilInstruction(Stobj, type.ToTypeDefOrRef()),
             };
@@ -105,9 +107,10 @@ internal static class CilInstructionExtensions
         /// Create a new instruction loading a value indirectly from a target location.
         /// </summary>
         /// <param name="type">The type of value to load.</param>
+        /// <param name="runtimeContext">The context to assume when resolving the type.</param>
         /// <returns>The instruction.</returns>
         [SuppressMessage("Style", "IDE0072", Justification = "We use 'ldobj' for all other possible types.")]
-        public static CilInstruction CreateLdind(TypeSignature type)
+        public static CilInstruction CreateLdind(TypeSignature type, RuntimeContext? runtimeContext)
         {
             return type.ElementType switch
             {
@@ -123,7 +126,7 @@ internal static class CilInstructionExtensions
                 ElementType.U8 => new CilInstruction(Ldind_I8),
                 ElementType.R4 => new CilInstruction(Ldind_R4),
                 ElementType.R8 => new CilInstruction(Ldind_R8),
-                ElementType.ValueType when type.Resolve() is { IsClass: true, IsEnum: true } => new CilInstruction(Ldind_I4),
+                ElementType.ValueType when type.Resolve(runtimeContext) is { IsClass: true, IsEnum: true } => new CilInstruction(Ldind_I4),
                 ElementType.I => new CilInstruction(Ldind_I),
                 _ => new CilInstruction(Ldobj, type.ToTypeDefOrRef()),
             };

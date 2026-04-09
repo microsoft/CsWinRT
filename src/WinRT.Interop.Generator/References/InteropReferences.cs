@@ -26,25 +26,25 @@ internal sealed class InteropReferences
     private readonly IResolutionScope _windowsRuntimeModule;
 
     /// <summary>
-    /// The <see cref="ModuleDefinition"/> for the Windows SDK projection assembly.
-    /// </summary>
-    private readonly IResolutionScope _windowsSdkProjectionModule;
-
-    /// <summary>
     /// Creates a new <see cref="InteropReferences"/> instance.
     /// </summary>
+    /// <param name="runtimeContext">The <see cref="AsmResolver.DotNet.RuntimeContext"/> currently in use.</param>
     /// <param name="corLibTypeFactory">The <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> currently in use.</param>
     /// <param name="windowsRuntimeModule">The <see cref="IResolutionScope"/> for the Windows Runtime assembly (i.e. <c>WinRT.Runtime.dll</c>).</param>
-    /// <param name="windowsSdkProjectionModule">The <see cref="IResolutionScope"/> for the Windows SDK projection assembly.</param>
     public InteropReferences(
+        RuntimeContext runtimeContext,
         CorLibTypeFactory corLibTypeFactory,
-        IResolutionScope windowsRuntimeModule,
-        IResolutionScope windowsSdkProjectionModule)
+        IResolutionScope windowsRuntimeModule)
     {
+        RuntimeContext = runtimeContext;
         _corLibTypeFactory = corLibTypeFactory;
         _windowsRuntimeModule = windowsRuntimeModule;
-        _windowsSdkProjectionModule = windowsSdkProjectionModule;
     }
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.RuntimeContext"/> instance associated with this instance.
+    /// </summary>
+    public RuntimeContext RuntimeContext { get; }
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> instance associated with this instance.
@@ -106,11 +106,6 @@ internal sealed class InteropReferences
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime assembly (i.e. <c>WinRT.Runtime.dll</c>).
     /// </summary>
     public IResolutionScope WindowsRuntimeModule => _windowsRuntimeModule;
-
-    /// <summary>
-    /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.
-    /// </summary>
-    public IResolutionScope WindowsFoundationModule => _windowsSdkProjectionModule;
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Runtime.InteropServices.dll</c>.
@@ -3904,7 +3899,7 @@ internal sealed class InteropReferences
     public MemberReference DelegateInvoke(TypeSignature delegateType, ModuleDefinition module)
     {
         // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
-        MethodDefinition invokeMethod = delegateType.Resolve(module)!.GetMethod("Invoke"u8);
+        MethodDefinition invokeMethod = delegateType.Resolve(module.RuntimeContext).GetMethod("Invoke"u8);
 
         // Create the actual member reference to use when emitting calls to the 'Invoke' method.
         // This has to be on the input (potentially constructed) delegate type, but not using
@@ -3912,7 +3907,7 @@ internal sealed class InteropReferences
         // For instance, if the input delegate type were an 'EventHandler<Foo, BarArgs>' generic
         // instantiation, this 'Invoke' reference would be 'void EventHandler<Foo, BarArgs>::Invoke(!0, !1)'.
         // This is also why the method reference can directly reuse the signature from the method definition.
-        return delegateType.ToTypeDefOrRef().CreateMemberReference("Invoke"u8, invokeMethod.Signature!);
+        return delegateType.ToTypeDefOrRef().CreateMemberReference("Invoke"u8, invokeMethod.Signature);
     }
 
     /// <summary>

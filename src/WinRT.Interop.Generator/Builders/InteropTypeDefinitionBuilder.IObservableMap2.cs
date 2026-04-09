@@ -41,8 +41,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             factoryType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(mapType),
-                name: InteropUtf8NameFactory.TypeName(mapType, "EventSourceFactory"),
+                ns: InteropUtf8NameFactory.TypeNamespace(mapType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(mapType, interopReferences.RuntimeContext, "EventSourceFactory"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -104,8 +104,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal sealed class' type
             callbackType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(mapType),
-                name: InteropUtf8NameFactory.TypeName(mapType, "EventSourceCallback"),
+                ns: InteropUtf8NameFactory.TypeNamespace(mapType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(mapType, interopReferences.RuntimeContext, "EventSourceCallback"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -197,8 +197,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             methodsType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(mapType),
-                name: InteropUtf8NameFactory.TypeName(mapType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(mapType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(mapType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -320,7 +320,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(mapType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(mapType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: mapType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -385,8 +385,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(mapType),
-                name: InteropUtf8NameFactory.TypeName(mapType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(mapType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(mapType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -517,8 +517,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(mapType),
-                name: InteropUtf8NameFactory.TypeName(mapType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(mapType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(mapType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: interopDefinitions.IObservableMapVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

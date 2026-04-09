@@ -21,11 +21,13 @@ internal static class InteropImplTypeResolver
     /// </summary>
     /// <param name="type">The type to get the "Impl" method for.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="emitState">The emit state for this invocation.</param>
     /// <returns>The "Impl" methods for <paramref name="type"/>.</returns>
     public static (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) GetGenericInstanceTypeImpl(
         GenericInstanceTypeSignature type,
         InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
         InteropGeneratorEmitState emitState)
     {
         // For generic types (i.e. generic interfaces), their marshalling code will be in 'WinRT.Interop.dll',
@@ -34,7 +36,7 @@ internal static class InteropImplTypeResolver
         MethodDefinition get_VtableMethod = implTypeDefinition.GetMethod("get_Vtable"u8);
 
         // The IID will be in the generated 'ABI.InterfaceIIDs' type in 'WinRT.Interop.dll'
-        Utf8String get_IIDMethodName = $"get_IID_{InteropUtf8NameFactory.TypeName(type)}";
+        Utf8String get_IIDMethodName = $"get_IID_{InteropUtf8NameFactory.TypeName(type, interopReferences.RuntimeContext)}";
         MethodDefinition get_IIDMethod = interopDefinitions.InterfaceIIDs.GetMethod(get_IIDMethodName);
 
         // Return the pair of methods from the ABI type in 'WinRT.Interop.dll'

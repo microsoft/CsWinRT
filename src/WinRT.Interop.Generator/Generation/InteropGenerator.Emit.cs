@@ -39,12 +39,15 @@ internal partial class InteropGenerator
             args: args,
             discoveryState: discoveryState,
             windowsRuntimeModule: out ModuleDefinition windowsRuntimeModule,
-            windowsFoundationModule: out ModuleDefinition windowsFoundationModule);
+            windowsRuntimeSdkProjectionModule: out _);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Setup the well known items to use when emitting code
-        InteropReferences interopReferences = new(module.CorLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
+        InteropReferences interopReferences = new(
+            runtimeContext: module.RuntimeContext!,
+            corLibTypeFactory: module.CorLibTypeFactory,
+            windowsRuntimeModule: windowsRuntimeModule);
         InteropDefinitions interopDefinitions = new(
             interopReferences: interopReferences,
             windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -199,13 +202,13 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
-    /// <param name="windowsFoundationModule">The <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.</param>
+    /// <param name="windowsRuntimeSdkProjectionModule">The <see cref="ModuleDefinition"/> for the Windows SDK projection assembly.</param>
     /// <returns>The interop module to populate and emit.</returns>
     private static ModuleDefinition DefineInteropModule(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
         out ModuleDefinition windowsRuntimeModule,
-        out ModuleDefinition windowsFoundationModule)
+        out ModuleDefinition windowsRuntimeSdkProjectionModule)
     {
         // Get the loaded module for the application .dll (this should always be available here)
         if (!discoveryState.Modules.TryGetValue(args.OutputAssemblyPath, out ModuleDefinition? assemblyModule))
@@ -221,7 +224,7 @@ internal partial class InteropGenerator
         }
 
         // Get the loaded module for the Windows SDK projection .dll (same as above)
-        if ((windowsFoundationModule = discoveryState.Modules.FirstOrDefault(
+        if ((windowsRuntimeSdkProjectionModule = discoveryState.Modules.FirstOrDefault(
             predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
         {
             throw WellKnownInteropExceptions.WindowsSdkProjectionModuleNotFound();

@@ -194,8 +194,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // We're declaring an 'internal abstract class' type
             callbackType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ComWrappersCallback"),
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext, "ComWrappersCallback"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -333,8 +333,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: interopDefinitions.IReferenceArrayVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -401,8 +401,8 @@ internal partial class InteropTypeDefinitionBuilder
             interfaceEntriesType = interopDefinitions.SzArrayInterfaceEntries(entriesList.Count);
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "InterfaceEntriesImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext, "InterfaceEntriesImpl"),
                 entriesFieldType: interfaceEntriesType,
                 interopReferences: interopReferences,
                 module: module,
@@ -433,8 +433,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ComWrappersMarshallerAttribute"),
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -554,10 +554,10 @@ internal partial class InteropTypeDefinitionBuilder
             // that arrays with element types that are not Windows Runtime types will still have entries in the marshalling
             // type map (as they're treated the same as normal user-defined types), so this allows us to distinguish them.
             InteropTypeDefinitionBuilder.Proxy(
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType),
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext),
                 mappedMetadata: "Windows.Foundation.FoundationContract",
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(arrayType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(arrayType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 metadataTypeName: null,
                 mappedType: arrayType,
                 referenceType: null,
@@ -583,7 +583,7 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections)
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(arrayType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(arrayType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 metadataTypeName: null,
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: arrayType,
