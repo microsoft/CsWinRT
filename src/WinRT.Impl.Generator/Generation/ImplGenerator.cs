@@ -29,6 +29,11 @@ namespace WindowsRuntime.ImplGenerator.Generation;
 internal static partial class ImplGenerator
 {
     /// <summary>
+    /// An IID used to produce MVID values for new implementation assemblies.
+    /// </summary>
+    private static readonly Guid ImplGeneratorMvidSalt = new("5A79C752-B558-4FFC-9465-25029F160117");
+
+    /// <summary>
     /// The set of well known attribute types to copy over to the generated assemblies.
     /// </summary>
     private static readonly FrozenSet<string> WellKnownAttributeTypes =
@@ -245,8 +250,13 @@ internal static partial class ImplGenerator
     {
         try
         {
-            // Create the impl module and its containing assembly
-            ModuleDefinition implModule = new(outputModule.Name, runtimeContext.RuntimeCorLib!.ToAssemblyReference());
+            // Create the impl module, with a deterministic MVID
+            ModuleDefinition implModule = new(outputModule.Name, runtimeContext.RuntimeCorLib!.ToAssemblyReference())
+            {
+                Mvid = MvidGenerator.CreateMvid(outputModule.Mvid, ImplGeneratorMvidSalt)
+            };
+
+            // Create its containing assembly as well and add the module to it
             AssemblyDefinition implAssembly = new(outputModule.Assembly?.Name, outputModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
             {
                 Modules = { implModule }
