@@ -248,9 +248,6 @@ internal partial class InteropGenerator
             // Create the module for the 'WinRT.Interop.dll' assembly, where we'll add all generated types to
             ModuleDefinition winRTInteropModule = new(InteropNames.WindowsRuntimeInteropDllNameUtf8, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib())
             {
-                // Create and set a metadata resolver from the assembly resolver that we created during the discovery phase (used for auto-import)
-                MetadataResolver = new DefaultMetadataResolver(discoveryState.AssemblyResolver),
-
                 // We need a deterministic MVID for the generated module, so we create one based on the input assemblies.
                 // This logic will produce a hash from each .NET assembly that was loaded and analyzed during discovery.
                 Mvid = MvidGenerator.CreateMvid(discoveryState.Modules.Keys)
@@ -258,10 +255,17 @@ internal partial class InteropGenerator
 
             // Also create a containing assembly for it (needed for the emit phase). We don't actually need the assembly
             // ourselves, but creating it and adding the module will update the declaring assembly for types added to it.
-            _ = new AssemblyDefinition(InteropNames.WindowsRuntimeInteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
+            AssemblyDefinition winRTInteropAssembly = new(InteropNames.WindowsRuntimeInteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
             {
                 Modules = { winRTInteropModule }
             };
+
+            // Create a runtime context with the assembly resolver from the discovery phase, and add
+            // the assembly to it. This enables type resolution across assemblies (used for auto-import).
+            RuntimeContext runtimeContext = new(assemblyModule.OriginalTargetRuntime, discoveryState.AssemblyResolver);
+
+            // Adding the assembly to the context will bind them together (can't set a context externally)
+            runtimeContext.AddAssembly(winRTInteropAssembly);
 
             return winRTInteropModule;
         }
