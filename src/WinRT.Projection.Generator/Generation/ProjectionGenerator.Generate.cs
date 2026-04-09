@@ -10,7 +10,6 @@ using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionGenerator.Errors;
-using WindowsRuntime.ProjectionGenerator.Resolvers;
 
 #pragma warning disable IDE0270
 
@@ -169,7 +168,7 @@ internal partial class ProjectionGenerator
 
                     continue;
                 }
-                else if (moduleDefinition.Assembly!.Name == "Microsoft.WinUI")
+                else if (moduleDefinition.Assembly.Name == "Microsoft.WinUI")
                 {
                     // In addition to projecting the individual types, make sure
                     // the additions get included by including the namespace.
