@@ -67,6 +67,24 @@ internal static partial class ModuleDefinitionExtensions
     /// <returns>Whether the module references the Windows Runtime assembly.</returns>
     public static bool ReferencesAssembly(this ModuleDefinition module, Utf8String assemblyName)
     {
+        return ReferencesAssembly(module, assemblyName, []);
+    }
+
+    /// <summary>
+    /// Checks whether a <see cref="ModuleDefinition"/> references the Windows Runtime assembly.
+    /// </summary>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="assemblyName">The name of the assembly to check for references to.</param>
+    /// <param name="visitedModules">The set of already visited modules, to avoid circular references.</param>
+    /// <returns>Whether the module references the Windows Runtime assembly.</returns>
+    private static bool ReferencesAssembly(ModuleDefinition module, Utf8String assemblyName, HashSet<ModuleDefinition> visitedModules)
+    {
+        // If we've already visited this module, skip it to avoid infinite recursion from circular references
+        if (!visitedModules.Add(module))
+        {
+            return false;
+        }
+
         // Check all direct assembly references and check if they match
         foreach (AssemblyReference reference in module.AssemblyReferences)
         {
@@ -84,7 +102,7 @@ internal static partial class ModuleDefinitionExtensions
             // Also traverse the entire transitive dependency graph and check those assemblies
             foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
             {
-                if (transitiveModule.ReferencesAssembly(assemblyName))
+                if (ReferencesAssembly(transitiveModule, assemblyName, visitedModules))
                 {
                     return true;
                 }
@@ -101,6 +119,23 @@ internal static partial class ModuleDefinitionExtensions
     /// <returns>All (transitive) assembly references for <paramref name="module"/>.</returns>
     public static IEnumerable<AssemblyReference> EnumerateAssemblyReferences(this ModuleDefinition module)
     {
+        return EnumerateAssemblyReferences(module, []);
+    }
+
+    /// <summary>
+    /// Enumerates all (transitive) assembly references for a given <see cref="ModuleDefinition"/>.
+    /// </summary>
+    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="visitedModules">The set of already visited modules, to avoid circular references.</param>
+    /// <returns>All (transitive) assembly references for <paramref name="module"/>.</returns>
+    private static IEnumerable<AssemblyReference> EnumerateAssemblyReferences(ModuleDefinition module, HashSet<ModuleDefinition> visitedModules)
+    {
+        // If we've already visited this module, skip it to avoid infinite recursion from circular references
+        if (!visitedModules.Add(module))
+        {
+            yield break;
+        }
+
         foreach (AssemblyReference reference in module.AssemblyReferences)
         {
             yield return reference;
@@ -114,7 +149,7 @@ internal static partial class ModuleDefinitionExtensions
             // Also enumerate all transitive references as well
             foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
             {
-                foreach (AssemblyReference transitiveReference in transitiveModule.EnumerateAssemblyReferences())
+                foreach (AssemblyReference transitiveReference in EnumerateAssemblyReferences(transitiveModule, visitedModules))
                 {
                     yield return transitiveReference;
                 }
