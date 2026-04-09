@@ -117,7 +117,7 @@ internal sealed class InteropReferences
         name: "System.Runtime.InteropServices"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemRuntimeInteropServices).Import(_corLibTypeFactory.CorLibScope);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemRuntimeInteropServices);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.ObjectModel.dll</c>.
@@ -127,7 +127,7 @@ internal sealed class InteropReferences
         name: "System.ObjectModel"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel).Import(_corLibTypeFactory.CorLibScope);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Memory.dll</c>.
@@ -137,7 +137,7 @@ internal sealed class InteropReferences
         name: "System.Memory"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemMemory).Import(_corLibTypeFactory.CorLibScope);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemMemory);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Numerics.Vectors.dll</c>.
@@ -147,7 +147,7 @@ internal sealed class InteropReferences
         name: "System.Numerics.Vectors"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemNumericsVectors).Import(_corLibTypeFactory.CorLibScope);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemNumericsVectors);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Threading.dll</c>.
@@ -157,7 +157,7 @@ internal sealed class InteropReferences
         name: "System.Threading"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemThreading).Import(_corLibTypeFactory.CorLibScope);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemThreading);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Sdk.Projection.dll</c>.
@@ -167,7 +167,7 @@ internal sealed class InteropReferences
         name: InteropNames.WindowsRuntimeSdkProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: default).Import(_corLibTypeFactory.CorLibScope);
+        publicKeyOrToken: default);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Sdk.Xaml.Projection.dll</c>.
@@ -177,7 +177,7 @@ internal sealed class InteropReferences
         name: InteropNames.WindowsRuntimeSdkXamlProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: default).Import(_corLibTypeFactory.CorLibScope);
+        publicKeyOrToken: default);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Projection.dll</c>.
@@ -187,7 +187,7 @@ internal sealed class InteropReferences
         name: InteropNames.WindowsRuntimeProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: default).Import(_corLibTypeFactory.CorLibScope);
+        publicKeyOrToken: default);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Attribute"/>.

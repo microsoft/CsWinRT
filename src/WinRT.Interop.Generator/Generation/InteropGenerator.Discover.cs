@@ -496,12 +496,11 @@ internal partial class InteropGenerator
             throw WellKnownInteropExceptions.ModuleMissingRuntimeContext(module);
         }
 
-        // Import both assembly references, so the resolution scope for them is set correctly during discovery.
-        // This is required so that all kinds of signature comparisons during discovery actually work correctly.
+        // We don't need to import the 'WinRT.Runtime.dll' module here, as we're reusing the same runtime context everywhere
         return new(
             runtimeContext: module.RuntimeContext,
             corLibTypeFactory: module.CorLibTypeFactory,
-            windowsRuntimeModule: windowsRuntimeAssembly.Import(module));
+            windowsRuntimeModule: windowsRuntimeAssembly);
     }
 
     /// <summary>
