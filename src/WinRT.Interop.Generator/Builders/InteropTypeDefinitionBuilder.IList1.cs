@@ -41,8 +41,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // We're declaring an 'internal abstract class' type
             interfaceType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "Interface"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -96,8 +96,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Otherwise, we must construct a new specialized vtable type
             vftblType = WellKnownTypeDefinitionFactory.IList1Vftbl(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "Vftbl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Vftbl"),
                 elementType: elementType.GetAbiType(interopReferences),
                 interopReferences: interopReferences);
 
@@ -125,8 +125,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             vectorMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "IVectorMethods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "IVectorMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -220,8 +220,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             listMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -572,7 +572,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(listType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(listType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: listType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -632,8 +632,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -1017,8 +1017,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -1060,7 +1060,7 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections)
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(listType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(listType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 metadataTypeName: null,
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: listType,

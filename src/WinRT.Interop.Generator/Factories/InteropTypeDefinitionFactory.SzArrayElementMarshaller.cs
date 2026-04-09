@@ -239,8 +239,8 @@ internal partial class InteropTypeDefinitionFactory
 
             // We're declaring an 'internal abstract class' type
             TypeDefinition elementMarshallerType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "ElementMarshaller"),
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext, "ElementMarshaller"),
                 attributes: attributes,
                 baseType: baseType)
             {

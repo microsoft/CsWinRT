@@ -43,7 +43,7 @@ internal static class WindowsRuntimeTypeAnalyzer
             // if for instance a type implements the 'IDictionary<string, string>' interface, we
             // want to make sure to find that type signature, and not just 'IEnumerable'.
             if (interfaceType is null ||
-                interfaceType.IsAssignableFrom(interfaceSignature, SignatureComparer.IgnoreVersion))
+                interfaceType.IsAssignableFrom(interfaceSignature, interopReferences.RuntimeContext, SignatureComparer.IgnoreVersion))
             {
                 interfaceType = interfaceSignature;
             }

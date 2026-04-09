@@ -156,8 +156,8 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // Define the proxy type for the interface type. Because the metadata type name depends on the XAML configuration
         // that is used, we can't define this proxy type in advance even if the interface type itself is not generic.
         InteropTypeDefinitionBuilder.Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
-            name: InteropUtf8NameFactory.TypeName(trimTarget),
+            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
             mappedMetadata: metadata,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
@@ -208,8 +208,8 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
         // Define the proxy type for the 'ICommand' interface type (it needs a dynamic one, same as the other interface types above)
         InteropTypeDefinitionBuilder.Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
-            name: InteropUtf8NameFactory.TypeName(trimTarget),
+            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
             mappedMetadata: metadata,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
@@ -265,8 +265,8 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
         // Define the proxy type for the 'INotifyCollectionChanged' interface type
         InteropTypeDefinitionBuilder.Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
-            name: InteropUtf8NameFactory.TypeName(trimTarget),
+            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
             mappedMetadata: metadata,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
@@ -322,8 +322,8 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
         // Define the proxy type for the 'INotifyPropertyChanged' interface type
         InteropTypeDefinitionBuilder.Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
-            name: InteropUtf8NameFactory.TypeName(trimTarget),
+            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
             mappedMetadata: metadata,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
@@ -381,10 +381,10 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // metadata type name is not fixed. We define a runtime class name so that 'TypeName' marshalling will be
         // able to do lookups correctly (this attribute will be used, since the input type is a normal class type).
         InteropTypeDefinitionBuilder.Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
-            name: InteropUtf8NameFactory.TypeName(trimTarget),
+            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
             mappedMetadata: metadata,
-            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
             metadataTypeName: null,
             mappedType: trimTarget,
             referenceType: null,
@@ -397,7 +397,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // the proxy type map used will only be with the marshalling type map group, and the metadata type map group is
         // not needed here. Same goes for the external type map: we just have a normal entry for marshalling there.
         InteropTypeDefinitionBuilder.TypeMapAttributes(
-            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
             metadataTypeName: null,
             externalTypeMapTargetType: proxyType.ToTypeSignature(),
             externalTypeMapTrimTargetType: trimTarget,
@@ -433,10 +433,10 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // Define the proxy type for the delegate type. Same as above, we need to define this proxy type here, as the
         // metadata type name is not fixed. This type can be instantiated and boxed, so we need both possible names.
         InteropTypeDefinitionBuilder.Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
-            name: InteropUtf8NameFactory.TypeName(trimTarget),
+            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
             mappedMetadata: metadata,
-            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
             mappedType: trimTarget,
             referenceType: null,
@@ -447,7 +447,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
         // Same as above for class types, the only difference here is in the proxy type definition for delegates
         InteropTypeDefinitionBuilder.TypeMapAttributes(
-            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
             externalTypeMapTargetType: proxyType.ToTypeSignature(),
             externalTypeMapTrimTargetType: trimTarget,
@@ -483,10 +483,10 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // Define the proxy type for the value type. In this case we still need both the runtime class name and the
         // metadata type name, as above, but we also need to reference the boxed type instantiation for this type.
         InteropTypeDefinitionBuilder.Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget),
-            name: InteropUtf8NameFactory.TypeName(trimTarget),
+            ns: InteropUtf8NameFactory.TypeNamespace(trimTarget, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(trimTarget, interopReferences.RuntimeContext),
             mappedMetadata: metadata,
-            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
             mappedType: trimTarget,
             referenceType: interopReferences.Nullable1.MakeGenericValueType([trimTarget]),
@@ -497,7 +497,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 
         // Same as above for delegate types, with both a marshalling and a metadata type map entry
         InteropTypeDefinitionBuilder.TypeMapAttributes(
-            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, useWindowsUIXamlProjections),
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(trimTarget, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
             externalTypeMapTargetType: proxyType.ToTypeSignature(),
             externalTypeMapTrimTargetType: trimTarget,
@@ -532,8 +532,8 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // implementation (as it returns an 'IBindableVectorView' instance). This type is only used as a CCW. So we need
         // a proxy type for it, with the correct runtime class name, and an entry just in the marshalling proxy type map.
         InteropTypeDefinitionBuilder.Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(adapterType),
-            name: InteropUtf8NameFactory.TypeName(adapterType),
+            ns: InteropUtf8NameFactory.TypeNamespace(adapterType, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(adapterType, interopReferences.RuntimeContext),
             mappedMetadata: null,
             runtimeClassName: runtimeClassName,
             metadataTypeName: null,
@@ -564,7 +564,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             name: "IReadOnlyListComWrappersMarshallerAttribute"u8);
 
         // Verify that this marshaller attribute does exist correctly and can be resolved
-        if (comWrappersMarshallerTypeReference.Resolve(module) is not TypeDefinition comWrappersMarshallerType)
+        if (!comWrappersMarshallerTypeReference.TryResolve(module.RuntimeContext, out TypeDefinition? comWrappersMarshallerType))
         {
             throw WellKnownInteropExceptions.NonProjectedTypeComWrappersMarshallerAttributeTypeResolveError(comWrappersMarshallerTypeReference, "IBindableVectorView");
         }
@@ -616,11 +616,11 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     {
         // Retrieve the '[ComWrappersMarshaller]' type from 'WinRT.Runtime.dll', which always follows this naming convention
         TypeReference comWrappersMarshallerTypeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference(
-            ns: InteropUtf8NameFactory.TypeNamespace(type),
+            ns: InteropUtf8NameFactory.TypeNamespace(type, interopReferences.RuntimeContext),
             name: (Utf8String)$"{type.Name}ComWrappersMarshallerAttribute");
 
         // The '[ComWrappersMarshaller]' type should always exist for all custom-mapped types, throw if it doesn't
-        if (comWrappersMarshallerTypeReference.Resolve(module) is not TypeDefinition comWrappersMarshallerType)
+        if (!comWrappersMarshallerTypeReference.TryResolve(module.RuntimeContext, out TypeDefinition? comWrappersMarshallerType))
         {
             throw WellKnownInteropExceptions.CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(type);
         }
@@ -643,11 +643,11 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     {
         // Retrieve the "Methods" type from 'WinRT.Runtime.dll', which always follows this naming convention
         TypeReference methodsTypeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference(
-            ns: InteropUtf8NameFactory.TypeNamespace(type),
+            ns: InteropUtf8NameFactory.TypeNamespace(type, interopReferences.RuntimeContext),
             name: (Utf8String)$"{type.Name}Methods");
 
         // The "Methods" type should always exist for all custom-mapped types, throw if it doesn't
-        if (methodsTypeReference.Resolve(module) is not TypeDefinition methodsType)
+        if (!methodsTypeReference.TryResolve(module.RuntimeContext, out TypeDefinition? methodsType))
         {
             throw WellKnownInteropExceptions.CustomMappedTypeMethodsTypeResolveError(type);
         }

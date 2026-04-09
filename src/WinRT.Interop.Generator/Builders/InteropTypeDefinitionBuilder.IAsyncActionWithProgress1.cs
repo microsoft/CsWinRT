@@ -42,8 +42,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             actionMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(actionType),
-                name: InteropUtf8NameFactory.TypeName(actionType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(actionType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(actionType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -191,7 +191,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(actionType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(actionType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: actionType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -249,8 +249,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(actionType),
-                name: InteropUtf8NameFactory.TypeName(actionType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(actionType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(actionType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -472,8 +472,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(actionType),
-                name: InteropUtf8NameFactory.TypeName(actionType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(actionType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(actionType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: interopDefinitions.IAsyncActionWithProgressVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

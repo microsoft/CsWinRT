@@ -69,7 +69,7 @@ internal partial class InteropMethodRewriter
                 // However, we must use the correct indirect store instruction for primitive types.
                 if (retValType.IsBlittable(interopReferences))
                 {
-                    body.Instructions.ReferenceReplaceRange(marker, [CilInstruction.CreateStind(retValType)]);
+                    body.Instructions.ReferenceReplaceRange(marker, [CilInstruction.CreateStind(retValType, interopReferences.RuntimeContext)]);
                 }
                 else if (retValType.IsConstructedKeyValuePairType(interopReferences))
                 {

@@ -40,8 +40,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             factoryType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
-                name: InteropUtf8NameFactory.TypeName(vectorType, "EventSourceFactory"),
+                ns: InteropUtf8NameFactory.TypeNamespace(vectorType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(vectorType, interopReferences.RuntimeContext, "EventSourceFactory"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -102,8 +102,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal sealed class' type
             callbackType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
-                name: InteropUtf8NameFactory.TypeName(vectorType, "EventSourceCallback"),
+                ns: InteropUtf8NameFactory.TypeNamespace(vectorType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(vectorType, interopReferences.RuntimeContext, "EventSourceCallback"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -193,8 +193,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             methodsType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
-                name: InteropUtf8NameFactory.TypeName(vectorType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(vectorType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(vectorType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -313,7 +313,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(vectorType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(vectorType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: vectorType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -371,8 +371,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
-                name: InteropUtf8NameFactory.TypeName(vectorType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(vectorType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(vectorType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -502,8 +502,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(vectorType),
-                name: InteropUtf8NameFactory.TypeName(vectorType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(vectorType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(vectorType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: interopDefinitions.IObservableVectorVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

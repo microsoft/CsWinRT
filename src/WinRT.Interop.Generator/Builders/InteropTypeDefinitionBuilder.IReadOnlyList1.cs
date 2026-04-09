@@ -49,8 +49,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Otherwise, we must construct a new specialized vtable type
             vftblType = WellKnownTypeDefinitionFactory.IReadOnlyList1Vftbl(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Vftbl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, interopReferences.RuntimeContext, "Vftbl"),
                 elementType: elementType.GetAbiType(interopReferences),
                 interopReferences: interopReferences);
 
@@ -78,8 +78,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             vectorViewMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "IVectorViewMethods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, interopReferences.RuntimeContext, "IVectorViewMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -122,8 +122,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             readOnlyListMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -237,7 +237,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyListType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyListType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: readOnlyListType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -297,8 +297,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -428,8 +428,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyListType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyListType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyListType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -463,7 +463,7 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections)
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyListType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyListType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 metadataTypeName: null,
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: readOnlyListType,

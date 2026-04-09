@@ -280,8 +280,8 @@ internal partial class InteropTypeDefinitionFactory
 
             // We're declaring an 'internal static class' type
             TypeDefinition marshallerType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(arrayType),
-                name: InteropUtf8NameFactory.TypeName(arrayType, "Marshaller"),
+                ns: InteropUtf8NameFactory.TypeNamespace(arrayType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(arrayType, interopReferences.RuntimeContext, "Marshaller"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 

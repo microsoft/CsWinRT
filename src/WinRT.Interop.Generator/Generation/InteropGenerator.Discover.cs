@@ -242,11 +242,13 @@ internal partial class InteropGenerator
                 return;
             }
 
+            InteropReferences interopReferences = CreateDiscoveryInteropReferences(module);
+
             foreach (TypeDefinition type in module.GetAllTypes())
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                InteropTypeDiscovery.TryTrackTypeHierarchyType(type, args, discoveryState);
+                InteropTypeDiscovery.TryTrackTypeHierarchyType(type, args, discoveryState, interopReferences);
             }
         }
         catch (Exception e)
@@ -442,9 +444,19 @@ internal partial class InteropGenerator
         windowsSdkProjectionAssembly.PublicKeyOrToken = InteropValues.PublicKeyData;
         windowsSdkProjectionAssembly.HasPublicKey = true;
 
+        // Validate that the module has a runtime context, which is required
+        // for reference resolution (this should just always be the case).
+        if (module.RuntimeContext is null)
+        {
+            throw WellKnownInteropExceptions.ModuleMissingRuntimeContext(module);
+        }
+
         // Import both assembly references, so the resolution scope for them is set correctly during discovery.
         // This is required so that all kinds of signature comparisons during discovery actually work correctly.
-        return new(module.CorLibTypeFactory, windowsRuntimeAssembly.Import(module), windowsSdkProjectionAssembly.Import(module));
+        return new(
+            runtimeContext: module.RuntimeContext,
+            corLibTypeFactory: module.CorLibTypeFactory,
+            windowsRuntimeModule: windowsRuntimeAssembly.Import(module));
     }
 
     /// <summary>

@@ -45,7 +45,7 @@ internal partial class InteropTypeDiscovery
         }
 
         // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-        if (!typeSignature.IsFullyResolvable(out TypeDefinition? typeDefinition))
+        if (!typeSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? typeDefinition))
         {
             // Log a warning the first time we fail to resolve this generic instantiation in this module
             if (discoveryState.TrackFailedResolutionType(typeSignature, module))
@@ -113,7 +113,7 @@ internal partial class InteropTypeDiscovery
         }
 
         // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-        if (!typeSignature.IsFullyResolvable(out TypeDefinition? typeDefinition))
+        if (!typeSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? typeDefinition))
         {
             // Log a warning the first time we fail to resolve this SZ array in this module
             if (discoveryState.TrackFailedResolutionType(typeSignature, module))
@@ -194,7 +194,7 @@ internal partial class InteropTypeDiscovery
                     continue;
                 }
 
-                if (!interfaceSignature.IsFullyResolvable(out _))
+                if (!interfaceSignature.IsFullyResolvable(interopReferences.RuntimeContext, out _))
                 {
                     // Also log a warning the first time we fail to resolve one of the recursively discovered generic
                     // instantiations from this module. The enumeration also yields back interfaces that couldn't be

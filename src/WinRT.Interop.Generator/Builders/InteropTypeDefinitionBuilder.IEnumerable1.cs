@@ -42,8 +42,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // We're declaring an 'internal abstract class' type
             interfaceType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "Interface"),
+                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, interopReferences.RuntimeContext, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -91,8 +91,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             iterableMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "IIterableMethods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, interopReferences.RuntimeContext, "IIterableMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -225,8 +225,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             enumerableMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -301,7 +301,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(enumerableType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(enumerableType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: enumerableType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -359,8 +359,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -444,8 +444,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType),
-                name: InteropUtf8NameFactory.TypeName(enumerableType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(enumerableType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(enumerableType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: interopDefinitions.IEnumerable1Vftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

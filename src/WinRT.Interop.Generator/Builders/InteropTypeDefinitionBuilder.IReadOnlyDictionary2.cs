@@ -66,8 +66,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Otherwise, we must construct a new specialized vtable type
             TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.IReadOnlyDictionary2Vftbl(
-                ns: InteropUtf8NameFactory.TypeNamespace(sharedReadOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, "Vftbl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(sharedReadOnlyDictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, interopReferences.RuntimeContext, "Vftbl"),
                 keyType: keyType,
                 valueType: interopReferences.Void,
                 interopReferences: interopReferences);
@@ -104,8 +104,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             mapViewMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "IMapViewMethods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, interopReferences.RuntimeContext, "IMapViewMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -161,8 +161,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             readOnlyDictionaryMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -334,7 +334,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyDictionaryType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyDictionaryType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: readOnlyDictionaryType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -396,8 +396,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -598,8 +598,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
