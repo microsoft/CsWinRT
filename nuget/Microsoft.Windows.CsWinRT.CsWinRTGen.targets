@@ -47,7 +47,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Derived properties for 'cswinrtinteropgen' tooling -->
     <_CsWinRTGeneratorInteropAssemblyName>WinRT.Interop</_CsWinRTGeneratorInteropAssemblyName>
     <_CsWinRTGeneratorInteropAssemblyFileName>$(_CsWinRTGeneratorInteropAssemblyName).dll</_CsWinRTGeneratorInteropAssemblyFileName>
-    <_CsWinRTGeneratorInteropAssemblyPath>$(CsWinRTGeneratorInteropAssemblyDirectory)$(_CsWinRTGeneratorInteropAssemblyFileName)</_CsWinRTGeneratorInteropAssemblyPath>	  
+    <_CsWinRTGeneratorInteropAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CsWinRTGeneratorInteropAssemblyDirectory)', '$(_CsWinRTGeneratorInteropAssemblyFileName)'))</_CsWinRTGeneratorInteropAssemblyPath>
 
     <!--
       Set the path of the file with the hash of all input properties for 'cswinrtinteropgen' and 'cswinrtprojectiongen'.
@@ -66,22 +66,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!--
       Default property values for `cswinrtprojectiongen`.
     -->      
-    <_CsWinRTGeneratorMergedProjectionAssemblyPath>$(IntermediateOutputPath)WinRT.Projection.dll</_CsWinRTGeneratorMergedProjectionAssemblyPath>
-    <_CsWinRTGeneratorMergedProjectionOutputAssemblyPath>WinRT.Projection.dll</_CsWinRTGeneratorMergedProjectionOutputAssemblyPath>
+    <_CsWinRTGeneratorMergedProjectionAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'WinRT.Projection.dll'))</_CsWinRTGeneratorMergedProjectionAssemblyPath>
 
     <!--
       Default property values for the Windows SDK projection (`WinRT.Sdk.Projection.dll`).
       This is either a pre-built impl assembly from the package or generated at build time.
     -->
-    <_CsWinRTSdkProjectionAssemblyPath>$(IntermediateOutputPath)WinRT.Sdk.Projection.dll</_CsWinRTSdkProjectionAssemblyPath>
-    <_CsWinRTSdkProjectionOutputAssemblyPath>WinRT.Sdk.Projection.dll</_CsWinRTSdkProjectionOutputAssemblyPath>
-
-    <!--
-      Default property values for the Windows.UI.Xaml projection (`WinRT.Sdk.Xaml.Projection.dll`).
-      Only used when CsWinRTUseWindowsUIXamlProjections is true.
-    -->
-    <_CsWinRTSdkXamlAssemblyPath Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">$(IntermediateOutputPath)WinRT.Sdk.Xaml.Projection.dll</_CsWinRTSdkXamlAssemblyPath>
-    <_CsWinRTSdkXamlOutputAssemblyPath Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">WinRT.Sdk.Xaml.Projection.dll</_CsWinRTSdkXamlOutputAssemblyPath>
+    <_CsWinRTSdkProjectionAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'WinRT.Sdk.Projection.dll'))</_CsWinRTSdkProjectionAssemblyPath>
 
     <DefineConstants Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">$(DefineConstants);CSWINRT_REFERENCE_PROJECTION</DefineConstants>    
   </PropertyGroup>
@@ -107,7 +98,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTToolsDirectory>$(CsWinRTInteropGenEffectiveToolsDirectory)</CsWinRTToolsDirectory>
 
       <!-- Temporarily setting this due to .NET SDK targets override it to the wrong value. -->
-      <_CsWinRTGeneratorInteropAssemblyPath>$(CsWinRTGeneratorInteropAssemblyDirectory)$(_CsWinRTGeneratorInteropAssemblyFileName)</_CsWinRTGeneratorInteropAssemblyPath>
+      <_CsWinRTGeneratorInteropAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CsWinRTGeneratorInteropAssemblyDirectory)', '$(_CsWinRTGeneratorInteropAssemblyFileName)'))</_CsWinRTGeneratorInteropAssemblyPath>
+
+      <!--
+        Default property values for the Windows.UI.Xaml projection (`WinRT.Sdk.Xaml.Projection.dll`).
+        Only used when CsWinRTUseWindowsUIXamlProjections is true.
+        CsWinRTUseWindowsUIXamlProjections is set as part of a .NET SDK targets file which is why we set the value separately here from our other defaults.
+      -->
+      <_CsWinRTSdkXamlAssemblyPath Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'WinRT.Sdk.Xaml.Projection.dll'))</_CsWinRTSdkXamlAssemblyPath>
     </PropertyGroup>
   </Target>    
     
@@ -207,17 +205,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <!-- 'ReferencePath' handles adding the interop .dll to '.deps.json', which is needed for '[UnsafeAccessor]' to work -->
       <ReferencePath Include="@(CsWinRTGeneratorInteropAssemblyPath)" />
 
-      <ReferenceCopyLocalPaths Include="@(CsWinRTGeneratorInteropAssemblyPath)" />     
-
-      <!-- '_SourceItemsToCopyToOutputDirectory' handles copying the interop .dll to the build output folder -->
-      <_SourceItemsToCopyToOutputDirectory
-        Include="@(CsWinRTGeneratorInteropAssemblyPath)"
-        TargetPath="$(_CsWinRTGeneratorInteropAssemblyFileName)" />
-
-      <!-- '_SourceItemsToCopyToPublishDirectory' handles copying the interop .dll to the publish output folder -->
-      <!-- <_SourceItemsToCopyToPublishDirectory
-        Include="@(CsWinRTGeneratorInteropAssemblyPath)"
-        TargetPath="$(_CsWinRTGeneratorInteropAssemblyFileName)" /> -->
+      <!-- 'ReferenceCopyLocalPaths' handles copying the interop .dll to both the build output folder and the publish folder -->
+      <ReferenceCopyLocalPaths Include="@(CsWinRTGeneratorInteropAssemblyPath)" />
     </ItemGroup>
 
     <!-- Append to 'FileWrites' so the interop .dll will be removed on clean -->
@@ -365,11 +354,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <ReferencePath Include="@(CsWinRTGeneratorMergedProjectionPath)" />
       <ReferenceCopyLocalPaths Include="@(CsWinRTGeneratorMergedProjectionPath)" />
 
-      <!-- '_SourceItemsToCopyToOutputDirectory' handles copying the interop .dll to the build output folder -->
-      <_SourceItemsToCopyToOutputDirectory
-        Include="@(CsWinRTGeneratorMergedProjectionPath)"
-        TargetPath="$(_CsWinRTGeneratorMergedProjectionOutputAssemblyPath)" />
-
       <!-- Append to 'FileWrites' so the forwarder .dll will be removed on clean -->
       <FileWrites Include="@(CsWinRTGeneratorMergedProjectionPath)"/>
     </ItemGroup>
@@ -448,12 +432,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Add the SDK projection .dll to the required output groups -->
     <ItemGroup>
       <ReferencePath Include="@(CsWinRTSdkProjectionPath)" />
-        
       <ReferenceCopyLocalPaths Include="@(CsWinRTSdkProjectionPath)" />
-        
-      <_SourceItemsToCopyToOutputDirectory
-        Include="@(CsWinRTSdkProjectionPath)"
-        TargetPath="$(_CsWinRTSdkProjectionOutputAssemblyPath)" />
     </ItemGroup>
 
     <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
@@ -538,12 +517,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Add the SDK XAML .dll to the required output groups -->
     <ItemGroup>
       <ReferencePath Include="@(CsWinRTSdkXamlPath)" />
-        
       <ReferenceCopyLocalPaths Include="@(CsWinRTSdkXamlPath)" />
-        
-      <_SourceItemsToCopyToOutputDirectory
-        Include="@(CsWinRTSdkXamlPath)"
-        TargetPath="$(_CsWinRTSdkXamlOutputAssemblyPath)" />
     </ItemGroup>
 
     <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
