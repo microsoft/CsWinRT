@@ -13,6 +13,7 @@ using System.Text.Json;
 using System.Threading;
 using WindowsRuntime.ImplGenerator.Errors;
 using WindowsRuntime.ImplGenerator.Helpers;
+using WindowsRuntime.InteropGenerator;
 
 #pragma warning disable IDE0008
 

@@ -19,6 +19,7 @@ using ConsoleAppFramework;
 using WindowsRuntime.ImplGenerator.Errors;
 using WindowsRuntime.ImplGenerator.References;
 using WindowsRuntime.ImplGenerator.Resolvers;
+using WindowsRuntime.InteropGenerator;
 
 namespace WindowsRuntime.ImplGenerator.Generation;
 
