@@ -204,7 +204,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <!-- 'ReferencePath' handles adding the interop .dll to '.deps.json', which is needed for '[UnsafeAccessor]' to work -->
       <ReferencePath Include="@(CsWinRTGeneratorInteropAssemblyPath)" />
 
-      <!-- 'ReferenceCopyLocalPaths' handles copying the interop .dll to both the build output folder -->
+      <!-- 'ReferenceCopyLocalPaths' handles copying the interop .dll to both the build output folder and the publish folder -->
       <ReferenceCopyLocalPaths Include="@(CsWinRTGeneratorInteropAssemblyPath)" />
     </ItemGroup>
 
