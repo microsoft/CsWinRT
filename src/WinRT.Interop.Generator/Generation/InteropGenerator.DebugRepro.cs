@@ -213,7 +213,7 @@ internal partial class InteropGenerator
         }
 
         // Path for the ZIP archive
-        string zipPath = Path.Combine(args.DebugReproDirectory, "debug-repro.zip");
+        string zipPath = Path.Combine(args.DebugReproDirectory, "interop-debug-repro.zip");
 
         // Create a temporary directory to stage files for the ZIP
         string tempFolderName = $"cswinrtinteropgen-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";

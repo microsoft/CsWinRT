@@ -157,7 +157,7 @@ internal static partial class ImplGenerator
         }
 
         // Path for the ZIP archive
-        string zipPath = Path.Combine(args.DebugReproDirectory, "debug-repro.zip");
+        string zipPath = Path.Combine(args.DebugReproDirectory, "impl-debug-repro.zip");
 
         // Create a temporary directory to stage files for the ZIP
         string tempFolderName = $"cswinrtimplgen-debug-repro-{Guid.NewGuid().ToString().ToUpperInvariant()}";
