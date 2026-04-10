@@ -482,8 +482,9 @@ namespace WinRT
                 // pointer can be retained and used.  This is determined by the
                 // IsAggregated and PreventReleaseOnDispose properties on IObjectReference.
                 objRef.IsAggregated = true;
-                // In WinUI scenario don't release inner
-                objRef.PreventReleaseOnDispose = referenceTracker != default;
+                // In aggregation scenarios, inner is passed to .NET and it manages
+                // its release when the RCW goes away, so don't release it.
+                objRef.PreventReleaseOnDispose = true;
             }
             else
             {

@@ -41,6 +41,18 @@ namespace winrt::TestComponentCSharp::implementation
     void WarningClass::WarningOverridableProperty(int32_t value)
     {
     }
+    int32_t WarningClass::CallOverridablePropertyGetter()
+    {
+        return overridable().WarningOverridableProperty();
+    }
+    void WarningClass::CallOverridablePropertySetter(int32_t value)
+    {
+        overridable().WarningOverridableProperty(value);
+    }
+    void WarningClass::CallOverridableMethod()
+    {
+        overridable().WarningOverridableMethod();
+    }
     //winrt::event_token WarningClass::WarningOverridableEvent(Windows::Foundation::EventHandler<int32_t> const& handler)
     //{
     //    return {};
