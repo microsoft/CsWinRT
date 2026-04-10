@@ -13,7 +13,7 @@ resources:
     type: github
     name: microsoft/TestWinRT
     endpoint: microsoft
-    ref: 'aa4edcd52542cfe036473d008d3f66c8a220d59d'
+    ref: '1fb99297094edd131935cba6e8bc0704852162bb'
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:

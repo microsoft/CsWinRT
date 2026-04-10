@@ -99,6 +99,14 @@ set nuget_dir=%this_dir%.nuget
 if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
+rem Ensure nuget.exe is available.
+if not exist %nuget_dir% md %nuget_dir%
+if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile %nuget_dir%\nuget.exe"
+%nuget_dir%\nuget update -self
+
+rem Get TestWinRT repo
+call %this_dir%get_testwinrt.cmd
+
 call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:RestorePackagesConfig=true /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform% %this_dir%cswinrt.slnx 
 
 :build
