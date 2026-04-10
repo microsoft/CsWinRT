@@ -252,9 +252,6 @@ internal static partial class ImplGenerator
                 Modules = { implModule }
             };
 
-            // Add this assembly to the runtime context, so they're bound together for resolution
-            runtimeContext.AddAssembly(implAssembly);
-
             return implModule;
         }
         catch (Exception e) when (!e.IsWellKnown)
