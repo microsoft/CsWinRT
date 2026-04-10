@@ -312,7 +312,7 @@ public abstract unsafe class WindowsRuntimeObject :
         DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
         UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    protected internal abstract bool HasUnwrappableNativeObjectReference { get; }
+    protected internal virtual bool HasUnwrappableNativeObjectReference => UnreachableException.Throw();
 
     /// <summary>
     /// Gets the lazy-loaded, cached object reference for <c>IInspectable</c> for the current object.
@@ -368,7 +368,10 @@ public abstract unsafe class WindowsRuntimeObject :
         DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
         UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    protected abstract bool IsOverridableInterface(in Guid iid);
+    protected virtual bool IsOverridableInterface(in Guid iid)
+    {
+        return UnreachableException.Throw();
+    }
 
     /// <summary>
     /// Retrieves a <see cref="WindowsRuntimeObjectReference"/> object for the specified interface.

@@ -137,11 +137,11 @@ Apply surgical edits to `.github/skills/interop-generator/SKILL.md` to fix any d
 
 ### Step 13: update related documentation if applicable
 
-If the changes to the interop generator are significant enough to affect the design documents, also check and update the documentation files in `docs/cswinrtgen/`:
+If the changes to the interop generator are significant enough to affect the design documents, also check and update the reference documents in `.github/skills/interop-generator/references/`:
 
-- `docs/cswinrtgen/marshalling-generic-interfaces.md` — Generic interface marshalling design
-- `docs/cswinrtgen/marshalling-arrays.md` — Array marshalling design
-- `docs/cswinrtgen/name-mangling-scheme.md` — Name mangling scheme for generated interop types
+- `references/marshalling-generic-interfaces.md` — Generic interface marshalling design
+- `references/marshalling-arrays.md` — Array marshalling design
+- `references/name-mangling-scheme.md` — Name mangling scheme for generated interop types
 
 These docs describe the *design* of the generated code patterns. If the actual generated code has diverged from what these docs describe (e.g., new types generated, changed API patterns, renamed infrastructure types), update the docs to match.
 
@@ -151,7 +151,7 @@ If significant changes to the interop generator were discovered (e.g., new pipel
 
 - The **per-area verification steps** (steps 2–11) must stay in sync with the actual project structure. If a new area is added (e.g., a new subdirectory with its own logic), add a verification step for it.
 - The **verification criteria** for each step should reflect what is actually worth checking. If a section gains new aspects worth validating (e.g., new builder partials, new resolver types), add those to the checklist.
-- The **documentation step** (step 13) should list all docs in `docs/cswinrtgen/` that may need updating.
+- The **documentation step** (step 13) should list all reference documents in `.github/skills/interop-generator/references/` that may need updating.
 
 This ensures the skill remains useful and accurate for future runs.
 

@@ -70,6 +70,7 @@
     <!-- Set remote for source link. -->
     <AdoMirrorBuild Condition="'$(AdoMirrorBuild)' == ''">false</AdoMirrorBuild>
     <GitRepositoryRemoteName Condition="$(AdoMirrorBuild)">github</GitRepositoryRemoteName>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <!-- Tells NativeAOT to not ignore issues where assemblies / types fail to be resolved. -->
     <IlcResilient>false</IlcResilient>
   </PropertyGroup>

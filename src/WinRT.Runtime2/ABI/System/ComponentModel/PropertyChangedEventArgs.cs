@@ -97,7 +97,7 @@ file static unsafe class PropertyChangedEventArgsRuntimeClassFactory
     /// <summary>
     /// The singleton instance for the activation factory.
     /// </summary>
-    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeActivationFactory.GetActivationFactory(
+    private static readonly WindowsRuntimeObjectReference NativeObject = WindowsRuntimeObjectReference.GetActivationFactory(
         runtimeClassName: WellKnownXamlRuntimeClassNames.PropertyChangedEventArgs,
         iid: in WellKnownXamlInterfaceIIDs.IID_PropertyChangedEventArgsRuntimeClassFactory);
 

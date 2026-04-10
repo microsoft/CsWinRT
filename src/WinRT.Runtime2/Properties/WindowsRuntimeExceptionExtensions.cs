@@ -1481,4 +1481,19 @@ internal static class WindowsRuntimeExceptionExtensions
             return new(paramName, WindowsRuntimeExceptionMessages.ArgumentNullReference_IOCompletionCallbackCannotProcessNullAsyncInfo);
         }
     }
+
+    extension(UnreachableException)
+    {
+        /// <summary>
+        /// Throws an <see cref="UnreachableException"/>.
+        /// </summary>
+        /// <returns>This method never returns.</returns>
+        /// <exception cref="UnreachableException">Always thrown.</exception>
+        [DoesNotReturn]
+        [StackTraceHidden]
+        public static bool Throw()
+        {
+            throw new UnreachableException();
+        }
+    }
 }
