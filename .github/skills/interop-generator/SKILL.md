@@ -1,6 +1,6 @@
 ---
 name: interop-generator
-description: Work with, answer questions about, edit, or debug the CsWinRT interop generator (cswinrtinteropgen.exe). Use when the user needs to understand, modify, debug, or extend the interop sidecar generator that produces WinRT.Interop.dll.
+description: Use whenever the user mentions the interop generator (cswinrtinteropgen.exe, which produces WinRT.Interop.dll) in any context — debugging, extending, or just understanding how it works.
 ---
 
 # CsWinRT interop generator (`cswinrtinteropgen.exe`)
@@ -74,9 +74,15 @@ WinRT.Interop.Generator/
 ├── Factories/                              # Type/member/attribute creation factories
 │   ├── InteropCustomAttributeFactory.cs    # [Guid], [UnmanagedCallersOnly], [TypeMap], etc.
 │   ├── InteropMemberDefinitionFactory.cs   # Properties, methods, lazy-init patterns
+│   ├── InteropMethodDefinitionFactory.*.cs # Per-interface method body factories (20+ partials)
+│   ├── InteropTypeDefinitionFactory.SzArrayMarshaller.cs         # SZ array marshaller type emission
+│   ├── InteropTypeDefinitionFactory.SzArrayElementMarshaller.cs  # SZ array element marshaller emission
+│   ├── InteropTypeDefinitionFactory.IEnumeratorElementMarshaller.cs # Collection element marshaller emission
+│   ├── InteropTypeDefinitionFactory.IReadOnlyCollectionKeyValuePair2.cs # IReadOnlyCollection<KeyValuePair<K,V>> emission
 │   ├── InteropUtf8NameFactory.cs           # ABI-prefixed namespace/type name generation
 │   ├── WellKnownTypeDefinitionFactory.cs   # IUnknownVftbl, IInspectableVftbl, DelegateVftbl
-│   └── WellKnownMemberDefinitionFactory.cs # IID/Vtable property definitions
+│   ├── WellKnownMemberDefinitionFactory.cs # IID/Vtable property definitions
+│   └── ... (8 more)                        # Various well-known and utility factories
 ├── Fixups/                                 # Post-emit IL cleanup
 │   ├── InteropMethodFixup.cs               # Abstract base with label redirect helpers
 │   ├── InteropMethodFixup.RemoveLeftoverNopAfterLeave.cs  # ECMA-335 compliance
@@ -389,13 +395,16 @@ For each discovered type, the generator emits some or all of these components:
 - **ComWrappersMarshallerAttribute** — For opaque object marshalling
 - **Proxy type** — `[WindowsRuntimeClassName]` + marshaller attribute for type map registration
 - **Type map attributes** — `[TypeMap<*TypeMapGroup>]` attributes for all three type map groups
+- **Element marshaller type** (when applicable) — Implements a `IWindowsRuntime*ElementMarshaller<T>` interface from the runtime, providing per-element conversion logic for collection `GetMany` CCW methods. Emitted by the `IEnumerator<T>` builder and reused by `IList<T>` and `IReadOnlyList<T>` builders. Not needed for blittable, `object`, `string`, `Type`, or `Exception` element types (these use specialized direct paths).
 
 For additional details on generic interface code generation, see `references/marshalling-generic-interfaces.md`.
 
 **Per SZ array type (e.g., `string[]`):**
-- **Array marshaller** — `ConvertToManaged`/`ConvertToUnmanaged`/`CopyToManaged`/`CopyToUnmanaged`/`Free`
+- **Array element marshaller type** (when applicable) — Implements a `IWindowsRuntime*ArrayElementMarshaller<T>` interface from the runtime, providing bidirectional per-element conversion. Emitted for non-trivial element types: `KeyValuePair<K,V>`, `Nullable<T>`, managed value types, unmanaged value types, and reference types. Not needed for blittable value types, `object`, `string`, `Type`, or `Exception` (these use specialized direct marshallers).
+- **Array marshaller** — `ConvertToManaged`/`ConvertToUnmanaged`/`CopyToManaged`/`CopyToUnmanaged`/`Free`. Delegates to the runtime's generic array marshaller classes, passing the generated element marshaller type as a generic type argument when applicable.
 - **Array ComWrappers callback** — `IWindowsRuntimeArrayComWrappersCallback` implementation
 - **Array impl type** — `IReferenceArray` vtable with `get_Value` CCW method
+- **Interface entries impl type** — CCW interface entries for the array type
 - **Proxy + marshaller attribute** — For opaque object marshalling
 
 For additional details on array code generation, see `references/marshalling-arrays.md`.
@@ -433,7 +442,7 @@ Builders construct complete type definitions with IL method bodies. They use a *
 | `InteropTypeDefinitionBuilder.cs` | Core: IID, NativeObject, ComWrappersCallback |
 | `.Delegate.cs` | Generic delegate marshalling (vtable, native type, marshaller, impl, event source) |
 | `.EventSource.cs` | Event source types for EventHandler and collection changed events |
-| `.IEnumerator1.cs` | `IEnumerator<T>` methods impl, marshaller, CCW |
+| `.IEnumerator1.cs` | `IEnumerator<T>` methods impl, marshaller, CCW, element marshaller |
 | `.IEnumerable1.cs` | `IEnumerable<T>` methods impl, marshaller, CCW |
 | `.IList1.cs` | `IList<T>` full interface marshalling |
 | `.IReadOnlyList1.cs` | `IReadOnlyList<T>` full interface marshalling |
@@ -449,7 +458,7 @@ Builders construct complete type definitions with IL method bodies. They use a *
 | `.ICollectionKeyValuePair2.cs` | `ICollection<KeyValuePair<K,V>>` marshalling |
 | `.IReadOnlyCollectionKeyValuePair2.cs` | `IReadOnlyCollection<KeyValuePair<K,V>>` marshalling |
 | `.SzArray.cs` | `T[]` array marshallers (element-type-specific strategies) |
-| `.UserDefinedType.cs` | CCW interface entries + vtable emission |
+| `.UserDefinedType.cs` | CCW interface entries + vtable |
 
 **Other builders:**
 - **`WindowsRuntimeTypeHierarchyBuilder`** — Emits a frozen hash table (keys/values/buckets as RVA static data) for O(1) runtime class name → type lookup
@@ -463,6 +472,12 @@ Factories create individual metadata elements (types, methods, properties, attri
 
 - **`InteropCustomAttributeFactory`** — Creates `CustomAttribute` instances: `[Guid]`, `[UnmanagedCallersOnly]`, `[DisableRuntimeMarshalling]`, `[TypeMap<*>]`, `[AttributeUsage]`, `[IgnoresAccessChecksTo]`, `[AssemblyMetadata]`
 - **`InteropMemberDefinitionFactory`** — Creates property/method definitions. Key pattern: `LazyVolatileReferenceDefaultConstructorReadOnlyProperty()` — a lazy-initialized static property using `Interlocked.CompareExchange` for thread-safe initialization
+- **`InteropMethodDefinitionFactory`** — Per-interface method body factories (20+ partial files, e.g., `.IEnumerator1Impl.cs`, `.IList1Impl.cs`, `.IReadOnlyList1Impl.cs`). Generate IL method bodies for CCW and RCW methods. Key methods like `GetMany()` consume element marshaller types via `emitState.LookupTypeDefinition(elementType, "ElementMarshaller")`.
+- **`InteropTypeDefinitionFactory`** — Per-category type definition factories (partial files):
+  - **`.SzArrayElementMarshaller.cs`** — Emits concrete element marshaller types for SZ arrays (one per element type category: `UnmanagedValueType`, `ManagedValueType`, `KeyValuePair`, `NullableValueType`, `ReferenceType`). Generated types implement `IWindowsRuntime*ArrayElementMarshaller<T>` interfaces from the runtime.
+  - **`.IEnumeratorElementMarshaller.cs`** — Emits concrete element marshaller types for collection interfaces (same 5 categories). Generated types implement `IWindowsRuntime*ElementMarshaller<T>` interfaces. Tracked in emit state for reuse by `IList<T>` and `IReadOnlyList<T>` method factories.
+  - **`.SzArrayMarshaller.cs`** — Emits array marshaller types that forward to runtime array marshaller classes, passing the element marshaller type as a generic argument.
+  - **`.IReadOnlyCollectionKeyValuePair2.cs`** — Emits `IReadOnlyCollection<KeyValuePair<K,V>>` types.
 - **`WellKnownTypeDefinitionFactory`** — Creates fundamental vtable struct types (`IUnknownVftbl`, `IInspectableVftbl`, `DelegateVftbl`) with sequential layout and unmanaged function pointer fields
 - **`WellKnownMemberDefinitionFactory`** — Creates IID properties (backed by RVA static data containing GUID bytes) and Vtable properties
 - **`InteropUtf8NameFactory`** — Generates ABI-prefixed type/namespace names in `Utf8String` format

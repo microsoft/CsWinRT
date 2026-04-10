@@ -71,7 +71,13 @@ Launch an explore agent to verify:
 - **Define*Types() method list** matches the actual methods in `InteropGenerator.Emit.cs`
 - **Builder partial files** in `Builders/` are complete (check for added or removed partials)
 - **What gets generated** per type category is still accurate
-- **Factory classes** in `Factories/` are current
+- **Factory classes** in `Factories/` are current, including:
+  - `InteropTypeDefinitionFactory` partials (SzArrayMarshaller, SzArrayElementMarshaller, IEnumeratorElementMarshaller, IReadOnlyCollectionKeyValuePair2)
+  - `InteropMethodDefinitionFactory` partials (per-interface method body factories)
+- **Element marshaller generation** is accurately described:
+  - SZ array element marshallers: which element categories get them, factory methods, runtime interfaces
+  - Collection element marshallers: emission by IEnumerator1 builder, reuse by IList1/IReadOnlyList1, runtime interfaces
+  - Selection logic table (which element types use direct paths vs element marshallers)
 - **Dynamic custom-mapped types** are current (check builder partial files)
 
 ### Step 8: verify two-pass IL and fixups
@@ -143,7 +149,10 @@ If the changes to the interop generator are significant enough to affect the des
 - `references/marshalling-arrays.md` — Array marshalling design
 - `references/name-mangling-scheme.md` — Name mangling scheme for generated interop types
 
-These docs describe the *design* of the generated code patterns. If the actual generated code has diverged from what these docs describe (e.g., new types generated, changed API patterns, renamed infrastructure types), update the docs to match.
+These docs describe the *design* of the generated code patterns. If the actual generated code has diverged from what these docs describe (e.g., new types generated, changed API patterns, renamed infrastructure types), update the docs to match. In particular:
+
+- `marshalling-arrays.md` includes the element marshaller infrastructure (runtime interfaces, runtime array marshaller classes, generated element marshaller types, selection logic table)
+- `marshalling-generic-interfaces.md` includes the collection element marshaller infrastructure (runtime interfaces, GetMany adapter extension methods, generated element marshaller types, emission/reuse pattern)
 
 ### Step 14: update this skill if needed
 
