@@ -43,10 +43,14 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Setup the well known items to use when emitting code
+        // Setup the well known items to use when emitting code. Note that we're intentionally using
+        // the 'corlib' factory from the 'WinRT.Runtime.dll' module we loaded during discovery, as
+        // that will use 'System.Runtime' as its scope. If we used the 'corlib' factory from the
+        // interop module we're building, its scope would be 'System.Private.CoreLib', which would
+        // then cause all type comparisons with types from the .NET BCL to fail in the emit phase.
         InteropReferences interopReferences = new(
             runtimeContext: module.RuntimeContext!,
-            corLibTypeFactory: module.CorLibTypeFactory,
+            corLibTypeFactory: windowsRuntimeModule.CorLibTypeFactory,
             windowsRuntimeModule: windowsRuntimeModule);
         InteropDefinitions interopDefinitions = new(
             interopReferences: interopReferences,
