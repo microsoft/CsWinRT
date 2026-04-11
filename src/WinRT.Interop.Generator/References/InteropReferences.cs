@@ -3895,11 +3895,10 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for the <c>Invoke</c> method of a given delegate type.
     /// </summary>
     /// <param name="delegateType">The input delegate type.</param>
-    /// <param name="module">The <see cref="ModuleDefinition"/> to use to import <paramref name="delegateType"/> before resolving it.</param>
-    public MemberReference DelegateInvoke(TypeSignature delegateType, ModuleDefinition module)
+    public MemberReference DelegateInvoke(TypeSignature delegateType)
     {
         // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
-        MethodDefinition invokeMethod = delegateType.Resolve(module.RuntimeContext).GetMethod("Invoke"u8);
+        MethodDefinition invokeMethod = delegateType.Resolve(RuntimeContext).GetMethod("Invoke"u8);
 
         // Create the actual member reference to use when emitting calls to the 'Invoke' method.
         // This has to be on the input (potentially constructed) delegate type, but not using

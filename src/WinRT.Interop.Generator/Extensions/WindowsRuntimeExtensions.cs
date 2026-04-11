@@ -803,12 +803,12 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Gets the <see cref="MethodSignature"/> for the <c>Invoke</c> method of a given delegate type.
         /// </summary>
-        /// <param name="module">The <see cref="ModuleDefinition"/> to use to import the delegate before resolving it.</param>
+        /// <param name="runtimeContext">The <see cref="RuntimeContext"/> to use to resolve the delegate type.</param>
         /// <returns>The <see cref="MethodSignature"/> for the <c>Invoke</c> method for the input delegate type.</returns>
-        public MethodSignature GetDelegateInvokeMethodSignature(ModuleDefinition module)
+        public MethodSignature GetDelegateInvokeMethodSignature(RuntimeContext runtimeContext)
         {
             // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
-            MethodDefinition invokeMethod = signature.Resolve(module.RuntimeContext).GetMethod("Invoke"u8);
+            MethodDefinition invokeMethod = signature.Resolve(runtimeContext).GetMethod("Invoke"u8);
 
             // Construct the generic signature for the method with the context of the input delegate.
             // We can use this to get all the parameters, which might be any combination of explicitly

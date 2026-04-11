@@ -79,7 +79,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition vftblType)
         {
-            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(module);
+            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(interopReferences.RuntimeContext);
 
             // Prepare the sender and arguments types (same as for the 'Impl' type below). Note that
             // we are relying on the fact that all Windows Runtime generic delegate types have in
@@ -200,7 +200,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(module);
+            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(interopReferences.RuntimeContext);
 
             // Prepare the sender and arguments types. This path is only ever reached for valid generic
             // Windows Runtime delegate types, and they all have exactly two type arguments (see above).
@@ -244,7 +244,7 @@ internal partial class InteropTypeDefinitionBuilder
                     { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([delegateType]) },
                     { nop_parameter1Rewrite },
                     { nop_parameter2Rewrite },
-                    { Callvirt, interopReferences.DelegateInvoke(delegateType, module) },
+                    { Callvirt, interopReferences.DelegateInvoke(delegateType) },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
@@ -529,7 +529,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition nativeDelegateType)
         {
-            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(module);
+            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(interopReferences.RuntimeContext);
 
             // Prepare the sender and arguments types (same as for the 'Impl' type above)
             TypeSignature senderType = invokeSignature.ParameterTypes[0];
