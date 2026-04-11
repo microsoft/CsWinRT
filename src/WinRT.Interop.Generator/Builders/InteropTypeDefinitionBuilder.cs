@@ -520,8 +520,7 @@ internal static partial class InteropTypeDefinitionBuilder
         static void LoadIID(
             (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) arg,
             CilInstructionCollection instructions,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             _ = instructions.Add(Call, arg.get_IID);
             _ = instructions.Add(Ldobj, interopReferences.Guid);
@@ -531,8 +530,7 @@ internal static partial class InteropTypeDefinitionBuilder
         static void LoadVtable(
             (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) arg,
             CilInstructionCollection instructions,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             _ = instructions.Add(Call, arg.get_Vtable);
         }
@@ -574,8 +572,8 @@ internal static partial class InteropTypeDefinitionBuilder
             entriesFieldType: entriesFieldType,
             interopReferences: interopReferences,
             module: module,
-            get_IID: static (arg, il, references, module) => arg.LoadIID(il, references, module),
-            get_Vtable: static (arg, il, references, module) => arg.LoadVtable(il, references, module),
+            get_IID: static (arg, il, references) => arg.LoadIID(il, references),
+            get_Vtable: static (arg, il, references) => arg.LoadVtable(il, references),
             implTypes: implTypes,
             implType: out implType);
     }
@@ -600,8 +598,8 @@ internal static partial class InteropTypeDefinitionBuilder
         InteropReferences interopReferences,
         ModuleDefinition module,
         ReadOnlySpan<TArg> implTypes,
-        Action<TArg, CilInstructionCollection, InteropReferences, ModuleDefinition> get_IID,
-        Action<TArg, CilInstructionCollection, InteropReferences, ModuleDefinition> get_Vtable,
+        Action<TArg, CilInstructionCollection, InteropReferences> get_IID,
+        Action<TArg, CilInstructionCollection, InteropReferences> get_Vtable,
         out TypeDefinition implType)
     {
         // Enforce that we can initialize all interface entries
@@ -656,14 +654,14 @@ internal static partial class InteropTypeDefinitionBuilder
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
 
             // Invoke the callback to emit code to load 'IID' on the evaluation stack
-            get_IID(implTypes[i], cctorInstructions, interopReferences, module);
+            get_IID(implTypes[i], cctorInstructions, interopReferences);
 
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryIIDField);
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
 
             // Same as above, but to get the vtable pointer on the stack
-            get_Vtable(implTypes[i], cctorInstructions, interopReferences, module);
+            get_Vtable(implTypes[i], cctorInstructions, interopReferences);
 
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryVtableField);
         }

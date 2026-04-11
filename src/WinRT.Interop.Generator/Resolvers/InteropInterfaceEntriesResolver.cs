@@ -294,14 +294,14 @@ internal static class InteropInterfaceEntriesResolver
     private sealed class WindowsRuntimeInterfaceEntryInfo(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) : InteropInterfaceEntryInfo
     {
         /// <inheritdoc/>
-        public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
+        public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences)
         {
             _ = instructions.Add(Call, get_IID);
             _ = instructions.Add(Ldobj, interopReferences.Guid);
         }
 
         /// <inheritdoc/>
-        public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
+        public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences)
         {
             _ = instructions.Add(Call, get_Vtable);
         }
@@ -314,14 +314,14 @@ internal static class InteropInterfaceEntriesResolver
     private sealed class ComInterfaceEntryInfo(TypeSignature interfaceInformationType) : InteropInterfaceEntryInfo
     {
         /// <inheritdoc/>
-        public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
+        public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences)
         {
             _ = instructions.Add(Constrained, interfaceInformationType.ToTypeDefOrRef());
             _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_Iid);
         }
 
         /// <inheritdoc/>
-        public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
+        public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences)
         {
             _ = instructions.Add(Constrained, interfaceInformationType.ToTypeDefOrRef());
             _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable);
