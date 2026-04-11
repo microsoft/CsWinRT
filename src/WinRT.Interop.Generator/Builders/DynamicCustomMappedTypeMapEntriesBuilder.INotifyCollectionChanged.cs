@@ -62,7 +62,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature(),
-                    eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CollectionChanged"u8),
+                    eventMethod: GetMethodsType(interfaceType, interopReferences).GetMethod("CollectionChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
                     interopReferences: interopReferences)
             };
@@ -83,7 +83,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature(),
-                    eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CollectionChanged"u8),
+                    eventMethod: GetMethodsType(interfaceType, interopReferences).GetMethod("CollectionChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
                     interopReferences: interopReferences)
             };

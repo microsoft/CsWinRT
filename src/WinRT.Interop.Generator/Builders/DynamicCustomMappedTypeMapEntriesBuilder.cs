@@ -150,7 +150,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         // will need one, so they can plug in specialized RCWs to better handle all the various scenarios where the interface is
         // used. Other interfaces, such as 'INotifyPropertyChanged', don't need that, and they will just rely on dynamic casts.
         TypeDefinition? comWrappersMarshallerAttribute = useComWrappersMarshallerAttribute
-            ? GetMarshallerAttributeType(trimTarget, interopReferences, module)
+            ? GetMarshallerAttributeType(trimTarget, interopReferences)
             : null;
 
         // Define the proxy type for the interface type. Because the metadata type name depends on the XAML configuration
@@ -388,7 +388,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             metadataTypeName: null,
             mappedType: trimTarget,
             referenceType: null,
-            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
+            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences),
             interopReferences: interopReferences,
             module: module,
             proxyType: out TypeDefinition proxyType);
@@ -440,7 +440,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
             mappedType: trimTarget,
             referenceType: null,
-            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
+            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences),
             interopReferences: interopReferences,
             module: module,
             proxyType: out TypeDefinition proxyType);
@@ -490,7 +490,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(trimTarget, useWindowsUIXamlProjections),
             mappedType: trimTarget,
             referenceType: interopReferences.Nullable1.MakeGenericValueType([trimTarget]),
-            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences, module),
+            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(trimTarget, interopReferences),
             interopReferences: interopReferences,
             module: module,
             proxyType: out TypeDefinition proxyType);
@@ -539,7 +539,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             metadataTypeName: null,
             mappedType: null,
             referenceType: null,
-            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(adapterType, interopReferences, module),
+            comWrappersMarshallerAttributeType: GetMarshallerAttributeType(adapterType, interopReferences),
             interopReferences: interopReferences,
             module: module,
             out TypeDefinition adapterProxyType);
@@ -606,13 +606,9 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// </summary>
     /// <param name="type">The custom-mapped type to retrieve the marshaller attribute for.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The marshaller attribute type for the input type.</returns>
     /// <exception cref="WellKnownInteropException">Thrown if resolving the marshaller attribute type fails.</exception>
-    private static TypeDefinition GetMarshallerAttributeType(
-        TypeSignature type,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    private static TypeDefinition GetMarshallerAttributeType(TypeSignature type, InteropReferences interopReferences)
     {
         // Retrieve the '[ComWrappersMarshaller]' type from 'WinRT.Runtime.dll', which always follows this naming convention
         TypeReference comWrappersMarshallerTypeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference(
@@ -620,7 +616,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             name: (Utf8String)$"{type.Name}ComWrappersMarshallerAttribute");
 
         // The '[ComWrappersMarshaller]' type should always exist for all custom-mapped types, throw if it doesn't
-        if (!comWrappersMarshallerTypeReference.TryResolve(module.RuntimeContext, out TypeDefinition? comWrappersMarshallerType))
+        if (!comWrappersMarshallerTypeReference.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? comWrappersMarshallerType))
         {
             throw WellKnownInteropExceptions.CustomMappedTypeComWrappersMarshallerAttributeTypeResolveError(type);
         }
@@ -633,13 +629,9 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
     /// </summary>
     /// <param name="type">The custom-mapped type to retrieve the "Methods" type for.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The module that the attribute will be used from.</param>
     /// <returns>The "Methods" type for the input type.</returns>
     /// <exception cref="WellKnownInteropException">Thrown if resolving the "Methods" type fails.</exception>
-    private static TypeDefinition GetMethodsType(
-        TypeSignature type,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    private static TypeDefinition GetMethodsType(TypeSignature type, InteropReferences interopReferences)
     {
         // Retrieve the "Methods" type from 'WinRT.Runtime.dll', which always follows this naming convention
         TypeReference methodsTypeReference = interopReferences.WindowsRuntimeModule.CreateTypeReference(
@@ -647,7 +639,7 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
             name: (Utf8String)$"{type.Name}Methods");
 
         // The "Methods" type should always exist for all custom-mapped types, throw if it doesn't
-        if (!methodsTypeReference.TryResolve(module.RuntimeContext, out TypeDefinition? methodsType))
+        if (!methodsTypeReference.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? methodsType))
         {
             throw WellKnownInteropExceptions.CustomMappedTypeMethodsTypeResolveError(type);
         }
