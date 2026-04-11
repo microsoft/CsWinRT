@@ -43,6 +43,12 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
     public string? AssemblyOriginatorKeyFile { get; set; }
 
     /// <summary>
+    /// Gets or sets the directory where the debug repro will be produced.
+    /// </summary>
+    /// <remarks>If not set, no debug repro will be produced.</remarks>
+    public string? DebugReproDirectory { get; set; }
+
+    /// <summary>
     /// Gets or sets the tools directory where the 'cswinrtimplgen' tool is located.
     /// </summary>
     [Required]
@@ -116,6 +122,13 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
             return false;
         }
 
+        if (DebugReproDirectory is not null && !Directory.Exists(DebugReproDirectory))
+        {
+            Log.LogWarning("Debug repro directory '{0}' is invalid or does not exist.", DebugReproDirectory);
+
+            return false;
+        }
+
         if (CsWinRTToolsArchitecture is not null &&
             !CsWinRTToolsArchitecture.Equals("x86", StringComparison.OrdinalIgnoreCase) &&
             !CsWinRTToolsArchitecture.Equals("x64", StringComparison.OrdinalIgnoreCase) &&
@@ -170,6 +183,7 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
         AppendResponseFileCommand(args, "--output-assembly-path", EffectiveOutputAssemblyItemSpec);
         AppendResponseFileCommand(args, "--generated-assembly-directory", GeneratedAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--assembly-originator-key-file", AssemblyOriginatorKeyFile);
+        AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
         AppendResponseFileCommand(args, "--treat-warnings-as-errors", TreatWarningsAsErrors.ToString());
 
         // Add any additional arguments that are not statically known

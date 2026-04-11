@@ -245,6 +245,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       OutputAssemblyPath="@(IntermediateAssembly)"
       GeneratedAssemblyDirectory="$(CsWinRTGeneratorForwarderAssemblyDirectory)"
       AssemblyOriginatorKeyFile="$(_AssemblyOriginatorKeyFile)"
+      DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
       CsWinRTToolsDirectory="$(CsWinRTImplEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       TreatWarningsAsErrors="$(CsWinRTGeneratorTreatWarningsAsErrors)"

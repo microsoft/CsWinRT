@@ -49,6 +49,10 @@
     <IlcDehydrate>false</IlcDehydrate>
     <IlcResilient>false</IlcResilient>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\WinRT.Interop.Generator\Extensions\FileExtensions.cs" Link="Extensions\FileExtensions.cs" />
+    <Compile Include="..\WinRT.Interop.Generator\Extensions\PathExtensions.cs" Link="Extensions\PathExtensions.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AsmResolver.DotNet" />
