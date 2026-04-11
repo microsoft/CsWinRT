@@ -28,7 +28,7 @@ resources:
   - repository: TestWinRT
     type: git
     name: TestWinRT.mirror
-    ref: 'ea7f7d821d4139e6cc3293d28bca214dcef014ea'
+    ref: '938301db9c5b5e94899bef2e533bb96dae5fc643'
 
 extends:
   template: v2/Microsoft.Official.yml@templates

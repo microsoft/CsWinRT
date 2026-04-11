@@ -99,6 +99,14 @@ set nuget_dir=%this_dir%.nuget
 if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
+rem Ensure nuget.exe is available.
+if not exist %nuget_dir% md %nuget_dir%
+if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile %nuget_dir%\nuget.exe"
+%nuget_dir%\nuget update -self
+
+rem Get TestWinRT repo
+call %this_dir%get_testwinrt.cmd
+
 call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:RestorePackagesConfig=true /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform% %this_dir%cswinrt.slnx 
 
 :build
@@ -244,20 +252,17 @@ rem We set the properties of the CsWinRT.nuspec here, and pass them as the -Prop
 set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
 set interop_winmd=%cswinrt_bin_dir%WindowsRuntime.Internal.winmd
-set net10_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.dll
-set net10_runtime_xml=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.xml
+set net10_runtime=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.dll
+set net10_runtime_xml=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\WinRT.Runtime.xml
 set source_generator_roslyn4120=%this_dir%Authoring\WinRT.SourceGenerator.Roslyn4120\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set source_generator=%this_dir%Authoring\WinRT.SourceGenerator2\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll.mui
 set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net10.0\WinRT.Host.Shim.dll
 set cswinmd_outpath=%this_dir%Authoring\cswinmd\bin\%cswinrt_configuration%\net10.0
-set cswinrtinteropgen_x64=%this_dir%WinRT.Interop.Generator\bin\x64\%cswinrt_configuration%\net10.0\win-x64\publish\cswinrtinteropgen.exe
-set cswinrtinteropgen_arm64=%this_dir%WinRT.Interop.Generator\bin\arm64\%cswinrt_configuration%\net10.0\win-arm64\publish\cswinrtinteropgen.exe
-set cswinrtimplgen_x64=%this_dir%WinRT.Impl.Generator\bin\x64\%cswinrt_configuration%\net10.0\win-x64\publish\cswinrtimplgen.exe
-set cswinrtimplgen_arm64=%this_dir%WinRT.Impl.Generator\bin\arm64\%cswinrt_configuration%\net10.0\win-arm64\publish\cswinrtimplgen.exe
-set cswinrtprojectiongen_x64=%this_dir%WinRT.Projection.Generator\bin\x64\%cswinrt_configuration%\net10.0\win-x64\publish\cswinrtprojectiongen.exe
-set cswinrtprojectiongen_arm64=%this_dir%WinRT.Projection.Generator\bin\arm64\%cswinrt_configuration%\net10.0\win-arm64\publish\cswinrtprojectiongen.exe
+set cswinrtinteropgen_%cswinrt_platform%=%this_dir%WinRT.Interop.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtinteropgen.exe
+set cswinrtimplgen_%cswinrt_platform%=%this_dir%WinRT.Impl.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtimplgen.exe
+set cswinrtprojectiongen_%cswinrt_platform%=%this_dir%WinRT.Projection.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtprojectiongen.exe
 set run_cswinrt_generator_task=%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Generator.Tasks.dll
 
 rem Now call pack
