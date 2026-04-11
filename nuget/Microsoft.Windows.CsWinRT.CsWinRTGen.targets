@@ -258,6 +258,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <_SourceItemsToCopyToOutputDirectory
           Include="@(IntermediateAssembly)"
           TargetPath="ref\$(AssemblyName).dll" />
+
+        <!--
+            Also track the reference assembly as a FileWrite.
+            Without this, IncrementalClean will delete it after IntermediateAssembly
+            is replaced with the forwarder path.
+        -->
+        <FileWrites Include="@(IntermediateAssembly)"/>
           
         <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
         <FileWrites Include="$(_CsWinRTGeneratorForwarderAssemblyPath)"/>
