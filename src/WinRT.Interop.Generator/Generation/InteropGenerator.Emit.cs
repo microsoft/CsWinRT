@@ -43,14 +43,10 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Setup the well known items to use when emitting code. Note that we're intentionally using
-        // the 'corlib' factory from the 'WinRT.Runtime.dll' module we loaded during discovery, as
-        // that will use 'System.Runtime' as its scope. If we used the 'corlib' factory from the
-        // interop module we're building, its scope would be 'System.Private.CoreLib', which would
-        // then cause all type comparisons with types from the .NET BCL to fail in the emit phase.
+        // Setup the well known items to use when emitting code
         InteropReferences interopReferences = new(
             runtimeContext: module.RuntimeContext!,
-            corLibTypeFactory: windowsRuntimeModule.CorLibTypeFactory,
+            corLibTypeFactory: module.CorLibTypeFactory,
             windowsRuntimeModule: windowsRuntimeModule);
         InteropDefinitions interopDefinitions = new(
             interopReferences: interopReferences,
@@ -250,7 +246,9 @@ internal partial class InteropGenerator
         try
         {
             // Create the module for the 'WinRT.Interop.dll' assembly, where we'll add all generated types to
-            ModuleDefinition winRTInteropModule = new(InteropNames.WindowsRuntimeInteropDllNameUtf8, discoveryState.RuntimeContext.RuntimeCorLib!.ToAssemblyReference())
+            ModuleDefinition winRTInteropModule = new(
+                name: InteropNames.WindowsRuntimeInteropDllNameUtf8,
+                corLib: discoveryState.RuntimeContext.TargetRuntime.GetDefaultCorLib())
             {
                 // We need a deterministic MVID for the generated module, so we create one based on the input assemblies.
                 // This logic will produce a hash from each .NET assembly that was loaded and analyzed during discovery.
@@ -259,7 +257,9 @@ internal partial class InteropGenerator
 
             // Also create a containing assembly for it (needed for the emit phase). We don't actually need the assembly
             // ourselves, but creating it and adding the module will update the declaring assembly for types added to it.
-            AssemblyDefinition winRTInteropAssembly = new(InteropNames.WindowsRuntimeInteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
+            AssemblyDefinition winRTInteropAssembly = new(
+                name: InteropNames.WindowsRuntimeInteropAssemblyNameUtf8,
+                version: assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
             {
                 Modules = { winRTInteropModule }
             };
