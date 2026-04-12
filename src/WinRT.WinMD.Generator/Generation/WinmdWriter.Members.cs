@@ -118,12 +118,12 @@ internal sealed partial class WinmdWriter
     {
         TypeSignature propertyType = MapTypeSignatureToOutput(inputProperty.Signature!.ReturnType);
 
+        bool isStatic = inputProperty.GetMethod?.IsStatic == true || inputProperty.SetMethod?.IsStatic == true;
+
         PropertyDefinition outputProperty = new(
             inputProperty.Name!.Value,
             0,
-            PropertySignature.CreateInstance(propertyType));
-
-        bool isStatic = inputProperty.GetMethod?.IsStatic == true || inputProperty.SetMethod?.IsStatic == true;
+            isStatic ? PropertySignature.CreateStatic(propertyType) : PropertySignature.CreateInstance(propertyType));
 
         // Add getter
         if (inputProperty.GetMethod != null)
