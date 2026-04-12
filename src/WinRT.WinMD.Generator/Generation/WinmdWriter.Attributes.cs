@@ -38,11 +38,8 @@ internal sealed partial class WinmdWriter
         Guid guid;
         // CodeQL [SM02196] WinRT uses UUID v5 SHA1 to generate Guids for parameterized types.
 #pragma warning disable CA5350
-        using (SHA1 sha = SHA1.Create())
-        {
-            byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(name));
-            guid = EncodeGuid(hash);
-        }
+        byte[] hash = SHA1.HashData(Encoding.UTF8.GetBytes(name));
+        guid = EncodeGuid(hash);
 #pragma warning restore CA5350
 
         AddGuidAttribute(outputType, guid);
@@ -120,7 +117,7 @@ internal sealed partial class WinmdWriter
                     _outputModule.CorLibTypeFactory.UInt32));
 
             CustomAttributeSignature sig = new();
-            sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(), factoryInterface));
+            sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(), ResolveTypeNameToSignature(factoryInterface)));
             sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
 
             outputType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
@@ -153,7 +150,7 @@ internal sealed partial class WinmdWriter
                 _outputModule.CorLibTypeFactory.UInt32));
 
         CustomAttributeSignature sig = new();
-        sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(), staticInterfaceName));
+        sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(), ResolveTypeNameToSignature(staticInterfaceName)));
         sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
 
         classOutputType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
@@ -171,7 +168,7 @@ internal sealed partial class WinmdWriter
                 systemType.ToTypeSignature()));
 
         CustomAttributeSignature sig = new();
-        sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(), className));
+        sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(), ResolveTypeNameToSignature(className)));
 
         interfaceType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
     }
@@ -375,5 +372,24 @@ internal sealed partial class WinmdWriter
         guidBytes[8] = (byte)((guidBytes[8] & 0x3F) | 0x80);
 
         return new Guid(guidBytes);
+    }
+
+    /// <summary>
+    /// Resolves a fully-qualified type name to a <see cref="TypeSignature"/> for use in custom attribute arguments.
+    /// </summary>
+    private TypeSignature ResolveTypeNameToSignature(string qualifiedTypeName)
+    {
+        // Check if we have this type in our output type definitions
+        if (_typeDefinitionMapping.TryGetValue(qualifiedTypeName, out TypeDeclaration? declaration) && declaration.OutputType != null)
+        {
+            return declaration.OutputType.ToTypeSignature();
+        }
+
+        // Parse the qualified name into namespace and type name, then create a reference
+        int lastDot = qualifiedTypeName.LastIndexOf('.');
+        string ns = lastDot > 0 ? qualifiedTypeName[..lastDot] : "";
+        string name = lastDot > 0 ? qualifiedTypeName[(lastDot + 1)..] : qualifiedTypeName;
+
+        return GetOrCreateTypeReference(ns, name, _assemblyName).ToTypeSignature();
     }
 }
