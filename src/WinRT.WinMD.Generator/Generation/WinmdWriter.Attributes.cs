@@ -366,8 +366,26 @@ internal sealed partial class WinmdWriter
         byte[] guidBytes = new byte[16];
         Array.Copy(hash, guidBytes, 16);
 
-        // Set version to 5 (SHA1)
-        guidBytes[7] = (byte)((guidBytes[7] & 0x0F) | 0x50);
+        if (BitConverter.IsLittleEndian)
+        {
+            // Swap bytes of int a (bytes 0-3)
+            (guidBytes[0], guidBytes[3]) = (guidBytes[3], guidBytes[0]);
+            (guidBytes[1], guidBytes[2]) = (guidBytes[2], guidBytes[1]);
+
+            // Swap bytes of short b (bytes 4-5)
+            (guidBytes[4], guidBytes[5]) = (guidBytes[5], guidBytes[4]);
+
+            // Swap bytes of short c (bytes 6-7) and encode version
+            byte t = guidBytes[6];
+            guidBytes[6] = guidBytes[7];
+            guidBytes[7] = (byte)((t & 0x0F) | 0x50); // version 5
+        }
+        else
+        {
+            // Set version to 5 (SHA1)
+            guidBytes[7] = (byte)((guidBytes[7] & 0x0F) | 0x50);
+        }
+
         // Set variant to RFC 4122
         guidBytes[8] = (byte)((guidBytes[8] & 0x3F) | 0x80);
 

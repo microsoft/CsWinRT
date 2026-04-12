@@ -108,10 +108,10 @@ internal sealed partial class WinmdWriter
             typeAttributes,
             baseType);
 
-        // Add .ctor(object, IntPtr)
+        // Add .ctor(object, IntPtr) — private per WinRT delegate convention
         MethodDefinition ctor = new(
             ".ctor",
-            MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
+            MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
             MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
                 _outputModule.CorLibTypeFactory.Object,
@@ -119,6 +119,8 @@ internal sealed partial class WinmdWriter
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
+        ctor.ParameterDefinitions.Add(new ParameterDefinition(1, "object", 0));
+        ctor.ParameterDefinitions.Add(new ParameterDefinition(2, "method", 0));
         outputType.Methods.Add(ctor);
 
         // Add Invoke method
@@ -140,14 +142,14 @@ internal sealed partial class WinmdWriter
                 ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
             };
 
-            // Add parameter names
+            // Add parameter names with [In] attribute
             int paramIndex = 1;
             foreach (ParameterDefinition inputParam in inputInvoke.ParameterDefinitions)
             {
                 invoke.ParameterDefinitions.Add(new ParameterDefinition(
                     (ushort)paramIndex++,
                     inputParam.Name!.Value,
-                    inputParam.Attributes));
+                    ParameterAttributes.In));
             }
 
             outputType.Methods.Add(invoke);
