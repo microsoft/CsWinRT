@@ -6,7 +6,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- Setup common properties for '_RunCsWinRTWinMDGenerator' below -->
   <PropertyGroup>
-    <CsWinRTGenTasksAssembly Condition="'$(CsWinRTGenTasksAssembly)' == ''">$(MSBuildThisFileDirectory)..\tools\WinRT.Generator.Tasks.dll</CsWinRTGenTasksAssembly>
     <CsWinRTWinMDGenToolsDirectory>$(SolutionDir)WinRT.WinMD.Generator\bin\$(Configuration)\net10.0\</CsWinRTWinMDGenToolsDirectory>
 
     <!-- Enable/disable WinMD generation (opt-in) -->
@@ -15,11 +14,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Output paths -->
     <CsWinRTWinMDOutputDirectory Condition="'$(CsWinRTWinMDOutputDirectory)' == ''">$(IntermediateOutputPath)</CsWinRTWinMDOutputDirectory>
     <_CsWinRTWinMDOutputPath>$(CsWinRTWinMDOutputDirectory)$(AssemblyName).winmd</_CsWinRTWinMDOutputPath>
-
-    <!-- Standard output importance -->
-    <CsWinRTWinMDGeneratorStandardOutputImportance Condition="'$(CsWinRTWinMDGeneratorStandardOutputImportance)' == ''">High</CsWinRTWinMDGeneratorStandardOutputImportance>
-    <CsWinRTWinMDGeneratorStandardErrorImportance Condition="'$(CsWinRTWinMDGeneratorStandardErrorImportance)' == ''">High</CsWinRTWinMDGeneratorStandardErrorImportance>
-    <CsWinRTWinMDGeneratorLogStandardErrorAsError Condition="'$(CsWinRTWinMDGeneratorLogStandardErrorAsError)' == ''">true</CsWinRTWinMDGeneratorLogStandardErrorAsError>
 
     <!--
       Set the path of the file with the hash of all input properties for 'cswinrtwinmdgen'.
@@ -83,9 +77,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
       CsWinRTToolsDirectory="$(CsWinRTWinMDGenToolsDirectory)"
       CsWinRTToolsArchitecture="AnyCPU"
-      StandardOutputImportance="$(CsWinRTWinMDGeneratorStandardOutputImportance)"
-      StandardErrorImportance="$(CsWinRTWinMDGeneratorStandardErrorImportance)"
-      LogStandardErrorAsError="$(CsWinRTWinMDGeneratorLogStandardErrorAsError)" />
+      StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
+      StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
     <!-- Make the .winmd available as an output -->
     <ItemGroup>
