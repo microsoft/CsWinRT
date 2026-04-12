@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
@@ -23,10 +24,13 @@ internal sealed partial class WinmdWriter
     /// </summary>
     private void ProcessCustomMappedInterfaces(TypeDefinition inputType, TypeDefinition outputType)
     {
+        // Gather all interfaces from the type and its base types (matching old generator's GetInterfaces)
+        List<InterfaceImplementation> allInterfaces = GatherAllInterfaces(inputType);
+
         // Collect all mapped interfaces and determine if they are publicly or explicitly implemented
         List<(InterfaceImplementation impl, string interfaceName, MappedType mapping, bool isPublic)> mappedInterfaces = [];
 
-        foreach (InterfaceImplementation impl in inputType.Interfaces)
+        foreach (InterfaceImplementation impl in allInterfaces)
         {
             if (impl.Interface == null)
             {
@@ -53,7 +57,6 @@ internal sealed partial class WinmdWriter
             {
                 foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
                 {
-                    // Check if the class has a public method that could implement this interface member
                     string methodName = interfaceMethod.Name?.Value ?? "";
                     if (inputType.Methods.Any(m => m.IsPublic && m.Name?.Value == methodName))
                     {
@@ -440,5 +443,60 @@ internal sealed partial class WinmdWriter
         outputType.MethodImplementations.Add(new MethodImplementation(addRef, adder));
         MemberReference removeRef = new(mappedInterfaceRef, $"remove_{eventName}", MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, tokenSig));
         outputType.MethodImplementations.Add(new MethodImplementation(removeRef, remover));
+    }
+
+    /// <summary>
+    /// Gathers all interfaces from a type and its base type chain, including interfaces
+    /// inherited from interfaces. This matches the old source generator's AllInterfaces behavior.
+    /// </summary>
+    private static List<InterfaceImplementation> GatherAllInterfaces(TypeDefinition type)
+    {
+        HashSet<string> seen = new(StringComparer.Ordinal);
+        List<InterfaceImplementation> result = [];
+
+        void CollectFromType(TypeDefinition typeDef)
+        {
+            foreach (InterfaceImplementation impl in typeDef.Interfaces)
+            {
+                if (impl.Interface == null)
+                {
+                    continue;
+                }
+
+                string name = impl.Interface.FullName ?? "";
+                if (!seen.Add(name))
+                {
+                    continue;
+                }
+
+                if (IsPubliclyAccessible(impl.Interface))
+                {
+                    result.Add(impl);
+                }
+
+                // Also collect interfaces inherited by this interface
+                TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
+                    ? (ts.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
+                    : impl.Interface.Resolve();
+
+                if (interfaceDef != null)
+                {
+                    CollectFromType(interfaceDef);
+                }
+            }
+        }
+
+        // Collect from the type itself
+        CollectFromType(type);
+
+        // Walk base types
+        TypeDefinition? current = type.BaseType?.Resolve();
+        while (current != null)
+        {
+            CollectFromType(current);
+            current = current.BaseType?.Resolve();
+        }
+
+        return result;
     }
 }
