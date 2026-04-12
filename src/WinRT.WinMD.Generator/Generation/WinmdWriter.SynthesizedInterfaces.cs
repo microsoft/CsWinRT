@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.WinMDGenerator.Discovery;
 using WindowsRuntime.WinMDGenerator.Models;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
+using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes;
 using TypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
@@ -231,14 +232,14 @@ internal sealed partial class WinmdWriter
             MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot,
             MethodSignature.CreateInstance(returnType, parameterTypes));
 
-        // Add parameter names
+        // Add parameter names with [In] attribute
         int paramIndex = 1;
         foreach (ParameterDefinition inputParam in constructor.ParameterDefinitions)
         {
             factoryMethod.ParameterDefinitions.Add(new ParameterDefinition(
                 (ushort)paramIndex++,
                 inputParam.Name!.Value,
-                inputParam.Attributes));
+                ParameterAttributes.In));
         }
 
         synthesizedInterface.Methods.Add(factoryMethod);

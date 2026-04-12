@@ -111,6 +111,11 @@ internal sealed partial class WinmdWriter
             typeAttributes,
             baseType);
 
+        // Register early so self-referencing signatures can find this type
+        _outputModule.TopLevelTypes.Add(outputType);
+        TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+        _typeDefinitionMapping[qualifiedName] = declaration;
+
         // Add .ctor(object, IntPtr) — private per WinRT delegate convention
         MethodDefinition ctor = new(
             ".ctor",
@@ -158,11 +163,6 @@ internal sealed partial class WinmdWriter
             outputType.Methods.Add(invoke);
         }
 
-        _outputModule.TopLevelTypes.Add(outputType);
-
-        TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
-        _typeDefinitionMapping[qualifiedName] = declaration;
-
         // Add GUID attribute
         AddGuidAttribute(outputType, inputType);
     }
@@ -183,6 +183,11 @@ internal sealed partial class WinmdWriter
             AssemblyAnalyzer.GetEffectiveNamespace(inputType),
             inputType.Name!.Value,
             typeAttributes);
+
+        // Register early so self-referencing signatures can find this type
+        _outputModule.TopLevelTypes.Add(outputType);
+        TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+        _typeDefinitionMapping[qualifiedName] = declaration;
 
         // Add methods
         foreach (MethodDefinition method in inputType.Methods)
@@ -217,11 +222,6 @@ internal sealed partial class WinmdWriter
             }
         }
 
-        _outputModule.TopLevelTypes.Add(outputType);
-
-        TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
-        _typeDefinitionMapping[qualifiedName] = declaration;
-
         // Add GUID attribute
         AddGuidAttribute(outputType, inputType);
     }
@@ -245,6 +245,11 @@ internal sealed partial class WinmdWriter
             typeAttributes,
             baseType);
 
+        // Register early so self-referencing signatures can find this type
+        _outputModule.TopLevelTypes.Add(outputType);
+        TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+        _typeDefinitionMapping[qualifiedName] = declaration;
+
         // Add public fields
         foreach (FieldDefinition field in inputType.Fields)
         {
@@ -259,11 +264,6 @@ internal sealed partial class WinmdWriter
                 new FieldSignature(MapTypeSignatureToOutput(field.Signature!.FieldType)));
             outputType.Fields.Add(outputField);
         }
-
-        _outputModule.TopLevelTypes.Add(outputType);
-
-        TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
-        _typeDefinitionMapping[qualifiedName] = declaration;
     }
 
     private void AddClassType(TypeDefinition inputType)

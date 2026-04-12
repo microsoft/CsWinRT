@@ -47,7 +47,7 @@ internal sealed partial class WinmdWriter
             outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
                 (ushort)paramIndex++,
                 inputParam.Name!.Value,
-                inputParam.Attributes));
+                ParameterAttributes.In));
         }
 
         outputType.Methods.Add(outputMethod);
@@ -105,7 +105,7 @@ internal sealed partial class WinmdWriter
             outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
                 (ushort)paramIndex++,
                 inputParam.Name!.Value,
-                inputParam.Attributes));
+                ParameterAttributes.In));
         }
 
         outputType.Methods.Add(outputMethod);
