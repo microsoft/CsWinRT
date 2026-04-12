@@ -129,7 +129,7 @@ internal sealed partial class WinmdWriter
                     if (classMethod != null)
                     {
                         MemberReference interfaceMethodRef = new(classInterfaceImpl.Interface, interfaceMethod.Name!.Value, interfaceMethod.Signature);
-                        classOutputType.MethodImplementations.Add(new MethodImplementation(classMethod, interfaceMethodRef));
+                        classOutputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, classMethod));
                     }
                 }
             }
@@ -151,7 +151,7 @@ internal sealed partial class WinmdWriter
                     if (classMethod != null)
                     {
                         MemberReference interfaceMethodRef = new(interfaceRef, interfaceMethod.Name!.Value, interfaceMethod.Signature);
-                        classOutputType.MethodImplementations.Add(new MethodImplementation(classMethod, interfaceMethodRef));
+                        classOutputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, classMethod));
                     }
                 }
             }
