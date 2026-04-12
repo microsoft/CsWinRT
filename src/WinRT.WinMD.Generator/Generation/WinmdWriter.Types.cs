@@ -43,6 +43,14 @@ internal sealed partial class WinmdWriter
             new FieldSignature(underlyingType));
         outputType.Fields.Add(valueField);
 
+        _outputModule.TopLevelTypes.Add(outputType);
+
+        TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+        _typeDefinitionMapping[qualifiedName] = declaration;
+
+        // Enum literal fields use the enum type itself (not the underlying type)
+        TypeSignature enumTypeSignature = new TypeDefOrRefSignature(outputType, isValueType: true);
+
         // Add enum members
         foreach (FieldDefinition field in inputType.Fields)
         {
@@ -59,7 +67,7 @@ internal sealed partial class WinmdWriter
             FieldDefinition outputField = new(
                 field.Name!.Value,
                 FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal | FieldAttributes.HasDefault,
-                new FieldSignature(underlyingType));
+                new FieldSignature(enumTypeSignature));
 
             if (field.Constant != null)
             {
@@ -68,11 +76,6 @@ internal sealed partial class WinmdWriter
 
             outputType.Fields.Add(outputField);
         }
-
-        _outputModule.TopLevelTypes.Add(outputType);
-
-        TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
-        _typeDefinitionMapping[qualifiedName] = declaration;
     }
 
     private TypeSignature GetEnumUnderlyingType(TypeDefinition enumType)
@@ -417,5 +420,12 @@ internal sealed partial class WinmdWriter
 
         // Add synthesized interfaces (IFooClass, IFooFactory, IFooStatic)
         AddSynthesizedInterfaces(inputType, outputType, declaration);
+
+        // If no default synthesized interface was created but the class implements
+        // user interfaces, mark the first interface implementation as [Default]
+        if (declaration.DefaultInterface == null && outputType.Interfaces.Count > 0)
+        {
+            AddDefaultAttribute(outputType.Interfaces[0]);
+        }
     }
 }
