@@ -1,0 +1,444 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Collections.Generic;
+using System.Linq;
+using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.WinMDGenerator.Discovery;
+using WindowsRuntime.WinMDGenerator.Models;
+using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
+using MethodImplAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodImplAttributes;
+using MethodSemanticsAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodSemanticsAttributes;
+using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes;
+
+namespace WindowsRuntime.WinMDGenerator.Generation;
+
+internal sealed partial class WinmdWriter
+{
+    /// <summary>
+    /// Processes custom mapped interfaces for a class type. This maps .NET collection interfaces,
+    /// IDisposable, INotifyPropertyChanged, etc. to their WinRT equivalents and adds the
+    /// required explicit implementation methods and MethodImpl records.
+    /// </summary>
+    private void ProcessCustomMappedInterfaces(TypeDefinition inputType, TypeDefinition outputType)
+    {
+        // Collect all mapped interfaces and determine if they are publicly or explicitly implemented
+        List<(InterfaceImplementation impl, string interfaceName, MappedType mapping, bool isPublic)> mappedInterfaces = [];
+
+        foreach (InterfaceImplementation impl in inputType.Interfaces)
+        {
+            if (impl.Interface == null)
+            {
+                continue;
+            }
+
+            string interfaceName = GetInterfaceQualifiedName(impl.Interface);
+
+            if (!_mapper.HasMappingForType(interfaceName))
+            {
+                continue;
+            }
+
+            MappedType mapping = _mapper.GetMappedType(interfaceName);
+
+            // Determine if the interface is publicly implemented by checking if any
+            // implementing member on the class is public
+            bool isPublic = false;
+            TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
+                ? (ts.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
+                : impl.Interface.Resolve();
+
+            if (interfaceDef != null)
+            {
+                foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
+                {
+                    // Check if the class has a public method that could implement this interface member
+                    string methodName = interfaceMethod.Name?.Value ?? "";
+                    if (inputType.Methods.Any(m => m.IsPublic && m.Name?.Value == methodName))
+                    {
+                        isPublic = true;
+                        break;
+                    }
+                }
+            }
+
+            mappedInterfaces.Add((impl, interfaceName, mapping, isPublic));
+        }
+
+        // If generic IEnumerable<T> (IIterable) is present, skip non-generic IEnumerable (IBindableIterable)
+        bool hasGenericEnumerable = mappedInterfaces.Any(m =>
+            m.interfaceName == "System.Collections.Generic.IEnumerable`1");
+
+        foreach ((InterfaceImplementation impl, string interfaceName, MappedType mapping, bool isPublic) in mappedInterfaces)
+        {
+            (string mappedNs, string mappedName, string mappedAssembly, _, _) = mapping.GetMapping();
+
+            // Skip non-generic IEnumerable when generic IEnumerable<T> is also implemented
+            if (hasGenericEnumerable && interfaceName == "System.Collections.IEnumerable")
+            {
+                continue;
+            }
+
+            // Add the mapped interface as an implementation on the output type
+            TypeReference mappedInterfaceRef = GetOrCreateTypeReference(mappedNs, mappedName, mappedAssembly);
+
+            ITypeDefOrRef mappedInterfaceTypeRef;
+
+            // For generic interfaces, handle type arguments (mapping KeyValuePair -> IKeyValuePair, etc.)
+            if (impl.Interface is TypeSpecification typeSpec && typeSpec.Signature is GenericInstanceTypeSignature genericInst)
+            {
+                TypeSignature[] mappedArgs = [.. genericInst.TypeArguments
+                    .Select(MapCustomMappedTypeArgument)];
+                TypeSpecification mappedSpec = new(new GenericInstanceTypeSignature(mappedInterfaceRef, false, mappedArgs));
+                outputType.Interfaces.Add(new InterfaceImplementation(mappedSpec));
+                mappedInterfaceTypeRef = mappedSpec;
+            }
+            else
+            {
+                outputType.Interfaces.Add(new InterfaceImplementation(mappedInterfaceRef));
+                mappedInterfaceTypeRef = mappedInterfaceRef;
+            }
+
+            // Add explicit implementation methods for the mapped interface
+            AddCustomMappedTypeMembers(outputType, mappedName, mappedInterfaceTypeRef, isPublic);
+        }
+    }
+
+    /// <summary>
+    /// Maps a type argument for custom mapped interfaces, transforming mapped types
+    /// like KeyValuePair to IKeyValuePair.
+    /// </summary>
+    private TypeSignature MapCustomMappedTypeArgument(TypeSignature arg)
+    {
+        TypeSignature mapped = MapTypeSignatureToOutput(arg);
+
+        // Check if the mapped type itself has a WinRT mapping (e.g. KeyValuePair -> IKeyValuePair)
+        if (mapped is TypeDefOrRefSignature tdrs)
+        {
+            string typeName = AssemblyAnalyzer.GetQualifiedName(tdrs.Type);
+            if (_mapper.HasMappingForType(typeName))
+            {
+                MappedType innerMapping = _mapper.GetMappedType(typeName);
+                (string ns, string name, string asm, _, _) = innerMapping.GetMapping();
+                TypeReference innerRef = GetOrCreateTypeReference(ns, name, asm);
+                return innerRef.ToTypeSignature();
+            }
+        }
+
+        // For generic instances, recursively map type arguments
+        if (mapped is GenericInstanceTypeSignature gits)
+        {
+            string typeName = AssemblyAnalyzer.GetQualifiedName(gits.GenericType);
+            if (_mapper.HasMappingForType(typeName))
+            {
+                MappedType innerMapping = _mapper.GetMappedType(typeName);
+                (string ns, string name, string asm, _, _) = innerMapping.GetMapping();
+                TypeReference innerRef = GetOrCreateTypeReference(ns, name, asm);
+                TypeSignature[] innerArgs = [.. gits.TypeArguments.Select(MapCustomMappedTypeArgument)];
+                return new GenericInstanceTypeSignature(innerRef, false, innerArgs);
+            }
+        }
+
+        return mapped;
+    }
+
+    /// <summary>
+    /// Adds the explicit implementation methods for a specific mapped WinRT interface.
+    /// </summary>
+    private void AddCustomMappedTypeMembers(
+        TypeDefinition outputType,
+        string mappedTypeName,
+        ITypeDefOrRef mappedInterfaceRef,
+        bool isPublic)
+    {
+        // Build the qualified prefix for explicit implementation method names
+        string qualifiedPrefix = mappedInterfaceRef.FullName ?? mappedTypeName;
+
+        void AddMappedMethod(string name, (string name, TypeSignature type, ParameterAttributes attrs)[]? parameters, TypeSignature? returnType)
+        {
+            string methodName = isPublic ? name : $"{qualifiedPrefix}.{name}";
+
+            MethodAttributes attrs = isPublic
+                ? (MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot)
+                : (MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot);
+
+            TypeSignature[] paramTypes = parameters?.Select(p => p.type).ToArray() ?? [];
+            MethodSignature sig = MethodSignature.CreateInstance(returnType ?? _outputModule.CorLibTypeFactory.Void, paramTypes);
+
+            MethodDefinition method = new(methodName, attrs, sig)
+            {
+                ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
+            };
+
+            if (parameters != null)
+            {
+                int idx = 1;
+                foreach ((string name, TypeSignature type, ParameterAttributes attrs) p in parameters)
+                {
+                    method.ParameterDefinitions.Add(new ParameterDefinition((ushort)idx++, p.name, p.attrs));
+                }
+            }
+
+            outputType.Methods.Add(method);
+
+            // Add MethodImpl pointing to the mapped interface method
+            MemberReference interfaceMethodRef = new(mappedInterfaceRef, name, MethodSignature.CreateInstance(returnType ?? _outputModule.CorLibTypeFactory.Void, paramTypes));
+            outputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, method));
+        }
+
+        void AddMappedProperty(string name, TypeSignature propertyType, bool hasSetter)
+        {
+            string propName = isPublic ? name : $"{qualifiedPrefix}.{name}";
+            string getMethodName = isPublic ? $"get_{name}" : $"{qualifiedPrefix}.get_{name}";
+
+            // Getter
+            MethodAttributes getAttrs = isPublic
+                ? (MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.SpecialName)
+                : (MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.SpecialName);
+
+            MethodDefinition getter = new(getMethodName, getAttrs, MethodSignature.CreateInstance(propertyType))
+            {
+                ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
+            };
+            outputType.Methods.Add(getter);
+
+            // Property
+            PropertyDefinition prop = new(propName, 0, PropertySignature.CreateInstance(propertyType));
+            prop.Semantics.Add(new MethodSemantics(getter, MethodSemanticsAttributes.Getter));
+
+            // MethodImpl for getter
+            MemberReference getterRef = new(mappedInterfaceRef, $"get_{name}", MethodSignature.CreateInstance(propertyType));
+            outputType.MethodImplementations.Add(new MethodImplementation(getterRef, getter));
+
+            if (hasSetter)
+            {
+                string putMethodName = isPublic ? $"put_{name}" : $"{qualifiedPrefix}.put_{name}";
+                MethodDefinition setter = new(putMethodName, getAttrs, MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, propertyType))
+                {
+                    ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
+                };
+                setter.ParameterDefinitions.Add(new ParameterDefinition(1, "value", ParameterAttributes.In));
+                outputType.Methods.Add(setter);
+                prop.Semantics.Add(new MethodSemantics(setter, MethodSemanticsAttributes.Setter));
+
+                MemberReference setterRef = new(mappedInterfaceRef, $"put_{name}", MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, propertyType));
+                outputType.MethodImplementations.Add(new MethodImplementation(setterRef, setter));
+            }
+
+            outputType.Properties.Add(prop);
+        }
+
+        // Helper to get generic type arguments from the mapped interface
+        TypeSignature GetGenericArg(int index)
+        {
+            return mappedInterfaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gits && index < gits.TypeArguments.Count
+                ? gits.TypeArguments[index]
+                : _outputModule.CorLibTypeFactory.Object;
+        }
+
+        TypeSignature uint32Sig = _outputModule.CorLibTypeFactory.UInt32;
+        TypeSignature boolSig = _outputModule.CorLibTypeFactory.Boolean;
+        TypeSignature objectSig = _outputModule.CorLibTypeFactory.Object;
+        TypeSignature stringSig = _outputModule.CorLibTypeFactory.String;
+
+        TypeSignature GetTypeRef(string ns, string name, string asm) =>
+            GetOrCreateTypeReference(ns, name, asm).ToTypeSignature();
+
+        TypeSignature GetGenericTypeRef(string ns, string name, string asm, params TypeSignature[] args) =>
+            new GenericInstanceTypeSignature(GetOrCreateTypeReference(ns, name, asm), false, args);
+
+        // Generate members for each known mapped type
+        switch (mappedTypeName)
+        {
+            case "IClosable":
+                AddMappedMethod("Close", null, null);
+                break;
+
+            case "IIterable`1":
+                AddMappedMethod("First", null,
+                    GetGenericTypeRef("Windows.Foundation.Collections", "IIterator`1", "Windows.Foundation.FoundationContract", GetGenericArg(0)));
+                break;
+
+            case "IMap`2":
+                AddMappedMethod("Clear", null, null);
+                AddMappedMethod("GetView", null,
+                    GetGenericTypeRef("Windows.Foundation.Collections", "IMapView`2", "Windows.Foundation.FoundationContract", GetGenericArg(0), GetGenericArg(1)));
+                AddMappedMethod("HasKey",
+                    [("key", GetGenericArg(0), ParameterAttributes.In)], boolSig);
+                AddMappedMethod("Insert",
+                    [("key", GetGenericArg(0), ParameterAttributes.In), ("value", GetGenericArg(1), ParameterAttributes.In)], boolSig);
+                AddMappedMethod("Lookup",
+                    [("key", GetGenericArg(0), ParameterAttributes.In)], GetGenericArg(1));
+                AddMappedMethod("Remove",
+                    [("key", GetGenericArg(0), ParameterAttributes.In)], null);
+                AddMappedProperty("Size", uint32Sig, false);
+                break;
+
+            case "IMapView`2":
+                AddMappedMethod("HasKey",
+                    [("key", GetGenericArg(0), ParameterAttributes.In)], boolSig);
+                AddMappedMethod("Lookup",
+                    [("key", GetGenericArg(0), ParameterAttributes.In)], GetGenericArg(1));
+                AddMappedMethod("Split",
+                    [("first", new ByReferenceTypeSignature(GetGenericTypeRef("Windows.Foundation.Collections", "IMapView`2", "Windows.Foundation.FoundationContract", GetGenericArg(0), GetGenericArg(1))), ParameterAttributes.Out),
+                     ("second", new ByReferenceTypeSignature(GetGenericTypeRef("Windows.Foundation.Collections", "IMapView`2", "Windows.Foundation.FoundationContract", GetGenericArg(0), GetGenericArg(1))), ParameterAttributes.Out)], null);
+                AddMappedProperty("Size", uint32Sig, false);
+                break;
+
+            case "IVector`1":
+                AddMappedMethod("Append",
+                    [("value", GetGenericArg(0), ParameterAttributes.In)], null);
+                AddMappedMethod("Clear", null, null);
+                AddMappedMethod("GetAt",
+                    [("index", uint32Sig, ParameterAttributes.In)], GetGenericArg(0));
+                AddMappedMethod("GetMany",
+                    [("startIndex", uint32Sig, ParameterAttributes.In), ("items", new SzArrayTypeSignature(GetGenericArg(0)), ParameterAttributes.In)], uint32Sig);
+                AddMappedMethod("GetView", null,
+                    GetGenericTypeRef("Windows.Foundation.Collections", "IVectorView`1", "Windows.Foundation.FoundationContract", GetGenericArg(0)));
+                AddMappedMethod("IndexOf",
+                    [("value", GetGenericArg(0), ParameterAttributes.In), ("index", new ByReferenceTypeSignature(uint32Sig), ParameterAttributes.Out)], boolSig);
+                AddMappedMethod("InsertAt",
+                    [("index", uint32Sig, ParameterAttributes.In), ("value", GetGenericArg(0), ParameterAttributes.In)], null);
+                AddMappedMethod("RemoveAt",
+                    [("index", uint32Sig, ParameterAttributes.In)], null);
+                AddMappedMethod("RemoveAtEnd", null, null);
+                AddMappedMethod("ReplaceAll",
+                    [("items", new SzArrayTypeSignature(GetGenericArg(0)), ParameterAttributes.In)], null);
+                AddMappedMethod("SetAt",
+                    [("index", uint32Sig, ParameterAttributes.In), ("value", GetGenericArg(0), ParameterAttributes.In)], null);
+                AddMappedProperty("Size", uint32Sig, false);
+                break;
+
+            case "IVectorView`1":
+                AddMappedMethod("GetAt",
+                    [("index", uint32Sig, ParameterAttributes.In)], GetGenericArg(0));
+                AddMappedMethod("GetMany",
+                    [("startIndex", uint32Sig, ParameterAttributes.In), ("items", new SzArrayTypeSignature(GetGenericArg(0)), ParameterAttributes.In)], uint32Sig);
+                AddMappedMethod("IndexOf",
+                    [("value", GetGenericArg(0), ParameterAttributes.In), ("index", new ByReferenceTypeSignature(uint32Sig), ParameterAttributes.Out)], boolSig);
+                AddMappedProperty("Size", uint32Sig, false);
+                break;
+
+            case "IBindableIterable":
+                AddMappedMethod("First", null,
+                    GetTypeRef("Microsoft.UI.Xaml.Interop", "IBindableIterator", "Microsoft.UI"));
+                break;
+
+            case "IBindableVector":
+                AddMappedMethod("Append",
+                    [("value", objectSig, ParameterAttributes.In)], null);
+                AddMappedMethod("Clear", null, null);
+                AddMappedMethod("GetAt",
+                    [("index", uint32Sig, ParameterAttributes.In)], objectSig);
+                AddMappedMethod("GetView", null,
+                    GetTypeRef("Microsoft.UI.Xaml.Interop", "IBindableVectorView", "Microsoft.UI"));
+                AddMappedMethod("IndexOf",
+                    [("value", objectSig, ParameterAttributes.In), ("index", new ByReferenceTypeSignature(uint32Sig), ParameterAttributes.Out)], boolSig);
+                AddMappedMethod("InsertAt",
+                    [("index", uint32Sig, ParameterAttributes.In), ("value", objectSig, ParameterAttributes.In)], null);
+                AddMappedMethod("RemoveAt",
+                    [("index", uint32Sig, ParameterAttributes.In)], null);
+                AddMappedMethod("RemoveAtEnd", null, null);
+                AddMappedMethod("SetAt",
+                    [("index", uint32Sig, ParameterAttributes.In), ("value", objectSig, ParameterAttributes.In)], null);
+                AddMappedProperty("Size", uint32Sig, false);
+                break;
+
+            case "INotifyPropertyChanged":
+                // Event: PropertyChanged
+                AddMappedEvent(outputType, "PropertyChanged",
+                    GetTypeRef("Microsoft.UI.Xaml.Data", "PropertyChangedEventHandler", "Microsoft.UI"),
+                    mappedInterfaceRef, isPublic);
+                break;
+
+            case "ICommand":
+                AddMappedEvent(outputType, "CanExecuteChanged",
+                    GetGenericTypeRef("Windows.Foundation", "EventHandler`1", "Windows.Foundation.FoundationContract", objectSig),
+                    mappedInterfaceRef, isPublic);
+                AddMappedMethod("CanExecute",
+                    [("parameter", objectSig, ParameterAttributes.In)], boolSig);
+                AddMappedMethod("Execute",
+                    [("parameter", objectSig, ParameterAttributes.In)], null);
+                break;
+
+            case "INotifyCollectionChanged":
+                AddMappedEvent(outputType, "CollectionChanged",
+                    GetTypeRef("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler", "Microsoft.UI"),
+                    mappedInterfaceRef, isPublic);
+                break;
+
+            case "INotifyDataErrorInfo":
+                AddMappedProperty("HasErrors", boolSig, false);
+                AddMappedEvent(outputType, "ErrorsChanged",
+                    GetGenericTypeRef("Windows.Foundation", "EventHandler`1", "Windows.Foundation.FoundationContract",
+                        GetTypeRef("Microsoft.UI.Xaml.Data", "DataErrorsChangedEventArgs", "Microsoft.UI")),
+                    mappedInterfaceRef, isPublic);
+                AddMappedMethod("GetErrors",
+                    [("propertyName", stringSig, ParameterAttributes.In)],
+                    GetGenericTypeRef("Windows.Foundation.Collections", "IIterable`1", "Windows.Foundation.FoundationContract", objectSig));
+                break;
+
+            case "IXamlServiceProvider":
+                AddMappedMethod("GetService",
+                    [("type", GetTypeRef("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract"), ParameterAttributes.In)],
+                    objectSig);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Adds a mapped event with add/remove methods and MethodImpl records.
+    /// </summary>
+    private void AddMappedEvent(
+        TypeDefinition outputType,
+        string eventName,
+        TypeSignature handlerType,
+        ITypeDefOrRef mappedInterfaceRef,
+        bool isPublic)
+    {
+        string qualifiedPrefix = mappedInterfaceRef.FullName ?? "";
+        TypeReference tokenType = GetOrCreateTypeReference("Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract");
+        TypeSignature tokenSig = tokenType.ToTypeSignature();
+
+        ITypeDefOrRef handlerTypeRef = handlerType is TypeDefOrRefSignature tdrs ? tdrs.Type : (handlerType is GenericInstanceTypeSignature gits ? new TypeSpecification(gits) : tokenType);
+
+        string addName = isPublic ? $"add_{eventName}" : $"{qualifiedPrefix}.add_{eventName}";
+        string removeName = isPublic ? $"remove_{eventName}" : $"{qualifiedPrefix}.remove_{eventName}";
+
+        MethodAttributes attrs = isPublic
+            ? (MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.SpecialName)
+            : (MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.SpecialName);
+
+        // Add method
+        MethodDefinition adder = new(addName, attrs, MethodSignature.CreateInstance(tokenSig, handlerType))
+        {
+            ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
+        };
+        adder.ParameterDefinitions.Add(new ParameterDefinition(1, "handler", ParameterAttributes.In));
+        outputType.Methods.Add(adder);
+
+        // Remove method
+        MethodDefinition remover = new(removeName, attrs, MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, tokenSig))
+        {
+            ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
+        };
+        remover.ParameterDefinitions.Add(new ParameterDefinition(1, "token", ParameterAttributes.In));
+        outputType.Methods.Add(remover);
+
+        // Event
+        EventDefinition evt = new(isPublic ? eventName : $"{qualifiedPrefix}.{eventName}", 0, handlerTypeRef);
+        evt.Semantics.Add(new MethodSemantics(adder, MethodSemanticsAttributes.AddOn));
+        evt.Semantics.Add(new MethodSemantics(remover, MethodSemanticsAttributes.RemoveOn));
+        outputType.Events.Add(evt);
+
+        // MethodImpls
+        MemberReference addRef = new(mappedInterfaceRef, $"add_{eventName}", MethodSignature.CreateInstance(tokenSig, handlerType));
+        outputType.MethodImplementations.Add(new MethodImplementation(addRef, adder));
+        MemberReference removeRef = new(mappedInterfaceRef, $"remove_{eventName}", MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, tokenSig));
+        outputType.MethodImplementations.Add(new MethodImplementation(removeRef, remover));
+    }
+}

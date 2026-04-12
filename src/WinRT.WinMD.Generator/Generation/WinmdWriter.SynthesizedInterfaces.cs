@@ -6,7 +6,6 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.WinMDGenerator.Discovery;
-using WindowsRuntime.WinMDGenerator.Models;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
 using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes;
 using TypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
@@ -243,47 +242,6 @@ internal sealed partial class WinmdWriter
         }
 
         synthesizedInterface.Methods.Add(factoryMethod);
-    }
-
-    /// <summary>
-    /// Processes custom mapped interfaces for a class type. This maps .NET collection interfaces,
-    /// IDisposable, INotifyPropertyChanged, etc. to their WinRT equivalents.
-    /// </summary>
-    private void ProcessCustomMappedInterfaces(TypeDefinition inputType, TypeDefinition outputType)
-    {
-        foreach (InterfaceImplementation impl in inputType.Interfaces)
-        {
-            if (impl.Interface == null)
-            {
-                continue;
-            }
-
-            string interfaceName = GetInterfaceQualifiedName(impl.Interface);
-
-            if (!_mapper.HasMappingForType(interfaceName))
-            {
-                continue;
-            }
-
-            MappedType mapping = _mapper.GetMappedType(interfaceName);
-            (string mappedNs, string mappedName, string mappedAssembly, _, _) = mapping.GetMapping();
-
-            // Add the mapped interface as an implementation on the output type
-            TypeReference mappedInterfaceRef = GetOrCreateTypeReference(mappedNs, mappedName, mappedAssembly);
-
-            // For generic interfaces, we need to handle type arguments
-            if (impl.Interface is TypeSpecification typeSpec && typeSpec.Signature is GenericInstanceTypeSignature genericInst)
-            {
-                TypeSignature[] mappedArgs = [.. genericInst.TypeArguments
-                    .Select(MapTypeSignatureToOutput)];
-                TypeSpecification mappedSpec = new(new GenericInstanceTypeSignature(mappedInterfaceRef, false, mappedArgs));
-                outputType.Interfaces.Add(new InterfaceImplementation(mappedSpec));
-            }
-            else
-            {
-                outputType.Interfaces.Add(new InterfaceImplementation(mappedInterfaceRef));
-            }
-        }
     }
 
     private static string GetInterfaceQualifiedName(ITypeDefOrRef type)
