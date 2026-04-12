@@ -20,8 +20,8 @@ internal sealed partial class WinmdWriter
         {
             if (attr.Constructor?.DeclaringType?.FullName == "System.Runtime.InteropServices.GuidAttribute" &&
                 attr.Signature?.FixedArguments.Count > 0 &&
-                attr.Signature.FixedArguments[0].Element is string guidString &&
-                Guid.TryParse(guidString, out Guid guid))
+                attr.Signature.FixedArguments[0].Element is { } guidElement &&
+                Guid.TryParse(guidElement.ToString(), out Guid guid))
             {
                 AddGuidAttribute(outputType, guid);
                 return;
