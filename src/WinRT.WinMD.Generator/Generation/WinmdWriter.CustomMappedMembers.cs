@@ -56,8 +56,8 @@ internal sealed partial class WinmdWriter
         }
 
         // If generic IEnumerable<T> (IIterable) is present, skip non-generic IEnumerable (IBindableIterable)
-        bool hasGenericEnumerable = mappedInterfaces.Any(m =>
-            m.interfaceName == "System.Collections.Generic.IEnumerable`1");
+        bool hasGenericEnumerable = allInterfaces.Any(i =>
+            GetInterfaceQualifiedName(i.Interface!) == "System.Collections.Generic.IEnumerable`1");
 
         foreach ((InterfaceImplementation impl, string interfaceName, MappedType mapping, bool isPublic) in mappedInterfaces)
         {
