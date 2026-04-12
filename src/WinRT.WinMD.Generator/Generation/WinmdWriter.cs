@@ -104,7 +104,9 @@ internal sealed partial class WinmdWriter
     public void FinalizeGeneration()
     {
         // Phase 1: Add MethodImpl fixups for classes
-        foreach ((string qualifiedName, TypeDeclaration declaration) in _typeDefinitionMapping)
+        // Snapshot the mapping to avoid modification during iteration (ProcessType may add entries via MapTypeSignatureToOutput)
+        List<KeyValuePair<string, TypeDeclaration>> typeDeclarations = [.. _typeDefinitionMapping];
+        foreach ((string qualifiedName, TypeDeclaration declaration) in typeDeclarations)
         {
             if (declaration.OutputType == null || declaration.InputType == null || !declaration.IsComponentType)
             {
@@ -115,9 +117,12 @@ internal sealed partial class WinmdWriter
             TypeDefinition classInputType = declaration.InputType;
 
             // Add MethodImpls for implemented interfaces (excluding the default synthesized interface, handled below)
-            foreach (InterfaceImplementation classInterfaceImpl in classOutputType.Interfaces)
+            // Snapshot the interfaces list to avoid modification during iteration
+            List<InterfaceImplementation> outputInterfaces = [.. classOutputType.Interfaces];
+            foreach (InterfaceImplementation classInterfaceImpl in outputInterfaces)
             {
                 // Resolve the interface — handle TypeSpecification (generic instances) by resolving the GenericType
+                bool resolvedFromInput = false;
                 TypeDefinition? interfaceDef = classInterfaceImpl.Interface is TypeSpecification ts
                     && ts.Signature is GenericInstanceTypeSignature gits
                     ? gits.GenericType.Resolve()
@@ -136,6 +141,7 @@ internal sealed partial class WinmdWriter
                                 && its.Signature is GenericInstanceTypeSignature igits
                                 ? igits.GenericType.Resolve()
                                 : inputImpl.Interface.Resolve();
+                            resolvedFromInput = interfaceDef != null;
                             break;
                         }
                     }
@@ -155,14 +161,15 @@ internal sealed partial class WinmdWriter
                     continue;
                 }
 
-                foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
+                List<MethodDefinition> interfaceMethods = [.. interfaceDef.Methods];
+                foreach (MethodDefinition interfaceMethod in interfaceMethods)
                 {
-                    // Find the corresponding method on the class (by name or explicit implementation pattern)
-                    MethodDefinition? classMethod = FindMatchingMethod(classOutputType, interfaceMethod);
+                    // Find the corresponding method on the class (by name or explicit implementation pattern).
+                    // When resolved from input ref assemblies, map .NET projection types to WinRT equivalents.
+                    MethodDefinition? classMethod = FindMatchingMethod(classOutputType, interfaceMethod, resolvedFromInput);
                     if (classMethod == null)
                     {
                         // Try matching explicit implementation: look for "Namespace.IFoo.MethodName" pattern
-                        // Also verify parameter count and types match to avoid wrong overload matches
                         string explicitName = $"{interfaceQualName}.{interfaceMethod.Name?.Value}";
                         int paramCount = interfaceMethod.Signature?.ParameterTypes.Count ?? 0;
                         classMethod = classOutputType.Methods.FirstOrDefault(m =>
@@ -179,7 +186,11 @@ internal sealed partial class WinmdWriter
 
                             for (int i = 0; i < paramCount; i++)
                             {
-                                if (m.Signature!.ParameterTypes[i].FullName != interfaceMethod.Signature!.ParameterTypes[i].FullName)
+                                string classParamName = m.Signature!.ParameterTypes[i].FullName;
+                                string ifaceParamName = interfaceMethod.Signature!.ParameterTypes[i].FullName;
+
+                                if (classParamName != ifaceParamName &&
+                                    !(resolvedFromInput && IsProjectionEquivalent(ifaceParamName, classParamName)))
                                 {
                                     return false;
                                 }
@@ -191,7 +202,11 @@ internal sealed partial class WinmdWriter
 
                     if (classMethod != null)
                     {
-                        MemberReference interfaceMethodRef = new(classInterfaceImpl.Interface, interfaceMethod.Name!.Value, interfaceMethod.Signature);
+                        // Use the class method's signature for the MethodImpl declaration when resolved
+                        // from input ref assemblies — the ref assembly uses .NET projection types
+                        // (e.g., System.Type) but the WinMD needs WinRT types (e.g., TypeName)
+                        MethodSignature implSignature = resolvedFromInput ? classMethod.Signature! : interfaceMethod.Signature!;
+                        MemberReference interfaceMethodRef = new(classInterfaceImpl.Interface, interfaceMethod.Name!.Value, implSignature);
                         classOutputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, classMethod));
                     }
                 }
@@ -219,7 +234,7 @@ internal sealed partial class WinmdWriter
         // Phase 2: Add default version attributes for types that don't have one
         int defaultVersion = Version.Parse(_version).Major;
 
-        foreach ((string _, TypeDeclaration declaration) in _typeDefinitionMapping)
+        foreach ((string _, TypeDeclaration declaration) in typeDeclarations)
         {
             if (declaration.OutputType == null)
             {
@@ -235,7 +250,7 @@ internal sealed partial class WinmdWriter
         }
 
         // Phase 3: Add custom attributes from input types to output types
-        foreach ((string _, TypeDeclaration declaration) in _typeDefinitionMapping)
+        foreach ((string _, TypeDeclaration declaration) in typeDeclarations)
         {
             if (declaration.OutputType == null || declaration.InputType == null || !declaration.IsComponentType)
             {
@@ -246,7 +261,7 @@ internal sealed partial class WinmdWriter
         }
 
         // Phase 4: Add overload attributes for methods with the same name
-        foreach ((string _, TypeDeclaration declaration) in _typeDefinitionMapping)
+        foreach ((string _, TypeDeclaration declaration) in typeDeclarations)
         {
             if (declaration.OutputType == null)
             {
@@ -257,7 +272,7 @@ internal sealed partial class WinmdWriter
         }
     }
 
-    private static MethodDefinition? FindMatchingMethod(TypeDefinition classType, MethodDefinition interfaceMethod)
+    private MethodDefinition? FindMatchingMethod(TypeDefinition classType, MethodDefinition interfaceMethod, bool mapInterfaceTypes = false)
     {
         string methodName = interfaceMethod.Name?.Value ?? "";
 
@@ -278,10 +293,18 @@ internal sealed partial class WinmdWriter
             bool parametersMatch = true;
             for (int i = 0; i < (classMethod.Signature?.ParameterTypes.Count ?? 0); i++)
             {
-                if (classMethod.Signature!.ParameterTypes[i].FullName != interfaceMethod.Signature!.ParameterTypes[i].FullName)
+                string classParamName = classMethod.Signature!.ParameterTypes[i].FullName;
+                string ifaceParamName = interfaceMethod.Signature!.ParameterTypes[i].FullName;
+
+                if (classParamName != ifaceParamName)
                 {
-                    parametersMatch = false;
-                    break;
+                    // When comparing against externally-resolved interface methods (from ref assemblies),
+                    // check if the .NET projection type maps to the WinRT type via TypeMapper
+                    if (!mapInterfaceTypes || !IsProjectionEquivalent(ifaceParamName, classParamName))
+                    {
+                        parametersMatch = false;
+                        break;
+                    }
                 }
             }
 
@@ -294,6 +317,21 @@ internal sealed partial class WinmdWriter
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Checks if a .NET projection type name maps to a WinRT type name via the TypeMapper.
+    /// </summary>
+    private bool IsProjectionEquivalent(string dotNetTypeName, string winrtTypeName)
+    {
+        if (_mapper.HasMappingForType(dotNetTypeName))
+        {
+            (string ns, string name, _, _, _) = _mapper.GetMappedType(dotNetTypeName).GetMapping();
+            string mappedName = string.IsNullOrEmpty(ns) ? name : $"{ns}.{name}";
+            return mappedName == winrtTypeName;
+        }
+
+        return false;
     }
 
     private void AddOverloadAttributesForType(TypeDefinition type)
