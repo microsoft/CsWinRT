@@ -98,7 +98,17 @@ internal sealed partial class WinmdWriter
                 return declaration.OutputType;
             }
 
-            // Otherwise create a type reference
+            // If this is a public type from the input module, process it on demand
+            if (typeDef.IsPublic || typeDef.IsNestedPublic)
+            {
+                ProcessType(typeDef);
+                if (_typeDefinitionMapping.TryGetValue(qualifiedName, out declaration) && declaration.OutputType != null)
+                {
+                    return declaration.OutputType;
+                }
+            }
+
+            // External type or non-WinRT type — create a type reference
             return GetOrCreateTypeReference(
                 AssemblyAnalyzer.GetEffectiveNamespace(typeDef) ?? "",
                 typeDef.Name!.Value,
