@@ -49,6 +49,12 @@ internal sealed partial class WinmdWriter
             RuntimeVersion = "WindowsRuntime 1.4"
         };
 
+        // Replace the default mscorlib reference with the WinMD-style one (v255.255.255.255 with PKT)
+        AssemblyReference defaultCorLib = (AssemblyReference)_outputModule.CorLibTypeFactory.CorLibScope;
+        defaultCorLib.Version = new Version(0xFF, 0xFF, 0xFF, 0xFF);
+        defaultCorLib.PublicKeyOrToken = [0xb7, 0x7a, 0x5c, 0x56, 0x19, 0x34, 0xe0, 0x89];
+        _assemblyReferenceCache["mscorlib"] = defaultCorLib;
+
         // Create the output assembly with WindowsRuntime flag (keep reference alive via module)
         _ = new AssemblyDefinition(assemblyName, new Version(version))
         {
@@ -56,9 +62,6 @@ internal sealed partial class WinmdWriter
             Attributes = AssemblyAttributes.ContentWindowsRuntime,
             HashAlgorithm = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyHashAlgorithm.Sha1
         };
-
-        // Add the <Module> type
-        _outputModule.TopLevelTypes.Add(new TypeDefinition(null, "<Module>", 0));
     }
 
     /// <summary>
