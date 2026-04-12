@@ -140,17 +140,13 @@ internal sealed partial class WinmdWriter
                 defaultInterfaceDecl.OutputType != null)
             {
                 TypeDefinition defaultInterface = defaultInterfaceDecl.OutputType;
-                ITypeDefOrRef interfaceRef = GetOrCreateTypeReference(
-                    defaultInterface.Namespace?.Value ?? "",
-                    defaultInterface.Name!.Value,
-                    _assemblyName);
 
                 foreach (MethodDefinition interfaceMethod in defaultInterface.Methods)
                 {
                     MethodDefinition? classMethod = FindMatchingMethod(classOutputType, interfaceMethod);
                     if (classMethod != null)
                     {
-                        MemberReference interfaceMethodRef = new(interfaceRef, interfaceMethod.Name!.Value, interfaceMethod.Signature);
+                        MemberReference interfaceMethodRef = new(defaultInterface, interfaceMethod.Name!.Value, interfaceMethod.Signature);
                         classOutputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, classMethod));
                     }
                 }

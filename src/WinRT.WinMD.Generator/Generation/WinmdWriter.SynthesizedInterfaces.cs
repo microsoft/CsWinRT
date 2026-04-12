@@ -187,9 +187,8 @@ internal sealed partial class WinmdWriter
             {
                 classDeclaration.DefaultInterface = qualifiedInterfaceName;
 
-                // Add interface implementation on the class
-                TypeReference interfaceRef = GetOrCreateTypeReference(ns, interfaceName, _assemblyName);
-                InterfaceImplementation interfaceImpl = new(interfaceRef);
+                // Add interface implementation on the class (use the TypeDefinition directly since it's in the same module)
+                InterfaceImplementation interfaceImpl = new(synthesizedInterface);
                 classOutputType.Interfaces.Add(interfaceImpl);
 
                 // Add DefaultAttribute on the interface implementation
