@@ -75,14 +75,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Name="_RunCsWinRTWinMDGenerator"
     DependsOnTargets="CoreCompile;_ComputeRunCsWinRTWinMDGeneratorCache"
     AfterTargets="CoreCompile"
-    Inputs="@(IntermediateAssembly);@(ReferencePath);$(_RunCsWinRTWinMDGeneratorPropertyInputsCachePath)"
+    Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies);$(_RunCsWinRTWinMDGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTWinMDOutputPath)"
     Condition="'$(CsWinRTComponent)' == 'true'">
 
     <!-- Invoke 'cswinrtwinmdgen' -->
     <RunCsWinRTWinMDGenerator
       InputAssemblyPath="@(IntermediateAssembly)"
-      ReferenceAssemblyPaths="@(ReferencePath)"
+      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
       OutputWinmdPath="$(_CsWinRTWinMDOutputPath)"
       AssemblyVersion="$(AssemblyVersion)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"

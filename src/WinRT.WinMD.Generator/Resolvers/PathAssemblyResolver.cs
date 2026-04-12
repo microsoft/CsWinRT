@@ -68,6 +68,28 @@ internal sealed class PathAssemblyResolver : IAssemblyResolver
             }
         }
 
+        // Fallback: search sibling directories of existing reference paths.
+        // This handles type forwarding scenarios where the forwarder assembly (e.g., Microsoft.Windows.SDK.NET)
+        // forwards to an assembly (e.g., WinRT.Sdk.Projection) that lives in a sibling directory.
+        string targetFileName = assembly.Name + ".dll";
+        foreach (string path in _referencePaths)
+        {
+            string? dir = Path.GetDirectoryName(path);
+            if (dir is null)
+            {
+                continue;
+            }
+
+            string candidate = Path.Combine(dir, targetFileName);
+            if (File.Exists(candidate))
+            {
+                return _cache.GetOrAdd(
+                    key: assembly,
+                    valueFactory: static (_, args) => AssemblyDefinition.FromFile(args.Path, args.Parameters),
+                    factoryArgument: (Path: candidate, Parameters: ReaderParameters));
+            }
+        }
+
         return null;
     }
 

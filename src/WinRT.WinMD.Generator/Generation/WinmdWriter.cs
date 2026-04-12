@@ -117,9 +117,34 @@ internal sealed partial class WinmdWriter
             // Add MethodImpls for implemented interfaces (excluding the default synthesized interface, handled below)
             foreach (InterfaceImplementation classInterfaceImpl in classOutputType.Interfaces)
             {
-                TypeDefinition? interfaceDef = classInterfaceImpl.Interface?.Resolve();
+                // Resolve the interface — handle TypeSpecification (generic instances) by resolving the GenericType
+                TypeDefinition? interfaceDef = classInterfaceImpl.Interface is TypeSpecification ts
+                    && ts.Signature is GenericInstanceTypeSignature gits
+                    ? gits.GenericType.Resolve()
+                    : classInterfaceImpl.Interface?.Resolve();
+
+                // If the output interface can't be resolved (WinRT contract assemblies),
+                // find the matching interface from the INPUT type which points to resolvable projection assemblies
                 if (interfaceDef == null)
                 {
+                    string outputIfaceName = GetInterfaceQualifiedName(classInterfaceImpl.Interface!);
+                    foreach (InterfaceImplementation inputImpl in classInputType.Interfaces)
+                    {
+                        if (inputImpl.Interface != null && GetInterfaceQualifiedName(inputImpl.Interface) == outputIfaceName)
+                        {
+                            interfaceDef = inputImpl.Interface is TypeSpecification its
+                                && its.Signature is GenericInstanceTypeSignature igits
+                                ? igits.GenericType.Resolve()
+                                : inputImpl.Interface.Resolve();
+                            break;
+                        }
+                    }
+                }
+
+                if (interfaceDef == null)
+                {
+                    // Still unresolvable — MethodImpls for mapped interfaces are already
+                    // created by AddCustomMappedTypeMembers, so this is expected for those.
                     continue;
                 }
 
@@ -132,8 +157,38 @@ internal sealed partial class WinmdWriter
 
                 foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
                 {
-                    // Find the corresponding method on the class
+                    // Find the corresponding method on the class (by name or explicit implementation pattern)
                     MethodDefinition? classMethod = FindMatchingMethod(classOutputType, interfaceMethod);
+                    if (classMethod == null)
+                    {
+                        // Try matching explicit implementation: look for "Namespace.IFoo.MethodName" pattern
+                        // Also verify parameter count and types match to avoid wrong overload matches
+                        string explicitName = $"{interfaceQualName}.{interfaceMethod.Name?.Value}";
+                        int paramCount = interfaceMethod.Signature?.ParameterTypes.Count ?? 0;
+                        classMethod = classOutputType.Methods.FirstOrDefault(m =>
+                        {
+                            if (m.Name?.Value != explicitName)
+                            {
+                                return false;
+                            }
+
+                            if ((m.Signature?.ParameterTypes.Count ?? 0) != paramCount)
+                            {
+                                return false;
+                            }
+
+                            for (int i = 0; i < paramCount; i++)
+                            {
+                                if (m.Signature!.ParameterTypes[i].FullName != interfaceMethod.Signature!.ParameterTypes[i].FullName)
+                                {
+                                    return false;
+                                }
+                            }
+
+                            return true;
+                        });
+                    }
+
                     if (classMethod != null)
                     {
                         MemberReference interfaceMethodRef = new(classInterfaceImpl.Interface, interfaceMethod.Name!.Value, interfaceMethod.Signature);

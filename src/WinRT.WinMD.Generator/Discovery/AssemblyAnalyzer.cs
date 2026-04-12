@@ -135,10 +135,6 @@ internal sealed class AssemblyAnalyzer
     internal static string GetQualifiedName(TypeDefinition type)
     {
         string name = type.Name!.Value;
-        if (type.GenericParameters.Count > 0)
-        {
-            name += $"`{type.GenericParameters.Count}";
-        }
 
         string? ns = GetEffectiveNamespace(type);
         return ns is { Length: > 0 } ? $"{ns}.{name}" : name;

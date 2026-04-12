@@ -39,7 +39,7 @@ internal sealed partial class WinmdWriter
         // Collect members that come from interface implementations
         HashSet<string> membersFromInterfaces = [];
 
-        // Use all interfaces including inherited ones
+        // Use all interfaces including inherited ones from the input type
         List<InterfaceImplementation> allInterfaces = GatherAllInterfaces(inputType);
         foreach (InterfaceImplementation impl in allInterfaces)
         {
@@ -83,6 +83,18 @@ internal sealed partial class WinmdWriter
                 {
                     _ = membersFromInterfaces.Add(fullName[(lastDot + 1)..]);
                 }
+            }
+        }
+
+        // Also use MethodImplementations from the input type's IL to detect implicit interface
+        // implementations. This handles cases where a public class method implicitly implements
+        // an external interface method (e.g., IWwwFormUrlDecoderEntry.get_Name) — the compiler
+        // generates MethodImpl entries that tell us which methods come from interfaces.
+        foreach (MethodImplementation methodImpl in inputType.MethodImplementations)
+        {
+            if (methodImpl.Body is MethodDefinition bodyMethod && bodyMethod.IsPublic)
+            {
+                _ = membersFromInterfaces.Add(bodyMethod.Name?.Value ?? "");
             }
         }
 
