@@ -118,7 +118,9 @@ internal sealed partial class WinmdWriter
     {
         TypeSignature propertyType = MapTypeSignatureToOutput(inputProperty.Signature!.ReturnType);
 
-        bool isStatic = inputProperty.GetMethod?.IsStatic == true || inputProperty.SetMethod?.IsStatic == true;
+        // For interface parents (synthesized interfaces), always use instance signatures
+        // even when the original property was static — interface methods are always instance
+        bool isStatic = !isInterfaceParent && (inputProperty.GetMethod?.IsStatic == true || inputProperty.SetMethod?.IsStatic == true);
 
         PropertyDefinition outputProperty = new(
             inputProperty.Name!.Value,
@@ -203,7 +205,8 @@ internal sealed partial class WinmdWriter
 
         EventDefinition outputEvent = new(inputEvent.Name!.Value, 0, eventType);
 
-        bool isStatic = inputEvent.AddMethod?.IsStatic == true;
+        // For interface parents (synthesized interfaces), always use instance signatures
+        bool isStatic = !isInterfaceParent && inputEvent.AddMethod?.IsStatic == true;
 
         // Add method
         {
