@@ -552,9 +552,7 @@ internal sealed partial class WinmdWriter
 
         return sig is CorLibTypeSignature corLib
             ? corLib.Type.Name?.Value ?? sig.FullName
-            : sig is TypeDefOrRefSignature tdrs
-                ? tdrs.Type.Name?.Value ?? sig.FullName
-                : sig.FullName;
+            : sig.FullName;
     }
 
     /// <summary>

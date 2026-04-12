@@ -245,7 +245,8 @@ internal sealed partial class WinmdWriter
         if (attrTypeName is
             "System.Runtime.InteropServices.GuidAttribute" or
             "WinRT.GeneratedBindableCustomPropertyAttribute" or
-            "Windows.Foundation.Metadata.VersionAttribute")
+            "Windows.Foundation.Metadata.VersionAttribute" or
+            "System.Reflection.DefaultMemberAttribute")
         {
             return false;
         }
