@@ -70,7 +70,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     This target runs after CoreCompile since it needs the compiled DLL.
     ============================================================
   -->
-  <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden)' != 'true'" TaskName="RunCsWinRTWinMDGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
+  <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTWinMDGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTWinMDGenerator"
     DependsOnTargets="CoreCompile;_ComputeRunCsWinRTWinMDGeneratorCache"
