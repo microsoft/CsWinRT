@@ -310,6 +310,11 @@ internal sealed partial class WinmdWriter
             typeAttributes,
             baseType);
 
+        // Register in the mapping early so self-referencing method signatures can find it
+        _outputModule.TopLevelTypes.Add(outputType);
+        TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+        _typeDefinitionMapping[qualifiedName] = declaration;
+
         bool hasConstructor = false;
         bool hasDefaultConstructor = false;
         bool hasAtLeastOneNonPublicConstructor = false;
@@ -399,11 +404,6 @@ internal sealed partial class WinmdWriter
             ITypeDefOrRef outputInterfaceRef = ImportTypeReference(impl.Interface);
             outputType.Interfaces.Add(new InterfaceImplementation(outputInterfaceRef));
         }
-
-        _outputModule.TopLevelTypes.Add(outputType);
-
-        TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
-        _typeDefinitionMapping[qualifiedName] = declaration;
 
         // Add activatable attribute if it has a default constructor
         if (hasDefaultConstructor)

@@ -394,20 +394,12 @@ internal sealed partial class WinmdWriter
 
     /// <summary>
     /// Resolves a fully-qualified type name to a <see cref="TypeSignature"/> for use in custom attribute arguments.
+    /// Uses the output TypeDefinition directly to avoid creating self-referencing TypeReferences.
     /// </summary>
     private TypeSignature ResolveTypeNameToSignature(string qualifiedTypeName)
     {
-        // Check if we have this type in our output type definitions
-        if (_typeDefinitionMapping.TryGetValue(qualifiedTypeName, out TypeDeclaration? declaration) && declaration.OutputType != null)
-        {
-            return declaration.OutputType.ToTypeSignature();
-        }
-
-        // Parse the qualified name into namespace and type name, then create a reference
-        int lastDot = qualifiedTypeName.LastIndexOf('.');
-        string ns = lastDot > 0 ? qualifiedTypeName[..lastDot] : "";
-        string name = lastDot > 0 ? qualifiedTypeName[(lastDot + 1)..] : qualifiedTypeName;
-
-        return GetOrCreateTypeReference(ns, name, _assemblyName).ToTypeSignature();
+        return _typeDefinitionMapping.TryGetValue(qualifiedTypeName, out TypeDeclaration? declaration) && declaration.OutputType != null
+            ? declaration.OutputType.ToTypeSignature()
+            : throw new InvalidOperationException($"Type '{qualifiedTypeName}' not found in the output type definitions.");
     }
 }

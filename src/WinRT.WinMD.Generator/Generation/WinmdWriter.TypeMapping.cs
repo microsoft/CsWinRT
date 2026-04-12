@@ -109,6 +109,14 @@ internal sealed partial class WinmdWriter
         {
             string ns = typeRef.Namespace?.Value ?? "";
             string name = typeRef.Name!.Value;
+            string fullName = string.IsNullOrEmpty(ns) ? name : $"{ns}.{name}";
+
+            // Check if this type is in the output module (same-assembly reference)
+            if (_typeDefinitionMapping.TryGetValue(fullName, out TypeDeclaration? declaration) && declaration.OutputType != null)
+            {
+                return declaration.OutputType;
+            }
+
             string assembly = GetAssemblyNameFromScope(typeRef.Scope);
             return GetOrCreateTypeReference(ns, name, assembly);
         }

@@ -218,7 +218,10 @@ internal sealed partial class WinmdWriter
 
     private void AddFactoryMethod(TypeDefinition synthesizedInterface, TypeDefinition classType, MethodDefinition constructor)
     {
-        TypeSignature returnType = ImportTypeReference(classType).ToTypeSignature();
+        // Look up the output class TypeDefinition to use as the return type
+        string classQualifiedName = AssemblyAnalyzer.GetQualifiedName(classType);
+        TypeDefinition outputClassType = _typeDefinitionMapping[classQualifiedName].OutputType!;
+        TypeSignature returnType = new TypeDefOrRefSignature(outputClassType, isValueType: false);
 
         TypeSignature[] parameterTypes = [.. constructor.Signature!.ParameterTypes
             .Select(MapTypeSignatureToOutput)];

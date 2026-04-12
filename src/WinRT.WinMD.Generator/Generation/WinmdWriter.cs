@@ -18,7 +18,6 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 /// </summary>
 internal sealed partial class WinmdWriter
 {
-    private readonly string _assemblyName;
     private readonly string _version;
     private readonly TypeMapper _mapper;
     private readonly ModuleDefinition _inputModule;
@@ -40,7 +39,6 @@ internal sealed partial class WinmdWriter
         TypeMapper mapper,
         ModuleDefinition inputModule)
     {
-        _assemblyName = assemblyName;
         _version = version;
         _mapper = mapper;
         _inputModule = inputModule;
@@ -113,11 +111,18 @@ internal sealed partial class WinmdWriter
             TypeDefinition classOutputType = declaration.OutputType;
             TypeDefinition classInputType = declaration.InputType;
 
-            // Add MethodImpls for implemented interfaces
+            // Add MethodImpls for implemented interfaces (excluding the default synthesized interface, handled below)
             foreach (InterfaceImplementation classInterfaceImpl in classOutputType.Interfaces)
             {
                 TypeDefinition? interfaceDef = classInterfaceImpl.Interface?.Resolve();
                 if (interfaceDef == null)
+                {
+                    continue;
+                }
+
+                // Skip the default synthesized interface — it's handled separately below
+                string interfaceQualName = AssemblyAnalyzer.GetQualifiedName(interfaceDef);
+                if (interfaceQualName == declaration.DefaultInterface)
                 {
                     continue;
                 }
