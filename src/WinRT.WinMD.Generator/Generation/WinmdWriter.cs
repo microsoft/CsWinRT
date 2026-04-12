@@ -46,7 +46,10 @@ internal sealed partial class WinmdWriter
         _inputModule = inputModule;
 
         // Create the output WinMD module
-        _outputModule = new ModuleDefinition(assemblyName + ".winmd");
+        _outputModule = new ModuleDefinition(assemblyName + ".winmd")
+        {
+            RuntimeVersion = "WindowsRuntime 1.4"
+        };
 
         // Create the output assembly with WindowsRuntime flag (keep reference alive via module)
         _ = new AssemblyDefinition(assemblyName, new Version(version))
@@ -75,7 +78,7 @@ internal sealed partial class WinmdWriter
         {
             AddEnumType(inputType);
         }
-        else if (AssemblyAnalyzer.IsDelegate(inputType))
+        else if (inputType.IsDelegate)
         {
             AddDelegateType(inputType);
         }
@@ -83,7 +86,7 @@ internal sealed partial class WinmdWriter
         {
             AddInterfaceType(inputType);
         }
-        else if (inputType.IsValueType && !inputType.IsEnum)
+        else if (inputType.IsValueType)
         {
             AddStructType(inputType);
         }
@@ -112,12 +115,7 @@ internal sealed partial class WinmdWriter
             // Add MethodImpls for implemented interfaces
             foreach (InterfaceImplementation classInterfaceImpl in classOutputType.Interfaces)
             {
-                if (classInterfaceImpl.Interface == null)
-                {
-                    continue;
-                }
-
-                TypeDefinition? interfaceDef = classInterfaceImpl.Interface.Resolve();
+                TypeDefinition? interfaceDef = classInterfaceImpl.Interface?.Resolve();
                 if (interfaceDef == null)
                 {
                     continue;
