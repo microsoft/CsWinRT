@@ -44,6 +44,7 @@
     <CsWinRTInteropGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Interop.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTInteropGenEffectiveToolsDirectory>
     <CsWinRTImplEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Impl.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTImplEffectiveToolsDirectory>
     <CsWinRTMergedProjectionEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Projection.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTMergedProjectionEffectiveToolsDirectory>
+    <CsWinRTWinMDGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.WinMD.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTWinMDGenEffectiveToolsDirectory>
     <CsWinRTToolsArchitecture>AnyCPU</CsWinRTToolsArchitecture>
   </PropertyGroup>
 

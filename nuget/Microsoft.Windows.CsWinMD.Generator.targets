@@ -6,10 +6,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- Setup common properties for '_RunCsWinRTWinMDGenerator' below -->
   <PropertyGroup>
-    <CsWinRTWinMDGenToolsDirectory>$(SolutionDir)WinRT.WinMD.Generator\bin\$(Configuration)\net10.0\</CsWinRTWinMDGenToolsDirectory>
-
-    <!-- Enable/disable WinMD generation (opt-in) -->
-    <CsWinRTGenerateWinMD Condition="'$(CsWinRTGenerateWinMD)' == ''">false</CsWinRTGenerateWinMD>
 
     <!-- Output paths -->
     <CsWinRTWinMDOutputDirectory Condition="'$(CsWinRTWinMDOutputDirectory)' == ''">$(IntermediateOutputPath)</CsWinRTWinMDOutputDirectory>
@@ -25,6 +21,21 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <!--
     ============================================================
+                    _ResolveCsWinRTWinMDGenToolsDirectory
+
+    Resolves the location of the WinMD generator tools.
+    Uses the shared _CsWinRTToolsDirectory from _ResolveCsWinRToolsDirectory
+    when available (NuGet package), with a dev-only fallback.
+    ============================================================
+  -->
+  <Target Name="_ResolveCsWinRTWinMDGenToolsDirectory" DependsOnTargets="ResolveAssemblyReferences;_ResolveCsWinRToolsDirectory" BeforeTargets="_ComputeRunCsWinRTWinMDGeneratorCache">
+    <PropertyGroup>
+      <CsWinRTWinMDGenEffectiveToolsDirectory Condition="'$(CsWinRTWinMDGenEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTWinMDGenEffectiveToolsDirectory>
+    </PropertyGroup>
+  </Target>
+
+  <!--
+    ============================================================
                     _ComputeRunCsWinRTWinMDGeneratorCache
 
     Computes a hash of all input properties to detect when re-generation is needed.
@@ -32,10 +43,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target
     Name="_ComputeRunCsWinRTWinMDGeneratorCache"
-    DependsOnTargets="CoreCompile">
+    DependsOnTargets="CoreCompile;_ResolveCsWinRTWinMDGenToolsDirectory">
 
     <ItemGroup>
-      <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(CsWinRTWinMDGenToolsDirectory)" />
+      <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(CsWinRTWinMDGenEffectiveToolsDirectory)" />
       <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
       <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(AssemblyVersion)" />
     </ItemGroup>
@@ -66,7 +77,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     AfterTargets="CoreCompile"
     Inputs="@(IntermediateAssembly);@(ReferencePath);$(_RunCsWinRTWinMDGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTWinMDOutputPath)"
-    Condition="'$(CsWinRTGenerateWinMD)' == 'true'">
+    Condition="'$(CsWinRTComponent)' == 'true'">
 
     <!-- Invoke 'cswinrtwinmdgen' -->
     <RunCsWinRTWinMDGenerator
@@ -75,8 +86,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       OutputWinmdPath="$(_CsWinRTWinMDOutputPath)"
       AssemblyVersion="$(AssemblyVersion)"
       UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
-      CsWinRTToolsDirectory="$(CsWinRTWinMDGenToolsDirectory)"
-      CsWinRTToolsArchitecture="AnyCPU"
+      CsWinRTToolsDirectory="$(CsWinRTWinMDGenEffectiveToolsDirectory)"
+      CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
