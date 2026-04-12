@@ -55,7 +55,8 @@ internal sealed partial class WinmdWriter
         _ = new AssemblyDefinition(assemblyName, new Version(version))
         {
             Modules = { _outputModule },
-            Attributes = AssemblyAttributes.ContentWindowsRuntime // WindowsRuntime
+            Attributes = AssemblyAttributes.ContentWindowsRuntime,
+            HashAlgorithm = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyHashAlgorithm.Sha1
         };
 
         // Add the <Module> type
