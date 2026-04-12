@@ -46,25 +46,11 @@ internal sealed partial class WinmdWriter
 
             MappedType mapping = _mapper.GetMappedType(interfaceName);
 
-            // Determine if the interface is publicly implemented by checking if any
-            // implementing member on the class is public
-            bool isPublic = false;
-            TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
-                ? (ts.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
-                : impl.Interface.Resolve();
-
-            if (interfaceDef != null)
-            {
-                foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
-                {
-                    string methodName = interfaceMethod.Name?.Value ?? "";
-                    if (inputType.Methods.Any(m => m.IsPublic && m.Name?.Value == methodName))
-                    {
-                        isPublic = true;
-                        break;
-                    }
-                }
-            }
+            // Determine if the interface is publicly implemented.
+            // Check if the class has public methods that match the .NET interface members.
+            // For mapped interfaces, the .NET method names differ from WinRT names
+            // (e.g., Add vs Append), so we check the .NET interface's members.
+            bool isPublic = IsInterfacePubliclyImplemented(inputType, impl);
 
             mappedInterfaces.Add((impl, interfaceName, mapping, isPublic));
         }
@@ -155,8 +141,9 @@ internal sealed partial class WinmdWriter
         ITypeDefOrRef mappedInterfaceRef,
         bool isPublic)
     {
-        // Build the qualified prefix for explicit implementation method names
-        string qualifiedPrefix = mappedInterfaceRef.FullName ?? mappedTypeName;
+        // Build the qualified prefix for explicit implementation method names.
+        // For generic types, use short type names (e.g. "IMap`2<String, Int32>" not "IMap`2<System.String, System.Int32>")
+        string qualifiedPrefix = FormatQualifiedInterfaceName(mappedInterfaceRef);
 
         void AddMappedMethod(string name, (string name, TypeSignature type, ParameterAttributes attrs)[]? parameters, TypeSignature? returnType)
         {
@@ -498,5 +485,75 @@ internal sealed partial class WinmdWriter
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Determines if a mapped interface is publicly implemented on the class.
+    /// Checks if the class declares public methods whose names match the .NET interface members.
+    /// For inherited interfaces, walks up the class hierarchy.
+    /// </summary>
+    private static bool IsInterfacePubliclyImplemented(TypeDefinition classType, InterfaceImplementation impl)
+    {
+        TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
+            ? (ts.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
+            : impl.Interface?.Resolve();
+
+        if (interfaceDef == null)
+        {
+            return false;
+        }
+
+        // Walk the class hierarchy to find public implementations
+        TypeDefinition? current = classType;
+        while (current != null)
+        {
+            foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
+            {
+                string methodName = interfaceMethod.Name?.Value ?? "";
+                if (current.Methods.Any(m => m.IsPublic && m.Name?.Value == methodName))
+                {
+                    return true;
+                }
+            }
+
+            current = current.BaseType?.Resolve();
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Formats a qualified interface name for use in explicit method names.
+    /// Uses short type names for generic arguments (e.g., "String" not "System.String").
+    /// </summary>
+    private static string FormatQualifiedInterfaceName(ITypeDefOrRef typeRef)
+    {
+        if (typeRef is TypeSpecification spec && spec.Signature is GenericInstanceTypeSignature gits)
+        {
+            string baseName = gits.GenericType.FullName ?? "";
+            string args = string.Join(", ", gits.TypeArguments.Select(FormatShortTypeName));
+            return $"{baseName}<{args}>";
+        }
+
+        return typeRef.FullName ?? "";
+    }
+
+    /// <summary>
+    /// Formats a type signature using short names (e.g., "String" instead of "System.String").
+    /// </summary>
+    private static string FormatShortTypeName(TypeSignature sig)
+    {
+        if (sig is GenericInstanceTypeSignature gits)
+        {
+            string baseName = gits.GenericType.FullName ?? "";
+            string args = string.Join(", ", gits.TypeArguments.Select(FormatShortTypeName));
+            return $"{baseName}<{args}>";
+        }
+
+        return sig is CorLibTypeSignature corLib
+            ? corLib.Type.Name?.Value ?? sig.FullName
+            : sig is TypeDefOrRefSignature tdrs
+                ? tdrs.Type.Name?.Value ?? sig.FullName
+                : sig.FullName;
     }
 }
