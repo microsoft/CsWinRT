@@ -450,14 +450,14 @@ internal sealed partial class WinmdWriter
 
     /// <summary>
     /// Gathers all interfaces from a type and its base type chain, including interfaces
-    /// inherited from interfaces. This matches the old source generator's AllInterfaces behavior.
+    /// inherited from interfaces. Resolves generic type parameters through the base class chain.
     /// </summary>
-    private static List<InterfaceImplementation> GatherAllInterfaces(TypeDefinition type)
+    private List<InterfaceImplementation> GatherAllInterfaces(TypeDefinition type)
     {
         HashSet<string> seen = new(StringComparer.Ordinal);
         List<InterfaceImplementation> result = [];
 
-        void CollectFromType(TypeDefinition typeDef)
+        void CollectFromType(TypeDefinition typeDef, TypeSignature[]? genericArgs)
         {
             foreach (InterfaceImplementation impl in typeDef.Interfaces)
             {
@@ -466,38 +466,68 @@ internal sealed partial class WinmdWriter
                     continue;
                 }
 
-                string name = impl.Interface.FullName ?? "";
+                // If we have generic args, substitute them in the interface reference
+                ITypeDefOrRef resolvedInterface = impl.Interface;
+                if (genericArgs != null && impl.Interface is TypeSpecification ts &&
+                    ts.Signature is GenericInstanceTypeSignature gits)
+                {
+                    // Resolve generic parameters in type arguments
+                    TypeSignature[] resolvedArgs = [.. gits.TypeArguments.Select(arg =>
+                        arg is GenericParameterSignature gps && gps.Index < genericArgs.Length
+                            ? genericArgs[gps.Index]
+                            : arg)];
+                    resolvedInterface = new TypeSpecification(new GenericInstanceTypeSignature(gits.GenericType, gits.IsValueType, resolvedArgs));
+                }
+
+                string name = resolvedInterface.FullName ?? "";
                 if (!seen.Add(name))
                 {
                     continue;
                 }
 
-                if (IsPubliclyAccessible(impl.Interface))
+                if (IsPubliclyAccessible(resolvedInterface))
                 {
-                    result.Add(impl);
+                    result.Add(new InterfaceImplementation(resolvedInterface));
                 }
 
                 // Also collect interfaces inherited by this interface
-                TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
-                    ? (ts.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
-                    : impl.Interface.Resolve();
+                TypeDefinition? interfaceDef = resolvedInterface is TypeSpecification ts2
+                    ? (ts2.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
+                    : resolvedInterface.Resolve();
 
                 if (interfaceDef != null)
                 {
-                    CollectFromType(interfaceDef);
+                    // Pass the resolved interface's generic args down
+                    TypeSignature[]? innerArgs = resolvedInterface is TypeSpecification ts3 &&
+                        ts3.Signature is GenericInstanceTypeSignature innerGits
+                        ? [.. innerGits.TypeArguments]
+                        : null;
+                    CollectFromType(interfaceDef, innerArgs);
                 }
             }
         }
 
         // Collect from the type itself
-        CollectFromType(type);
+        CollectFromType(type, null);
 
-        // Walk base types
-        TypeDefinition? current = type.BaseType?.Resolve();
-        while (current != null)
+        // Walk base types, resolving generic arguments
+        ITypeDefOrRef? baseTypeRef = type.BaseType;
+        while (baseTypeRef != null)
         {
-            CollectFromType(current);
-            current = current.BaseType?.Resolve();
+            TypeDefinition? baseDef = baseTypeRef.Resolve();
+            if (baseDef == null)
+            {
+                break;
+            }
+
+            // Get generic arguments from the base type reference
+            TypeSignature[]? baseGenericArgs = baseTypeRef is TypeSpecification baseTs &&
+                baseTs.Signature is GenericInstanceTypeSignature baseGits
+                ? [.. baseGits.TypeArguments]
+                : null;
+
+            CollectFromType(baseDef, baseGenericArgs);
+            baseTypeRef = baseDef.BaseType;
         }
 
         return result;

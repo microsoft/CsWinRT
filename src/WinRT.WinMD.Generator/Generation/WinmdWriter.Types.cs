@@ -459,21 +459,23 @@ internal sealed partial class WinmdWriter
 
     /// <summary>
     /// Adds explicit interface implementation methods from the input class.
-    /// These are private methods with qualified names (e.g., "AuthoringTest.IDouble.GetDouble").
+    /// Applies WinRT conventions: set_ to put_, event add returns EventRegistrationToken,
+    /// event remove takes EventRegistrationToken.
     /// </summary>
     private void AddExplicitInterfaceImplementations(TypeDefinition inputType, TypeDefinition outputType)
     {
+        TypeReference eventRegistrationTokenType = GetOrCreateTypeReference(
+            "Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract");
+        TypeSignature tokenSig = eventRegistrationTokenType.ToTypeSignature();
+
         foreach (MethodDefinition method in inputType.Methods)
         {
-            // Explicit implementations in compiled IL are private methods with dots in the name
             if (method.IsPublic || method.Name?.Value?.Contains('.') != true)
             {
                 continue;
             }
 
             string fullMethodName = method.Name.Value;
-
-            // Extract interface name and method name (e.g., "AuthoringTest.IDouble.GetDouble" -> "AuthoringTest.IDouble" + "GetDouble")
             int lastDot = fullMethodName.LastIndexOf('.');
             if (lastDot <= 0)
             {
@@ -483,102 +485,110 @@ internal sealed partial class WinmdWriter
             string interfaceQualName = fullMethodName[..lastDot];
             string shortMethodName = fullMethodName[(lastDot + 1)..];
 
-            // Check if this interface is one we've processed (skip mapped/unmapped interfaces)
             if (!_typeDefinitionMapping.ContainsKey(interfaceQualName))
             {
                 continue;
             }
 
-            // Create the output method
-            TypeSignature returnType = method.Signature!.ReturnType is CorLibTypeSignature { ElementType: ElementType.Void }
-                ? _outputModule.CorLibTypeFactory.Void
-                : MapTypeSignatureToOutput(method.Signature.ReturnType);
+            // Apply WinRT naming: set_ to put_
+            string winrtShortName = shortMethodName;
+            if (winrtShortName.StartsWith("set_", StringComparison.Ordinal))
+            {
+                winrtShortName = "put_" + winrtShortName[4..];
+            }
 
-            TypeSignature[] parameterTypes = [.. method.Signature.ParameterTypes
-                .Select(MapTypeSignatureToOutput)];
+            string winrtFullName = $"{interfaceQualName}.{winrtShortName}";
+
+            TypeSignature returnType;
+            TypeSignature[] parameterTypes;
+            string[] paramNames;
+
+            if (winrtShortName.StartsWith("add_", StringComparison.Ordinal))
+            {
+                // Event add: returns EventRegistrationToken, param is handler type named "handler"
+                returnType = tokenSig;
+                parameterTypes = [.. method.Signature!.ParameterTypes.Select(MapTypeSignatureToOutput)];
+                paramNames = ["handler"];
+            }
+            else if (winrtShortName.StartsWith("remove_", StringComparison.Ordinal))
+            {
+                // Event remove: takes EventRegistrationToken named "token", returns void
+                returnType = _outputModule.CorLibTypeFactory.Void;
+                parameterTypes = [tokenSig];
+                paramNames = ["token"];
+            }
+            else
+            {
+                returnType = method.Signature!.ReturnType is CorLibTypeSignature { ElementType: ElementType.Void }
+                    ? _outputModule.CorLibTypeFactory.Void
+                    : MapTypeSignatureToOutput(method.Signature.ReturnType);
+                parameterTypes = [.. method.Signature.ParameterTypes.Select(MapTypeSignatureToOutput)];
+                paramNames = [.. method.ParameterDefinitions.Select(p => p.Name?.Value ?? "value")];
+            }
 
             MethodAttributes attrs =
-                MethodAttributes.Private |
-                MethodAttributes.Final |
-                MethodAttributes.Virtual |
-                MethodAttributes.HideBySig |
-                MethodAttributes.NewSlot;
+                MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual |
+                MethodAttributes.HideBySig | MethodAttributes.NewSlot;
 
             if (method.IsSpecialName)
             {
                 attrs |= MethodAttributes.SpecialName;
             }
 
-            MethodDefinition outputMethod = new(
-                fullMethodName,
-                attrs,
+            MethodDefinition outputMethod = new(winrtFullName, attrs,
                 MethodSignature.CreateInstance(returnType, parameterTypes))
             {
                 ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
             };
 
-            int paramIndex = 1;
-            foreach (ParameterDefinition inputParam in method.ParameterDefinitions)
+            for (int i = 0; i < paramNames.Length; i++)
             {
                 outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
-                    (ushort)paramIndex++,
-                    inputParam.Name!.Value,
-                    ParameterAttributes.In));
+                    (ushort)(i + 1), paramNames[i], ParameterAttributes.In));
             }
 
             outputType.Methods.Add(outputMethod);
 
-            // Also add properties/events for accessor methods
-            if (shortMethodName.StartsWith("get_", StringComparison.Ordinal) || shortMethodName.StartsWith("put_", StringComparison.Ordinal))
+            if (winrtShortName.StartsWith("get_", StringComparison.Ordinal) || winrtShortName.StartsWith("put_", StringComparison.Ordinal))
             {
-                string propName = $"{interfaceQualName}.{shortMethodName[4..]}";
-                if (!outputType.Properties.Any(p => p.Name?.Value == propName))
+                string propName = $"{interfaceQualName}.{winrtShortName[4..]}";
+                PropertyDefinition? existingProp = outputType.Properties.FirstOrDefault(p => p.Name?.Value == propName);
+                if (existingProp == null)
                 {
-                    PropertyDefinition prop = new(propName, 0, PropertySignature.CreateInstance(
-                        shortMethodName.StartsWith("get_", StringComparison.Ordinal) ? returnType : parameterTypes[0]));
-
-                    if (shortMethodName.StartsWith("get_", StringComparison.Ordinal))
-                    {
-                        prop.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.Getter));
-                    }
-                    else
-                    {
-                        prop.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.Setter));
-                    }
-
+                    TypeSignature propType = winrtShortName.StartsWith("get_", StringComparison.Ordinal) ? returnType : parameterTypes[0];
+                    PropertyDefinition prop = new(propName, 0, PropertySignature.CreateInstance(propType));
+                    prop.Semantics.Add(new MethodSemantics(outputMethod,
+                        winrtShortName.StartsWith("get_", StringComparison.Ordinal) ? MethodSemanticsAttributes.Getter : MethodSemanticsAttributes.Setter));
                     outputType.Properties.Add(prop);
                 }
                 else
                 {
-                    // Add setter to existing property
-                    PropertyDefinition existing = outputType.Properties.First(p => p.Name?.Value == propName);
-                    existing.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.Setter));
+                    existingProp.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.Setter));
                 }
             }
-            else if (shortMethodName.StartsWith("add_", StringComparison.Ordinal))
+            else if (winrtShortName.StartsWith("add_", StringComparison.Ordinal))
             {
-                string evtName = $"{interfaceQualName}.{shortMethodName[4..]}";
-                // Find the event handler type from the parameter
+                string evtName = $"{interfaceQualName}.{winrtShortName[4..]}";
                 ITypeDefOrRef eventType = parameterTypes.Length > 0 && parameterTypes[0] is TypeDefOrRefSignature tdrs
                     ? tdrs.Type
-                    : GetOrCreateTypeReference("Windows.Foundation", "EventHandler`1", "Windows.Foundation.FoundationContract");
-
+                    : parameterTypes.Length > 0 && parameterTypes[0] is GenericInstanceTypeSignature gits
+                        ? new TypeSpecification(gits)
+                        : GetOrCreateTypeReference("Windows.Foundation", "EventHandler`1", "Windows.Foundation.FoundationContract");
                 EventDefinition evt = new(evtName, 0, eventType);
                 evt.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.AddOn));
                 outputType.Events.Add(evt);
             }
-            else if (shortMethodName.StartsWith("remove_", StringComparison.Ordinal))
+            else if (winrtShortName.StartsWith("remove_", StringComparison.Ordinal))
             {
-                string evtName = $"{interfaceQualName}.{shortMethodName[7..]}";
+                string evtName = $"{interfaceQualName}.{winrtShortName[7..]}";
                 EventDefinition? existingEvt = outputType.Events.FirstOrDefault(e => e.Name?.Value == evtName);
                 existingEvt?.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.RemoveOn));
             }
 
-            // Add MethodImpl pointing to the interface method
             TypeDeclaration interfaceDecl = _typeDefinitionMapping[interfaceQualName];
             if (interfaceDecl.OutputType != null)
             {
-                MemberReference interfaceMethodRef = new(interfaceDecl.OutputType, shortMethodName,
+                MemberReference interfaceMethodRef = new(interfaceDecl.OutputType, winrtShortName,
                     MethodSignature.CreateInstance(returnType, parameterTypes));
                 outputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, outputMethod));
             }
