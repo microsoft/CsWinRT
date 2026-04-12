@@ -56,7 +56,7 @@ internal sealed class AssemblyAnalyzer
         }
 
         // We include classes, interfaces, structs, enums, and delegates
-        if (type.IsClass || type.IsInterface || type.IsValueType || type.IsEnum || IsDelegate(type))
+        if (type.IsClass || type.IsInterface || type.IsValueType || type.IsEnum || type.IsDelegate)
         {
             publicTypes.Add(type);
         }
@@ -74,14 +74,6 @@ internal sealed class AssemblyAnalyzer
     private static bool IsPublicType(TypeDefinition type)
     {
         return type.IsPublic || type.IsNestedPublic;
-    }
-
-    /// <summary>
-    /// Checks whether a type is a delegate (inherits from System.MulticastDelegate).
-    /// </summary>
-    internal static bool IsDelegate(TypeDefinition type)
-    {
-        return type.BaseType?.FullName == "System.MulticastDelegate";
     }
 
     /// <summary>
@@ -149,9 +141,7 @@ internal sealed class AssemblyAnalyzer
         }
 
         string? ns = GetEffectiveNamespace(type);
-        return ns is { Length: > 0 }
-            ? $"{ns}.{name}"
-            : name;
+        return ns is { Length: > 0 } ? $"{ns}.{name}" : name;
     }
 
     /// <summary>
@@ -160,19 +150,14 @@ internal sealed class AssemblyAnalyzer
     /// </summary>
     internal static string GetQualifiedName(ITypeDefOrRef type)
     {
-        string name = type.Name!.Value;
-        if (type is TypeDefinition td && td.GenericParameters.Count > 0)
+        if (type is TypeDefinition td)
         {
-            name += $"`{td.GenericParameters.Count}";
+            return GetQualifiedName(td);
         }
 
-        // For TypeDefinition, use GetEffectiveNamespace to handle nested types
-        string? ns = type is TypeDefinition typeDef
-            ? GetEffectiveNamespace(typeDef)
-            : type.Namespace?.Value;
+        string name = type.Name!.Value;
+        string? ns = type.Namespace?.Value;
 
-        return ns is { Length: > 0 }
-            ? $"{ns}.{name}"
-            : name;
+        return ns is { Length: > 0 } ? $"{ns}.{name}" : name;
     }
 }

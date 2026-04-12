@@ -217,6 +217,5 @@ internal sealed class TypeMapper
         "System.IEquatable`1",
         "System.Runtime.InteropServices.ICustomQueryInterface",
         "System.Runtime.InteropServices.IDynamicInterfaceCastable",
-        "WinRT.IWinRTObject"
     };
 }
