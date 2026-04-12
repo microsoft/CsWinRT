@@ -72,6 +72,22 @@ internal sealed partial class WinmdWriter
             // Add the mapped interface as an implementation on the output type
             TypeReference mappedInterfaceRef = GetOrCreateTypeReference(mappedNs, mappedName, mappedAssembly);
 
+            // Check if the output type already implements this mapped interface
+            // (e.g., IObservableVector<T> already brings IVector<T>)
+            string mappedFullName = string.IsNullOrEmpty(mappedNs) ? mappedName : $"{mappedNs}.{mappedName}";
+            bool alreadyImplemented = outputType.Interfaces.Any(i =>
+            {
+                string? existingName = i.Interface is TypeSpecification existingTs && existingTs.Signature is GenericInstanceTypeSignature existingGits
+                    ? existingGits.GenericType.FullName
+                    : i.Interface?.FullName;
+                return existingName == mappedFullName;
+            });
+
+            if (alreadyImplemented)
+            {
+                continue;
+            }
+
             ITypeDefOrRef mappedInterfaceTypeRef;
 
             // For generic interfaces, handle type arguments (mapping KeyValuePair -> IKeyValuePair, etc.)

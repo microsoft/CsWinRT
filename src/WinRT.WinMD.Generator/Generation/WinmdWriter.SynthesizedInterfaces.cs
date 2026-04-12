@@ -38,19 +38,51 @@ internal sealed partial class WinmdWriter
 
         // Collect members that come from interface implementations
         HashSet<string> membersFromInterfaces = [];
-        foreach (InterfaceImplementation impl in inputType.Interfaces)
-        {
-            TypeDefinition? interfaceDef = impl.Interface?.Resolve();
-            if (interfaceDef == null)
-            {
-                continue;
-            }
 
-            foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
+        // Use all interfaces including inherited ones
+        List<InterfaceImplementation> allInterfaces = GatherAllInterfaces(inputType);
+        foreach (InterfaceImplementation impl in allInterfaces)
+        {
+            TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
+                ? (ts.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
+                : impl.Interface?.Resolve();
+
+            if (interfaceDef != null)
             {
-                // Find the class member that implements this interface member
-                string methodName = interfaceMethod.Name?.Value ?? "";
-                _ = membersFromInterfaces.Add(methodName);
+                foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
+                {
+                    _ = membersFromInterfaces.Add(interfaceMethod.Name?.Value ?? "");
+                }
+
+                foreach (PropertyDefinition prop in interfaceDef.Properties)
+                {
+                    _ = membersFromInterfaces.Add(prop.Name?.Value ?? "");
+                }
+
+                foreach (EventDefinition evt in interfaceDef.Events)
+                {
+                    _ = membersFromInterfaces.Add(evt.Name?.Value ?? "");
+                }
+            }
+        }
+
+        // Also include members from custom mapped interfaces (already excluded from the class)
+        HashSet<string> customMappedNames = CollectCustomMappedMemberNames(inputType);
+        membersFromInterfaces.UnionWith(customMappedNames);
+
+        // Also detect explicit interface implementations from the compiled IL
+        // (private methods with dots in their names like "AuthoringTest.IDouble.GetDouble")
+        foreach (MethodDefinition method in inputType.Methods)
+        {
+            if (!method.IsPublic && method.Name?.Value?.Contains('.') == true)
+            {
+                // Extract the method name after the last dot
+                string fullName = method.Name.Value;
+                int lastDot = fullName.LastIndexOf('.');
+                if (lastDot > 0)
+                {
+                    _ = membersFromInterfaces.Add(fullName[(lastDot + 1)..]);
+                }
             }
         }
 

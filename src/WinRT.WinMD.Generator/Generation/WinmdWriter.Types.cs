@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
@@ -11,6 +12,8 @@ using WindowsRuntime.WinMDGenerator.Models;
 using FieldAttributes = AsmResolver.PE.DotNet.Metadata.Tables.FieldAttributes;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
 using MethodImplAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodImplAttributes;
+using MethodSemanticsAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodSemanticsAttributes;
+using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes;
 using TypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
@@ -443,11 +446,142 @@ internal sealed partial class WinmdWriter
         // Add synthesized interfaces (IFooClass, IFooFactory, IFooStatic)
         AddSynthesizedInterfaces(inputType, outputType, declaration);
 
+        // Add explicit interface implementation methods (private methods with qualified names)
+        AddExplicitInterfaceImplementations(inputType, outputType);
+
         // If no default synthesized interface was created but the class implements
         // user interfaces, mark the first interface implementation as [Default]
         if (declaration.DefaultInterface == null && outputType.Interfaces.Count > 0)
         {
             AddDefaultAttribute(outputType.Interfaces[0]);
+        }
+    }
+
+    /// <summary>
+    /// Adds explicit interface implementation methods from the input class.
+    /// These are private methods with qualified names (e.g., "AuthoringTest.IDouble.GetDouble").
+    /// </summary>
+    private void AddExplicitInterfaceImplementations(TypeDefinition inputType, TypeDefinition outputType)
+    {
+        foreach (MethodDefinition method in inputType.Methods)
+        {
+            // Explicit implementations in compiled IL are private methods with dots in the name
+            if (method.IsPublic || method.Name?.Value?.Contains('.') != true)
+            {
+                continue;
+            }
+
+            string fullMethodName = method.Name.Value;
+
+            // Extract interface name and method name (e.g., "AuthoringTest.IDouble.GetDouble" -> "AuthoringTest.IDouble" + "GetDouble")
+            int lastDot = fullMethodName.LastIndexOf('.');
+            if (lastDot <= 0)
+            {
+                continue;
+            }
+
+            string interfaceQualName = fullMethodName[..lastDot];
+            string shortMethodName = fullMethodName[(lastDot + 1)..];
+
+            // Check if this interface is one we've processed (skip mapped/unmapped interfaces)
+            if (!_typeDefinitionMapping.ContainsKey(interfaceQualName))
+            {
+                continue;
+            }
+
+            // Create the output method
+            TypeSignature returnType = method.Signature!.ReturnType is CorLibTypeSignature { ElementType: ElementType.Void }
+                ? _outputModule.CorLibTypeFactory.Void
+                : MapTypeSignatureToOutput(method.Signature.ReturnType);
+
+            TypeSignature[] parameterTypes = [.. method.Signature.ParameterTypes
+                .Select(MapTypeSignatureToOutput)];
+
+            MethodAttributes attrs =
+                MethodAttributes.Private |
+                MethodAttributes.Final |
+                MethodAttributes.Virtual |
+                MethodAttributes.HideBySig |
+                MethodAttributes.NewSlot;
+
+            if (method.IsSpecialName)
+            {
+                attrs |= MethodAttributes.SpecialName;
+            }
+
+            MethodDefinition outputMethod = new(
+                fullMethodName,
+                attrs,
+                MethodSignature.CreateInstance(returnType, parameterTypes))
+            {
+                ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
+            };
+
+            int paramIndex = 1;
+            foreach (ParameterDefinition inputParam in method.ParameterDefinitions)
+            {
+                outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
+                    (ushort)paramIndex++,
+                    inputParam.Name!.Value,
+                    ParameterAttributes.In));
+            }
+
+            outputType.Methods.Add(outputMethod);
+
+            // Also add properties/events for accessor methods
+            if (shortMethodName.StartsWith("get_", StringComparison.Ordinal) || shortMethodName.StartsWith("put_", StringComparison.Ordinal))
+            {
+                string propName = $"{interfaceQualName}.{shortMethodName[4..]}";
+                if (!outputType.Properties.Any(p => p.Name?.Value == propName))
+                {
+                    PropertyDefinition prop = new(propName, 0, PropertySignature.CreateInstance(
+                        shortMethodName.StartsWith("get_", StringComparison.Ordinal) ? returnType : parameterTypes[0]));
+
+                    if (shortMethodName.StartsWith("get_", StringComparison.Ordinal))
+                    {
+                        prop.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.Getter));
+                    }
+                    else
+                    {
+                        prop.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.Setter));
+                    }
+
+                    outputType.Properties.Add(prop);
+                }
+                else
+                {
+                    // Add setter to existing property
+                    PropertyDefinition existing = outputType.Properties.First(p => p.Name?.Value == propName);
+                    existing.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.Setter));
+                }
+            }
+            else if (shortMethodName.StartsWith("add_", StringComparison.Ordinal))
+            {
+                string evtName = $"{interfaceQualName}.{shortMethodName[4..]}";
+                // Find the event handler type from the parameter
+                ITypeDefOrRef eventType = parameterTypes.Length > 0 && parameterTypes[0] is TypeDefOrRefSignature tdrs
+                    ? tdrs.Type
+                    : GetOrCreateTypeReference("Windows.Foundation", "EventHandler`1", "Windows.Foundation.FoundationContract");
+
+                EventDefinition evt = new(evtName, 0, eventType);
+                evt.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.AddOn));
+                outputType.Events.Add(evt);
+            }
+            else if (shortMethodName.StartsWith("remove_", StringComparison.Ordinal))
+            {
+                string evtName = $"{interfaceQualName}.{shortMethodName[7..]}";
+                EventDefinition? existingEvt = outputType.Events.FirstOrDefault(e => e.Name?.Value == evtName);
+                existingEvt?.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.RemoveOn));
+            }
+
+            // Add MethodImpl pointing to the interface method
+            TypeDeclaration interfaceDecl = _typeDefinitionMapping[interfaceQualName];
+            if (interfaceDecl.OutputType != null)
+            {
+                MemberReference interfaceMethodRef = new(interfaceDecl.OutputType, shortMethodName,
+                    MethodSignature.CreateInstance(returnType, parameterTypes));
+                outputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, outputMethod));
+            }
         }
     }
 }
