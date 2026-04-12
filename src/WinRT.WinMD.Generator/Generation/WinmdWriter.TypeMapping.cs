@@ -7,6 +7,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.WinMDGenerator.Discovery;
+using WindowsRuntime.WinMDGenerator.Models;
 using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
@@ -55,10 +56,21 @@ internal sealed partial class WinmdWriter
         // Handle generic instance types
         if (inputSig is GenericInstanceTypeSignature genericInst)
         {
+            string genericTypeName = AssemblyAnalyzer.GetQualifiedName(genericInst.GenericType);
+
+            // Check if the generic type itself has a WinRT mapping (e.g., IList`1 -> IVector`1)
+            if (_mapper.HasMappingForType(genericTypeName))
+            {
+                MappedType mapping = _mapper.GetMappedType(genericTypeName);
+                (string ns, string name, string asm, _, bool isValueType) = mapping.GetMapping();
+                ITypeDefOrRef mappedType = GetOrCreateTypeReference(ns, name, asm);
+                TypeSignature[] mappedArgs = [.. genericInst.TypeArguments.Select(MapTypeSignatureToOutput)];
+                return new GenericInstanceTypeSignature(mappedType, isValueType, mappedArgs);
+            }
+
             ITypeDefOrRef importedType = ImportTypeReference(genericInst.GenericType);
-            TypeSignature[] mappedArgs = [.. genericInst.TypeArguments
-                .Select(MapTypeSignatureToOutput)];
-            return new GenericInstanceTypeSignature(importedType, genericInst.IsValueType, mappedArgs);
+            TypeSignature[] importedArgs = [.. genericInst.TypeArguments.Select(MapTypeSignatureToOutput)];
+            return new GenericInstanceTypeSignature(importedType, genericInst.IsValueType, importedArgs);
         }
 
         // Handle generic method/type parameters
@@ -76,6 +88,17 @@ internal sealed partial class WinmdWriter
         // Handle TypeDefOrRefSignature
         if (inputSig is TypeDefOrRefSignature typeDefOrRef)
         {
+            string typeName = AssemblyAnalyzer.GetQualifiedName(typeDefOrRef.Type);
+
+            // Check if the type has a WinRT mapping (e.g., IDisposable -> IClosable, Type -> TypeName)
+            if (_mapper.HasMappingForType(typeName))
+            {
+                MappedType mapping = _mapper.GetMappedType(typeName);
+                (string ns, string name, string asm, _, bool isValueType) = mapping.GetMapping();
+                ITypeDefOrRef mappedType = GetOrCreateTypeReference(ns, name, asm);
+                return new TypeDefOrRefSignature(mappedType, isValueType);
+            }
+
             ITypeDefOrRef importedRef = ImportTypeReference(typeDefOrRef.Type);
             return new TypeDefOrRefSignature(importedRef, typeDefOrRef.IsValueType);
         }

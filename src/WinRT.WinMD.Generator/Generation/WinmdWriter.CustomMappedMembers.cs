@@ -556,4 +556,69 @@ internal sealed partial class WinmdWriter
                 ? tdrs.Type.Name?.Value ?? sig.FullName
                 : sig.FullName;
     }
+
+    /// <summary>
+    /// Collects the names of members that belong to custom mapped or unmapped .NET interfaces.
+    /// These members should be excluded from the WinMD class definition since they're replaced
+    /// by the WinRT mapped interface members.
+    /// </summary>
+    private HashSet<string> CollectCustomMappedMemberNames(TypeDefinition inputType)
+    {
+        HashSet<string> memberNames = new(StringComparer.Ordinal);
+
+        List<InterfaceImplementation> allInterfaces = GatherAllInterfaces(inputType);
+
+        foreach (InterfaceImplementation impl in allInterfaces)
+        {
+            if (impl.Interface == null)
+            {
+                continue;
+            }
+
+            string interfaceName = GetInterfaceQualifiedName(impl.Interface);
+
+            // Include members from both mapped interfaces and unmapped interfaces
+            if (!_mapper.HasMappingForType(interfaceName) &&
+                !TypeMapper.ImplementedInterfacesWithoutMapping.Contains(interfaceName))
+            {
+                continue;
+            }
+
+            TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
+                ? (ts.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
+                : impl.Interface.Resolve();
+
+            if (interfaceDef == null)
+            {
+                continue;
+            }
+
+            // Add all method names from this interface
+            foreach (MethodDefinition method in interfaceDef.Methods)
+            {
+                string methodName = method.Name?.Value ?? "";
+                _ = memberNames.Add(methodName);
+
+                // For property accessors, also add the property name
+                if (methodName.StartsWith("get_", StringComparison.Ordinal) || methodName.StartsWith("set_", StringComparison.Ordinal))
+                {
+                    _ = memberNames.Add(methodName[4..]);
+                }
+            }
+
+            // Add property names
+            foreach (PropertyDefinition prop in interfaceDef.Properties)
+            {
+                _ = memberNames.Add(prop.Name?.Value ?? "");
+            }
+
+            // Add event names
+            foreach (EventDefinition evt in interfaceDef.Events)
+            {
+                _ = memberNames.Add(evt.Name?.Value ?? "");
+            }
+        }
+
+        return memberNames;
+    }
 }

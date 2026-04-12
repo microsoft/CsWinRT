@@ -173,7 +173,9 @@ internal sealed partial class WinmdWriter
 
             if (!HasVersionAttribute(declaration.OutputType))
             {
-                AddVersionAttribute(declaration.OutputType, defaultVersion);
+                // Use the version from the input type if available, otherwise use the default
+                int version = declaration.InputType != null ? GetVersion(declaration.InputType) : defaultVersion;
+                AddVersionAttribute(declaration.OutputType, version);
             }
         }
 

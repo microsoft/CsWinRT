@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -189,10 +190,10 @@ internal sealed partial class WinmdWriter
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
         _typeDefinitionMapping[qualifiedName] = declaration;
 
-        // Add methods
+        // Add methods (skip property/event accessors — they're added by property/event processing below)
         foreach (MethodDefinition method in inputType.Methods)
         {
-            if (!method.IsPublic)
+            if (!method.IsPublic || method.IsSpecialName)
             {
                 continue;
             }
@@ -323,6 +324,9 @@ internal sealed partial class WinmdWriter
         bool hasAtLeastOneNonPublicConstructor = false;
         bool isStaticClass = inputType.IsAbstract && inputType.IsSealed;
 
+        // Collect members from custom mapped interfaces and unmapped interfaces to exclude from the class
+        HashSet<string> customMappedMembers = CollectCustomMappedMemberNames(inputType);
+
         // Add methods (non-property/event accessors)
         foreach (MethodDefinition method in inputType.Methods)
         {
@@ -340,6 +344,12 @@ internal sealed partial class WinmdWriter
             }
             else if (method.IsPublic && !method.IsSpecialName)
             {
+                // Skip methods that belong to custom mapped or unmapped interfaces
+                if (customMappedMembers.Contains(method.Name?.Value ?? ""))
+                {
+                    continue;
+                }
+
                 AddMethodToClass(outputType, method);
             }
         }
@@ -347,6 +357,12 @@ internal sealed partial class WinmdWriter
         // Add properties
         foreach (PropertyDefinition property in inputType.Properties)
         {
+            // Skip properties that belong to custom mapped or unmapped interfaces
+            if (customMappedMembers.Contains(property.Name?.Value ?? ""))
+            {
+                continue;
+            }
+
             // Only add if at least one accessor is public
             bool hasPublicGetter = property.GetMethod?.IsPublic == true;
             bool hasPublicSetter = property.SetMethod?.IsPublic == true;
@@ -359,6 +375,12 @@ internal sealed partial class WinmdWriter
         // Add events
         foreach (EventDefinition evt in inputType.Events)
         {
+            // Skip events that belong to custom mapped or unmapped interfaces
+            if (customMappedMembers.Contains(evt.Name?.Value ?? ""))
+            {
+                continue;
+            }
+
             bool hasPublicAdder = evt.AddMethod?.IsPublic == true;
             bool hasPublicRemover = evt.RemoveMethod?.IsPublic == true;
             if (hasPublicAdder || hasPublicRemover)
