@@ -165,7 +165,8 @@
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
-      <Build Project="false" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/AuthoringWinUITest/AuthoringWinUITest (Package)/AuthoringWinUITest (Package).wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
       <Platform Solution="*|ARM" Project="x86" />
