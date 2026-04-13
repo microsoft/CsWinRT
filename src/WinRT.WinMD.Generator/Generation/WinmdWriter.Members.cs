@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.WinMDGenerator.Discovery;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
 using MethodImplAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodImplAttributes;
 using MethodSemanticsAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodSemanticsAttributes;
@@ -40,15 +42,8 @@ internal sealed partial class WinmdWriter
             attrs,
             MethodSignature.CreateInstance(returnType, parameterTypes));
 
-        // Add parameter definitions
-        int paramIndex = 1;
-        foreach (ParameterDefinition inputParam in inputMethod.ParameterDefinitions)
-        {
-            outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
-                (ushort)paramIndex++,
-                inputParam.Name!.Value,
-                ParameterAttributes.In));
-        }
+        // Add parameter definitions with correct attributes for WinRT array conventions
+        AddParameterDefinitions(outputMethod, inputMethod);
 
         outputType.Methods.Add(outputMethod);
 
@@ -98,20 +93,68 @@ internal sealed partial class WinmdWriter
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
 
-        // Add parameter definitions
-        int paramIndex = 1;
-        foreach (ParameterDefinition inputParam in inputMethod.ParameterDefinitions)
-        {
-            outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
-                (ushort)paramIndex++,
-                inputParam.Name!.Value,
-                ParameterAttributes.In));
-        }
+        // Add parameter definitions with correct attributes for WinRT array conventions
+        AddParameterDefinitions(outputMethod, inputMethod);
 
         outputType.Methods.Add(outputMethod);
 
         // Copy custom attributes from the input method
         CopyCustomAttributes(inputMethod, outputMethod);
+    }
+
+    /// <summary>
+    /// Adds parameter definitions to an output method with correct WinRT attributes.
+    /// Handles Span/ReadOnlySpan → array parameter attribute mapping:
+    /// - ReadOnlySpan&lt;T&gt; → [in] T[] (PassArray)
+    /// - Span&lt;T&gt; → [out] T[] without BYREF (FillArray)
+    /// - out T[] → [out] T[] with BYREF (ReceiveArray)
+    /// - All other params → [in]
+    /// </summary>
+    private static void AddParameterDefinitions(MethodDefinition outputMethod, MethodDefinition inputMethod)
+    {
+        int paramIndex = 1;
+        IList<TypeSignature> inputParamTypes = inputMethod.Signature!.ParameterTypes;
+
+        foreach (ParameterDefinition inputParam in inputMethod.ParameterDefinitions)
+        {
+            int sigIndex = paramIndex - 1;
+            ParameterAttributes paramAttrs = ParameterAttributes.In;
+
+            if (sigIndex < inputParamTypes.Count)
+            {
+                paramAttrs = GetWinRTParameterAttributes(inputParamTypes[sigIndex]);
+            }
+
+            outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
+                (ushort)paramIndex++,
+                inputParam.Name!.Value,
+                paramAttrs));
+        }
+    }
+
+    /// <summary>
+    /// Determines the WinRT parameter attributes based on the input parameter type.
+    /// </summary>
+    private static ParameterAttributes GetWinRTParameterAttributes(TypeSignature inputParamType)
+    {
+        // out parameters (ByRef) stay as Out
+        if (inputParamType is ByReferenceTypeSignature)
+        {
+            return ParameterAttributes.Out;
+        }
+
+        // Span<T> → FillArray pattern: [out] without BYREF
+        if (inputParamType is GenericInstanceTypeSignature gits)
+        {
+            string typeName = AssemblyAnalyzer.GetQualifiedName(gits.GenericType);
+            if (typeName == "System.Span`1")
+            {
+                return ParameterAttributes.Out;
+            }
+        }
+
+        // ReadOnlySpan<T> and everything else → [in]
+        return ParameterAttributes.In;
     }
 
     private void AddPropertyToType(TypeDefinition outputType, PropertyDefinition inputProperty, bool isInterfaceParent)

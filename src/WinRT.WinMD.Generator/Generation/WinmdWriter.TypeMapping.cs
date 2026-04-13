@@ -58,6 +58,14 @@ internal sealed partial class WinmdWriter
         {
             string genericTypeName = AssemblyAnalyzer.GetQualifiedName(genericInst.GenericType);
 
+            // Map Span<T> and ReadOnlySpan<T> to T[] (SzArray) for WinRT
+            // ReadOnlySpan<T> → PassArray (in), Span<T> → FillArray (out without BYREF)
+            if (genericTypeName is "System.Span`1" or "System.ReadOnlySpan`1"
+                && genericInst.TypeArguments.Count == 1)
+            {
+                return new SzArrayTypeSignature(MapTypeSignatureToOutput(genericInst.TypeArguments[0]));
+            }
+
             // Check if the generic type itself has a WinRT mapping (e.g., IList`1 -> IVector`1)
             if (_mapper.HasMappingForType(genericTypeName))
             {
