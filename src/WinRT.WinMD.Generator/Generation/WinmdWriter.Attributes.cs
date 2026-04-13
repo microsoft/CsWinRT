@@ -187,7 +187,7 @@ internal sealed partial class WinmdWriter
     private static bool HasVersionAttribute(TypeDefinition type)
     {
         return type.CustomAttributes.Any(
-            attr => attr.Constructor?.DeclaringType?.Name?.Value == "VersionAttribute");
+            attr => attr.Constructor?.DeclaringType?.Name?.Value is "VersionAttribute" or "ContractVersionAttribute");
     }
 
     private int GetVersion(TypeDefinition type)
@@ -244,7 +244,7 @@ internal sealed partial class WinmdWriter
         // Skip attributes already handled separately by the generator
         if (attrTypeName is
             "System.Runtime.InteropServices.GuidAttribute" or
-            "WinRT.GeneratedBindableCustomPropertyAttribute" or
+            "WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute" or
             "Windows.Foundation.Metadata.VersionAttribute" or
             "System.Reflection.DefaultMemberAttribute")
         {
@@ -280,12 +280,15 @@ internal sealed partial class WinmdWriter
 
         ITypeDefOrRef importedType = ImportTypeReference(ctor.DeclaringType);
 
-        TypeSignature[] mappedParams = [.. methodSig.ParameterTypes
-            .Select(MapTypeSignatureToOutput)];
+        // Attribute constructor parameters must use CLR types (System.Type, System.String, etc.)
+        // not WinRT projected types (TypeName, HString), because the custom attribute blob
+        // serializer only supports primitives, System.Type, System.String, and enum types.
+        TypeSignature[] importedParams = [.. methodSig.ParameterTypes
+            .Select(ImportTypeSignatureForAttribute)];
 
         MethodSignature importedSig = MethodSignature.CreateInstance(
             _outputModule.CorLibTypeFactory.Void,
-            mappedParams);
+            importedParams);
 
         return new MemberReference(importedType, ".ctor", importedSig);
     }
@@ -323,11 +326,49 @@ internal sealed partial class WinmdWriter
     }
 
     /// <summary>
+    /// Imports a type signature for use in attribute constructor parameters.
+    /// Unlike <see cref="MapTypeSignatureToOutput"/>, this preserves CLR types
+    /// (System.Type, System.String) that custom attribute blobs require.
+    /// </summary>
+    private TypeSignature ImportTypeSignatureForAttribute(TypeSignature sig)
+    {
+        if (sig is CorLibTypeSignature)
+        {
+            return sig;
+        }
+
+        if (sig is TypeDefOrRefSignature typeDefOrRefSig)
+        {
+            string? fullName = typeDefOrRefSig.Type?.FullName;
+
+            // System.Type must stay as System.Type for attribute blob encoding
+            if (fullName == "System.Type")
+            {
+                return GetOrCreateTypeReference("System", "Type", "mscorlib").ToTypeSignature();
+            }
+
+            // Enum types: import the reference so the blob encoder can resolve the underlying type
+            TypeDefinition? resolved = typeDefOrRefSig.Type?.Resolve();
+            if (resolved != null && resolved.IsEnum)
+            {
+                return ImportTypeReference(typeDefOrRefSig.Type!).ToTypeSignature(typeDefOrRefSig.IsValueType);
+            }
+
+            // For other types, import directly without WinRT mapping
+            return ImportTypeReference(typeDefOrRefSig.Type!).ToTypeSignature(typeDefOrRefSig.IsValueType);
+        }
+
+        // Fallback: use the standard mapping
+        return MapTypeSignatureToOutput(sig);
+    }
+
+    /// <summary>
     /// Clones a single custom attribute argument, remapping type references.
+    /// Uses attribute-safe type imports to preserve CLR types required by the blob encoder.
     /// </summary>
     private CustomAttributeArgument CloneAttributeArgument(CustomAttributeArgument arg)
     {
-        TypeSignature mappedType = MapTypeSignatureToOutput(arg.ArgumentType);
+        TypeSignature mappedType = ImportTypeSignatureForAttribute(arg.ArgumentType);
         CustomAttributeArgument clonedArg = new(mappedType);
 
         if (arg.IsNullArray)

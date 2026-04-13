@@ -20,8 +20,53 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 
 internal sealed partial class WinmdWriter
 {
+    /// <summary>
+    /// Checks if an enum type represents a WinRT API contract (has [ApiContract] attribute).
+    /// </summary>
+    private static bool IsApiContract(TypeDefinition type)
+    {
+        return type.CustomAttributes.Any(
+            attr => attr.Constructor?.DeclaringType?.Name?.Value == "ApiContractAttribute");
+    }
+
+    /// <summary>
+    /// Emits an API contract type as an empty struct in the WinMD.
+    /// In C#, API contracts are projected as enums with [ApiContract], but in WinMD
+    /// metadata they are represented as empty structs per the WinRT type system spec.
+    /// </summary>
+    private void AddApiContractType(TypeDefinition inputType)
+    {
+        string qualifiedName = AssemblyAnalyzer.GetQualifiedName(inputType);
+
+        TypeAttributes typeAttributes =
+            TypeAttributes.Public |
+            (TypeAttributes)0x4000 | // WindowsRuntime
+            TypeAttributes.SequentialLayout |
+            TypeAttributes.AnsiClass |
+            TypeAttributes.Sealed;
+
+        TypeReference baseType = GetOrCreateTypeReference("System", "ValueType", "mscorlib");
+
+        TypeDefinition outputType = new(
+            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
+            inputType.Name!.Value,
+            typeAttributes,
+            baseType);
+
+        _outputModule.TopLevelTypes.Add(outputType);
+        TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+        _typeDefinitionMapping[qualifiedName] = declaration;
+    }
+
     private void AddEnumType(TypeDefinition inputType)
     {
+        // API contract types are projected as enums in C# but emitted as empty structs in WinMD
+        if (IsApiContract(inputType))
+        {
+            AddApiContractType(inputType);
+            return;
+        }
+
         string qualifiedName = AssemblyAnalyzer.GetQualifiedName(inputType);
 
         TypeAttributes typeAttributes =

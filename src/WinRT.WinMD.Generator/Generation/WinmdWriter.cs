@@ -283,9 +283,17 @@ internal sealed partial class WinmdWriter
 
             if (!HasVersionAttribute(declaration.OutputType))
             {
-                // Use the version from the input type if available, otherwise use the default
-                int version = declaration.InputType != null ? GetVersion(declaration.InputType) : defaultVersion;
-                AddVersionAttribute(declaration.OutputType, version);
+                // Skip adding VersionAttribute if the input type has ContractVersionAttribute
+                // (it will be copied in Phase 3 via CopyCustomAttributes)
+                bool hasContractVersion = declaration.InputType?.CustomAttributes.Any(
+                    attr => attr.Constructor?.DeclaringType?.Name?.Value == "ContractVersionAttribute") == true;
+
+                if (!hasContractVersion)
+                {
+                    // Use the version from the input type if available, otherwise use the default
+                    int version = declaration.InputType != null ? GetVersion(declaration.InputType) : defaultVersion;
+                    AddVersionAttribute(declaration.OutputType, version);
+                }
             }
         }
 

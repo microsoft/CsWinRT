@@ -2276,4 +2276,85 @@ namespace AnotherNamespace
             DataChanged?.Invoke(this, "changed");
         }
     }
+
+    // Contract versioning
+    [Windows.Foundation.Metadata.ApiContract]
+    public enum AnotherNamespaceContract { }
+
+    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 1u)]
+    public sealed class ContractVersionedClass
+    {
+        public string Name { get; set; } = "";
+    }
+
+    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+    public sealed class ContractVersionedClassV2
+    {
+        public string Name { get; set; } = "";
+        public int Count { get; set; }
+    }
+
+    // Class evolving across contract versions with versioned members and interfaces
+    public interface IContractVersionedMembersV1
+    {
+        string TrackName { get; }
+    }
+
+    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+    public interface IContractVersionedMembersV2
+    {
+        int Volume { get; }
+    }
+
+    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 1u)]
+    public sealed class ContractVersionedMembersClass : IContractVersionedMembersV1, IContractVersionedMembersV2
+    {
+        public string TrackName { get; set; } = "";
+
+        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+        public int Volume { get; set; }
+
+        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+        public string GetNowPlaying() => $"{TrackName} (Vol={Volume})";
+
+        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+        public event System.EventHandler<string> TrackChanged;
+
+        public void RaiseTrackChanged()
+        {
+            TrackChanged?.Invoke(this, TrackName);
+        }
+    }
+
+    // Class evolving across Version attribute versions with versioned members and interfaces
+    public interface IVersionedMembersV1
+    {
+        string Message { get; }
+    }
+
+    [Windows.Foundation.Metadata.Version(2u)]
+    public interface IVersionedMembersV2
+    {
+        double Urgency { get; }
+    }
+
+    [Windows.Foundation.Metadata.Version(1u)]
+    public sealed class VersionedMembersClass : IVersionedMembersV1, IVersionedMembersV2
+    {
+        public string Message { get; set; } = "";
+
+        [Windows.Foundation.Metadata.Version(2u)]
+        public double Urgency { get; set; }
+
+        [Windows.Foundation.Metadata.Version(2u)]
+        public string Format() => $"{Message}: {Urgency}";
+
+        [Windows.Foundation.Metadata.Version(2u)]
+        public event System.EventHandler<double> UrgencyChanged;
+
+        public void RaiseUrgencyChanged()
+        {
+            UrgencyChanged?.Invoke(this, Urgency);
+        }
+    }
 }
