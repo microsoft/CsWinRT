@@ -59,7 +59,7 @@ internal static class InteropMemberDefinitionFactory
                 { Ldsflda, backingField },
                 { Newobj, propertyType.ToTypeDefOrRef().CreateConstructorReference(interopReferences.CorLibTypeFactory) },
                 { Ldnull },
-                { Call, interopReferences.InterlockedCompareExchange1.MakeGenericInstanceMethod(propertyType) },
+                { Call, interopReferences.InterlockedCompareExchange1.MakeGenericInstanceMethod([propertyType]) },
                 { Pop },
 
                 // return <BACKING_FIELD>;

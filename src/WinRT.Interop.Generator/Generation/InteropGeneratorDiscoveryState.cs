@@ -113,9 +113,9 @@ internal sealed class InteropGeneratorDiscoveryState
     private volatile bool _hasWinRTRuntimeDllVersion2References;
 
     /// <summary>
-    /// Gets the assembly resolver to use for loading assemblies.
+    /// Gets the runtime context to use for the current invocation.
     /// </summary>
-    public required IAssemblyResolver AssemblyResolver { get; init; }
+    public required RuntimeContext RuntimeContext { get; init; }
 
     /// <summary>
     /// Gets the loaded modules.

@@ -26,27 +26,27 @@ internal static class TypeSignatureExtensions
         /// Determines whether the current type is assignable from the provided type.
         /// </summary>
         /// <param name="other">The other type.</param>
+        /// <param name="runtimeContext">The runtime context to assume when comparing the types.</param>
         /// <param name="comparer">The comparer to use for comparing type signatures.</param>
         /// <returns>Whether the current type is assignable from <paramref name="other" />.</returns>
         /// <remarks>
         /// Type compatibility is determined according to the rules in ECMA-335 I.8.7.3.
         /// </remarks>
-        public bool IsAssignableFrom(TypeSignature other, SignatureComparer comparer)
+        public bool IsAssignableFrom(TypeSignature other, RuntimeContext? runtimeContext, SignatureComparer comparer)
         {
-            return other.IsAssignableTo(signature, comparer);
+            return other.IsAssignableTo(signature, runtimeContext, comparer);
         }
 
         /// <summary>
         /// Gets a value indicating whether a given <see cref="TypeSignature"/> instance can be fully resolved to type definitions.
         /// </summary>
+        /// <param name="runtimeContext">The context to assume when resolving the type.</param>
         /// <param name="definition">The resulting <see cref="TypeDefinition"/>, if the type can be resolved.</param>
         /// <returns>Whether the type can be fully resolved.</returns>
-        public bool IsFullyResolvable([NotNullWhen(true)] out TypeDefinition? definition)
+        public bool IsFullyResolvable(RuntimeContext? runtimeContext, [NotNullWhen(true)] out TypeDefinition? definition)
         {
-            definition = signature.Resolve();
-
             // Ensure that we can resolve the type (if we can't, we're likely missing a .dll)
-            if (definition is null)
+            if (!signature.TryResolve(runtimeContext, out definition))
             {
                 return false;
             }
@@ -56,7 +56,7 @@ internal static class TypeSignatureExtensions
             {
                 foreach (TypeSignature typeArgument in genericInstanceTypeSignature.TypeArguments)
                 {
-                    if (!typeArgument.IsFullyResolvable(out _))
+                    if (!typeArgument.IsFullyResolvable(runtimeContext, out _))
                     {
                         return false;
                     }
@@ -84,10 +84,10 @@ internal static class TypeSignatureExtensions
                 yield return interopReferences.IList.ToReferenceTypeSignature();
                 yield return interopReferences.ICollection.ToReferenceTypeSignature();
                 yield return interopReferences.IEnumerable.ToReferenceTypeSignature();
-                yield return interopReferences.IList1.MakeGenericReferenceType(arraySignature.BaseType);
-                yield return interopReferences.ICollection1.MakeGenericReferenceType(arraySignature.BaseType);
-                yield return interopReferences.IEnumerable1.MakeGenericReferenceType(arraySignature.BaseType);
-                yield return interopReferences.IReadOnlyList1.MakeGenericReferenceType(arraySignature.BaseType);
+                yield return interopReferences.IList1.MakeGenericReferenceType([arraySignature.BaseType]);
+                yield return interopReferences.ICollection1.MakeGenericReferenceType([arraySignature.BaseType]);
+                yield return interopReferences.IEnumerable1.MakeGenericReferenceType([arraySignature.BaseType]);
+                yield return interopReferences.IReadOnlyList1.MakeGenericReferenceType([arraySignature.BaseType]);
 
                 yield break;
             }
@@ -98,7 +98,7 @@ internal static class TypeSignatureExtensions
             {
                 // If we can't resolve the current type signature, we have to stop.
                 // Callers should validate the type hierarchy before calling this.
-                if (!currentSignature.IsFullyResolvable(out TypeDefinition? currentDefinition))
+                if (!currentSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? currentDefinition))
                 {
                     yield break;
                 }
@@ -164,7 +164,7 @@ internal static class TypeSignatureExtensions
             while (currentSignature is not null)
             {
                 // Same validation as above, callers should ensure the type can be resolved
-                if (!currentSignature.IsFullyResolvable(out TypeDefinition? currentDefinition))
+                if (!currentSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? currentDefinition))
                 {
                     yield break;
                 }

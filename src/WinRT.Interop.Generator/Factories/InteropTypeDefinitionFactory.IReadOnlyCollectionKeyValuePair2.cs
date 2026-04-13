@@ -42,8 +42,8 @@ internal partial class InteropTypeDefinitionFactory
         {
             // We're declaring an 'internal sealed class' type
             forwarderAttributeType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyCollectionType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyCollectionType, "ForwarderAttribute"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyCollectionType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyCollectionType, interopReferences.RuntimeContext, "ForwarderAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.DynamicInterfaceCastableForwarderAttribute);
 
@@ -69,7 +69,7 @@ internal partial class InteropTypeDefinitionFactory
                     returnType: interopReferences.Boolean,
                     parameterTypes: [
                         interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
-                        interopReferences.WindowsRuntimeObjectReference.MakeByReferenceType()]))
+                        interopReferences.WindowsRuntimeObjectReference.MakeReferenceTypeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilInstructions =

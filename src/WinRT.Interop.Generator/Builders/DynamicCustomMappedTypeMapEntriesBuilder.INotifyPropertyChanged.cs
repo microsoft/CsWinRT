@@ -36,8 +36,8 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(interfaceType),
-                name: InteropUtf8NameFactory.TypeName(interfaceType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(interfaceType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(interfaceType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -62,7 +62,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
-                    eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("PropertyChanged"u8),
+                    eventMethod: GetMethodsType(interfaceType, interopReferences).GetMethod("PropertyChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
                     interopReferences: interopReferences)
             };
@@ -83,7 +83,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
-                    eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("PropertyChanged"u8),
+                    eventMethod: GetMethodsType(interfaceType, interopReferences).GetMethod("PropertyChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
                     interopReferences: interopReferences)
             };

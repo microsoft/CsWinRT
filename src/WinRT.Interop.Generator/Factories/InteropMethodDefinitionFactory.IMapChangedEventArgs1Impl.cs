@@ -42,7 +42,7 @@ internal partial class InteropMethodDefinitionFactory
                     returnType: interopReferences.Int32,
                     parameterTypes: [
                         interopReferences.Void.MakePointerType(),
-                        interopReferences.CollectionChange.MakePointerType()]))
+                        interopReferences.CollectionChange.MakeValueTypePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -73,7 +73,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(argsType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([argsType]) },
                     { Callvirt, interopReferences.IMapChangedEventArgs1get_CollectionChange(elementType) },
                     { Stind_I4 },
                     { Ldc_I4_0 },
@@ -162,7 +162,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(argsType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([argsType]) },
                     { Callvirt, interopReferences.IMapChangedEventArgs1get_Key(keyType) },
                     { nop_convertToUnmanaged },
                     { Ldc_I4_0 },

@@ -41,25 +41,25 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             operationMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(operationType),
-                name: InteropUtf8NameFactory.TypeName(operationType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(operationType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(operationType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationMethodsImpl1.MakeGenericReferenceType(resultType).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationMethodsImpl1.MakeGenericReferenceType([resultType]).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(operationMethodsType);
 
             // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to managed
             MethodDefinition convertToManagedMethod = emitState.LookupTypeDefinition(
-                typeSignature: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
+                typeSignature: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType([resultType]),
                 key: "Marshaller").GetMethod("ConvertToManaged"u8);
 
             // Define the 'Completed' get method:
             MethodDefinition get_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoMethods.get_Handler(
                 methodName: "Completed"u8,
-                handlerType: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
+                handlerType: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType([resultType]),
                 vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("get_Completed"u8),
                 convertToManagedMethod: convertToManagedMethod,
                 interopReferences: interopReferences);
@@ -70,13 +70,13 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to native
             MethodDefinition convertToUnmanagedMethod = emitState.LookupTypeDefinition(
-                typeSignature: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
+                typeSignature: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType([resultType]),
                 key: "Marshaller").GetMethod("ConvertToUnmanaged"u8);
 
             // Define the 'Completed' set method:
             MethodDefinition set_CompletedMethod = InteropMethodDefinitionFactory.IAsyncInfoMethods.set_Handler(
                 methodName: "Completed"u8,
-                handlerType: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType),
+                handlerType: interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType([resultType]),
                 vftblField: interopDefinitions.IAsyncOperationVftbl.GetField("set_Completed"u8),
                 convertToUnmanagedMethod: convertToUnmanagedMethod,
                 interopReferences: interopReferences);
@@ -113,9 +113,9 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition nativeObjectType)
         {
             // The 'NativeObject' is deriving from 'WindowsRuntimeAsyncOperation<<TYPE_ARGUMENT>, <IASYNC_OPERATION_METHODS>>'
-            TypeSignature windowsRuntimeAsyncOperation1Type = interopReferences.WindowsRuntimeAsyncOperation2.MakeGenericReferenceType(
+            TypeSignature windowsRuntimeAsyncOperation1Type = interopReferences.WindowsRuntimeAsyncOperation2.MakeGenericReferenceType([
                 operationType.TypeArguments[0],
-                operationMethodsType.ToReferenceTypeSignature());
+                operationMethodsType.ToReferenceTypeSignature()]);
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: operationType,
@@ -145,7 +145,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(operationType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(operationType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: operationType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -203,8 +203,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(operationType),
-                name: InteropUtf8NameFactory.TypeName(operationType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(operationType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(operationType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -229,7 +229,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_CompletedMethod = new(
                 name: $"Windows.Foundation.IAsyncOperation<{resultType.FullName}>.get_Completed",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType)));
+                signature: MethodSignature.CreateInstance(interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType([resultType])));
 
             // Add and implement the 'get_Completed' method
             interfaceImplType.AddMethodImplementation(
@@ -249,7 +249,7 @@ internal partial class InteropTypeDefinitionBuilder
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
                 signature: MethodSignature.CreateInstance(
                     returnType: interopReferences.Void,
-                    parameterTypes: [interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType)]));
+                    parameterTypes: [interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType([resultType])]));
 
             // Add and implement the 'set_Completed' method
             interfaceImplType.AddMethodImplementation(
@@ -314,7 +314,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature resultType = operationType.TypeArguments[0];
 
             // Prepare the 'AsyncOperationCompletedHandler<<RESULT_TYPE>>' signature
-            TypeSignature asyncOperationCompletedHandlerType = interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType(resultType);
+            TypeSignature asyncOperationCompletedHandlerType = interopReferences.AsyncOperationCompletedHandler1.MakeGenericReferenceType([resultType]);
 
             // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationCompletedHandler<T>' instance to native
             MethodDefinition convertToUnmanagedMethod = emitState.LookupTypeDefinition(
@@ -348,8 +348,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(operationType),
-                name: InteropUtf8NameFactory.TypeName(operationType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(operationType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(operationType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: interopDefinitions.IAsyncOperationVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

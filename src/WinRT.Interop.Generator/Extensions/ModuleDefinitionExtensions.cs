@@ -75,8 +75,14 @@ internal static partial class ModuleDefinitionExtensions
                 return true;
             }
 
+            // Try to resolve the current assembly, skip it if it fails
+            if (!reference.TryResolve(module.RuntimeContext, out AssemblyDefinition? assembly))
+            {
+                continue;
+            }
+
             // Also traverse the entire transitive dependency graph and check those assemblies
-            foreach (ModuleDefinition transitiveModule in reference.Resolve()?.Modules ?? [])
+            foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
             {
                 if (transitiveModule.ReferencesAssembly(assemblyName))
                 {
@@ -99,8 +105,14 @@ internal static partial class ModuleDefinitionExtensions
         {
             yield return reference;
 
+            // Try to resolve the current assembly, skip it if it fails
+            if (!reference.TryResolve(module.RuntimeContext, out AssemblyDefinition? assembly))
+            {
+                continue;
+            }
+
             // Also enumerate all transitive references as well
-            foreach (ModuleDefinition transitiveModule in reference.Resolve()?.Modules ?? [])
+            foreach (ModuleDefinition transitiveModule in assembly.Modules ?? [])
             {
                 foreach (AssemblyReference transitiveReference in transitiveModule.EnumerateAssemblyReferences())
                 {
@@ -174,7 +186,7 @@ internal static partial class ModuleDefinitionExtensions
         // one or more type arguments is statically known, and which might be a type relevant for marshalling.
         foreach (MethodDefinition method in module.EnumerateTableMembers<MethodDefinition>(TableIndex.Method))
         {
-            foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes())
+            foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(module.RuntimeContext))
             {
                 foreach (TResult result in EnumerateTypeSignatures(visibleType, results, visitor))
                 {
@@ -194,7 +206,7 @@ internal static partial class ModuleDefinitionExtensions
             }
 
             // Resolve the type definition to be able to process its methods
-            if (specification.Resolve() is not TypeDefinition type)
+            if (!specification.TryResolve(module.RuntimeContext, out TypeDefinition? type))
             {
                 continue;
             }
@@ -217,7 +229,7 @@ internal static partial class ModuleDefinitionExtensions
             // it also wouldn't appear in the method specification table. So this is the only way to cover these cases.
             foreach (MethodDefinition method in type.Methods)
             {
-                foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes())
+                foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(module.RuntimeContext))
                 {
                     foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), results, visitor))
                     {
@@ -237,9 +249,11 @@ internal static partial class ModuleDefinitionExtensions
         // This will correctly detect that constructed 'List<int>' on the constructed return for the 'M<int>()' invocation.
         foreach (MethodSpecification specification in module.EnumerateTableMembers<MethodSpecification>(TableIndex.MethodSpec))
         {
-            GenericContext genericContext = new(specification.DeclaringType?.ToTypeSignature() as GenericInstanceTypeSignature, specification.Signature);
+            GenericContext genericContext = new(
+                type: specification.DeclaringType?.ToTypeSignature(module.RuntimeContext) as GenericInstanceTypeSignature,
+                method: specification.Signature);
 
-            foreach (TypeSignature visibleType in specification.Method!.EnumerateAllVisibleTypes())
+            foreach (TypeSignature visibleType in specification.Method!.EnumerateAllVisibleTypes(module.RuntimeContext))
             {
                 foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), results, visitor))
                 {

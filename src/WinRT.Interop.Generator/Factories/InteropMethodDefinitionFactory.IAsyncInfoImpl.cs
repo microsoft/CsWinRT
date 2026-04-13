@@ -83,7 +83,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(asyncInfoType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([asyncInfoType]) },
                     { Callvirt, get_HandlerMethod },
                     { Call, convertToUnmanagedMethod },
                     { Stloc_1 },
@@ -178,7 +178,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(asyncInfoType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([asyncInfoType]) },
                     { Ldarg_1 },
                     { Call, convertToManagedMethod },
                     { Callvirt, set_HandlerMethod },

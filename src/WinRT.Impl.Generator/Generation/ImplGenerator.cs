@@ -14,11 +14,11 @@ using System.Security.Permissions;
 using System.Threading;
 using AsmResolver;
 using AsmResolver.DotNet;
+using AsmResolver.PE;
 using AsmResolver.PE.DotNet.StrongName;
 using ConsoleAppFramework;
 using WindowsRuntime.ImplGenerator.Errors;
 using WindowsRuntime.ImplGenerator.References;
-using WindowsRuntime.ImplGenerator.Resolvers;
 using WindowsRuntime.InteropGenerator;
 
 namespace WindowsRuntime.ImplGenerator.Generation;
@@ -122,13 +122,13 @@ internal static partial class ImplGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        PathAssemblyResolver assemblyResolver;
+        RuntimeContext runtimeContext;
         ModuleDefinition outputModule;
 
         // Initialize the assembly resolver and load the output module
         try
         {
-            LoadOutputModule(args, out assemblyResolver, out outputModule);
+            LoadOutputModule(args, out runtimeContext, out outputModule);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
@@ -142,7 +142,7 @@ internal static partial class ImplGenerator
         // Define the impl module to emit
         try
         {
-            implModule = DefineImplModule(assemblyResolver, outputModule);
+            implModule = DefineImplModule(runtimeContext, outputModule);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
@@ -192,22 +192,44 @@ internal static partial class ImplGenerator
     /// Loads the output assembly being produced.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="assemblyResolver">The <see cref="IAssemblyResolver"/> instance in use.</param>
+    /// <param name="runtimeContext">The <see cref="RuntimeContext"/> instance in use.</param>
     /// <param name="outputModule">The loaded <see cref="ModuleDefinition"/> for the output assembly.</param>
     private static void LoadOutputModule(
         ImplGeneratorArgs args,
-        out PathAssemblyResolver assemblyResolver,
+        out RuntimeContext runtimeContext,
         out ModuleDefinition outputModule)
     {
-        // Initialize the assembly resolver (we need to reuse this to allow caching)
-        assemblyResolver = new(args.ReferenceAssemblyPaths);
+        PEImage outputAssemblyImage;
+
+        // Load the output assembly as a PE image first, so we can probe the .NET version
+        try
+        {
+            outputAssemblyImage = PEImage.FromFile(args.OutputAssemblyPath);
+
+        }
+        catch (Exception e)
+        {
+            throw WellKnownImplExceptions.OutputAssemblyFileReadError(Path.GetFileName(args.OutputAssemblyPath), e);
+        }
+
+        // Probe the .NET runtime version for the output .dll
+        if (!TargetRuntimeProber.TryGetLikelyTargetRuntime(outputAssemblyImage, out DotNetRuntimeInfo targetRuntime))
+        {
+            throw WellKnownImplExceptions.OutputAssemblyRuntimeVersionNotFound(args.OutputAssemblyPath);
+        }
+
+        // Initialize the assembly resolver (this will be held internally by the runtime context)
+        PathAssemblyResolver assemblyResolver = new(args.ReferenceAssemblyPaths);
+
+        // Initialize the runtime context (this will be reused to allow caching)
+        runtimeContext = new RuntimeContext(targetRuntime, assemblyResolver);
 
         // Try to load the .dll at the current path
         try
         {
-            outputModule = ModuleDefinition.FromFile(args.OutputAssemblyPath, assemblyResolver.ReaderParameters);
+            outputModule = runtimeContext.LoadModule(outputAssemblyImage);
         }
-        catch (Exception e) when (!e.IsWellKnown)
+        catch (Exception e)
         {
             throw WellKnownImplExceptions.OutputAssemblyFileReadError(Path.GetFileName(args.OutputAssemblyPath), e);
         }
@@ -216,22 +238,19 @@ internal static partial class ImplGenerator
     /// <summary>
     /// Defines the impl module to emit.
     /// </summary>
-    /// <param name="assemblyResolver">The <see cref="IAssemblyResolver"/> instance in use.</param>
+    /// <param name="runtimeContext">The <see cref="RuntimeContext"/> instance in use.</param>
     /// <param name="outputModule">The loaded <see cref="ModuleDefinition"/> for the output assembly.</param>
     /// <returns>The impl module to populate and emit.</returns>
-    private static ModuleDefinition DefineImplModule(PathAssemblyResolver assemblyResolver, ModuleDefinition outputModule)
+    private static ModuleDefinition DefineImplModule(RuntimeContext runtimeContext, ModuleDefinition outputModule)
     {
         try
         {
             // Create the impl module and its containing assembly
-            AssemblyDefinition implAssembly = new(outputModule.Assembly?.Name, outputModule.Assembly?.Version ?? new Version(0, 0, 0, 0));
-            ModuleDefinition implModule = new(outputModule.Name, outputModule.OriginalTargetRuntime.GetDefaultCorLib())
+            ModuleDefinition implModule = new(outputModule.Name, runtimeContext.RuntimeCorLib!.ToAssemblyReference());
+            AssemblyDefinition implAssembly = new(outputModule.Assembly?.Name, outputModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
             {
-                MetadataResolver = new DefaultMetadataResolver(assemblyResolver)
+                Modules = { implModule }
             };
-
-            // Add the module to the parent assembly
-            implAssembly.Modules.Add(implModule);
 
             return implModule;
         }
@@ -259,7 +278,7 @@ internal static partial class ImplGenerator
                 }
 
                 implModule.Assembly!.CustomAttributes.Add(new CustomAttribute(
-                    constructor: (ICustomAttributeType)assemblyAttribute.Constructor!.ImportWith(implModule.DefaultImporter),
+                    constructor: assemblyAttribute.Constructor!,
                     signature: assemblyAttribute.Signature));
             }
 
@@ -272,7 +291,7 @@ internal static partial class ImplGenerator
                 }
 
                 implModule.CustomAttributes.Add(new CustomAttribute(
-                    constructor: (ICustomAttributeType)moduleAttribute.Constructor!.ImportWith(implModule.DefaultImporter),
+                    constructor: moduleAttribute.Constructor!,
                     signature: moduleAttribute.Signature));
             }
         }
@@ -347,7 +366,7 @@ internal static partial class ImplGenerator
 
                 // Emit the type forwards for all public (projected) types
                 implModule.ExportedTypes.Add(new ExportedType(
-                    implementation: implementationAssembly.ImportWith(implModule.DefaultImporter),
+                    implementation: implementationAssembly,
                     ns: exportedType.Namespace,
                     name: exportedType.Name)
                 {

@@ -39,15 +39,16 @@ internal static class TypeDefinitionExtensions
         /// <summary>
         /// Gets a value indicating whether a given <see cref="TypeDefinition"/>'s type hierarchy can be fully resolved to type definitions.
         /// </summary>
+        /// <param name="runtimeContext">The context to assume when resolving types.</param>
         /// <param name="failedResolutionBaseType">The <see cref="ITypeDefOrRef"/> for the first base type that failed resolution, if any.</param>
         /// <returns>Whether the input <see cref="TypeDefinition"/>'s type hierarchy can be fully resolved to type definitions.</returns>
-        public bool IsTypeHierarchyFullyResolvable([NotNullWhen(false)] out ITypeDefOrRef? failedResolutionBaseType)
+        public bool IsTypeHierarchyFullyResolvable(RuntimeContext? runtimeContext, [NotNullWhen(false)] out ITypeDefOrRef? failedResolutionBaseType)
         {
             TypeDefinition currentDefinition = type;
 
             while (currentDefinition.HasBaseType(out ITypeDefOrRef? baseType))
             {
-                if (!baseType.IsFullyResolvable(out currentDefinition!))
+                if (!baseType.IsFullyResolvable(runtimeContext, out currentDefinition!))
                 {
                     failedResolutionBaseType = baseType;
 
@@ -64,10 +65,11 @@ internal static class TypeDefinitionExtensions
         /// Determines whether a type has or inherits an attribute that matches a particular type.
         /// </summary>
         /// <param name="attributeType">The attribute type to look for.</param>
+        /// <param name="runtimeContext">The context to assume when resolving types.</param>
         /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
-        public bool HasOrInheritsAttribute(ITypeDescriptor attributeType)
+        public bool HasOrInheritsAttribute(ITypeDescriptor attributeType, RuntimeContext? runtimeContext)
         {
-            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf())
+            foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(runtimeContext))
             {
                 if (currentType.HasCustomAttribute(attributeType))
                 {
@@ -228,8 +230,9 @@ internal static class TypeDefinitionExtensions
         /// <summary>
         /// Enumerates all base types of the specified type.
         /// </summary>
+        /// <param name="runtimeContext">The context to assume when resolving types.</param>
         /// <returns>The sequence of base types for the input type.</returns>
-        public IEnumerable<TypeDefinition> EnumerateBaseTypes()
+        public IEnumerable<TypeDefinition> EnumerateBaseTypes(RuntimeContext? runtimeContext)
         {
             TypeDefinition currentDefinition = type;
 
@@ -237,7 +240,7 @@ internal static class TypeDefinitionExtensions
             {
                 // If we can't resolve the current base type, we have to stop.
                 // Callers should validate the type hierarchy before calling this.
-                if (!baseType.IsFullyResolvable(out currentDefinition!))
+                if (!baseType.IsFullyResolvable(runtimeContext, out currentDefinition!))
                 {
                     yield break;
                 }
@@ -249,8 +252,9 @@ internal static class TypeDefinitionExtensions
         /// <summary>
         /// Enumerates all base types of the specified type, including itself.
         /// </summary>
+        /// <param name="runtimeContext">The context to assume when resolving types.</param>
         /// <returns>The sequence of base types for the input type, including itself.</returns>
-        public IEnumerable<TypeDefinition> EnumerateBaseTypesAndSelf()
+        public IEnumerable<TypeDefinition> EnumerateBaseTypesAndSelf(RuntimeContext? runtimeContext)
         {
             yield return type;
 
@@ -259,7 +263,7 @@ internal static class TypeDefinitionExtensions
             while (currentDefinition.HasBaseType(out ITypeDefOrRef? baseType))
             {
                 // Same logic as above
-                if (!baseType.IsFullyResolvable(out currentDefinition!))
+                if (!baseType.IsFullyResolvable(runtimeContext, out currentDefinition!))
                 {
                     yield break;
                 }
@@ -272,13 +276,14 @@ internal static class TypeDefinitionExtensions
         /// Enumerates all generic instance type signatures for base interfaces, from a given starting interface.
         /// </summary>
         /// <param name="typeSignature">The constructed signature for the interface type.</param>
+        /// <param name="runtimeContext">The context to assume when resolving types.</param>
         /// <returns>All (unique) generic type signatures for base interfaces.</returns>
         /// <remarks>
         /// This method can only be called when <paramref name="typeSignature"/> is an interface type.
         /// Additionally, <paramref name="typeSignature"/> must be constructed over that type.
         /// </remarks>
         /// <exception cref="ArgumentException"><paramref name="typeSignature"/> is not an interface type, or <paramref name="typeSignature"/> is not a match for it.</exception>
-        public IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceInterfaceSignatures(GenericInstanceTypeSignature typeSignature)
+        public IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceInterfaceSignatures(GenericInstanceTypeSignature typeSignature, RuntimeContext? runtimeContext)
         {
             // This method is only valid when called on interface types (it's meant to enumerate the base interfaces)
             if (!type.IsInterface)
@@ -307,9 +312,9 @@ internal static class TypeDefinitionExtensions
                 yield return interfaceSignature;
 
                 // Also recurse on the base interfaces
-                if (interfaceSignature.IsFullyResolvable(out TypeDefinition? interfaceDefinition))
+                if (interfaceSignature.IsFullyResolvable(runtimeContext, out TypeDefinition? interfaceDefinition))
                 {
-                    foreach (GenericInstanceTypeSignature baseInterfaceImplementation in interfaceDefinition.EnumerateGenericInstanceInterfaceSignatures(interfaceSignature))
+                    foreach (GenericInstanceTypeSignature baseInterfaceImplementation in interfaceDefinition.EnumerateGenericInstanceInterfaceSignatures(interfaceSignature, runtimeContext))
                     {
                         yield return baseInterfaceImplementation;
                     }

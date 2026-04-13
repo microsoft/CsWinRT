@@ -61,7 +61,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(actionType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([actionType]) },
                     { Callvirt, interopReferences.IAsyncActionWithProgress1GetResults(progressType) },
                     { Ldc_I4_0 },
                     { Stloc_0 },

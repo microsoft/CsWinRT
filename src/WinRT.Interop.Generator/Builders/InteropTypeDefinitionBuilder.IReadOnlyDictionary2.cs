@@ -60,14 +60,14 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Construct a signature using 'object' as the value, and we use that to generate
             // the namespace and type name for the shared vtable type ('object' is a placeholder).
-            TypeSignature sharedReadOnlyDictionaryType = interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType(
+            TypeSignature sharedReadOnlyDictionaryType = interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([
                 keyType,
-                interopReferences.Object);
+                interopReferences.Object]);
 
             // Otherwise, we must construct a new specialized vtable type
             TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.IReadOnlyDictionary2Vftbl(
-                ns: InteropUtf8NameFactory.TypeNamespace(sharedReadOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, "Vftbl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(sharedReadOnlyDictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(sharedReadOnlyDictionaryType, interopReferences.RuntimeContext, "Vftbl"),
                 keyType: keyType,
                 valueType: interopReferences.Void,
                 interopReferences: interopReferences);
@@ -104,12 +104,12 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             mapViewMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "IMapViewMethods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, interopReferences.RuntimeContext, "IMapViewMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IMapViewMethodsImpl2.MakeGenericReferenceType(keyType, valueType).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IMapViewMethodsImpl2.MakeGenericReferenceType([keyType, valueType]).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(mapViewMethodsType);
@@ -161,8 +161,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             readOnlyDictionaryMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -295,16 +295,16 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
             TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
-            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([keyValuePairType]);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeReadOnlyDictionary<<KEY_TYPE>, <VALUE_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IMAPVIEW_METHODS>>'
-            TypeSignature windowsRuntimeReadOnlyDictionary5Type = interopReferences.WindowsRuntimeReadOnlyDictionary5.MakeGenericReferenceType(
+            TypeSignature windowsRuntimeReadOnlyDictionary5Type = interopReferences.WindowsRuntimeReadOnlyDictionary5.MakeGenericReferenceType([
                 keyType,
                 valueType,
                 emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
-                mapViewMethodsType.ToReferenceTypeSignature());
+                mapViewMethodsType.ToReferenceTypeSignature()]);
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: readOnlyDictionaryType,
@@ -334,7 +334,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyDictionaryType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(readOnlyDictionaryType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: readOnlyDictionaryType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -390,14 +390,14 @@ internal partial class InteropTypeDefinitionBuilder
         {
             TypeSignature keyType = readOnlyDictionaryType.TypeArguments[0];
             TypeSignature valueType = readOnlyDictionaryType.TypeArguments[1];
-            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType(keyType, valueType);
-            TypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType(keyValuePairType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(keyValuePairType);
+            TypeSignature keyValuePairType = interopReferences.KeyValuePair2.MakeGenericValueType([keyType, valueType]);
+            TypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType([keyValuePairType]);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([keyValuePairType]);
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -421,7 +421,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(valueType, keyType));
+                signature: MethodSignature.CreateInstance(valueType, [keyType]));
 
             // Add and implement the 'get_Item' method
             interfaceImplType.AddMethodImplementation(
@@ -448,7 +448,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_KeysMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Keys",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(keyType)));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType([keyType])));
 
             // Add and implement the 'get_Keys' method
             interfaceImplType.AddMethodImplementation(
@@ -479,7 +479,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ValuesMethod = new(
                 name: $"System.Collections.Generic.IReadOnlyDictionary<{keyType.FullName},{valueType.FullName}>.get_Values",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType(valueType)));
+                signature: MethodSignature.CreateInstance(interopReferences.IEnumerable1.MakeGenericReferenceType([valueType])));
 
             // Add and implement the 'get_Values' method
             interfaceImplType.AddMethodImplementation(
@@ -598,8 +598,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType),
-                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(readOnlyDictionaryType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(readOnlyDictionaryType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

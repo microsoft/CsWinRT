@@ -41,8 +41,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // We're declaring an 'internal abstract class' type
             interfaceType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "Interface"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Interface"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -96,8 +96,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // Otherwise, we must construct a new specialized vtable type
             vftblType = WellKnownTypeDefinitionFactory.IList1Vftbl(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "Vftbl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Vftbl"),
                 elementType: elementType.GetAbiType(interopReferences),
                 interopReferences: interopReferences);
 
@@ -125,12 +125,12 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             vectorMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "IVectorMethods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "IVectorMethods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IVectorMethodsImpl1.MakeGenericReferenceType(elementType).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IVectorMethodsImpl1.MakeGenericReferenceType([elementType]).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(vectorMethodsType);
@@ -220,8 +220,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             listMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -535,14 +535,14 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition nativeObjectType)
         {
             TypeSignature elementType = listType.TypeArguments[0];
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([elementType]);
 
             // The 'NativeObject' is deriving from 'WindowsRuntimeList<<ELEMENT_TYPE>, <IENUMERABLE_INTERFACE>, <IITERABLE_METHODS, <IVECTOR_METHODS>>'
-            TypeSignature windowsRuntimeList4Type = interopReferences.WindowsRuntimeList4.MakeGenericReferenceType(
+            TypeSignature windowsRuntimeList4Type = interopReferences.WindowsRuntimeList4.MakeGenericReferenceType([
                 elementType,
                 emitState.LookupTypeDefinition(enumerableType, "Interface").ToReferenceTypeSignature(),
                 emitState.LookupTypeDefinition(enumerableType, "IIterableMethods").ToReferenceTypeSignature(),
-                vectorMethodsType.ToReferenceTypeSignature());
+                vectorMethodsType.ToReferenceTypeSignature()]);
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: listType,
@@ -572,7 +572,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(listType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(listType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: listType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -627,13 +627,13 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition interfaceImplType)
         {
             TypeSignature elementType = listType.TypeArguments[0];
-            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(elementType);
-            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType(elementType);
+            TypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType([elementType]);
+            TypeSignature enumerableType = interopReferences.IEnumerable1.MakeGenericReferenceType([elementType]);
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -660,7 +660,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition get_ItemMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.get_Item",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceAccessorMethod,
-                signature: MethodSignature.CreateInstance(elementType, interopReferences.Int32));
+                signature: MethodSignature.CreateInstance(elementType, [interopReferences.Int32]));
 
             // Add and implement the 'get_Item' method
             interfaceImplType.AddMethodImplementation(
@@ -712,7 +712,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition indexOfMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.IndexOf",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.Int32, elementType));
+                signature: MethodSignature.CreateInstance(interopReferences.Int32, [elementType]));
 
             // Add and implement the 'IndexOf' method
             interfaceImplType.AddMethodImplementation(
@@ -752,7 +752,7 @@ internal partial class InteropTypeDefinitionBuilder
             MethodDefinition removeAtMethod = new(
                 name: $"System.Collections.Generic.IList<{elementType.FullName}>.RemoveAt",
                 attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                signature: MethodSignature.CreateInstance(interopReferences.Void, interopReferences.Int32));
+                signature: MethodSignature.CreateInstance(interopReferences.Void, [interopReferences.Int32]));
 
             // Add and implement the 'RemoveAt' method
             interfaceImplType.AddMethodImplementation(
@@ -831,7 +831,7 @@ internal partial class InteropTypeDefinitionBuilder
                 MethodDefinition addMethod = new(
                     name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Add",
                     attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                    signature: MethodSignature.CreateInstance(interopReferences.Void, elementType));
+                    signature: MethodSignature.CreateInstance(interopReferences.Void, [elementType]));
 
                 // Add and implement the 'Add' method
                 interfaceImplType.AddMethodImplementation(
@@ -867,7 +867,7 @@ internal partial class InteropTypeDefinitionBuilder
                 MethodDefinition containsMethod = new(
                     name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Contains",
                     attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                    signature: MethodSignature.CreateInstance(interopReferences.Boolean, elementType));
+                    signature: MethodSignature.CreateInstance(interopReferences.Boolean, [elementType]));
 
                 // Add and implement the 'Contains' method
                 interfaceImplType.AddMethodImplementation(
@@ -907,7 +907,7 @@ internal partial class InteropTypeDefinitionBuilder
                 MethodDefinition removeMethod = new(
                     name: $"System.Collections.Generic.ICollection<{elementType.FullName}>.Remove",
                     attributes: WellKnownMethodAttributesFactory.ExplicitInterfaceImplementationInstanceMethod,
-                    signature: MethodSignature.CreateInstance(interopReferences.Boolean, elementType));
+                    signature: MethodSignature.CreateInstance(interopReferences.Boolean, [elementType]));
 
                 // Add and implement the 'Remove' method
                 interfaceImplType.AddMethodImplementation(
@@ -1017,8 +1017,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(listType),
-                name: InteropUtf8NameFactory.TypeName(listType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(listType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(listType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -1060,7 +1060,7 @@ internal partial class InteropTypeDefinitionBuilder
             bool useWindowsUIXamlProjections)
         {
             InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(listType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(listType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 metadataTypeName: null,
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: listType,
@@ -1088,7 +1088,7 @@ internal partial class InteropTypeDefinitionBuilder
                     marshallingTypeMapProxyType: null,
                     metadataTypeMapSourceType: null,
                     metadataTypeMapProxyType: null,
-                    interfaceTypeMapSourceType: interopReferences.ICollection1.MakeGenericReferenceType(elementType),
+                    interfaceTypeMapSourceType: interopReferences.ICollection1.MakeGenericReferenceType([elementType]),
                     interfaceTypeMapProxyType: interfaceImplType.ToReferenceTypeSignature(),
                     interopReferences: interopReferences,
                     module: module);

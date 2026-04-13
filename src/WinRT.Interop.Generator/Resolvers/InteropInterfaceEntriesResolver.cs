@@ -60,6 +60,7 @@ internal static class InteropInterfaceEntriesResolver
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetGenericInstanceTypeImpl(
                     type: genericTypeSignature,
                     interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
                     emitState: emitState);
 
                 yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
@@ -91,7 +92,7 @@ internal static class InteropInterfaceEntriesResolver
             }
 
             // We always need to resolve the user-defined types in all cases below, so just do it once first
-            TypeDefinition interfaceType = typeSignature.Resolve()!;
+            TypeDefinition interfaceType = typeSignature.Resolve(interopReferences.RuntimeContext);
 
             // Handle the common case for all normally projected, non-generic Windows Runtime interface types. For those, all the
             // interop code will just live in the 'WinRT.Projection.dll' assembly, with all projected types for the application domain.
@@ -249,7 +250,7 @@ internal static class InteropInterfaceEntriesResolver
             }
 
             // Resolve the user-defined interface type (same as above)
-            TypeDefinition interfaceType = typeSignature.Resolve()!;
+            TypeDefinition interfaceType = typeSignature.Resolve(interopReferences.RuntimeContext);
 
             // We only care about '[GeneratedComInterface]' types
             if (!interfaceType.IsGeneratedComInterfaceType)
@@ -293,14 +294,14 @@ internal static class InteropInterfaceEntriesResolver
     private sealed class WindowsRuntimeInterfaceEntryInfo(IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) : InteropInterfaceEntryInfo
     {
         /// <inheritdoc/>
-        public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
+        public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences)
         {
             _ = instructions.Add(Call, get_IID);
             _ = instructions.Add(Ldobj, interopReferences.Guid);
         }
 
         /// <inheritdoc/>
-        public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
+        public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences)
         {
             _ = instructions.Add(Call, get_Vtable);
         }
@@ -313,14 +314,14 @@ internal static class InteropInterfaceEntriesResolver
     private sealed class ComInterfaceEntryInfo(TypeSignature interfaceInformationType) : InteropInterfaceEntryInfo
     {
         /// <inheritdoc/>
-        public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
+        public override void LoadIID(CilInstructionCollection instructions, InteropReferences interopReferences)
         {
             _ = instructions.Add(Constrained, interfaceInformationType.ToTypeDefOrRef());
             _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_Iid);
         }
 
         /// <inheritdoc/>
-        public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences, ModuleDefinition module)
+        public override void LoadVtable(CilInstructionCollection instructions, InteropReferences interopReferences)
         {
             _ = instructions.Add(Constrained, interfaceInformationType.ToTypeDefOrRef());
             _ = instructions.Add(Call, interopReferences.IIUnknownInterfaceTypeget_ManagedVirtualMethodTable);

@@ -38,10 +38,12 @@ internal static partial class InteropTypeDiscovery
     /// <param name="typeDefinition">The <see cref="TypeDefinition"/> for the type to analyze.</param>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     public static void TryTrackTypeHierarchyType(
         TypeDefinition typeDefinition,
         InteropGeneratorArgs args,
-        InteropGeneratorDiscoveryState discoveryState)
+        InteropGeneratorDiscoveryState discoveryState,
+        InteropReferences interopReferences)
     {
         // We only care about projected Windows Runtime classes
         if (!typeDefinition.IsProjectedWindowsRuntimeClassType)
@@ -56,7 +58,7 @@ internal static partial class InteropTypeDiscovery
         }
 
         // We need to resolve the base type to be able to look up attributes on it
-        if (!baseType.IsFullyResolvable(out _))
+        if (!baseType.IsFullyResolvable(interopReferences.RuntimeContext, out _))
         {
             WellKnownInteropExceptions.WindowsRuntimeClassTypeNotResolvedWarning(baseType, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -120,7 +122,7 @@ internal static partial class InteropTypeDiscovery
 
         // We'll need to look up attributes and enumerate interfaces across the entire type
         // hierarchy for this type, so make sure that we can resolve all types from it first.
-        if (!typeDefinition.IsTypeHierarchyFullyResolvable(out ITypeDefOrRef? failedResolutionBaseType))
+        if (!typeDefinition.IsTypeHierarchyFullyResolvable(interopReferences.RuntimeContext, out ITypeDefOrRef? failedResolutionBaseType))
         {
             WellKnownInteropExceptions.UserDefinedTypeNotFullyResolvedWarning(failedResolutionBaseType, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -203,7 +205,7 @@ internal static partial class InteropTypeDiscovery
         {
             // Make sure we can resolve the interface type fully, which we should always be able to do.
             // This can really only fail for some constructed generics, for invalid type arguments.
-            if (!interfaceSignature.IsFullyResolvable(out TypeDefinition? interfaceDefinition))
+            if (!interfaceSignature.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? interfaceDefinition))
             {
                 WellKnownInteropExceptions.InterfaceImplementationTypeNotResolvedWarning(interfaceSignature, typeSignature).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -368,7 +370,7 @@ internal static partial class InteropTypeDiscovery
 
         // We'll need to look up attributes and enumerate interfaces across the entire type
         // hierarchy for this type, so make sure that we can resolve all types from it first.
-        if (!typeDefinition.IsTypeHierarchyFullyResolvable(out ITypeDefOrRef? failedResolutionBaseType))
+        if (!typeDefinition.IsTypeHierarchyFullyResolvable(interopReferences.RuntimeContext, out ITypeDefOrRef? failedResolutionBaseType))
         {
             WellKnownInteropExceptions.ArrayTypeElementTypeNotFullyResolvedWarning(failedResolutionBaseType, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -405,7 +407,7 @@ internal static partial class InteropTypeDiscovery
         {
             // Validate that we can resolve the interface. In this case we should be pretty confident
             // that this won't possibly fail, since we expect to only see well-known interfaces here.
-            if (!interfaceSignature.IsFullyResolvable(out TypeDefinition? interfaceDefinition))
+            if (!interfaceSignature.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? interfaceDefinition))
             {
                 WellKnownInteropExceptions.InterfaceImplementationTypeNotResolvedWarning(interfaceSignature, typeSignature).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -502,7 +504,7 @@ internal static partial class InteropTypeDiscovery
             throw WellKnownInteropExceptions.EnsureWindowsRuntimeComponentModuleError();
         }
 
-        Utf8String @namespace = InteropUtf8NameFactory.TypeNamespace(typeSignature);
+        Utf8String @namespace = InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext);
 
         // Go over all declared types in the component .dll to try to find those for '[exclusiveto]' interfaces
         foreach (TypeDefinition componentType in interopDefinitions.WindowsRuntimeComponentModule.TopLevelTypes)

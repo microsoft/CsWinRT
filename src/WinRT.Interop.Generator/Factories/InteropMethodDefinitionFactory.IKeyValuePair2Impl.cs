@@ -97,7 +97,7 @@ internal partial class InteropMethodDefinitionFactory
             MemberReference get_KeyOrValueAccessorMethod = keyValuePairType
                 .ToTypeDefOrRef()
                 .CreateMemberReference(
-                    memberName: methodName,
+                    name: methodName,
                     signature: MethodSignature.CreateInstance(new GenericParameterSignature(
                         parameterType: GenericParameterType.Type,
                         index: methodName.AsSpan().SequenceEqual("get_Key"u8) ? 0 : 1)));
@@ -133,7 +133,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(interopReferences.Object) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([interopReferences.Object]) },
                     { Unbox_Any, keyValuePairType.ToTypeDefOrRef() },
                     { Stloc_1 },
                     { Ldarg_1 },

@@ -36,8 +36,8 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(interfaceType),
-                name: InteropUtf8NameFactory.TypeName(interfaceType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(interfaceType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(interfaceType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -62,7 +62,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.EventHandler.ToReferenceTypeSignature(),
-                    eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CanExecuteChanged"u8),
+                    eventMethod: GetMethodsType(interfaceType, interopReferences).GetMethod("CanExecuteChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.AddOn,
                     interopReferences: interopReferences)
             };
@@ -83,7 +83,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
                 CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                     interfaceType: interfaceType,
                     handlerType: interopReferences.EventHandler.ToReferenceTypeSignature(),
-                    eventMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CanExecuteChanged"u8),
+                    eventMethod: GetMethodsType(interfaceType, interopReferences).GetMethod("CanExecuteChanged"u8),
                     eventAccessorAttributes: MethodSemanticsAttributes.RemoveOn,
                     interopReferences: interopReferences)
             };
@@ -122,7 +122,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
             canExecuteMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                 interfaceType: interfaceType,
                 implementationMethod: canExecuteMethod,
-                forwardedMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("CanExecute"u8),
+                forwardedMethod: GetMethodsType(interfaceType, interopReferences).GetMethod("CanExecute"u8),
                 interopReferences: interopReferences);
 
             // Define the 'ICommand.Execute' method
@@ -142,7 +142,7 @@ internal partial class DynamicCustomMappedTypeMapEntriesBuilder
             executeMethod.CilMethodBody = WellKnownCilMethodBodyFactory.DynamicInterfaceCastableImplementation(
                 interfaceType: interfaceType,
                 implementationMethod: executeMethod,
-                forwardedMethod: GetMethodsType(interfaceType, interopReferences, module).GetMethod("Execute"u8),
+                forwardedMethod: GetMethodsType(interfaceType, interopReferences).GetMethod("Execute"u8),
                 interopReferences: interopReferences);
         }
     }

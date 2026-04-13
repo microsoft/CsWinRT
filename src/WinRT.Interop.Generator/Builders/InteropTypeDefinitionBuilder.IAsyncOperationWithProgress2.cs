@@ -42,19 +42,19 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal abstract class' type
             operationMethodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(operationType),
-                name: InteropUtf8NameFactory.TypeName(operationType, "Methods"),
+                ns: InteropUtf8NameFactory.TypeNamespace(operationType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(operationType, interopReferences.RuntimeContext, "Methods"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
-                Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationWithProgressMethodsImpl2.MakeGenericReferenceType(resultType, progressType).ToTypeDefOrRef()) }
+                Interfaces = { new InterfaceImplementation(interopReferences.IAsyncOperationWithProgressMethodsImpl2.MakeGenericReferenceType([resultType, progressType]).ToTypeDefOrRef()) }
             };
 
             module.TopLevelTypes.Add(operationMethodsType);
 
             // Prepare the handler types
-            TypeSignature asyncOperationProgressHandlerType = interopReferences.AsyncOperationProgressHandler2.MakeGenericReferenceType(resultType, progressType);
-            TypeSignature asyncOperationWithProgressCompletedHandlerType = interopReferences.AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType(resultType, progressType);
+            TypeSignature asyncOperationProgressHandlerType = interopReferences.AsyncOperationProgressHandler2.MakeGenericReferenceType([resultType, progressType]);
+            TypeSignature asyncOperationWithProgressCompletedHandlerType = interopReferences.AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType([resultType, progressType]);
 
             // Get the generated 'ConvertToManaged' method to marshal the 'AsyncOperationProgressHandler<TResult, TProgress>' instance to managed
             MethodDefinition progressConvertToManagedMethod = emitState.LookupTypeDefinition(
@@ -152,10 +152,10 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition nativeObjectType)
         {
             // The 'NativeObject' is deriving from 'WindowsRuntimeAsyncOperationWithProgress<<RESULT_TYPE>, <PROGRESS_TYPE>, <IASYNC_OPERATION_WITH_PROGRESS_METHODS>>'
-            TypeSignature windowsRuntimeAsyncOperationWithProgress2Type = interopReferences.WindowsRuntimeAsyncOperationWithProgress3.MakeGenericReferenceType(
+            TypeSignature windowsRuntimeAsyncOperationWithProgress2Type = interopReferences.WindowsRuntimeAsyncOperationWithProgress3.MakeGenericReferenceType([
                 operationType.TypeArguments[0],
                 operationType.TypeArguments[1],
-                operationMethodsType.ToReferenceTypeSignature());
+                operationMethodsType.ToReferenceTypeSignature()]);
 
             InteropTypeDefinitionBuilder.NativeObject(
                 typeSignature: operationType,
@@ -185,7 +185,7 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition callbackType)
         {
             ComWrappersCallback(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(operationType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(operationType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 typeSignature: operationType,
                 nativeObjectType: nativeObjectType,
                 get_IidMethod: get_IidMethod,
@@ -244,8 +244,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal interface class' type
             interfaceImplType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(operationType),
-                name: InteropUtf8NameFactory.TypeName(operationType, "InterfaceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(operationType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(operationType, interopReferences.RuntimeContext, "InterfaceImpl"),
                 attributes: TypeAttributes.Interface | TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: null)
             {
@@ -264,8 +264,8 @@ internal partial class InteropTypeDefinitionBuilder
             module.TopLevelTypes.Add(interfaceImplType);
 
             // Prepare the handler types
-            TypeSignature asyncOperationProgressHandlerType = interopReferences.AsyncOperationProgressHandler2.MakeGenericReferenceType(resultType, progressType);
-            TypeSignature asyncOperationWithProgressCompletedHandlerType = interopReferences.AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType(resultType, progressType);
+            TypeSignature asyncOperationProgressHandlerType = interopReferences.AsyncOperationProgressHandler2.MakeGenericReferenceType([resultType, progressType]);
+            TypeSignature asyncOperationWithProgressCompletedHandlerType = interopReferences.AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType([resultType, progressType]);
 
             // Get the getter and setter accessor methods for 'Progress'
             MethodDefinition[] progressMethods = operationMethodsType.GetMethods("Progress"u8);
@@ -413,7 +413,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeSignature progressType = operationType.TypeArguments[1];
 
             // Prepare the 'AsyncOperationProgressHandler<<RESULT_TYPE>, <PROGRESS_TYPE>>' signature
-            TypeSignature asyncOperationProgressHandlerType = interopReferences.AsyncOperationProgressHandler2.MakeGenericReferenceType(resultType, progressType);
+            TypeSignature asyncOperationProgressHandlerType = interopReferences.AsyncOperationProgressHandler2.MakeGenericReferenceType([resultType, progressType]);
 
             // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationProgressHandler<TResult, TProgress>' instance to native
             MethodDefinition progressConvertToUnmanagedMethod = emitState.LookupTypeDefinition(
@@ -440,7 +440,7 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences);
 
             // Prepare the 'AsyncOperationWithProgressCompletedHandler<<RESULT_TYPE>, <PROGRESS_TYPE>>' signature
-            TypeSignature asyncOperationWithProgressCompletedHandlerType = interopReferences.AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType(resultType, progressType);
+            TypeSignature asyncOperationWithProgressCompletedHandlerType = interopReferences.AsyncOperationWithProgressCompletedHandler2.MakeGenericReferenceType([resultType, progressType]);
 
             // Get the generated 'ConvertToUnmanaged' method to marshal the 'AsyncOperationWithProgressCompletedHandler<TResult, TProgress>' instance to native
             MethodDefinition completedConvertToUnmanagedMethod = emitState.LookupTypeDefinition(
@@ -474,8 +474,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(operationType),
-                name: InteropUtf8NameFactory.TypeName(operationType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(operationType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(operationType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: interopDefinitions.IAsyncOperationWithProgressVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,

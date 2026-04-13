@@ -82,7 +82,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([listType]) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Ldloc_0 },
@@ -117,7 +117,7 @@ internal partial class InteropMethodDefinitionFactory
 
             // Track the method for rewrite to marshal the result value
             emitState.TrackRetValValueMethodRewrite(
-                retValType: interopReferences.IReadOnlyList1.MakeGenericReferenceType(elementType),
+                retValType: interopReferences.IReadOnlyList1.MakeGenericReferenceType([elementType]),
                 method: getViewMethod,
                 marker: nop_convertToUnmanaged);
 
@@ -212,7 +212,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([listType]) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { Ldarg_1 },
@@ -296,7 +296,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([listType]) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { nop_parameter1Rewrite },
@@ -382,7 +382,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([listType]) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { Call, interopReferences.IListAdapter1RemoveAtEnd(elementType) },
@@ -460,7 +460,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([listType]) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { Callvirt, interopReferences.ICollection1Clear(elementType) },
@@ -615,7 +615,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code to load the list
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([listType]) },
                     { Stloc_0 },
 
                     // list.Clear();
@@ -637,7 +637,7 @@ internal partial class InteropMethodDefinitionFactory
                     { Mul },
                     { Conv_I },
                     { Add },
-                    { CilInstruction.CreateLdind(elementAbiType) },
+                    { CilInstruction.CreateLdind(elementAbiType, interopReferences.RuntimeContext) },
                     { nop_convertToManaged },
                     { Callvirt, interopReferences.ICollection1Add(elementType) },
 
@@ -743,7 +743,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(listType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([listType]) },
                     { Stloc_0 },
                     { Ldloc_0 },
                     { Ldarg_1 },

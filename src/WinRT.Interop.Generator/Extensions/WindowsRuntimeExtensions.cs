@@ -372,7 +372,7 @@ internal static class WindowsRuntimeExtensions
         public bool IsBlittable(InteropReferences interopReferences)
         {
             // Only value types are possibly blittable
-            if (!type.IsValueType)
+            if (!type.GetIsValueType(interopReferences.RuntimeContext))
             {
                 return false;
             }
@@ -383,7 +383,7 @@ internal static class WindowsRuntimeExtensions
                 return false;
             }
 
-            TypeDefinition typeDefinition = type.Resolve()!;
+            TypeDefinition typeDefinition = type.Resolve(interopReferences.RuntimeContext);
 
             // Enum types are always blittable
             if (typeDefinition.IsEnum)
@@ -430,7 +430,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the type is a managed value type.</returns>
         public bool IsManagedValueType(InteropReferences interopReferences)
         {
-            if (!type.IsValueType)
+            if (!type.GetIsValueType(interopReferences.RuntimeContext))
             {
                 return false;
             }
@@ -441,7 +441,7 @@ internal static class WindowsRuntimeExtensions
                 return true;
             }
 
-            TypeDefinition typeDefinition = type.Resolve()!;
+            TypeDefinition typeDefinition = type.Resolve(interopReferences.RuntimeContext);
 
             // Enum types are always blittable
             if (typeDefinition.IsEnum)
@@ -496,7 +496,7 @@ internal static class WindowsRuntimeExtensions
         public bool IsTrackerSupportRequired(InteropReferences interopReferences)
         {
             // Check reference types first, as there's fewer special cases to handle
-            if (!type.IsValueType)
+            if (!type.GetIsValueType(interopReferences.RuntimeContext))
             {
                 // 'string' objects don't need tracker support, as they can't reference anything
                 if (type.IsTypeOfString())
@@ -530,7 +530,7 @@ internal static class WindowsRuntimeExtensions
                 return false;
             }
 
-            TypeDefinition typeDefinition = type.Resolve()!;
+            TypeDefinition typeDefinition = type.Resolve(interopReferences.RuntimeContext);
 
             // Enum types are blittable, so they never need tracker support
             if (typeDefinition.IsEnum)
@@ -583,7 +583,7 @@ internal static class WindowsRuntimeExtensions
             }
 
             // All other value types will never have a reference type as the ABI type
-            if (type.IsValueType)
+            if (type.GetIsValueType(interopReferences.RuntimeContext))
             {
                 return false;
             }
@@ -618,7 +618,7 @@ internal static class WindowsRuntimeExtensions
                 return interopReferences.Void.MakePointerType();
             }
 
-            TypeDefinition typeDefinition = type.Resolve()!;
+            TypeDefinition typeDefinition = type.Resolve(interopReferences.RuntimeContext);
 
             if (typeDefinition.IsValueType)
             {
@@ -753,7 +753,7 @@ internal static class WindowsRuntimeExtensions
         /// <returns>Whether the input type is a Windows Runtime managed-only type.</returns>
         public bool IsWindowsRuntimeManagedOnlyType(InteropReferences interopReferences)
         {
-            return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute);
+            return type.HasOrInheritsAttribute(interopReferences.WindowsRuntimeManagedOnlyTypeAttribute, interopReferences.RuntimeContext);
         }
 
         /// <summary>
@@ -803,12 +803,12 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Gets the <see cref="MethodSignature"/> for the <c>Invoke</c> method of a given delegate type.
         /// </summary>
-        /// <param name="module">The <see cref="ModuleDefinition"/> to use to import the delegate before resolving it.</param>
+        /// <param name="runtimeContext">The <see cref="RuntimeContext"/> to use to resolve the delegate type.</param>
         /// <returns>The <see cref="MethodSignature"/> for the <c>Invoke</c> method for the input delegate type.</returns>
-        public MethodSignature GetDelegateInvokeMethodSignature(ModuleDefinition module)
+        public MethodSignature GetDelegateInvokeMethodSignature(RuntimeContext runtimeContext)
         {
             // Get the 'Invoke' method of the delegate type (this will remove the type arguments)
-            MethodDefinition invokeMethod = signature.Resolve(module)!.GetMethod("Invoke"u8);
+            MethodDefinition invokeMethod = signature.Resolve(runtimeContext).GetMethod("Invoke"u8);
 
             // Construct the generic signature for the method with the context of the input delegate.
             // We can use this to get all the parameters, which might be any combination of explicitly
@@ -994,7 +994,7 @@ internal static class WindowsRuntimeExtensions
                 return true;
             }
 
-            TypeDefinition type = signature.Resolve()!;
+            TypeDefinition type = signature.Resolve(interopReferences.RuntimeContext);
 
             // For all other cases, just check that the type is projected. This will also include
             // manually projected types that are defined in 'WinRT.Runtime.dll' (same attributes).
@@ -1061,7 +1061,7 @@ internal static class WindowsRuntimeExtensions
                 return true;
             }
 
-            TypeDefinition type = signature.Resolve()!;
+            TypeDefinition type = signature.Resolve(interopReferences.RuntimeContext);
 
             // For all other cases, first check that the type is projected (same as above)
             if (!type.IsProjectedWindowsRuntimeType)
@@ -1078,6 +1078,7 @@ internal static class WindowsRuntimeExtensions
         /// <summary>
         /// Gets the Windows Runtime metadata name for a <see cref="TypeSignature"/>, if available.
         /// </summary>
+        /// <param name="runtimeContext">The context to assume when resolving types.</param>
         /// <returns>The Windows Runtime metadata name from the underlying type's <c>WindowsRuntimeMetadataAttribute</c>, or <see langword="null"/> if not found.</returns>
         /// <remarks>
         /// <para>
@@ -1086,13 +1087,13 @@ internal static class WindowsRuntimeExtensions
         /// For other types, it resolves the type definition directly.
         /// </para>
         /// </remarks>
-        public Utf8String? GetWindowsRuntimeMetadataName()
+        public Utf8String? GetWindowsRuntimeMetadataName(RuntimeContext? runtimeContext)
         {
             return signature switch
             {
-                GenericInstanceTypeSignature generic => generic.GenericType.Resolve()?.GetWindowsRuntimeMetadataName(),
-                ArrayTypeSignature array => array.BaseType.GetWindowsRuntimeMetadataName(),
-                _ => signature.ToTypeDefOrRef().Resolve()?.GetWindowsRuntimeMetadataName()
+                GenericInstanceTypeSignature generic => generic.GenericType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(),
+                ArrayTypeSignature array => array.BaseType.Resolve(runtimeContext).GetWindowsRuntimeMetadataName(),
+                _ => signature.ToTypeDefOrRef().Resolve(runtimeContext).GetWindowsRuntimeMetadataName()
             };
         }
     }

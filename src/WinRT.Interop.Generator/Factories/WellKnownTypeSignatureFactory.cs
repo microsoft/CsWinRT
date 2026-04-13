@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -30,7 +29,7 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: interopReferences.Int32),
             parameterTypes: [
                 interopReferences.Void.MakePointerType(),
-                interopReferences.Guid.MakePointerType(),
+                interopReferences.Guid.MakeValueTypePointerType(),
                 interopReferences.Void.MakePointerType().MakePointerType()]);
     }
 
@@ -85,7 +84,7 @@ internal static class WellKnownTypeSignatureFactory
             parameterTypes: [
                 interopReferences.Void.MakePointerType(),
                 interopReferences.UInt32.MakePointerType(),
-                interopReferences.Guid.MakePointerType().MakePointerType()]);
+                interopReferences.Guid.MakeValueTypePointerType().MakePointerType()]);
     }
 
     /// <summary>
@@ -123,7 +122,7 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: interopReferences.Int32),
             parameterTypes: [
                 interopReferences.Void.MakePointerType(),
-                interopReferences.TrustLevel.MakePointerType()]);
+                interopReferences.TrustLevel.MakeValueTypePointerType()]);
     }
 
     /// <summary>
@@ -143,7 +142,7 @@ internal static class WellKnownTypeSignatureFactory
             parameterTypes: [
                 interopReferences.Void.MakePointerType(),
                 interopReferences.Void.MakePointerType(),
-                interopReferences.EventRegistrationToken.MakePointerType()]);
+                interopReferences.EventRegistrationToken.MakeValueTypePointerType()]);
     }
 
     /// <summary>
@@ -805,7 +804,7 @@ internal static class WellKnownTypeSignatureFactory
                 baseType: interopReferences.Int32),
             parameterTypes: [
                 interopReferences.Void.MakePointerType(),
-                interopReferences.CollectionChange.MakePointerType()]);
+                interopReferences.CollectionChange.MakeValueTypePointerType()]);
     }
 
     /// <summary>

@@ -85,7 +85,7 @@ internal readonly ref struct InteropMarshallerType
     {
         // When boxing, the parameter is either 'Nullable<T>' for value types, or just the same type
         TypeSignature parameterType = _type.IsValueType
-            ? _interopReferences.Nullable1.MakeGenericValueType(_type)
+            ? _interopReferences.Nullable1.MakeGenericValueType([_type])
             : _type;
 
         return _marshallerType.GetMethodDefOrRef(
@@ -103,7 +103,7 @@ internal readonly ref struct InteropMarshallerType
     {
         // When unboxing, the return type is either 'Nullable<T>' for value types, or just the same type
         TypeSignature returnType = _type.IsValueType
-            ? _interopReferences.Nullable1.MakeGenericValueType(_type)
+            ? _interopReferences.Nullable1.MakeGenericValueType([_type])
             : _type;
 
         return _marshallerType.GetMethodDefOrRef(

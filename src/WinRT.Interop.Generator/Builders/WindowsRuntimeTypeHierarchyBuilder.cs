@@ -470,6 +470,10 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
         module.TopLevelTypes.Add(windowsRuntimeTypeHierarchyDataType);
 
+        int bucketsRvaSizeInt32 = (int)(bucketsRvaField.Signature!.FieldType.Resolve(module.RuntimeContext).ClassLayout!.ClassSize / sizeof(int));
+        int keysRvaSize = (int)keysRvaField.Signature!.FieldType.Resolve(module.RuntimeContext).ClassLayout!.ClassSize;
+        int valuesRvaSize = (int)valuesRvaField.Signature!.FieldType.Resolve(module.RuntimeContext).ClassLayout!.ClassSize;
+
         // Create the 'Buckets' get accessor
         MethodDefinition get_BucketsMethod = new(
             name: "get_Buckets"u8,
@@ -481,7 +485,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 { Ldsflda, bucketsRvaField },
                 { Conv_U },
-                { CilInstruction.CreateLdcI4((int)(bucketsRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize / sizeof(int))) },
+                { CilInstruction.CreateLdcI4(bucketsRvaSizeInt32) },
                 { Newobj, interopReferences.ReadOnlySpanInt32_ctor },
                 { Ret }
             }
@@ -498,7 +502,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 { Ldsflda, keysRvaField },
                 { Conv_U },
-                { CilInstruction.CreateLdcI4((int)keysRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize) },
+                { CilInstruction.CreateLdcI4(keysRvaSize) },
                 { Newobj, interopReferences.ReadOnlySpanByte_ctor },
                 { Ret }
             }
@@ -515,7 +519,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             {
                 { Ldsflda, valuesRvaField },
                 { Conv_U },
-                { CilInstruction.CreateLdcI4((int)valuesRvaField.Signature!.FieldType.Resolve()!.ClassLayout!.ClassSize) },
+                { CilInstruction.CreateLdcI4(valuesRvaSize) },
                 { Newobj, interopReferences.ReadOnlySpanByte_ctor },
                 { Ret }
             }

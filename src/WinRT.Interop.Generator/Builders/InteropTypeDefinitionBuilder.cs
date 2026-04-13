@@ -42,7 +42,7 @@ internal static partial class InteropTypeDefinitionBuilder
         out MethodDefinition get_IidMethod)
     {
         IID(
-            name: InteropUtf8NameFactory.TypeName(interfaceType),
+            name: InteropUtf8NameFactory.TypeName(interfaceType, interopReferences.RuntimeContext),
             interopDefinitions: interopDefinitions,
             interopReferences: interopReferences,
             iid: GuidGenerator.CreateIID(interfaceType, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
@@ -96,8 +96,8 @@ internal static partial class InteropTypeDefinitionBuilder
     {
         // We're declaring an 'internal sealed class' type
         nativeObjectType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "NativeObject"),
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "NativeObject"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: nativeObjectBaseType.ToTypeDefOrRef());
 
@@ -133,8 +133,8 @@ internal static partial class InteropTypeDefinitionBuilder
     {
         // We're declaring an 'internal abstract class' type
         callbackType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersCallback"),
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "ComWrappersCallback"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.Object.ToTypeDefOrRef())
         {
@@ -159,7 +159,7 @@ internal static partial class InteropTypeDefinitionBuilder
                     interopReferences.Void.MakePointerType(),
                     interopReferences.ReadOnlySpanChar,
                     interopReferences.Object.MakeByReferenceType(),
-                    interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
+                    interopReferences.CreatedWrapperFlags.MakeValueTypeByReferenceType()]))
         { CilOutParameterIndices = [3, 4] };
 
         // Add and implement 'TryCreateObject'
@@ -224,7 +224,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 returnType: interopReferences.Object,
                 parameterTypes: [
                     interopReferences.Void.MakePointerType(),
-                    interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
+                    interopReferences.CreatedWrapperFlags.MakeValueTypeByReferenceType()]))
         {
             CilOutParameterIndices = [2],
             CilInstructions =
@@ -264,8 +264,8 @@ internal static partial class InteropTypeDefinitionBuilder
     {
         // We're declaring an 'internal sealed class' type
         marshallerType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "ComWrappersMarshallerAttribute"),
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "ComWrappersMarshallerAttribute"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -288,7 +288,7 @@ internal static partial class InteropTypeDefinitionBuilder
                 returnType: interopReferences.Object,
                 parameterTypes: [
                     interopReferences.Void.MakePointerType(),
-                    interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
+                    interopReferences.CreatedWrapperFlags.MakeValueTypeByReferenceType()]))
         {
             CilOutParameterIndices = [2],
             CilInstructions =
@@ -327,8 +327,8 @@ internal static partial class InteropTypeDefinitionBuilder
     {
         // We're declaring an 'internal static class' type
         marshallerType = new(
-            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature),
-            name: InteropUtf8NameFactory.TypeName(typeSignature, "Marshaller"),
+            ns: InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(typeSignature, interopReferences.RuntimeContext, "Marshaller"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -367,7 +367,7 @@ internal static partial class InteropTypeDefinitionBuilder
         // Construct a descriptor for 'WindowsRuntimeUnsealedObjectMarshaller.ConvertToManaged<<INTERFACE_CALLBACK_TYPE>>(void*)'
         IMethodDescriptor windowsRuntimeUnsealedObjectMarshallerConvertToManaged =
             interopReferences.WindowsRuntimeUnsealedObjectMarshallerConvertToManaged
-            .MakeGenericInstanceMethod(interfaceComWrappersCallbackType.ToReferenceTypeSignature());
+            .MakeGenericInstanceMethod([interfaceComWrappersCallbackType.ToReferenceTypeSignature()]);
 
         // Define the 'ConvertToManaged' method as follows:
         //
@@ -520,8 +520,7 @@ internal static partial class InteropTypeDefinitionBuilder
         static void LoadIID(
             (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) arg,
             CilInstructionCollection instructions,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             _ = instructions.Add(Call, arg.get_IID);
             _ = instructions.Add(Ldobj, interopReferences.Guid);
@@ -531,8 +530,7 @@ internal static partial class InteropTypeDefinitionBuilder
         static void LoadVtable(
             (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) arg,
             CilInstructionCollection instructions,
-            InteropReferences interopReferences,
-            ModuleDefinition module)
+            InteropReferences interopReferences)
         {
             _ = instructions.Add(Call, arg.get_Vtable);
         }
@@ -574,8 +572,8 @@ internal static partial class InteropTypeDefinitionBuilder
             entriesFieldType: entriesFieldType,
             interopReferences: interopReferences,
             module: module,
-            get_IID: static (arg, il, references, module) => arg.LoadIID(il, references, module),
-            get_Vtable: static (arg, il, references, module) => arg.LoadVtable(il, references, module),
+            get_IID: static (arg, il, references) => arg.LoadIID(il, references),
+            get_Vtable: static (arg, il, references) => arg.LoadVtable(il, references),
             implTypes: implTypes,
             implType: out implType);
     }
@@ -600,8 +598,8 @@ internal static partial class InteropTypeDefinitionBuilder
         InteropReferences interopReferences,
         ModuleDefinition module,
         ReadOnlySpan<TArg> implTypes,
-        Action<TArg, CilInstructionCollection, InteropReferences, ModuleDefinition> get_IID,
-        Action<TArg, CilInstructionCollection, InteropReferences, ModuleDefinition> get_Vtable,
+        Action<TArg, CilInstructionCollection, InteropReferences> get_IID,
+        Action<TArg, CilInstructionCollection, InteropReferences> get_Vtable,
         out TypeDefinition implType)
     {
         // Enforce that we can initialize all interface entries
@@ -656,14 +654,14 @@ internal static partial class InteropTypeDefinitionBuilder
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
 
             // Invoke the callback to emit code to load 'IID' on the evaluation stack
-            get_IID(implTypes[i], cctorInstructions, interopReferences, module);
+            get_IID(implTypes[i], cctorInstructions, interopReferences);
 
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryIIDField);
             _ = cctorInstructions.Add(Ldsflda, entriesField);
             _ = cctorInstructions.Add(Ldflda, entriesFieldType.Fields[i]);
 
             // Same as above, but to get the vtable pointer on the stack
-            get_Vtable(implTypes[i], cctorInstructions, interopReferences, module);
+            get_Vtable(implTypes[i], cctorInstructions, interopReferences);
 
             _ = cctorInstructions.Add(Stfld, comInterfaceEntryVtableField);
         }
@@ -671,7 +669,7 @@ internal static partial class InteropTypeDefinitionBuilder
         _ = cctorInstructions.Add(Ret);
 
         // The 'Vtables' property type has the signature being 'ComWrappers.ComInterfaceEntry*'
-        PointerTypeSignature vtablesPropertyType = interopReferences.ComInterfaceEntry.MakePointerType();
+        PointerTypeSignature vtablesPropertyType = interopReferences.ComInterfaceEntry.MakeValueTypePointerType();
 
         // Create the 'Vtables' property
         PropertyDefinition vtablesProperty = new(
@@ -724,8 +722,8 @@ internal static partial class InteropTypeDefinitionBuilder
         // emit '[WindowsRuntimeMetadataTypeName]', to support mapping the generic interface name
         // when marshalling 'TypeName' instances. Nobody would need a runtime class name here.
         Proxy(
-            ns: InteropUtf8NameFactory.TypeNamespace(interfaceType),
-            name: InteropUtf8NameFactory.TypeName(interfaceType),
+            ns: InteropUtf8NameFactory.TypeNamespace(interfaceType, interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(interfaceType, interopReferences.RuntimeContext),
             mappedMetadata: null,
             runtimeClassName: null,
             metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(interfaceType, useWindowsUIXamlProjections),
@@ -850,7 +848,7 @@ internal static partial class InteropTypeDefinitionBuilder
         bool useWindowsUIXamlProjections)
     {
         TypeMapAttributes(
-            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, useWindowsUIXamlProjections),
+            runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(interfaceType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
             metadataTypeName: null,
             externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
             externalTypeMapTrimTargetType: interfaceType,

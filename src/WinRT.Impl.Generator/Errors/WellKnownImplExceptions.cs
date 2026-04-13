@@ -120,6 +120,14 @@ internal static class WellKnownImplExceptions
     }
 
     /// <summary>
+    /// Failed to probe the .NET runtime version from the output assembly.
+    /// </summary>
+    public static Exception OutputAssemblyRuntimeVersionNotFound(string path)
+    {
+        return Exception(14, $"Failed to probe the .NET runtime version from the output assembly '{path}'.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

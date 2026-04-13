@@ -39,12 +39,15 @@ internal partial class InteropGenerator
             args: args,
             discoveryState: discoveryState,
             windowsRuntimeModule: out ModuleDefinition windowsRuntimeModule,
-            windowsFoundationModule: out ModuleDefinition windowsFoundationModule);
+            windowsRuntimeSdkProjectionModule: out _);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Setup the well known items to use when emitting code
-        InteropReferences interopReferences = new(module.CorLibTypeFactory, windowsRuntimeModule, windowsFoundationModule);
+        InteropReferences interopReferences = new(
+            runtimeContext: module.RuntimeContext!,
+            corLibTypeFactory: module.CorLibTypeFactory,
+            windowsRuntimeModule: windowsRuntimeModule);
         InteropDefinitions interopDefinitions = new(
             interopReferences: interopReferences,
             windowsRuntimeSdkProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule!,
@@ -199,13 +202,13 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
-    /// <param name="windowsFoundationModule">The <see cref="ModuleDefinition"/> for the Windows Runtine foundation projection assembly.</param>
+    /// <param name="windowsRuntimeSdkProjectionModule">The <see cref="ModuleDefinition"/> for the Windows SDK projection assembly.</param>
     /// <returns>The interop module to populate and emit.</returns>
     private static ModuleDefinition DefineInteropModule(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
         out ModuleDefinition windowsRuntimeModule,
-        out ModuleDefinition windowsFoundationModule)
+        out ModuleDefinition windowsRuntimeSdkProjectionModule)
     {
         // Get the loaded module for the application .dll (this should always be available here)
         if (!discoveryState.Modules.TryGetValue(args.OutputAssemblyPath, out ModuleDefinition? assemblyModule))
@@ -221,7 +224,7 @@ internal partial class InteropGenerator
         }
 
         // Get the loaded module for the Windows SDK projection .dll (same as above)
-        if ((windowsFoundationModule = discoveryState.Modules.FirstOrDefault(
+        if ((windowsRuntimeSdkProjectionModule = discoveryState.Modules.FirstOrDefault(
             predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
         {
             throw WellKnownInteropExceptions.WindowsSdkProjectionModuleNotFound();
@@ -243,11 +246,10 @@ internal partial class InteropGenerator
         try
         {
             // Create the module for the 'WinRT.Interop.dll' assembly, where we'll add all generated types to
-            ModuleDefinition winRTInteropModule = new(InteropNames.WindowsRuntimeInteropDllNameUtf8, assemblyModule.OriginalTargetRuntime.GetDefaultCorLib())
+            ModuleDefinition winRTInteropModule = new(
+                name: InteropNames.WindowsRuntimeInteropDllNameUtf8,
+                corLib: discoveryState.RuntimeContext.TargetRuntime.GetDefaultCorLib())
             {
-                // Create and set a metadata resolver from the assembly resolver that we created during the discovery phase (used for auto-import)
-                MetadataResolver = new DefaultMetadataResolver(discoveryState.AssemblyResolver),
-
                 // We need a deterministic MVID for the generated module, so we create one based on the input assemblies.
                 // This logic will produce a hash from each .NET assembly that was loaded and analyzed during discovery.
                 Mvid = MvidGenerator.CreateMvid(discoveryState.Modules.Keys)
@@ -255,10 +257,16 @@ internal partial class InteropGenerator
 
             // Also create a containing assembly for it (needed for the emit phase). We don't actually need the assembly
             // ourselves, but creating it and adding the module will update the declaring assembly for types added to it.
-            _ = new AssemblyDefinition(InteropNames.WindowsRuntimeInteropAssemblyNameUtf8, assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
+            AssemblyDefinition winRTInteropAssembly = new(
+                name: InteropNames.WindowsRuntimeInteropAssemblyNameUtf8,
+                version: assemblyModule.Assembly?.Version ?? new Version(0, 0, 0, 0))
             {
                 Modules = { winRTInteropModule }
             };
+
+            // Add this assembly to the runtime context we've been using since discovery.
+            // This enables type resolution across assemblies (used for auto-import).
+            discoveryState.RuntimeContext.AddAssembly(winRTInteropAssembly);
 
             return winRTInteropModule;
         }
@@ -2049,7 +2057,7 @@ internal partial class InteropGenerator
             }
 
             // Construct the 'IReadOnlyCollection<KeyValuePair<,>>' type for processing
-            GenericInstanceTypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType(typeSignature.TypeArguments[0]);
+            GenericInstanceTypeSignature readOnlyCollectionType = interopReferences.IReadOnlyCollection1.MakeGenericReferenceType([typeSignature.TypeArguments[0]]);
 
             try
             {
@@ -2106,7 +2114,7 @@ internal partial class InteropGenerator
             }
 
             // Construct the 'ICollection<KeyValuePair<,>>' type for processing
-            GenericInstanceTypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType(typeSignature.TypeArguments[0]);
+            GenericInstanceTypeSignature collectionType = interopReferences.ICollection1.MakeGenericReferenceType([typeSignature.TypeArguments[0]]);
 
             try
             {

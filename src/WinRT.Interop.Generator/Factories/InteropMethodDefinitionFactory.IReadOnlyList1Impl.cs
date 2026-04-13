@@ -87,7 +87,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyListType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([readOnlyListType]) },
                     { Stloc_0 },
                     { Ldarg_2 },
                     { Ldloc_0 },
@@ -189,7 +189,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyListType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([readOnlyListType]) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Ldloc_0 },
@@ -311,7 +311,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyListType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([readOnlyListType]) },
                     { Stloc_0 },
                     { Ldarg_3 },
                     { Ldloc_0 },
@@ -457,7 +457,7 @@ internal partial class InteropMethodDefinitionFactory
                     // '.try' code
                     { ldarg_s_4_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(readOnlyListType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([readOnlyListType]) },
                     { Ldarg_1 },
                     { Ldarg_2 },
                     { Ldarg_3 },

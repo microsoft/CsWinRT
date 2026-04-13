@@ -42,7 +42,7 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // 'IDelegate' IID
             IID(
-                name: InteropUtf8NameFactory.TypeName(delegateType),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 iid: GuidGenerator.CreateIID(delegateType, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
@@ -55,7 +55,7 @@ internal partial class InteropTypeDefinitionBuilder
             // scenario. This is different than boxed value type, which instead are
             // just always projected as and using 'Nullable<T>' to represent this.
             IID(
-                name: InteropUtf8NameFactory.TypeName(delegateType, "Reference"),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "Reference"),
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 iid: GuidGenerator.CreateIID(delegateType.MakeBoxedType(), interopDefinitions, interopReferences, useWindowsUIXamlProjections),
@@ -79,7 +79,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition vftblType)
         {
-            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(module);
+            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(interopReferences.RuntimeContext);
 
             // Prepare the sender and arguments types (same as for the 'Impl' type below). Note that
             // we are relying on the fact that all Windows Runtime generic delegate types have in
@@ -103,8 +103,8 @@ internal partial class InteropTypeDefinitionBuilder
             if (!isSenderReferenceType && !isArgsReferenceType)
             {
                 vftblType = WellKnownTypeDefinitionFactory.DelegateVftbl(
-                    ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                    name: InteropUtf8NameFactory.TypeName(delegateType, "Vftbl"),
+                    ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "Vftbl"),
                     senderType: senderType.GetAbiType(interopReferences),
                     argsType: argsType.GetAbiType(interopReferences),
                     interopReferences: interopReferences);
@@ -132,14 +132,14 @@ internal partial class InteropTypeDefinitionBuilder
                 }
 
                 // Create a dummy signature just to generate the mangled name for the vtable type
-                TypeSignature sharedEventHandlerType = interopReferences.EventHandler2.MakeGenericReferenceType(
+                TypeSignature sharedEventHandlerType = interopReferences.EventHandler2.MakeGenericReferenceType([
                     displaySenderType,
-                    displayArgsType);
+                    displayArgsType]);
 
                 // Construct a new specialized vtable type
                 TypeDefinition newVftblType = WellKnownTypeDefinitionFactory.DelegateVftbl(
-                    ns: InteropUtf8NameFactory.TypeNamespace(sharedEventHandlerType),
-                    name: InteropUtf8NameFactory.TypeName(sharedEventHandlerType, "Vftbl"),
+                    ns: InteropUtf8NameFactory.TypeNamespace(sharedEventHandlerType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(sharedEventHandlerType, interopReferences.RuntimeContext, "Vftbl"),
                     senderType: senderType,
                     argsType: argsType,
                     interopReferences: interopReferences);
@@ -200,7 +200,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition implType)
         {
-            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(module);
+            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(interopReferences.RuntimeContext);
 
             // Prepare the sender and arguments types. This path is only ever reached for valid generic
             // Windows Runtime delegate types, and they all have exactly two type arguments (see above).
@@ -241,10 +241,10 @@ internal partial class InteropTypeDefinitionBuilder
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([delegateType]) },
                     { nop_parameter1Rewrite },
                     { nop_parameter2Rewrite },
-                    { Callvirt, interopReferences.DelegateInvoke(delegateType, module) },
+                    { Callvirt, interopReferences.DelegateInvoke(delegateType) },
                     { Ldc_I4_0 },
                     { Stloc_0 },
                     { Leave_S, ldloc_0_returnHResult.CreateLabel() },
@@ -287,8 +287,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIUnknown,
-                ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "Impl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "Impl"),
                 vftblType: vftblType,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -360,7 +360,7 @@ internal partial class InteropTypeDefinitionBuilder
                     // '.try' code
                     { ldarg_1_tryStart },
                     { Ldarg_0 },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(delegateType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([delegateType]) },
                     { Call, marshallerType.GetMethod("ConvertToUnmanaged"u8) },
                     { Stloc_1 },
                     { Ldloca_S, loc_1_referenceValue },
@@ -395,8 +395,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             Impl(
                 interfaceType: ComInterfaceType.InterfaceIsIInspectable,
-                ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "ReferenceImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "ReferenceImpl"),
                 vftblType: interopDefinitions.DelegateReferenceVftbl,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
@@ -429,8 +429,8 @@ internal partial class InteropTypeDefinitionBuilder
             out TypeDefinition interfaceEntriesImplType)
         {
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
-                ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "InterfaceEntriesImpl"),
+                ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "InterfaceEntriesImpl"),
                 entriesFieldType: interopDefinitions.DelegateInterfaceEntries,
                 interopReferences: interopReferences,
                 module: module,
@@ -466,8 +466,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // We're declaring an 'internal abstract class' type
             callbackType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "ComWrappersCallback"),
+                ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "ComWrappersCallback"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef())
             {
@@ -486,7 +486,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: interopReferences.Object,
                     parameterTypes: [
                         interopReferences.Void.MakePointerType(),
-                        interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
+                        interopReferences.CreatedWrapperFlags.MakeValueTypeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilMethodBody = new CilMethodBody
@@ -529,7 +529,7 @@ internal partial class InteropTypeDefinitionBuilder
             ModuleDefinition module,
             out TypeDefinition nativeDelegateType)
         {
-            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(module);
+            MethodSignature invokeSignature = delegateType.GetDelegateInvokeMethodSignature(interopReferences.RuntimeContext);
 
             // Prepare the sender and arguments types (same as for the 'Impl' type above)
             TypeSignature senderType = invokeSignature.ParameterTypes[0];
@@ -537,8 +537,8 @@ internal partial class InteropTypeDefinitionBuilder
 
             // We're declaring an 'internal static class' type
             nativeDelegateType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "NativeDelegate"),
+                ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "NativeDelegate"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -684,8 +684,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "ComWrappersMarshallerAttribute"),
+                ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "ComWrappersMarshallerAttribute"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -699,7 +699,7 @@ internal partial class InteropTypeDefinitionBuilder
             marshallerType.Methods.Add(ctor);
 
             // The 'ComputeVtables' method returns the 'ComWrappers.ComInterfaceEntry*' type
-            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.MakePointerType();
+            PointerTypeSignature computeVtablesReturnType = interopReferences.ComInterfaceEntry.MakeValueTypePointerType();
 
             // Define the 'ComputeVtables' method as follows:
             //
@@ -748,7 +748,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Import the 'UnboxToManaged<TCallback>' method for the delegate
             IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged2Descriptor =
                 interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged2
-                .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
+                .MakeGenericInstanceMethod([delegateComWrappersCallbackType.ToReferenceTypeSignature()]);
 
             // Define the 'CreateObject' method as follows:
             //
@@ -760,7 +760,7 @@ internal partial class InteropTypeDefinitionBuilder
                     returnType: interopReferences.Object,
                     parameterTypes: [
                         interopReferences.Void.MakePointerType(),
-                        interopReferences.CreatedWrapperFlags.MakeByReferenceType()]))
+                        interopReferences.CreatedWrapperFlags.MakeValueTypeByReferenceType()]))
             {
                 CilOutParameterIndices = [2],
                 CilInstructions =
@@ -801,8 +801,8 @@ internal partial class InteropTypeDefinitionBuilder
         {
             // We're declaring an 'internal static class' type
             marshallerType = new(
-                ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType, "Marshaller"),
+                ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext, "Marshaller"),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
@@ -838,7 +838,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Construct a descriptor for 'WindowsRuntimeDelegateMarshaller.ConvertToManaged<<DELEGATE_CALLBACK_TYPE>>(void*)'
             IMethodDescriptor windowsRuntimeDelegateMarshallerConvertToManaged =
                 interopReferences.WindowsRuntimeDelegateMarshallerConvertToManaged
-                .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
+                .MakeGenericInstanceMethod([delegateComWrappersCallbackType.ToReferenceTypeSignature()]);
 
             // Define the 'ConvertToManaged' method as follows:
             //
@@ -885,7 +885,7 @@ internal partial class InteropTypeDefinitionBuilder
             // Construct a descriptor for 'WindowsRuntimeDelegateMarshaller.UnboxToManaged<<DELEGATE_CALLBACK_TYPE>>(void*)'
             IMethodDescriptor windowsRuntimeDelegateMarshallerUnboxToManaged =
                 interopReferences.WindowsRuntimeDelegateMarshallerUnboxToManaged
-                .MakeGenericInstanceMethod(delegateComWrappersCallbackType.ToReferenceTypeSignature());
+                .MakeGenericInstanceMethod([delegateComWrappersCallbackType.ToReferenceTypeSignature()]);
 
             // Define the 'UnboxToManaged' method as follows:
             //
@@ -929,10 +929,10 @@ internal partial class InteropTypeDefinitionBuilder
             // native we can correctly detect the mapped type to be a metadata type, and also annotate the proxy types with the
             // '[WindowsRuntimeMetadataTypeName]', as that's different than the runtime class name (which uses 'IReference<T>').
             InteropTypeDefinitionBuilder.Proxy(
-                ns: InteropUtf8NameFactory.TypeNamespace(delegateType),
-                name: InteropUtf8NameFactory.TypeName(delegateType),
+                ns: InteropUtf8NameFactory.TypeNamespace(delegateType, interopReferences.RuntimeContext),
+                name: InteropUtf8NameFactory.TypeName(delegateType, interopReferences.RuntimeContext),
                 mappedMetadata: "Windows.Foundation.FoundationContract",
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(delegateType, useWindowsUIXamlProjections),
                 mappedType: delegateType,
                 referenceType: null,
@@ -961,7 +961,7 @@ internal partial class InteropTypeDefinitionBuilder
             // attributes, as we need '[TypeMap<TTypeMapGroup>]' entries in the metadata type map as well.
             // This allows marshalling a 'TypeName' representing a Windows Runtime delegate type correctly.
             InteropTypeDefinitionBuilder.TypeMapAttributes(
-                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, useWindowsUIXamlProjections),
+                runtimeClassName: RuntimeClassNameGenerator.GetRuntimeClassName(delegateType, interopReferences.RuntimeContext, useWindowsUIXamlProjections),
                 metadataTypeName: MetadataTypeNameGenerator.GetMetadataTypeName(delegateType, useWindowsUIXamlProjections),
                 externalTypeMapTargetType: proxyType.ToReferenceTypeSignature(),
                 externalTypeMapTrimTargetType: delegateType,

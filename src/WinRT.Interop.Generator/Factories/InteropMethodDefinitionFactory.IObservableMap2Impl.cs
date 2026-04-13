@@ -39,13 +39,13 @@ internal partial class InteropMethodDefinitionFactory
             TypeSignature valueType = mapType.TypeArguments[1];
 
             // Prepare the 'MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>' signature
-            TypeSignature eventHandlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType(keyType, valueType);
+            TypeSignature eventHandlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([keyType, valueType]);
 
             // Prepare the 'EventRegistrationTokenTable<MapChangedEventHandler<KEY_TYPE>, <VALUE_TYPE>>' signature
-            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType);
+            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType([eventHandlerType]);
 
             // Prepare the 'ConditionalWeakTable<<MAP_TYPE>, EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>>' signature
-            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(mapType, eventRegistrationTokenTableType);
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([mapType, eventRegistrationTokenTableType]);
 
             // Define the 'add_MapChanged' method as follows:
             //
@@ -59,7 +59,7 @@ internal partial class InteropMethodDefinitionFactory
                     parameterTypes: [
                         interopReferences.Void.MakePointerType(),
                         interopReferences.Void.MakePointerType(),
-                        interopReferences.EventRegistrationToken.MakePointerType()]))
+                        interopReferences.EventRegistrationToken.MakeValueTypePointerType()]))
             {
                 CustomAttributes = { InteropCustomAttributeFactory.UnmanagedCallersOnly(interopReferences) }
             };
@@ -100,7 +100,7 @@ internal partial class InteropMethodDefinitionFactory
 
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(mapType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([mapType]) },
                     { Stloc_0 },
                     { Ldarg_1 },
                     { Call, emitState.LookupTypeDefinition(eventHandlerType, "Marshaller").GetMethod("ConvertToManaged"u8) },
@@ -164,13 +164,13 @@ internal partial class InteropMethodDefinitionFactory
             TypeSignature valueType = mapType.TypeArguments[1];
 
             // Prepare the 'MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>' signature
-            TypeSignature eventHandlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType(keyType, valueType);
+            TypeSignature eventHandlerType = interopReferences.MapChangedEventHandler2.MakeGenericReferenceType([keyType, valueType]);
 
             // Prepare the 'EventRegistrationTokenTable<MapChangedEventHandler<KEY_TYPE>, <VALUE_TYPE>>' signature
-            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType(eventHandlerType);
+            TypeSignature eventRegistrationTokenTableType = interopReferences.EventRegistrationTokenTable1.MakeGenericReferenceType([eventHandlerType]);
 
             // Prepare the 'ConditionalWeakTable<<MAP_TYPE>, EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>>' signature
-            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType(mapType, eventRegistrationTokenTableType);
+            TypeSignature conditionalWeakTableType = interopReferences.ConditionalWeakTable2.MakeGenericReferenceType([mapType, eventRegistrationTokenTableType]);
 
             // Define the 'remove_MapChanged' method as follows:
             //
@@ -212,7 +212,7 @@ internal partial class InteropMethodDefinitionFactory
                 {
                     // '.try' code
                     { ldarg_0_tryStart },
-                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod(mapType) },
+                    { Call, interopReferences.ComInterfaceDispatchGetInstance.MakeGenericInstanceMethod([mapType]) },
                     { Stloc_0 },
 
                     // if (unboxedValue != null && MapChangedTable.TryGetValue(unboxedValue, out EventRegistrationTokenTable<MapChangedEventHandler<<KEY_TYPE>, <VALUE_TYPE>>> table))

@@ -62,7 +62,7 @@ internal static class InteropCustomAttributeFactory
     public static CustomAttribute UnmanagedCallersOnly(InteropReferences interopReferences)
     {
         // Get the 'Type[]' signature and reuse it (we need it for both the argument and the element)
-        TypeSignature typeArraySignature = interopReferences.Type.MakeSzArrayType();
+        TypeSignature typeArraySignature = interopReferences.Type.MakeReferenceTypeSzArrayType();
 
         // Create the following attribute:
         //
@@ -151,7 +151,7 @@ internal static class InteropCustomAttributeFactory
         InteropReferences interopReferences)
     {
         // Get the constructor taking 'assemblyName' as a string argument
-        MethodDefinition ctor = interopDefinitions.IgnoresAccessChecksToAttribute.GetConstructor(interopReferences.String)!;
+        MethodDefinition ctor = interopDefinitions.IgnoresAccessChecksToAttribute.GetConstructor([interopReferences.String])!;
 
         // Create the following attribute:
         //

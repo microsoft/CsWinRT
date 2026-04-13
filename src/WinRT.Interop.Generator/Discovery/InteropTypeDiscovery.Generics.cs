@@ -45,7 +45,7 @@ internal partial class InteropTypeDiscovery
         }
 
         // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-        if (!typeSignature.IsFullyResolvable(out TypeDefinition? typeDefinition))
+        if (!typeSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? typeDefinition))
         {
             // Log a warning the first time we fail to resolve this generic instantiation in this module
             if (discoveryState.TrackFailedResolutionType(typeSignature, module))
@@ -113,7 +113,7 @@ internal partial class InteropTypeDiscovery
         }
 
         // Ignore types that are not fully resolvable (this likely means a .dll is missing)
-        if (!typeSignature.IsFullyResolvable(out TypeDefinition? typeDefinition))
+        if (!typeSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? typeDefinition))
         {
             // Log a warning the first time we fail to resolve this SZ array in this module
             if (discoveryState.TrackFailedResolutionType(typeSignature, module))
@@ -194,7 +194,7 @@ internal partial class InteropTypeDiscovery
                     continue;
                 }
 
-                if (!interfaceSignature.IsFullyResolvable(out _))
+                if (!interfaceSignature.IsFullyResolvable(interopReferences.RuntimeContext, out _))
                 {
                     // Also log a warning the first time we fail to resolve one of the recursively discovered generic
                     // instantiations from this module. The enumeration also yields back interfaces that couldn't be
@@ -307,7 +307,7 @@ internal partial class InteropTypeDiscovery
                 valueType: out TypeSignature? valueSignature))
             {
                 TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                    typeSignature: interopReferences.IDictionary2.MakeGenericReferenceType(keySignature, valueSignature),
+                    typeSignature: interopReferences.IDictionary2.MakeGenericReferenceType([keySignature, valueSignature]),
                     args: args,
                     discoveryState: discoveryState,
                     interopDefinitions: interopDefinitions,
@@ -346,7 +346,7 @@ internal partial class InteropTypeDiscovery
                 valueType: out TypeSignature? valueSignature))
             {
                 TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                    typeSignature: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType(keySignature, valueSignature),
+                    typeSignature: interopReferences.IReadOnlyDictionary2.MakeGenericReferenceType([keySignature, valueSignature]),
                     args: args,
                     discoveryState: discoveryState,
                     interopDefinitions: interopDefinitions,
@@ -382,7 +382,7 @@ internal partial class InteropTypeDiscovery
             // So to make this work, we need to perform 'QueryInterface' calls at runtime for both and then delegate to the right implementation.
             // Because of this, we need to ensure that we have the 'KeyValuePair<TKey, TValue>' instantiation for 'IList<T>' also tracked.
             TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                typeSignature: interopReferences.IList1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
+                typeSignature: interopReferences.IList1.MakeGenericReferenceType([interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])]),
                 args: args,
                 discoveryState: discoveryState,
                 interopDefinitions: interopDefinitions,
@@ -392,7 +392,7 @@ internal partial class InteropTypeDiscovery
             // Then, we also need to track the 'IEnumerable<KeyValuePair<TKey, TValue>>' type, as it's needed by the 'NativeObject' type for
             // the dictionary type. This is because that specialized RCW type will also need to be able to project this interface in metadata.
             TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
+                typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType([interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])]),
                 args: args,
                 discoveryState: discoveryState,
                 interopDefinitions: interopDefinitions,
@@ -460,7 +460,7 @@ internal partial class InteropTypeDiscovery
 
             // Also track 'IReadOnlyList<KeyValuePair<TKey, TValue>>' to enable dynamic casts (see notes above for 'IDictionary<TKey, TValue>')
             TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                typeSignature: interopReferences.IReadOnlyList1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
+                typeSignature: interopReferences.IReadOnlyList1.MakeGenericReferenceType([interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])]),
                 args: args,
                 discoveryState: discoveryState,
                 interopDefinitions: interopDefinitions,
@@ -469,7 +469,7 @@ internal partial class InteropTypeDiscovery
 
             // Also track 'IEnumerable<KeyValuePair<TKey, TValue>>', like for 'IDictionary<TKey, TValue>' (see notes above)
             TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
+                typeSignature: interopReferences.IEnumerable1.MakeGenericReferenceType([interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])]),
                 args: args,
                 discoveryState: discoveryState,
                 interopDefinitions: interopDefinitions,
@@ -523,7 +523,7 @@ internal partial class InteropTypeDiscovery
 
             // Handle 'ArraySegment<T>.Enumerator', which is returned by 'IReadOnlyDictionarySplitAdapter<TKey, TValue>.GetEnumerator()'
             TryTrackGenericTypeInstance(
-                typeSignature: interopReferences.ArraySegment1Enumerator.MakeGenericValueType(interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])),
+                typeSignature: interopReferences.ArraySegment1Enumerator.MakeGenericValueType([interopReferences.KeyValuePair2.MakeGenericValueType([.. typeSignature.TypeArguments])]),
                 args: args,
                 discoveryState: discoveryState,
                 interopDefinitions: interopDefinitions,
@@ -550,7 +550,7 @@ internal partial class InteropTypeDiscovery
 
             // Also manually track the args type for 'MapChangedEventHandler<K,V>' (i.e. 'IMapChangedEventArgs<K>')
             TryTrackWindowsRuntimeGenericInterfaceTypeInstance(
-                typeSignature: interopReferences.IMapChangedEventArgs1.MakeGenericReferenceType(typeSignature.TypeArguments[0]),
+                typeSignature: interopReferences.IMapChangedEventArgs1.MakeGenericReferenceType([typeSignature.TypeArguments[0]]),
                 args: args,
                 discoveryState: discoveryState,
                 interopDefinitions: interopDefinitions,
