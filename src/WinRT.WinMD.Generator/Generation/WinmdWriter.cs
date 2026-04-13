@@ -218,6 +218,15 @@ internal sealed partial class WinmdWriter
                         // Find the corresponding method on the class by name.
                         // When resolved from input ref assemblies, map .NET projection types to WinRT equivalents.
                         classMethod = FindMatchingMethod(classOutputType, interfaceMethod, resolvedFromInput, interfaceGenericArgs);
+
+                        // Fallback for event methods from ref assemblies: CsWinRT projections change
+                        // event accessor signatures (e.g., remove_ takes delegate instead of EventRegistrationToken).
+                        // Match by name only since WinRT event accessors are unique by name.
+                        if (classMethod == null && resolvedFromInput && interfaceMethod.IsSpecialName)
+                        {
+                            string methodName = interfaceMethod.Name?.Value ?? "";
+                            classMethod = classOutputType.Methods.FirstOrDefault(m => m.Name?.Value == methodName);
+                        }
                     }
 
                     if (classMethod != null)
