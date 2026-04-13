@@ -123,10 +123,19 @@ internal sealed partial class WinmdWriter
             {
                 // Resolve the interface — handle TypeSpecification (generic instances) by resolving the GenericType
                 bool resolvedFromInput = false;
-                TypeDefinition? interfaceDef = classInterfaceImpl.Interface is TypeSpecification ts
-                    && ts.Signature is GenericInstanceTypeSignature gits
-                    ? gits.GenericType.Resolve()
-                    : classInterfaceImpl.Interface?.Resolve();
+                TypeSignature[]? interfaceGenericArgs = null;
+                TypeDefinition? interfaceDef = null;
+
+                if (classInterfaceImpl.Interface is TypeSpecification ts
+                    && ts.Signature is GenericInstanceTypeSignature gits)
+                {
+                    interfaceDef = gits.GenericType.Resolve();
+                    interfaceGenericArgs = [.. gits.TypeArguments];
+                }
+                else
+                {
+                    interfaceDef = classInterfaceImpl.Interface?.Resolve();
+                }
 
                 // If the output interface can't be resolved (WinRT contract assemblies),
                 // find the matching interface from the INPUT type which points to resolvable projection assemblies
@@ -164,14 +173,19 @@ internal sealed partial class WinmdWriter
                 List<MethodDefinition> interfaceMethods = [.. interfaceDef.Methods];
                 foreach (MethodDefinition interfaceMethod in interfaceMethods)
                 {
-                    // Find the corresponding method on the class (by name or explicit implementation pattern).
-                    // When resolved from input ref assemblies, map .NET projection types to WinRT equivalents.
-                    MethodDefinition? classMethod = FindMatchingMethod(classOutputType, interfaceMethod, resolvedFromInput);
-                    if (classMethod == null)
+                    // Check if an explicit implementation already exists for this interface method.
+                    // If so, prefer it — don't create a MethodImpl for the public method.
+                    string explicitName = $"{interfaceQualName}.{interfaceMethod.Name?.Value}";
+                    int paramCount = interfaceMethod.Signature?.ParameterTypes.Count ?? 0;
+                    bool hasExplicitImpl = classOutputType.Methods.Any(m =>
+                        m.Name?.Value == explicitName &&
+                        (m.Signature?.ParameterTypes.Count ?? 0) == paramCount);
+
+                    MethodDefinition? classMethod;
+
+                    if (hasExplicitImpl)
                     {
-                        // Try matching explicit implementation: look for "Namespace.IFoo.MethodName" pattern
-                        string explicitName = $"{interfaceQualName}.{interfaceMethod.Name?.Value}";
-                        int paramCount = interfaceMethod.Signature?.ParameterTypes.Count ?? 0;
+                        // Match by explicit name only
                         classMethod = classOutputType.Methods.FirstOrDefault(m =>
                         {
                             if (m.Name?.Value != explicitName)
@@ -198,6 +212,12 @@ internal sealed partial class WinmdWriter
 
                             return true;
                         });
+                    }
+                    else
+                    {
+                        // Find the corresponding method on the class by name.
+                        // When resolved from input ref assemblies, map .NET projection types to WinRT equivalents.
+                        classMethod = FindMatchingMethod(classOutputType, interfaceMethod, resolvedFromInput, interfaceGenericArgs);
                     }
 
                     if (classMethod != null)
@@ -272,7 +292,11 @@ internal sealed partial class WinmdWriter
         }
     }
 
-    private MethodDefinition? FindMatchingMethod(TypeDefinition classType, MethodDefinition interfaceMethod, bool mapInterfaceTypes = false)
+    private MethodDefinition? FindMatchingMethod(
+        TypeDefinition classType,
+        MethodDefinition interfaceMethod,
+        bool mapInterfaceTypes = false,
+        TypeSignature[]? interfaceGenericArgs = null)
     {
         string methodName = interfaceMethod.Name?.Value ?? "";
 
@@ -294,7 +318,15 @@ internal sealed partial class WinmdWriter
             for (int i = 0; i < (classMethod.Signature?.ParameterTypes.Count ?? 0); i++)
             {
                 string classParamName = classMethod.Signature!.ParameterTypes[i].FullName;
-                string ifaceParamName = interfaceMethod.Signature!.ParameterTypes[i].FullName;
+                TypeSignature ifaceParamType = interfaceMethod.Signature!.ParameterTypes[i];
+
+                // Resolve generic parameters (!0, !1) using the interface's generic arguments
+                if (interfaceGenericArgs != null)
+                {
+                    ifaceParamType = ResolveGenericArg(ifaceParamType, interfaceGenericArgs);
+                }
+
+                string ifaceParamName = ifaceParamType.FullName;
 
                 if (classParamName != ifaceParamName)
                 {
