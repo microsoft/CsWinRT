@@ -161,50 +161,75 @@ internal sealed partial class WinmdWriter
         // For generic types, use short type names (e.g. "IMap`2<String, Int32>" not "IMap`2<System.String, System.Int32>")
         string qualifiedPrefix = FormatQualifiedInterfaceName(mappedInterfaceRef);
 
-        // Build a reverse map from resolved type args back to generic parameters for MethodImpl signatures.
+        // Store parent interface generic type arguments for MethodImpl signature conversion.
         // MethodImpl declarations on generic interfaces should reference methods using !0, !1 etc. (not resolved types).
-        Dictionary<string, GenericParameterSignature>? genericArgReverseMap = null;
-        if (mappedInterfaceRef is TypeSpecification mts && mts.Signature is GenericInstanceTypeSignature mgits)
+        TypeSignature[]? parentGenericArgs = null;
+        if (mappedInterfaceRef is TypeSpecification mts2 && mts2.Signature is GenericInstanceTypeSignature mgits)
         {
-            genericArgReverseMap = [];
-            for (int i = 0; i < mgits.TypeArguments.Count; i++)
+            parentGenericArgs = [.. mgits.TypeArguments];
+        }
+
+        // Look up a type signature in the parent interface's generic arguments by identity.
+        // Returns the corresponding GenericParameterSignature (!0, !1) or null if not found.
+        GenericParameterSignature? FindParentGenericParam(TypeSignature sig)
+        {
+            if (parentGenericArgs == null)
             {
-                string argFullName = mgits.TypeArguments[i].FullName;
-                genericArgReverseMap[argFullName] = new GenericParameterSignature(_outputModule, GenericParameterType.Type, i);
+                return null;
             }
+
+            string sigFullName = sig.FullName;
+            for (int i = 0; i < parentGenericArgs.Length; i++)
+            {
+                if (parentGenericArgs[i].FullName == sigFullName)
+                {
+                    return new GenericParameterSignature(_outputModule, GenericParameterType.Type, i);
+                }
+            }
+
+            return null;
         }
 
         // Convert a resolved type signature to use generic parameters (!0, !1) for MethodImpl declarations.
-        // This handles two cases:
-        // 1. Parent interface generic args (e.g., IVector`1<T> -> !0 for T)
-        // 2. Generic type instances in signatures (e.g., EventHandler`1<Object> -> EventHandler`1<!0>)
-        TypeSignature ToGenericParam(TypeSignature sig) => sig switch
+        // For parent interface generic args, substitutes resolved types back to !0, !1.
+        // For all GenericInstanceTypeSignature in signatures, converts to open form
+        // (e.g., EventHandler`1<Object> -> EventHandler`1<!0>) matching WinRT metadata conventions.
+        TypeSignature ToGenericParam(TypeSignature sig)
         {
-            _ when genericArgReverseMap != null
-                && genericArgReverseMap.TryGetValue(sig.FullName, out GenericParameterSignature? gps) => gps,
-            GenericInstanceTypeSignature innerGits => ToOpenGenericForm(innerGits),
-            SzArrayTypeSignature szArray => new SzArrayTypeSignature(ToGenericParam(szArray.BaseType)),
-            ByReferenceTypeSignature byRef => new ByReferenceTypeSignature(ToGenericParam(byRef.BaseType)),
-            _ => sig
-        };
+            if (parentGenericArgs != null)
+            {
+                GenericParameterSignature? gps = FindParentGenericParam(sig);
+                if (gps != null)
+                {
+                    return gps;
+                }
+            }
+
+            return sig switch
+            {
+                GenericInstanceTypeSignature innerGits => ToOpenGenericForm(innerGits),
+                SzArrayTypeSignature szArray => new SzArrayTypeSignature(ToGenericParam(szArray.BaseType)),
+                ByReferenceTypeSignature byRef => new ByReferenceTypeSignature(ToGenericParam(byRef.BaseType)),
+                _ => sig
+            };
+        }
 
         // Convert a GenericInstanceTypeSignature to its open form for MethodImpl declarations.
-        // E.g., EventHandler`1<Object> -> EventHandler`1<!0>, IKeyValuePair`2<String, Int32> -> IKeyValuePair`2<!0, !1>
-        // For parent interface generic args, substitutes them back to !0, !1 etc.
+        // E.g., KeyValuePair<String, Int32> -> KeyValuePair<!0, !1> when those are parent interface args.
         GenericInstanceTypeSignature ToOpenGenericForm(GenericInstanceTypeSignature gits)
         {
             TypeSignature[] openArgs = new TypeSignature[gits.TypeArguments.Count];
             for (int i = 0; i < gits.TypeArguments.Count; i++)
             {
                 TypeSignature arg = gits.TypeArguments[i];
-                // First try parent interface generic arg substitution
-                if (genericArgReverseMap != null && genericArgReverseMap.TryGetValue(arg.FullName, out GenericParameterSignature? parentGps))
+                // Try parent interface generic arg substitution (first match wins for duplicate args)
+                GenericParameterSignature? parentGps = FindParentGenericParam(arg);
+                if (parentGps != null)
                 {
                     openArgs[i] = parentGps;
                 }
                 else if (arg is GenericInstanceTypeSignature nestedGits)
                 {
-                    // Recursively convert nested generic instances
                     openArgs[i] = ToOpenGenericForm(nestedGits);
                 }
                 else
@@ -500,7 +525,8 @@ internal sealed partial class WinmdWriter
         evt.Semantics.Add(new MethodSemantics(remover, MethodSemanticsAttributes.RemoveOn));
         outputType.Events.Add(evt);
 
-        // MethodImpls (use open generic form for handler type in declaration signature)
+        // MethodImpls — use open generic form for handler type in declaration signatures
+        // to match WinRT metadata conventions (e.g., EventHandler`1<!0> not EventHandler`1<Object>)
         TypeSignature implHandlerType = handlerType is GenericInstanceTypeSignature handlerGits
             ? ToOpenGenericFormStatic(handlerGits, _outputModule)
             : handlerType;

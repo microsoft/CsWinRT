@@ -579,8 +579,11 @@ internal sealed partial class WinmdWriter
 
             for (int i = 0; i < paramNames.Length; i++)
             {
+                ParameterAttributes paramAttr = i < parameterTypes.Length
+                    ? GetWinRTParameterAttributes(method.Signature!.ParameterTypes[i])
+                    : ParameterAttributes.In;
                 outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
-                    (ushort)(i + 1), paramNames[i], ParameterAttributes.In));
+                    (ushort)(i + 1), paramNames[i], paramAttr));
             }
 
             outputType.Methods.Add(outputMethod);
