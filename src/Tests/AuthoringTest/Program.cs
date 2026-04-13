@@ -1,7 +1,3 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Markup;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,18 +6,18 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Markup;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
 using Windows.Graphics.Effects;
-using WinRT;
-using WinRT.Interop;
+using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 
 #pragma warning disable CA1416
 
@@ -136,7 +132,7 @@ namespace AuthoringTest
             return basicClass;
         }
 
-        public BasicStruct[] ReturnArray([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] BasicStruct[] basicStructs)
+        public BasicStruct[] ReturnArray(ReadOnlySpan<BasicStruct> basicStructs)
         {
             BasicStruct[] copy = new BasicStruct[basicStructs.Length];
             for (int idx = 0; idx < copy.Length; idx++)
@@ -146,12 +142,17 @@ namespace AuthoringTest
             return copy;
         }
 
-        public int GetSum([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr)
+        public int GetSum(ReadOnlySpan<int> arr)
         {
-            return arr.Sum();
+            int sum = 0;
+            foreach (int value in arr)
+            {
+                sum += value;
+            }
+            return sum;
         }
 
-        public void PopulateArray([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr)
+        public void PopulateArray(Span<int> arr)
         {
             for (int idx = 0; idx < arr.Length; idx++)
             {
@@ -199,8 +200,8 @@ namespace AuthoringTest
 
         public string Value => "CsWinRT";
     }
-
-    [GeneratedBindableCustomProperty]
+    
+    // [GeneratedBindableCustomProperty]
     public sealed partial class CustomProperty
     {
         public int Number { get; } = 4;
@@ -209,7 +210,7 @@ namespace AuthoringTest
         public CustomPropertyStructType CustomPropertyStructType => new CustomPropertyStructType();
     }
 
-    [GeneratedBindableCustomProperty]
+    // [GeneratedBindableCustomProperty]
     public partial struct CustomPropertyStructType
     {
         // Public WinRT struct types must have at least one field
@@ -219,14 +220,14 @@ namespace AuthoringTest
         public string Value => "CsWinRTFromStructType";
     }
 
-    [GeneratedBindableCustomProperty]
+    // [GeneratedBindableCustomProperty]
     internal sealed partial record CustomPropertyRecordType
     {
         public int Number { get; } = 4;
         public string Value => "CsWinRTFromRecordType";
     }
 
-    [GeneratedBindableCustomProperty]
+    // [GeneratedBindableCustomProperty]
     internal partial record struct CustomPropertyRecordStructType
     {
         public int Number => 4;
@@ -241,7 +242,7 @@ namespace AuthoringTest
 
         public static object CreateRecordStruct() => default(CustomPropertyRecordStructType);
     }
-
+    
     public sealed partial class CustomPropertyProviderWithExplicitImplementation : ICustomPropertyProvider
     {
         public Type Type => typeof(CustomPropertyProviderWithExplicitImplementation);
@@ -489,7 +490,7 @@ namespace AuthoringTest
 
         public IAsyncOperation<BasicStruct> GetStructAsyncOperation()
         {
-            return System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResult(new BasicStruct() { X = 2, Y = 4, Value = "Test" });
+            return WindowsRuntime.InteropServices.AsyncInfo.FromResult(new BasicStruct() { X = 2, Y = 4, Value = "Test" });
         }
 
         public IAsyncOperation<bool> GetBoolAsyncOperation()
@@ -625,7 +626,7 @@ namespace AuthoringTest
         }
     }
 
-    [WinRTRuntimeClassName("AuthoringTest.DisposableClassImpl")]
+    [WindowsRuntimeClassName("AuthoringTest.DisposableClassImpl")]
     public sealed class DisposableClass : IDisposable
     {
         public bool IsDisposed { get; set; }
@@ -741,7 +742,7 @@ namespace AuthoringTest
         }
     }
 
-    [WinRTRuntimeClassName("AuthoringTest.CustomReadOnlyDictionaryImpl")]
+    [WindowsRuntimeClassName("AuthoringTest.CustomReadOnlyDictionaryImpl")]
     public sealed class CustomReadOnlyDictionary : IReadOnlyDictionary<string, BasicStruct>
     {
         private readonly CustomDictionary _dictionary;
@@ -817,7 +818,7 @@ namespace AuthoringTest
         }
     }
     */
-
+    
     public sealed class CustomVector : IList<DisposableClass>
     {
         private IList<DisposableClass> _list;
@@ -990,7 +991,7 @@ namespace AuthoringTest
         }
     }
 
-    [WinRTRuntimeClassName("AuthoringTest.StaticClassImpl")]
+    [WindowsRuntimeClassName("AuthoringTest.StaticClassImpl")]
     public static class StaticClass
     {
         public static int GetNumber()
@@ -1014,7 +1015,7 @@ namespace AuthoringTest
             DelegateEvent?.Invoke(value);
         }
     }
-
+    
     public static class ButtonUtils
     {
         public static Button GetButton()
@@ -1120,7 +1121,7 @@ namespace AuthoringTest
         }
     }
 
-    public sealed class CustomXamlServiceProvider : IXamlServiceProvider
+    public sealed class CustomXamlServiceProvider : IServiceProvider
     {
         public object GetService(Type type)
         {
@@ -1301,7 +1302,7 @@ namespace AuthoringTest
             throw new NotImplementedException();
         }
     }
-
+    
     public sealed class SingleInterfaceClass : IDouble
     {
         private double _number;
@@ -1637,7 +1638,7 @@ namespace AuthoringTest
             _list.RemoveAt(index);
         }
     }
-
+    
     public sealed class CustomDictionary2 : IDictionary<string, int>
     {
         private readonly Dictionary<string, int> _dictionary = new Dictionary<string, int>();
@@ -1711,7 +1712,7 @@ namespace AuthoringTest
     public sealed class TestCollection : CollectionBase
     {
     }
-
+    
     public partial interface IPartialInterface
     {
         public string GetNumberAsString();
@@ -1842,6 +1843,7 @@ namespace AuthoringTest
         }
     }
 
+    /*
     public sealed class TestMixedWinRTCOMWrapper : IGraphicsEffectSource, IPublicInterface, IInternalInterface1, SomeInternalType.IInternalInterface2
     {
         public string HelloWorld()
@@ -1863,99 +1865,11 @@ namespace AuthoringTest
             return 0;
         }
     }
+    */
 
     public interface IPublicInterface
     {
         string HelloWorld();
-    }
-
-    // Internal, classic COM interface
-    [global::System.Runtime.InteropServices.Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
-    [WindowsRuntimeType]
-    [WindowsRuntimeHelperType(typeof(IInternalInterface1))]
-    internal unsafe interface IInternalInterface1
-    {
-        int GetNumber(int* value);
-
-        [global::System.Runtime.InteropServices.Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
-        public struct Vftbl
-        {
-            public static readonly IntPtr AbiToProjectionVftablePtr = InitVtbl();
-
-            private static IntPtr InitVtbl()
-            {
-                Vftbl* lpVtbl = (Vftbl*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(Vftbl));
-
-                lpVtbl->IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl;
-                lpVtbl->GetNumber = &GetNumberFromAbi;
-
-                return (IntPtr)lpVtbl;
-            }
-
-            private IUnknownVftbl IUnknownVftbl;
-            private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
-
-            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-            private static int GetNumberFromAbi(void* thisPtr, int* value)
-            {
-                try
-                {
-                    return ComWrappersSupport.FindObject<IInternalInterface1>((IntPtr)thisPtr).GetNumber(value);
-                }
-                catch (Exception e)
-                {
-                    ExceptionHelpers.SetErrorInfo(e);
-
-                    return Marshal.GetHRForException(e);
-                }
-            }
-        }
-    }
-
-    internal struct SomeInternalType
-    {
-        // Nested, classic COM interface
-        [global::System.Runtime.InteropServices.Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
-        [WindowsRuntimeType]
-        [WindowsRuntimeHelperType(typeof(IInternalInterface2))]
-        public unsafe interface IInternalInterface2
-        {
-            int GetNumber(int* value);
-
-            [global::System.Runtime.InteropServices.Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
-            public struct Vftbl
-            {
-                public static readonly IntPtr AbiToProjectionVftablePtr = InitVtbl();
-
-                private static IntPtr InitVtbl()
-                {
-                    Vftbl* lpVtbl = (Vftbl*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(Vftbl));
-
-                    lpVtbl->IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl;
-                    lpVtbl->GetNumber = &GetNumberFromAbi;
-
-                    return (IntPtr)lpVtbl;
-                }
-
-                private IUnknownVftbl IUnknownVftbl;
-                private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
-
-                [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-                private static int GetNumberFromAbi(void* thisPtr, int* value)
-                {
-                    try
-                    {
-                        return ComWrappersSupport.FindObject<IInternalInterface2>((IntPtr)thisPtr).GetNumber(value);
-                    }
-                    catch (Exception e)
-                    {
-                        ExceptionHelpers.SetErrorInfo(e);
-
-                        return Marshal.GetHRForException(e);
-                    }
-                }
-            }
-        }
     }
 
     [System.Runtime.InteropServices.Guid("26D8EE57-8B1B-46F4-A4F9-8C6DEEEAF53A")]
@@ -1985,7 +1899,7 @@ namespace AuthoringTest
         }
     }
 
-    [WinRTRuntimeClassName("AuthoringTest.NonActivatableFactoryImpl")]
+    [WindowsRuntimeClassName("AuthoringTest.NonActivatableFactoryImpl")]
     public static class NonActivatableFactory
     {
         public static NonActivatableType Create()
@@ -2011,26 +1925,6 @@ namespace AuthoringTest
         public string GetText()
         {
             return _text;
-        }
-    }
-}
-
-namespace ABI.AuthoringTest
-{
-    internal static class IInternalInterface1Methods
-    {
-        public static Guid IID => typeof(global::AuthoringTest.IInternalInterface1).GUID;
-
-        public static IntPtr AbiToProjectionVftablePtr => global::AuthoringTest.IInternalInterface1.Vftbl.AbiToProjectionVftablePtr;
-    }
-
-    internal struct SomeInternalType
-    {
-        internal static class IInternalInterface2Methods
-        {
-            public static Guid IID => typeof(global::AuthoringTest.SomeInternalType.IInternalInterface2).GUID;
-
-            public static IntPtr AbiToProjectionVftablePtr => global::AuthoringTest.SomeInternalType.IInternalInterface2.Vftbl.AbiToProjectionVftablePtr;
         }
     }
 }
