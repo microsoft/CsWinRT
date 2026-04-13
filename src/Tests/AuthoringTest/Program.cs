@@ -19,6 +19,7 @@ using Windows.Foundation.Metadata;
 using Windows.Graphics.Effects;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
+using WindowsRuntime.Xaml;
 
 #pragma warning disable CA1416
 
@@ -201,8 +202,8 @@ namespace AuthoringTest
 
         public string Value => "CsWinRT";
     }
-    
-    // [GeneratedBindableCustomProperty]
+
+    [GeneratedCustomPropertyProvider]
     public sealed partial class CustomProperty
     {
         public int Number { get; } = 4;
@@ -211,7 +212,7 @@ namespace AuthoringTest
         public CustomPropertyStructType CustomPropertyStructType => new CustomPropertyStructType();
     }
 
-    // [GeneratedBindableCustomProperty]
+    [GeneratedCustomPropertyProvider]
     public partial struct CustomPropertyStructType
     {
         // Public WinRT struct types must have at least one field
@@ -221,14 +222,14 @@ namespace AuthoringTest
         public string Value => "CsWinRTFromStructType";
     }
 
-    // [GeneratedBindableCustomProperty]
+    [GeneratedCustomPropertyProvider]
     internal sealed partial record CustomPropertyRecordType
     {
         public int Number { get; } = 4;
         public string Value => "CsWinRTFromRecordType";
     }
 
-    // [GeneratedBindableCustomProperty]
+    [GeneratedCustomPropertyProvider]
     internal partial record struct CustomPropertyRecordStructType
     {
         public int Number => 4;
