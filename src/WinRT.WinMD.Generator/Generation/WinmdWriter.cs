@@ -365,10 +365,29 @@ internal sealed partial class WinmdWriter
     /// </summary>
     private bool IsProjectionEquivalent(string dotNetTypeName, string winrtTypeName)
     {
-        if (_mapper.HasMappingForType(dotNetTypeName))
+        // Strip generic type arguments for mapper lookup.
+        // E.g., "System.Collections.Generic.IEnumerable`1<System.String>" → "System.Collections.Generic.IEnumerable`1"
+        // The mapper uses open generic names as keys.
+        string lookupName = dotNetTypeName;
+        int angleBracket = dotNetTypeName.IndexOf('<');
+        if (angleBracket > 0)
         {
-            (string ns, string name, _, _, _) = _mapper.GetMappedType(dotNetTypeName).GetMapping();
+            lookupName = dotNetTypeName[..angleBracket];
+        }
+
+        if (_mapper.HasMappingForType(lookupName))
+        {
+            (string ns, string name, _, _, _) = _mapper.GetMappedType(lookupName).GetMapping();
             string mappedName = string.IsNullOrEmpty(ns) ? name : $"{ns}.{name}";
+
+            // For generic types, compare the open generic name portion of both
+            if (angleBracket > 0)
+            {
+                int winrtAngle = winrtTypeName.IndexOf('<');
+                string winrtOpenName = winrtAngle > 0 ? winrtTypeName[..winrtAngle] : winrtTypeName;
+                return mappedName == winrtOpenName;
+            }
+
             return mappedName == winrtTypeName;
         }
 
