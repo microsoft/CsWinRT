@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using AuthoringTest;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Markup;
@@ -1949,6 +1950,330 @@ namespace AnotherNamespace
     {
         public void InternalFunction()
         {
+        }
+    }
+
+    // Out parameters on interface methods
+    public interface IOutParams
+    {
+        void GetData(out string result);
+        void GetStruct(out BasicStruct result);
+        bool TryParse(string input, out int value);
+    }
+
+    // Nullable/IReference parameters
+    public sealed class NullableParamClass
+    {
+        public int? NullableIntProp { get; set; }
+        public double? NullableDoubleProp { get; set; }
+        public bool? NullableBoolProp { get; set; }
+
+        public int GetValueOrDefault(int? value, int defaultValue)
+        {
+            return value ?? defaultValue;
+        }
+
+        public int? TryGetValue(string key)
+        {
+            return null;
+        }
+    }
+
+    // Mapped type parameters (DateTimeOffset, TimeSpan, Uri, Exception)
+    public sealed class MappedTypeParamClass
+    {
+        public DateTimeOffset GetTimestamp()
+        {
+            return DateTimeOffset.UtcNow;
+        }
+
+        public void SetTimestamp(DateTimeOffset timestamp) { }
+
+        public TimeSpan GetDuration()
+        {
+            return TimeSpan.FromSeconds(1);
+        }
+
+        public void SetDuration(TimeSpan duration) { }
+
+        public Uri GetUri()
+        {
+            return new Uri("https://example.com");
+        }
+
+        public void SetUri(Uri uri) { }
+
+        public string FormatTimestamp(DateTimeOffset timestamp, TimeSpan offset)
+        {
+            return (timestamp + offset).ToString();
+        }
+    }
+
+    // Mixed Span and regular array parameters
+    public sealed class MixedArrayClass
+    {
+        public void CopyToSpan(ReadOnlySpan<int> source, Span<int> destination)
+        {
+            source.CopyTo(destination);
+        }
+
+        public int[] TransformArray(ReadOnlySpan<int> input)
+        {
+            return input.ToArray();
+        }
+
+        public void FillWithIndex(Span<int> buffer)
+        {
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                buffer[i] = i;
+            }
+        }
+
+        public void ProcessAndOutput(ReadOnlySpan<BasicStruct> input, out BasicStruct[] output)
+        {
+            output = input.ToArray();
+        }
+    }
+
+    // Classes implementing IDisposable + custom interface
+    public interface ICustomResource
+    {
+        string Name { get; }
+        void Reset();
+    }
+
+    public sealed class DisposableResource : IDisposable, ICustomResource
+    {
+        public string Name => "Resource";
+        public void Reset() { }
+        public void Dispose() { }
+    }
+
+    // Multiple constructors (3+)
+    public sealed class MultiConstructorClass
+    {
+        private readonly string _name;
+        private readonly int _value;
+        private readonly BasicStruct _data;
+
+        public MultiConstructorClass()
+        {
+            _name = "";
+            _value = 0;
+            _data = default;
+        }
+
+        public MultiConstructorClass(string name)
+        {
+            _name = name;
+            _value = 0;
+            _data = default;
+        }
+
+        public MultiConstructorClass(string name, int value)
+        {
+            _name = name;
+            _value = value;
+            _data = default;
+        }
+
+        public MultiConstructorClass(string name, int value, BasicStruct data)
+        {
+            _name = name;
+            _value = value;
+            _data = data;
+        }
+
+        public string Name => _name;
+        public int Value => _value;
+        public BasicStruct Data => _data;
+    }
+
+    // Static properties returning complex types
+    public sealed class StaticComplexProps
+    {
+        public static string DefaultName => "Default";
+        public static BasicStruct DefaultStruct => new() { X = 1, Y = 2 };
+        public static int MaxCount { get; set; } = 100;
+    }
+
+    // Multiple overloaded methods with DefaultOverload
+    public sealed class OverloadedMethodClass
+    {
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        public string Format(int value)
+        {
+            return value.ToString();
+        }
+
+        public string Format(double value)
+        {
+            return value.ToString("F2");
+        }
+
+        public string Format(string value)
+        {
+            return value;
+        }
+
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        public static int Parse(string text)
+        {
+            return int.Parse(text);
+        }
+
+        public static int Parse(string text, int radix)
+        {
+            return Convert.ToInt32(text, radix);
+        }
+    }
+
+    // Nested structs (2 levels)
+    public struct InnerStruct
+    {
+        public int A;
+        public int B;
+    }
+
+    public struct OuterStruct
+    {
+        public InnerStruct Inner;
+        public int C;
+    }
+
+    // Delegates with 3+ parameters and struct params
+    public delegate void MultiParamDelegate(int a, string b, double c);
+    public delegate bool StructParamDelegate(BasicStruct data, int index);
+    public delegate BasicStruct StructReturnDelegate(string name);
+
+    // Flags enum edge cases
+    [Flags]
+    public enum DetailedFlags : uint
+    {
+        None = 0,
+        Read = 1,
+        Write = 2,
+        Execute = 4,
+        ReadWrite = Read | Write,
+        All = Read | Write | Execute
+    }
+
+    // Enum without Flags (signed)
+    public enum Priority
+    {
+        Low = -1,
+        Normal = 0,
+        High = 1,
+        Critical = 2
+    }
+
+    // IAsyncAction (no return value)
+    public sealed class AsyncMethodClass
+    {
+        public Windows.Foundation.IAsyncAction DoWorkAsync()
+        {
+            return Task.CompletedTask.AsAsyncAction();
+        }
+
+        public Windows.Foundation.IAsyncOperation<int> ComputeAsync()
+        {
+            return Task.FromResult(42).AsAsyncOperation();
+        }
+    }
+
+    // Version attribute on methods/properties
+    public interface IVersionedInterface
+    {
+        [Windows.Foundation.Metadata.Version(1u)]
+        void OriginalMethod();
+
+        [Windows.Foundation.Metadata.Version(2u)]
+        void NewerMethod();
+
+        [Windows.Foundation.Metadata.Version(1u)]
+        string Name { get; }
+
+        [Windows.Foundation.Metadata.Version(2u)]
+        int Count { get; }
+    }
+
+    // Deprecated members
+    public sealed class DeprecatedMembersClass
+    {
+        [Windows.Foundation.Metadata.Deprecated("Use NewMethod instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
+        public void OldMethod() { }
+
+        public void NewMethod() { }
+
+        [Windows.Foundation.Metadata.Deprecated("Use NewProp instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
+        public string OldProp => "";
+
+        public string NewProp => "";
+    }
+
+    // Class implementing INotifyPropertyChanged + custom interface
+    public sealed class NotifyWithCustomInterface : System.ComponentModel.INotifyPropertyChanged, ICustomResource
+    {
+        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+        public string Name { get; set; } = "";
+
+        public void Reset()
+        {
+            Name = "";
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Name)));
+        }
+    }
+
+    // Class with both factory and static members
+    public sealed class FactoryAndStaticClass
+    {
+        private readonly string _id;
+
+        public FactoryAndStaticClass(string id)
+        {
+            _id = id;
+        }
+
+        public FactoryAndStaticClass(string id, int version)
+        {
+            _id = $"{id}_v{version}";
+        }
+
+        public string Id => _id;
+
+        public static string DefaultId => "default";
+        public static FactoryAndStaticClass CreateDefault()
+        {
+            return new FactoryAndStaticClass(DefaultId);
+        }
+    }
+
+    // Interface with properties, methods, and events combined
+    public interface IFullFeaturedInterface
+    {
+        string Name { get; set; }
+        int Count { get; }
+
+        void DoWork();
+        string GetData(int index);
+
+        event EventHandler<string> DataChanged;
+    }
+
+    public sealed class FullFeaturedClass : IFullFeaturedInterface
+    {
+        public string Name { get; set; } = "";
+        public int Count => 0;
+
+        public void DoWork() { }
+        public string GetData(int index) => "";
+
+        public event EventHandler<string> DataChanged;
+
+        public void RaiseDataChanged()
+        {
+            DataChanged?.Invoke(this, "changed");
         }
     }
 }
