@@ -450,11 +450,47 @@ internal sealed partial class WinmdWriter
         AddExplicitInterfaceImplementations(inputType, outputType);
 
         // If no default synthesized interface was created but the class implements
-        // user interfaces, mark the first interface implementation as [Default]
+        // user interfaces, mark the first interface implementation as [Default].
+        // The [Default] goes on the WinRT equivalent of the first user-declared .NET interface.
         if (declaration.DefaultInterface == null && outputType.Interfaces.Count > 0)
         {
-            AddDefaultAttribute(outputType.Interfaces[0]);
+            InterfaceImplementation? defaultImpl = FindDefaultInterface(inputType, outputType);
+            AddDefaultAttribute(defaultImpl ?? outputType.Interfaces[0]);
         }
+    }
+
+    /// <summary>
+    /// Finds the output interface that should receive [Default] — the WinRT equivalent
+    /// of the first user-declared .NET interface on the input type.
+    /// </summary>
+    private InterfaceImplementation? FindDefaultInterface(TypeDefinition inputType, TypeDefinition outputType)
+    {
+        if (inputType.Interfaces.Count == 0)
+        {
+            return null;
+        }
+
+        // Get the first user-declared interface
+        InterfaceImplementation firstInputImpl = inputType.Interfaces[0];
+        string firstIfaceName = GetInterfaceQualifiedName(firstInputImpl.Interface!);
+
+        // Check if it's a mapped type (e.g., IList -> IVector)
+        string targetName = _mapper.HasMappingForType(firstIfaceName)
+            ? _mapper.GetMappedType(firstIfaceName).GetMapping() is var (ns, name, _, _, _)
+                ? string.IsNullOrEmpty(ns) ? name : $"{ns}.{name}"
+                : firstIfaceName
+            : firstIfaceName;
+
+        // Find the matching interface on the output type
+        foreach (InterfaceImplementation outputImpl in outputType.Interfaces)
+        {
+            if (outputImpl.Interface != null && GetInterfaceQualifiedName(outputImpl.Interface) == targetName)
+            {
+                return outputImpl;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
