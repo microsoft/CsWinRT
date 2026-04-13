@@ -77,25 +77,25 @@ internal sealed class AssemblyAnalyzer
     }
 
     /// <summary>
-    /// Checks whether a type is a WinRT type (has the WindowsRuntimeTypeAttribute).
+    /// Checks whether a type is a WinRT type (has the WindowsRuntimeMetadataAttribute).
     /// </summary>
     internal static bool IsWinRTType(TypeDefinition type)
     {
         return type.CustomAttributes.Any(
-            attr => attr.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeTypeAttribute");
+            attr => attr.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeMetadataAttribute");
     }
 
     /// <summary>
-    /// Gets the assembly name from a WindowsRuntimeTypeAttribute on a type, if present.
+    /// Gets the WinRT contract assembly name from WindowsRuntimeMetadataAttribute on a type, if present.
     /// </summary>
     internal static string? GetAssemblyForWinRTType(TypeDefinition type)
     {
         foreach (CustomAttribute attr in type.CustomAttributes)
         {
-            if (attr.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeTypeAttribute" &&
-                attr.Signature?.FixedArguments.Count > 0)
+            if (attr.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeMetadataAttribute"
+                && attr.Signature?.FixedArguments.Count > 0)
             {
-                return attr.Signature.FixedArguments[0].Element as string;
+                return attr.Signature.FixedArguments[0].Element?.ToString();
             }
         }
 

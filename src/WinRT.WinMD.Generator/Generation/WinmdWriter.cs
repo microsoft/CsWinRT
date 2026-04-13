@@ -135,6 +135,17 @@ internal sealed partial class WinmdWriter
                 else
                 {
                     interfaceDef = classInterfaceImpl.Interface?.Resolve();
+
+                    // For same-module TypeRefs (created by EnsureTypeReference), Resolve() may fail
+                    // since the output module isn't in the resolver. Look up in our type mapping instead.
+                    if (interfaceDef == null && classInterfaceImpl.Interface != null)
+                    {
+                        string ifaceFullName = classInterfaceImpl.Interface.FullName ?? "";
+                        if (_typeDefinitionMapping.TryGetValue(ifaceFullName, out TypeDeclaration? ifaceDecl) && ifaceDecl.OutputType != null)
+                        {
+                            interfaceDef = ifaceDecl.OutputType;
+                        }
+                    }
                 }
 
                 // If the output interface can't be resolved (WinRT contract assemblies),

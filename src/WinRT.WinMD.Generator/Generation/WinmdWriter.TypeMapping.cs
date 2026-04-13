@@ -158,7 +158,20 @@ internal sealed partial class WinmdWriter
                 return declaration.OutputType;
             }
 
+            // For WinRT types from projection assemblies, use the WinRT contract assembly name
+            // from WindowsRuntimeMetadataAttribute instead of the projection assembly name.
+            // E.g., StackPanel from Microsoft.WinUI → Microsoft.UI.Xaml in the WinMD.
             string assembly = GetAssemblyNameFromScope(typeRef.Scope);
+            TypeDefinition? resolvedType = typeRef.Resolve();
+            if (resolvedType != null)
+            {
+                string? winrtAssembly = AssemblyAnalyzer.GetAssemblyForWinRTType(resolvedType);
+                if (winrtAssembly != null)
+                {
+                    assembly = winrtAssembly;
+                }
+            }
+
             return GetOrCreateTypeReference(ns, name, assembly);
         }
 
@@ -180,6 +193,24 @@ internal sealed partial class WinmdWriter
             ModuleDefinition mod => mod.Assembly?.Name?.Value ?? "mscorlib",
             _ => "mscorlib"
         };
+    }
+
+    /// <summary>
+    /// Ensures an ITypeDefOrRef is a TypeReference, not a TypeDefinition.
+    /// WinMD convention: interface implementations should use TypeRef even for same-module types
+    /// (TypeDef redirection per the WinMD spec).
+    /// </summary>
+    private ITypeDefOrRef EnsureTypeReference(ITypeDefOrRef type)
+    {
+        if (type is TypeDefinition typeDef)
+        {
+            string ns = AssemblyAnalyzer.GetEffectiveNamespace(typeDef) ?? "";
+            string name = typeDef.Name!.Value;
+            string assembly = _outputModule.Assembly?.Name?.Value ?? "mscorlib";
+            return GetOrCreateTypeReference(ns, name, assembly);
+        }
+
+        return type;
     }
 
     private TypeReference GetOrCreateTypeReference(string @namespace, string name, string assemblyName)

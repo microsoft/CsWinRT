@@ -221,7 +221,7 @@ internal sealed partial class WinmdWriter
         {
             if (impl.Interface != null)
             {
-                ITypeDefOrRef outputInterfaceRef = ImportTypeReference(impl.Interface);
+                ITypeDefOrRef outputInterfaceRef = EnsureTypeReference(ImportTypeReference(impl.Interface));
                 outputType.Interfaces.Add(new InterfaceImplementation(outputInterfaceRef));
             }
         }
@@ -429,7 +429,7 @@ internal sealed partial class WinmdWriter
                 continue;
             }
 
-            ITypeDefOrRef outputInterfaceRef = ImportTypeReference(impl.Interface);
+            ITypeDefOrRef outputInterfaceRef = EnsureTypeReference(ImportTypeReference(impl.Interface));
             outputType.Interfaces.Add(new InterfaceImplementation(outputInterfaceRef));
         }
 
