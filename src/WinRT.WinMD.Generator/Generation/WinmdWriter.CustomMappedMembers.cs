@@ -174,22 +174,48 @@ internal sealed partial class WinmdWriter
             }
         }
 
-        // Convert a resolved type signature to use generic parameters (!0, !1) for MethodImpl declarations
-        TypeSignature ToGenericParam(TypeSignature sig) =>
-            genericArgReverseMap == null
-                ? sig
-                : genericArgReverseMap.TryGetValue(sig.FullName, out GenericParameterSignature? gps)
-                    ? gps
-                    : sig switch
-                    {
-                        GenericInstanceTypeSignature innerGits =>
-                            new GenericInstanceTypeSignature(innerGits.GenericType, innerGits.IsValueType, [.. innerGits.TypeArguments.Select(ToGenericParam)]),
-                        SzArrayTypeSignature szArray =>
-                            new SzArrayTypeSignature(ToGenericParam(szArray.BaseType)),
-                        ByReferenceTypeSignature byRef =>
-                            new ByReferenceTypeSignature(ToGenericParam(byRef.BaseType)),
-                        _ => sig
-                    };
+        // Convert a resolved type signature to use generic parameters (!0, !1) for MethodImpl declarations.
+        // This handles two cases:
+        // 1. Parent interface generic args (e.g., IVector`1<T> -> !0 for T)
+        // 2. Generic type instances in signatures (e.g., EventHandler`1<Object> -> EventHandler`1<!0>)
+        TypeSignature ToGenericParam(TypeSignature sig) => sig switch
+        {
+            _ when genericArgReverseMap != null
+                && genericArgReverseMap.TryGetValue(sig.FullName, out GenericParameterSignature? gps) => gps,
+            GenericInstanceTypeSignature innerGits => ToOpenGenericForm(innerGits),
+            SzArrayTypeSignature szArray => new SzArrayTypeSignature(ToGenericParam(szArray.BaseType)),
+            ByReferenceTypeSignature byRef => new ByReferenceTypeSignature(ToGenericParam(byRef.BaseType)),
+            _ => sig
+        };
+
+        // Convert a GenericInstanceTypeSignature to its open form for MethodImpl declarations.
+        // E.g., EventHandler`1<Object> -> EventHandler`1<!0>, IKeyValuePair`2<String, Int32> -> IKeyValuePair`2<!0, !1>
+        // For parent interface generic args, substitutes them back to !0, !1 etc.
+        GenericInstanceTypeSignature ToOpenGenericForm(GenericInstanceTypeSignature gits)
+        {
+            TypeSignature[] openArgs = new TypeSignature[gits.TypeArguments.Count];
+            for (int i = 0; i < gits.TypeArguments.Count; i++)
+            {
+                TypeSignature arg = gits.TypeArguments[i];
+                // First try parent interface generic arg substitution
+                if (genericArgReverseMap != null && genericArgReverseMap.TryGetValue(arg.FullName, out GenericParameterSignature? parentGps))
+                {
+                    openArgs[i] = parentGps;
+                }
+                else if (arg is GenericInstanceTypeSignature nestedGits)
+                {
+                    // Recursively convert nested generic instances
+                    openArgs[i] = ToOpenGenericForm(nestedGits);
+                }
+                else
+                {
+                    // Use the generic type's own parameter
+                    openArgs[i] = new GenericParameterSignature(_outputModule, GenericParameterType.Type, i);
+                }
+            }
+
+            return new GenericInstanceTypeSignature(gits.GenericType, gits.IsValueType, openArgs);
+        }
 
         void AddMappedMethod(string name, (string name, TypeSignature type, ParameterAttributes attrs)[]? parameters, TypeSignature? returnType)
         {
@@ -474,8 +500,11 @@ internal sealed partial class WinmdWriter
         evt.Semantics.Add(new MethodSemantics(remover, MethodSemanticsAttributes.RemoveOn));
         outputType.Events.Add(evt);
 
-        // MethodImpls
-        MemberReference addRef = new(mappedInterfaceRef, $"add_{eventName}", MethodSignature.CreateInstance(tokenSig, handlerType));
+        // MethodImpls (use open generic form for handler type in declaration signature)
+        TypeSignature implHandlerType = handlerType is GenericInstanceTypeSignature handlerGits
+            ? ToOpenGenericFormStatic(handlerGits, _outputModule)
+            : handlerType;
+        MemberReference addRef = new(mappedInterfaceRef, $"add_{eventName}", MethodSignature.CreateInstance(tokenSig, implHandlerType));
         outputType.MethodImplementations.Add(new MethodImplementation(addRef, adder));
         MemberReference removeRef = new(mappedInterfaceRef, $"remove_{eventName}", MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, tokenSig));
         outputType.MethodImplementations.Add(new MethodImplementation(removeRef, remover));
@@ -581,6 +610,21 @@ internal sealed partial class WinmdWriter
         }
 
         return arg;
+    }
+
+    /// <summary>
+    /// Converts a GenericInstanceTypeSignature to its open form for MethodImpl declarations.
+    /// E.g., EventHandler`1&lt;Object&gt; → EventHandler`1&lt;!0&gt;
+    /// </summary>
+    private static GenericInstanceTypeSignature ToOpenGenericFormStatic(GenericInstanceTypeSignature gits, ModuleDefinition module)
+    {
+        TypeSignature[] openArgs = new TypeSignature[gits.TypeArguments.Count];
+        for (int i = 0; i < gits.TypeArguments.Count; i++)
+        {
+            openArgs[i] = new GenericParameterSignature(module, GenericParameterType.Type, i);
+        }
+
+        return new GenericInstanceTypeSignature(gits.GenericType, gits.IsValueType, openArgs);
     }
 
     /// <summary>
