@@ -30,12 +30,7 @@ internal static class MvidGenerator
         // Hash the two IIDs together (the order matters)
         _ = SHA1.HashData(input, hash);
 
-        // Take first 16 bytes and set UUID v5 version and variant bits
-        Span<byte> result = hash[..16];
-        result[6] = (byte)((result[6] & 0x0F) | 0x50);
-        result[8] = (byte)((result[8] & 0x3F) | 0x80);
-
-        // Construct the resulting IID from the hashed data
-        return new(result, bigEndian: true);
+        // Create the final MVID from the first 16 bytes of the hash
+        return new(hash[..16]);
     }
 }
