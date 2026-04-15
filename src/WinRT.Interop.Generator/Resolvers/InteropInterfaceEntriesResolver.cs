@@ -136,7 +136,10 @@ internal static class InteropInterfaceEntriesResolver
 
             // Lastly, if the type represents an '[exclusiveto]' interface for an authored type from a Windows Runtime
             // component written in C#, we resolve the implementation from the generated 'WinRT.Component.dll' assembly.
-            if (interfaceType.HasCustomAttribute(interopReferences.WindowsRuntimeExclusiveToInterfaceAttribute))
+            // With the centralized attribute model, we check whether this interface type appears in the exclusive-to
+            // interfaces lookup from the component module, rather than checking for an attribute on the type itself.
+            if (interfaceType.DeclaringModule is { Assembly.IsWindowsRuntimeComponentAssembly: true } &&
+                !interfaceType.IsPublic)
             {
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetComponentTypeImpl(
                     type: interfaceType,
