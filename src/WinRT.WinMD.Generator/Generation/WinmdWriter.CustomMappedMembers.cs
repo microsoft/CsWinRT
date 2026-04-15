@@ -50,7 +50,7 @@ internal sealed partial class WinmdWriter
             // Check if the class has public methods that match the .NET interface members.
             // For mapped interfaces, the .NET method names differ from WinRT names
             // (e.g., Add vs Append), so we check the .NET interface's members.
-            bool isPublic = IsInterfacePubliclyImplemented(inputType, impl);
+            bool isPublic = IsInterfacePubliclyImplemented(classType: inputType, impl, _runtimeContext);
 
             mappedInterfaces.Add((impl, interfaceName, mapping, isPublic));
         }
@@ -127,7 +127,7 @@ internal sealed partial class WinmdWriter
                 MappedType innerMapping = _mapper.GetMappedType(typeName);
                 (string ns, string name, string asm, _, _) = innerMapping.GetMapping();
                 TypeReference innerRef = GetOrCreateTypeReference(ns, name, asm);
-                return innerRef.ToTypeSignature();
+                return innerRef.ToTypeSignature(tdrs.IsValueType);
             }
         }
 
@@ -298,13 +298,13 @@ internal sealed partial class WinmdWriter
 
             // MethodImpl for getter (use generic params for declaration signature)
             TypeSignature implPropertyType = ToGenericParam(propertyType);
-            MemberReference getterRef = new(mappedInterfaceRef, $"get_{name}", MethodSignature.CreateInstance(implPropertyType));
+            MemberReference getterRef = new(mappedInterfaceRef, $"get_{name}", MethodSignature.CreateInstance(implPropertyType, []));
             outputType.MethodImplementations.Add(new MethodImplementation(getterRef, getter));
 
             if (hasSetter)
             {
                 string putMethodName = isPublic ? $"put_{name}" : $"{qualifiedPrefix}.put_{name}";
-                MethodDefinition setter = new(putMethodName, getAttrs, MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, propertyType))
+                MethodDefinition setter = new(putMethodName, getAttrs, MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [propertyType]))
                 {
                     ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
                 };
@@ -312,7 +312,7 @@ internal sealed partial class WinmdWriter
                 outputType.Methods.Add(setter);
                 prop.Semantics.Add(new MethodSemantics(setter, MethodSemanticsAttributes.Setter));
 
-                MemberReference setterRef = new(mappedInterfaceRef, $"put_{name}", MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, implPropertyType));
+                MemberReference setterRef = new(mappedInterfaceRef, $"put_{name}", MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [implPropertyType]));
                 outputType.MethodImplementations.Add(new MethodImplementation(setterRef, setter));
             }
 
@@ -332,8 +332,8 @@ internal sealed partial class WinmdWriter
         TypeSignature objectSig = _outputModule.CorLibTypeFactory.Object;
         TypeSignature stringSig = _outputModule.CorLibTypeFactory.String;
 
-        TypeSignature GetTypeRef(string ns, string name, string asm) =>
-            GetOrCreateTypeReference(ns, name, asm).ToTypeSignature();
+        TypeSignature GetTypeRef(string ns, string name, string asm, bool isValueType = false) =>
+            GetOrCreateTypeReference(ns, name, asm).ToTypeSignature(isValueType);
 
         TypeSignature GetGenericTypeRef(string ns, string name, string asm, params TypeSignature[] args) =>
             new GenericInstanceTypeSignature(GetOrCreateTypeReference(ns, name, asm), false, args);
@@ -471,7 +471,7 @@ internal sealed partial class WinmdWriter
 
             case "IXamlServiceProvider":
                 AddMappedMethod("GetService",
-                    [("type", GetTypeRef("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract"), ParameterAttributes.In)],
+                    [("type", GetTypeRef("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract", isValueType: true), ParameterAttributes.In)],
                     objectSig);
                 break;
 
@@ -492,7 +492,7 @@ internal sealed partial class WinmdWriter
     {
         string qualifiedPrefix = mappedInterfaceRef.FullName ?? "";
         TypeReference tokenType = GetOrCreateTypeReference("Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract");
-        TypeSignature tokenSig = tokenType.ToTypeSignature();
+        TypeSignature tokenSig = tokenType.ToTypeSignature(true);
 
         ITypeDefOrRef handlerTypeRef = handlerType is TypeDefOrRefSignature tdrs ? tdrs.Type : (handlerType is GenericInstanceTypeSignature gits ? new TypeSpecification(gits) : tokenType);
 
@@ -504,7 +504,7 @@ internal sealed partial class WinmdWriter
             : (MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.SpecialName);
 
         // Add method
-        MethodDefinition adder = new(addName, attrs, MethodSignature.CreateInstance(tokenSig, handlerType))
+        MethodDefinition adder = new(addName, attrs, MethodSignature.CreateInstance(tokenSig, [handlerType]))
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
@@ -512,7 +512,7 @@ internal sealed partial class WinmdWriter
         outputType.Methods.Add(adder);
 
         // Remove method
-        MethodDefinition remover = new(removeName, attrs, MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, tokenSig))
+        MethodDefinition remover = new(removeName, attrs, MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [tokenSig]))
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
@@ -530,9 +530,9 @@ internal sealed partial class WinmdWriter
         TypeSignature implHandlerType = handlerType is GenericInstanceTypeSignature handlerGits
             ? ToOpenGenericFormStatic(handlerGits, _outputModule)
             : handlerType;
-        MemberReference addRef = new(mappedInterfaceRef, $"add_{eventName}", MethodSignature.CreateInstance(tokenSig, implHandlerType));
+        MemberReference addRef = new(mappedInterfaceRef, $"add_{eventName}", MethodSignature.CreateInstance(tokenSig, [implHandlerType]));
         outputType.MethodImplementations.Add(new MethodImplementation(addRef, adder));
-        MemberReference removeRef = new(mappedInterfaceRef, $"remove_{eventName}", MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, tokenSig));
+        MemberReference removeRef = new(mappedInterfaceRef, $"remove_{eventName}", MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [tokenSig]));
         outputType.MethodImplementations.Add(new MethodImplementation(removeRef, remover));
     }
 
@@ -577,8 +577,8 @@ internal sealed partial class WinmdWriter
 
                 // Also collect interfaces inherited by this interface
                 TypeDefinition? interfaceDef = resolvedInterface is TypeSpecification ts2
-                    ? (ts2.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
-                    : resolvedInterface.Resolve();
+                    ? SafeResolve((ts2.Signature as GenericInstanceTypeSignature)?.GenericType)
+                    : SafeResolve(resolvedInterface);
 
                 if (interfaceDef != null)
                 {
@@ -599,7 +599,7 @@ internal sealed partial class WinmdWriter
         ITypeDefOrRef? baseTypeRef = type.BaseType;
         while (baseTypeRef != null)
         {
-            TypeDefinition? baseDef = baseTypeRef.Resolve();
+            TypeDefinition? baseDef = SafeResolve(baseTypeRef);
             if (baseDef == null)
             {
                 break;
@@ -658,11 +658,11 @@ internal sealed partial class WinmdWriter
     /// Checks if the class declares public methods whose names match the .NET interface members.
     /// For inherited interfaces, walks up the class hierarchy.
     /// </summary>
-    private static bool IsInterfacePubliclyImplemented(TypeDefinition classType, InterfaceImplementation impl)
+    private static bool IsInterfacePubliclyImplemented(TypeDefinition classType, InterfaceImplementation impl, RuntimeContext? runtimeContext)
     {
         TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
-            ? (ts.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
-            : impl.Interface?.Resolve();
+            ? (ts.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve(runtimeContext)
+            : impl.Interface?.Resolve(runtimeContext);
 
         if (interfaceDef == null)
         {
@@ -682,7 +682,7 @@ internal sealed partial class WinmdWriter
                 }
             }
 
-            current = current.BaseType?.Resolve();
+            current = current.BaseType?.Resolve(runtimeContext);
         }
 
         return false;
@@ -749,8 +749,8 @@ internal sealed partial class WinmdWriter
             }
 
             TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
-                ? (ts.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
-                : impl.Interface.Resolve();
+                ? SafeResolve((ts.Signature as GenericInstanceTypeSignature)?.GenericType)
+                : SafeResolve(impl.Interface);
 
             if (interfaceDef == null)
             {

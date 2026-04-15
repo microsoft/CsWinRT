@@ -162,7 +162,7 @@ internal sealed partial class WinmdWriter
             // from WindowsRuntimeMetadataAttribute instead of the projection assembly name.
             // E.g., StackPanel from Microsoft.WinUI → Microsoft.UI.Xaml in the WinMD.
             string assembly = GetAssemblyNameFromScope(typeRef.Scope);
-            TypeDefinition? resolvedType = typeRef.Resolve();
+            TypeDefinition? resolvedType = SafeResolve(typeRef);
             if (resolvedType != null)
             {
                 string? winrtAssembly = AssemblyAnalyzer.GetAssemblyForWinRTType(resolvedType);

@@ -218,8 +218,8 @@ internal sealed partial class WinmdWriter
             }
 
             MethodSignature setSignature = isStatic
-                ? MethodSignature.CreateStatic(_outputModule.CorLibTypeFactory.Void, propertyType)
-                : MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, propertyType);
+                ? MethodSignature.CreateStatic(_outputModule.CorLibTypeFactory.Void, [propertyType])
+                : MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [propertyType]);
 
             MethodDefinition setter = new("put_" + inputProperty.Name.Value, attrs, setSignature);
             if (!isInterfaceParent)
@@ -267,12 +267,12 @@ internal sealed partial class WinmdWriter
                 attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
             }
 
-            TypeSignature handlerSig = eventType.ToTypeSignature();
-            TypeSignature tokenSig = eventRegistrationTokenType.ToTypeSignature();
+            TypeSignature handlerSig = eventType.ToTypeSignature(false);
+            TypeSignature tokenSig = eventRegistrationTokenType.ToTypeSignature(true);
 
             MethodSignature addSignature = isStatic
-                ? MethodSignature.CreateStatic(tokenSig, handlerSig)
-                : MethodSignature.CreateInstance(tokenSig, handlerSig);
+                ? MethodSignature.CreateStatic(tokenSig, [handlerSig])
+                : MethodSignature.CreateInstance(tokenSig, [handlerSig]);
 
             MethodDefinition adder = new("add_" + inputEvent.Name.Value, attrs, addSignature);
             if (!isInterfaceParent)
@@ -300,11 +300,11 @@ internal sealed partial class WinmdWriter
                 attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
             }
 
-            TypeSignature tokenSig = eventRegistrationTokenType.ToTypeSignature();
+            TypeSignature tokenSig = eventRegistrationTokenType.ToTypeSignature(true);
 
             MethodSignature removeSignature = isStatic
-                ? MethodSignature.CreateStatic(_outputModule.CorLibTypeFactory.Void, tokenSig)
-                : MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, tokenSig);
+                ? MethodSignature.CreateStatic(_outputModule.CorLibTypeFactory.Void, [tokenSig])
+                : MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [tokenSig]);
 
             MethodDefinition remover = new("remove_" + inputEvent.Name.Value, attrs, removeSignature);
             if (!isInterfaceParent)

@@ -171,8 +171,8 @@ internal sealed partial class WinmdWriter
             MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
             MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
-                _outputModule.CorLibTypeFactory.Object,
-                _outputModule.CorLibTypeFactory.IntPtr))
+                [_outputModule.CorLibTypeFactory.Object,
+                _outputModule.CorLibTypeFactory.IntPtr]))
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
@@ -346,7 +346,7 @@ internal sealed partial class WinmdWriter
         if (inputType.BaseType != null && inputType.BaseType.FullName != "System.Object")
         {
             // Check if the base type is abstract; WinRT doesn't support projecting abstract classes
-            TypeDefinition? baseTypeDef = inputType.BaseType.Resolve();
+            TypeDefinition? baseTypeDef = SafeResolve(inputType.BaseType);
             baseType = baseTypeDef != null && baseTypeDef.IsAbstract
                 ? GetOrCreateTypeReference("System", "Object", "mscorlib")
                 : ImportTypeReference(inputType.BaseType);
@@ -547,7 +547,7 @@ internal sealed partial class WinmdWriter
     {
         TypeReference eventRegistrationTokenType = GetOrCreateTypeReference(
             "Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract");
-        TypeSignature tokenSig = eventRegistrationTokenType.ToTypeSignature();
+        TypeSignature tokenSig = eventRegistrationTokenType.ToTypeSignature(true);
 
         foreach (MethodDefinition method in inputType.Methods)
         {

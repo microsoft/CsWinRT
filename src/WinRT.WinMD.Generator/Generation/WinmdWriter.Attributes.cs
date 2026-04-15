@@ -57,7 +57,7 @@ internal sealed partial class WinmdWriter
         MemberReference guidCtor = new(guidAttrType, ".ctor",
             MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
-                _outputModule.CorLibTypeFactory.UInt32,
+                [_outputModule.CorLibTypeFactory.UInt32,
                 _outputModule.CorLibTypeFactory.UInt16,
                 _outputModule.CorLibTypeFactory.UInt16,
                 _outputModule.CorLibTypeFactory.Byte,
@@ -67,7 +67,7 @@ internal sealed partial class WinmdWriter
                 _outputModule.CorLibTypeFactory.Byte,
                 _outputModule.CorLibTypeFactory.Byte,
                 _outputModule.CorLibTypeFactory.Byte,
-                _outputModule.CorLibTypeFactory.Byte));
+                _outputModule.CorLibTypeFactory.Byte]));
 
         CustomAttributeSignature sig = new();
         sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, BitConverter.ToUInt32(guidBytes, 0)));
@@ -93,7 +93,7 @@ internal sealed partial class WinmdWriter
         MemberReference versionCtor = new(versionAttrType, ".ctor",
             MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
-                _outputModule.CorLibTypeFactory.UInt32));
+                [_outputModule.CorLibTypeFactory.UInt32]));
 
         CustomAttributeSignature sig = new();
         sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, (uint)version));
@@ -113,11 +113,11 @@ internal sealed partial class WinmdWriter
             MemberReference ctor = new(activatableAttrType, ".ctor",
                 MethodSignature.CreateInstance(
                     _outputModule.CorLibTypeFactory.Void,
-                    systemType.ToTypeSignature(),
-                    _outputModule.CorLibTypeFactory.UInt32));
+                    [systemType.ToTypeSignature(false),
+                    _outputModule.CorLibTypeFactory.UInt32]));
 
             CustomAttributeSignature sig = new();
-            sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(), ResolveTypeNameToSignature(factoryInterface)));
+            sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(factoryInterface)));
             sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
 
             outputType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
@@ -128,7 +128,7 @@ internal sealed partial class WinmdWriter
             MemberReference ctor = new(activatableAttrType, ".ctor",
                 MethodSignature.CreateInstance(
                     _outputModule.CorLibTypeFactory.Void,
-                    _outputModule.CorLibTypeFactory.UInt32));
+                    [_outputModule.CorLibTypeFactory.UInt32]));
 
             CustomAttributeSignature sig = new();
             sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
@@ -146,11 +146,11 @@ internal sealed partial class WinmdWriter
         MemberReference ctor = new(staticAttrType, ".ctor",
             MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
-                systemType.ToTypeSignature(),
-                _outputModule.CorLibTypeFactory.UInt32));
+                [systemType.ToTypeSignature(false),
+                _outputModule.CorLibTypeFactory.UInt32]));
 
         CustomAttributeSignature sig = new();
-        sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(), ResolveTypeNameToSignature(staticInterfaceName)));
+        sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(staticInterfaceName)));
         sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
 
         classOutputType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
@@ -165,10 +165,10 @@ internal sealed partial class WinmdWriter
         MemberReference ctor = new(exclusiveToAttrType, ".ctor",
             MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
-                systemType.ToTypeSignature()));
+                [systemType.ToTypeSignature(false)]));
 
         CustomAttributeSignature sig = new();
-        sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(), ResolveTypeNameToSignature(className)));
+        sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(className)));
 
         interfaceType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
     }
@@ -213,7 +213,7 @@ internal sealed partial class WinmdWriter
     {
         foreach (CustomAttribute attr in source.CustomAttributes)
         {
-            if (!ShouldCopyAttribute(attr))
+            if (!ShouldCopyAttribute(attr, _runtimeContext))
             {
                 continue;
             }
@@ -232,7 +232,7 @@ internal sealed partial class WinmdWriter
     /// <summary>
     /// Determines whether a custom attribute should be copied to the output WinMD.
     /// </summary>
-    private static bool ShouldCopyAttribute(CustomAttribute attr)
+    private static bool ShouldCopyAttribute(CustomAttribute attr, RuntimeContext? runtimeContext)
     {
         string? attrTypeName = attr.Constructor?.DeclaringType?.FullName;
 
@@ -258,8 +258,11 @@ internal sealed partial class WinmdWriter
         }
 
         // Skip non-public attribute types (if resolvable)
-        TypeDefinition? attrTypeDef = attr.Constructor?.DeclaringType?.Resolve();
-        if (attrTypeDef != null && !attrTypeDef.IsPublic && !attrTypeDef.IsNestedPublic)
+        if (runtimeContext is not null
+            && attr.Constructor?.DeclaringType is { } attrType
+            && attrType is not TypeDefinition
+            && attrType.Resolve(runtimeContext, out TypeDefinition? attrTypeDef) == ResolutionStatus.Success
+            && !attrTypeDef!.IsPublic && !attrTypeDef.IsNestedPublic)
         {
             return false;
         }
@@ -344,11 +347,11 @@ internal sealed partial class WinmdWriter
             // System.Type must stay as System.Type for attribute blob encoding
             if (fullName == "System.Type")
             {
-                return GetOrCreateTypeReference("System", "Type", "mscorlib").ToTypeSignature();
+                return GetOrCreateTypeReference("System", "Type", "mscorlib").ToTypeSignature(false);
             }
 
             // Enum types: import the reference so the blob encoder can resolve the underlying type
-            TypeDefinition? resolved = typeDefOrRefSig.Type?.Resolve();
+            TypeDefinition? resolved = SafeResolve(typeDefOrRefSig.Type);
             if (resolved != null && resolved.IsEnum)
             {
                 return ImportTypeReference(typeDefOrRefSig.Type!).ToTypeSignature(typeDefOrRefSig.IsValueType);

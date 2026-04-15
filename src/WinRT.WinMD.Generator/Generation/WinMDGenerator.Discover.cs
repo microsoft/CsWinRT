@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System;
+using System.IO;
+using System.Linq;
 using AsmResolver.DotNet;
 using WindowsRuntime.WinMDGenerator.Discovery;
 using WindowsRuntime.WinMDGenerator.Errors;
-using WindowsRuntime.WinMDGenerator.Resolvers;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
@@ -22,8 +23,22 @@ internal static partial class WinMDGenerator
         try
         {
             string[] allReferencePaths = [args.InputAssemblyPath, .. args.ReferenceAssemblyPaths];
-            PathAssemblyResolver assemblyResolver = new(allReferencePaths);
-            inputModule = ModuleDefinition.FromFile(args.InputAssemblyPath, assemblyResolver.ReaderParameters);
+
+            // Use the built-in PathAssemblyResolver with both explicit paths and search directories
+            // to handle type forwarding scenarios where a referenced assembly forwards to another
+            // assembly in the same directory.
+            string[] searchDirectories = allReferencePaths
+                .Select(Path.GetDirectoryName)
+                .Where(d => d is not null)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray()!;
+
+            PathAssemblyResolver assemblyResolver = PathAssemblyResolver.FromSearchDirectories(searchDirectories);
+
+            DotNetRuntimeInfo targetRuntime = new(".NETCoreApp", new Version(10, 0));
+            RuntimeContext runtimeContext = new(targetRuntime, assemblyResolver);
+
+            inputModule = runtimeContext.LoadModule(args.InputAssemblyPath);
         }
         catch (Exception e)
         {

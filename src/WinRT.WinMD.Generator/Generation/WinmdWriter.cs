@@ -21,6 +21,7 @@ internal sealed partial class WinmdWriter
     private readonly string _version;
     private readonly TypeMapper _mapper;
     private readonly ModuleDefinition _inputModule;
+    private readonly RuntimeContext? _runtimeContext;
 
     // Output WinMD module and assembly
     private readonly ModuleDefinition _outputModule;
@@ -42,6 +43,7 @@ internal sealed partial class WinmdWriter
         _version = version;
         _mapper = mapper;
         _inputModule = inputModule;
+        _runtimeContext = inputModule.RuntimeContext;
 
         // Create the output WinMD module
         _outputModule = new ModuleDefinition(assemblyName + ".winmd")
@@ -62,6 +64,21 @@ internal sealed partial class WinmdWriter
             Attributes = AssemblyAttributes.ContentWindowsRuntime,
             HashAlgorithm = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyHashAlgorithm.Sha1
         };
+    }
+
+    /// <summary>
+    /// Safely resolves a type reference, returning null instead of throwing if the type
+    /// cannot be found (e.g., output-only synthesized types not in the input assembly).
+    /// </summary>
+    private TypeDefinition? SafeResolve(ITypeDefOrRef? typeRef)
+    {
+        return typeRef is TypeDefinition td
+            ? td
+            : typeRef is not null
+                && _runtimeContext is not null
+                && typeRef.Resolve(_runtimeContext, out TypeDefinition? resolved) == ResolutionStatus.Success
+                ? resolved
+                : null;
     }
 
     /// <summary>
@@ -129,12 +146,12 @@ internal sealed partial class WinmdWriter
                 if (classInterfaceImpl.Interface is TypeSpecification ts
                     && ts.Signature is GenericInstanceTypeSignature gits)
                 {
-                    interfaceDef = gits.GenericType.Resolve();
+                    interfaceDef = SafeResolve(gits.GenericType);
                     interfaceGenericArgs = [.. gits.TypeArguments];
                 }
                 else
                 {
-                    interfaceDef = classInterfaceImpl.Interface?.Resolve();
+                    interfaceDef = SafeResolve(classInterfaceImpl.Interface);
 
                     // For same-module TypeRefs (created by EnsureTypeReference), Resolve() may fail
                     // since the output module isn't in the resolver. Look up in our type mapping instead.
@@ -159,8 +176,8 @@ internal sealed partial class WinmdWriter
                         {
                             interfaceDef = inputImpl.Interface is TypeSpecification its
                                 && its.Signature is GenericInstanceTypeSignature igits
-                                ? igits.GenericType.Resolve()
-                                : inputImpl.Interface.Resolve();
+                                ? SafeResolve(igits.GenericType)
+                                : SafeResolve(inputImpl.Interface);
                             resolvedFromInput = interfaceDef != null;
                             break;
                         }
@@ -441,7 +458,7 @@ internal sealed partial class WinmdWriter
         MemberReference ctor = new(overloadAttrType, ".ctor",
             MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
-                _outputModule.CorLibTypeFactory.String));
+                [_outputModule.CorLibTypeFactory.String]));
 
         CustomAttributeSignature sig = new();
         sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.String, overloadName));

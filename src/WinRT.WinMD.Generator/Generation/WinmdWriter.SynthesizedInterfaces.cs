@@ -43,8 +43,8 @@ internal sealed partial class WinmdWriter
         foreach (InterfaceImplementation impl in allInterfaces)
         {
             TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
-                ? (ts.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve()
-                : impl.Interface?.Resolve();
+                ? SafeResolve((ts.Signature as GenericInstanceTypeSignature)?.GenericType)
+                : SafeResolve(impl.Interface);
 
             if (interfaceDef != null)
             {
