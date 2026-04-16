@@ -5,7 +5,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 #pragma warning disable IDE0045, IDE0046
@@ -15,10 +14,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Extensions for the <see cref="IDictionaryAdapter{TKey, TValue}"/> type.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static class IDictionaryAdapterExtensions
 {
     extension<TValue>(IDictionaryAdapter<string, TValue>)

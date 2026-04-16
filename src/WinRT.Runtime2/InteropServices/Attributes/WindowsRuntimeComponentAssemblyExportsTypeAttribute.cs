@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -15,10 +14,7 @@ namespace WindowsRuntime.InteropServices;
 /// </remarks>
 /// <seealso cref="System.Runtime.CompilerServices.ReferenceAssemblyAttribute"/>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = false)]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public sealed class WindowsRuntimeComponentAssemblyExportsTypeAttribute : Attribute
 {
     /// <summary>

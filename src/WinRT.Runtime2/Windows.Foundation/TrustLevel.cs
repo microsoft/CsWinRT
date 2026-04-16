@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.ComponentModel;
 using WindowsRuntime;
 
 namespace Windows.Foundation;
@@ -14,10 +12,7 @@ namespace Windows.Foundation;
 /// This type is required for ABI projection of Windows Runtime types, but marshalling it is not supported.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/windows/win32/api/inspectable/ne-inspectable-trustlevel"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public enum TrustLevel
 {
     /// <summary>
