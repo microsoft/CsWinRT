@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -121,4 +120,3 @@ internal sealed unsafe class AsyncStatusComWrappersMarshallerAttribute : Windows
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<AsyncStatus>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncStatus);
     }
 }
-#endif

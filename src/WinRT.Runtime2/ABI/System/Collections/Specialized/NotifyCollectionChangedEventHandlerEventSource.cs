@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System.Collections.Specialized;
 using WindowsRuntime.InteropServices;
 
@@ -48,4 +47,3 @@ public sealed unsafe class NotifyCollectionChangedEventHandlerEventSource : Even
         }
     }
 }
-#endif

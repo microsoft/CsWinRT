@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>14.0</LangVersion>
@@ -116,6 +116,14 @@
     -->
     <NoWarn>$(NoWarn);CS8597;IDE0005;IDE0380</NoWarn>
   </PropertyGroup>
+
+  <!--
+    To simplify the code, just remove all files that we know will never be needed for ref assemblies.
+    This doesn't cover all of them, but a good amount, and avoids having tens of dozens of '#ifdefs'.
+  -->
+  <ItemGroup Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
+    <Compile Remove="ABI\**\*.cs"/>
+  </ItemGroup>
     
   <!--
     Emit the [SupportedOSVersion] attribute if needed. Note that the .NET SDK already emits this attribute

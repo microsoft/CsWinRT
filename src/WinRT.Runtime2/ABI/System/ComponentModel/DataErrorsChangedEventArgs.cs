@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -132,4 +131,3 @@ file static unsafe class DataErrorsChangedEventArgsRuntimeClassFactory
         return defaultInterface;
     }
 }
-#endif

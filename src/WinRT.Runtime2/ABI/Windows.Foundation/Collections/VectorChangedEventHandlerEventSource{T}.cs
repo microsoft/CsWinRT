@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using Windows.Foundation.Collections;
 using WindowsRuntime.InteropServices;
 
@@ -43,4 +42,3 @@ public abstract unsafe class VectorChangedEventHandlerEventSource<T> : EventSour
         }
     }
 }
-#endif

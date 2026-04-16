@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime;
@@ -93,4 +92,3 @@ file sealed unsafe class ObjectComWrappersMarshallerAttribute : WindowsRuntimeCo
 
     // Marshalling 'object' instances is not supported, and it should just never happen
 }
-#endif

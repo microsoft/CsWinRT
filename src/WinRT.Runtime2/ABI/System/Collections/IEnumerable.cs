@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
@@ -190,4 +189,3 @@ file interface IEnumerableInterfaceImpl : IEnumerable
         return global::WindowsRuntime.InteropServices.IEnumerableMethods.GetEnumerator(interfaceReference);
     }
 }
-#endif

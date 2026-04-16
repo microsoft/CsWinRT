@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
@@ -260,4 +259,3 @@ file interface IEnumeratorInterfaceImpl : IEnumerator
         throw new NotSupportedException();
     }
 }
-#endif

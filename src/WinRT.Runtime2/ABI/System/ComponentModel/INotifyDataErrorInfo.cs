@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -360,4 +359,3 @@ file interface INotifyDataErrorInfoInterfaceImpl : global::System.ComponentModel
         return INotifyDataErrorInfoMethods.GetErrors(thisReference, propertyName);
     }
 }
-#endif

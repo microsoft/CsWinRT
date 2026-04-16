@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#if !REFERENCE_ASSEMBLY
 using System;
 using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
@@ -109,4 +108,3 @@ public sealed unsafe class NotifyCollectionChangedActionComWrappersMarshallerAtt
         return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<NotifyCollectionChangedAction>(value, in WellKnownXamlInterfaceIIDs.IID_IReferenceOfNotifyCollectionChangedAction);
     }
 }
-#endif
