@@ -78,6 +78,48 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <!--
+    Disable the default 'ProduceReferenceAssembly' behavior. WinRT.Runtime provides its own custom
+    reference assembly (built with 'CsWinRTBuildReferenceAssembly=true') that strips private
+    implementation detail types via '#if !REFERENCE_ASSEMBLY'. The SDK-generated ref assembly would
+    include those types (since 'REFERENCE_ASSEMBLY' is not defined in normal builds), which would
+    leak abstract members to downstream ProjectReference consumers and break reference projections.
+  -->
+  <PropertyGroup Condition="'$(CsWinRTBuildReferenceAssembly)' != 'true'">
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+
+    <!-- Define the constant to include '[WindowsRuntimeImplementationOnlyType]' -->
+    <DefineConstants>$(DefineConstants);WINDOWS_RUNTIME_REFERENCE_ASSEMBLY</DefineConstants>
+  </PropertyGroup>
+
+  <!--
+    When producing a reference assembly for packaging, define 'REFERENCE_ASSEMBLY'. This is used to
+    completely strip out the private implementation detail types from the reference assembly, so they're
+    further hidden. This is conditioned on 'CsWinRTBuildReferenceAssembly' (and NOT 'ProduceReferenceAssembly'),
+    because 'ProduceReferenceAssembly' is set to 'true' by default by the .NET SDK for library projects. The
+    stripping should only happen during the explicit reference assembly build step for NuGet packaging.
+  -->
+  <PropertyGroup Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
+    <DefineConstants>$(DefineConstants);REFERENCE_ASSEMBLY</DefineConstants>
+
+    <!--
+      Suppress warnings that only appear when building the reference assembly, due to types being
+      excluded via '#if !REFERENCE_ASSEMBLY'. These are expected and harmless in the reference assembly:
+        - CS8597: Thrown value may be null (in stubs with 'throw null' bodies).
+        - IDE0005: Unused 'using' directives (some usings are only needed by excluded code).
+        - IDE0380: 'unsafe' modifier is unnecessary (some types have 'unsafe' for excluded members).
+    -->
+    <NoWarn>$(NoWarn);CS8597;IDE0005;IDE0380</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    To simplify the code, just remove all files that we know will never be needed for ref assemblies.
+    This doesn't cover all of them, but a good amount, and avoids having tens of dozens of '#ifdefs'.
+  -->
+  <ItemGroup Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
+    <Compile Remove="ABI\**\*.cs"/>
+  </ItemGroup>
     
   <!--
     Emit the [SupportedOSVersion] attribute if needed. Note that the .NET SDK already emits this attribute
