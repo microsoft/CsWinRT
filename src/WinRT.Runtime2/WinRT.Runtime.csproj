@@ -111,12 +111,19 @@
   </PropertyGroup>
 
   <!--
-    To simplify the code, just remove all files that we know will never be needed for ref assemblies.
-    This doesn't cover all of them, but a good amount, and avoids having tens of dozens of '#ifdefs'.
+    Strip all files whose top-level type is annotated with '[WindowsRuntimeImplementationOnlyMember]'
+    from the reference assembly build. This avoids sprinkling '#ifdefs' across the codebase and relies
+    on the attribute being the single source of truth for what constitutes a private implementation detail.
+    Runs inside a target so MSBuild applies item batching to the '%(FullPath)' metadata access.
   -->
-  <ItemGroup Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
-    <Compile Remove="ABI\**\*.cs"/>
-  </ItemGroup>
+  <Target
+    Name="RemoveWindowsRuntimeImplementationOnlyFiles"
+    BeforeTargets="CoreCompile"
+    Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
+    <ItemGroup>
+      <Compile Remove="@(Compile)" Condition="$([System.IO.File]::ReadAllText('%(FullPath)').Contains('[WindowsRuntimeImplementationOnlyMember]'))"/>
+    </ItemGroup>
+  </Target>
     
   <!--
     Emit the [SupportedOSVersion] attribute if needed. Note that the .NET SDK already emits this attribute
