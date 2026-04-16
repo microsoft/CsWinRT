@@ -81,9 +81,6 @@
     -->
     <NoWarn>$(NoWarn);AD0001</NoWarn>
 
-    <!-- Ignore warnings for '[Obsolete]' members that are a private implementation detail (since they're allowed here) -->
-    <NoWarn>$(NoWarn);CSWINRT3001</NoWarn>
-
     <!-- Enable strong name signing -->
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
