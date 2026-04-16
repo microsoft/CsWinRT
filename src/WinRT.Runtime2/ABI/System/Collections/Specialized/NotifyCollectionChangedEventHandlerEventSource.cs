@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 
@@ -12,10 +10,7 @@ namespace ABI.System.Collections.Specialized;
 /// <summary>
 /// An <see cref="EventSource{T}"/> implementation for <see cref="NotifyCollectionChangedEventHandler"/>.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public sealed unsafe class NotifyCollectionChangedEventHandlerEventSource : EventSource<NotifyCollectionChangedEventHandler>
 {
     /// <inheritdoc cref="EventSource{T}.EventSource"/>

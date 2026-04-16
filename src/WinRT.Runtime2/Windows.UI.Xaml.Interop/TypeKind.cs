@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using WindowsRuntime;
 
 namespace Windows.UI.Xaml.Interop;
@@ -14,10 +13,7 @@ namespace Windows.UI.Xaml.Interop;
 /// This type is required for ABI projection of the <see cref="Type"/> class, but marshalling it is not supported.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.ui.xaml.interop.typekind"/>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public enum TypeKind
 {
     /// <summary>

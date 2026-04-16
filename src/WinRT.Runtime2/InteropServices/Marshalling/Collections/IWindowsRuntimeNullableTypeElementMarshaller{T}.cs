@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices.Marshalling;
 
@@ -10,10 +9,7 @@ namespace WindowsRuntime.InteropServices.Marshalling;
 /// An interface for marshalling collection elements to native.
 /// </summary>
 /// <typeparam name="T">The underlying value type of the nullable type.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public interface IWindowsRuntimeNullableTypeElementMarshaller<T>
     where T : struct
 {
