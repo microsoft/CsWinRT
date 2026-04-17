@@ -4,6 +4,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
+#pragma warning disable CS1574
+
 namespace WindowsRuntime;
 
 /// <summary>

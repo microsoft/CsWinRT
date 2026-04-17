@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.InteropServices;
+
 namespace WindowsRuntime.InteropServices;
 
 /// <see href="https://docs.rs/windows-sys/latest/windows_sys/Win32/System/Com/struct.ComCallData.html"/>
+[StructLayout(LayoutKind.Sequential)]
 internal unsafe struct ComCallData
 {
     public uint dwDispid;
