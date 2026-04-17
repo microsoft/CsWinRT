@@ -38,6 +38,9 @@ public static unsafe class RestrictedErrorInfo
     /// <param name="restoredExceptionFromGlobalState">restoredExceptionFromGlobalState Out param.</param>
     private static Exception? GetExceptionForHR(HRESULT errorCode, out bool restoredExceptionFromGlobalState)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         // If the 'HRESULT' indicates success, there is no exception to return
         if (errorCode.Succeeded)
         {
@@ -176,6 +179,7 @@ public static unsafe class RestrictedErrorInfo
         restoredExceptionFromGlobalState = false;
 
         return exception;
+#endif
     }
 
     /// <summary>
@@ -226,6 +230,9 @@ public static unsafe class RestrictedErrorInfo
     /// <seealso cref="Marshal.GetExceptionForHR(int)"/>
     public static HRESULT GetHRForException(Exception? exception)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         // If the input exception is 'null', we always just map to 'S_OK'
         if (exception is null)
         {
@@ -250,6 +257,7 @@ public static unsafe class RestrictedErrorInfo
         }
 
         return WellKnownExceptionMappings.GetHRForNativeOrManagedErrorCode(hresult);
+#endif
     }
 
     /// <summary>
@@ -259,6 +267,9 @@ public static unsafe class RestrictedErrorInfo
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is <see langword="null"/>.</exception>
     internal static void SetErrorInfo(Exception exception)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentNullException.ThrowIfNull(exception);
 
         try
@@ -335,6 +346,7 @@ public static unsafe class RestrictedErrorInfo
             // If we fail to set the error info, we continue on reporting the original exception
             Debug.Assert(false, e.Message, e.StackTrace);
         }
+#endif
     }
 
     /// <summary>
@@ -343,6 +355,9 @@ public static unsafe class RestrictedErrorInfo
     /// <param name="exception">The input <see cref="Exception"/> instance to attach the error info to.</param>
     internal static void AttachErrorInfo(Exception exception)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentNullException.ThrowIfNull(exception);
 
         void* restrictedErrorInfoPtr = null;
@@ -413,6 +428,7 @@ public static unsafe class RestrictedErrorInfo
         {
             WindowsRuntimeUnknownMarshaller.Free(restrictedErrorInfoPtr);
         }
+#endif
     }
 
     /// <summary>
@@ -429,6 +445,9 @@ public static unsafe class RestrictedErrorInfo
     /// </remarks>
     internal static void ReportUnhandledError(Exception exception)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         SetErrorInfo(exception);
 
         using WindowsRuntimeObjectReferenceValue restrictedErrorInfoValue = RestrictedErrorInfoHelpers.BorrowErrorInfo();
@@ -439,5 +458,6 @@ public static unsafe class RestrictedErrorInfo
         {
             _ = WindowsRuntimeImports.RoReportUnhandledError(restrictedErrorInfoValuePtr);
         }
+#endif
     }
 }

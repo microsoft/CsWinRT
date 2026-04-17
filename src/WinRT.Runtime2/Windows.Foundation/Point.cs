@@ -91,14 +91,21 @@ public struct Point : IEquatable<Point>, IFormattable
     /// <inheritdoc/>
     public override readonly string ToString()
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         char separator = TokenizerHelper.GetNumericListSeparator(null);
 
         return $"{X}{separator}{Y}";
+#endif
     }
 
     /// <inheritdoc/>
     public readonly string ToString(string? format, IFormatProvider? formatProvider)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         // Fast path if both arguments are 'null'
         if (format is null && formatProvider is null)
         {
@@ -119,6 +126,7 @@ public struct Point : IEquatable<Point>, IFormattable
         handler.AppendFormatted(Y, format);
 
         return handler.ToStringAndClear();
+#endif
     }
 
     /// <summary>

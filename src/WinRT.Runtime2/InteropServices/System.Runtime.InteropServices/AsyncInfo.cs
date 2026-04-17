@@ -41,9 +41,13 @@ public static class AsyncInfo
     /// </remarks>
     public static IAsyncAction Run(Func<CancellationToken, Task> factory)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentNullException.ThrowIfNull(factory);
 
         return new TaskAdapter(factory);
+#endif
     }
 
     /// <summary>
@@ -75,9 +79,13 @@ public static class AsyncInfo
     /// </remarks>
     public static IAsyncActionWithProgress<TProgress> Run<TProgress>(Func<CancellationToken, IProgress<TProgress>, Task> factory)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentNullException.ThrowIfNull(factory);
 
         return new TaskWithProgressAdapter<TProgress>(factory);
+#endif
     }
 
     /// <summary>
@@ -99,9 +107,13 @@ public static class AsyncInfo
     /// </remarks>
     public static IAsyncOperation<TResult> Run<TResult>(Func<CancellationToken, Task<TResult>> factory)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentNullException.ThrowIfNull(factory);
 
         return new TaskAdapter<TResult>(factory);
+#endif
     }
 
     /// <summary>
@@ -139,9 +151,13 @@ public static class AsyncInfo
     public static IAsyncOperationWithProgress<TResult, TProgress> Run<TResult, TProgress>(
         Func<CancellationToken, IProgress<TProgress>, Task<TResult>> factory)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentNullException.ThrowIfNull(factory);
 
         return new TaskWithProgressAdapter<TResult, TProgress>(factory);
+#endif
     }
 
     /// <summary>
@@ -150,7 +166,11 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncAction"/> instance.</returns>
     public static IAsyncAction CompletedAction()
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         return new TaskAdapter(default(CompletedTaskPlaceholder));
+#endif
     }
 
     /// <summary>
@@ -160,7 +180,11 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</returns>
     public static IAsyncActionWithProgress<TProgress> CompletedActionWithProgress<TProgress>()
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         return new TaskWithProgressAdapter<TProgress>(default(CompletedTaskPlaceholder));
+#endif
     }
 
     /// <summary>
@@ -171,7 +195,11 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncOperation{TResult}"/> instance.</returns>
     public static IAsyncOperation<TResult> FromResult<TResult>(TResult result)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         return new TaskAdapter<TResult>(result);
+#endif
     }
 
     /// <summary>
@@ -183,7 +211,11 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</returns>
     public static IAsyncOperationWithProgress<TResult, TProgress> FromResultWithProgress<TResult, TProgress>(TResult result)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         return new TaskWithProgressAdapter<TResult, TProgress>(result);
+#endif
     }
 
     /// <summary>
@@ -193,9 +225,13 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncAction"/> instance.</returns>
     public static IAsyncAction FromException(Exception exception)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentNullException.ThrowIfNull(exception);
 
         return new TaskAdapter(exception);
+#endif
     }
 
     /// <summary>
@@ -206,9 +242,13 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</returns>
     public static IAsyncActionWithProgress<TProgress> FromExceptionWithProgress<TProgress>(Exception exception)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentNullException.ThrowIfNull(exception);
 
         return new TaskWithProgressAdapter<TProgress>(exception);
+#endif
     }
 
     /// <summary>
@@ -219,9 +259,13 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncOperation{TResult}"/> instance.</returns>
     public static IAsyncOperation<TResult> FromException<TResult>(Exception exception)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentNullException.ThrowIfNull(exception);
 
         return new TaskAdapter<TResult>(exception);
+#endif
     }
 
     /// <summary>
@@ -233,9 +277,13 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</returns>
     public static IAsyncOperationWithProgress<TResult, TProgress> FromExceptionWithProgress<TResult, TProgress>(Exception exception)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentNullException.ThrowIfNull(exception);
 
         return new TaskWithProgressAdapter<TResult, TProgress>(exception);
+#endif
     }
 
     /// <summary>
@@ -244,7 +292,11 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncAction"/> instance.</returns>
     public static IAsyncAction CanceledAction()
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         return new TaskAdapter(default(CanceledTaskPlaceholder));
+#endif
     }
 
     /// <summary>
@@ -254,7 +306,11 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncActionWithProgress{TProgress}"/> instance.</returns>
     public static IAsyncActionWithProgress<TProgress> CanceledActionWithProgress<TProgress>()
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         return new TaskWithProgressAdapter<TProgress>(default(CanceledTaskPlaceholder));
+#endif
     }
 
     /// <summary>
@@ -264,7 +320,11 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncOperation{TResult}"/> instance.</returns>
     public static IAsyncOperation<TResult> CanceledOperation<TResult>()
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         return new TaskAdapter<TResult>(default(CanceledTaskPlaceholder));
+#endif
     }
 
     /// <summary>
@@ -275,6 +335,10 @@ public static class AsyncInfo
     /// <returns>The resulting <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance.</returns>
     public static IAsyncOperationWithProgress<TResult, TProgress> CanceledOperationWithProgress<TResult, TProgress>()
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         return new TaskWithProgressAdapter<TResult, TProgress>(default(CanceledTaskPlaceholder));
+#endif
     }
 }
