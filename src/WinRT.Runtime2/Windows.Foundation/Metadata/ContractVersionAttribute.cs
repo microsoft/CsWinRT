@@ -16,8 +16,10 @@ namespace Windows.Foundation.Metadata;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 #endif
 [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#endif
 public sealed class ContractVersionAttribute : Attribute
 {
     /// <summary>

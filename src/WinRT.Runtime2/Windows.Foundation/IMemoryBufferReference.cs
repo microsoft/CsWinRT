@@ -15,7 +15,9 @@ namespace Windows.Foundation;
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 #endif
 [Guid("FBC4DD29-245B-11E4-AF98-689423260CF8")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
+#endif
 public interface IMemoryBufferReference : IDisposable
 {
     /// <summary>

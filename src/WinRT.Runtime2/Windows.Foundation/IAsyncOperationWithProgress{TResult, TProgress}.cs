@@ -24,7 +24,9 @@ namespace Windows.Foundation;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 #endif
 [Guid("B5D036D7-E297-498F-BA60-0289E76E23DD")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#endif
 public interface IAsyncOperationWithProgress<TResult, TProgress> : IAsyncInfo
 {
     /// <summary>

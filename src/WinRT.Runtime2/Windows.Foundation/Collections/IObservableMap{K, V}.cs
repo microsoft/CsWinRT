@@ -18,7 +18,9 @@ namespace Windows.Foundation.Collections;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 #endif
 [Guid("65DF2BF5-BF39-41B5-AEBC-5A9D865E472B")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#endif
 public interface IObservableMap<K, V> : IDictionary<K, V>, ICollection<KeyValuePair<K, V>>, IEnumerable<KeyValuePair<K, V>>, IEnumerable
 {
     /// <summary>

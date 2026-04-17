@@ -22,7 +22,9 @@ namespace Windows.Foundation;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 #endif
 [Guid("1F6DB258-E803-48A1-9546-EB7353398884")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#endif
 public interface IAsyncActionWithProgress<TProgress> : IAsyncInfo
 {
     /// <summary>

@@ -20,7 +20,9 @@ namespace Windows.Foundation;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 #endif
 [Guid("96369F54-8EB6-48F0-ABCE-C1B211E627C3")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#endif
 public interface IStringable
 {
     /// <summary>

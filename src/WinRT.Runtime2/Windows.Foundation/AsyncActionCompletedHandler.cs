@@ -15,8 +15,9 @@ namespace Windows.Foundation;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 #endif
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.AsyncActionCompletedHandler>")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
-#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [ABI.Windows.Foundation.AsyncActionCompletedHandlerComWrappersMarshaller]
 #endif
 public delegate void AsyncActionCompletedHandler(IAsyncAction asyncInfo, AsyncStatus asyncStatus);

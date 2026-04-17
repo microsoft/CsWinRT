@@ -24,9 +24,10 @@ namespace Windows.Foundation.Collections;
 #if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Collections.CollectionChange")]
 [WindowsRuntimeReferenceType(typeof(CollectionChange?))]
-#endif
+#elif WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#endif
 #if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [ABI.Windows.Foundation.Collections.CollectionChangeComWrappersMarshaller]
 #endif

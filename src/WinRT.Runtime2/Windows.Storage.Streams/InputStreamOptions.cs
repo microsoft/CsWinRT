@@ -20,9 +20,10 @@ namespace Windows.Storage.Streams;
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Storage.Streams.InputStreamOptions>")]
 #if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeReferenceType(typeof(InputStreamOptions?))]
-#endif
+#elif WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
+#endif
 #if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [ABI.Windows.Storage.Streams.InputStreamOptionsComWrappersMarshaller]
 #endif

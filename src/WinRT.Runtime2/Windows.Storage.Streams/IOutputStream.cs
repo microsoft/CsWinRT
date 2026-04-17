@@ -16,7 +16,9 @@ namespace Windows.Storage.Streams;
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 #endif
 [Guid("905A0FE6-BC53-11DF-8C49-001E4FC686DA")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
+#endif
 public interface IOutputStream : IDisposable
 {
     /// <summary>

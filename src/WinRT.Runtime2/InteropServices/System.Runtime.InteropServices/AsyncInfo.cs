@@ -20,7 +20,9 @@ namespace WindowsRuntime.InteropServices;
 /// that will be wrapped by the returned Windows Runtime adapter.
 /// </remarks>
 /// <seealso cref="IAsyncInfo"/>
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("windows10.0.10240.0")]
+#endif
 public static class AsyncInfo
 {
     /// <summary>

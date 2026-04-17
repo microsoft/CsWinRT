@@ -11,6 +11,8 @@ namespace Windows.Foundation;
 /// <remarks>
 /// This type is required for ABI projection of the value types and delegates, but marshalling it is not supported.
 /// </remarks>
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ApiContract]
 [ContractVersion(1245184u)]
+#endif
 public enum UniversalApiContract;

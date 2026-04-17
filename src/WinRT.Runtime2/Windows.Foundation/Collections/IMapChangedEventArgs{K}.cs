@@ -15,7 +15,9 @@ namespace Windows.Foundation.Collections;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 #endif
 [Guid("9939F4DF-050A-4C0F-AA60-77075F9C4777")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#endif
 public interface IMapChangedEventArgs<K>
 {
     /// <summary>

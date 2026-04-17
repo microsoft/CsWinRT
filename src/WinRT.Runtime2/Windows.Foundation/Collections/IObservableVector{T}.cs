@@ -17,7 +17,9 @@ namespace Windows.Foundation.Collections;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 #endif
 [Guid("5917EB53-50B4-4A0D-B309-65862B3F1DBC")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#endif
 public interface IObservableVector<T> : IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable
 {
     /// <summary>
