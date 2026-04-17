@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
+#endif
 using WindowsRuntime;
 
 #pragma warning disable IDE0060

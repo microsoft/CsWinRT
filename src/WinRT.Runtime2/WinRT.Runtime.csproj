@@ -82,17 +82,20 @@
   <!--
     Disable the default 'ProduceReferenceAssembly' behavior. WinRT.Runtime provides its own custom
     reference assembly (built with 'CsWinRTBuildReferenceAssembly=true') that strips private implementation
-    detail types via '#if !WINDOWS_RUNTIME_REFERENCE_ASSEMBLY'. The SDK-generated ref assembly would
+    detail types via '#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY'. The SDK-generated ref assembly would
     include those types (since 'WINDOWS_RUNTIME_REFERENCE_ASSEMBLY' is not defined in normal builds), which
     would leak abstract members to downstream ProjectReference consumers and break reference projections.
   -->
   <PropertyGroup Condition="'$(CsWinRTBuildReferenceAssembly)' != 'true'">
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+
+    <!-- Build constant to simplify '#ifdef'-s, so they don't need negation expressions -->
+    <DefineConstants>$(DefineConstants);WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY</DefineConstants>
   </PropertyGroup>
 
   <!--
-    When producing a reference assembly for packaging, define 'REFERENCE_ASSEMBLY'. This is used to
-    completely strip out the private implementation detail types from the reference assembly, so they're
+    When producing a reference assembly for packaging, define 'WINDOWS_RUNTIME_REFERENCE_ASSEMBLY'. This is used
+    to completely strip out the private implementation detail types from the reference assembly, so they're
     further hidden. This is conditioned on 'CsWinRTBuildReferenceAssembly' (and NOT 'ProduceReferenceAssembly'),
     because 'ProduceReferenceAssembly' is set to 'true' by default by the .NET SDK for library projects. The
     stripping should only happen during the explicit reference assembly build step for NuGet packaging.

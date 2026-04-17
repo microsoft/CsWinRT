@@ -4,7 +4,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Foundation.Collections;

@@ -28,25 +28,25 @@ public abstract partial class WindowsRuntimeObject :
     /// <inheritdoc/>
     bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
     {
-        throw null!;
+        throw null;
     }
 
     /// <inheritdoc/>
     RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
     {
-        throw null!;
+        throw null;
     }
 
     /// <inheritdoc/>
     VirtualMethodTableInfo IUnmanagedVirtualMethodTableProvider.GetVirtualMethodTableInfoForKey(Type type)
     {
-        throw null!;
+        throw null;
     }
 
     /// <inheritdoc/>
     CustomQueryInterfaceResult ICustomQueryInterface.GetInterface(ref Guid iid, out nint ppv)
     {
-        throw null!;
+        throw null;
     }
 #endif
 }

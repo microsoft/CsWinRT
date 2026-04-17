@@ -3,7 +3,9 @@
 
 using System;
 using System.Runtime.InteropServices;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Foundation;

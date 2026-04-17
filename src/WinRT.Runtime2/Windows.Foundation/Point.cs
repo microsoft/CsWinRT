@@ -6,8 +6,10 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 

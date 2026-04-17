@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using System;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Storage.Streams;

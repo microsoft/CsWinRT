@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Foundation.Collections;

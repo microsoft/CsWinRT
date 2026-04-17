@@ -4,7 +4,9 @@
 using System;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Storage.Streams;
