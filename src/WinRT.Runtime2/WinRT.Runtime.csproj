@@ -127,10 +127,39 @@
       <Compile Remove="@(Compile)" Condition="$([System.IO.File]::ReadAllText('%(FullPath)').Contains('[WindowsRuntimeImplementationOnlyMember]'))"/>
 
       <!--
+        Also remove all files that explicitly opt out of the reference assembly by defining 'WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE'
+        at the top of the file. This provides a simple file-level opt-out for sources that reference internal types or members that
+        are stripped from the reference assembly, and that would otherwise fail to compile in the reference assembly build.
+      -->
+      <Compile Remove="@(Compile)" Condition="$([System.IO.File]::ReadAllText('%(FullPath)').Contains('#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE'))"/>
+
+      <!--
         Also remove all ABI types, since none of these are needed for reference assemblies, and some might only contain
         internal types, meaning they wouldn't have the attribute (so they'd be kept), but would result in build errors.
       -->
       <Compile Remove="ABI\**\*.cs"/>
+
+      <!-- Also remove other folders with implementation-only types, to minimize the number of code changes needed -->
+      <Compile Remove="InteropServices\AsyncInfo\**\*.cs"/>
+      <Compile Remove="InteropServices\Bindables\**\*.cs"/>
+      <Compile Remove="InteropServices\Buffers\**\*.cs"/>
+      <Compile Remove="InteropServices\Callbacks\**\*.cs"/>
+      <Compile Remove="InteropServices\Collections\**\*.cs"/>
+      <Compile Remove="InteropServices\Dispatching\**\*.cs"/>
+      <Compile Remove="InteropServices\Events\**\*.cs"/>
+      <Compile Remove="InteropServices\Exceptions\**\*.cs"/>
+      <Compile Remove="InteropServices\InteropDllImports\**\*.cs"/>
+      <Compile Remove="InteropServices\Marshalers\**\*.cs"/>
+      <Compile Remove="InteropServices\ObjectReference\**\*.cs"/>
+      <Compile Remove="InteropServices\Placeholders\**\*.cs"/>
+      <Compile Remove="InteropServices\ProjectionDllExports\**\*.cs"/>
+      <Compile Remove="InteropServices\ProjectionImpls\**\*.cs"/>
+      <Compile Remove="InteropServices\Streams\**\*.cs"/>
+      <Compile Remove="InteropServices\TypeMapGroups\**\*.cs"/>
+      <Compile Remove="InteropServices\TypeMapInfo\**\*.cs"/>
+      <Compile Remove="InteropServices\Vtables\**\*.cs"/>
+      <Compile Remove="InteropServices\WeakReferences\**\*.cs"/>
+      <Compile Remove="NativeObjects\**\*.cs"/>
     </ItemGroup>
   </Target>
     
