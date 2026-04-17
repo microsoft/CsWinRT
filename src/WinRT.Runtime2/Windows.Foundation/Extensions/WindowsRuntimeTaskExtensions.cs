@@ -15,9 +15,7 @@ namespace Windows.Foundation;
 /// <summary>
 /// Provides extensions for <see cref="IAsyncInfo"/> types to interoperate with <see cref="Task"/> types.
 /// </summary>
-#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("windows10.0.10240.0")]
-#endif
 public static class WindowsRuntimeTaskExtensions
 {
     /// <summary>
