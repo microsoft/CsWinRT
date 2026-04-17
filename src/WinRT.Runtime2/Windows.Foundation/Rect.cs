@@ -299,6 +299,9 @@ public struct Rect : IEquatable<Rect>, IFormattable
     /// <inheritdoc/>
     public override readonly string ToString()
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         if (IsEmpty)
         {
             return "Empty";
@@ -307,11 +310,15 @@ public struct Rect : IEquatable<Rect>, IFormattable
         char separator = TokenizerHelper.GetNumericListSeparator(null);
 
         return $"{X}{separator}{Y}{separator}{Width}{separator}{Height}";
+#endif
     }
 
     /// <inheritdoc/>
     public readonly string ToString(string? format, IFormatProvider? formatProvider)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         // Fast path if both arguments are 'null'
         if (format is null && formatProvider is null)
         {
@@ -336,6 +343,7 @@ public struct Rect : IEquatable<Rect>, IFormattable
         handler.AppendFormatted(Height, format);
 
         return handler.ToStringAndClear();
+#endif
     }
 
     /// <summary>

@@ -19,9 +19,13 @@ public static class WindowsRuntimeBuffer
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="capacity"/> is less than <c>0</c>.</exception>
     public static IBuffer Create(int capacity)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
 
         return new WindowsRuntimePinnedArrayBuffer(capacity);
+#endif
     }
 
     /// <summary>
@@ -31,11 +35,15 @@ public static class WindowsRuntimeBuffer
     /// <returns>The resulting <see cref="IBuffer"/> instance (with <see cref="IBuffer.Capacity"/> and <see cref="IBuffer.Length"/> equal to the length of <paramref name="data"/>).</returns>
     public static IBuffer Create(ReadOnlySpan<byte> data)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         byte[] pinnedData = GC.AllocateArray<byte>(data.Length, pinned: true);
 
         data.CopyTo(pinnedData);
 
         return new WindowsRuntimePinnedArrayBuffer(pinnedData, offset: 0, data.Length, data.Length);
+#endif
     }
 
     /// <summary>
@@ -49,6 +57,9 @@ public static class WindowsRuntimeBuffer
     /// <exception cref="ArgumentException">Thrown if <paramref name="capacity"/> is less than the length of <paramref name="data"/>.</exception>
     public static IBuffer Create(ReadOnlySpan<byte> data, int capacity)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         //if (capacity < length) throw new ArgumentException(global::Windows.Foundation.SR.Argument_InsufficientBufferCapacity);
 
@@ -57,6 +68,7 @@ public static class WindowsRuntimeBuffer
         data.CopyTo(pinnedData);
 
         return new WindowsRuntimePinnedArrayBuffer(pinnedData, offset: 0, data.Length, capacity);
+#endif
     }
 
     /// <summary>
@@ -73,6 +85,9 @@ public static class WindowsRuntimeBuffer
     /// <exception cref="ArgumentException">Thrown if the specified range is not valid, or if <paramref name="capacity"/> is less than the specified range.</exception>
     public static IBuffer Create(byte[] data, int offset, int length, int capacity)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         ArgumentNullException.ThrowIfNull(data);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
@@ -91,5 +106,6 @@ public static class WindowsRuntimeBuffer
             length: length);
 
         return new WindowsRuntimePinnedArrayBuffer(pinnedData, offset: 0, length, capacity);
+#endif
     }
 }

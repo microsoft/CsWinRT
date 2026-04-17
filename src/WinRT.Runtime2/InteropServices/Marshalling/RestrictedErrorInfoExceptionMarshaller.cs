@@ -7,15 +7,16 @@ using System.Runtime.InteropServices.Marshalling;
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
-/// A marshaller using <see cref="RestrictedErrorInfo"/> to marshal exceptions to and from the native side.
+/// A marshaller using the <c>IRestrictedErrorInfo</c> infrastructure to marshal exceptions to and from the native side.
 /// </summary>
 /// <remarks>
 /// This type is only meant to be used in two scenarios:
 /// <list type="bullet">
-///   <item>With <see cref="GeneratedComInterfaceAttribute"/>, when used on interfaces implemented by WinRT objects.</item>
+///   <item>With <see cref="GeneratedComInterfaceAttribute"/>, when used on interfaces implemented by Windows Runtime objects.</item>
 ///   <item>In <see langword="finally"/> blocks within generated or handwritten marshalling stubs.</item>
 /// </list>
 /// </remarks>
+/// <see href="https://learn.microsoft.com/windows/win32/api/restrictederrorinfo/nn-restrictederrorinfo-irestrictederrorinfo"/>.
 [CustomMarshaller(typeof(Exception), MarshalMode.ManagedToUnmanagedOut, typeof(RestrictedErrorInfoExceptionMarshaller))]
 public static class RestrictedErrorInfoExceptionMarshaller
 {
@@ -36,9 +37,13 @@ public static class RestrictedErrorInfoExceptionMarshaller
     /// </remarks>
     public static HRESULT ConvertToUnmanaged(Exception value)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         RestrictedErrorInfo.SetErrorInfo(value);
 
         return RestrictedErrorInfo.GetHRForException(value);
+#endif
     }
 
     /// <summary>
@@ -48,6 +53,10 @@ public static class RestrictedErrorInfoExceptionMarshaller
     /// <returns>A managed exception.</returns>
     public static Exception? ConvertToManaged(HRESULT value)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         return RestrictedErrorInfo.GetExceptionForHR(value);
+#endif
     }
 }
