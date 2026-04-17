@@ -11,8 +11,12 @@ namespace Windows.Foundation;
 /// </summary>
 /// <param name="asyncInfo">The asynchronous operation.</param>
 /// <param name="asyncStatus">One of the enumeration values.</param>
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.AsyncActionCompletedHandler>")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [ABI.Windows.Foundation.AsyncActionCompletedHandlerComWrappersMarshaller]
+#endif
 public delegate void AsyncActionCompletedHandler(IAsyncAction asyncInfo, AsyncStatus asyncStatus);

@@ -11,12 +11,18 @@ namespace Windows.Foundation;
 /// Specifies property value types.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.propertytype"/>
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.PropertyType>")]
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeReferenceType(typeof(PropertyType?))]
+#endif
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [ABI.Windows.Foundation.PropertyTypeComWrappersMarshaller]
+#endif
 public enum PropertyType
 {
     /// <summary>

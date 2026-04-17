@@ -10,7 +10,9 @@ namespace Windows.Foundation.Collections;
 /// <summary>
 /// Provides data for the changed event of a vector.
 /// </summary>
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [Guid("575933DF-34FE-4480-AF15-07691F3D5D9B")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public interface IVectorChangedEventArgs

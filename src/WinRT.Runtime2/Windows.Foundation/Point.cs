@@ -17,12 +17,18 @@ namespace Windows.Foundation;
 /// Represents X and Y coordinate values that define a point in a two-dimensional plane.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.point"/>
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Point>")]
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeReferenceType(typeof(Point?))]
+#endif
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [ABI.Windows.Foundation.PointComWrappersMarshaller]
+#endif
 public struct Point : IEquatable<Point>, IFormattable
 {
     /// <summary>

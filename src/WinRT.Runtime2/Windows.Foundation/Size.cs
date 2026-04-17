@@ -16,12 +16,18 @@ namespace Windows.Foundation;
 /// Represents number values that specify a height and width.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.size"/>
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Size>")]
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeReferenceType(typeof(Size?))]
+#endif
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [ABI.Windows.Foundation.SizeComWrappersMarshaller]
+#endif
 public struct Size : IEquatable<Size>, IFormattable
 {
     /// <summary>

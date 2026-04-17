@@ -17,13 +17,19 @@ namespace Windows.Foundation.Collections;
 /// <see cref="IMapChangedEventArgs{K}.Key"/> property to determine the location of the change.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.collections.collectionchange"/>
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Collections.CollectionChange>")]
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadataTypeName("Windows.Foundation.Collections.CollectionChange")]
 [WindowsRuntimeReferenceType(typeof(CollectionChange?))]
+#endif
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [ABI.Windows.Foundation.Collections.CollectionChangeComWrappersMarshaller]
+#endif
 public enum CollectionChange
 {
     /// <summary>

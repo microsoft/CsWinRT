@@ -12,6 +12,8 @@ namespace Windows.Foundation;
 /// <typeparam name="TResult">The result type.</typeparam>
 /// <param name="asyncInfo">The asynchronous action.</param>
 /// <param name="asyncStatus">One of the enumeration values.</param>
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 [ContractVersion(typeof(FoundationContract), 65536u)]
 public delegate void AsyncOperationCompletedHandler<TResult>(IAsyncOperation<TResult> asyncInfo, AsyncStatus asyncStatus);

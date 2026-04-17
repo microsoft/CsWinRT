@@ -12,7 +12,9 @@ namespace Windows.Storage.Streams;
 /// <summary>
 /// Represents a sequential stream of bytes to be written.
 /// </summary>
+#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+#endif
 [Guid("905A0FE6-BC53-11DF-8C49-001E4FC686DA")]
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
 public interface IOutputStream : IDisposable
