@@ -122,6 +122,12 @@
     Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
     <ItemGroup>
       <Compile Remove="@(Compile)" Condition="$([System.IO.File]::ReadAllText('%(FullPath)').Contains('[WindowsRuntimeImplementationOnlyMember]'))"/>
+
+      <!--
+        Also remove all ABI types, since none of these are needed for reference assemblies, and some might only contain
+        internal types, meaning they wouldn't have the attribute (so they'd be kept), but would result in build errors.
+      -->
+      <Compile Remove="ABI\**\*.cs"/>
     </ItemGroup>
   </Target>
     
