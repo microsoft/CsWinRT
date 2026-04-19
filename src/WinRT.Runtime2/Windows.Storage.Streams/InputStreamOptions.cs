@@ -18,9 +18,7 @@ namespace Windows.Storage.Streams;
 [Flags]
 #if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
-#endif
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Storage.Streams.InputStreamOptions>")]
-#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeReferenceType(typeof(InputStreamOptions?))]
 #elif WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("Windows10.0.10240.0")]

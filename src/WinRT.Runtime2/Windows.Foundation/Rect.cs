@@ -23,9 +23,7 @@ namespace Windows.Foundation;
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.rect"/>
 #if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
-#endif
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Rect>")]
-#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeReferenceType(typeof(Rect?))]
 #elif WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("Windows10.0.10240.0")]
