@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using AsmResolver;
 using AsmResolver.DotNet;
 
 namespace WindowsRuntime.WinMDGenerator.Discovery;
@@ -51,6 +53,14 @@ internal sealed class AssemblyAnalyzer
     private static void CollectPublicTypes(TypeDefinition type, List<TypeDefinition> publicTypes)
     {
         if (!IsPublicType(type))
+        {
+            return;
+        }
+
+        // Skip ABI namespace types — these are source generator implementation details,
+        // not WinRT types to be included in the .winmd.
+        if (type.Namespace is Utf8String ns &&
+            (ns.AsSpan().SequenceEqual("ABI"u8) || ns.AsSpan().StartsWith("ABI."u8)))
         {
             return;
         }

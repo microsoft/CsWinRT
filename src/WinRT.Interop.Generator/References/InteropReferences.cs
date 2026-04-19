@@ -167,7 +167,7 @@ internal sealed class InteropReferences
         name: InteropNames.WindowsRuntimeSdkProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: default);
+        publicKeyOrToken: WellKnownPublicKeyTokens.CsWinRT);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Sdk.Xaml.Projection.dll</c>.
@@ -177,7 +177,7 @@ internal sealed class InteropReferences
         name: InteropNames.WindowsRuntimeSdkXamlProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: default);
+        publicKeyOrToken: WellKnownPublicKeyTokens.CsWinRT);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Projection.dll</c>.
@@ -187,7 +187,7 @@ internal sealed class InteropReferences
         name: InteropNames.WindowsRuntimeProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: default);
+        publicKeyOrToken: WellKnownPublicKeyTokens.CsWinRT);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Attribute"/>.

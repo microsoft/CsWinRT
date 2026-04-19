@@ -206,9 +206,25 @@ internal partial class InteropTypeDefinitionBuilder
                     module: module,
                     out proxyType);
             }
+            else if (userDefinedTypeDefinition.DeclaringModule is { Assembly.IsWindowsRuntimeComponentAssembly: true })
+            {
+                // For authored component types, the runtime class name is the type's own fully-qualified name.
+                InteropTypeDefinitionBuilder.Proxy(
+                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopReferences.RuntimeContext),
+                    mappedMetadata: null,
+                    runtimeClassName: MetadataTypeNameGenerator.GetMetadataTypeName(userDefinedType, useWindowsUIXamlProjections),
+                    metadataTypeName: null,
+                    mappedType: null,
+                    referenceType: null,
+                    comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out proxyType);
+            }
             else
             {
-                // Get the most derived Windows Runtime interface for the type, to use for the runtime class name
+                // For non-authored user-defined types, get the most derived Windows Runtime interface to use for the runtime class name
                 if (!WindowsRuntimeTypeAnalyzer.TryGetMostDerivedWindowsRuntimeInterfaceType(
                     type: userDefinedType,
                     interopReferences: interopReferences,
@@ -219,7 +235,6 @@ internal partial class InteropTypeDefinitionBuilder
                     throw WellKnownInteropExceptions.PrimaryWindowsRuntimeInterfaceNotFoundError(userDefinedType);
                 }
 
-                // Otherwise, we'll use the runtime class name of the first implemented Windows Runtime interface
                 InteropTypeDefinitionBuilder.Proxy(
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
                     name: InteropUtf8NameFactory.TypeName(userDefinedType, interopReferences.RuntimeContext),

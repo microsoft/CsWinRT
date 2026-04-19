@@ -45,11 +45,11 @@ internal partial class ProjectionGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
-        GenerateRspFile(args, out string outputFolder, out string rspFile, out HashSet<string> projectionReferenceAssemblies);
+        GenerateRspFile(args, out string outputFolder, out string rspFile, out HashSet<string> projectionReferenceAssemblies, out bool hasTypesToProject);
 
         string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
 
-        return new ProjectionGeneratorProcessingState(outputFolder, rspFile, referencesWithoutProjections);
+        return new ProjectionGeneratorProcessingState(outputFolder, rspFile, referencesWithoutProjections, hasTypesToProject);
     }
 
     /// <summary>
@@ -110,75 +110,141 @@ internal partial class ProjectionGenerator
     /// <param name="outputFolder">The folder where sources will be generated.</param>
     /// <param name="rspFile">The generated response file for running <c>cswinrt.exe</c>.</param>
     /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used to generate the response file.</param>
+    /// <param name="hasTypesToProject">Whether any types were found to include in the projection.</param>
     private static void GenerateRspFile(
         ProjectionGeneratorArgs args,
         out string outputFolder,
         out string rspFile,
-        out HashSet<string> projectionReferenceAssemblies)
+        out HashSet<string> projectionReferenceAssemblies,
+        out bool hasTypesToProject)
     {
         args.Token.ThrowIfCancellationRequested();
 
         outputFolder = GetTempFolder();
         rspFile = Path.Combine(outputFolder, "ProjectionGenerator.rsp");
         projectionReferenceAssemblies = [];
+        hasTypesToProject = false;
 
         using StreamWriter fileStream = new(rspFile);
 
-        PathAssemblyResolver resolver = new(args.ReferenceAssemblyPaths);
+        // Filter out .winmd files from the resolver paths — they use version 255.255
+        // which AsmResolver 6.0.0-rc.1 cannot handle when creating a RuntimeContext.
+        string[] resolverPaths = [.. args.ReferenceAssemblyPaths
+            .Where(p => !p.EndsWith(".winmd", StringComparison.OrdinalIgnoreCase))];
+
+        PathAssemblyResolver resolver = new(resolverPaths);
 
         bool isWindowsSdkMode = args.WindowsSdkOnly || args.WindowsUIXamlProjection;
+        bool isComponentMode = args.AssemblyName == "WinRT.Component";
 
-        foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
+        // In component mode, read the component .winmd files directly to get the WinRT type
+        // includes. The .winmd is the authoritative source of WinRT types and only contains
+        // the public WinRT API surface without implementation details like ABI types.
+        // We identify component WinMDs by checking if a corresponding assembly with
+        // [WindowsRuntimeComponentAssembly] exists in the reference assemblies.
+        if (isComponentMode)
         {
-            ModuleDefinition moduleDefinition = ModuleDefinition.FromFile(referenceAssemblyPath, resolver.ReaderParameters);
+            // Collect the names of all component assemblies from the references
+            HashSet<string> componentAssemblyNames = [];
 
-            // Check if this is a reference assembly as the ones we are regenerating are reference assemblies.
-            if (!IsReferenceAssembly(moduleDefinition) || !IsWindowsRuntimeReferenceAssembly(moduleDefinition))
+            foreach (string refPath in args.ReferenceAssemblyPaths)
             {
-                continue;
-            }
-
-            bool isWindowsSdk = IsWindowsSdkAssembly(moduleDefinition);
-
-            // By default, Windows SDK types are excluded (they go into WinRT.Sdk.Projection.dll
-            // and WinRT.Sdk.Xaml.Projection.dll). In WindowsSdkOnly mode where we are generating
-            // those dlls is when we will include them.
-            if (isWindowsSdk && !isWindowsSdkMode)
-            {
-                // Track this as a projection assembly so it's excluded from compilation references.
-                // WinRT.Sdk.Projection.dll and WinRT.Sdk.Xaml.Projection.dll replace these types.
-                _ = projectionReferenceAssemblies.Add(referenceAssemblyPath);
-                continue;
-            }
-
-            // Skip other projection binaries we may get.
-            if (!isWindowsSdk && isWindowsSdkMode)
-            {
-                continue;
-            }
-
-            _ = projectionReferenceAssemblies.Add(referenceAssemblyPath);
-
-            if (moduleDefinition.Assembly is not null)
-            {
-                if (isWindowsSdk)
+                if (refPath.EndsWith(".winmd", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Write the filtes for the Windows SDK projection mode.
-                    WriteWindowsSdkFilters(fileStream, args.WindowsUIXamlProjection);
-
                     continue;
                 }
-                else if (moduleDefinition.Assembly.Name == "Microsoft.WinUI")
+
+                ModuleDefinition refModule = ModuleDefinition.FromFile(refPath, resolver.ReaderParameters);
+
+                if (IsComponentAssembly(refModule) && refModule.Assembly?.Name is Utf8String name)
                 {
-                    // In addition to projecting the individual types, make sure
-                    // the additions get included by including the namespace.
-                    fileStream.WriteLine($"-include Microsoft.UI");
+                    _ = componentAssemblyNames.Add(name.Value);
                 }
             }
 
-            foreach (TypeDefinition exportedType in moduleDefinition.TopLevelTypes)
+            // Scan WinMD files matching component assembly names (e.g. "MyComponent.winmd")
+            foreach (string winmdPath in args.WinMDPaths)
             {
-                fileStream.WriteLine($"-include {exportedType.FullName}");
+                string winmdFileName = Path.GetFileNameWithoutExtension(winmdPath);
+
+                if (!componentAssemblyNames.Contains(winmdFileName))
+                {
+                    continue;
+                }
+
+                ModuleDefinition winmdModule = ModuleDefinition.FromFile(winmdPath, resolver.ReaderParameters, createRuntimeContext: false);
+
+                foreach (TypeDefinition type in winmdModule.TopLevelTypes)
+                {
+                    if (type.Name?.Value is "<Module>")
+                    {
+                        continue;
+                    }
+
+                    fileStream.WriteLine($"-include {type.FullName}");
+                    hasTypesToProject = true;
+                }
+            }
+        }
+
+        // In non-component mode, scan reference assemblies to determine type includes.
+        // Component mode handles this above via WinMD scanning.
+        if (!isComponentMode)
+        {
+            foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
+            {
+                ModuleDefinition moduleDefinition = ModuleDefinition.FromFile(referenceAssemblyPath, resolver.ReaderParameters);
+
+                // For non-component assemblies, check if this is a WinRT reference assembly.
+                if (!IsReferenceAssembly(moduleDefinition) || !IsWindowsRuntimeReferenceAssembly(moduleDefinition))
+                {
+                    continue;
+                }
+
+                bool isWindowsSdk = IsWindowsSdkAssembly(moduleDefinition);
+
+                // By default, Windows SDK types are excluded (they go into WinRT.Sdk.Projection.dll
+                // and WinRT.Sdk.Xaml.Projection.dll). In WindowsSdkOnly mode where we are generating
+                // those dlls is when we will include them.
+                if (isWindowsSdk && !isWindowsSdkMode)
+                {
+                    // Track this as a projection assembly so it's excluded from compilation references.
+                    // WinRT.Sdk.Projection.dll and WinRT.Sdk.Xaml.Projection.dll replace these types.
+                    _ = projectionReferenceAssemblies.Add(referenceAssemblyPath);
+                    continue;
+                }
+
+                // Skip other projection binaries we may get.
+                if (!isWindowsSdk && isWindowsSdkMode)
+                {
+                    continue;
+                }
+
+                _ = projectionReferenceAssemblies.Add(referenceAssemblyPath);
+
+                if (moduleDefinition.Assembly is not null)
+                {
+                    if (isWindowsSdk)
+                    {
+                        // Write the filtes for the Windows SDK projection mode.
+                        WriteWindowsSdkFilters(fileStream, args.WindowsUIXamlProjection);
+                        hasTypesToProject = true;
+
+                        continue;
+                    }
+                    else if (moduleDefinition.Assembly.Name == "Microsoft.WinUI")
+                    {
+                        // In addition to projecting the individual types, make sure
+                        // the additions get included by including the namespace.
+                        fileStream.WriteLine($"-include Microsoft.UI");
+                    }
+                }
+
+                foreach (TypeDefinition exportedType in moduleDefinition.TopLevelTypes)
+                {
+                    fileStream.WriteLine($"-include {exportedType.FullName}");
+                    hasTypesToProject = true;
+                }
             }
         }
 
@@ -200,6 +266,13 @@ internal partial class ProjectionGenerator
         fileStream.WriteLine($"-target {args.TargetFramework}");
         fileStream.WriteLine($"-input {args.WindowsMetadata}");
         fileStream.WriteLine($"-output \"{outputFolder}\"");
+
+        // When generating WinRT.Component.dll, pass -component to cswinrt.exe to enable
+        // component-specific code generation (activation factories, exclusive-to interfaces, etc.)
+        if (args.AssemblyName == "WinRT.Component")
+        {
+            fileStream.WriteLine("-component");
+        }
 
         foreach (string winmdPath in args.WinMDPaths)
         {
@@ -284,5 +357,16 @@ internal partial class ProjectionGenerator
         return
             (moduleDefinition.Assembly?.Name is Utf8String sdkName && sdkName.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET"u8)) ||
             (moduleDefinition.Assembly?.Name is Utf8String xamlName && xamlName.AsSpan().SequenceEqual("Microsoft.Windows.UI.Xaml"u8));
+    }
+
+    /// <summary>
+    /// Checks if the specified module definition represents a Windows Runtime component assembly
+    /// (i.e. an assembly annotated with <c>[WindowsRuntimeComponentAssembly]</c>).
+    /// </summary>
+    /// <param name="moduleDefinition">The module definition to check.</param>
+    /// <returns><c>true</c> if the module is a Windows Runtime component assembly; otherwise, <c>false</c>.</returns>
+    private static bool IsComponentAssembly(ModuleDefinition moduleDefinition)
+    {
+        return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComponentAssemblyAttribute"u8);
     }
 }

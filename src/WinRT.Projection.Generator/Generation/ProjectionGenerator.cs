@@ -54,10 +54,19 @@ internal static partial class ProjectionGenerator
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
+            ConsoleApp.LogError($"Unhandled exception during processing: {e}");
             throw new UnhandledProjectionGeneratorException("processing", e);
         }
 
         args.Token.ThrowIfCancellationRequested();
+
+        // If no types were found to project (e.g., component mode with no component references),
+        // skip source generation and emit phases entirely - no DLL will be produced.
+        if (!processingState.HasTypesToProject)
+        {
+            ConsoleApp.Log("No types to project, skipping generation");
+            return;
+        }
 
         // Invoke 'cswinrt.exe' to generate the projection sources
         try

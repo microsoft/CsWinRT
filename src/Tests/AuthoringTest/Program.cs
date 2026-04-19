@@ -244,7 +244,7 @@ namespace AuthoringTest
 
         public static object CreateRecordStruct() => default(CustomPropertyRecordStructType);
     }
-    
+
     public sealed partial class CustomPropertyProviderWithExplicitImplementation : ICustomPropertyProvider
     {
         public Type Type => typeof(CustomPropertyProviderWithExplicitImplementation);
@@ -820,7 +820,7 @@ namespace AuthoringTest
         }
     }
     */
-    
+
     public sealed class CustomVector : IList<DisposableClass>
     {
         private IList<DisposableClass> _list;
@@ -1017,7 +1017,7 @@ namespace AuthoringTest
             DelegateEvent?.Invoke(value);
         }
     }
-    
+
     public static class ButtonUtils
     {
         public static Button GetButton()
@@ -1304,7 +1304,7 @@ namespace AuthoringTest
             throw new NotImplementedException();
         }
     }
-    
+
     public sealed class SingleInterfaceClass : IDouble
     {
         private double _number;
@@ -1640,7 +1640,7 @@ namespace AuthoringTest
             _list.RemoveAt(index);
         }
     }
-    
+
     public sealed class CustomDictionary2 : IDictionary<string, int>
     {
         private readonly Dictionary<string, int> _dictionary = new Dictionary<string, int>();
@@ -1714,7 +1714,7 @@ namespace AuthoringTest
     public sealed class TestCollection : CollectionBase
     {
     }
-    
+
     public partial interface IPartialInterface
     {
         public string GetNumberAsString();
@@ -1929,433 +1929,433 @@ namespace AuthoringTest
             return _text;
         }
     }
-}
 
-namespace AnotherNamespace
-{
-    internal partial class PartialClass3
+    namespace AnotherNamespace
     {
-        public void InternalFunction()
+        internal partial class PartialClass3
         {
-        }
-    }
-
-    partial class PartialClass3
-    {
-        public void InternalFunction2()
-        {
-        }
-    }
-
-    internal class InternalClass
-    {
-        public void InternalFunction()
-        {
-        }
-    }
-
-    // Out parameters on interface methods
-    public interface IOutParams
-    {
-        void GetData(out string result);
-        void GetStruct(out BasicStruct result);
-        bool TryParse(string input, out int value);
-    }
-
-    // Nullable/IReference parameters
-    public sealed class NullableParamClass
-    {
-        public int? NullableIntProp { get; set; }
-        public double? NullableDoubleProp { get; set; }
-        public bool? NullableBoolProp { get; set; }
-
-        public int GetValueOrDefault(int? value, int defaultValue)
-        {
-            return value ?? defaultValue;
-        }
-
-        public int? TryGetValue(string key)
-        {
-            return null;
-        }
-    }
-
-    // Mapped type parameters (DateTimeOffset, TimeSpan, Uri, Exception)
-    public sealed class MappedTypeParamClass
-    {
-        public DateTimeOffset GetTimestamp()
-        {
-            return DateTimeOffset.UtcNow;
-        }
-
-        public void SetTimestamp(DateTimeOffset timestamp) { }
-
-        public TimeSpan GetDuration()
-        {
-            return TimeSpan.FromSeconds(1);
-        }
-
-        public void SetDuration(TimeSpan duration) { }
-
-        public Uri GetUri()
-        {
-            return new Uri("https://example.com");
-        }
-
-        public void SetUri(Uri uri) { }
-
-        public string FormatTimestamp(DateTimeOffset timestamp, TimeSpan offset)
-        {
-            return (timestamp + offset).ToString();
-        }
-    }
-
-    // Mixed Span and regular array parameters
-    public sealed class MixedArrayClass
-    {
-        public void CopyToSpan(ReadOnlySpan<int> source, Span<int> destination)
-        {
-            source.CopyTo(destination);
-        }
-
-        public int[] TransformArray(ReadOnlySpan<int> input)
-        {
-            return input.ToArray();
-        }
-
-        public void FillWithIndex(Span<int> buffer)
-        {
-            for (int i = 0; i < buffer.Length; i++)
+            public void InternalFunction()
             {
-                buffer[i] = i;
             }
         }
 
-        public void ProcessAndOutput(ReadOnlySpan<BasicStruct> input, out BasicStruct[] output)
+        partial class PartialClass3
         {
-            output = input.ToArray();
-        }
-    }
-
-    // Classes implementing IDisposable + custom interface
-    public interface ICustomResource
-    {
-        string Name { get; }
-        void Reset();
-    }
-
-    public sealed class DisposableResource : IDisposable, ICustomResource
-    {
-        public string Name => "Resource";
-        public void Reset() { }
-        public void Dispose() { }
-    }
-
-    // Multiple constructors (3+)
-    public sealed class MultiConstructorClass
-    {
-        private readonly string _name;
-        private readonly int _value;
-        private readonly BasicStruct _data;
-
-        public MultiConstructorClass()
-        {
-            _name = "";
-            _value = 0;
-            _data = default;
+            public void InternalFunction2()
+            {
+            }
         }
 
-        public MultiConstructorClass(string name)
+        internal class InternalClass
         {
-            _name = name;
-            _value = 0;
-            _data = default;
+            public void InternalFunction()
+            {
+            }
         }
 
-        public MultiConstructorClass(string name, int value)
+        // Out parameters on interface methods
+        public interface IOutParams
         {
-            _name = name;
-            _value = value;
-            _data = default;
+            void GetData(out string result);
+            void GetStruct(out BasicStruct result);
+            bool TryParse(string input, out int value);
         }
 
-        public MultiConstructorClass(string name, int value, BasicStruct data)
+        // Nullable/IReference parameters
+        public sealed class NullableParamClass
         {
-            _name = name;
-            _value = value;
-            _data = data;
+            public int? NullableIntProp { get; set; }
+            public double? NullableDoubleProp { get; set; }
+            public bool? NullableBoolProp { get; set; }
+
+            public int GetValueOrDefault(int? value, int defaultValue)
+            {
+                return value ?? defaultValue;
+            }
+
+            public int? TryGetValue(string key)
+            {
+                return null;
+            }
         }
 
-        public string Name => _name;
-        public int Value => _value;
-        public BasicStruct Data => _data;
-    }
-
-    // Static properties returning complex types
-    public sealed class StaticComplexProps
-    {
-        public static string DefaultName => "Default";
-        public static BasicStruct DefaultStruct => new() { X = 1, Y = 2 };
-        public static int MaxCount { get; set; } = 100;
-    }
-
-    // Multiple overloaded methods with DefaultOverload
-    public sealed class OverloadedMethodClass
-    {
-        [Windows.Foundation.Metadata.DefaultOverload()]
-        public string Format(int value)
+        // Mapped type parameters (DateTimeOffset, TimeSpan, Uri, Exception)
+        public sealed class MappedTypeParamClass
         {
-            return value.ToString();
+            public DateTimeOffset GetTimestamp()
+            {
+                return DateTimeOffset.UtcNow;
+            }
+
+            public void SetTimestamp(DateTimeOffset timestamp) { }
+
+            public TimeSpan GetDuration()
+            {
+                return TimeSpan.FromSeconds(1);
+            }
+
+            public void SetDuration(TimeSpan duration) { }
+
+            public Uri GetUri()
+            {
+                return new Uri("https://example.com");
+            }
+
+            public void SetUri(Uri uri) { }
+
+            public string FormatTimestamp(DateTimeOffset timestamp, TimeSpan offset)
+            {
+                return (timestamp + offset).ToString();
+            }
         }
 
-        public string Format(double value)
+        // Mixed Span and regular array parameters
+        public sealed class MixedArrayClass
         {
-            return value.ToString("F2");
+            public void CopyToSpan(ReadOnlySpan<int> source, Span<int> destination)
+            {
+                source.CopyTo(destination);
+            }
+
+            public int[] TransformArray(ReadOnlySpan<int> input)
+            {
+                return input.ToArray();
+            }
+
+            public void FillWithIndex(Span<int> buffer)
+            {
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    buffer[i] = i;
+                }
+            }
+
+            public void ProcessAndOutput(ReadOnlySpan<BasicStruct> input, out BasicStruct[] output)
+            {
+                output = input.ToArray();
+            }
         }
 
-        public string Format(string value)
+        // Classes implementing IDisposable + custom interface
+        public interface ICustomResource
         {
-            return value;
+            string Name { get; }
+            void Reset();
         }
 
-        [Windows.Foundation.Metadata.DefaultOverload()]
-        public static int Parse(string text)
+        public sealed class DisposableResource : IDisposable, ICustomResource
         {
-            return int.Parse(text);
+            public string Name => "Resource";
+            public void Reset() { }
+            public void Dispose() { }
         }
 
-        public static int Parse(string text, int radix)
+        // Multiple constructors (3+)
+        public sealed class MultiConstructorClass
         {
-            return Convert.ToInt32(text, radix);
-        }
-    }
+            private readonly string _name;
+            private readonly int _value;
+            private readonly BasicStruct _data;
 
-    // Nested structs (2 levels)
-    public struct InnerStruct
-    {
-        public int A;
-        public int B;
-    }
+            public MultiConstructorClass()
+            {
+                _name = "";
+                _value = 0;
+                _data = default;
+            }
 
-    public struct OuterStruct
-    {
-        public InnerStruct Inner;
-        public int C;
-    }
+            public MultiConstructorClass(string name)
+            {
+                _name = name;
+                _value = 0;
+                _data = default;
+            }
 
-    // Delegates with 3+ parameters and struct params
-    public delegate void MultiParamDelegate(int a, string b, double c);
-    public delegate bool StructParamDelegate(BasicStruct data, int index);
-    public delegate BasicStruct StructReturnDelegate(string name);
+            public MultiConstructorClass(string name, int value)
+            {
+                _name = name;
+                _value = value;
+                _data = default;
+            }
 
-    // Flags enum edge cases
-    [Flags]
-    public enum DetailedFlags : uint
-    {
-        None = 0,
-        Read = 1,
-        Write = 2,
-        Execute = 4,
-        ReadWrite = Read | Write,
-        All = Read | Write | Execute
-    }
+            public MultiConstructorClass(string name, int value, BasicStruct data)
+            {
+                _name = name;
+                _value = value;
+                _data = data;
+            }
 
-    // Enum without Flags (signed)
-    public enum Priority
-    {
-        Low = -1,
-        Normal = 0,
-        High = 1,
-        Critical = 2
-    }
-
-    // IAsyncAction (no return value)
-    public sealed class AsyncMethodClass
-    {
-        public Windows.Foundation.IAsyncAction DoWorkAsync()
-        {
-            return Task.CompletedTask.AsAsyncAction();
+            public string Name => _name;
+            public int Value => _value;
+            public BasicStruct Data => _data;
         }
 
-        public Windows.Foundation.IAsyncOperation<int> ComputeAsync()
+        // Static properties returning complex types
+        public sealed class StaticComplexProps
         {
-            return Task.FromResult(42).AsAsyncOperation();
+            public static string DefaultName => "Default";
+            public static BasicStruct DefaultStruct => new() { X = 1, Y = 2 };
+            public static int MaxCount { get; set; } = 100;
         }
-    }
 
-    // Version attribute on methods/properties
-    public interface IVersionedInterface
-    {
+        // Multiple overloaded methods with DefaultOverload
+        public sealed class OverloadedMethodClass
+        {
+            [Windows.Foundation.Metadata.DefaultOverload()]
+            public string Format(int value)
+            {
+                return value.ToString();
+            }
+
+            public string Format(double value)
+            {
+                return value.ToString("F2");
+            }
+
+            public string Format(string value)
+            {
+                return value;
+            }
+
+            [Windows.Foundation.Metadata.DefaultOverload()]
+            public static int Parse(string text)
+            {
+                return int.Parse(text);
+            }
+
+            public static int Parse(string text, int radix)
+            {
+                return Convert.ToInt32(text, radix);
+            }
+        }
+
+        // Nested structs (2 levels)
+        public struct InnerStruct
+        {
+            public int A;
+            public int B;
+        }
+
+        public struct OuterStruct
+        {
+            public InnerStruct Inner;
+            public int C;
+        }
+
+        // Delegates with 3+ parameters and struct params
+        public delegate void MultiParamDelegate(int a, string b, double c);
+        public delegate bool StructParamDelegate(BasicStruct data, int index);
+        public delegate BasicStruct StructReturnDelegate(string name);
+
+        // Flags enum edge cases
+        [Flags]
+        public enum DetailedFlags : uint
+        {
+            None = 0,
+            Read = 1,
+            Write = 2,
+            Execute = 4,
+            ReadWrite = Read | Write,
+            All = Read | Write | Execute
+        }
+
+        // Enum without Flags (signed)
+        public enum Priority
+        {
+            Low = -1,
+            Normal = 0,
+            High = 1,
+            Critical = 2
+        }
+
+        // IAsyncAction (no return value)
+        public sealed class AsyncMethodClass
+        {
+            public Windows.Foundation.IAsyncAction DoWorkAsync()
+            {
+                return Task.CompletedTask.AsAsyncAction();
+            }
+
+            public Windows.Foundation.IAsyncOperation<int> ComputeAsync()
+            {
+                return Task.FromResult(42).AsAsyncOperation();
+            }
+        }
+
+        // Version attribute on methods/properties
+        public interface IVersionedInterface
+        {
+            [Windows.Foundation.Metadata.Version(1u)]
+            void OriginalMethod();
+
+            [Windows.Foundation.Metadata.Version(2u)]
+            void NewerMethod();
+
+            [Windows.Foundation.Metadata.Version(1u)]
+            string Name { get; }
+
+            [Windows.Foundation.Metadata.Version(2u)]
+            int Count { get; }
+        }
+
+        // Deprecated members
+        public sealed class DeprecatedMembersClass
+        {
+            [Windows.Foundation.Metadata.Deprecated("Use NewMethod instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
+            public void OldMethod() { }
+
+            public void NewMethod() { }
+
+            [Windows.Foundation.Metadata.Deprecated("Use NewProp instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
+            public string OldProp => "";
+
+            public string NewProp => "";
+        }
+
+        // Class implementing INotifyPropertyChanged + custom interface
+        public sealed class NotifyWithCustomInterface : System.ComponentModel.INotifyPropertyChanged, ICustomResource
+        {
+            public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+            public string Name { get; set; } = "";
+
+            public void Reset()
+            {
+                Name = "";
+                PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Name)));
+            }
+        }
+
+        // Class with both factory and static members
+        public sealed class FactoryAndStaticClass
+        {
+            private readonly string _id;
+
+            public FactoryAndStaticClass(string id)
+            {
+                _id = id;
+            }
+
+            public FactoryAndStaticClass(string id, int version)
+            {
+                _id = $"{id}_v{version}";
+            }
+
+            public string Id => _id;
+
+            public static string DefaultId => "default";
+            public static FactoryAndStaticClass CreateDefault()
+            {
+                return new FactoryAndStaticClass(DefaultId);
+            }
+        }
+
+        // Interface with properties, methods, and events combined
+        public interface IFullFeaturedInterface
+        {
+            string Name { get; set; }
+            int Count { get; }
+
+            void DoWork();
+            string GetData(int index);
+
+            event EventHandler<string> DataChanged;
+        }
+
+        public sealed class FullFeaturedClass : IFullFeaturedInterface
+        {
+            public string Name { get; set; } = "";
+            public int Count => 0;
+
+            public void DoWork() { }
+            public string GetData(int index) => "";
+
+            public event EventHandler<string> DataChanged;
+
+            public void RaiseDataChanged()
+            {
+                DataChanged?.Invoke(this, "changed");
+            }
+        }
+
+        // Contract versioning
+        [Windows.Foundation.Metadata.ApiContract]
+        public enum AnotherNamespaceContract { }
+
+        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 1u)]
+        public sealed class ContractVersionedClass
+        {
+            public string Name { get; set; } = "";
+        }
+
+        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+        public sealed class ContractVersionedClassV2
+        {
+            public string Name { get; set; } = "";
+            public int Count { get; set; }
+        }
+
+        // Class evolving across contract versions with versioned members and interfaces
+        public interface IContractVersionedMembersV1
+        {
+            string TrackName { get; }
+        }
+
+        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+        public interface IContractVersionedMembersV2
+        {
+            int Volume { get; }
+        }
+
+        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 1u)]
+        public sealed class ContractVersionedMembersClass : IContractVersionedMembersV1, IContractVersionedMembersV2
+        {
+            public string TrackName { get; set; } = "";
+
+            [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+            public int Volume { get; set; }
+
+            [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+            public string GetNowPlaying() => $"{TrackName} (Vol={Volume})";
+
+            [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+            public event System.EventHandler<string> TrackChanged;
+
+            public void RaiseTrackChanged()
+            {
+                TrackChanged?.Invoke(this, TrackName);
+            }
+        }
+
+        // Class evolving across Version attribute versions with versioned members and interfaces
+        public interface IVersionedMembersV1
+        {
+            string Message { get; }
+        }
+
+        [Windows.Foundation.Metadata.Version(2u)]
+        public interface IVersionedMembersV2
+        {
+            double Urgency { get; }
+        }
+
         [Windows.Foundation.Metadata.Version(1u)]
-        void OriginalMethod();
-
-        [Windows.Foundation.Metadata.Version(2u)]
-        void NewerMethod();
-
-        [Windows.Foundation.Metadata.Version(1u)]
-        string Name { get; }
-
-        [Windows.Foundation.Metadata.Version(2u)]
-        int Count { get; }
-    }
-
-    // Deprecated members
-    public sealed class DeprecatedMembersClass
-    {
-        [Windows.Foundation.Metadata.Deprecated("Use NewMethod instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
-        public void OldMethod() { }
-
-        public void NewMethod() { }
-
-        [Windows.Foundation.Metadata.Deprecated("Use NewProp instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
-        public string OldProp => "";
-
-        public string NewProp => "";
-    }
-
-    // Class implementing INotifyPropertyChanged + custom interface
-    public sealed class NotifyWithCustomInterface : System.ComponentModel.INotifyPropertyChanged, ICustomResource
-    {
-        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
-        public string Name { get; set; } = "";
-
-        public void Reset()
+        public sealed class VersionedMembersClass : IVersionedMembersV1, IVersionedMembersV2
         {
-            Name = "";
-            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Name)));
-        }
-    }
+            public string Message { get; set; } = "";
 
-    // Class with both factory and static members
-    public sealed class FactoryAndStaticClass
-    {
-        private readonly string _id;
+            [Windows.Foundation.Metadata.Version(2u)]
+            public double Urgency { get; set; }
 
-        public FactoryAndStaticClass(string id)
-        {
-            _id = id;
-        }
+            [Windows.Foundation.Metadata.Version(2u)]
+            public string Format() => $"{Message}: {Urgency}";
 
-        public FactoryAndStaticClass(string id, int version)
-        {
-            _id = $"{id}_v{version}";
-        }
+            [Windows.Foundation.Metadata.Version(2u)]
+            public event System.EventHandler<double> UrgencyChanged;
 
-        public string Id => _id;
-
-        public static string DefaultId => "default";
-        public static FactoryAndStaticClass CreateDefault()
-        {
-            return new FactoryAndStaticClass(DefaultId);
-        }
-    }
-
-    // Interface with properties, methods, and events combined
-    public interface IFullFeaturedInterface
-    {
-        string Name { get; set; }
-        int Count { get; }
-
-        void DoWork();
-        string GetData(int index);
-
-        event EventHandler<string> DataChanged;
-    }
-
-    public sealed class FullFeaturedClass : IFullFeaturedInterface
-    {
-        public string Name { get; set; } = "";
-        public int Count => 0;
-
-        public void DoWork() { }
-        public string GetData(int index) => "";
-
-        public event EventHandler<string> DataChanged;
-
-        public void RaiseDataChanged()
-        {
-            DataChanged?.Invoke(this, "changed");
-        }
-    }
-
-    // Contract versioning
-    [Windows.Foundation.Metadata.ApiContract]
-    public enum AnotherNamespaceContract { }
-
-    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 1u)]
-    public sealed class ContractVersionedClass
-    {
-        public string Name { get; set; } = "";
-    }
-
-    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
-    public sealed class ContractVersionedClassV2
-    {
-        public string Name { get; set; } = "";
-        public int Count { get; set; }
-    }
-
-    // Class evolving across contract versions with versioned members and interfaces
-    public interface IContractVersionedMembersV1
-    {
-        string TrackName { get; }
-    }
-
-    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
-    public interface IContractVersionedMembersV2
-    {
-        int Volume { get; }
-    }
-
-    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 1u)]
-    public sealed class ContractVersionedMembersClass : IContractVersionedMembersV1, IContractVersionedMembersV2
-    {
-        public string TrackName { get; set; } = "";
-
-        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
-        public int Volume { get; set; }
-
-        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
-        public string GetNowPlaying() => $"{TrackName} (Vol={Volume})";
-
-        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
-        public event System.EventHandler<string> TrackChanged;
-
-        public void RaiseTrackChanged()
-        {
-            TrackChanged?.Invoke(this, TrackName);
-        }
-    }
-
-    // Class evolving across Version attribute versions with versioned members and interfaces
-    public interface IVersionedMembersV1
-    {
-        string Message { get; }
-    }
-
-    [Windows.Foundation.Metadata.Version(2u)]
-    public interface IVersionedMembersV2
-    {
-        double Urgency { get; }
-    }
-
-    [Windows.Foundation.Metadata.Version(1u)]
-    public sealed class VersionedMembersClass : IVersionedMembersV1, IVersionedMembersV2
-    {
-        public string Message { get; set; } = "";
-
-        [Windows.Foundation.Metadata.Version(2u)]
-        public double Urgency { get; set; }
-
-        [Windows.Foundation.Metadata.Version(2u)]
-        public string Format() => $"{Message}: {Urgency}";
-
-        [Windows.Foundation.Metadata.Version(2u)]
-        public event System.EventHandler<double> UrgencyChanged;
-
-        public void RaiseUrgencyChanged()
-        {
-            UrgencyChanged?.Invoke(this, Urgency);
+            public void RaiseUrgencyChanged()
+            {
+                UrgencyChanged?.Invoke(this, Urgency);
+            }
         }
     }
 }

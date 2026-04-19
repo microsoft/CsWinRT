@@ -6,6 +6,7 @@
 #include "code_writers.h"
 #include <concurrent_unordered_map.h>
 #include <concurrent_unordered_set.h>
+#include <concurrent_vector.h>
 
 namespace cswinrt
 {
@@ -42,7 +43,6 @@ namespace cswinrt
         { "public_enums", 0, 0, {}, "Used with embedded option to generate enums as public"},
         { "public_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces public in the projection (default is internal)"},
         { "idic_exclusiveto", 0, 0, {}, "Make exclusiveto interfaces support IDynamicInterfaceCastable (IDIC) for RCW scenarios (default is false)"},
-        { "partial_factory", 0, 0, {}, "Allows to provide an additional component activation factory (default is false)"},
         { "reference_projection", 0, 0, {}, "Generates a projection to be used as a reference assembly (default is false)"},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
@@ -111,7 +111,6 @@ Where <spec> is one or more of:
         settings.public_enums = args.exists("public_enums");
         settings.public_exclusiveto = args.exists("public_exclusiveto");
         settings.idic_exclusiveto = args.exists("idic_exclusiveto");
-        settings.partial_factory = args.exists("partial_factory");
         settings.reference_projection = args.exists("reference_projection");
         settings.input = args.files("input", database::is_database);
 
@@ -158,6 +157,7 @@ Where <spec> is one or more of:
             settings.addition_filter = { settings.include, settings.addition_exclude };
 
             std::set<TypeDef> componentActivatableClasses;
+            std::map<std::string, std::set<TypeDef>> componentActivatableClassesByModule;
             if (settings.component)
             {
                 for (auto&& [ns, members] : c.namespaces())
@@ -176,6 +176,9 @@ Where <spec> is one or more of:
                             if (attribute_name.second == "ActivatableAttribute" || attribute_name.second == "StaticAttribute")
                             {
                                 componentActivatableClasses.insert(type);
+                                std::filesystem::path db_path(type.get_database().path());
+                                auto module_name = db_path.stem().string();
+                                componentActivatableClassesByModule[module_name].insert(type);
                             }
                         }
                     }
@@ -250,11 +253,12 @@ Where <spec> is one or more of:
             task_group group;
             concurrency::concurrent_unordered_map<std::string, std::string> authoredTypeNameToMetadataTypeNameMap;
             concurrency::concurrent_unordered_map<std::string, std::string> defaultInterfaceEntries;
+            concurrency::concurrent_vector<std::pair<std::string, std::string>> exclusiveToInterfaceEntries;
             concurrency::concurrent_unordered_set<generic_abi_delegate> abiDelegateEntries;
             bool projectionFileWritten = false;
             for (auto&& ns_members : c.namespaces())
             {
-                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap, &defaultInterfaceEntries]
+                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &abiDelegateEntries, &authoredTypeNameToMetadataTypeNameMap, &defaultInterfaceEntries, &exclusiveToInterfaceEntries]
                 {
                     auto&& [ns, members] = ns_members;
                     std::string_view currentType = "";
@@ -345,6 +349,7 @@ Where <spec> is one or more of:
                                 {
                                     write_class(w, type);
                                     add_default_interface_entry(w, type, defaultInterfaceEntries);
+                                    add_exclusive_to_interface_entries(w, type, exclusiveToInterfaceEntries);
                                     add_metadata_type_entry(type, authoredTypeNameToMetadataTypeNameMap);
                                     if (settings.component && componentActivatableClasses.count(type) == 1)
                                     {
@@ -410,10 +415,6 @@ Where <spec> is one or more of:
                                     {
                                     case category::class_type:
                                         write_abi_class(w, type);
-                                        if (settings.component && componentActivatableClasses.count(type) == 1)
-                                        {
-                                            write_winrt_exposed_type_class(w, type, true);
-                                        }
                                         break;
                                     case category::delegate_type:
                                         write_abi_delegate(w, type);
@@ -461,11 +462,11 @@ Where <spec> is one or more of:
             
             if(settings.component)
             {
-                group.add([&componentActivatableClasses, &projectionFileWritten]
+                group.add([&componentActivatableClassesByModule, &projectionFileWritten]
                 {
                     writer wm;
                     write_file_header(wm);
-                    write_module_activation_factory(wm, componentActivatableClasses);
+                    write_module_activation_factory(wm, componentActivatableClassesByModule);
                     wm.flush_to_file(settings.output_folder / (std::string("WinRT_Module") + ".cs"));
                     projectionFileWritten = true;
                 });
@@ -481,43 +482,13 @@ Where <spec> is one or more of:
                 write_default_interfaces_class(sortedEntries);
             }
 
-            if (!authoredTypeNameToMetadataTypeNameMap.empty() && settings.component)
+            if (!exclusiveToInterfaceEntries.empty() && settings.component && !settings.reference_projection)
             {
-                writer metadataMappingTypeWriter("WinRT");
-                write_file_header(metadataMappingTypeWriter);
-                metadataMappingTypeWriter.write(R"(
-using System;
-
-namespace WinRT
-{
-internal static class AuthoringMetadataTypeInitializer
-{
-
-private static Type GetMetadataTypeMapping(Type type)
-{
-return type switch
-{
-%
-_ => null
-};
-}
-
-[System.Runtime.CompilerServices.ModuleInitializer]
-internal static void InitializeAuthoringTypeMapping()
-{
-ComWrappersSupport.RegisterAuthoringMetadataTypeLookup(new Func<Type, Type>(GetMetadataTypeMapping));
-}
-}
-})",
-                bind([&](writer& w) {
-                        for (auto&& [key, value] : authoredTypeNameToMetadataTypeNameMap)
-                        {
-                            w.write(R"(Type _ when type == typeof(%) => typeof(%),)", key, value);
-                            w.write("\n");
-                        }
-                }));
-            metadataMappingTypeWriter.flush_to_file(settings.output_folder / "AuthoringMetadataTypeMappingHelper.cs");
-        }
+                std::vector<std::pair<std::string, std::string>> sortedEntries(
+                    exclusiveToInterfaceEntries.begin(), exclusiveToInterfaceEntries.end());
+                std::sort(sortedEntries.begin(), sortedEntries.end());
+                write_exclusive_to_interfaces_class(sortedEntries);
+            }
 
             if (projectionFileWritten)
             {
