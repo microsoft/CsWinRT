@@ -20,12 +20,11 @@ namespace Windows.Foundation;
 /// progress and have a result use another interface, <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/>.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncoperation-1"/>
-#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
-#endif
 [Guid("9FC2B0BB-E446-44E2-AA61-9CAB8F636AF2")]
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 #endif
 public interface IAsyncOperation<TResult> : IAsyncInfo
 {

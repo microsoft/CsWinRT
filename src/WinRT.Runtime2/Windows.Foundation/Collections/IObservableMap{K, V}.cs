@@ -16,12 +16,11 @@ namespace Windows.Foundation.Collections;
 /// </summary>
 /// <typeparam name="K">The type of keys in the observable map.</typeparam>
 /// <typeparam name="V">The type of values in the observable map.</typeparam>
-#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
-#endif
 [Guid("65DF2BF5-BF39-41B5-AEBC-5A9D865E472B")]
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 #endif
 public interface IObservableMap<K, V> : IDictionary<K, V>, ICollection<KeyValuePair<K, V>>, IEnumerable<KeyValuePair<K, V>>, IEnumerable
 {

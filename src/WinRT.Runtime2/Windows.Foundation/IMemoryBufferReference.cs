@@ -13,12 +13,11 @@ namespace Windows.Foundation;
 /// <summary>
 /// Represents a reference to an <see href="https://learn.microsoft.com/uwp/api/windows.foundation.imemorybuffer"><c>IMemoryBuffer</c></see> object.
 /// </summary>
-#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
-#endif
 [Guid("FBC4DD29-245B-11E4-AF98-689423260CF8")]
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 #endif
 public interface IMemoryBufferReference : IDisposable
 {
