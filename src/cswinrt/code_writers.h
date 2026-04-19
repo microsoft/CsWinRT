@@ -346,6 +346,16 @@ namespace cswinrt
             }
         }
 
+        // Authored interfaces that aren't exclusive just use the same authored interface.
+        // It is only for exclusive ones where we generate our own.
+        if (authoredType &&
+            name_type_to_write == typedef_name_type::CCW &&
+            get_category(type) == category::interface_type &&
+            !is_exclusive_to(type))
+        {
+            name_type_to_write = typedef_name_type::Projected;
+        }
+
         if (name_type_to_write == typedef_name_type::EventSource && typeNamespace == "System")
         {
             w.write("global::WindowsRuntime.InteropServices.");
@@ -8849,6 +8859,12 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             return;
         }
 
+        // For component interfaces, if it isn't exclusive, we can just use the authored one.
+        if (settings.component && !is_exclusive_to(type))
+        {
+            return;
+        }
+
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
 
         w.write(R"(
@@ -9293,21 +9309,6 @@ protected override bool IsOverridableInterface(in Guid iid) => %%;
     {
         auto projected_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
         auto default_type_semantics = get_type_semantics(get_default_interface(type));
-        // auto default_interface_iid = for_typedef(w, default_type_semantics, [&](auto&& iface) { return w.write_temp("%", bind<write_iid_guid>(iface)); });
-
-        /*
-                    bind([&](writer& w) {
-                for_typedef(w, default_type_semantics, [&](TypeDef const& interface_type)
-                {
-                    if (size(interface_type.GenericParam()) != 0)
-                    {
-                        write_unsafe_accessor_for_iid(w, interface_type, true);
-                    }
-                });
-            }),
-            bind<write_iid_guid_with_type_semantics>(default_type_semantics),
-
-        */
 
         w.write(R"(
 public static unsafe class %Marshaller
@@ -10215,7 +10216,7 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
 
     void write_factory_class(writer& w, TypeDef const& type)
     {
-        auto factory_type_name = write_type_name_temp(w, type, "%ServerActivationFactory", typedef_name_type::CCW);
+        auto factory_type_name = w.write_temp("%ServerActivationFactory", type.TypeName());
         auto is_activatable = !is_static(type) && has_default_constructor(type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
 
