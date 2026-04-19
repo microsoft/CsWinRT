@@ -282,11 +282,13 @@ public partial class AuthoringExportTypesGenerator
                 using global::System.Diagnostics.CodeAnalysis;
                 using global::System.Runtime.CompilerServices;
                 using global::System.Runtime.InteropServices;
+                using global::System.Runtime.Versioning;
                 using global::WindowsRuntime.InteropServices;
+                using global::WindowsRuntime.InteropServices.Marshalling;
 
                 using HRESULT = int;
                 using unsafe HSTRING = void*;
-                using IActivationFactory = void;
+                using unsafe IActivationFactory = void*;
 
                 /// <summary>
                 /// Contains the native exports for activating types from the current project in an authoring scenario.
@@ -307,7 +309,7 @@ public partial class AuthoringExportTypesGenerator
                     /// <returns>The <c>HRESULT</c> for the operation.</returns>
                     /// <seealso href="https://learn.microsoft.com/en-us/previous-versions/br205771(v=vs.85)"/>
                     [UnmanagedCallersOnly(EntryPoint = nameof(DllGetActivationFactory), CallConvs = [typeof(CallConvStdcall)])]
-                    public static HRESULT DllGetActivationFactory(HSTRING activatableClassId, IActivationFactory** factory)
+                    public static HRESULT DllGetActivationFactory(HSTRING activatableClassId, IActivationFactory* factory)
                     {
                         const int E_INVALIDARG = unchecked((int)0x80070057);
                         const int CLASS_E_CLASSNOTAVAILABLE = unchecked((int)(0x80040111));
@@ -322,7 +324,7 @@ public partial class AuthoringExportTypesGenerator
 
                         try
                         {
-                            IActivationFactory* result = ManagedExports.GetActivationFactory(managedActivatableClassId);
+                            IActivationFactory result = ManagedExports.GetActivationFactory(managedActivatableClassId);
 
                             if ((void*)result is null)
                             {
@@ -365,7 +367,7 @@ public partial class AuthoringExportTypesGenerator
                     /// </summary>
                     /// <param name="value">The input <c>HSTRING</c> value to marshal.</param>
                     /// <returns>The resulting <see cref="ReadOnlySpan{T}"/> value.</returns>
-                    public static ReadOnlySpan<char> ConvertToManagedUnsafe(HSTRING value)
+                    public static unsafe ReadOnlySpan<char> ConvertToManagedUnsafe(HSTRING value)
                     {
                         uint length;
                         char* buffer = WindowsRuntimeImports.WindowsGetStringRawBuffer(value, &length);
@@ -382,7 +384,7 @@ public partial class AuthoringExportTypesGenerator
                     /// <see href="https://learn.microsoft.com/windows/win32/api/winstring/nf-winstring-windowsgetstringrawbuffer"/>
                     [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", EntryPoint = "WindowsGetStringRawBuffer", ExactSpelling = true)]
                     [SupportedOSPlatform("windows6.2")]
-                    public static extern char* WindowsGetStringRawBuffer(HSTRING @string, uint* length);
+                    public static unsafe extern char* WindowsGetStringRawBuffer(HSTRING @string, uint* length);
                 }
                 """, isMultiline: true);
 
