@@ -21,14 +21,14 @@ namespace Windows.Foundation;
 /// Contains number values that represent the location and size of a rectangle.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.rect"/>
-#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+[SupportedOSPlatform("Windows10.0.10240.0")]
+[ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Rect>")]
 [WindowsRuntimeReferenceType(typeof(Rect?))]
 [ABI.Windows.Foundation.RectComWrappersMarshaller]
-#elif WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
-[SupportedOSPlatform("Windows10.0.10240.0")]
-[ContractVersion(typeof(FoundationContract), 65536u)]
 #endif
 public struct Rect : IEquatable<Rect>, IFormattable
 {
