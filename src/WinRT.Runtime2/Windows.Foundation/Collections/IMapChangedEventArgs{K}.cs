@@ -13,12 +13,11 @@ namespace Windows.Foundation.Collections;
 /// Provides data for the changed event of a map collection.
 /// </summary>
 /// <typeparam name="K">The type of keys in the map.</typeparam>
-#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
-#endif
 [Guid("9939F4DF-050A-4C0F-AA60-77075F9C4777")]
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 #endif
 public interface IMapChangedEventArgs<K>
 {

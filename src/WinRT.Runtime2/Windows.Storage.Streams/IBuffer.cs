@@ -14,12 +14,11 @@ namespace Windows.Storage.Streams;
 /// <summary>
 /// Represents a referenced array of bytes used by byte stream read and write interfaces.
 /// </summary>
-#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
-#endif
 [Guid("905A0FE0-BC53-11DF-8C49-001E4FC686DA")]
 #if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 #endif
 public interface IBuffer
 {
