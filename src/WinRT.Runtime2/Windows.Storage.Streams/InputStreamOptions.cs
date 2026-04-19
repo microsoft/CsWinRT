@@ -20,12 +20,10 @@ namespace Windows.Storage.Streams;
 [WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Storage.Streams.InputStreamOptions>")]
 [WindowsRuntimeReferenceType(typeof(InputStreamOptions?))]
+[ABI.Windows.Storage.Streams.InputStreamOptionsComWrappersMarshaller]
 #elif WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
-#endif
-#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[ABI.Windows.Storage.Streams.InputStreamOptionsComWrappersMarshaller]
 #endif
 public enum InputStreamOptions : uint
 {

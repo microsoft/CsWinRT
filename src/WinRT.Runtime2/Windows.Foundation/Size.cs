@@ -22,12 +22,10 @@ namespace Windows.Foundation;
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Size>")]
 [WindowsRuntimeReferenceType(typeof(Size?))]
+[ABI.Windows.Foundation.SizeComWrappersMarshaller]
 #elif WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [SupportedOSPlatform("Windows10.0.10240.0")]
 [ContractVersion(typeof(FoundationContract), 65536u)]
-#endif
-#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
-[ABI.Windows.Foundation.SizeComWrappersMarshaller]
 #endif
 public struct Size : IEquatable<Size>, IFormattable
 {
