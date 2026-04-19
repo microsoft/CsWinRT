@@ -140,6 +140,7 @@
       <Compile Remove="ABI\**\*.cs"/>
 
       <!-- Also remove other folders with implementation-only types, to minimize the number of code changes needed -->
+      <Compile Remove="Exceptions\**\*.cs"/>
       <Compile Remove="InteropServices\AsyncInfo\**\*.cs"/>
       <Compile Remove="InteropServices\Bindables\**\*.cs"/>
       <Compile Remove="InteropServices\Buffers\**\*.cs"/>
