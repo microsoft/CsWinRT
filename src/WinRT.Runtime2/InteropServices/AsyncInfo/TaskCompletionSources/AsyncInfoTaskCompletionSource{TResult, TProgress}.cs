@@ -24,11 +24,11 @@ internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCo
     /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}._cancellationToken"/>
     private readonly CancellationToken _cancellationToken;
 
+    /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}._asyncInfo"/>
+    private readonly IAsyncInfo? _asyncInfo;
+
     /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}._registration"/>
     private readonly CancellationTokenRegistration _registration;
-
-    /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}._asyncInfoRegistration"/>
-    private readonly CancellationTokenRegistration _asyncInfoRegistration;
 
     /// <summary>
     /// Creates a new <see cref="AsyncInfoTaskCompletionSource{TResult, TProgress}"/> instance with the specified parameters.
@@ -42,34 +42,35 @@ internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCo
         // The logic for this constructor should be kept in sync with the one without 'TResult'
         if (_cancellationToken.CanBeCanceled)
         {
-            // Register the cancellation from the input cancellation token
+            _asyncInfo = asyncInfo;
+
             _registration = _cancellationToken.Register(
-                callback: static (@this, ct) => Unsafe.As<TaskCompletionSource>(@this!).TrySetCanceled(ct),
+                callback: static @this => Unsafe.As<AsyncInfoTaskCompletionSource<TResult, TProgress>>(@this!).OnCancellation(),
                 state: this);
-
-            // Register the cancellation from the async object as well
-            try
-            {
-                _asyncInfoRegistration = _cancellationToken.Register(
-                    callback: static asyncInfo => Unsafe.As<IAsyncInfo>(asyncInfo!).Cancel(),
-                    state: asyncInfo);
-            }
-            catch (Exception ex)
-            {
-                // Handle exceptions from 'Cancel' if the token is already canceled
-                if (!Task.IsFaulted)
-                {
-                    Debug.Fail($"Expected base task to already be faulted, but found it in state '{Task.Status}'.");
-
-                    _ = TrySetException(ex);
-                }
-            }
         }
 
         // If we're already completed, unregister everything again
         if (Task.IsCompleted)
         {
             Dispose();
+        }
+    }
+
+    /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}.OnCancellation"/>
+    private void OnCancellation()
+    {
+        Debug.Assert(_asyncInfo is not null);
+
+        _ = TrySetCanceled(_cancellationToken);
+
+        // Cancelling the underlying operation is a best-effort attempt, so ignore exceptions.
+        // See more details about this in 'AsyncInfoTaskCompletionSource<TProgress>.OnCancellation'.
+        try
+        {
+            _asyncInfo.Cancel();
+        }
+        catch
+        {
         }
     }
 
@@ -192,6 +193,5 @@ internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCo
     private void Dispose()
     {
         _registration.Dispose();
-        _asyncInfoRegistration.Dispose();
     }
 }
