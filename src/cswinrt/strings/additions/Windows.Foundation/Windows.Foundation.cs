@@ -296,6 +296,7 @@ namespace System
     {
         private const int RPC_E_DISCONNECTED = unchecked((int)0x80010108);
         private const int RPC_S_SERVER_UNAVAILABLE = unchecked((int)0x800706BA);
+        private const int JSCRIPT_E_CANTEXECUTE = unchecked((int)0x89020001);
 
         private readonly CancellationToken _ct;
         private readonly CancellationTokenRegistration _asyncInfoRegistration;
@@ -329,7 +330,7 @@ namespace System
                         }
                         catch (Exception e) when (
                             e is COMException comException &&
-                            comException.HResult is RPC_E_DISCONNECTED or RPC_S_SERVER_UNAVAILABLE)
+                            comException.HResult is RPC_E_DISCONNECTED or RPC_S_SERVER_UNAVAILABLE or JSCRIPT_E_CANTEXECUTE)
                         {
                             // In the event of the async action/operation failing because it belonged to some COM server
                             // that was disconnected, handle the failure gracefully and do nothing here. We don't want to
