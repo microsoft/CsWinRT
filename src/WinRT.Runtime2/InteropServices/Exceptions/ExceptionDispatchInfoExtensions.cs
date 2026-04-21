@@ -23,11 +23,10 @@ internal static class ExceptionDispatchInfoExtensions
         /// information and augmenting rather than replacing the original stack trace.
         /// </summary>
         /// <param name="exception">The exception whose state is captured, then rethrown.</param>
-        /// <param name="synchronizationContext">The target <see cref="SynchronizationContext"/>, if available.</param>
         /// <remarks>
-        /// This method will throw <paramref name="exception"/> on <paramref name="synchronizationContext"/>, or on a thread pool thread.
+        /// This method will throw <paramref name="exception"/> on a thread pool thread.
         /// </remarks>
-        public static void ThrowAsync(Exception exception, SynchronizationContext? synchronizationContext)
+        public static void ThrowAsync(Exception exception)
         {
             // If this is an error indicating the RPC called failed, it is most likely due
             // to the other process is gone. In this case, we just ignore it, as it just
@@ -44,19 +43,6 @@ internal static class ExceptionDispatchInfoExtensions
             // Capture the exception dispatch info, so we preserve the stacktrace we originally had.
             // Otherwise, we'd reset that from the place where the exception is actually thrown from.
             ExceptionDispatchInfo exceptionDispatchInfo = ExceptionDispatchInfo.Capture(exception);
-
-            // If we have a synchronization context, try posting to it first
-            if (synchronizationContext is not null)
-            {
-                try
-                {
-                    synchronizationContext.Post(static e => Unsafe.As<ExceptionDispatchInfo>(e!).Throw(), exceptionDispatchInfo);
-                }
-                catch
-                {
-                    // Something went wrong in the 'Post' call, let's try using the thread pool instead
-                }
-            }
 
             bool scheduled = true;
 
