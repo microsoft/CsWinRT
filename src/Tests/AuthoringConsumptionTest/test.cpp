@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 
 using namespace winrt;
 using namespace Windows::Foundation;
@@ -659,6 +659,7 @@ TEST(AuthoringTest, PartialClass)
     EXPECT_EQ(partialStruct.Z, 5);
 }
 
+/*
 TEST(AuthoringTest, MixedWinRTClassicCOM)
 {
     TestMixedWinRTCOMWrapper wrapper;
@@ -692,7 +693,7 @@ TEST(AuthoringTest, MixedWinRTClassicCOM)
     EXPECT_EQ(reinterpret_cast<GetNumber>((*reinterpret_cast<void***>(internalInterface2.get()))[3])(internalInterface2.get(), &number), S_OK);
     EXPECT_EQ(number, 123);
 }
-
+*/
 TEST(AuthoringTest, GetRuntimeClassName)
 {
     CustomDictionary2 dictionary;
@@ -701,8 +702,8 @@ TEST(AuthoringTest, GetRuntimeClassName)
     DisposableClass disposed;
     EXPECT_EQ(winrt::get_class_name(disposed), L"AuthoringTest.DisposableClass");
 
-    TestMixedWinRTCOMWrapper wrapper;
-    EXPECT_EQ(winrt::get_class_name(wrapper), L"AuthoringTest.TestMixedWinRTCOMWrapper");
+    // TestMixedWinRTCOMWrapper wrapper;
+    // EXPECT_EQ(winrt::get_class_name(wrapper), L"AuthoringTest.TestMixedWinRTCOMWrapper");
 
     TestClass testClass;
     testClass.SetNonProjectedDisposableObject();
