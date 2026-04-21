@@ -4,12 +4,13 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 
-#pragma warning disable IDE0010
+#pragma warning disable IDE0010, IDE0055
 
 namespace WindowsRuntime.InteropServices;
 
@@ -85,7 +86,10 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
         {
             _asyncInfo.Cancel();
         }
-        catch
+        catch (Exception e) when (e is COMException { HResult:
+            WellKnownErrorCodes.RPC_E_DISCONNECTED or
+            WellKnownErrorCodes.RPC_S_SERVER_UNAVAILABLE or
+            WellKnownErrorCodes.JSCRIPT_E_CANTEXECUTE })
         {
             // The native 'Cancel' call failed (e.g. the COM server hosting the async
             // operation has been disconnected). Swallow the exception here so it doesn't
@@ -94,6 +98,11 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
             // it (often a thread pool thread), potentially crashing the process. The task
             // has already been marked as canceled above, so awaiters will observe the
             // cancellation as expected.
+            //
+            // Note that we're intentionally only handling well-known exceptions due to "valid"
+            // infrastructure issues that can happen normally (e.g. a COM server disconnecting).
+            // We are not handling all exceptions, as that could hide legitimate bugs. The set of
+            // 'HRESULT'-s should be kept in sync with 'ExceptionDispatchInfoExtensions.ThrowAsync'.
         }
     }
 

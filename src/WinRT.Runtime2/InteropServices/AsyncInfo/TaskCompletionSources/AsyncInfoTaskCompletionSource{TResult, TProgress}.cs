@@ -4,12 +4,13 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 
-#pragma warning disable IDE0010
+#pragma warning disable IDE0010, IDE0055
 
 namespace WindowsRuntime.InteropServices;
 
@@ -69,7 +70,10 @@ internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCo
         {
             _asyncInfo.Cancel();
         }
-        catch
+        catch (Exception e) when (e is COMException { HResult:
+            WellKnownErrorCodes.RPC_E_DISCONNECTED or
+            WellKnownErrorCodes.RPC_S_SERVER_UNAVAILABLE or
+            WellKnownErrorCodes.JSCRIPT_E_CANTEXECUTE })
         {
         }
     }
