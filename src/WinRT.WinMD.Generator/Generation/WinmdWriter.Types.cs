@@ -40,7 +40,7 @@ internal sealed partial class WinmdWriter
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
-            (TypeAttributes)0x4000 | // WindowsRuntime
+            TypeAttributes.WindowsRuntime |
             TypeAttributes.SequentialLayout |
             TypeAttributes.AnsiClass |
             TypeAttributes.Sealed;
@@ -71,7 +71,7 @@ internal sealed partial class WinmdWriter
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
-            (TypeAttributes)0x4000 | // WindowsRuntime
+            TypeAttributes.WindowsRuntime |
             TypeAttributes.AutoLayout |
             TypeAttributes.AnsiClass |
             TypeAttributes.Sealed;
@@ -147,7 +147,7 @@ internal sealed partial class WinmdWriter
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
-            (TypeAttributes)0x4000 | // WindowsRuntime
+            TypeAttributes.WindowsRuntime |
             TypeAttributes.AutoLayout |
             TypeAttributes.AnsiClass |
             TypeAttributes.Sealed;
@@ -222,7 +222,7 @@ internal sealed partial class WinmdWriter
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
-            (TypeAttributes)0x4000 | // WindowsRuntime
+            TypeAttributes.WindowsRuntime |
             TypeAttributes.AutoLayout |
             TypeAttributes.AnsiClass |
             TypeAttributes.Interface |
@@ -281,7 +281,7 @@ internal sealed partial class WinmdWriter
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
-            (TypeAttributes)0x4000 | // WindowsRuntime
+            TypeAttributes.WindowsRuntime |
             TypeAttributes.SequentialLayout |
             TypeAttributes.AnsiClass |
             TypeAttributes.Sealed;
@@ -321,7 +321,7 @@ internal sealed partial class WinmdWriter
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
-            (TypeAttributes)0x4000 | // WindowsRuntime
+            TypeAttributes.WindowsRuntime |
             TypeAttributes.AutoLayout |
             TypeAttributes.AnsiClass |
             TypeAttributes.Class |

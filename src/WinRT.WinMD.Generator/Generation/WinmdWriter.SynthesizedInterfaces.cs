@@ -116,7 +116,7 @@ internal sealed partial class WinmdWriter
 
         TypeAttributes typeAttributes =
             TypeAttributes.NotPublic |
-            (TypeAttributes)0x4000 | // WindowsRuntime
+            TypeAttributes.WindowsRuntime |
             TypeAttributes.AutoLayout |
             TypeAttributes.AnsiClass |
             TypeAttributes.Interface |
