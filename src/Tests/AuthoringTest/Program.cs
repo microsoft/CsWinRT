@@ -1,7 +1,3 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Markup;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,18 +6,20 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using AuthoringTest;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Markup;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
 using Windows.Graphics.Effects;
-using WinRT;
-using WinRT.Interop;
+using WindowsRuntime;
+using WindowsRuntime.InteropServices;
+using WindowsRuntime.Xaml;
 
 #pragma warning disable CA1416
 
@@ -136,7 +134,7 @@ namespace AuthoringTest
             return basicClass;
         }
 
-        public BasicStruct[] ReturnArray([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] BasicStruct[] basicStructs)
+        public BasicStruct[] ReturnArray(ReadOnlySpan<BasicStruct> basicStructs)
         {
             BasicStruct[] copy = new BasicStruct[basicStructs.Length];
             for (int idx = 0; idx < copy.Length; idx++)
@@ -146,12 +144,17 @@ namespace AuthoringTest
             return copy;
         }
 
-        public int GetSum([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr)
+        public int GetSum(ReadOnlySpan<int> arr)
         {
-            return arr.Sum();
+            int sum = 0;
+            foreach (int value in arr)
+            {
+                sum += value;
+            }
+            return sum;
         }
 
-        public void PopulateArray([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr)
+        public void PopulateArray(Span<int> arr)
         {
             for (int idx = 0; idx < arr.Length; idx++)
             {
@@ -200,7 +203,7 @@ namespace AuthoringTest
         public string Value => "CsWinRT";
     }
 
-    [GeneratedBindableCustomProperty]
+    [GeneratedCustomPropertyProvider]
     public sealed partial class CustomProperty
     {
         public int Number { get; } = 4;
@@ -209,7 +212,7 @@ namespace AuthoringTest
         public CustomPropertyStructType CustomPropertyStructType => new CustomPropertyStructType();
     }
 
-    [GeneratedBindableCustomProperty]
+    [GeneratedCustomPropertyProvider]
     public partial struct CustomPropertyStructType
     {
         // Public WinRT struct types must have at least one field
@@ -219,14 +222,14 @@ namespace AuthoringTest
         public string Value => "CsWinRTFromStructType";
     }
 
-    [GeneratedBindableCustomProperty]
+    [GeneratedCustomPropertyProvider]
     internal sealed partial record CustomPropertyRecordType
     {
         public int Number { get; } = 4;
         public string Value => "CsWinRTFromRecordType";
     }
 
-    [GeneratedBindableCustomProperty]
+    [GeneratedCustomPropertyProvider]
     internal partial record struct CustomPropertyRecordStructType
     {
         public int Number => 4;
@@ -241,7 +244,7 @@ namespace AuthoringTest
 
         public static object CreateRecordStruct() => default(CustomPropertyRecordStructType);
     }
-
+    
     public sealed partial class CustomPropertyProviderWithExplicitImplementation : ICustomPropertyProvider
     {
         public Type Type => typeof(CustomPropertyProviderWithExplicitImplementation);
@@ -489,7 +492,7 @@ namespace AuthoringTest
 
         public IAsyncOperation<BasicStruct> GetStructAsyncOperation()
         {
-            return System.Runtime.InteropServices.WindowsRuntime.AsyncInfo.FromResult(new BasicStruct() { X = 2, Y = 4, Value = "Test" });
+            return WindowsRuntime.InteropServices.AsyncInfo.FromResult(new BasicStruct() { X = 2, Y = 4, Value = "Test" });
         }
 
         public IAsyncOperation<bool> GetBoolAsyncOperation()
@@ -625,7 +628,7 @@ namespace AuthoringTest
         }
     }
 
-    [WinRTRuntimeClassName("AuthoringTest.DisposableClassImpl")]
+    [WindowsRuntimeClassName("AuthoringTest.DisposableClassImpl")]
     public sealed class DisposableClass : IDisposable
     {
         public bool IsDisposed { get; set; }
@@ -741,7 +744,7 @@ namespace AuthoringTest
         }
     }
 
-    [WinRTRuntimeClassName("AuthoringTest.CustomReadOnlyDictionaryImpl")]
+    [WindowsRuntimeClassName("AuthoringTest.CustomReadOnlyDictionaryImpl")]
     public sealed class CustomReadOnlyDictionary : IReadOnlyDictionary<string, BasicStruct>
     {
         private readonly CustomDictionary _dictionary;
@@ -817,7 +820,7 @@ namespace AuthoringTest
         }
     }
     */
-
+    
     public sealed class CustomVector : IList<DisposableClass>
     {
         private IList<DisposableClass> _list;
@@ -990,7 +993,7 @@ namespace AuthoringTest
         }
     }
 
-    [WinRTRuntimeClassName("AuthoringTest.StaticClassImpl")]
+    [WindowsRuntimeClassName("AuthoringTest.StaticClassImpl")]
     public static class StaticClass
     {
         public static int GetNumber()
@@ -1014,7 +1017,7 @@ namespace AuthoringTest
             DelegateEvent?.Invoke(value);
         }
     }
-
+    
     public static class ButtonUtils
     {
         public static Button GetButton()
@@ -1120,7 +1123,7 @@ namespace AuthoringTest
         }
     }
 
-    public sealed class CustomXamlServiceProvider : IXamlServiceProvider
+    public sealed class CustomXamlServiceProvider : IServiceProvider
     {
         public object GetService(Type type)
         {
@@ -1301,7 +1304,7 @@ namespace AuthoringTest
             throw new NotImplementedException();
         }
     }
-
+    
     public sealed class SingleInterfaceClass : IDouble
     {
         private double _number;
@@ -1637,7 +1640,7 @@ namespace AuthoringTest
             _list.RemoveAt(index);
         }
     }
-
+    
     public sealed class CustomDictionary2 : IDictionary<string, int>
     {
         private readonly Dictionary<string, int> _dictionary = new Dictionary<string, int>();
@@ -1711,7 +1714,7 @@ namespace AuthoringTest
     public sealed class TestCollection : CollectionBase
     {
     }
-
+    
     public partial interface IPartialInterface
     {
         public string GetNumberAsString();
@@ -1842,6 +1845,7 @@ namespace AuthoringTest
         }
     }
 
+    /*
     public sealed class TestMixedWinRTCOMWrapper : IGraphicsEffectSource, IPublicInterface, IInternalInterface1, SomeInternalType.IInternalInterface2
     {
         public string HelloWorld()
@@ -1863,99 +1867,11 @@ namespace AuthoringTest
             return 0;
         }
     }
+    */
 
     public interface IPublicInterface
     {
         string HelloWorld();
-    }
-
-    // Internal, classic COM interface
-    [global::System.Runtime.InteropServices.Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
-    [WindowsRuntimeType]
-    [WindowsRuntimeHelperType(typeof(IInternalInterface1))]
-    internal unsafe interface IInternalInterface1
-    {
-        int GetNumber(int* value);
-
-        [global::System.Runtime.InteropServices.Guid("C7850559-8FF2-4E54-A237-6ED813F20CDC")]
-        public struct Vftbl
-        {
-            public static readonly IntPtr AbiToProjectionVftablePtr = InitVtbl();
-
-            private static IntPtr InitVtbl()
-            {
-                Vftbl* lpVtbl = (Vftbl*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(Vftbl));
-
-                lpVtbl->IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl;
-                lpVtbl->GetNumber = &GetNumberFromAbi;
-
-                return (IntPtr)lpVtbl;
-            }
-
-            private IUnknownVftbl IUnknownVftbl;
-            private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
-
-            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-            private static int GetNumberFromAbi(void* thisPtr, int* value)
-            {
-                try
-                {
-                    return ComWrappersSupport.FindObject<IInternalInterface1>((IntPtr)thisPtr).GetNumber(value);
-                }
-                catch (Exception e)
-                {
-                    ExceptionHelpers.SetErrorInfo(e);
-
-                    return Marshal.GetHRForException(e);
-                }
-            }
-        }
-    }
-
-    internal struct SomeInternalType
-    {
-        // Nested, classic COM interface
-        [global::System.Runtime.InteropServices.Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
-        [WindowsRuntimeType]
-        [WindowsRuntimeHelperType(typeof(IInternalInterface2))]
-        public unsafe interface IInternalInterface2
-        {
-            int GetNumber(int* value);
-
-            [global::System.Runtime.InteropServices.Guid("8A08E18A-8D20-4E7C-9242-857BFE1E3159")]
-            public struct Vftbl
-            {
-                public static readonly IntPtr AbiToProjectionVftablePtr = InitVtbl();
-
-                private static IntPtr InitVtbl()
-                {
-                    Vftbl* lpVtbl = (Vftbl*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), sizeof(Vftbl));
-
-                    lpVtbl->IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl;
-                    lpVtbl->GetNumber = &GetNumberFromAbi;
-
-                    return (IntPtr)lpVtbl;
-                }
-
-                private IUnknownVftbl IUnknownVftbl;
-                private delegate* unmanaged[Stdcall]<void*, int*, int> GetNumber;
-
-                [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-                private static int GetNumberFromAbi(void* thisPtr, int* value)
-                {
-                    try
-                    {
-                        return ComWrappersSupport.FindObject<IInternalInterface2>((IntPtr)thisPtr).GetNumber(value);
-                    }
-                    catch (Exception e)
-                    {
-                        ExceptionHelpers.SetErrorInfo(e);
-
-                        return Marshal.GetHRForException(e);
-                    }
-                }
-            }
-        }
     }
 
     [System.Runtime.InteropServices.Guid("26D8EE57-8B1B-46F4-A4F9-8C6DEEEAF53A")]
@@ -1985,7 +1901,7 @@ namespace AuthoringTest
         }
     }
 
-    [WinRTRuntimeClassName("AuthoringTest.NonActivatableFactoryImpl")]
+    [WindowsRuntimeClassName("AuthoringTest.NonActivatableFactoryImpl")]
     public static class NonActivatableFactory
     {
         public static NonActivatableType Create()
@@ -2015,26 +1931,6 @@ namespace AuthoringTest
     }
 }
 
-namespace ABI.AuthoringTest
-{
-    internal static class IInternalInterface1Methods
-    {
-        public static Guid IID => typeof(global::AuthoringTest.IInternalInterface1).GUID;
-
-        public static IntPtr AbiToProjectionVftablePtr => global::AuthoringTest.IInternalInterface1.Vftbl.AbiToProjectionVftablePtr;
-    }
-
-    internal struct SomeInternalType
-    {
-        internal static class IInternalInterface2Methods
-        {
-            public static Guid IID => typeof(global::AuthoringTest.SomeInternalType.IInternalInterface2).GUID;
-
-            public static IntPtr AbiToProjectionVftablePtr => global::AuthoringTest.SomeInternalType.IInternalInterface2.Vftbl.AbiToProjectionVftablePtr;
-        }
-    }
-}
-
 namespace AnotherNamespace
 {
     internal partial class PartialClass3
@@ -2055,6 +1951,411 @@ namespace AnotherNamespace
     {
         public void InternalFunction()
         {
+        }
+    }
+
+    // Out parameters on interface methods
+    public interface IOutParams
+    {
+        void GetData(out string result);
+        void GetStruct(out BasicStruct result);
+        bool TryParse(string input, out int value);
+    }
+
+    // Nullable/IReference parameters
+    public sealed class NullableParamClass
+    {
+        public int? NullableIntProp { get; set; }
+        public double? NullableDoubleProp { get; set; }
+        public bool? NullableBoolProp { get; set; }
+
+        public int GetValueOrDefault(int? value, int defaultValue)
+        {
+            return value ?? defaultValue;
+        }
+
+        public int? TryGetValue(string key)
+        {
+            return null;
+        }
+    }
+
+    // Mapped type parameters (DateTimeOffset, TimeSpan, Uri, Exception)
+    public sealed class MappedTypeParamClass
+    {
+        public DateTimeOffset GetTimestamp()
+        {
+            return DateTimeOffset.UtcNow;
+        }
+
+        public void SetTimestamp(DateTimeOffset timestamp) { }
+
+        public TimeSpan GetDuration()
+        {
+            return TimeSpan.FromSeconds(1);
+        }
+
+        public void SetDuration(TimeSpan duration) { }
+
+        public Uri GetUri()
+        {
+            return new Uri("https://example.com");
+        }
+
+        public void SetUri(Uri uri) { }
+
+        public string FormatTimestamp(DateTimeOffset timestamp, TimeSpan offset)
+        {
+            return (timestamp + offset).ToString();
+        }
+    }
+
+    // Mixed Span and regular array parameters
+    public sealed class MixedArrayClass
+    {
+        public void CopyToSpan(ReadOnlySpan<int> source, Span<int> destination)
+        {
+            source.CopyTo(destination);
+        }
+
+        public int[] TransformArray(ReadOnlySpan<int> input)
+        {
+            return input.ToArray();
+        }
+
+        public void FillWithIndex(Span<int> buffer)
+        {
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                buffer[i] = i;
+            }
+        }
+
+        public void ProcessAndOutput(ReadOnlySpan<BasicStruct> input, out BasicStruct[] output)
+        {
+            output = input.ToArray();
+        }
+    }
+
+    // Classes implementing IDisposable + custom interface
+    public interface ICustomResource
+    {
+        string Name { get; }
+        void Reset();
+    }
+
+    public sealed class DisposableResource : IDisposable, ICustomResource
+    {
+        public string Name => "Resource";
+        public void Reset() { }
+        public void Dispose() { }
+    }
+
+    // Multiple constructors (3+)
+    public sealed class MultiConstructorClass
+    {
+        private readonly string _name;
+        private readonly int _value;
+        private readonly BasicStruct _data;
+
+        public MultiConstructorClass()
+        {
+            _name = "";
+            _value = 0;
+            _data = default;
+        }
+
+        public MultiConstructorClass(string name)
+        {
+            _name = name;
+            _value = 0;
+            _data = default;
+        }
+
+        public MultiConstructorClass(string name, int value)
+        {
+            _name = name;
+            _value = value;
+            _data = default;
+        }
+
+        public MultiConstructorClass(string name, int value, BasicStruct data)
+        {
+            _name = name;
+            _value = value;
+            _data = data;
+        }
+
+        public string Name => _name;
+        public int Value => _value;
+        public BasicStruct Data => _data;
+    }
+
+    // Static properties returning complex types
+    public sealed class StaticComplexProps
+    {
+        public static string DefaultName => "Default";
+        public static BasicStruct DefaultStruct => new() { X = 1, Y = 2 };
+        public static int MaxCount { get; set; } = 100;
+    }
+
+    // Multiple overloaded methods with DefaultOverload
+    public sealed class OverloadedMethodClass
+    {
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        public string Format(int value)
+        {
+            return value.ToString();
+        }
+
+        public string Format(double value)
+        {
+            return value.ToString("F2");
+        }
+
+        public string Format(string value)
+        {
+            return value;
+        }
+
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        public static int Parse(string text)
+        {
+            return int.Parse(text);
+        }
+
+        public static int Parse(string text, int radix)
+        {
+            return Convert.ToInt32(text, radix);
+        }
+    }
+
+    // Nested structs (2 levels)
+    public struct InnerStruct
+    {
+        public int A;
+        public int B;
+    }
+
+    public struct OuterStruct
+    {
+        public InnerStruct Inner;
+        public int C;
+    }
+
+    // Delegates with 3+ parameters and struct params
+    public delegate void MultiParamDelegate(int a, string b, double c);
+    public delegate bool StructParamDelegate(BasicStruct data, int index);
+    public delegate BasicStruct StructReturnDelegate(string name);
+
+    // Flags enum edge cases
+    [Flags]
+    public enum DetailedFlags : uint
+    {
+        None = 0,
+        Read = 1,
+        Write = 2,
+        Execute = 4,
+        ReadWrite = Read | Write,
+        All = Read | Write | Execute
+    }
+
+    // Enum without Flags (signed)
+    public enum Priority
+    {
+        Low = -1,
+        Normal = 0,
+        High = 1,
+        Critical = 2
+    }
+
+    // IAsyncAction (no return value)
+    public sealed class AsyncMethodClass
+    {
+        public Windows.Foundation.IAsyncAction DoWorkAsync()
+        {
+            return Task.CompletedTask.AsAsyncAction();
+        }
+
+        public Windows.Foundation.IAsyncOperation<int> ComputeAsync()
+        {
+            return Task.FromResult(42).AsAsyncOperation();
+        }
+    }
+
+    // Version attribute on methods/properties
+    public interface IVersionedInterface
+    {
+        [Windows.Foundation.Metadata.Version(1u)]
+        void OriginalMethod();
+
+        [Windows.Foundation.Metadata.Version(2u)]
+        void NewerMethod();
+
+        [Windows.Foundation.Metadata.Version(1u)]
+        string Name { get; }
+
+        [Windows.Foundation.Metadata.Version(2u)]
+        int Count { get; }
+    }
+
+    // Deprecated members
+    public sealed class DeprecatedMembersClass
+    {
+        [Windows.Foundation.Metadata.Deprecated("Use NewMethod instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
+        public void OldMethod() { }
+
+        public void NewMethod() { }
+
+        [Windows.Foundation.Metadata.Deprecated("Use NewProp instead", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1u)]
+        public string OldProp => "";
+
+        public string NewProp => "";
+    }
+
+    // Class implementing INotifyPropertyChanged + custom interface
+    public sealed class NotifyWithCustomInterface : System.ComponentModel.INotifyPropertyChanged, ICustomResource
+    {
+        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+        public string Name { get; set; } = "";
+
+        public void Reset()
+        {
+            Name = "";
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Name)));
+        }
+    }
+
+    // Class with both factory and static members
+    public sealed class FactoryAndStaticClass
+    {
+        private readonly string _id;
+
+        public FactoryAndStaticClass(string id)
+        {
+            _id = id;
+        }
+
+        public FactoryAndStaticClass(string id, int version)
+        {
+            _id = $"{id}_v{version}";
+        }
+
+        public string Id => _id;
+
+        public static string DefaultId => "default";
+        public static FactoryAndStaticClass CreateDefault()
+        {
+            return new FactoryAndStaticClass(DefaultId);
+        }
+    }
+
+    // Interface with properties, methods, and events combined
+    public interface IFullFeaturedInterface
+    {
+        string Name { get; set; }
+        int Count { get; }
+
+        void DoWork();
+        string GetData(int index);
+
+        event EventHandler<string> DataChanged;
+    }
+
+    public sealed class FullFeaturedClass : IFullFeaturedInterface
+    {
+        public string Name { get; set; } = "";
+        public int Count => 0;
+
+        public void DoWork() { }
+        public string GetData(int index) => "";
+
+        public event EventHandler<string> DataChanged;
+
+        public void RaiseDataChanged()
+        {
+            DataChanged?.Invoke(this, "changed");
+        }
+    }
+
+    // Contract versioning
+    [Windows.Foundation.Metadata.ApiContract]
+    public enum AnotherNamespaceContract { }
+
+    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 1u)]
+    public sealed class ContractVersionedClass
+    {
+        public string Name { get; set; } = "";
+    }
+
+    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+    public sealed class ContractVersionedClassV2
+    {
+        public string Name { get; set; } = "";
+        public int Count { get; set; }
+    }
+
+    // Class evolving across contract versions with versioned members and interfaces
+    public interface IContractVersionedMembersV1
+    {
+        string TrackName { get; }
+    }
+
+    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+    public interface IContractVersionedMembersV2
+    {
+        int Volume { get; }
+    }
+
+    [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 1u)]
+    public sealed class ContractVersionedMembersClass : IContractVersionedMembersV1, IContractVersionedMembersV2
+    {
+        public string TrackName { get; set; } = "";
+
+        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+        public int Volume { get; set; }
+
+        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+        public string GetNowPlaying() => $"{TrackName} (Vol={Volume})";
+
+        [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 2u)]
+        public event System.EventHandler<string> TrackChanged;
+
+        public void RaiseTrackChanged()
+        {
+            TrackChanged?.Invoke(this, TrackName);
+        }
+    }
+
+    // Class evolving across Version attribute versions with versioned members and interfaces
+    public interface IVersionedMembersV1
+    {
+        string Message { get; }
+    }
+
+    [Windows.Foundation.Metadata.Version(2u)]
+    public interface IVersionedMembersV2
+    {
+        double Urgency { get; }
+    }
+
+    [Windows.Foundation.Metadata.Version(1u)]
+    public sealed class VersionedMembersClass : IVersionedMembersV1, IVersionedMembersV2
+    {
+        public string Message { get; set; } = "";
+
+        [Windows.Foundation.Metadata.Version(2u)]
+        public double Urgency { get; set; }
+
+        [Windows.Foundation.Metadata.Version(2u)]
+        public string Format() => $"{Message}: {Urgency}";
+
+        [Windows.Foundation.Metadata.Version(2u)]
+        public event System.EventHandler<double> UrgencyChanged;
+
+        public void RaiseUrgencyChanged()
+        {
+            UrgencyChanged?.Invoke(this, Urgency);
         }
     }
 }

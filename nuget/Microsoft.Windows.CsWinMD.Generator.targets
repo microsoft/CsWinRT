@@ -1,0 +1,100 @@
+<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+***********************************************************************************************
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Setup common properties for '_RunCsWinRTWinMDGenerator' below -->
+  <PropertyGroup>
+
+    <!-- Output paths -->
+    <CsWinRTWinMDOutputDirectory Condition="'$(CsWinRTWinMDOutputDirectory)' == ''">$(IntermediateOutputPath)</CsWinRTWinMDOutputDirectory>
+    <_CsWinRTWinMDOutputPath>$(CsWinRTWinMDOutputDirectory)$(AssemblyName).winmd</_CsWinRTWinMDOutputPath>
+
+    <!--
+      Set the path of the file with the hash of all input properties for 'cswinrtwinmdgen'.
+      This is needed to make the target incremental with respect to property changes.
+    -->
+    <_RunCsWinRTWinMDGeneratorPropertyInputsCachePath Condition="'$(_RunCsWinRTWinMDGeneratorPropertyInputsCachePath)' == ''">$(IntermediateOutputPath)$(MSBuildProjectName).cswinrtwinmdgen.cache</_RunCsWinRTWinMDGeneratorPropertyInputsCachePath>
+    <_RunCsWinRTWinMDGeneratorPropertyInputsCachePath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_RunCsWinRTWinMDGeneratorPropertyInputsCachePath)'))</_RunCsWinRTWinMDGeneratorPropertyInputsCachePath>
+  </PropertyGroup>
+
+  <!--
+    ============================================================
+                    _ResolveCsWinRTWinMDGenToolsDirectory
+
+    Resolves the location of the WinMD generator tools.
+    Uses the shared _CsWinRTToolsDirectory from _ResolveCsWinRToolsDirectory
+    when available (NuGet package), with a dev-only fallback.
+    ============================================================
+  -->
+  <Target Name="_ResolveCsWinRTWinMDGenToolsDirectory" DependsOnTargets="ResolveAssemblyReferences;_ResolveCsWinRToolsDirectory" BeforeTargets="_ComputeRunCsWinRTWinMDGeneratorCache">
+    <PropertyGroup>
+      <CsWinRTWinMDGenEffectiveToolsDirectory Condition="'$(CsWinRTWinMDGenEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTWinMDGenEffectiveToolsDirectory>
+    </PropertyGroup>
+  </Target>
+
+  <!--
+    ============================================================
+                    _ComputeRunCsWinRTWinMDGeneratorCache
+
+    Computes a hash of all input properties to detect when re-generation is needed.
+    ============================================================
+  -->
+  <Target
+    Name="_ComputeRunCsWinRTWinMDGeneratorCache"
+    DependsOnTargets="CoreCompile;_ResolveCsWinRTWinMDGenToolsDirectory">
+
+    <ItemGroup>
+      <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(CsWinRTWinMDGenEffectiveToolsDirectory)" />
+      <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
+      <_RunCsWinRTWinMDGeneratorInputsCacheToHash Include="$(AssemblyVersion)" />
+    </ItemGroup>
+
+    <Hash ItemsToHash="@(_RunCsWinRTWinMDGeneratorInputsCacheToHash)">
+      <Output TaskParameter="HashResult" PropertyName="_RunCsWinRTWinMDGeneratorInputsCacheHash" />
+    </Hash>
+
+    <WriteLinesToFile
+      Lines="$(_RunCsWinRTWinMDGeneratorInputsCacheHash)"
+      File="$(_RunCsWinRTWinMDGeneratorPropertyInputsCachePath)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <!--
+    ============================================================
+                    _RunCsWinRTWinMDGenerator
+
+    Runs 'cswinrtwinmdgen' to produce a .winmd file from the compiled assembly.
+    This target runs after CoreCompile since it needs the compiled DLL.
+    ============================================================
+  -->
+  <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTWinMDGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
+  <Target
+    Name="_RunCsWinRTWinMDGenerator"
+    DependsOnTargets="CoreCompile;_ComputeRunCsWinRTWinMDGeneratorCache"
+    AfterTargets="CoreCompile"
+    Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies);$(_RunCsWinRTWinMDGeneratorPropertyInputsCachePath)"
+    Outputs="$(_CsWinRTWinMDOutputPath)"
+    Condition="'$(CsWinRTComponent)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+
+    <!-- Invoke 'cswinrtwinmdgen' -->
+    <RunCsWinRTWinMDGenerator
+      InputAssemblyPath="@(IntermediateAssembly)"
+      ReferenceAssemblyPaths="@(ReferencePathWithRefAssemblies)"
+      OutputWinmdPath="$(_CsWinRTWinMDOutputPath)"
+      AssemblyVersion="$(AssemblyVersion)"
+      UseWindowsUIXamlProjections="$(CsWinRTUseWindowsUIXamlProjections)"
+      CsWinRTToolsDirectory="$(CsWinRTWinMDGenEffectiveToolsDirectory)"
+      CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+      StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
+      StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
+
+    <!-- Make the .winmd available as an output -->
+    <ItemGroup>
+      <FileWrites Include="$(_CsWinRTWinMDOutputPath)" />
+    </ItemGroup>
+  </Target>
+</Project>

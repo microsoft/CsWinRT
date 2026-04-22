@@ -1,0 +1,256 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
+using System.Linq;
+using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.WinMDGenerator.Discovery;
+using WindowsRuntime.WinMDGenerator.Models;
+using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
+
+namespace WindowsRuntime.WinMDGenerator.Generation;
+
+internal sealed partial class WinmdWriter
+{
+    /// <summary>
+    /// Maps a type signature from the input module to the output module.
+    /// </summary>
+    private TypeSignature MapTypeSignatureToOutput(TypeSignature inputSig)
+    {
+        // Handle CorLib types
+        if (inputSig is CorLibTypeSignature corLib)
+        {
+#pragma warning disable IDE0072 // Switch already has default case handling all other element types
+            return corLib.ElementType switch
+            {
+                ElementType.Boolean => _outputModule.CorLibTypeFactory.Boolean,
+                ElementType.Char => _outputModule.CorLibTypeFactory.Char,
+                ElementType.I1 => _outputModule.CorLibTypeFactory.SByte,
+                ElementType.U1 => _outputModule.CorLibTypeFactory.Byte,
+                ElementType.I2 => _outputModule.CorLibTypeFactory.Int16,
+                ElementType.U2 => _outputModule.CorLibTypeFactory.UInt16,
+                ElementType.I4 => _outputModule.CorLibTypeFactory.Int32,
+                ElementType.U4 => _outputModule.CorLibTypeFactory.UInt32,
+                ElementType.I8 => _outputModule.CorLibTypeFactory.Int64,
+                ElementType.U8 => _outputModule.CorLibTypeFactory.UInt64,
+                ElementType.R4 => _outputModule.CorLibTypeFactory.Single,
+                ElementType.R8 => _outputModule.CorLibTypeFactory.Double,
+                ElementType.String => _outputModule.CorLibTypeFactory.String,
+                ElementType.Object => _outputModule.CorLibTypeFactory.Object,
+                ElementType.I => _outputModule.CorLibTypeFactory.IntPtr,
+                ElementType.U => _outputModule.CorLibTypeFactory.UIntPtr,
+                ElementType.Void => _outputModule.CorLibTypeFactory.Void,
+                _ => _outputModule.CorLibTypeFactory.Object
+            };
+#pragma warning restore IDE0072
+        }
+
+        // Handle SZArray (single-dimensional zero-based arrays)
+        if (inputSig is SzArrayTypeSignature szArray)
+        {
+            return new SzArrayTypeSignature(MapTypeSignatureToOutput(szArray.BaseType));
+        }
+
+        // Handle generic instance types
+        if (inputSig is GenericInstanceTypeSignature genericInst)
+        {
+            string genericTypeName = AssemblyAnalyzer.GetQualifiedName(genericInst.GenericType);
+
+            // Map Span<T> and ReadOnlySpan<T> to T[] (SzArray) for WinRT
+            // ReadOnlySpan<T> → PassArray (in), Span<T> → FillArray (out without BYREF)
+            if (genericTypeName is "System.Span`1" or "System.ReadOnlySpan`1"
+                && genericInst.TypeArguments.Count == 1)
+            {
+                return new SzArrayTypeSignature(MapTypeSignatureToOutput(genericInst.TypeArguments[0]));
+            }
+
+            // Check if the generic type itself has a WinRT mapping (e.g., IList`1 -> IVector`1)
+            if (_mapper.HasMappingForType(genericTypeName))
+            {
+                MappedType mapping = _mapper.GetMappedType(genericTypeName);
+                (string ns, string name, string asm, _, bool isValueType) = mapping.GetMapping();
+                ITypeDefOrRef mappedType = GetOrCreateTypeReference(ns, name, asm);
+                TypeSignature[] mappedArgs = [.. genericInst.TypeArguments.Select(MapTypeSignatureToOutput)];
+                return new GenericInstanceTypeSignature(mappedType, isValueType, mappedArgs);
+            }
+
+            ITypeDefOrRef importedType = ImportTypeReference(genericInst.GenericType);
+            TypeSignature[] importedArgs = [.. genericInst.TypeArguments.Select(MapTypeSignatureToOutput)];
+            return new GenericInstanceTypeSignature(importedType, genericInst.IsValueType, importedArgs);
+        }
+
+        // Handle generic method/type parameters
+        if (inputSig is GenericParameterSignature genericParam)
+        {
+            return new GenericParameterSignature(_outputModule, genericParam.ParameterType, genericParam.Index);
+        }
+
+        // Handle ByRef
+        if (inputSig is ByReferenceTypeSignature byRef)
+        {
+            return new ByReferenceTypeSignature(MapTypeSignatureToOutput(byRef.BaseType));
+        }
+
+        // Handle TypeDefOrRefSignature
+        if (inputSig is TypeDefOrRefSignature typeDefOrRef)
+        {
+            string typeName = AssemblyAnalyzer.GetQualifiedName(typeDefOrRef.Type);
+
+            // Check if the type has a WinRT mapping (e.g., IDisposable -> IClosable, Type -> TypeName)
+            if (_mapper.HasMappingForType(typeName))
+            {
+                MappedType mapping = _mapper.GetMappedType(typeName);
+                (string ns, string name, string asm, _, bool isValueType) = mapping.GetMapping();
+                ITypeDefOrRef mappedType = GetOrCreateTypeReference(ns, name, asm);
+                return new TypeDefOrRefSignature(mappedType, isValueType);
+            }
+
+            ITypeDefOrRef importedRef = ImportTypeReference(typeDefOrRef.Type);
+            return new TypeDefOrRefSignature(importedRef, typeDefOrRef.IsValueType);
+        }
+
+        // Fallback: import the type
+        return _outputModule.CorLibTypeFactory.Object;
+    }
+
+    /// <summary>
+    /// Imports a type reference from the input module to the output module.
+    /// </summary>
+    private ITypeDefOrRef ImportTypeReference(ITypeDefOrRef type)
+    {
+        if (type is TypeDefinition typeDef)
+        {
+            // Check if we've already processed this type into the output module
+            string qualifiedName = AssemblyAnalyzer.GetQualifiedName(typeDef);
+            if (_typeDefinitionMapping.TryGetValue(qualifiedName, out TypeDeclaration? declaration) && declaration.OutputType != null)
+            {
+                return declaration.OutputType;
+            }
+
+            // If this is a public type from the input module, process it on demand
+            if (typeDef.IsPublic || typeDef.IsNestedPublic)
+            {
+                ProcessType(typeDef);
+                if (_typeDefinitionMapping.TryGetValue(qualifiedName, out declaration) && declaration.OutputType != null)
+                {
+                    return declaration.OutputType;
+                }
+            }
+
+            // External type or non-WinRT type — create a type reference
+            return GetOrCreateTypeReference(
+                AssemblyAnalyzer.GetEffectiveNamespace(typeDef) ?? "",
+                typeDef.Name!.Value,
+                _inputModule.Assembly?.Name?.Value ?? "mscorlib");
+        }
+
+        if (type is TypeReference typeRef)
+        {
+            string ns = typeRef.Namespace?.Value ?? "";
+            string name = typeRef.Name!.Value;
+            string fullName = string.IsNullOrEmpty(ns) ? name : $"{ns}.{name}";
+
+            // Check if this type is in the output module (same-assembly reference)
+            if (_typeDefinitionMapping.TryGetValue(fullName, out TypeDeclaration? declaration) && declaration.OutputType != null)
+            {
+                return declaration.OutputType;
+            }
+
+            // For WinRT types from projection assemblies, use the WinRT contract assembly name
+            // from WindowsRuntimeMetadataAttribute instead of the projection assembly name.
+            // E.g., StackPanel from Microsoft.WinUI → Microsoft.UI.Xaml in the WinMD.
+            string assembly = GetAssemblyNameFromScope(typeRef.Scope);
+            TypeDefinition? resolvedType = SafeResolve(typeRef);
+            if (resolvedType != null)
+            {
+                string? winrtAssembly = AssemblyAnalyzer.GetAssemblyForWinRTType(resolvedType);
+                if (winrtAssembly != null)
+                {
+                    assembly = winrtAssembly;
+                }
+            }
+
+            return GetOrCreateTypeReference(ns, name, assembly);
+        }
+
+        if (type is TypeSpecification typeSpec)
+        {
+            // For type specs, we need to create a new TypeSpecification in the output
+            TypeSignature mappedSig = MapTypeSignatureToOutput(typeSpec.Signature!);
+            return new TypeSpecification(mappedSig);
+        }
+
+        return GetOrCreateTypeReference("System", "Object", "mscorlib");
+    }
+
+    private static string GetAssemblyNameFromScope(IResolutionScope? scope)
+    {
+        return scope switch
+        {
+            AssemblyReference asmRef => asmRef.Name?.Value ?? "mscorlib",
+            ModuleDefinition mod => mod.Assembly?.Name?.Value ?? "mscorlib",
+            _ => "mscorlib"
+        };
+    }
+
+    /// <summary>
+    /// Ensures an ITypeDefOrRef is a TypeReference, not a TypeDefinition.
+    /// WinMD convention: interface implementations should use TypeRef even for same-module types
+    /// (TypeDef redirection per the WinMD spec).
+    /// </summary>
+    private ITypeDefOrRef EnsureTypeReference(ITypeDefOrRef type)
+    {
+        if (type is TypeDefinition typeDef)
+        {
+            string ns = AssemblyAnalyzer.GetEffectiveNamespace(typeDef) ?? "";
+            string name = typeDef.Name!.Value;
+            string assembly = _outputModule.Assembly?.Name?.Value ?? "mscorlib";
+            return GetOrCreateTypeReference(ns, name, assembly);
+        }
+
+        return type;
+    }
+
+    private TypeReference GetOrCreateTypeReference(string @namespace, string name, string assemblyName)
+    {
+        string fullName = string.IsNullOrEmpty(@namespace) ? name : $"{@namespace}.{name}";
+
+        if (_typeReferenceCache.TryGetValue(fullName, out TypeReference? cached))
+        {
+            return cached;
+        }
+
+        AssemblyReference assemblyRef = GetOrCreateAssemblyReference(assemblyName);
+        TypeReference typeRef = new(_outputModule, assemblyRef, @namespace, name);
+        _typeReferenceCache[fullName] = typeRef;
+        return typeRef;
+    }
+
+    private AssemblyReference GetOrCreateAssemblyReference(string assemblyName)
+    {
+        if (_assemblyReferenceCache.TryGetValue(assemblyName, out AssemblyReference? cached))
+        {
+            return cached;
+        }
+
+        AssemblyAttributes flags = string.CompareOrdinal(assemblyName, "mscorlib") == 0
+            ? 0
+            : AssemblyAttributes.ContentWindowsRuntime;
+
+        AssemblyReference asmRef = new(assemblyName, new Version(0xFF, 0xFF, 0xFF, 0xFF))
+        {
+            Attributes = flags,
+        };
+
+        if (string.CompareOrdinal(assemblyName, "mscorlib") == 0)
+        {
+            asmRef.PublicKeyOrToken = [0xb7, 0x7a, 0x5c, 0x56, 0x19, 0x34, 0xe0, 0x89];
+        }
+
+        _outputModule.AssemblyReferences.Add(asmRef);
+        _assemblyReferenceCache[assemblyName] = asmRef;
+        return asmRef;
+    }
+}

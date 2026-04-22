@@ -357,7 +357,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Copy Authored winmd to output folder -->
   <Target Name="CsWinRTPlaceWinMDInOutputFolder" BeforeTargets="AfterBuild">
     
-    <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(CsWinRTWinMDOutputDirectory)$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
     
   </Target>
 
