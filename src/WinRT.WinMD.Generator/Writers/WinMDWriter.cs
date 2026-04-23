@@ -4,9 +4,11 @@
 using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
+using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.WinMDGenerator.Errors;
 using WindowsRuntime.WinMDGenerator.Helpers;
 using WindowsRuntime.WinMDGenerator.Models;
+using WindowsRuntime.WinMDGenerator.References;
 using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
 
 #pragma warning disable IDE0046
@@ -98,13 +100,13 @@ internal sealed partial class WinMDWriter
         // Create the output WinMD module
         _outputModule = new ModuleDefinition(assemblyName + ".winmd")
         {
-            RuntimeVersion = "WindowsRuntime 1.4"
+            RuntimeVersion = WinMDValues.RuntimeVersion
         };
 
         // Replace the default 'mscorlib' reference with the WinMD-style one ('v255.255.255.255' with PKT)
         AssemblyReference defaultCorLib = (AssemblyReference)_outputModule.CorLibTypeFactory.CorLibScope;
-        defaultCorLib.Version = new Version(0xFF, 0xFF, 0xFF, 0xFF);
-        defaultCorLib.PublicKeyOrToken = [0xb7, 0x7a, 0x5c, 0x56, 0x19, 0x34, 0xe0, 0x89];
+        defaultCorLib.Version = WinMDValues.MSCorLibVersion;
+        defaultCorLib.PublicKeyOrToken = WellKnownPublicKeyTokens.MSCorLib;
         _assemblyReferenceCache["mscorlib"] = defaultCorLib;
 
         // Create the output assembly with WindowsRuntime flag (keep reference alive via module)

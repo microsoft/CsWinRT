@@ -6,7 +6,9 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.WinMDGenerator.Models;
+using WindowsRuntime.WinMDGenerator.References;
 using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
 
 namespace WindowsRuntime.WinMDGenerator.Writers;
@@ -296,19 +298,19 @@ internal sealed partial class WinMDWriter
         }
 
         AssemblyAttributes flags = string.CompareOrdinal(assemblyName, "mscorlib") == 0
-            ? 0
+            ? AssemblyAttributes.ArchitectureNone
             : AssemblyAttributes.ContentWindowsRuntime;
 
         AssemblyReference assemblyReference = new(
             name: assemblyName,
-            version: new Version(0xFF, 0xFF, 0xFF, 0xFF))
+            version: WinMDValues.MSCorLibVersion)
         {
             Attributes = flags,
         };
 
         if (string.CompareOrdinal(assemblyName, "mscorlib") == 0)
         {
-            assemblyReference.PublicKeyOrToken = [0xb7, 0x7a, 0x5c, 0x56, 0x19, 0x34, 0xe0, 0x89];
+            assemblyReference.PublicKeyOrToken = WellKnownPublicKeyTokens.MSCorLib;
         }
 
         _outputModule.AssemblyReferences.Add(assemblyReference);
