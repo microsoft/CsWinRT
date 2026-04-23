@@ -3,7 +3,7 @@
 
 using AsmResolver.DotNet;
 
-namespace WindowsRuntime.WinMDGenerator.Generation;
+namespace WindowsRuntime.WinMDGenerator.Models;
 
 /// <summary>
 /// Tracks the input and output type definitions for a given type.

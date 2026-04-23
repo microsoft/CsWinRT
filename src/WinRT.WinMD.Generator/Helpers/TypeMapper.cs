@@ -4,73 +4,25 @@
 using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
+using WindowsRuntime.WinMDGenerator.Models;
 
-namespace WindowsRuntime.WinMDGenerator.Models;
-
-/// <summary>
-/// A mapped type from a .NET type to a WinRT type.
-/// </summary>
-internal readonly struct MappedType
-{
-    private readonly string? _namespace;
-    private readonly string? _name;
-    private readonly string? _assembly;
-    private readonly bool _isSystemType;
-    private readonly bool _isValueType;
-    private readonly bool _isBlittable;
-    private readonly Func<TypeDefinition?, (string, string, string, bool, bool)>? _multipleMappingFunc;
-
-    /// <summary>
-    /// Creates a new <see cref="MappedType"/> with a fixed mapping.
-    /// </summary>
-    public MappedType(string @namespace, string name, string assembly, bool isValueType = false, bool isBlittable = false)
-    {
-        _namespace = @namespace;
-        _name = name;
-        _assembly = assembly;
-        _isSystemType = string.CompareOrdinal(assembly, "mscorlib") == 0;
-        _isValueType = isValueType;
-        _isBlittable = isBlittable;
-        _multipleMappingFunc = null;
-    }
-
-    /// <summary>
-    /// Creates a new <see cref="MappedType"/> with a context-dependent mapping.
-    /// </summary>
-    public MappedType(Func<TypeDefinition?, (string, string, string, bool, bool)> multipleMappingFunc)
-    {
-        _namespace = null;
-        _name = null;
-        _assembly = null;
-        _isSystemType = false;
-        _isValueType = false;
-        _isBlittable = false;
-        _multipleMappingFunc = multipleMappingFunc;
-    }
-
-    /// <summary>
-    /// Gets the mapping tuple (namespace, name, assembly, isSystemType, isValueType).
-    /// </summary>
-    /// <param name="containingType">The optional containing type for context-dependent mappings.</param>
-    public (string Namespace, string Name, string Assembly, bool IsSystemType, bool IsValueType) GetMapping(TypeDefinition? containingType = null)
-    {
-        return _multipleMappingFunc != null
-            ? _multipleMappingFunc(containingType)
-            : (_namespace!, _name!, _assembly!, _isSystemType, _isValueType);
-    }
-
-    /// <summary>
-    /// Gets whether the mapped type is blittable.
-    /// </summary>
-    public bool IsBlittable()
-    {
-        return _isValueType && _isBlittable;
-    }
-}
+namespace WindowsRuntime.WinMDGenerator.Helpers;
 
 /// <summary>
-/// Maps .NET types to their WinRT equivalents.
+/// Maps .NET types to their WinRT equivalents for WinMD generation.
 /// </summary>
+/// <remarks>
+/// <para>
+/// This class maintains the bidirectional mapping table between .NET types and their WinRT
+/// projections. The mapping is configuration-dependent: when <c>CsWinRTUseWindowsUIXamlProjections</c>
+/// is enabled, XAML-related types map to <c>Windows.UI.Xaml.*</c> (UWP XAML); otherwise, they map
+/// to <c>Microsoft.UI.Xaml.*</c> (WinUI).
+/// </para>
+/// <para>
+/// The mapping table should be kept in sync with the reverse mapping from
+/// <c>WinRT.Runtime/Projections.cs</c> and <c>cswinrt/helpers.h</c>.
+/// </para>
+/// </remarks>
 internal sealed class TypeMapper
 {
     private readonly Dictionary<string, MappedType> _typeMapping;

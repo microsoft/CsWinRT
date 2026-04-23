@@ -3,7 +3,7 @@
 
 using System.IO;
 using AsmResolver.DotNet;
-using WindowsRuntime.WinMDGenerator.Models;
+using WindowsRuntime.WinMDGenerator.Helpers;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 

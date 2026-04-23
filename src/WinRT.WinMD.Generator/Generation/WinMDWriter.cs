@@ -8,6 +8,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.WinMDGenerator.Discovery;
 using WindowsRuntime.WinMDGenerator.Errors;
+using WindowsRuntime.WinMDGenerator.Helpers;
 using WindowsRuntime.WinMDGenerator.Models;
 using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
 

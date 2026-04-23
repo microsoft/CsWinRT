@@ -8,6 +8,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.WinMDGenerator.Discovery;
+using WindowsRuntime.WinMDGenerator.Helpers;
 using WindowsRuntime.WinMDGenerator.Models;
 using FieldAttributes = AsmResolver.PE.DotNet.Metadata.Tables.FieldAttributes;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;

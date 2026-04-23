@@ -8,6 +8,7 @@ using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.WinMDGenerator.Discovery;
+using WindowsRuntime.WinMDGenerator.Models;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 

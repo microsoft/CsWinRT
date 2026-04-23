@@ -6,6 +6,7 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.WinMDGenerator.Discovery;
+using WindowsRuntime.WinMDGenerator.Models;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
 using TypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
 
