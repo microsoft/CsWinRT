@@ -26,6 +26,15 @@ internal static class TypeDefinitionExtensions
         public bool IsWindowsRuntimeType => type.FindCustomAttributes("WindowsRuntime", "WindowsRuntimeMetadataAttribute").Any();
 
         /// <summary>
+        /// Checks whether the type is a Windows Runtime API contract (has the <c>[ApiContract]</c> attribute).
+        /// </summary>
+        /// <remarks>
+        /// In C#, API contracts are projected as enums with <c>[ApiContract]</c>, but in WinMD metadata
+        /// they are represented as empty structs per the Windows Runtime type system spec.
+        /// </remarks>
+        public bool IsApiContract => type.FindCustomAttributes("Windows.Foundation.Metadata", "ApiContractAttribute").Any();
+
+        /// <summary>
         /// Gets the Windows Runtime contract assembly name from <c>[WindowsRuntimeMetadata]</c> attribute on the type, if present.
         /// </summary>
         /// <returns>

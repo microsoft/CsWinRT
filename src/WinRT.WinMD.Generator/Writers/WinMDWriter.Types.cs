@@ -22,17 +22,6 @@ namespace WindowsRuntime.WinMDGenerator.Writers;
 internal sealed partial class WinMDWriter
 {
     /// <summary>
-    /// Checks if an enum type represents a Windows Runtime API contract (has <c>[ApiContract]</c> attribute).
-    /// </summary>
-    /// <param name="type">The enum <see cref="TypeDefinition"/> to check.</param>
-    /// <returns><see langword="true"/> if the type has an <c>[ApiContract]</c> attribute; otherwise, <see langword="false"/>.</returns>
-    private static bool IsApiContract(TypeDefinition type)
-    {
-        return type.CustomAttributes.Any(
-            attribute => attribute.Constructor?.DeclaringType?.Name?.Value == "ApiContractAttribute");
-    }
-
-    /// <summary>
     /// Emits an API contract type as an empty struct in the WinMD.
     /// </summary>
     /// <remarks>
@@ -76,7 +65,7 @@ internal sealed partial class WinMDWriter
     private void AddEnumType(TypeDefinition inputType)
     {
         // API contract types are projected as enums in C# but emitted as empty structs in WinMD
-        if (IsApiContract(inputType))
+        if (inputType.IsApiContract)
         {
             AddApiContractType(inputType);
             return;
