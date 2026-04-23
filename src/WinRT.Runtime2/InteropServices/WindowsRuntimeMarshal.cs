@@ -62,10 +62,7 @@ public static unsafe class WindowsRuntimeMarshal
         IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)*(void***)externalComObject;
         IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.Vtable;
 
-        return
-            unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface &&
-            unknownVftbl->AddRef == runtimeVftbl->AddRef &&
-            unknownVftbl->Release == runtimeVftbl->Release;
+        return unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface;
     }
 
     /// <summary>
