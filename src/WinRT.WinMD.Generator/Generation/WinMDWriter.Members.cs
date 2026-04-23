@@ -6,7 +6,6 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.WinMDGenerator.Discovery;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
 using MethodImplAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodImplAttributes;
 using MethodSemanticsAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodSemanticsAttributes;
@@ -146,7 +145,7 @@ internal sealed partial class WinMDWriter
         // Span<T> → FillArray pattern: [out] without BYREF
         if (inputParamType is GenericInstanceTypeSignature gits)
         {
-            string typeName = AssemblyAnalyzer.GetQualifiedName(gits.GenericType);
+            string typeName = gits.GenericType.QualifiedName;
             if (typeName == "System.Span`1")
             {
                 return ParameterAttributes.Out;

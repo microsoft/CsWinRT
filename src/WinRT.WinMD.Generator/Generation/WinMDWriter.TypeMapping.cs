@@ -6,7 +6,6 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.WinMDGenerator.Discovery;
 using WindowsRuntime.WinMDGenerator.Models;
 using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
 
@@ -56,7 +55,7 @@ internal sealed partial class WinMDWriter
         // Handle generic instance types
         if (inputSig is GenericInstanceTypeSignature genericInst)
         {
-            string genericTypeName = AssemblyAnalyzer.GetQualifiedName(genericInst.GenericType);
+            string genericTypeName = genericInst.GenericType.QualifiedName;
 
             // Map Span<T> and ReadOnlySpan<T> to T[] (SzArray) for WinRT
             // ReadOnlySpan<T> → PassArray (in), Span<T> → FillArray (out without BYREF)
@@ -96,7 +95,7 @@ internal sealed partial class WinMDWriter
         // Handle TypeDefOrRefSignature
         if (inputSig is TypeDefOrRefSignature typeDefOrRef)
         {
-            string typeName = AssemblyAnalyzer.GetQualifiedName(typeDefOrRef.Type);
+            string typeName = typeDefOrRef.Type.QualifiedName;
 
             // Check if the type has a WinRT mapping (e.g., IDisposable -> IClosable, Type -> TypeName)
             if (_mapper.HasMappingForType(typeName))
@@ -123,7 +122,7 @@ internal sealed partial class WinMDWriter
         if (type is TypeDefinition typeDef)
         {
             // Check if we've already processed this type into the output module
-            string qualifiedName = AssemblyAnalyzer.GetQualifiedName(typeDef);
+            string qualifiedName = typeDef.QualifiedName;
             if (_typeDefinitionMapping.TryGetValue(qualifiedName, out TypeDeclaration? declaration) && declaration.OutputType != null)
             {
                 return declaration.OutputType;
@@ -141,7 +140,7 @@ internal sealed partial class WinMDWriter
 
             // External type or non-WinRT type — create a type reference
             return GetOrCreateTypeReference(
-                AssemblyAnalyzer.GetEffectiveNamespace(typeDef) ?? "",
+                typeDef.EffectiveNamespace ?? "",
                 typeDef.Name!.Value,
                 _inputModule.Assembly?.Name?.Value ?? "mscorlib");
         }
@@ -165,7 +164,7 @@ internal sealed partial class WinMDWriter
             TypeDefinition? resolvedType = SafeResolve(typeRef);
             if (resolvedType != null)
             {
-                string? winrtAssembly = AssemblyAnalyzer.GetAssemblyForWinRTType(resolvedType);
+                string? winrtAssembly = resolvedType.WinRTAssemblyName;
                 if (winrtAssembly != null)
                 {
                     assembly = winrtAssembly;
@@ -204,7 +203,7 @@ internal sealed partial class WinMDWriter
     {
         if (type is TypeDefinition typeDef)
         {
-            string ns = AssemblyAnalyzer.GetEffectiveNamespace(typeDef) ?? "";
+            string ns = typeDef.EffectiveNamespace ?? "";
             string name = typeDef.Name!.Value;
             string assembly = _outputModule.Assembly?.Name?.Value ?? "mscorlib";
             return GetOrCreateTypeReference(ns, name, assembly);

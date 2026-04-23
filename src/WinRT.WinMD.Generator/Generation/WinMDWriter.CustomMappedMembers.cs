@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.WinMDGenerator.Discovery;
 using WindowsRuntime.WinMDGenerator.Helpers;
 using WindowsRuntime.WinMDGenerator.Models;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
@@ -122,7 +121,7 @@ internal sealed partial class WinMDWriter
         // Check if the mapped type itself has a WinRT mapping (e.g. KeyValuePair -> IKeyValuePair)
         if (mapped is TypeDefOrRefSignature tdrs)
         {
-            string typeName = AssemblyAnalyzer.GetQualifiedName(tdrs.Type);
+            string typeName = tdrs.Type.QualifiedName;
             if (_mapper.HasMappingForType(typeName))
             {
                 MappedType innerMapping = _mapper.GetMappedType(typeName);
@@ -135,7 +134,7 @@ internal sealed partial class WinMDWriter
         // For generic instances, recursively map type arguments
         if (mapped is GenericInstanceTypeSignature gits)
         {
-            string typeName = AssemblyAnalyzer.GetQualifiedName(gits.GenericType);
+            string typeName = gits.GenericType.QualifiedName;
             if (_mapper.HasMappingForType(typeName))
             {
                 MappedType innerMapping = _mapper.GetMappedType(typeName);

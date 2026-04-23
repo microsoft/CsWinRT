@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Collections.Generic;
-using System.Linq;
 using AsmResolver.DotNet;
 
 namespace WindowsRuntime.WinMDGenerator.Discovery;
@@ -10,8 +9,16 @@ namespace WindowsRuntime.WinMDGenerator.Discovery;
 /// <summary>
 /// Analyzes a compiled assembly to discover its public WinRT API surface.
 /// </summary>
+/// <remarks>
+/// This type is responsible for scanning the input module and collecting all public types
+/// that should be represented in the output WinMD. It discovers public classes, interfaces,
+/// structs, enums, and delegates, including nested public types.
+/// </remarks>
 internal sealed class AssemblyAnalyzer
 {
+    /// <summary>
+    /// The input module to analyze.
+    /// </summary>
     private readonly ModuleDefinition _inputModule;
 
     /// <summary>
@@ -48,9 +55,11 @@ internal sealed class AssemblyAnalyzer
     /// <summary>
     /// Recursively collects public types, including nested public types.
     /// </summary>
+    /// <param name="type">The type to check and potentially collect.</param>
+    /// <param name="publicTypes">The list to add public types to.</param>
     private static void CollectPublicTypes(TypeDefinition type, List<TypeDefinition> publicTypes)
     {
-        if (!IsPublicType(type))
+        if (!type.IsPublic && !type.IsNestedPublic)
         {
             return;
         }
@@ -66,94 +75,5 @@ internal sealed class AssemblyAnalyzer
         {
             CollectPublicTypes(nestedType, publicTypes);
         }
-    }
-
-    /// <summary>
-    /// Checks whether a type is public (visible outside the assembly).
-    /// </summary>
-    private static bool IsPublicType(TypeDefinition type)
-    {
-        return type.IsPublic || type.IsNestedPublic;
-    }
-
-    /// <summary>
-    /// Checks whether a type is a WinRT type (has the WindowsRuntimeMetadataAttribute).
-    /// </summary>
-    internal static bool IsWinRTType(TypeDefinition type)
-    {
-        return type.CustomAttributes.Any(
-            attr => attr.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeMetadataAttribute");
-    }
-
-    /// <summary>
-    /// Gets the WinRT contract assembly name from WindowsRuntimeMetadataAttribute on a type, if present.
-    /// </summary>
-    internal static string? GetAssemblyForWinRTType(TypeDefinition type)
-    {
-        foreach (CustomAttribute attr in type.CustomAttributes)
-        {
-            if (attr.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeMetadataAttribute"
-                && attr.Signature?.FixedArguments.Count > 0)
-            {
-                return attr.Signature.FixedArguments[0].Element?.ToString();
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Gets the effective namespace of a type. For nested types, this walks up the
-    /// declaring type chain since nested types have no namespace of their own in metadata.
-    /// </summary>
-    internal static string? GetEffectiveNamespace(TypeDefinition type)
-    {
-        if (type.Namespace is { Value.Length: > 0 })
-        {
-            return type.Namespace.Value;
-        }
-
-        // For nested types, walk up to the declaring type to find the namespace
-        TypeDefinition? current = type.DeclaringType;
-        while (current != null)
-        {
-            if (current.Namespace is { Value.Length: > 0 })
-            {
-                return current.Namespace.Value;
-            }
-
-            current = current.DeclaringType;
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Gets the full qualified name of a type, including generic arity.
-    /// For nested types, uses the effective namespace from the declaring type chain.
-    /// </summary>
-    internal static string GetQualifiedName(TypeDefinition type)
-    {
-        string name = type.Name!.Value;
-
-        string? ns = GetEffectiveNamespace(type);
-        return ns is { Length: > 0 } ? $"{ns}.{name}" : name;
-    }
-
-    /// <summary>
-    /// Gets the full qualified name for an <see cref="ITypeDefOrRef"/>.
-    /// For nested <see cref="TypeDefinition"/> types, uses the effective namespace from the declaring type chain.
-    /// </summary>
-    internal static string GetQualifiedName(ITypeDefOrRef type)
-    {
-        if (type is TypeDefinition td)
-        {
-            return GetQualifiedName(td);
-        }
-
-        string name = type.Name!.Value;
-        string? ns = type.Namespace?.Value;
-
-        return ns is { Length: > 0 } ? $"{ns}.{name}" : name;
     }
 }

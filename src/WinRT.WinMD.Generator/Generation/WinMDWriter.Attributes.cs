@@ -7,7 +7,6 @@ using System.Security.Cryptography;
 using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.WinMDGenerator.Discovery;
 using WindowsRuntime.WinMDGenerator.Models;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
@@ -30,7 +29,7 @@ internal sealed partial class WinMDWriter
         }
 
         // Generate a GUID from the type name using SHA1
-        string typeName = AssemblyAnalyzer.GetQualifiedName(inputType);
+        string typeName = inputType.QualifiedName;
         AddGuidAttributeFromName(outputType, typeName);
     }
 

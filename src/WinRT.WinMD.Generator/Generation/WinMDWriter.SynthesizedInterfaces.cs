@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.WinMDGenerator.Discovery;
 using WindowsRuntime.WinMDGenerator.Models;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
 using TypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
@@ -111,7 +110,7 @@ internal sealed partial class WinMDWriter
         HashSet<string> membersFromInterfaces)
     {
         bool hasMembers = false;
-        string ns = AssemblyAnalyzer.GetEffectiveNamespace(inputType) ?? "";
+        string ns = inputType.EffectiveNamespace ?? "";
         string className = inputType.Name!.Value;
         string interfaceName = GetSynthesizedInterfaceName(className, interfaceType);
 
@@ -246,7 +245,7 @@ internal sealed partial class WinMDWriter
             AddGuidAttributeFromName(synthesizedInterface, interfaceName);
 
             // Add ExclusiveTo attribute
-            AddExclusiveToAttribute(synthesizedInterface, AssemblyAnalyzer.GetQualifiedName(inputType));
+            AddExclusiveToAttribute(synthesizedInterface, inputType.QualifiedName);
 
             if (interfaceType == SynthesizedInterfaceType.Factory)
             {
@@ -263,7 +262,7 @@ internal sealed partial class WinMDWriter
     private void AddFactoryMethod(TypeDefinition synthesizedInterface, TypeDefinition classType, MethodDefinition constructor)
     {
         // Look up the output class TypeDefinition to use as the return type
-        string classQualifiedName = AssemblyAnalyzer.GetQualifiedName(classType);
+        string classQualifiedName = classType.QualifiedName;
         TypeDefinition outputClassType = _typeDefinitionMapping[classQualifiedName].OutputType!;
         TypeSignature returnType = new TypeDefOrRefSignature(outputClassType, isValueType: false);
 
@@ -284,7 +283,7 @@ internal sealed partial class WinMDWriter
     private static string GetInterfaceQualifiedName(ITypeDefOrRef type)
     {
         return type is TypeSpecification typeSpec && typeSpec.Signature is GenericInstanceTypeSignature genericInst
-            ? AssemblyAnalyzer.GetQualifiedName(genericInst.GenericType)
-            : AssemblyAnalyzer.GetQualifiedName(type);
+            ? genericInst.GenericType.QualifiedName
+            : type.QualifiedName;
     }
 }

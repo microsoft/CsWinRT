@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.WinMDGenerator.Discovery;
 using WindowsRuntime.WinMDGenerator.Errors;
 using WindowsRuntime.WinMDGenerator.Helpers;
 using WindowsRuntime.WinMDGenerator.Models;
@@ -87,7 +86,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     public void ProcessType(TypeDefinition inputType)
     {
-        string qualifiedName = AssemblyAnalyzer.GetQualifiedName(inputType);
+        string qualifiedName = inputType.QualifiedName;
 
         if (_typeDefinitionMapping.ContainsKey(qualifiedName))
         {
@@ -193,7 +192,7 @@ internal sealed partial class WinMDWriter
                 }
 
                 // Skip the default synthesized interface — it's handled separately below
-                string interfaceQualName = AssemblyAnalyzer.GetQualifiedName(interfaceDef);
+                string interfaceQualName = interfaceDef.QualifiedName;
                 if (interfaceQualName == declaration.DefaultInterface)
                 {
                     continue;

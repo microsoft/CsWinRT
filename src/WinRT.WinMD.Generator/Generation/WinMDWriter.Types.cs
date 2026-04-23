@@ -7,7 +7,6 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.WinMDGenerator.Discovery;
 using WindowsRuntime.WinMDGenerator.Helpers;
 using WindowsRuntime.WinMDGenerator.Models;
 using FieldAttributes = AsmResolver.PE.DotNet.Metadata.Tables.FieldAttributes;
@@ -37,7 +36,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     private void AddApiContractType(TypeDefinition inputType)
     {
-        string qualifiedName = AssemblyAnalyzer.GetQualifiedName(inputType);
+        string qualifiedName = inputType.QualifiedName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -49,7 +48,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "ValueType", "mscorlib");
 
         TypeDefinition outputType = new(
-            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
+            inputType.EffectiveNamespace,
             inputType.Name!.Value,
             typeAttributes,
             baseType);
@@ -68,7 +67,7 @@ internal sealed partial class WinMDWriter
             return;
         }
 
-        string qualifiedName = AssemblyAnalyzer.GetQualifiedName(inputType);
+        string qualifiedName = inputType.QualifiedName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -80,7 +79,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "Enum", "mscorlib");
 
         TypeDefinition outputType = new(
-            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
+            inputType.EffectiveNamespace,
             inputType.Name!.Value,
             typeAttributes,
             baseType);
@@ -144,7 +143,7 @@ internal sealed partial class WinMDWriter
 
     private void AddDelegateType(TypeDefinition inputType)
     {
-        string qualifiedName = AssemblyAnalyzer.GetQualifiedName(inputType);
+        string qualifiedName = inputType.QualifiedName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -156,7 +155,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "MulticastDelegate", "mscorlib");
 
         TypeDefinition outputType = new(
-            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
+            inputType.EffectiveNamespace,
             inputType.Name!.Value,
             typeAttributes,
             baseType);
@@ -219,7 +218,7 @@ internal sealed partial class WinMDWriter
 
     private void AddInterfaceType(TypeDefinition inputType)
     {
-        string qualifiedName = AssemblyAnalyzer.GetQualifiedName(inputType);
+        string qualifiedName = inputType.QualifiedName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -230,7 +229,7 @@ internal sealed partial class WinMDWriter
             TypeAttributes.Abstract;
 
         TypeDefinition outputType = new(
-            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
+            inputType.EffectiveNamespace,
             inputType.Name!.Value,
             typeAttributes);
 
@@ -278,7 +277,7 @@ internal sealed partial class WinMDWriter
 
     private void AddStructType(TypeDefinition inputType)
     {
-        string qualifiedName = AssemblyAnalyzer.GetQualifiedName(inputType);
+        string qualifiedName = inputType.QualifiedName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -290,7 +289,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "ValueType", "mscorlib");
 
         TypeDefinition outputType = new(
-            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
+            inputType.EffectiveNamespace,
             inputType.Name!.Value,
             typeAttributes,
             baseType);
@@ -318,7 +317,7 @@ internal sealed partial class WinMDWriter
 
     private void AddClassType(TypeDefinition inputType)
     {
-        string qualifiedName = AssemblyAnalyzer.GetQualifiedName(inputType);
+        string qualifiedName = inputType.QualifiedName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -358,7 +357,7 @@ internal sealed partial class WinMDWriter
         }
 
         TypeDefinition outputType = new(
-            AssemblyAnalyzer.GetEffectiveNamespace(inputType),
+            inputType.EffectiveNamespace,
             inputType.Name!.Value,
             typeAttributes,
             baseType);
