@@ -339,9 +339,9 @@ internal sealed partial class WinMDWriter
             .Select(MapTypeSignatureToOutput)];
 
         MethodDefinition factoryMethod = new(
-            "Create" + classType.Name!.Value,
-            MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot,
-            MethodSignature.CreateInstance(returnType, parameterTypes));
+            name: "Create" + classType.Name!.Value,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot,
+            signature: MethodSignature.CreateInstance(returnType, parameterTypes));
 
         // Add parameter definitions with correct Windows Runtime attributes
         AddParameterDefinitions(factoryMethod, constructor);

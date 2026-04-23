@@ -458,10 +458,10 @@ internal sealed partial class WinMDWriter
             CustomAttributeArgument clonedInnerArg = CloneAttributeArgument(namedArg.Argument);
 
             outputSignature.NamedArguments.Add(new CustomAttributeNamedArgument(
-                namedArg.MemberType,
-                namedArg.MemberName,
-                mappedArgType,
-                clonedInnerArg));
+                memberType: namedArg.MemberType,
+                memberName: namedArg.MemberName,
+                argumentType: mappedArgType,
+                argument: clonedInnerArg));
         }
 
         return outputSignature;

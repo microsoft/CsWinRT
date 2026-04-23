@@ -43,10 +43,10 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "ValueType", "mscorlib");
 
         TypeDefinition outputType = new(
-            inputType.EffectiveNamespace,
-            inputType.Name!.Value,
-            typeAttributes,
-            baseType);
+            ns: inputType.EffectiveNamespace,
+            name: inputType.Name!.Value,
+            attributes: typeAttributes,
+            baseType: baseType);
 
         _outputModule.TopLevelTypes.Add(outputType);
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
@@ -83,17 +83,17 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "Enum", "mscorlib");
 
         TypeDefinition outputType = new(
-            inputType.EffectiveNamespace,
-            inputType.Name!.Value,
-            typeAttributes,
-            baseType);
+            ns: inputType.EffectiveNamespace,
+            name: inputType.Name!.Value,
+            attributes: typeAttributes,
+            baseType: baseType);
 
         // Add the 'value__' field
         TypeSignature underlyingType = GetEnumUnderlyingType(inputType);
         FieldDefinition valueField = new(
-            "value__",
-            FieldAttributes.Private | FieldAttributes.SpecialName | FieldAttributes.RuntimeSpecialName,
-            new FieldSignature(underlyingType));
+            name: "value__",
+            attributes: FieldAttributes.Private | FieldAttributes.SpecialName | FieldAttributes.RuntimeSpecialName,
+            signature: new FieldSignature(underlyingType));
         outputType.Fields.Add(valueField);
 
         _outputModule.TopLevelTypes.Add(outputType);
@@ -118,9 +118,9 @@ internal sealed partial class WinMDWriter
             }
 
             FieldDefinition outputField = new(
-                field.Name!.Value,
-                FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal | FieldAttributes.HasDefault,
-                new FieldSignature(enumTypeSignature));
+                name: field.Name!.Value,
+                attributes: FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal | FieldAttributes.HasDefault,
+                signature: new FieldSignature(enumTypeSignature));
 
             if (field.Constant != null)
             {
@@ -173,10 +173,10 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "MulticastDelegate", "mscorlib");
 
         TypeDefinition outputType = new(
-            inputType.EffectiveNamespace,
-            inputType.Name!.Value,
-            typeAttributes,
-            baseType);
+            ns: inputType.EffectiveNamespace,
+            name: inputType.Name!.Value,
+            attributes: typeAttributes,
+            baseType: baseType);
 
         // Register early so self-referencing signatures can find this type
         _outputModule.TopLevelTypes.Add(outputType);
@@ -185,9 +185,9 @@ internal sealed partial class WinMDWriter
 
         // Add '.ctor(object, IntPtr)' — private per Windows Runtime delegate convention
         MethodDefinition ctor = new(
-            ".ctor",
-            MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
-            MethodSignature.CreateInstance(
+            name: ".ctor",
+            attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
+            signature: MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
                 [_outputModule.CorLibTypeFactory.Object,
                 _outputModule.CorLibTypeFactory.IntPtr]))
@@ -210,9 +210,9 @@ internal sealed partial class WinMDWriter
                 .Select(MapTypeSignatureToOutput)];
 
             MethodDefinition invoke = new(
-                "Invoke",
-                MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual | MethodAttributes.NewSlot,
-                MethodSignature.CreateInstance(returnType, parameterTypes))
+                name: "Invoke",
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual | MethodAttributes.NewSlot,
+                signature: MethodSignature.CreateInstance(returnType, parameterTypes))
             {
                 ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
             };
@@ -255,9 +255,9 @@ internal sealed partial class WinMDWriter
             TypeAttributes.Abstract;
 
         TypeDefinition outputType = new(
-            inputType.EffectiveNamespace,
-            inputType.Name!.Value,
-            typeAttributes);
+            ns: inputType.EffectiveNamespace,
+            name: inputType.Name!.Value,
+            attributes: typeAttributes);
 
         // Register early so self-referencing signatures can find this type
         _outputModule.TopLevelTypes.Add(outputType);
@@ -323,10 +323,10 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "ValueType", "mscorlib");
 
         TypeDefinition outputType = new(
-            inputType.EffectiveNamespace,
-            inputType.Name!.Value,
-            typeAttributes,
-            baseType);
+            ns: inputType.EffectiveNamespace,
+            name: inputType.Name!.Value,
+            attributes: typeAttributes,
+            baseType: baseType);
 
         // Register early so self-referencing signatures can find this type
         _outputModule.TopLevelTypes.Add(outputType);
@@ -342,9 +342,9 @@ internal sealed partial class WinMDWriter
             }
 
             FieldDefinition outputField = new(
-                field.Name!.Value,
-                FieldAttributes.Public,
-                new FieldSignature(MapTypeSignatureToOutput(field.Signature!.FieldType)));
+                name: field.Name!.Value,
+                attributes: FieldAttributes.Public,
+                signature: new FieldSignature(MapTypeSignatureToOutput(field.Signature!.FieldType)));
             outputType.Fields.Add(outputField);
         }
     }
@@ -410,10 +410,10 @@ internal sealed partial class WinMDWriter
         }
 
         TypeDefinition outputType = new(
-            inputType.EffectiveNamespace,
-            inputType.Name!.Value,
-            typeAttributes,
-            baseType);
+            ns: inputType.EffectiveNamespace,
+            name: inputType.Name!.Value,
+            attributes: typeAttributes,
+            baseType: baseType);
 
         // Register in the mapping early so self-referencing method signatures can find it
         _outputModule.TopLevelTypes.Add(outputType);
@@ -494,9 +494,9 @@ internal sealed partial class WinMDWriter
         if (!hasConstructor && !hasAtLeastOneNonPublicConstructor && !isStaticClass)
         {
             MethodDefinition defaultCtor = new(
-                ".ctor",
-                MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
-                MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void))
+                name: ".ctor",
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
+                signature: MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void))
             {
                 ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
             };
@@ -678,8 +678,10 @@ internal sealed partial class WinMDWriter
                 attrs |= MethodAttributes.SpecialName;
             }
 
-            MethodDefinition outputMethod = new(winrtFullName, attrs,
-                MethodSignature.CreateInstance(returnType, parameterTypes))
+            MethodDefinition outputMethod = new(
+                name: winrtFullName,
+                attributes: attrs,
+                signature: MethodSignature.CreateInstance(returnType, parameterTypes))
             {
                 ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
             };
@@ -734,8 +736,10 @@ internal sealed partial class WinMDWriter
             TypeDeclaration interfaceDecl = _typeDefinitionMapping[interfaceQualName];
             if (interfaceDecl.OutputType != null)
             {
-                MemberReference interfaceMethodRef = new(interfaceDecl.OutputType, winrtShortName,
-                    MethodSignature.CreateInstance(returnType, parameterTypes));
+                MemberReference interfaceMethodRef = new(
+                    parent: interfaceDecl.OutputType,
+                    name: winrtShortName,
+                    signature: MethodSignature.CreateInstance(returnType, parameterTypes));
                 outputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, outputMethod));
             }
         }

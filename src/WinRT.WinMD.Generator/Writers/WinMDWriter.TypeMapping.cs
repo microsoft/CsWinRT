@@ -299,7 +299,9 @@ internal sealed partial class WinMDWriter
             ? 0
             : AssemblyAttributes.ContentWindowsRuntime;
 
-        AssemblyReference assemblyReference = new(assemblyName, new Version(0xFF, 0xFF, 0xFF, 0xFF))
+        AssemblyReference assemblyReference = new(
+            name: assemblyName,
+            version: new Version(0xFF, 0xFF, 0xFF, 0xFF))
         {
             Attributes = flags,
         };

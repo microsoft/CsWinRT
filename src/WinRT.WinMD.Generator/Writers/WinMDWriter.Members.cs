@@ -48,9 +48,9 @@ internal sealed partial class WinMDWriter
         }
 
         MethodDefinition outputMethod = new(
-            inputMethod.Name!.Value,
-            attrs,
-            MethodSignature.CreateInstance(returnType, parameterTypes));
+            name: inputMethod.Name!.Value,
+            attributes: attrs,
+            signature: MethodSignature.CreateInstance(returnType, parameterTypes));
 
         // Add parameter definitions with correct attributes for Windows Runtime array conventions
         AddParameterDefinitions(outputMethod, inputMethod);
@@ -107,9 +107,9 @@ internal sealed partial class WinMDWriter
             : MethodSignature.CreateStatic(returnType, parameterTypes);
 
         MethodDefinition outputMethod = new(
-            inputMethod.Name!.Value,
-            attrs,
-            signature)
+            name: inputMethod.Name!.Value,
+            attributes: attrs,
+            signature: signature)
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
@@ -203,9 +203,9 @@ internal sealed partial class WinMDWriter
         bool isStatic = !isInterfaceParent && (inputProperty.GetMethod?.IsStatic == true || inputProperty.SetMethod?.IsStatic == true);
 
         PropertyDefinition outputProperty = new(
-            inputProperty.Name!.Value,
-            0,
-            isStatic ? PropertySignature.CreateStatic(propertyType) : PropertySignature.CreateInstance(propertyType));
+            name: inputProperty.Name!.Value,
+            attributes: 0,
+            signature: isStatic ? PropertySignature.CreateStatic(propertyType) : PropertySignature.CreateInstance(propertyType));
 
         // Add getter
         if (inputProperty.GetMethod != null)
