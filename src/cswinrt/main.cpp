@@ -164,6 +164,7 @@ Where <spec> is one or more of:
                     for (auto&& type : members.classes)
                     {
                         if (!settings.filter.includes(type)) { continue; }
+                        if (is_removed(type)) { continue; }
                         for (auto&& attribute : type.CustomAttribute())
                         {
                             auto attribute_name = attribute.TypeNamespaceAndName();

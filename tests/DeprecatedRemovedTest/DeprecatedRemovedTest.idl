@@ -1,0 +1,189 @@
+// Test IDL for verifying deprecated and removed API support
+// Contains types with DeprecationType.Deprecate (0) and DeprecationType.Remove (1)
+//
+// This IDL covers ALL deprecation gaps found during functional testing:
+//   - Type-level: enums, enum fields, structs, delegates, interfaces, classes
+//   - Member-level on [default_interface] runtimeclass: methods, properties, events
+//   - ABI code generation for removed types (must not reference missing projected types)
+//   - MIDL attribute placement (DeprecatedAttribute on getter/add methods, not Property/Event rows)
+import "Windows.Foundation.idl";
+
+namespace DeprecatedRemovedTest
+{
+    // ========================================================================
+    // ENUMS
+    // ========================================================================
+
+    // Fully removed enum - should NOT appear in projection
+    [deprecated("RemovedEnum has been removed.", remove, 2)]
+    enum RemovedEnum
+    {
+        Alpha = 0,
+        Beta = 1
+    };
+
+    // Partially removed enum - Hidden value should be absent
+    enum PartiallyRemovedEnum
+    {
+        Visible = 0,
+        [deprecated("Hidden value has been removed.", remove, 2)]
+        Hidden = 1,
+        AlsoVisible = 2
+    };
+
+    // Deprecated enum - should have [Obsolete] but still be present
+    [deprecated("DeprecatedEnum is deprecated for testing.", deprecate, 1)]
+    enum DeprecatedEnum
+    {
+        First = 0,
+        Second = 1
+    };
+
+    // Normal enum for comparison
+    enum NormalEnum
+    {
+        One = 0,
+        Two = 1
+    };
+
+    // ========================================================================
+    // DELEGATES
+    // ========================================================================
+
+    // Deprecated delegate
+    [deprecated("DeprecatedDelegate is deprecated.", deprecate, 1)]
+    delegate void DeprecatedDelegate();
+
+    // Removed delegate - should NOT appear in projection
+    [deprecated("RemovedDelegate is gone.", remove, 2)]
+    delegate void RemovedDelegate();
+
+    // Normal delegate for comparison
+    delegate void NormalDelegate();
+
+    // Event handler delegate for event tests
+    delegate void TestEventHandler(String message);
+
+    // ========================================================================
+    // STRUCTS
+    // ========================================================================
+
+    // Deprecated struct
+    [deprecated("DeprecatedStruct is deprecated.", deprecate, 1)]
+    struct DeprecatedStruct
+    {
+        Int32 Value;
+    };
+
+    // Removed struct - should NOT appear in projection
+    [deprecated("RemovedStruct has been removed.", remove, 2)]
+    struct RemovedStruct
+    {
+        Int32 Value;
+    };
+
+    // ========================================================================
+    // INTERFACES
+    // ========================================================================
+
+    // Interface with mix of normal, deprecated, and removed methods
+    interface IVtableTest
+    {
+        void NormalMethod();
+        [deprecated("DeprecatedMethod is deprecated.", deprecate, 1)]
+        void DeprecatedMethod();
+        [deprecated("RemovedMethod is gone.", remove, 2)]
+        void RemovedMethod();
+        void AnotherNormalMethod();
+    };
+
+    // Deprecated interface - should have [Obsolete] but still be present
+    [deprecated("IDeprecatedInterface is deprecated.", deprecate, 1)]
+    interface IDeprecatedInterface
+    {
+        void DeprecatedWork();
+    };
+
+    // Removed interface - should NOT appear in projection at all
+    // (Previously caused CS0234 errors when ABI code referenced missing projected type)
+    [deprecated("IRemovedInterface has been removed.", remove, 2)]
+    interface IRemovedInterface
+    {
+        void RemovedWork();
+    };
+
+    // ========================================================================
+    // RUNTIMECLASSES
+    // ========================================================================
+
+    // Main test class with [default_interface] — tests member-level deprecation
+    // on the projected class (write_class_method, write_class_event, write_class_members)
+    [default_interface]
+    runtimeclass TestClass
+    {
+        TestClass();
+
+        [deprecated("Constructor with name is deprecated.", deprecate, 1)]
+        TestClass(String name);
+
+        [deprecated("Constructor with name and config has been removed.", remove, 2)]
+        TestClass(String name, Int32 config);
+
+        // --- Methods ---
+        void ActiveMethod();
+        [deprecated("RemovedMethod has been removed.", remove, 2)]
+        void RemovedMethod();
+        [deprecated("DeprecatedMethod is deprecated.", deprecate, 1)]
+        void DeprecatedMethod();
+        static void ActiveStaticMethod();
+        [deprecated("RemovedStaticMethod has been removed.", remove, 2)]
+        static void RemovedStaticMethod();
+
+        // --- Properties (Gap: MIDL puts DeprecatedAttr on getter, not Property row) ---
+        String NormalProp { get; };
+        [deprecated("DeprecatedProp is deprecated.", deprecate, 1)]
+        String DeprecatedProp { get; };
+        [deprecated("RemovedProp has been removed.", remove, 2)]
+        String RemovedProp { get; };
+
+        // --- Read-write properties ---
+        String WritableProp;
+        [deprecated("WritableDeprecatedProp is deprecated.", deprecate, 1)]
+        String WritableDeprecatedProp;
+        [deprecated("WritableRemovedProp has been removed.", remove, 2)]
+        String WritableRemovedProp;
+
+        // --- Static properties ---
+        static String StaticProp { get; };
+        [deprecated("StaticDeprecatedProp is deprecated.", deprecate, 1)]
+        static String StaticDeprecatedProp { get; };
+        [deprecated("StaticRemovedProp has been removed.", remove, 2)]
+        static String StaticRemovedProp { get; };
+
+        // --- Events (Gap: MIDL puts DeprecatedAttr on add method, not Event row) ---
+        event TestEventHandler NormalEvent;
+        [deprecated("DeprecatedEvent is deprecated.", deprecate, 1)]
+        event TestEventHandler DeprecatedEvent;
+        [deprecated("RemovedEvent has been removed.", remove, 2)]
+        event TestEventHandler RemovedEvent;
+    }
+
+    // Fully deprecated class
+    [deprecated("DeprecatedClass is deprecated.", deprecate, 1)]
+    [default_interface]
+    runtimeclass DeprecatedClass
+    {
+        DeprecatedClass();
+        void Method();
+    }
+
+    // Fully removed class - should NOT appear in projection
+    // (Previously caused CS0234 when ABI code referenced missing projected type)
+    [deprecated("RemovedClass has been removed.", remove, 2)]
+    [default_interface]
+    runtimeclass RemovedClass
+    {
+        RemovedClass();
+        void Method();
+    }
+}
