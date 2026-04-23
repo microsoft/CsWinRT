@@ -153,7 +153,7 @@ internal sealed partial class WinMDWriter
         {
             // Check if we've already processed this type into the output module
             string qualifiedName = typeDef.QualifiedName;
-            if (_typeDefinitionMapping.TryGetValue(qualifiedName, out TypeDeclaration? declaration) && declaration.OutputType != null)
+            if (_typeDefinitionMapping.TryGetValue(qualifiedName, out TypeDeclaration? declaration) && declaration.OutputType is not null)
             {
                 return declaration.OutputType;
             }
@@ -162,7 +162,7 @@ internal sealed partial class WinMDWriter
             if (typeDef.IsPublic || typeDef.IsNestedPublic)
             {
                 ProcessType(typeDef);
-                if (_typeDefinitionMapping.TryGetValue(qualifiedName, out declaration) && declaration.OutputType != null)
+                if (_typeDefinitionMapping.TryGetValue(qualifiedName, out declaration) && declaration.OutputType is not null)
                 {
                     return declaration.OutputType;
                 }
@@ -182,7 +182,7 @@ internal sealed partial class WinMDWriter
             string fullName = string.IsNullOrEmpty(@namespace) ? name : $"{@namespace}.{name}";
 
             // Check if this type is in the output module (same-assembly reference)
-            if (_typeDefinitionMapping.TryGetValue(fullName, out TypeDeclaration? declaration) && declaration.OutputType != null)
+            if (_typeDefinitionMapping.TryGetValue(fullName, out TypeDeclaration? declaration) && declaration.OutputType is not null)
             {
                 return declaration.OutputType;
             }
@@ -192,10 +192,10 @@ internal sealed partial class WinMDWriter
             // E.g., 'StackPanel' from 'Microsoft.WinUI' → 'Microsoft.UI.Xaml' in the WinMD.
             string assembly = GetAssemblyNameFromScope(typeRef.Scope);
             TypeDefinition? resolvedType = SafeResolve(typeRef);
-            if (resolvedType != null)
+            if (resolvedType is not null)
             {
                 string? winrtAssembly = resolvedType.WindowsRuntimeAssemblyName;
-                if (winrtAssembly != null)
+                if (winrtAssembly is not null)
                 {
                     assembly = winrtAssembly;
                 }

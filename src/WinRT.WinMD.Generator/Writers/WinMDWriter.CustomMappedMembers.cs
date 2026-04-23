@@ -45,7 +45,7 @@ internal sealed partial class WinMDWriter
 
         foreach (InterfaceImplementation interfaceImplementation in allInterfaces)
         {
-            if (interfaceImplementation.Interface == null)
+            if (interfaceImplementation.Interface is null)
             {
                 continue;
             }
@@ -70,7 +70,7 @@ internal sealed partial class WinMDWriter
 
         // If generic 'IEnumerable<T>' ('IIterable') is present, skip non-generic 'IEnumerable' ('IBindableIterable')
         bool hasGenericEnumerable = allInterfaces.Any(i =>
-            i.Interface != null && GetInterfaceQualifiedName(i.Interface) == "System.Collections.Generic.IEnumerable`1");
+            i.Interface is not null && GetInterfaceQualifiedName(i.Interface) == "System.Collections.Generic.IEnumerable`1");
 
         foreach ((InterfaceImplementation interfaceImplementation, string interfaceName, MappedType mapping, bool isPublic) in mappedInterfaces)
         {
@@ -208,7 +208,7 @@ internal sealed partial class WinMDWriter
         // Returns the corresponding GenericParameterSignature (!0, !1) or null if not found.
         GenericParameterSignature? FindParentGenericParam(TypeSignature signature)
         {
-            if (parentGenericArgs == null)
+            if (parentGenericArgs is null)
             {
                 return null;
             }
@@ -231,10 +231,10 @@ internal sealed partial class WinMDWriter
         // (e.g., EventHandler`1<Object> -> EventHandler`1<!0>) matching Windows Runtime metadata conventions.
         TypeSignature ToGenericParam(TypeSignature signature)
         {
-            if (parentGenericArgs != null)
+            if (parentGenericArgs is not null)
             {
                 GenericParameterSignature? genericParameter = FindParentGenericParam(signature);
-                if (genericParameter != null)
+                if (genericParameter is not null)
                 {
                     return genericParameter;
                 }
@@ -259,7 +259,7 @@ internal sealed partial class WinMDWriter
                 TypeSignature arg = genericInstanceSignature.TypeArguments[i];
                 // Try parent interface generic arg substitution (first match wins for duplicate args)
                 GenericParameterSignature? parentGenericParameter = FindParentGenericParam(arg);
-                if (parentGenericParameter != null)
+                if (parentGenericParameter is not null)
                 {
                     openArgs[i] = parentGenericParameter;
                 }
@@ -293,7 +293,7 @@ internal sealed partial class WinMDWriter
                 ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
             };
 
-            if (parameters != null)
+            if (parameters is not null)
             {
                 int idx = 1;
                 foreach ((string name, TypeSignature type, ParameterAttributes attributes) p in parameters)
@@ -606,14 +606,14 @@ internal sealed partial class WinMDWriter
         {
             foreach (InterfaceImplementation interfaceImplementation in typeDef.Interfaces)
             {
-                if (interfaceImplementation.Interface == null)
+                if (interfaceImplementation.Interface is null)
                 {
                     continue;
                 }
 
                 // If we have generic args, substitute them in the interface reference
                 ITypeDefOrRef resolvedInterface = interfaceImplementation.Interface;
-                if (genericArgs != null && interfaceImplementation.Interface is TypeSpecification typeSpecification &&
+                if (genericArgs is not null && interfaceImplementation.Interface is TypeSpecification typeSpecification &&
                     typeSpecification.Signature is GenericInstanceTypeSignature genericInstanceSignature)
                 {
                     // Resolve generic parameters in type arguments (recursively for nested generics)
@@ -637,7 +637,7 @@ internal sealed partial class WinMDWriter
                     ? SafeResolve((interfaceTypeSpecification.Signature as GenericInstanceTypeSignature)?.GenericType)
                     : SafeResolve(resolvedInterface);
 
-                if (interfaceDef != null)
+                if (interfaceDef is not null)
                 {
                     // Pass the resolved interface's generic args down
                     TypeSignature[]? innerArgs = resolvedInterface is TypeSpecification innerTypeSpecification &&
@@ -654,10 +654,10 @@ internal sealed partial class WinMDWriter
 
         // Walk base types, resolving generic arguments
         ITypeDefOrRef? baseTypeRef = type.BaseType;
-        while (baseTypeRef != null)
+        while (baseTypeRef is not null)
         {
             TypeDefinition? baseDef = SafeResolve(baseTypeRef);
-            if (baseDef == null)
+            if (baseDef is null)
             {
                 break;
             }
@@ -742,14 +742,14 @@ internal sealed partial class WinMDWriter
             ? (typeSpecification.Signature as GenericInstanceTypeSignature)?.GenericType.Resolve(runtimeContext)
             : interfaceImplementation.Interface?.Resolve(runtimeContext);
 
-        if (interfaceDef == null)
+        if (interfaceDef is null)
         {
             return false;
         }
 
         // Walk the class hierarchy to find public implementations
         TypeDefinition? current = classType;
-        while (current != null)
+        while (current is not null)
         {
             foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
             {
@@ -825,7 +825,7 @@ internal sealed partial class WinMDWriter
 
         foreach (InterfaceImplementation interfaceImplementation in allInterfaces)
         {
-            if (interfaceImplementation.Interface == null)
+            if (interfaceImplementation.Interface is null)
             {
                 continue;
             }
@@ -843,7 +843,7 @@ internal sealed partial class WinMDWriter
                 ? SafeResolve((typeSpecification.Signature as GenericInstanceTypeSignature)?.GenericType)
                 : SafeResolve(interfaceImplementation.Interface);
 
-            if (interfaceDef == null)
+            if (interfaceDef is null)
             {
                 continue;
             }

@@ -122,7 +122,7 @@ internal sealed partial class WinMDWriter
                 attributes: FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal | FieldAttributes.HasDefault,
                 signature: new FieldSignature(enumTypeSignature));
 
-            if (field.Constant != null)
+            if (field.Constant is not null)
             {
                 outputField.Constant = new Constant(field.Constant.Type, new DataBlobSignature(field.Constant.Value!.Data));
             }
@@ -200,7 +200,7 @@ internal sealed partial class WinMDWriter
 
         // Add 'Invoke' method
         MethodDefinition? inputInvoke = inputType.Methods.FirstOrDefault(m => m.Name?.Value == "Invoke");
-        if (inputInvoke != null)
+        if (inputInvoke is not null)
         {
             TypeSignature returnType = inputInvoke.Signature!.ReturnType is CorLibTypeSignature { ElementType: ElementType.Void }
                 ? _outputModule.CorLibTypeFactory.Void
@@ -290,7 +290,7 @@ internal sealed partial class WinMDWriter
         // Add interface implementations
         foreach (InterfaceImplementation interfaceImplementation in inputType.Interfaces)
         {
-            if (interfaceImplementation.Interface != null)
+            if (interfaceImplementation.Interface is not null)
             {
                 ITypeDefOrRef outputInterfaceRef = EnsureTypeReference(ImportTypeReference(interfaceImplementation.Interface));
                 outputType.Interfaces.Add(new InterfaceImplementation(outputInterfaceRef));
@@ -396,11 +396,11 @@ internal sealed partial class WinMDWriter
 
         // Determine base type
         ITypeDefOrRef? baseType;
-        if (inputType.BaseType != null && inputType.BaseType.FullName != "System.Object")
+        if (inputType.BaseType is not null && inputType.BaseType.FullName != "System.Object")
         {
             // Check if the base type is abstract; Windows Runtime doesn't support projecting abstract classes
             TypeDefinition? baseTypeDef = SafeResolve(inputType.BaseType);
-            baseType = baseTypeDef != null && baseTypeDef.IsAbstract
+            baseType = baseTypeDef is not null && baseTypeDef.IsAbstract
                 ? GetOrCreateTypeReference("System", "Object", "mscorlib")
                 : ImportTypeReference(inputType.BaseType);
         }
@@ -507,7 +507,7 @@ internal sealed partial class WinMDWriter
         // Add interface implementations (excluding mapped and unmappable interfaces)
         foreach (InterfaceImplementation interfaceImplementation in inputType.Interfaces)
         {
-            if (interfaceImplementation.Interface == null || !IsPubliclyAccessible(interfaceImplementation.Interface))
+            if (interfaceImplementation.Interface is null || !IsPubliclyAccessible(interfaceImplementation.Interface))
             {
                 continue;
             }
@@ -550,7 +550,7 @@ internal sealed partial class WinMDWriter
         // If no default synthesized interface was created but the class implements
         // user interfaces, mark the first interface implementation as '[Default]'.
         // The '[Default]' goes on the Windows Runtime equivalent of the first user-declared .NET interface.
-        if (declaration.DefaultInterface == null && outputType.Interfaces.Count > 0)
+        if (declaration.DefaultInterface is null && outputType.Interfaces.Count > 0)
         {
             InterfaceImplementation? defaultImpl = FindDefaultInterface(inputType, outputType);
             AddDefaultAttribute(defaultImpl ?? outputType.Interfaces[0]);
@@ -585,7 +585,7 @@ internal sealed partial class WinMDWriter
         // Find the matching interface on the output type
         foreach (InterfaceImplementation outputImpl in outputType.Interfaces)
         {
-            if (outputImpl.Interface != null && GetInterfaceQualifiedName(outputImpl.Interface) == targetName)
+            if (outputImpl.Interface is not null && GetInterfaceQualifiedName(outputImpl.Interface) == targetName)
             {
                 return outputImpl;
             }
@@ -701,7 +701,7 @@ internal sealed partial class WinMDWriter
             {
                 string propName = $"{interfaceQualName}.{winrtShortName[4..]}";
                 PropertyDefinition? existingProp = outputType.Properties.FirstOrDefault(p => p.Name?.Value == propName);
-                if (existingProp == null)
+                if (existingProp is null)
                 {
                     TypeSignature propType = winrtShortName.StartsWith("get_", StringComparison.Ordinal) ? returnType : parameterTypes[0];
                     PropertyDefinition prop = new(propName, 0, PropertySignature.CreateInstance(propType));
@@ -734,7 +734,7 @@ internal sealed partial class WinMDWriter
             }
 
             TypeDeclaration interfaceDecl = _typeDefinitionMapping[interfaceQualName];
-            if (interfaceDecl.OutputType != null)
+            if (interfaceDecl.OutputType is not null)
             {
                 MemberReference interfaceMethodRef = new(
                     parent: interfaceDecl.OutputType,

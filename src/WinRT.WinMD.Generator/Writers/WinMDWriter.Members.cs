@@ -208,7 +208,7 @@ internal sealed partial class WinMDWriter
             signature: isStatic ? PropertySignature.CreateStatic(propertyType) : PropertySignature.CreateInstance(propertyType));
 
         // Add getter
-        if (inputProperty.GetMethod != null)
+        if (inputProperty.GetMethod is not null)
         {
             MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
             if (isInterfaceParent)
@@ -238,7 +238,7 @@ internal sealed partial class WinMDWriter
         }
 
         // Add setter (Windows Runtime uses "put_" prefix)
-        if (inputProperty.SetMethod != null && inputProperty.SetMethod.IsPublic)
+        if (inputProperty.SetMethod is not null && inputProperty.SetMethod.IsPublic)
         {
             MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
             if (isInterfaceParent)
@@ -297,8 +297,11 @@ internal sealed partial class WinMDWriter
     private void AddEventToType(TypeDefinition outputType, EventDefinition inputEvent, bool isInterfaceParent)
     {
         ITypeDefOrRef eventType = ImportTypeReference(inputEvent.EventType!);
+
         TypeReference eventRegistrationTokenType = GetOrCreateTypeReference(
-            "Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract");
+            @namespace: "Windows.Foundation",
+            name: "EventRegistrationToken",
+            assemblyName: "Windows.Foundation.FoundationContract");
 
         EventDefinition outputEvent = new(inputEvent.Name!.Value, 0, eventType);
 

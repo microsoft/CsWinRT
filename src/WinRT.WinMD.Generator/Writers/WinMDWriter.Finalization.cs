@@ -40,7 +40,7 @@ internal sealed partial class WinMDWriter
 
         foreach ((string qualifiedName, TypeDeclaration declaration) in typeDeclarations)
         {
-            if (declaration.OutputType == null || declaration.InputType == null || !declaration.IsComponentType)
+            if (declaration.OutputType is null || declaration.InputType is null || !declaration.IsComponentType)
             {
                 continue;
             }
@@ -53,7 +53,7 @@ internal sealed partial class WinMDWriter
 
         foreach ((string _, TypeDeclaration declaration) in typeDeclarations)
         {
-            if (declaration.OutputType == null)
+            if (declaration.OutputType is null)
             {
                 continue;
             }
@@ -68,7 +68,7 @@ internal sealed partial class WinMDWriter
                 if (!hasContractVersion)
                 {
                     // Use the version from the input type if available, otherwise use the default
-                    int version = declaration.InputType != null ? GetVersion(declaration.InputType) : defaultVersion;
+                    int version = declaration.InputType is not null ? GetVersion(declaration.InputType) : defaultVersion;
                     AddVersionAttribute(declaration.OutputType, version);
                 }
             }
@@ -77,7 +77,7 @@ internal sealed partial class WinMDWriter
         // Phase 3: Add custom attributes from input types to output types
         foreach ((string _, TypeDeclaration declaration) in typeDeclarations)
         {
-            if (declaration.OutputType == null || declaration.InputType == null || !declaration.IsComponentType)
+            if (declaration.OutputType is null || declaration.InputType is null || !declaration.IsComponentType)
             {
                 continue;
             }
@@ -88,7 +88,7 @@ internal sealed partial class WinMDWriter
         // Phase 4: Add overload attributes for methods with the same name
         foreach ((string _, TypeDeclaration declaration) in typeDeclarations)
         {
-            if (declaration.OutputType == null)
+            if (declaration.OutputType is null)
             {
                 continue;
             }
@@ -141,11 +141,11 @@ internal sealed partial class WinMDWriter
 
                 // For same-module 'TypeRef's (created by 'EnsureTypeReference'), 'Resolve()' may fail
                 // since the output module isn't in the resolver. Look up in our type mapping instead.
-                if (interfaceDef == null && classInterfaceImpl.Interface != null)
+                if (interfaceDef is null && classInterfaceImpl.Interface is not null)
                 {
                     string ifaceFullName = classInterfaceImpl.Interface.FullName ?? "";
 
-                    if (_typeDefinitionMapping.TryGetValue(ifaceFullName, out TypeDeclaration? ifaceDecl) && ifaceDecl.OutputType != null)
+                    if (_typeDefinitionMapping.TryGetValue(ifaceFullName, out TypeDeclaration? ifaceDecl) && ifaceDecl.OutputType is not null)
                     {
                         interfaceDef = ifaceDecl.OutputType;
                     }
@@ -154,25 +154,25 @@ internal sealed partial class WinMDWriter
 
             // If the output interface can't be resolved (Windows Runtime contract assemblies),
             // find the matching interface from the INPUT type which points to resolvable projection assemblies
-            if (interfaceDef == null)
+            if (interfaceDef is null)
             {
                 string outputIfaceName = GetInterfaceQualifiedName(classInterfaceImpl.Interface!);
 
                 foreach (InterfaceImplementation inputImpl in classInputType.Interfaces)
                 {
-                    if (inputImpl.Interface != null && GetInterfaceQualifiedName(inputImpl.Interface) == outputIfaceName)
+                    if (inputImpl.Interface is not null && GetInterfaceQualifiedName(inputImpl.Interface) == outputIfaceName)
                     {
                         interfaceDef = inputImpl.Interface is TypeSpecification inputTypeSpecification
                             && inputTypeSpecification.Signature is GenericInstanceTypeSignature inputGenericInstanceSignature
                             ? SafeResolve(inputGenericInstanceSignature.GenericType)
                             : SafeResolve(inputImpl.Interface);
-                        resolvedFromInput = interfaceDef != null;
+                        resolvedFromInput = interfaceDef is not null;
                         break;
                     }
                 }
             }
 
-            if (interfaceDef == null)
+            if (interfaceDef is null)
             {
                 // Still unresolvable — MethodImpls for mapped interfaces are already
                 // created by 'AddCustomMappedTypeMembers', so this is expected for those.
@@ -191,9 +191,9 @@ internal sealed partial class WinMDWriter
         }
 
         // Add MethodImpls for default synthesized interface
-        if (declaration.DefaultInterface != null &&
+        if (declaration.DefaultInterface is not null &&
             _typeDefinitionMapping.TryGetValue(declaration.DefaultInterface, out TypeDeclaration? defaultInterfaceDecl) &&
-            defaultInterfaceDecl.OutputType != null)
+            defaultInterfaceDecl.OutputType is not null)
         {
             TypeDefinition defaultInterface = defaultInterfaceDecl.OutputType;
 
@@ -201,7 +201,7 @@ internal sealed partial class WinMDWriter
             {
                 MethodDefinition? classMethod = FindMatchingMethod(classOutputType, interfaceMethod);
 
-                if (classMethod != null)
+                if (classMethod is not null)
                 {
                     MemberReference interfaceMethodRef = new(defaultInterface, interfaceMethod.Name!.Value, interfaceMethod.Signature);
                     classOutputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, classMethod));
@@ -256,14 +256,14 @@ internal sealed partial class WinMDWriter
                 // Fallback for event methods from ref assemblies: CsWinRT projections change
                 // event accessor signatures (e.g., remove_ takes delegate instead of EventRegistrationToken).
                 // Match by name only since Windows Runtime event accessors are unique by name.
-                if (classMethod == null && resolvedFromInput && interfaceMethod.IsSpecialName)
+                if (classMethod is null && resolvedFromInput && interfaceMethod.IsSpecialName)
                 {
                     string methodName = interfaceMethod.Name?.Value ?? "";
                     classMethod = classOutputType.Methods.FirstOrDefault(m => m.Name?.Value == methodName);
                 }
             }
 
-            if (classMethod != null)
+            if (classMethod is not null)
             {
                 // Use the class method's signature for the 'MethodImpl' declaration when resolved
                 // from input ref assemblies — the ref assembly uses .NET projection types
@@ -358,7 +358,7 @@ internal sealed partial class WinMDWriter
                 TypeSignature ifaceParamType = interfaceMethod.Signature!.ParameterTypes[i];
 
                 // Resolve generic parameters (!0, !1) using the interface's generic arguments
-                if (interfaceGenericArgs != null)
+                if (interfaceGenericArgs is not null)
                 {
                     ifaceParamType = ResolveGenericArg(ifaceParamType, interfaceGenericArgs);
                 }

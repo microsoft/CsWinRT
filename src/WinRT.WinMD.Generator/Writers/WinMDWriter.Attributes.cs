@@ -341,7 +341,7 @@ internal sealed partial class WinMDWriter
             }
 
             MemberReference? importedCtor = ImportAttributeConstructor(attribute.Constructor);
-            if (importedCtor == null)
+            if (importedCtor is null)
             {
                 continue;
             }
@@ -398,7 +398,7 @@ internal sealed partial class WinMDWriter
         }
 
         // Skip attributes with unreadable signatures
-        return attribute.Signature != null;
+        return attribute.Signature is not null;
     }
 
     /// <summary>
@@ -413,7 +413,7 @@ internal sealed partial class WinMDWriter
     /// <returns>The imported <see cref="MemberReference"/>, or <see langword="null"/> if the constructor is invalid.</returns>
     private MemberReference? ImportAttributeConstructor(ICustomAttributeType? ctor)
     {
-        if (ctor?.DeclaringType == null || ctor.Signature is not MethodSignature methodSignature)
+        if (ctor?.DeclaringType is null || ctor.Signature is not MethodSignature methodSignature)
         {
             return null;
         }
@@ -440,7 +440,7 @@ internal sealed partial class WinMDWriter
     /// <returns>A new <see cref="CustomAttributeSignature"/> with remapped type references.</returns>
     private CustomAttributeSignature CloneAttributeSignature(CustomAttributeSignature? inputSignature)
     {
-        if (inputSignature == null)
+        if (inputSignature is null)
         {
             return new CustomAttributeSignature();
         }
@@ -496,7 +496,7 @@ internal sealed partial class WinMDWriter
 
             // Enum types: import the reference so the blob encoder can resolve the underlying type
             TypeDefinition? resolved = SafeResolve(typeDefOrRefSignature.Type);
-            if (resolved != null && resolved.IsEnum)
+            if (resolved is not null && resolved.IsEnum)
             {
                 return ImportTypeReference(typeDefOrRefSignature.Type!).ToTypeSignature(typeDefOrRefSignature.IsValueType);
             }
@@ -610,7 +610,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     private TypeSignature ResolveTypeNameToSignature(string qualifiedTypeName)
     {
-        return _typeDefinitionMapping.TryGetValue(qualifiedTypeName, out TypeDeclaration? declaration) && declaration.OutputType != null
+        return _typeDefinitionMapping.TryGetValue(qualifiedTypeName, out TypeDeclaration? declaration) && declaration.OutputType is not null
             ? declaration.OutputType.ToTypeSignature()
             : throw new InvalidOperationException($"Type '{qualifiedTypeName}' not found in the output type definitions.");
     }

@@ -103,7 +103,7 @@ internal readonly struct MappedType
     /// <returns>A tuple with the resolved Windows Runtime type information.</returns>
     public (string Namespace, string Name, string Assembly, bool IsSystemType, bool IsValueType) GetMapping(TypeDefinition? containingType = null)
     {
-        return _multipleMappingFunc != null
+        return _multipleMappingFunc is not null
             ? _multipleMappingFunc(containingType)
             : (_namespace!, _name!, _assembly!, _isSystemType, _isValueType);
     }

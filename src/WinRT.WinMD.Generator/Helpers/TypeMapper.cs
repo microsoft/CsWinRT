@@ -47,7 +47,7 @@ internal sealed class TypeMapper
     private static (string, string, string, bool, bool) GetSystemTypeCustomMapping(TypeDefinition? containingType)
     {
         bool isDefinedInAttribute =
-            containingType != null &&
+            containingType is not null &&
                 string.CompareOrdinal(containingType.BaseType?.FullName, "System.Attribute") == 0;
         return isDefinedInAttribute
             ? ("System", "Type", "mscorlib", true, false)

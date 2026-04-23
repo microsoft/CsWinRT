@@ -88,7 +88,7 @@ internal sealed partial class WinMDWriter
                 ? SafeResolve((typeSpecification.Signature as GenericInstanceTypeSignature)?.GenericType)
                 : SafeResolve(interfaceImplementation.Interface);
 
-            if (interfaceDef != null)
+            if (interfaceDef is not null)
             {
                 foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
                 {
