@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Buffers;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -31,12 +32,14 @@ internal sealed partial class WinMDWriter
                 Guid.TryParse(guidElement.ToString(), out Guid guid))
             {
                 AddGuidAttribute(outputType, guid);
+
                 return;
             }
         }
 
         // Generate a GUID from the type name using SHA1
         string typeName = inputType.QualifiedName;
+
         AddGuidAttributeFromName(outputType, typeName);
     }
 
@@ -48,12 +51,31 @@ internal sealed partial class WinMDWriter
     /// <param name="name">The fully-qualified type name to hash.</param>
     private void AddGuidAttributeFromName(TypeDefinition outputType, string name)
     {
-        Guid guid;
+        int maxNumberOfBytes = Encoding.UTF8.GetMaxByteCount(name.Length);
+
+        // Get a buffer from the array pool, or stack-allocated if small enough
+        byte[]? array = null;
+        Span<byte> span = maxNumberOfBytes <= 256
+            ? stackalloc byte[256]
+            : (array = ArrayPool<byte>.Shared.Rent(maxNumberOfBytes));
+
+        // Encode to UTF8 into the buffer
+        int writtenNumberOfBytes = Encoding.UTF8.GetBytes(name, span);
+
+        // Always stack-allocate the hash buffer (since it's constant)
+        Span<byte> hash = stackalloc byte[SHA1.HashSizeInBytes];
+
+        // Hash the data (we know we'll always fully fill the buffer).
         // CodeQL [SM02196] Windows Runtime uses UUID v5 SHA1 to generate Guids for parameterized types.
-#pragma warning disable CA5350
-        byte[] hash = SHA1.HashData(Encoding.UTF8.GetBytes(name));
-        guid = EncodeGuid(hash);
-#pragma warning restore CA5350
+        _ = SHA1.HashData(span[..writtenNumberOfBytes], hash);
+
+        // Return the rented array to the pool, if we have one
+        if (array is not null)
+        {
+            ArrayPool<byte>.Shared.Return(array);
+        }
+
+        Guid guid = EncodeGuid(hash);
 
         AddGuidAttribute(outputType, guid);
     }
@@ -523,10 +545,11 @@ internal sealed partial class WinMDWriter
     /// </remarks>
     /// <param name="hash">The SHA1 hash bytes (at least 16 bytes).</param>
     /// <returns>The encoded <see cref="Guid"/>.</returns>
-    private static Guid EncodeGuid(byte[] hash)
+    private static Guid EncodeGuid(ReadOnlySpan<byte> hash)
     {
-        byte[] guidBytes = new byte[16];
-        Array.Copy(hash, guidBytes, 16);
+        Span<byte> guidBytes = stackalloc byte[16];
+
+        hash[..16].CopyTo(guidBytes);
 
         if (BitConverter.IsLittleEndian)
         {
