@@ -13,6 +13,20 @@ internal static partial class WinMDGenerator
     /// <summary>
     /// Generates and writes the WinMD file from the discovered types.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Creates a <see cref="TypeMapper"/> configured for the target XAML framework, then uses
+    /// <see cref="WinMDWriter"/> to process each discovered public type into WinMD metadata.
+    /// After all types are processed, <see cref="WinMDWriter.FinalizeGeneration"/> is called
+    /// to add <c>MethodImpl</c> fixups, version attributes, custom attributes, and overload attributes.
+    /// </para>
+    /// <para>
+    /// The output directory is created if it does not exist, and the WinMD file is written to
+    /// the path specified in <paramref name="args"/>.
+    /// </para>
+    /// </remarks>
+    /// <param name="args">The parsed generator arguments.</param>
+    /// <param name="state">The discovery state containing the loaded module and public types.</param>
     private static void Generate(WinMDGeneratorArgs args, WinMDGeneratorDiscoveryState state)
     {
         TypeMapper mapper = new(args.UseWindowsUIXamlProjections);

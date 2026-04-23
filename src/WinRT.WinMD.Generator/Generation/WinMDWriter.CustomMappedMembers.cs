@@ -15,13 +15,26 @@ using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttri
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
+/// <inheritdoc cref="WinMDWriter"/>
 internal sealed partial class WinMDWriter
 {
     /// <summary>
-    /// Processes custom mapped interfaces for a class type. This maps .NET collection interfaces,
-    /// IDisposable, INotifyPropertyChanged, etc. to their WinRT equivalents and adds the
-    /// required explicit implementation methods and MethodImpl records.
+    /// Processes custom mapped interfaces for a class type.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This maps .NET collection interfaces, <c>IDisposable</c>, <c>INotifyPropertyChanged</c>, etc.
+    /// to their WinRT equivalents (e.g., <c>IList&lt;T&gt;</c> → <c>IVector&lt;T&gt;</c>,
+    /// <c>IDisposable</c> → <c>IClosable</c>) and adds the required explicit implementation methods
+    /// and <c>MethodImpl</c> records.
+    /// </para>
+    /// <para>
+    /// When a type implements both generic <c>IEnumerable&lt;T&gt;</c> and non-generic <c>IEnumerable</c>,
+    /// the non-generic <c>IBindableIterable</c> mapping is skipped since <c>IIterable&lt;T&gt;</c> supersedes it.
+    /// </para>
+    /// </remarks>
+    /// <param name="inputType">The input class <see cref="TypeDefinition"/>.</param>
+    /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
     private void ProcessCustomMappedInterfaces(TypeDefinition inputType, TypeDefinition outputType)
     {
         // Gather all interfaces from the type and its base types (matching old generator's GetInterfaces)
@@ -112,8 +125,14 @@ internal sealed partial class WinMDWriter
 
     /// <summary>
     /// Maps a type argument for custom mapped interfaces, transforming mapped types
-    /// like KeyValuePair to IKeyValuePair.
+    /// like <c>KeyValuePair</c> to <c>IKeyValuePair</c>.
     /// </summary>
+    /// <remarks>
+    /// Recursively handles nested generic instances (e.g., <c>IList&lt;KeyValuePair&lt;K, V&gt;&gt;</c>
+    /// becomes <c>IVector&lt;IKeyValuePair&lt;K, V&gt;&gt;</c>).
+    /// </remarks>
+    /// <param name="arg">The type argument signature to map.</param>
+    /// <returns>The mapped <see cref="TypeSignature"/>.</returns>
     private TypeSignature MapCustomMappedTypeArgument(TypeSignature arg)
     {
         TypeSignature mapped = MapTypeSignatureToOutput(arg);
@@ -151,6 +170,22 @@ internal sealed partial class WinMDWriter
     /// <summary>
     /// Adds the explicit implementation methods for a specific mapped WinRT interface.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method generates all methods, properties, and events defined by the mapped WinRT interface
+    /// (e.g., <c>IVector&lt;T&gt;</c> members like <c>Append</c>, <c>GetAt</c>, <c>Size</c>). Each member
+    /// is emitted with the correct WinRT signature and a <c>MethodImpl</c> entry linking it to the
+    /// interface method declaration.
+    /// </para>
+    /// <para>
+    /// When <paramref name="isPublic"/> is <see langword="false"/>, method names are prefixed with the
+    /// qualified interface name for explicit implementation (e.g., <c>IVector&lt;String&gt;.Append</c>).
+    /// </para>
+    /// </remarks>
+    /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="mappedTypeName">The short name of the mapped WinRT interface (e.g., <c>"IVector`1"</c>).</param>
+    /// <param name="mappedInterfaceRef">The type reference for the mapped WinRT interface in the output module.</param>
+    /// <param name="isPublic">Whether the interface is publicly implemented on the class.</param>
     private void AddCustomMappedTypeMembers(
         TypeDefinition outputType,
         string mappedTypeName,
@@ -481,8 +516,18 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Adds a mapped event with add/remove methods and MethodImpl records.
+    /// Adds a mapped event with <c>add</c>/<c>remove</c> methods and <c>MethodImpl</c> records.
     /// </summary>
+    /// <remarks>
+    /// The event add method returns <c>EventRegistrationToken</c> and the remove method accepts one,
+    /// following WinRT event conventions. <c>MethodImpl</c> entries are created using open generic
+    /// form for handler types in declaration signatures to match WinRT metadata conventions.
+    /// </remarks>
+    /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="eventName">The name of the event.</param>
+    /// <param name="handlerType">The handler delegate type signature.</param>
+    /// <param name="mappedInterfaceRef">The mapped WinRT interface reference for <c>MethodImpl</c> declarations.</param>
+    /// <param name="isPublic">Whether the event is publicly implemented.</param>
     private void AddMappedEvent(
         TypeDefinition outputType,
         string eventName,
@@ -538,8 +583,20 @@ internal sealed partial class WinMDWriter
 
     /// <summary>
     /// Gathers all interfaces from a type and its base type chain, including interfaces
-    /// inherited from interfaces. Resolves generic type parameters through the base class chain.
+    /// inherited from interfaces.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Resolves generic type parameters through the base class chain and deduplicates
+    /// by fully-qualified name. Only publicly accessible interfaces are included in the result.
+    /// </para>
+    /// <para>
+    /// This is equivalent to the old generator's <c>GetInterfaces</c> method and ensures all
+    /// transitive interface implementations are discovered.
+    /// </para>
+    /// </remarks>
+    /// <param name="type">The <see cref="TypeDefinition"/> to gather interfaces from.</param>
+    /// <returns>A list of all <see cref="InterfaceImplementation"/> entries found.</returns>
     private List<InterfaceImplementation> GatherAllInterfaces(TypeDefinition type)
     {
         HashSet<string> seen = new(StringComparer.Ordinal);
@@ -620,8 +677,15 @@ internal sealed partial class WinMDWriter
 
     /// <summary>
     /// Recursively resolves generic parameters in a type signature using the provided generic arguments.
-    /// Handles nested generic instances like KeyValuePair&lt;!0, !1&gt;.
     /// </summary>
+    /// <remarks>
+    /// Handles nested generic instances like <c>KeyValuePair&lt;!0, !1&gt;</c> where the
+    /// generic parameter indices need to be substituted with the concrete type arguments
+    /// from the parent type.
+    /// </remarks>
+    /// <param name="arg">The type signature that may contain generic parameters.</param>
+    /// <param name="genericArgs">The generic type arguments to substitute.</param>
+    /// <returns>The resolved <see cref="TypeSignature"/> with generic parameters replaced.</returns>
     private static TypeSignature ResolveGenericArg(TypeSignature arg, TypeSignature[] genericArgs)
     {
         if (arg is GenericParameterSignature gps && gps.Index < genericArgs.Length)
@@ -639,9 +703,16 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Converts a GenericInstanceTypeSignature to its open form for MethodImpl declarations.
-    /// E.g., EventHandler`1&lt;Object&gt; → EventHandler`1&lt;!0&gt;
+    /// Converts a <see cref="GenericInstanceTypeSignature"/> to its open form for <c>MethodImpl</c> declarations.
     /// </summary>
+    /// <remarks>
+    /// Replaces all resolved type arguments with generic parameter references (<c>!0</c>, <c>!1</c>, etc.)
+    /// to match WinRT metadata conventions. For example, <c>EventHandler`1&lt;Object&gt;</c> becomes
+    /// <c>EventHandler`1&lt;!0&gt;</c>.
+    /// </remarks>
+    /// <param name="gits">The generic instance type signature to convert.</param>
+    /// <param name="module">The output module used to create generic parameter signatures.</param>
+    /// <returns>A new <see cref="GenericInstanceTypeSignature"/> with open generic parameters.</returns>
     private static GenericInstanceTypeSignature ToOpenGenericFormStatic(GenericInstanceTypeSignature gits, ModuleDefinition module)
     {
         TypeSignature[] openArgs = new TypeSignature[gits.TypeArguments.Count];
@@ -655,9 +726,16 @@ internal sealed partial class WinMDWriter
 
     /// <summary>
     /// Determines if a mapped interface is publicly implemented on the class.
-    /// Checks if the class declares public methods whose names match the .NET interface members.
-    /// For inherited interfaces, walks up the class hierarchy.
     /// </summary>
+    /// <remarks>
+    /// Checks if the class (or any type in its base class hierarchy) declares public methods
+    /// whose names match the .NET interface members. This determines whether the mapped WinRT
+    /// interface members should be emitted as public or as explicit (private) implementations.
+    /// </remarks>
+    /// <param name="classType">The class <see cref="TypeDefinition"/> to check.</param>
+    /// <param name="impl">The interface implementation to check.</param>
+    /// <param name="runtimeContext">The runtime context for resolving types, or <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if the interface has at least one publicly implemented member; otherwise, <see langword="false"/>.</returns>
     private static bool IsInterfacePubliclyImplemented(TypeDefinition classType, InterfaceImplementation impl, RuntimeContext? runtimeContext)
     {
         TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
@@ -690,8 +768,14 @@ internal sealed partial class WinMDWriter
 
     /// <summary>
     /// Formats a qualified interface name for use in explicit method names.
-    /// Uses short type names for generic arguments (e.g., "String" not "System.String").
     /// </summary>
+    /// <remarks>
+    /// Uses short type names for generic arguments (e.g., <c>"IMap`2&lt;String, Int32&gt;"</c>
+    /// instead of <c>"IMap`2&lt;System.String, System.Int32&gt;"</c>) to match the naming
+    /// convention used in WinMD explicit interface implementations.
+    /// </remarks>
+    /// <param name="typeRef">The interface type reference to format.</param>
+    /// <returns>The formatted qualified interface name.</returns>
     private static string FormatQualifiedInterfaceName(ITypeDefOrRef typeRef)
     {
         if (typeRef is TypeSpecification spec && spec.Signature is GenericInstanceTypeSignature gits)
@@ -705,8 +789,10 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Formats a type signature using short names (e.g., "String" instead of "System.String").
+    /// Formats a type signature using short names (e.g., <c>"String"</c> instead of <c>"System.String"</c>).
     /// </summary>
+    /// <param name="sig">The type signature to format.</param>
+    /// <returns>The short-form type name.</returns>
     private static string FormatShortTypeName(TypeSignature sig)
     {
         if (sig is GenericInstanceTypeSignature gits)
@@ -723,9 +809,14 @@ internal sealed partial class WinMDWriter
 
     /// <summary>
     /// Collects the names of members that belong to custom mapped or unmapped .NET interfaces.
-    /// These members should be excluded from the WinMD class definition since they're replaced
-    /// by the WinRT mapped interface members.
     /// </summary>
+    /// <remarks>
+    /// These members should be excluded from the WinMD class definition since they are replaced
+    /// by the WinRT mapped interface members. This includes method names, property names (and their
+    /// accessor names without the <c>get_</c>/<c>set_</c> prefix), and event names.
+    /// </remarks>
+    /// <param name="inputType">The input class <see cref="TypeDefinition"/>.</param>
+    /// <returns>A set of member names that should be excluded from the class.</returns>
     private HashSet<string> CollectCustomMappedMemberNames(TypeDefinition inputType)
     {
         HashSet<string> memberNames = new(StringComparer.Ordinal);

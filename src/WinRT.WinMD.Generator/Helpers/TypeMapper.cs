@@ -23,12 +23,24 @@ namespace WindowsRuntime.WinMDGenerator.Helpers;
 /// <c>WinRT.Runtime/Projections.cs</c> and <c>cswinrt/helpers.h</c>.
 /// </para>
 /// </remarks>
+/// <seealso cref="MappedType"/>
 internal sealed class TypeMapper
 {
+    /// <summary>
+    /// The dictionary mapping fully-qualified .NET type names to their <see cref="MappedType"/> entries.
+    /// </summary>
     private readonly Dictionary<string, MappedType> _typeMapping;
 
-    // Based on whether System.Type is used in an attribute declaration or elsewhere,
-    // we need to choose the correct custom mapping as attributes don't use the TypeName mapping.
+    /// <summary>
+    /// Gets the custom mapping for <c>System.Type</c> based on the containing type context.
+    /// </summary>
+    /// <remarks>
+    /// <c>System.Type</c> is context-dependent: when used in an attribute declaration, it stays as
+    /// <c>System.Type</c> (since WinMD attribute blobs use CLR types). In all other contexts, it maps
+    /// to <c>Windows.UI.Xaml.Interop.TypeName</c>.
+    /// </remarks>
+    /// <param name="containingType">The type that contains the <c>System.Type</c> usage, or <see langword="null"/>.</param>
+    /// <returns>A tuple with the resolved mapping information.</returns>
     private static (string, string, string, bool, bool) GetSystemTypeCustomMapping(TypeDefinition? containingType)
     {
         bool isDefinedInAttribute =
@@ -144,24 +156,34 @@ internal sealed class TypeMapper
     }
 
     /// <summary>
-    /// Checks whether a mapping exists for the given fully-qualified type name.
+    /// Checks whether a mapping exists for the given fully-qualified .NET type name.
     /// </summary>
+    /// <param name="typeName">The fully-qualified .NET type name (e.g., <c>"System.Collections.Generic.IList`1"</c>).</param>
+    /// <returns><see langword="true"/> if a WinRT mapping exists for the type; otherwise, <see langword="false"/>.</returns>
     public bool HasMappingForType(string typeName)
     {
         return _typeMapping.ContainsKey(typeName);
     }
 
     /// <summary>
-    /// Gets the mapped type for the given fully-qualified type name.
+    /// Gets the <see cref="MappedType"/> for the given fully-qualified .NET type name.
     /// </summary>
+    /// <param name="typeName">The fully-qualified .NET type name.</param>
+    /// <returns>The <see cref="MappedType"/> containing the WinRT mapping information.</returns>
     public MappedType GetMappedType(string typeName)
     {
         return _typeMapping[typeName];
     }
 
     /// <summary>
-    /// The list of interfaces that are implemented by C# types but should not be mapped to WinRT interfaces.
+    /// The set of .NET interfaces that are implemented by C# types but have no WinRT equivalent.
     /// </summary>
+    /// <remarks>
+    /// Members from these interfaces should be excluded from the WinMD class definition,
+    /// similar to custom-mapped interfaces, but no WinRT interface implementation is added.
+    /// These include interfaces like <c>ICollection&lt;T&gt;</c> and <c>IEquatable&lt;T&gt;</c>
+    /// that have no counterpart in the WinRT type system.
+    /// </remarks>
     internal static readonly HashSet<string> ImplementedInterfacesWithoutMapping = new(StringComparer.Ordinal)
     {
         "System.Collections.Generic.ICollection`1",

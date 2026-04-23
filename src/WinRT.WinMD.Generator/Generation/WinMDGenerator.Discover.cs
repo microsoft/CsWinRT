@@ -14,8 +14,21 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 internal static partial class WinMDGenerator
 {
     /// <summary>
-    /// Loads the input assembly and discovers public types.
+    /// Loads the input assembly and discovers all public types that should be included in the WinMD.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Sets up a <see cref="PathAssemblyResolver"/> using search directories from all reference assembly
+    /// paths to handle type forwarding scenarios where a referenced assembly forwards to another assembly
+    /// in the same directory. The assembly is loaded into a <c>.NETCoreApp 10.0</c> runtime context.
+    /// </para>
+    /// <para>
+    /// Type discovery is performed by <see cref="Discovery.AssemblyAnalyzer"/>, which collects all public
+    /// classes, interfaces, structs, enums, and delegates (including nested public types).
+    /// </para>
+    /// </remarks>
+    /// <param name="args">The parsed generator arguments.</param>
+    /// <returns>A <see cref="WinMDGeneratorDiscoveryState"/> containing the loaded module and discovered types.</returns>
     private static WinMDGeneratorDiscoveryState Discover(WinMDGeneratorArgs args)
     {
         ModuleDefinition inputModule;

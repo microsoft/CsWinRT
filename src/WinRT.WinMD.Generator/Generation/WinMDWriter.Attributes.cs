@@ -11,8 +11,15 @@ using WindowsRuntime.WinMDGenerator.Models;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
+/// <inheritdoc cref="WinMDWriter"/>
 internal sealed partial class WinMDWriter
 {
+    /// <summary>
+    /// Adds a <c>[Guid]</c> attribute to an output type, sourced from the input type's
+    /// <c>[GuidAttribute]</c> or generated from the type name using SHA1 (UUID v5).
+    /// </summary>
+    /// <param name="outputType">The output <see cref="TypeDefinition"/> to add the attribute to.</param>
+    /// <param name="inputType">The input <see cref="TypeDefinition"/> to read the GUID from.</param>
     private void AddGuidAttribute(TypeDefinition outputType, TypeDefinition inputType)
     {
         // Check if the input type has a GuidAttribute
@@ -33,6 +40,12 @@ internal sealed partial class WinMDWriter
         AddGuidAttributeFromName(outputType, typeName);
     }
 
+    /// <summary>
+    /// Generates a GUID from a type name using SHA1 hashing (UUID v5 format)
+    /// and adds it as a <c>[Guid]</c> attribute on the output type.
+    /// </summary>
+    /// <param name="outputType">The output <see cref="TypeDefinition"/> to add the attribute to.</param>
+    /// <param name="name">The fully-qualified type name to hash.</param>
     private void AddGuidAttributeFromName(TypeDefinition outputType, string name)
     {
         Guid guid;
@@ -45,6 +58,16 @@ internal sealed partial class WinMDWriter
         AddGuidAttribute(outputType, guid);
     }
 
+    /// <summary>
+    /// Adds a <c>[Guid]</c> attribute to the output type with the specified GUID value.
+    /// </summary>
+    /// <remarks>
+    /// The <c>GuidAttribute</c> constructor in <c>Windows.Foundation.Metadata</c> takes 11 parameters:
+    /// <c>(uint, ushort, ushort, byte, byte, byte, byte, byte, byte, byte, byte)</c>,
+    /// matching the decomposed fields of a GUID.
+    /// </remarks>
+    /// <param name="outputType">The output <see cref="TypeDefinition"/> to add the attribute to.</param>
+    /// <param name="guid">The GUID value to encode.</param>
     private void AddGuidAttribute(TypeDefinition outputType, Guid guid)
     {
         // Create a reference to the GuidAttribute constructor in Windows.Foundation.Metadata
@@ -85,6 +108,11 @@ internal sealed partial class WinMDWriter
         outputType.CustomAttributes.Add(new CustomAttribute(guidCtor, sig));
     }
 
+    /// <summary>
+    /// Adds a <c>[Version]</c> attribute to the output type.
+    /// </summary>
+    /// <param name="outputType">The output <see cref="TypeDefinition"/> to add the attribute to.</param>
+    /// <param name="version">The version number to encode.</param>
     private void AddVersionAttribute(TypeDefinition outputType, int version)
     {
         TypeReference versionAttrType = GetOrCreateTypeReference(
@@ -101,6 +129,18 @@ internal sealed partial class WinMDWriter
         outputType.CustomAttributes.Add(new CustomAttribute(versionCtor, sig));
     }
 
+    /// <summary>
+    /// Adds an <c>[Activatable]</c> attribute to the output type.
+    /// </summary>
+    /// <remarks>
+    /// When <paramref name="factoryInterface"/> is <see langword="null"/>, uses the single-parameter
+    /// constructor <c>ActivatableAttribute(uint)</c> for default activation. When a factory interface
+    /// is provided, uses the two-parameter constructor <c>ActivatableAttribute(Type, uint)</c> to
+    /// indicate parameterized activation via the factory.
+    /// </remarks>
+    /// <param name="outputType">The output class <see cref="TypeDefinition"/> to add the attribute to.</param>
+    /// <param name="version">The version number for the activatable attribute.</param>
+    /// <param name="factoryInterface">The fully-qualified name of the factory interface, or <see langword="null"/> for default activation.</param>
     private void AddActivatableAttribute(TypeDefinition outputType, uint version, string? factoryInterface)
     {
         TypeReference activatableAttrType = GetOrCreateTypeReference(
@@ -137,6 +177,12 @@ internal sealed partial class WinMDWriter
         }
     }
 
+    /// <summary>
+    /// Adds a <c>[Static]</c> attribute to the class output type, referencing the static interface.
+    /// </summary>
+    /// <param name="classOutputType">The output class <see cref="TypeDefinition"/> to add the attribute to.</param>
+    /// <param name="version">The version number for the static attribute.</param>
+    /// <param name="staticInterfaceName">The fully-qualified name of the static interface.</param>
     private void AddStaticAttribute(TypeDefinition classOutputType, uint version, string staticInterfaceName)
     {
         TypeReference staticAttrType = GetOrCreateTypeReference(
@@ -156,6 +202,11 @@ internal sealed partial class WinMDWriter
         classOutputType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
     }
 
+    /// <summary>
+    /// Adds an <c>[ExclusiveTo]</c> attribute to a synthesized interface, binding it to its owning class.
+    /// </summary>
+    /// <param name="interfaceType">The synthesized interface <see cref="TypeDefinition"/> to add the attribute to.</param>
+    /// <param name="className">The fully-qualified name of the owning runtime class.</param>
     private void AddExclusiveToAttribute(TypeDefinition interfaceType, string className)
     {
         TypeReference exclusiveToAttrType = GetOrCreateTypeReference(
@@ -173,6 +224,15 @@ internal sealed partial class WinMDWriter
         interfaceType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
     }
 
+    /// <summary>
+    /// Adds a <c>[Default]</c> attribute to an interface implementation on a class.
+    /// </summary>
+    /// <remarks>
+    /// The <c>[Default]</c> attribute marks the default interface for a WinRT runtime class,
+    /// which determines the primary vtable layout and is the interface used when casting
+    /// to <c>IInspectable</c>.
+    /// </remarks>
+    /// <param name="interfaceImpl">The <see cref="InterfaceImplementation"/> to mark as default.</param>
     private void AddDefaultAttribute(InterfaceImplementation interfaceImpl)
     {
         TypeReference defaultAttrType = GetOrCreateTypeReference(
@@ -184,12 +244,23 @@ internal sealed partial class WinMDWriter
         interfaceImpl.CustomAttributes.Add(new CustomAttribute(ctor, new CustomAttributeSignature()));
     }
 
+    /// <summary>
+    /// Checks whether a type already has a <c>[Version]</c> or <c>[ContractVersion]</c> attribute.
+    /// </summary>
+    /// <param name="type">The <see cref="TypeDefinition"/> to check.</param>
+    /// <returns><see langword="true"/> if the type has a version attribute; otherwise, <see langword="false"/>.</returns>
     private static bool HasVersionAttribute(TypeDefinition type)
     {
         return type.CustomAttributes.Any(
             attr => attr.Constructor?.DeclaringType?.Name?.Value is "VersionAttribute" or "ContractVersionAttribute");
     }
 
+    /// <summary>
+    /// Gets the version number for a type from its <c>[Version]</c> attribute, or falls back
+    /// to the assembly major version.
+    /// </summary>
+    /// <param name="type">The <see cref="TypeDefinition"/> to read the version from.</param>
+    /// <returns>The version number as an integer.</returns>
     private int GetVersion(TypeDefinition type)
     {
         foreach (CustomAttribute attr in type.CustomAttributes)
@@ -209,6 +280,8 @@ internal sealed partial class WinMDWriter
     /// Copies custom attributes from a source metadata element to a target metadata element,
     /// filtering out attributes that are handled separately by the generator or not meaningful for WinMD.
     /// </summary>
+    /// <param name="source">The source element to copy attributes from.</param>
+    /// <param name="target">The target element to copy attributes to.</param>
     private void CopyCustomAttributes(IHasCustomAttribute source, IHasCustomAttribute target)
     {
         foreach (CustomAttribute attr in source.CustomAttributes)
@@ -232,6 +305,14 @@ internal sealed partial class WinMDWriter
     /// <summary>
     /// Determines whether a custom attribute should be copied to the output WinMD.
     /// </summary>
+    /// <remarks>
+    /// Filters out attributes that are handled separately by the generator (e.g., <c>GuidAttribute</c>,
+    /// <c>VersionAttribute</c>), compiler-generated attributes (e.g., from <c>System.Runtime.CompilerServices</c>),
+    /// non-public attribute types, and attributes with unreadable signatures.
+    /// </remarks>
+    /// <param name="attr">The custom attribute to evaluate.</param>
+    /// <param name="runtimeContext">The runtime context for resolving attribute types, or <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if the attribute should be copied; otherwise, <see langword="false"/>.</returns>
     private static bool ShouldCopyAttribute(CustomAttribute attr, RuntimeContext? runtimeContext)
     {
         string? attrTypeName = attr.Constructor?.DeclaringType?.FullName;
@@ -274,6 +355,13 @@ internal sealed partial class WinMDWriter
     /// <summary>
     /// Imports an attribute constructor reference into the output module.
     /// </summary>
+    /// <remarks>
+    /// Attribute constructor parameters must use CLR types (<c>System.Type</c>, <c>System.String</c>, etc.)
+    /// not WinRT projected types (<c>TypeName</c>, <c>HString</c>), because the custom attribute blob
+    /// serializer only supports primitives, <c>System.Type</c>, <c>System.String</c>, and enum types.
+    /// </remarks>
+    /// <param name="ctor">The constructor to import.</param>
+    /// <returns>The imported <see cref="MemberReference"/>, or <see langword="null"/> if the constructor is invalid.</returns>
     private MemberReference? ImportAttributeConstructor(ICustomAttributeType? ctor)
     {
         if (ctor?.DeclaringType == null || ctor.Signature is not MethodSignature methodSig)
@@ -299,6 +387,8 @@ internal sealed partial class WinMDWriter
     /// <summary>
     /// Clones a custom attribute signature, remapping type references to the output module.
     /// </summary>
+    /// <param name="inputSig">The input attribute signature to clone, or <see langword="null"/>.</param>
+    /// <returns>A new <see cref="CustomAttributeSignature"/> with remapped type references.</returns>
     private CustomAttributeSignature CloneAttributeSignature(CustomAttributeSignature? inputSig)
     {
         if (inputSig == null)
@@ -330,9 +420,14 @@ internal sealed partial class WinMDWriter
 
     /// <summary>
     /// Imports a type signature for use in attribute constructor parameters.
-    /// Unlike <see cref="MapTypeSignatureToOutput"/>, this preserves CLR types
-    /// (System.Type, System.String) that custom attribute blobs require.
     /// </summary>
+    /// <remarks>
+    /// Unlike <see cref="MapTypeSignatureToOutput"/>, this preserves CLR types
+    /// (<c>System.Type</c>, <c>System.String</c>) that custom attribute blobs require.
+    /// Enum types are imported so the blob encoder can resolve the underlying type.
+    /// </remarks>
+    /// <param name="sig">The type signature to import.</param>
+    /// <returns>The imported <see cref="TypeSignature"/> suitable for attribute parameter use.</returns>
     private TypeSignature ImportTypeSignatureForAttribute(TypeSignature sig)
     {
         if (sig is CorLibTypeSignature)
@@ -367,8 +462,14 @@ internal sealed partial class WinMDWriter
 
     /// <summary>
     /// Clones a single custom attribute argument, remapping type references.
-    /// Uses attribute-safe type imports to preserve CLR types required by the blob encoder.
     /// </summary>
+    /// <remarks>
+    /// Uses attribute-safe type imports via <see cref="ImportTypeSignatureForAttribute"/> to preserve CLR types
+    /// required by the blob encoder. Type-valued elements (stored as <see cref="TypeSignature"/>) are
+    /// remapped using <see cref="MapTypeSignatureToOutput"/>.
+    /// </remarks>
+    /// <param name="arg">The attribute argument to clone.</param>
+    /// <returns>A new <see cref="CustomAttributeArgument"/> with remapped type references.</returns>
     private CustomAttributeArgument CloneAttributeArgument(CustomAttributeArgument arg)
     {
         TypeSignature mappedType = ImportTypeSignatureForAttribute(arg.ArgumentType);
@@ -392,6 +493,15 @@ internal sealed partial class WinMDWriter
         return clonedArg;
     }
 
+    /// <summary>
+    /// Determines whether a type is publicly accessible (public or nested public).
+    /// </summary>
+    /// <remarks>
+    /// For <see cref="TypeReference"/> and <see cref="TypeSpecification"/> instances, accessibility
+    /// cannot be determined from the reference alone, so they are assumed accessible.
+    /// </remarks>
+    /// <param name="type">The type reference to check.</param>
+    /// <returns><see langword="true"/> if the type is publicly accessible; otherwise, <see langword="false"/>.</returns>
     private static bool IsPubliclyAccessible(ITypeDefOrRef type)
     {
         if (type is TypeDefinition typeDef)
@@ -404,8 +514,15 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Encodes a GUID from a SHA1 hash (UUID v5 format).
+    /// Encodes a GUID from a SHA1 hash following the UUID v5 format (RFC 4122).
     /// </summary>
+    /// <remarks>
+    /// WinRT uses UUID v5 SHA1 hashing to generate GUIDs for parameterized types.
+    /// The method sets the version nibble to 5 and the variant bits to RFC 4122,
+    /// handling endianness for the first three GUID fields.
+    /// </remarks>
+    /// <param name="hash">The SHA1 hash bytes (at least 16 bytes).</param>
+    /// <returns>The encoded <see cref="Guid"/>.</returns>
     private static Guid EncodeGuid(byte[] hash)
     {
         byte[] guidBytes = new byte[16];

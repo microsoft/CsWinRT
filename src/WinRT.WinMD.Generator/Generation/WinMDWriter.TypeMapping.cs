@@ -11,11 +11,27 @@ using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttribu
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
+/// <inheritdoc cref="WinMDWriter"/>
 internal sealed partial class WinMDWriter
 {
     /// <summary>
-    /// Maps a type signature from the input module to the output module.
+    /// Maps a type signature from the input module to the output module, applying WinRT type mappings.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is the core type mapping method used throughout the writer. It handles:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>CorLib primitive types (remapped to the output module's CorLib factory).</item>
+    ///   <item><c>SzArray</c> types (single-dimensional zero-based arrays).</item>
+    ///   <item>Generic instance types, including <c>Span&lt;T&gt;</c>/<c>ReadOnlySpan&lt;T&gt;</c> → <c>T[]</c> mapping.</item>
+    ///   <item>Generic parameter signatures (<c>!0</c>, <c>!1</c>, etc.).</item>
+    ///   <item>By-reference types.</item>
+    ///   <item><see cref="TypeDefOrRefSignature"/> with WinRT mapping (e.g., <c>IDisposable</c> → <c>IClosable</c>).</item>
+    /// </list>
+    /// </remarks>
+    /// <param name="inputSig">The input type signature to map.</param>
+    /// <returns>The mapped <see cref="TypeSignature"/> for use in the output WinMD.</returns>
     private TypeSignature MapTypeSignatureToOutput(TypeSignature inputSig)
     {
         // Handle CorLib types
@@ -117,6 +133,20 @@ internal sealed partial class WinMDWriter
     /// <summary>
     /// Imports a type reference from the input module to the output module.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method handles three kinds of type references:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item><see cref="TypeDefinition"/>: checks if already processed in the output module, processes on demand
+    ///     if public, or creates an external type reference.</item>
+    ///   <item><see cref="TypeReference"/>: looks up the output mapping, resolves WinRT contract assembly names
+    ///     via <c>WindowsRuntimeMetadataAttribute</c>, and creates a type reference.</item>
+    ///   <item><see cref="TypeSpecification"/>: creates a new specification with a mapped signature.</item>
+    /// </list>
+    /// </remarks>
+    /// <param name="type">The type reference to import.</param>
+    /// <returns>The imported <see cref="ITypeDefOrRef"/> for use in the output WinMD.</returns>
     private ITypeDefOrRef ImportTypeReference(ITypeDefOrRef type)
     {
         if (type is TypeDefinition typeDef)
@@ -184,6 +214,11 @@ internal sealed partial class WinMDWriter
         return GetOrCreateTypeReference("System", "Object", "mscorlib");
     }
 
+    /// <summary>
+    /// Gets the assembly name from a resolution scope.
+    /// </summary>
+    /// <param name="scope">The resolution scope to extract the assembly name from.</param>
+    /// <returns>The assembly name, defaulting to <c>"mscorlib"</c> if not determinable.</returns>
     private static string GetAssemblyNameFromScope(IResolutionScope? scope)
     {
         return scope switch
@@ -195,10 +230,15 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Ensures an ITypeDefOrRef is a TypeReference, not a TypeDefinition.
-    /// WinMD convention: interface implementations should use TypeRef even for same-module types
-    /// (TypeDef redirection per the WinMD spec).
+    /// Ensures an <see cref="ITypeDefOrRef"/> is a <see cref="TypeReference"/>, not a <see cref="TypeDefinition"/>.
     /// </summary>
+    /// <remarks>
+    /// WinMD convention requires that interface implementations use <c>TypeRef</c> even for same-module types
+    /// (TypeDef redirection per the WinMD spec). This method converts <see cref="TypeDefinition"/> instances
+    /// to <see cref="TypeReference"/> instances pointing to the output assembly.
+    /// </remarks>
+    /// <param name="type">The type to ensure is a reference.</param>
+    /// <returns>A <see cref="TypeReference"/> if the input was a <see cref="TypeDefinition"/>; otherwise, the original type.</returns>
     private ITypeDefOrRef EnsureTypeReference(ITypeDefOrRef type)
     {
         if (type is TypeDefinition typeDef)
@@ -212,6 +252,17 @@ internal sealed partial class WinMDWriter
         return type;
     }
 
+    /// <summary>
+    /// Gets or creates a <see cref="TypeReference"/> in the output module for the specified type.
+    /// </summary>
+    /// <remarks>
+    /// Results are cached by fully-qualified type name to avoid creating duplicate references.
+    /// The type reference is scoped to the assembly reference obtained from <see cref="GetOrCreateAssemblyReference"/>.
+    /// </remarks>
+    /// <param name="namespace">The type's namespace.</param>
+    /// <param name="name">The type's simple name.</param>
+    /// <param name="assemblyName">The assembly name to reference.</param>
+    /// <returns>The cached or newly created <see cref="TypeReference"/>.</returns>
     private TypeReference GetOrCreateTypeReference(string @namespace, string name, string assemblyName)
     {
         string fullName = string.IsNullOrEmpty(@namespace) ? name : $"{@namespace}.{name}";
@@ -227,6 +278,16 @@ internal sealed partial class WinMDWriter
         return typeRef;
     }
 
+    /// <summary>
+    /// Gets or creates an <see cref="AssemblyReference"/> in the output module for the specified assembly.
+    /// </summary>
+    /// <remarks>
+    /// Non-mscorlib assemblies receive the <c>ContentWindowsRuntime</c> flag.
+    /// The mscorlib reference includes the standard public key token.
+    /// Results are cached by assembly name.
+    /// </remarks>
+    /// <param name="assemblyName">The name of the assembly to reference.</param>
+    /// <returns>The cached or newly created <see cref="AssemblyReference"/>.</returns>
     private AssemblyReference GetOrCreateAssemblyReference(string assemblyName)
     {
         if (_assemblyReferenceCache.TryGetValue(assemblyName, out AssemblyReference? cached))

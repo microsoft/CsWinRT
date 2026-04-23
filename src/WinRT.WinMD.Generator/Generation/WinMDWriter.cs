@@ -16,24 +16,74 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 /// <summary>
 /// Writes a WinMD file from analyzed assembly types using AsmResolver.
 /// </summary>
+/// <remarks>
+/// <para>
+/// This is the core writer class for the WinMD generator. It transforms .NET type definitions from a
+/// compiled assembly into Windows Runtime metadata format (<c>.winmd</c>). The writer handles the
+/// full spectrum of WinRT type system requirements:
+/// </para>
+/// <list type="bullet">
+///   <item>Mapping .NET types to their WinRT equivalents (e.g., <c>IList&lt;T&gt;</c> → <c>IVector&lt;T&gt;</c>).</item>
+///   <item>Synthesizing WinRT-required interfaces (<c>IFooClass</c>, <c>IFooFactory</c>, <c>IFooStatic</c>).</item>
+///   <item>Emitting WinRT metadata attributes (<c>GuidAttribute</c>, <c>VersionAttribute</c>, <c>ActivatableAttribute</c>).</item>
+///   <item>Converting .NET naming conventions to WinRT conventions (e.g., <c>set_</c> → <c>put_</c>).</item>
+/// </list>
+/// <para>
+/// The writer is split across multiple partial class files, each handling a specific aspect of
+/// WinMD generation. See <see cref="ProcessType"/> as the main entry point for type processing.
+/// </para>
+/// </remarks>
 internal sealed partial class WinMDWriter
 {
+    /// <summary>
+    /// The assembly version string (e.g. <c>"1.0.0.0"</c>) used for the output WinMD assembly.
+    /// </summary>
     private readonly string _version;
+
+    /// <summary>
+    /// The <see cref="TypeMapper"/> instance used to map .NET types to their WinRT equivalents.
+    /// </summary>
     private readonly TypeMapper _mapper;
+
+    /// <summary>
+    /// The input <see cref="ModuleDefinition"/> from the compiled assembly being analyzed.
+    /// </summary>
     private readonly ModuleDefinition _inputModule;
+
+    /// <summary>
+    /// The runtime context used for resolving type references across assemblies.
+    /// May be <see langword="null"/> if the input module has no runtime context.
+    /// </summary>
     private readonly RuntimeContext? _runtimeContext;
 
-    // Output WinMD module and assembly
+    /// <summary>
+    /// The output <see cref="ModuleDefinition"/> representing the WinMD file being constructed.
+    /// </summary>
     private readonly ModuleDefinition _outputModule;
 
-    // Tracking for type definitions in the output WinMD
+    /// <summary>
+    /// Maps fully-qualified type names to their <see cref="TypeDeclaration"/> entries,
+    /// tracking both input and output type definitions.
+    /// </summary>
     private readonly Dictionary<string, TypeDeclaration> _typeDefinitionMapping = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Cache of assembly references already created in the output module, keyed by assembly name.
+    /// </summary>
     private readonly Dictionary<string, AssemblyReference> _assemblyReferenceCache = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Cache of type references already created in the output module, keyed by fully-qualified type name.
+    /// </summary>
     private readonly Dictionary<string, TypeReference> _typeReferenceCache = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Creates a new <see cref="WinMDWriter"/> instance.
     /// </summary>
+    /// <param name="assemblyName">The name for the output WinMD assembly.</param>
+    /// <param name="version">The version string for the output assembly (e.g. <c>"1.0.0.0"</c>).</param>
+    /// <param name="mapper">The <see cref="TypeMapper"/> for .NET-to-WinRT type mapping.</param>
+    /// <param name="inputModule">The input <see cref="ModuleDefinition"/> to read types from.</param>
     public WinMDWriter(
         string assemblyName,
         string version,
@@ -67,9 +117,11 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Safely resolves a type reference, returning null instead of throwing if the type
+    /// Safely resolves a type reference, returning <see langword="null"/> instead of throwing if the type
     /// cannot be found (e.g., output-only synthesized types not in the input assembly).
     /// </summary>
+    /// <param name="typeRef">The type reference to resolve, or <see langword="null"/>.</param>
+    /// <returns>The resolved <see cref="TypeDefinition"/>, or <see langword="null"/> if the type cannot be resolved.</returns>
     private TypeDefinition? SafeResolve(ITypeDefOrRef? typeRef)
     {
         return typeRef is TypeDefinition td
@@ -82,8 +134,15 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Processes a public type from the input assembly and adds it to the WinMD.
+    /// Processes a public type from the input assembly and adds it to the output WinMD.
     /// </summary>
+    /// <remarks>
+    /// Dispatches to the appropriate type-specific handler based on the kind of type
+    /// (enum, delegate, interface, struct, or class). Each handler is responsible for
+    /// creating the corresponding WinMD type definition with correct attributes and members.
+    /// Types that have already been processed are skipped.
+    /// </remarks>
+    /// <param name="inputType">The <see cref="TypeDefinition"/> from the input assembly to process.</param>
     public void ProcessType(TypeDefinition inputType)
     {
         string qualifiedName = inputType.QualifiedName;

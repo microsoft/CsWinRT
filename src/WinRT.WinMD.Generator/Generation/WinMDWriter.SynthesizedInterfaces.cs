@@ -11,15 +11,34 @@ using TypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
+/// <inheritdoc cref="WinMDWriter"/>
 internal sealed partial class WinMDWriter
 {
+    /// <summary>
+    /// The type of synthesized WinRT interface to generate for a runtime class.
+    /// </summary>
     private enum SynthesizedInterfaceType
     {
+        /// <summary>Contains static methods, properties, and events from the class.</summary>
         Static,
+
+        /// <summary>Contains factory methods (parameterized constructors projected as <c>Create</c> methods).</summary>
         Factory,
+
+        /// <summary>Contains instance methods, properties, and events not from implemented interfaces.</summary>
         Default
     }
 
+    /// <summary>
+    /// Gets the synthesized interface name for a class, following the WinRT naming convention.
+    /// </summary>
+    /// <remarks>
+    /// The convention is: <c>I{ClassName}Class</c> for default, <c>I{ClassName}Factory</c>
+    /// for factory, and <c>I{ClassName}Static</c> for static interfaces.
+    /// </remarks>
+    /// <param name="className">The simple name of the runtime class.</param>
+    /// <param name="type">The type of synthesized interface.</param>
+    /// <returns>The synthesized interface name (e.g., <c>"IFooClass"</c>).</returns>
     private static string GetSynthesizedInterfaceName(string className, SynthesizedInterfaceType type)
     {
         return "I" + className + type switch
@@ -31,6 +50,29 @@ internal sealed partial class WinMDWriter
         };
     }
 
+    /// <summary>
+    /// Adds all synthesized interfaces (<c>IFooClass</c>, <c>IFooFactory</c>, <c>IFooStatic</c>)
+    /// for a runtime class.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// WinRT requires runtime classes to express their public API surface through interfaces.
+    /// This method creates up to three synthesized interfaces containing the class's own members
+    /// (not those inherited from explicitly implemented interfaces):
+    /// </para>
+    /// <list type="bullet">
+    ///   <item><c>IFooStatic</c>: static methods, properties, and events.</item>
+    ///   <item><c>IFooFactory</c>: parameterized constructors projected as factory methods.</item>
+    ///   <item><c>IFooClass</c>: instance members not already provided by implemented interfaces.</item>
+    /// </list>
+    /// <para>
+    /// Members are excluded from synthesized interfaces if they come from implemented interfaces
+    /// (including custom-mapped interfaces, explicit implementations, and <c>MethodImpl</c> entries).
+    /// </para>
+    /// </remarks>
+    /// <param name="inputType">The input class <see cref="TypeDefinition"/>.</param>
+    /// <param name="classOutputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="classDeclaration">The <see cref="TypeDeclaration"/> tracking the class.</param>
     private void AddSynthesizedInterfaces(TypeDefinition inputType, TypeDefinition classOutputType, TypeDeclaration classDeclaration)
     {
         // Static vs non-static member filtering is handled below per-member
@@ -102,6 +144,23 @@ internal sealed partial class WinMDWriter
         AddSynthesizedInterface(inputType, classOutputType, classDeclaration, SynthesizedInterfaceType.Default, membersFromInterfaces);
     }
 
+    /// <summary>
+    /// Adds a single synthesized interface of the specified type for a runtime class.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The interface is only emitted if it has at least one member, or if it is the default interface
+    /// and the class has no other interface implementations. When emitted, the interface receives
+    /// <c>[Version]</c>, <c>[Guid]</c>, and <c>[ExclusiveTo]</c> attributes, and the appropriate
+    /// metadata attribute is added to the class (<c>[Activatable]</c> for factory, <c>[Static]</c>
+    /// for static, <c>[Default]</c> for default).
+    /// </para>
+    /// </remarks>
+    /// <param name="inputType">The input class <see cref="TypeDefinition"/>.</param>
+    /// <param name="classOutputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="classDeclaration">The <see cref="TypeDeclaration"/> tracking the class.</param>
+    /// <param name="interfaceType">The type of synthesized interface to create.</param>
+    /// <param name="membersFromInterfaces">Set of member names already provided by implemented interfaces.</param>
     private void AddSynthesizedInterface(
         TypeDefinition inputType,
         TypeDefinition classOutputType,
@@ -259,6 +318,16 @@ internal sealed partial class WinMDWriter
         }
     }
 
+    /// <summary>
+    /// Adds a factory method to a synthesized factory interface.
+    /// </summary>
+    /// <remarks>
+    /// Parameterized constructors are projected as <c>Create{ClassName}</c> factory methods
+    /// in the factory interface. The return type is the runtime class itself.
+    /// </remarks>
+    /// <param name="synthesizedInterface">The factory interface to add the method to.</param>
+    /// <param name="classType">The input class <see cref="TypeDefinition"/>.</param>
+    /// <param name="constructor">The parameterized constructor <see cref="MethodDefinition"/>.</param>
     private void AddFactoryMethod(TypeDefinition synthesizedInterface, TypeDefinition classType, MethodDefinition constructor)
     {
         // Look up the output class TypeDefinition to use as the return type
@@ -280,6 +349,15 @@ internal sealed partial class WinMDWriter
         synthesizedInterface.Methods.Add(factoryMethod);
     }
 
+    /// <summary>
+    /// Gets the fully-qualified name of an interface, stripping generic type arguments for generic interfaces.
+    /// </summary>
+    /// <remarks>
+    /// For a generic interface like <c>IList&lt;string&gt;</c>, returns the open generic name
+    /// <c>"System.Collections.Generic.IList`1"</c> rather than the closed form.
+    /// </remarks>
+    /// <param name="type">The interface type reference.</param>
+    /// <returns>The qualified name of the interface type.</returns>
     private static string GetInterfaceQualifiedName(ITypeDefOrRef type)
     {
         return type is TypeSpecification typeSpec && typeSpec.Signature is GenericInstanceTypeSignature genericInst

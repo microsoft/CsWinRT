@@ -13,8 +13,19 @@ using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttri
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
+/// <inheritdoc cref="WinMDWriter"/>
 internal sealed partial class WinMDWriter
 {
+    /// <summary>
+    /// Adds a method definition to a WinMD interface type.
+    /// </summary>
+    /// <remarks>
+    /// Interface methods in WinMD are abstract virtual methods. The return type and parameter types
+    /// are mapped from .NET to WinRT equivalents. Custom attributes from the input method are copied
+    /// to the output.
+    /// </remarks>
+    /// <param name="outputType">The output interface <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="inputMethod">The input <see cref="MethodDefinition"/> to add.</param>
     private void AddMethodToInterface(TypeDefinition outputType, MethodDefinition inputMethod)
     {
         TypeSignature returnType = inputMethod.Signature!.ReturnType is CorLibTypeSignature { ElementType: ElementType.Void }
@@ -50,6 +61,17 @@ internal sealed partial class WinMDWriter
         CopyCustomAttributes(inputMethod, outputMethod);
     }
 
+    /// <summary>
+    /// Adds a method definition to a WinMD class type.
+    /// </summary>
+    /// <remarks>
+    /// Class methods in WinMD are final virtual methods (sealed). Constructors receive
+    /// <c>SpecialName</c> and <c>RuntimeSpecialName</c> attributes. Static methods are emitted
+    /// as static. All methods use <c>Runtime | Managed</c> implementation attributes since the
+    /// actual implementation is provided at runtime by the WinRT projection.
+    /// </remarks>
+    /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="inputMethod">The input <see cref="MethodDefinition"/> to add.</param>
     private void AddMethodToClass(TypeDefinition outputType, MethodDefinition inputMethod)
     {
         TypeSignature returnType = inputMethod.Signature!.ReturnType is CorLibTypeSignature { ElementType: ElementType.Void }
@@ -156,6 +178,22 @@ internal sealed partial class WinMDWriter
         return ParameterAttributes.In;
     }
 
+    /// <summary>
+    /// Adds a property definition to a WinMD type (interface or class).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// WinRT properties use <c>get_</c> for getters and <c>put_</c> for setters (instead of .NET's <c>set_</c>).
+    /// For interface parents (including synthesized interfaces), the methods are emitted as abstract virtual
+    /// even when the original property was static, since WinRT interface methods are always instance methods.
+    /// </para>
+    /// <para>
+    /// Custom attributes from the input property are copied to the output property.
+    /// </para>
+    /// </remarks>
+    /// <param name="outputType">The output <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="inputProperty">The input <see cref="PropertyDefinition"/> to add.</param>
+    /// <param name="isInterfaceParent">Whether the parent type is an interface (forces instance signatures).</param>
     private void AddPropertyToType(TypeDefinition outputType, PropertyDefinition inputProperty, bool isInterfaceParent)
     {
         TypeSignature propertyType = MapTypeSignatureToOutput(inputProperty.Signature!.ReturnType);
@@ -239,6 +277,23 @@ internal sealed partial class WinMDWriter
         CopyCustomAttributes(inputProperty, outputProperty);
     }
 
+    /// <summary>
+    /// Adds an event definition to a WinMD type (interface or class).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// WinRT events always use <c>EventRegistrationToken</c> for the add/remove pattern:
+    /// the <c>add_</c> method returns an <c>EventRegistrationToken</c>, and the <c>remove_</c>
+    /// method accepts one. This differs from the .NET event pattern where both accessors are <c>void</c>.
+    /// </para>
+    /// <para>
+    /// For interface parents (including synthesized interfaces), the methods are emitted as abstract virtual
+    /// even when the original event was static.
+    /// </para>
+    /// </remarks>
+    /// <param name="outputType">The output <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="inputEvent">The input <see cref="EventDefinition"/> to add.</param>
+    /// <param name="isInterfaceParent">Whether the parent type is an interface (forces instance signatures).</param>
     private void AddEventToType(TypeDefinition outputType, EventDefinition inputEvent, bool isInterfaceParent)
     {
         ITypeDefOrRef eventType = ImportTypeReference(inputEvent.EventType!);

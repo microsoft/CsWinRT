@@ -18,11 +18,14 @@ using TypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
+/// <inheritdoc cref="WinMDWriter"/>
 internal sealed partial class WinMDWriter
 {
     /// <summary>
-    /// Checks if an enum type represents a WinRT API contract (has [ApiContract] attribute).
+    /// Checks if an enum type represents a WinRT API contract (has <c>[ApiContract]</c> attribute).
     /// </summary>
+    /// <param name="type">The enum <see cref="TypeDefinition"/> to check.</param>
+    /// <returns><see langword="true"/> if the type has an <c>[ApiContract]</c> attribute; otherwise, <see langword="false"/>.</returns>
     private static bool IsApiContract(TypeDefinition type)
     {
         return type.CustomAttributes.Any(
@@ -31,9 +34,12 @@ internal sealed partial class WinMDWriter
 
     /// <summary>
     /// Emits an API contract type as an empty struct in the WinMD.
-    /// In C#, API contracts are projected as enums with [ApiContract], but in WinMD
-    /// metadata they are represented as empty structs per the WinRT type system spec.
     /// </summary>
+    /// <remarks>
+    /// In C#, API contracts are projected as enums with <c>[ApiContract]</c>, but in WinMD
+    /// metadata they are represented as empty structs per the WinRT type system spec.
+    /// </remarks>
+    /// <param name="inputType">The API contract enum <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddApiContractType(TypeDefinition inputType)
     {
         string qualifiedName = inputType.QualifiedName;
@@ -58,6 +64,15 @@ internal sealed partial class WinMDWriter
         _typeDefinitionMapping[qualifiedName] = declaration;
     }
 
+    /// <summary>
+    /// Adds an enum type to the output WinMD.
+    /// </summary>
+    /// <remarks>
+    /// Handles API contract types specially (emitted as empty structs). For regular enums,
+    /// creates the WinMD enum type with the <c>value__</c> field and all public enum members
+    /// with their constant values.
+    /// </remarks>
+    /// <param name="inputType">The enum <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddEnumType(TypeDefinition inputType)
     {
         // API contract types are projected as enums in C# but emitted as empty structs in WinMD
@@ -127,6 +142,11 @@ internal sealed partial class WinMDWriter
         }
     }
 
+    /// <summary>
+    /// Gets the underlying type of an enum (e.g., <c>Int32</c>, <c>UInt32</c>) by inspecting its <c>value__</c> field.
+    /// </summary>
+    /// <param name="enumType">The enum <see cref="TypeDefinition"/> to inspect.</param>
+    /// <returns>The <see cref="TypeSignature"/> of the underlying type, defaulting to <c>Int32</c> if not found.</returns>
     private TypeSignature GetEnumUnderlyingType(TypeDefinition enumType)
     {
         foreach (FieldDefinition field in enumType.Fields)
@@ -141,6 +161,15 @@ internal sealed partial class WinMDWriter
         return _outputModule.CorLibTypeFactory.Int32;
     }
 
+    /// <summary>
+    /// Adds a delegate type to the output WinMD.
+    /// </summary>
+    /// <remarks>
+    /// Creates the WinMD delegate type with the required <c>.ctor(object, IntPtr)</c> constructor
+    /// (private per WinRT delegate convention) and the <c>Invoke</c> method with mapped parameter
+    /// and return types. Also adds the <c>[Guid]</c> attribute.
+    /// </remarks>
+    /// <param name="inputType">The delegate <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddDelegateType(TypeDefinition inputType)
     {
         string qualifiedName = inputType.QualifiedName;
@@ -216,6 +245,14 @@ internal sealed partial class WinMDWriter
         AddGuidAttribute(outputType, inputType);
     }
 
+    /// <summary>
+    /// Adds an interface type to the output WinMD.
+    /// </summary>
+    /// <remarks>
+    /// Creates the WinMD interface type with all public methods (excluding property/event accessors),
+    /// properties, events, and interface implementations. Also adds the <c>[Guid]</c> attribute.
+    /// </remarks>
+    /// <param name="inputType">The interface <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddInterfaceType(TypeDefinition inputType)
     {
         string qualifiedName = inputType.QualifiedName;
@@ -275,6 +312,14 @@ internal sealed partial class WinMDWriter
         AddGuidAttribute(outputType, inputType);
     }
 
+    /// <summary>
+    /// Adds a struct (value type) to the output WinMD.
+    /// </summary>
+    /// <remarks>
+    /// Creates the WinMD struct type with all public instance fields mapped to their WinRT
+    /// type equivalents. Static fields are excluded per WinRT struct conventions.
+    /// </remarks>
+    /// <param name="inputType">The struct <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddStructType(TypeDefinition inputType)
     {
         string qualifiedName = inputType.QualifiedName;
@@ -315,6 +360,25 @@ internal sealed partial class WinMDWriter
         }
     }
 
+    /// <summary>
+    /// Adds a class (runtime class) type to the output WinMD.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is the most complex type handler. It creates the WinMD runtime class with:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>Public methods, properties, and events (excluding custom-mapped interface members).</item>
+    ///   <item>Constructors (including an implicit default constructor if none are defined).</item>
+    ///   <item>Interface implementations (excluding mapped and unmappable .NET interfaces).</item>
+    ///   <item><c>[Activatable]</c> attribute if the class has a default constructor.</item>
+    ///   <item>Custom-mapped interfaces (e.g., <c>IList</c> → <c>IVector</c>) via <see cref="ProcessCustomMappedInterfaces"/>.</item>
+    ///   <item>Synthesized interfaces (<c>IFooClass</c>, <c>IFooFactory</c>, <c>IFooStatic</c>) via <see cref="AddSynthesizedInterfaces"/>.</item>
+    ///   <item>Explicit interface implementation methods.</item>
+    ///   <item>A <c>[Default]</c> attribute on the appropriate interface implementation.</item>
+    /// </list>
+    /// </remarks>
+    /// <param name="inputType">The class <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddClassType(TypeDefinition inputType)
     {
         string qualifiedName = inputType.QualifiedName;
@@ -505,9 +569,12 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Finds the output interface that should receive [Default] — the WinRT equivalent
+    /// Finds the output interface that should receive <c>[Default]</c> — the WinRT equivalent
     /// of the first user-declared .NET interface on the input type.
     /// </summary>
+    /// <param name="inputType">The input class <see cref="TypeDefinition"/>.</param>
+    /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <returns>The matching <see cref="InterfaceImplementation"/>, or <see langword="null"/> if not found.</returns>
     private InterfaceImplementation? FindDefaultInterface(TypeDefinition inputType, TypeDefinition outputType)
     {
         if (inputType.Interfaces.Count == 0)
@@ -539,10 +606,16 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Adds explicit interface implementation methods from the input class.
-    /// Applies WinRT conventions: set_ to put_, event add returns EventRegistrationToken,
-    /// event remove takes EventRegistrationToken.
+    /// Adds explicit interface implementation methods from the input class to the output WinMD.
     /// </summary>
+    /// <remarks>
+    /// Applies WinRT conventions: <c>set_</c> → <c>put_</c>, event <c>add</c> returns
+    /// <c>EventRegistrationToken</c>, event <c>remove</c> takes <c>EventRegistrationToken</c>.
+    /// Also creates the corresponding property/event definitions and <c>MethodImpl</c> entries
+    /// to wire the explicit implementations to their interface methods.
+    /// </remarks>
+    /// <param name="inputType">The input class <see cref="TypeDefinition"/>.</param>
+    /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
     private void AddExplicitInterfaceImplementations(TypeDefinition inputType, TypeDefinition outputType)
     {
         TypeReference eventRegistrationTokenType = GetOrCreateTypeReference(
