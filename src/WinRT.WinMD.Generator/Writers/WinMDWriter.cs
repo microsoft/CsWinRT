@@ -3,13 +3,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.WinMDGenerator.Errors;
 using WindowsRuntime.WinMDGenerator.Helpers;
 using WindowsRuntime.WinMDGenerator.Models;
 using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
+
+#pragma warning disable IDE0046
 
 namespace WindowsRuntime.WinMDGenerator.Writers;
 

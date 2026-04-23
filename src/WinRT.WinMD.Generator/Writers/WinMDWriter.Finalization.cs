@@ -187,7 +187,7 @@ internal sealed partial class WinMDWriter
                 continue;
             }
 
-            AddMethodImplsForInterface(classOutputType, classInputType, classInterfaceImpl, interfaceDef, resolvedFromInput, interfaceGenericArgs);
+            AddMethodImplsForInterface(classOutputType, classInterfaceImpl, interfaceDef, resolvedFromInput, interfaceGenericArgs);
         }
 
         // Add MethodImpls for default synthesized interface
@@ -214,14 +214,12 @@ internal sealed partial class WinMDWriter
     /// Adds <c>MethodImpl</c> entries for all methods in a specific interface on a class.
     /// </summary>
     /// <param name="classOutputType">The class type in the output WinMD.</param>
-    /// <param name="classInputType">The class type in the input assembly.</param>
     /// <param name="classInterfaceImpl">The interface implementation entry on the class.</param>
     /// <param name="interfaceDef">The resolved interface <see cref="TypeDefinition"/>.</param>
     /// <param name="resolvedFromInput">Whether the interface was resolved from the input assembly.</param>
     /// <param name="interfaceGenericArgs">The generic type arguments if the interface is a generic instantiation.</param>
     private void AddMethodImplsForInterface(
         TypeDefinition classOutputType,
-        TypeDefinition classInputType,
         InterfaceImplementation classInterfaceImpl,
         TypeDefinition interfaceDef,
         bool resolvedFromInput,
