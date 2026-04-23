@@ -4,6 +4,8 @@
 using System.Linq;
 using AsmResolver.DotNet;
 
+#pragma warning disable IDE0046
+
 namespace WindowsRuntime.WinMDGenerator;
 
 /// <summary>
@@ -21,11 +23,7 @@ internal static class TypeDefinitionExtensions
         /// from CsWinRT-generated projection assemblies. This attribute indicates the type has a
         /// corresponding Windows Runtime definition and carries metadata about its contract assembly.
         /// </remarks>
-        public bool IsWinRTType
-        {
-            get => type.CustomAttributes.Any(
-                attribute => attribute.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeMetadataAttribute");
-        }
+        public bool IsWindowsRuntimeType => type.FindCustomAttributes("WindowsRuntime", "WindowsRuntimeMetadataAttribute").Any();
 
         /// <summary>
         /// Gets the Windows Runtime contract assembly name from <c>[WindowsRuntimeMetadata]</c> attribute on the type, if present.
@@ -38,17 +36,20 @@ internal static class TypeDefinitionExtensions
         /// For types from projection assemblies (e.g. <c>Microsoft.WinUI</c>), this returns the original
         /// Windows Runtime contract assembly name so the WinMD can reference types correctly.
         /// </remarks>
-        public string? WinRTAssemblyName
+        public string? WindowsRuntimeAssemblyName
         {
             get
             {
-                foreach (CustomAttribute attribute in type.CustomAttributes)
+                // If the type doesn't have the '[WindowsRuntimeMetadata]' attribute, stop here
+                if (type.FindCustomAttributes("WindowsRuntime", "WindowsRuntimeMetadataAttribute").FirstOrDefault() is not CustomAttribute attribute)
                 {
-                    if (attribute.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeMetadataAttribute"
-                        && attribute.Signature?.FixedArguments.Count > 0)
-                    {
-                        return attribute.Signature.FixedArguments[0].Element?.ToString();
-                    }
+                    return null;
+                }
+
+                // Extract the assembly name from the attribute signature, if possible
+                if (attribute.Signature is { FixedArguments: [{ Element: object assemblyName }] })
+                {
+                    return assemblyName.ToString();
                 }
 
                 return null;
@@ -75,7 +76,7 @@ internal static class TypeDefinitionExtensions
                 // For nested types, walk up to the declaring type to find the namespace
                 TypeDefinition? current = type.DeclaringType;
 
-                while (current != null)
+                while (current is not null)
                 {
                     if (current.Namespace is { Value.Length: > 0 })
                     {

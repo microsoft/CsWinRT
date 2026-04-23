@@ -61,6 +61,7 @@ internal static partial class WinMDGenerator
         // another assembly in the same directory.
         string[] allReferencePaths = [args.InputAssemblyPath, .. args.ReferenceAssemblyPaths];
 
+        // Gather all the unique directories from the reference paths
         string[] searchDirectories = allReferencePaths
             .Select(Path.GetDirectoryName)
             .Where(directory => directory is not null)

@@ -194,7 +194,7 @@ internal sealed partial class WinMDWriter
             TypeDefinition? resolvedType = SafeResolve(typeRef);
             if (resolvedType != null)
             {
-                string? winrtAssembly = resolvedType.WinRTAssemblyName;
+                string? winrtAssembly = resolvedType.WindowsRuntimeAssemblyName;
                 if (winrtAssembly != null)
                 {
                     assembly = winrtAssembly;

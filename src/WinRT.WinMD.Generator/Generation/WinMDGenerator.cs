@@ -22,7 +22,7 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 /// The generation process runs in three phases:
 /// </para>
 /// <list type="number">
-///   <item><strong>Parse</strong>: Read arguments from the response file via <see cref="WinMDGeneratorArgs.ParseFromResponseFile"/>.</item>
+///   <item><strong>Parse</strong>: Read arguments from the response file via <see cref="WinMDGeneratorArgs.ParseFromResponseFile(string, CancellationToken)"/>.</item>
 ///   <item><strong>Discover</strong>: Load the input assembly and discover public types via <see cref="Discover"/>.</item>
 ///   <item><strong>Generate</strong>: Transform discovered types and write the WinMD file via <see cref="Generate"/>.</item>
 /// </list>

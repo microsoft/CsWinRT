@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using WindowsRuntime.WinMDGenerator.Attributes;
 using WindowsRuntime.WinMDGenerator.Errors;
 
@@ -25,7 +26,7 @@ internal partial class WinMDGeneratorArgs
     /// <param name="path">The path to the response file (optionally prefixed with <c>@</c>).</param>
     /// <param name="token">The cancellation token for the operation.</param>
     /// <returns>The resulting <see cref="WinMDGeneratorArgs"/> instance.</returns>
-    public static WinMDGeneratorArgs ParseFromResponseFile(string path, System.Threading.CancellationToken token)
+    public static WinMDGeneratorArgs ParseFromResponseFile(string path, CancellationToken token)
     {
         // If the path is a response file, it will start with the '@' character.
         // This matches the default escaping 'ToolTask' uses for response files.
@@ -55,13 +56,13 @@ internal partial class WinMDGeneratorArgs
     /// <remarks>
     /// Each line in the response file contains a single command-line argument in the form
     /// <c>--argument-name value</c>. Lines are parsed into a key-value map, and each property
-    /// of <see cref="WinMDGeneratorArgs"/> is populated using its <see cref="Attributes.CommandLineArgumentNameAttribute"/>.
+    /// of <see cref="WinMDGeneratorArgs"/> is populated using its <see cref="CommandLineArgumentNameAttribute"/>.
     /// Duplicate argument names cause a malformed response file error.
     /// </remarks>
     /// <param name="lines">The lines read from the response file.</param>
     /// <param name="token">The cancellation token for the operation.</param>
     /// <returns>The resulting <see cref="WinMDGeneratorArgs"/> instance.</returns>
-    private static WinMDGeneratorArgs ParseFromResponseFile(string[] lines, System.Threading.CancellationToken token)
+    private static WinMDGeneratorArgs ParseFromResponseFile(string[] lines, CancellationToken token)
     {
         Dictionary<string, string> argsMap = [];
 
@@ -109,7 +110,7 @@ internal partial class WinMDGeneratorArgs
 
     /// <summary>
     /// Gets the command-line argument name for a property by reading its
-    /// <see cref="Attributes.CommandLineArgumentNameAttribute"/>.
+    /// <see cref="CommandLineArgumentNameAttribute"/>.
     /// </summary>
     /// <param name="propertyName">The target property name on <see cref="WinMDGeneratorArgs"/>.</param>
     /// <returns>The command-line argument name (e.g., <c>"--input-assembly-path"</c>).</returns>

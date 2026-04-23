@@ -38,6 +38,7 @@ internal static partial class WinMDGenerator
             mapper,
             state.InputModule);
 
+        // Process all public types from the input assembly (internal or private types aren't authored)
         foreach (TypeDefinition type in state.PublicTypes)
         {
             writer.ProcessType(type);
@@ -46,12 +47,12 @@ internal static partial class WinMDGenerator
         writer.FinalizeGeneration();
 
         // Ensure output directory exists
-        string? outputDir = Path.GetDirectoryName(args.OutputWinmdPath);
-        if (outputDir != null)
+        if (Path.GetDirectoryName(args.OutputWinmdPath) is string outputDirectory)
         {
-            _ = Directory.CreateDirectory(outputDir);
+            _ = Directory.CreateDirectory(outputDirectory);
         }
 
+        // Write the .winmd file to disk
         writer.Write(args.OutputWinmdPath);
     }
 }
