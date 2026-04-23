@@ -669,18 +669,18 @@ internal sealed partial class WinMDWriter
                 paramNames = [.. method.ParameterDefinitions.Select(p => p.Name?.Value ?? "value")];
             }
 
-            MethodAttributes attrs =
+            MethodAttributes attributes =
                 MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual |
                 MethodAttributes.HideBySig | MethodAttributes.NewSlot;
 
             if (method.IsSpecialName)
             {
-                attrs |= MethodAttributes.SpecialName;
+                attributes |= MethodAttributes.SpecialName;
             }
 
             MethodDefinition outputMethod = new(
                 name: winrtFullName,
-                attributes: attrs,
+                attributes: attributes,
                 signature: MethodSignature.CreateInstance(returnType, parameterTypes))
             {
                 ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed

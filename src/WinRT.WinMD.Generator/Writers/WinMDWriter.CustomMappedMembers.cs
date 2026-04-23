@@ -277,18 +277,18 @@ internal sealed partial class WinMDWriter
             return new GenericInstanceTypeSignature(genericInstanceSignature.GenericType, genericInstanceSignature.IsValueType, openArgs);
         }
 
-        void AddMappedMethod(string name, (string name, TypeSignature type, ParameterAttributes attrs)[]? parameters, TypeSignature? returnType)
+        void AddMappedMethod(string name, (string name, TypeSignature type, ParameterAttributes attributes)[]? parameters, TypeSignature? returnType)
         {
             string methodName = isPublic ? name : $"{qualifiedPrefix}.{name}";
 
-            MethodAttributes attrs = isPublic
+            MethodAttributes attributes = isPublic
                 ? (MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot)
                 : (MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot);
 
             TypeSignature[] paramTypes = parameters?.Select(p => p.type).ToArray() ?? [];
             MethodSignature signature = MethodSignature.CreateInstance(returnType ?? _outputModule.CorLibTypeFactory.Void, paramTypes);
 
-            MethodDefinition method = new(methodName, attrs, signature)
+            MethodDefinition method = new(methodName, attributes, signature)
             {
                 ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
             };
@@ -296,9 +296,9 @@ internal sealed partial class WinMDWriter
             if (parameters != null)
             {
                 int idx = 1;
-                foreach ((string name, TypeSignature type, ParameterAttributes attrs) p in parameters)
+                foreach ((string name, TypeSignature type, ParameterAttributes attributes) p in parameters)
                 {
-                    method.ParameterDefinitions.Add(new ParameterDefinition((ushort)idx++, p.name, p.attrs));
+                    method.ParameterDefinitions.Add(new ParameterDefinition((ushort)idx++, p.name, p.attributes));
                 }
             }
 
@@ -317,11 +317,11 @@ internal sealed partial class WinMDWriter
             string getMethodName = isPublic ? $"get_{name}" : $"{qualifiedPrefix}.get_{name}";
 
             // Getter
-            MethodAttributes getAttrs = isPublic
+            MethodAttributes getattributes = isPublic
                 ? (MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.SpecialName)
                 : (MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.SpecialName);
 
-            MethodDefinition getter = new(getMethodName, getAttrs, MethodSignature.CreateInstance(propertyType))
+            MethodDefinition getter = new(getMethodName, getattributes, MethodSignature.CreateInstance(propertyType))
             {
                 ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
             };
@@ -339,7 +339,7 @@ internal sealed partial class WinMDWriter
             if (hasSetter)
             {
                 string putMethodName = isPublic ? $"put_{name}" : $"{qualifiedPrefix}.put_{name}";
-                MethodDefinition setter = new(putMethodName, getAttrs, MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [propertyType]))
+                MethodDefinition setter = new(putMethodName, getattributes, MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [propertyType]))
                 {
                     ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
                 };
@@ -544,12 +544,12 @@ internal sealed partial class WinMDWriter
         string addName = isPublic ? $"add_{eventName}" : $"{qualifiedPrefix}.add_{eventName}";
         string removeName = isPublic ? $"remove_{eventName}" : $"{qualifiedPrefix}.remove_{eventName}";
 
-        MethodAttributes attrs = isPublic
+        MethodAttributes attributes = isPublic
             ? (MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.SpecialName)
             : (MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.SpecialName);
 
         // Add method
-        MethodDefinition adder = new(addName, attrs, MethodSignature.CreateInstance(tokenSignature, [handlerType]))
+        MethodDefinition adder = new(addName, attributes, MethodSignature.CreateInstance(tokenSignature, [handlerType]))
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
@@ -557,7 +557,7 @@ internal sealed partial class WinMDWriter
         outputType.Methods.Add(adder);
 
         // Remove method
-        MethodDefinition remover = new(removeName, attrs, MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [tokenSignature]))
+        MethodDefinition remover = new(removeName, attributes, MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [tokenSignature]))
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };

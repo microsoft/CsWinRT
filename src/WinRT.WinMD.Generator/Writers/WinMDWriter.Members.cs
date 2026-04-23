@@ -35,7 +35,7 @@ internal sealed partial class WinMDWriter
         TypeSignature[] parameterTypes = [.. inputMethod.Signature.ParameterTypes
             .Select(MapTypeSignatureToOutput)];
 
-        MethodAttributes attrs =
+        MethodAttributes attributes =
             MethodAttributes.Public |
             MethodAttributes.HideBySig |
             MethodAttributes.Abstract |
@@ -44,12 +44,12 @@ internal sealed partial class WinMDWriter
 
         if (inputMethod.IsSpecialName)
         {
-            attrs |= MethodAttributes.SpecialName;
+            attributes |= MethodAttributes.SpecialName;
         }
 
         MethodDefinition outputMethod = new(
             name: inputMethod.Name!.Value,
-            attributes: attrs,
+            attributes: attributes,
             signature: MethodSignature.CreateInstance(returnType, parameterTypes));
 
         // Add parameter definitions with correct attributes for Windows Runtime array conventions
@@ -82,24 +82,24 @@ internal sealed partial class WinMDWriter
             .Select(MapTypeSignatureToOutput)];
 
         bool isConstructor = inputMethod.IsConstructor;
-        MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig;
+        MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig;
 
         if (isConstructor)
         {
-            attrs |= MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName;
+            attributes |= MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName;
         }
         else if (inputMethod.IsStatic)
         {
-            attrs |= MethodAttributes.Static;
+            attributes |= MethodAttributes.Static;
         }
         else
         {
-            attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
+            attributes |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
         }
 
         if (inputMethod.IsSpecialName && !isConstructor)
         {
-            attrs |= MethodAttributes.SpecialName;
+            attributes |= MethodAttributes.SpecialName;
         }
 
         MethodSignature signature = isConstructor || !inputMethod.IsStatic
@@ -108,7 +108,7 @@ internal sealed partial class WinMDWriter
 
         MethodDefinition outputMethod = new(
             name: inputMethod.Name!.Value,
-            attributes: attrs,
+            attributes: attributes,
             signature: signature)
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
@@ -139,17 +139,17 @@ internal sealed partial class WinMDWriter
         foreach (ParameterDefinition inputParam in inputMethod.ParameterDefinitions)
         {
             int sigIndex = paramIndex - 1;
-            ParameterAttributes paramAttrs = ParameterAttributes.In;
+            ParameterAttributes paramattributes = ParameterAttributes.In;
 
             if (sigIndex < inputParamTypes.Count)
             {
-                paramAttrs = GetWinRTParameterAttributes(inputParamTypes[sigIndex]);
+                paramattributes = GetWinRTParameterAttributes(inputParamTypes[sigIndex]);
             }
 
             outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
                 (ushort)paramIndex++,
                 inputParam.Name!.Value,
-                paramAttrs));
+                paramattributes));
         }
     }
 
@@ -204,31 +204,31 @@ internal sealed partial class WinMDWriter
 
         PropertyDefinition outputProperty = new(
             name: inputProperty.Name!.Value,
-            attributes: 0,
+            attributes: PropertyAttributes.None,
             signature: isStatic ? PropertySignature.CreateStatic(propertyType) : PropertySignature.CreateInstance(propertyType));
 
         // Add getter
         if (inputProperty.GetMethod != null)
         {
-            MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
+            MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
             if (isInterfaceParent)
             {
-                attrs |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+                attributes |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
             }
             else if (isStatic)
             {
-                attrs |= MethodAttributes.Static;
+                attributes |= MethodAttributes.Static;
             }
             else
             {
-                attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
+                attributes |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
             }
 
             MethodSignature getSignature = isStatic
                 ? MethodSignature.CreateStatic(propertyType)
                 : MethodSignature.CreateInstance(propertyType);
 
-            MethodDefinition getter = new("get_" + inputProperty.Name.Value, attrs, getSignature);
+            MethodDefinition getter = new("get_" + inputProperty.Name.Value, attributes, getSignature);
             if (!isInterfaceParent)
             {
                 getter.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
@@ -240,25 +240,25 @@ internal sealed partial class WinMDWriter
         // Add setter (Windows Runtime uses "put_" prefix)
         if (inputProperty.SetMethod != null && inputProperty.SetMethod.IsPublic)
         {
-            MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
+            MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
             if (isInterfaceParent)
             {
-                attrs |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+                attributes |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
             }
             else if (isStatic)
             {
-                attrs |= MethodAttributes.Static;
+                attributes |= MethodAttributes.Static;
             }
             else
             {
-                attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
+                attributes |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
             }
 
             MethodSignature setSignature = isStatic
                 ? MethodSignature.CreateStatic(_outputModule.CorLibTypeFactory.Void, [propertyType])
                 : MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [propertyType]);
 
-            MethodDefinition setter = new("put_" + inputProperty.Name.Value, attrs, setSignature);
+            MethodDefinition setter = new("put_" + inputProperty.Name.Value, attributes, setSignature);
             if (!isInterfaceParent)
             {
                 setter.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
@@ -307,18 +307,18 @@ internal sealed partial class WinMDWriter
 
         // Add method
         {
-            MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
+            MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
             if (isInterfaceParent)
             {
-                attrs |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+                attributes |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
             }
             else if (isStatic)
             {
-                attrs |= MethodAttributes.Static;
+                attributes |= MethodAttributes.Static;
             }
             else
             {
-                attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
+                attributes |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
             }
 
             TypeSignature handlerSignature = eventType.ToTypeSignature(false);
@@ -328,7 +328,7 @@ internal sealed partial class WinMDWriter
                 ? MethodSignature.CreateStatic(tokenSignature, [handlerSignature])
                 : MethodSignature.CreateInstance(tokenSignature, [handlerSignature]);
 
-            MethodDefinition adder = new("add_" + inputEvent.Name.Value, attrs, addSignature);
+            MethodDefinition adder = new("add_" + inputEvent.Name.Value, attributes, addSignature);
             if (!isInterfaceParent)
             {
                 adder.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
@@ -340,18 +340,18 @@ internal sealed partial class WinMDWriter
 
         // Remove method
         {
-            MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
+            MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
             if (isInterfaceParent)
             {
-                attrs |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+                attributes |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
             }
             else if (isStatic)
             {
-                attrs |= MethodAttributes.Static;
+                attributes |= MethodAttributes.Static;
             }
             else
             {
-                attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
+                attributes |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
             }
 
             TypeSignature tokenSignature = eventRegistrationTokenType.ToTypeSignature(true);
@@ -360,7 +360,7 @@ internal sealed partial class WinMDWriter
                 ? MethodSignature.CreateStatic(_outputModule.CorLibTypeFactory.Void, [tokenSignature])
                 : MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [tokenSignature]);
 
-            MethodDefinition remover = new("remove_" + inputEvent.Name.Value, attrs, removeSignature);
+            MethodDefinition remover = new("remove_" + inputEvent.Name.Value, attributes, removeSignature);
             if (!isInterfaceParent)
             {
                 remover.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
