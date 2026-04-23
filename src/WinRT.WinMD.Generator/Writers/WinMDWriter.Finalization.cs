@@ -58,7 +58,7 @@ internal sealed partial class WinMDWriter
                 continue;
             }
 
-            if (!HasVersionAttribute(declaration.OutputType))
+            if (!declaration.OutputType.HasVersionAttribute)
             {
                 // Skip adding '[Version]' attribute if the input type has '[ContractVersion]' attribute
                 // (it will be copied in Phase 3 via 'CopyCustomAttributes')

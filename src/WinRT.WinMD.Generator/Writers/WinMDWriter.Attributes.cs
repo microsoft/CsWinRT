@@ -315,17 +315,6 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Checks whether a type already has a <c>[Version]</c> or <c>[ContractVersion]</c> attribute.
-    /// </summary>
-    /// <param name="type">The <see cref="TypeDefinition"/> to check.</param>
-    /// <returns><see langword="true"/> if the type has a version attribute; otherwise, <see langword="false"/>.</returns>
-    private static bool HasVersionAttribute(TypeDefinition type)
-    {
-        return type.CustomAttributes.Any(
-            attribute => attribute.Constructor?.DeclaringType?.Name?.Value is "VersionAttribute" or "ContractVersionAttribute");
-    }
-
-    /// <summary>
     /// Gets the version number for a type from its <c>[Version]</c> attribute, or falls back
     /// to the assembly major version.
     /// </summary>
@@ -333,17 +322,7 @@ internal sealed partial class WinMDWriter
     /// <returns>The version number as an integer.</returns>
     private int GetVersion(TypeDefinition type)
     {
-        foreach (CustomAttribute attribute in type.CustomAttributes)
-        {
-            if (attribute.Constructor?.DeclaringType?.Name?.Value == "VersionAttribute" &&
-                attribute.Signature?.FixedArguments.Count > 0 &&
-                attribute.Signature.FixedArguments[0].Element is uint version)
-            {
-                return (int)version;
-            }
-        }
-
-        return Version.Parse(_version).Major;
+        return type.VersionAttributeValue ?? Version.Parse(_version).Major;
     }
 
     /// <summary>

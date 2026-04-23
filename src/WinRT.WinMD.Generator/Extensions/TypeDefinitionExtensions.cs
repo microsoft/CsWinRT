@@ -35,6 +35,35 @@ internal static class TypeDefinitionExtensions
         public bool IsApiContract => type.FindCustomAttributes("Windows.Foundation.Metadata", "ApiContractAttribute").Any();
 
         /// <summary>
+        /// Checks whether the type already has a <c>[Version]</c> or <c>[ContractVersion]</c> attribute.
+        /// </summary>
+        public bool HasVersionAttribute => type.FindCustomAttributes("Windows.Foundation.Metadata", "VersionAttribute").Any();
+
+        /// <summary>
+        /// Gets the version number from the type's <c>[Version]</c> attribute, if present.
+        /// </summary>
+        /// <returns>
+        /// The version number as an integer, or <see langword="null"/> if the type does not have a <c>[Version]</c> attribute.
+        /// </returns>
+        public int? VersionAttributeValue
+        {
+            get
+            {
+                if (type.FindCustomAttributes("Windows.Foundation.Metadata", "VersionAttribute").FirstOrDefault() is not CustomAttribute attribute)
+                {
+                    return null;
+                }
+
+                if (attribute.Signature is { FixedArguments: [{ Element: uint version }] })
+                {
+                    return (int)version;
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Gets the Windows Runtime contract assembly name from <c>[WindowsRuntimeMetadata]</c> attribute on the type, if present.
         /// </summary>
         /// <returns>
