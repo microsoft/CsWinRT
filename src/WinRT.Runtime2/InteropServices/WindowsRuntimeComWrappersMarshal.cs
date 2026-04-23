@@ -174,6 +174,24 @@ public static unsafe class WindowsRuntimeComWrappersMarshal
     }
 
     /// <summary>
+    /// Checks whether a pointer to a COM object is actually a reference to a CCW produced for a managed object that was marshalled to native code.
+    /// </summary>
+    /// <param name="externalComObject">The external COM object to check.</param>
+    /// <returns>Whether <paramref name="externalComObject"/> refers to a CCW for a managed object, rather than a native COM object.</returns>
+    /// <remarks>
+    /// This method is the same as <see cref="WindowsRuntimeMarshal.IsReferenceToManagedObject"/>, but without performing a
+    /// <see langword="null"/> check on <paramref name="externalComObject"/>. Callers should validate the input pointers.
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsReferenceToManagedObjectUnsafe(void* externalComObject)
+    {
+        IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)*(void***)externalComObject;
+        IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.Vtable;
+
+        return unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface;
+    }
+
+    /// <summary>
     /// Attempts to extract a <see cref="WindowsRuntimeObjectReference"/> from the specified object.
     /// </summary>
     /// <param name="value">The object to attempt to unwrap.</param>
