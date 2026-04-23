@@ -297,7 +297,7 @@ internal sealed partial class WinMDWriter
             return cached;
         }
 
-        AssemblyAttributes flags = string.CompareOrdinal(assemblyName, "mscorlib") == 0
+        AssemblyAttributes flags = assemblyName == "mscorlib"
             ? AssemblyAttributes.ArchitectureNone
             : AssemblyAttributes.ContentWindowsRuntime;
 
@@ -308,7 +308,7 @@ internal sealed partial class WinMDWriter
             Attributes = flags,
         };
 
-        if (string.CompareOrdinal(assemblyName, "mscorlib") == 0)
+        if (assemblyName == "mscorlib")
         {
             assemblyReference.PublicKeyOrToken = WellKnownPublicKeyTokens.MSCorLib;
         }

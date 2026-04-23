@@ -46,9 +46,8 @@ internal sealed class TypeMapper
     /// <returns>A tuple with the resolved mapping information.</returns>
     private static (string, string, string, bool, bool) GetSystemTypeCustomMapping(TypeDefinition? containingType)
     {
-        bool isDefinedInAttribute =
-            containingType is not null &&
-                string.CompareOrdinal(containingType.BaseType?.FullName, "System.Attribute") == 0;
+        bool isDefinedInAttribute = containingType is { BaseType.FullName: "System.Attribute" };
+
         return isDefinedInAttribute
             ? ("System", "Type", "mscorlib", true, false)
             : ("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract", false, true);

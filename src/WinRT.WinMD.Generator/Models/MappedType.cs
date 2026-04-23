@@ -72,7 +72,7 @@ internal readonly struct MappedType
         _namespace = @namespace;
         _name = name;
         _assembly = assembly;
-        _isSystemType = string.CompareOrdinal(assembly, "mscorlib") == 0;
+        _isSystemType = assembly == "mscorlib";
         _isValueType = isValueType;
         _isBlittable = isBlittable;
         _multipleMappingFunc = null;
