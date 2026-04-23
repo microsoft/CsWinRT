@@ -22,7 +22,7 @@ internal sealed partial class WinMDWriter
     /// <param name="inputType">The input <see cref="TypeDefinition"/> to read the GUID from.</param>
     private void AddGuidAttribute(TypeDefinition outputType, TypeDefinition inputType)
     {
-        // Check if the input type has a [Guid] attribute
+        // Check if the input type has a '[Guid]' attribute
         foreach (CustomAttribute attribute in inputType.CustomAttributes)
         {
             if (attribute.Constructor?.DeclaringType?.FullName == "System.Runtime.InteropServices.GuidAttribute" &&
@@ -70,13 +70,13 @@ internal sealed partial class WinMDWriter
     /// <param name="guid">The GUID value to encode.</param>
     private void AddGuidAttribute(TypeDefinition outputType, Guid guid)
     {
-        // Create a reference to the [Guid] attribute constructor in 'Windows.Foundation.Metadata'
+        // Create a reference to the '[Guid]' attribute constructor in 'Windows.Foundation.Metadata'
         TypeReference guidAttrType = GetOrCreateTypeReference(
             "Windows.Foundation.Metadata", "GuidAttribute", "Windows.Foundation.FoundationContract");
 
         byte[] guidBytes = guid.ToByteArray();
 
-        // The [Guid] attribute constructor takes (uint, ushort, ushort, byte, byte, byte, byte, byte, byte, byte, byte)
+        // The '[Guid]' attribute constructor takes (uint, ushort, ushort, byte, byte, byte, byte, byte, byte, byte, byte)
         MemberReference guidCtor = new(guidAttrType, ".ctor",
             MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
@@ -148,7 +148,7 @@ internal sealed partial class WinMDWriter
 
         if (factoryInterface != null)
         {
-            // Constructor: [Activatable](Type, uint)
+            // Constructor: '[Activatable]'(Type, uint)
             TypeReference systemType = GetOrCreateTypeReference("System", "Type", "mscorlib");
             MemberReference ctor = new(activatableAttrType, ".ctor",
                 MethodSignature.CreateInstance(
@@ -164,7 +164,7 @@ internal sealed partial class WinMDWriter
         }
         else
         {
-            // Constructor: [Activatable](uint)
+            // Constructor: '[Activatable]'(uint)
             MemberReference ctor = new(activatableAttrType, ".ctor",
                 MethodSignature.CreateInstance(
                     _outputModule.CorLibTypeFactory.Void,

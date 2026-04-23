@@ -196,8 +196,8 @@ internal sealed partial class WinMDWriter
         // For generic types, use short type names (e.g. "IMap`2<String, Int32>" not "IMap`2<System.String, System.Int32>")
         string qualifiedPrefix = FormatQualifiedInterfaceName(mappedInterfaceRef);
 
-        // Store parent interface generic type arguments for MethodImpl signature conversion.
-        // MethodImpl declarations on generic interfaces should reference methods using !0, !1 etc. (not resolved types).
+        // Store parent interface generic type arguments for 'MethodImpl' signature conversion.
+        // 'MethodImpl' declarations on generic interfaces should reference methods using !0, !1 etc. (not resolved types).
         TypeSignature[]? parentGenericArgs = null;
         if (mappedInterfaceRef is TypeSpecification mappedTypeSpecification && mappedTypeSpecification.Signature is GenericInstanceTypeSignature mappedGenericInstanceSignature)
         {
@@ -225,7 +225,7 @@ internal sealed partial class WinMDWriter
             return null;
         }
 
-        // Convert a resolved type signature to use generic parameters (!0, !1) for MethodImpl declarations.
+        // Convert a resolved type signature to use generic parameters (!0, !1) for 'MethodImpl' declarations.
         // For parent interface generic args, substitutes resolved types back to !0, !1.
         // For all GenericInstanceTypeSignature in signatures, converts to open form
         // (e.g., EventHandler`1<Object> -> EventHandler`1<!0>) matching Windows Runtime metadata conventions.
@@ -249,7 +249,7 @@ internal sealed partial class WinMDWriter
             };
         }
 
-        // Convert a GenericInstanceTypeSignature to its open form for MethodImpl declarations.
+        // Convert a GenericInstanceTypeSignature to its open form for 'MethodImpl' declarations.
         // E.g., KeyValuePair<String, Int32> -> KeyValuePair<!0, !1> when those are parent interface args.
         GenericInstanceTypeSignature ToOpenGenericForm(GenericInstanceTypeSignature genericInstanceSignature)
         {
@@ -304,7 +304,7 @@ internal sealed partial class WinMDWriter
 
             outputType.Methods.Add(method);
 
-            // Add MethodImpl pointing to the mapped interface method (use generic params !0, !1 for declaration signature)
+            // Add 'MethodImpl' pointing to the mapped interface method (use generic params !0, !1 for declaration signature)
             TypeSignature[] implParamTypes = parameters?.Select(p => ToGenericParam(p.type)).ToArray() ?? [];
             TypeSignature implReturnType = ToGenericParam(returnType ?? _outputModule.CorLibTypeFactory.Void);
             MemberReference interfaceMethodRef = new(mappedInterfaceRef, name, MethodSignature.CreateInstance(implReturnType, implParamTypes));
@@ -331,7 +331,7 @@ internal sealed partial class WinMDWriter
             PropertyDefinition prop = new(propName, 0, PropertySignature.CreateInstance(propertyType));
             prop.Semantics.Add(new MethodSemantics(getter, MethodSemanticsAttributes.Getter));
 
-            // MethodImpl for getter (use generic params for declaration signature)
+            // 'MethodImpl' for getter (use generic params for declaration signature)
             TypeSignature implPropertyType = ToGenericParam(propertyType);
             MemberReference getterRef = new(mappedInterfaceRef, $"get_{name}", MethodSignature.CreateInstance(implPropertyType, []));
             outputType.MethodImplementations.Add(new MethodImplementation(getterRef, getter));

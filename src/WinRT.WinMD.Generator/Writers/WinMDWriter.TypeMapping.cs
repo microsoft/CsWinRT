@@ -34,7 +34,7 @@ internal sealed partial class WinMDWriter
     /// <returns>The mapped <see cref="TypeSignature"/> for use in the output WinMD.</returns>
     private TypeSignature MapTypeSignatureToOutput(TypeSignature inputSignature)
     {
-        // Handle CorLib types
+        // Handle 'CorLib' types
         if (inputSignature is CorLibTypeSignature corLib)
         {
 #pragma warning disable IDE0072 // Switch already has default case handling all other element types
@@ -188,7 +188,7 @@ internal sealed partial class WinMDWriter
             }
 
             // For Windows Runtime types from projection assemblies, use the Windows Runtime contract assembly name
-            // from the [WindowsRuntimeMetadata] attribute instead of the projection assembly name.
+            // from the '[WindowsRuntimeMetadata]' attribute instead of the projection assembly name.
             // E.g., 'StackPanel' from 'Microsoft.WinUI' → 'Microsoft.UI.Xaml' in the WinMD.
             string assembly = GetAssemblyNameFromScope(typeRef.Scope);
             TypeDefinition? resolvedType = SafeResolve(typeRef);

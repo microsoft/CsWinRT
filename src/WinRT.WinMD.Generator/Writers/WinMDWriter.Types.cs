@@ -228,7 +228,7 @@ internal sealed partial class WinMDWriter
                 ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
             };
 
-            // Add parameter names with [In] attribute
+            // Add parameter names with '[In]' attribute
             int paramIndex = 1;
             foreach (ParameterDefinition inputParam in inputInvoke.ParameterDefinitions)
             {
@@ -559,8 +559,8 @@ internal sealed partial class WinMDWriter
         AddExplicitInterfaceImplementations(inputType, outputType);
 
         // If no default synthesized interface was created but the class implements
-        // user interfaces, mark the first interface implementation as [Default].
-        // The [Default] goes on the Windows Runtime equivalent of the first user-declared .NET interface.
+        // user interfaces, mark the first interface implementation as '[Default]'.
+        // The '[Default]' goes on the Windows Runtime equivalent of the first user-declared .NET interface.
         if (declaration.DefaultInterface == null && outputType.Interfaces.Count > 0)
         {
             InterfaceImplementation? defaultImpl = FindDefaultInterface(inputType, outputType);

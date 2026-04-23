@@ -34,7 +34,7 @@ internal sealed partial class WinMDWriter
     /// </remarks>
     public void FinalizeGeneration()
     {
-        // Phase 1: Add MethodImpl fixups for classes.
+        // Phase 1: Add 'MethodImpl' fixups for classes.
         // Snapshot the mapping to avoid modification during iteration ('ProcessType' may add entries via 'MapTypeSignatureToOutput').
         List<KeyValuePair<string, TypeDeclaration>> typeDeclarations = [.. _typeDefinitionMapping];
 
@@ -60,7 +60,7 @@ internal sealed partial class WinMDWriter
 
             if (!HasVersionAttribute(declaration.OutputType))
             {
-                // Skip adding [Version] attribute if the input type has [ContractVersion] attribute
+                // Skip adding '[Version]' attribute if the input type has '[ContractVersion]' attribute
                 // (it will be copied in Phase 3 via 'CopyCustomAttributes')
                 bool hasContractVersion = declaration.InputType?.CustomAttributes.Any(
                     attribute => attribute.Constructor?.DeclaringType?.Name?.Value == "ContractVersionAttribute") == true;
@@ -139,7 +139,7 @@ internal sealed partial class WinMDWriter
             {
                 interfaceDef = SafeResolve(classInterfaceImpl.Interface);
 
-                // For same-module TypeRefs (created by 'EnsureTypeReference'), 'Resolve()' may fail
+                // For same-module 'TypeRef's (created by 'EnsureTypeReference'), 'Resolve()' may fail
                 // since the output module isn't in the resolver. Look up in our type mapping instead.
                 if (interfaceDef == null && classInterfaceImpl.Interface != null)
                 {
@@ -233,7 +233,7 @@ internal sealed partial class WinMDWriter
         foreach (MethodDefinition interfaceMethod in interfaceMethods)
         {
             // Check if an explicit implementation already exists for this interface method.
-            // If so, prefer it — don't create a MethodImpl for the public method.
+            // If so, prefer it — don't create a 'MethodImpl' for the public method.
             string explicitName = $"{interfaceQualName}.{interfaceMethod.Name?.Value}";
             int paramCount = interfaceMethod.Signature?.ParameterTypes.Count ?? 0;
 
@@ -265,7 +265,7 @@ internal sealed partial class WinMDWriter
 
             if (classMethod != null)
             {
-                // Use the class method's signature for the MethodImpl declaration when resolved
+                // Use the class method's signature for the 'MethodImpl' declaration when resolved
                 // from input ref assemblies — the ref assembly uses .NET projection types
                 // (e.g., 'System.Type') but the WinMD needs Windows Runtime types (e.g., 'TypeName')
                 MethodSignature implSignature = resolvedFromInput ? classMethod.Signature! : interfaceMethod.Signature!;
