@@ -24,7 +24,7 @@ internal static class TypeDefinitionExtensions
         public bool IsWinRTType
         {
             get => type.CustomAttributes.Any(
-                attr => attr.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeMetadataAttribute");
+                attribute => attribute.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeMetadataAttribute");
         }
 
         /// <summary>
@@ -42,12 +42,12 @@ internal static class TypeDefinitionExtensions
         {
             get
             {
-                foreach (CustomAttribute attr in type.CustomAttributes)
+                foreach (CustomAttribute attribute in type.CustomAttributes)
                 {
-                    if (attr.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeMetadataAttribute"
-                        && attr.Signature?.FixedArguments.Count > 0)
+                    if (attribute.Constructor?.DeclaringType?.Name?.Value == "WindowsRuntimeMetadataAttribute"
+                        && attribute.Signature?.FixedArguments.Count > 0)
                     {
-                        return attr.Signature.FixedArguments[0].Element?.ToString();
+                        return attribute.Signature.FixedArguments[0].Element?.ToString();
                     }
                 }
 
@@ -98,9 +98,9 @@ internal static class TypeDefinitionExtensions
             get
             {
                 string name = type.Name!.Value;
-                string? ns = type.EffectiveNamespace;
+                string? @namespace = type.EffectiveNamespace;
 
-                return ns is { Length: > 0 } ? $"{ns}.{name}" : name;
+                return @namespace is { Length: > 0 } ? $"{@namespace}.{name}" : name;
             }
         }
     }

@@ -30,12 +30,12 @@ internal sealed partial class WinMDWriter
     ///   <item><see cref="TypeDefOrRefSignature"/> with Windows Runtime mapping (e.g., <c>IDisposable</c> → <c>IClosable</c>).</item>
     /// </list>
     /// </remarks>
-    /// <param name="inputSig">The input type signature to map.</param>
+    /// <param name="inputSignature">The input type signature to map.</param>
     /// <returns>The mapped <see cref="TypeSignature"/> for use in the output WinMD.</returns>
-    private TypeSignature MapTypeSignatureToOutput(TypeSignature inputSig)
+    private TypeSignature MapTypeSignatureToOutput(TypeSignature inputSignature)
     {
         // Handle CorLib types
-        if (inputSig is CorLibTypeSignature corLib)
+        if (inputSignature is CorLibTypeSignature corLib)
         {
 #pragma warning disable IDE0072 // Switch already has default case handling all other element types
             return corLib.ElementType switch
@@ -63,13 +63,13 @@ internal sealed partial class WinMDWriter
         }
 
         // Handle SZArray (single-dimensional zero-based arrays)
-        if (inputSig is SzArrayTypeSignature szArray)
+        if (inputSignature is SzArrayTypeSignature szArray)
         {
             return new SzArrayTypeSignature(MapTypeSignatureToOutput(szArray.BaseType));
         }
 
         // Handle generic instance types
-        if (inputSig is GenericInstanceTypeSignature genericInst)
+        if (inputSignature is GenericInstanceTypeSignature genericInst)
         {
             string genericTypeName = genericInst.GenericType.QualifiedName;
 
@@ -85,8 +85,8 @@ internal sealed partial class WinMDWriter
             if (_mapper.HasMappingForType(genericTypeName))
             {
                 MappedType mapping = _mapper.GetMappedType(genericTypeName);
-                (string ns, string name, string asm, _, bool isValueType) = mapping.GetMapping();
-                ITypeDefOrRef mappedType = GetOrCreateTypeReference(ns, name, asm);
+                (string @namespace, string name, string assembly, _, bool isValueType) = mapping.GetMapping();
+                ITypeDefOrRef mappedType = GetOrCreateTypeReference(@namespace, name, assembly);
                 TypeSignature[] mappedArgs = [.. genericInst.TypeArguments.Select(MapTypeSignatureToOutput)];
                 return new GenericInstanceTypeSignature(mappedType, isValueType, mappedArgs);
             }
@@ -97,19 +97,19 @@ internal sealed partial class WinMDWriter
         }
 
         // Handle generic method/type parameters
-        if (inputSig is GenericParameterSignature genericParam)
+        if (inputSignature is GenericParameterSignature genericParam)
         {
             return new GenericParameterSignature(_outputModule, genericParam.ParameterType, genericParam.Index);
         }
 
         // Handle ByRef
-        if (inputSig is ByReferenceTypeSignature byRef)
+        if (inputSignature is ByReferenceTypeSignature byRef)
         {
             return new ByReferenceTypeSignature(MapTypeSignatureToOutput(byRef.BaseType));
         }
 
         // Handle TypeDefOrRefSignature
-        if (inputSig is TypeDefOrRefSignature typeDefOrRef)
+        if (inputSignature is TypeDefOrRefSignature typeDefOrRef)
         {
             string typeName = typeDefOrRef.Type.QualifiedName;
 
@@ -117,8 +117,8 @@ internal sealed partial class WinMDWriter
             if (_mapper.HasMappingForType(typeName))
             {
                 MappedType mapping = _mapper.GetMappedType(typeName);
-                (string ns, string name, string asm, _, bool isValueType) = mapping.GetMapping();
-                ITypeDefOrRef mappedType = GetOrCreateTypeReference(ns, name, asm);
+                (string @namespace, string name, string assembly, _, bool isValueType) = mapping.GetMapping();
+                ITypeDefOrRef mappedType = GetOrCreateTypeReference(@namespace, name, assembly);
                 return new TypeDefOrRefSignature(mappedType, isValueType);
             }
 
@@ -177,9 +177,9 @@ internal sealed partial class WinMDWriter
 
         if (type is TypeReference typeRef)
         {
-            string ns = typeRef.Namespace?.Value ?? "";
+            string @namespace = typeRef.Namespace?.Value ?? "";
             string name = typeRef.Name!.Value;
-            string fullName = string.IsNullOrEmpty(ns) ? name : $"{ns}.{name}";
+            string fullName = string.IsNullOrEmpty(@namespace) ? name : $"{@namespace}.{name}";
 
             // Check if this type is in the output module (same-assembly reference)
             if (_typeDefinitionMapping.TryGetValue(fullName, out TypeDeclaration? declaration) && declaration.OutputType != null)
@@ -201,14 +201,14 @@ internal sealed partial class WinMDWriter
                 }
             }
 
-            return GetOrCreateTypeReference(ns, name, assembly);
+            return GetOrCreateTypeReference(@namespace, name, assembly);
         }
 
         if (type is TypeSpecification typeSpec)
         {
             // For type specs, we need to create a new TypeSpecification in the output
-            TypeSignature mappedSig = MapTypeSignatureToOutput(typeSpec.Signature!);
-            return new TypeSpecification(mappedSig);
+            TypeSignature mappedSignature = MapTypeSignatureToOutput(typeSpec.Signature!);
+            return new TypeSpecification(mappedSignature);
         }
 
         return GetOrCreateTypeReference("System", "Object", "mscorlib");
@@ -223,7 +223,7 @@ internal sealed partial class WinMDWriter
     {
         return scope switch
         {
-            AssemblyReference asmRef => asmRef.Name?.Value ?? "mscorlib",
+            AssemblyReference assemblyReference => assemblyReference.Name?.Value ?? "mscorlib",
             ModuleDefinition mod => mod.Assembly?.Name?.Value ?? "mscorlib",
             _ => "mscorlib"
         };
@@ -243,10 +243,10 @@ internal sealed partial class WinMDWriter
     {
         if (type is TypeDefinition typeDef)
         {
-            string ns = typeDef.EffectiveNamespace ?? "";
+            string @namespace = typeDef.EffectiveNamespace ?? "";
             string name = typeDef.Name!.Value;
             string assembly = _outputModule.Assembly?.Name?.Value ?? "mscorlib";
-            return GetOrCreateTypeReference(ns, name, assembly);
+            return GetOrCreateTypeReference(@namespace, name, assembly);
         }
 
         return type;
@@ -299,18 +299,18 @@ internal sealed partial class WinMDWriter
             ? 0
             : AssemblyAttributes.ContentWindowsRuntime;
 
-        AssemblyReference asmRef = new(assemblyName, new Version(0xFF, 0xFF, 0xFF, 0xFF))
+        AssemblyReference assemblyReference = new(assemblyName, new Version(0xFF, 0xFF, 0xFF, 0xFF))
         {
             Attributes = flags,
         };
 
         if (string.CompareOrdinal(assemblyName, "mscorlib") == 0)
         {
-            asmRef.PublicKeyOrToken = [0xb7, 0x7a, 0x5c, 0x56, 0x19, 0x34, 0xe0, 0x89];
+            assemblyReference.PublicKeyOrToken = [0xb7, 0x7a, 0x5c, 0x56, 0x19, 0x34, 0xe0, 0x89];
         }
 
-        _outputModule.AssemblyReferences.Add(asmRef);
-        _assemblyReferenceCache[assemblyName] = asmRef;
-        return asmRef;
+        _outputModule.AssemblyReferences.Add(assemblyReference);
+        _assemblyReferenceCache[assemblyName] = assemblyReference;
+        return assemblyReference;
     }
 }

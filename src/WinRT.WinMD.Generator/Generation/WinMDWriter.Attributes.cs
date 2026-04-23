@@ -23,11 +23,11 @@ internal sealed partial class WinMDWriter
     private void AddGuidAttribute(TypeDefinition outputType, TypeDefinition inputType)
     {
         // Check if the input type has a GuidAttribute
-        foreach (CustomAttribute attr in inputType.CustomAttributes)
+        foreach (CustomAttribute attribute in inputType.CustomAttributes)
         {
-            if (attr.Constructor?.DeclaringType?.FullName == "System.Runtime.InteropServices.GuidAttribute" &&
-                attr.Signature?.FixedArguments.Count > 0 &&
-                attr.Signature.FixedArguments[0].Element is { } guidElement &&
+            if (attribute.Constructor?.DeclaringType?.FullName == "System.Runtime.InteropServices.GuidAttribute" &&
+                attribute.Signature?.FixedArguments.Count > 0 &&
+                attribute.Signature.FixedArguments[0].Element is { } guidElement &&
                 Guid.TryParse(guidElement.ToString(), out Guid guid))
             {
                 AddGuidAttribute(outputType, guid);
@@ -92,20 +92,20 @@ internal sealed partial class WinMDWriter
                 _outputModule.CorLibTypeFactory.Byte,
                 _outputModule.CorLibTypeFactory.Byte]));
 
-        CustomAttributeSignature sig = new();
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, BitConverter.ToUInt32(guidBytes, 0)));
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt16, BitConverter.ToUInt16(guidBytes, 4)));
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt16, BitConverter.ToUInt16(guidBytes, 6)));
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[8]));
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[9]));
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[10]));
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[11]));
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[12]));
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[13]));
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[14]));
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[15]));
+        CustomAttributeSignature signature = new();
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, BitConverter.ToUInt32(guidBytes, 0)));
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt16, BitConverter.ToUInt16(guidBytes, 4)));
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt16, BitConverter.ToUInt16(guidBytes, 6)));
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[8]));
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[9]));
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[10]));
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[11]));
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[12]));
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[13]));
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[14]));
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[15]));
 
-        outputType.CustomAttributes.Add(new CustomAttribute(guidCtor, sig));
+        outputType.CustomAttributes.Add(new CustomAttribute(guidCtor, signature));
     }
 
     /// <summary>
@@ -123,10 +123,10 @@ internal sealed partial class WinMDWriter
                 _outputModule.CorLibTypeFactory.Void,
                 [_outputModule.CorLibTypeFactory.UInt32]));
 
-        CustomAttributeSignature sig = new();
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, (uint)version));
+        CustomAttributeSignature signature = new();
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, (uint)version));
 
-        outputType.CustomAttributes.Add(new CustomAttribute(versionCtor, sig));
+        outputType.CustomAttributes.Add(new CustomAttribute(versionCtor, signature));
     }
 
     /// <summary>
@@ -156,11 +156,11 @@ internal sealed partial class WinMDWriter
                     [systemType.ToTypeSignature(false),
                     _outputModule.CorLibTypeFactory.UInt32]));
 
-            CustomAttributeSignature sig = new();
-            sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(factoryInterface)));
-            sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
+            CustomAttributeSignature signature = new();
+            signature.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(factoryInterface)));
+            signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
 
-            outputType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
+            outputType.CustomAttributes.Add(new CustomAttribute(ctor, signature));
         }
         else
         {
@@ -170,10 +170,10 @@ internal sealed partial class WinMDWriter
                     _outputModule.CorLibTypeFactory.Void,
                     [_outputModule.CorLibTypeFactory.UInt32]));
 
-            CustomAttributeSignature sig = new();
-            sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
+            CustomAttributeSignature signature = new();
+            signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
 
-            outputType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
+            outputType.CustomAttributes.Add(new CustomAttribute(ctor, signature));
         }
     }
 
@@ -195,11 +195,11 @@ internal sealed partial class WinMDWriter
                 [systemType.ToTypeSignature(false),
                 _outputModule.CorLibTypeFactory.UInt32]));
 
-        CustomAttributeSignature sig = new();
-        sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(staticInterfaceName)));
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
+        CustomAttributeSignature signature = new();
+        signature.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(staticInterfaceName)));
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
 
-        classOutputType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
+        classOutputType.CustomAttributes.Add(new CustomAttribute(ctor, signature));
     }
 
     /// <summary>
@@ -218,10 +218,10 @@ internal sealed partial class WinMDWriter
                 _outputModule.CorLibTypeFactory.Void,
                 [systemType.ToTypeSignature(false)]));
 
-        CustomAttributeSignature sig = new();
-        sig.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(className)));
+        CustomAttributeSignature signature = new();
+        signature.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(className)));
 
-        interfaceType.CustomAttributes.Add(new CustomAttribute(ctor, sig));
+        interfaceType.CustomAttributes.Add(new CustomAttribute(ctor, signature));
     }
 
     /// <summary>
@@ -252,7 +252,7 @@ internal sealed partial class WinMDWriter
     private static bool HasVersionAttribute(TypeDefinition type)
     {
         return type.CustomAttributes.Any(
-            attr => attr.Constructor?.DeclaringType?.Name?.Value is "VersionAttribute" or "ContractVersionAttribute");
+            attribute => attribute.Constructor?.DeclaringType?.Name?.Value is "VersionAttribute" or "ContractVersionAttribute");
     }
 
     /// <summary>
@@ -263,11 +263,11 @@ internal sealed partial class WinMDWriter
     /// <returns>The version number as an integer.</returns>
     private int GetVersion(TypeDefinition type)
     {
-        foreach (CustomAttribute attr in type.CustomAttributes)
+        foreach (CustomAttribute attribute in type.CustomAttributes)
         {
-            if (attr.Constructor?.DeclaringType?.Name?.Value == "VersionAttribute" &&
-                attr.Signature?.FixedArguments.Count > 0 &&
-                attr.Signature.FixedArguments[0].Element is uint version)
+            if (attribute.Constructor?.DeclaringType?.Name?.Value == "VersionAttribute" &&
+                attribute.Signature?.FixedArguments.Count > 0 &&
+                attribute.Signature.FixedArguments[0].Element is uint version)
             {
                 return (int)version;
             }
@@ -284,21 +284,21 @@ internal sealed partial class WinMDWriter
     /// <param name="target">The target element to copy attributes to.</param>
     private void CopyCustomAttributes(IHasCustomAttribute source, IHasCustomAttribute target)
     {
-        foreach (CustomAttribute attr in source.CustomAttributes)
+        foreach (CustomAttribute attribute in source.CustomAttributes)
         {
-            if (!ShouldCopyAttribute(attr, _runtimeContext))
+            if (!ShouldCopyAttribute(attribute, _runtimeContext))
             {
                 continue;
             }
 
-            MemberReference? importedCtor = ImportAttributeConstructor(attr.Constructor);
+            MemberReference? importedCtor = ImportAttributeConstructor(attribute.Constructor);
             if (importedCtor == null)
             {
                 continue;
             }
 
-            CustomAttributeSignature clonedSig = CloneAttributeSignature(attr.Signature);
-            target.CustomAttributes.Add(new CustomAttribute(importedCtor, clonedSig));
+            CustomAttributeSignature clonedSignature = CloneAttributeSignature(attribute.Signature);
+            target.CustomAttributes.Add(new CustomAttribute(importedCtor, clonedSignature));
         }
     }
 
@@ -310,20 +310,20 @@ internal sealed partial class WinMDWriter
     /// <c>VersionAttribute</c>), compiler-generated attributes (e.g., from <c>System.Runtime.CompilerServices</c>),
     /// non-public attribute types, and attributes with unreadable signatures.
     /// </remarks>
-    /// <param name="attr">The custom attribute to evaluate.</param>
+    /// <param name="attribute">The custom attribute to evaluate.</param>
     /// <param name="runtimeContext">The runtime context for resolving attribute types, or <see langword="null"/>.</param>
     /// <returns><see langword="true"/> if the attribute should be copied; otherwise, <see langword="false"/>.</returns>
-    private static bool ShouldCopyAttribute(CustomAttribute attr, RuntimeContext? runtimeContext)
+    private static bool ShouldCopyAttribute(CustomAttribute attribute, RuntimeContext? runtimeContext)
     {
-        string? attrTypeName = attr.Constructor?.DeclaringType?.FullName;
+        string? attributeTypeName = attribute.Constructor?.DeclaringType?.FullName;
 
-        if (attrTypeName is null)
+        if (attributeTypeName is null)
         {
             return false;
         }
 
         // Skip attributes already handled separately by the generator
-        if (attrTypeName is
+        if (attributeTypeName is
             "System.Runtime.InteropServices.GuidAttribute" or
             "WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute" or
             "Windows.Foundation.Metadata.VersionAttribute" or
@@ -333,23 +333,23 @@ internal sealed partial class WinMDWriter
         }
 
         // Skip compiler-generated attributes not meaningful for WinMD
-        if (attrTypeName.StartsWith("System.Runtime.CompilerServices.", StringComparison.Ordinal))
+        if (attributeTypeName.StartsWith("System.Runtime.CompilerServices.", StringComparison.Ordinal))
         {
             return false;
         }
 
         // Skip non-public attribute types (if resolvable)
         if (runtimeContext is not null
-            && attr.Constructor?.DeclaringType is { } attrType
-            && attrType is not TypeDefinition
-            && attrType.Resolve(runtimeContext, out TypeDefinition? attrTypeDef) == ResolutionStatus.Success
-            && !attrTypeDef!.IsPublic && !attrTypeDef.IsNestedPublic)
+            && attribute.Constructor?.DeclaringType is { } attributeType
+            && attributeType is not TypeDefinition
+            && attributeType.Resolve(runtimeContext, out TypeDefinition? attributeTypeDefinition) == ResolutionStatus.Success
+            && !attributeTypeDefinition!.IsPublic && !attributeTypeDefinition.IsNestedPublic)
         {
             return false;
         }
 
         // Skip attributes with unreadable signatures
-        return attr.Signature != null;
+        return attribute.Signature != null;
     }
 
     /// <summary>
@@ -364,7 +364,7 @@ internal sealed partial class WinMDWriter
     /// <returns>The imported <see cref="MemberReference"/>, or <see langword="null"/> if the constructor is invalid.</returns>
     private MemberReference? ImportAttributeConstructor(ICustomAttributeType? ctor)
     {
-        if (ctor?.DeclaringType == null || ctor.Signature is not MethodSignature methodSig)
+        if (ctor?.DeclaringType == null || ctor.Signature is not MethodSignature methodSignature)
         {
             return null;
         }
@@ -374,48 +374,48 @@ internal sealed partial class WinMDWriter
         // Attribute constructor parameters must use CLR types (System.Type, System.String, etc.)
         // not Windows Runtime projected types (TypeName, HString), because the custom attribute blob
         // serializer only supports primitives, System.Type, System.String, and enum types.
-        TypeSignature[] importedParams = [.. methodSig.ParameterTypes
+        TypeSignature[] importedParams = [.. methodSignature.ParameterTypes
             .Select(ImportTypeSignatureForAttribute)];
 
-        MethodSignature importedSig = MethodSignature.CreateInstance(
+        MethodSignature importedSignature = MethodSignature.CreateInstance(
             _outputModule.CorLibTypeFactory.Void,
             importedParams);
 
-        return new MemberReference(importedType, ".ctor", importedSig);
+        return new MemberReference(importedType, ".ctor", importedSignature);
     }
 
     /// <summary>
     /// Clones a custom attribute signature, remapping type references to the output module.
     /// </summary>
-    /// <param name="inputSig">The input attribute signature to clone, or <see langword="null"/>.</param>
+    /// <param name="inputSignature">The input attribute signature to clone, or <see langword="null"/>.</param>
     /// <returns>A new <see cref="CustomAttributeSignature"/> with remapped type references.</returns>
-    private CustomAttributeSignature CloneAttributeSignature(CustomAttributeSignature? inputSig)
+    private CustomAttributeSignature CloneAttributeSignature(CustomAttributeSignature? inputSignature)
     {
-        if (inputSig == null)
+        if (inputSignature == null)
         {
             return new CustomAttributeSignature();
         }
 
-        CustomAttributeSignature outputSig = new();
+        CustomAttributeSignature outputSignature = new();
 
-        foreach (CustomAttributeArgument arg in inputSig.FixedArguments)
+        foreach (CustomAttributeArgument arg in inputSignature.FixedArguments)
         {
-            outputSig.FixedArguments.Add(CloneAttributeArgument(arg));
+            outputSignature.FixedArguments.Add(CloneAttributeArgument(arg));
         }
 
-        foreach (CustomAttributeNamedArgument namedArg in inputSig.NamedArguments)
+        foreach (CustomAttributeNamedArgument namedArg in inputSignature.NamedArguments)
         {
             TypeSignature mappedArgType = MapTypeSignatureToOutput(namedArg.Argument.ArgumentType);
             CustomAttributeArgument clonedInnerArg = CloneAttributeArgument(namedArg.Argument);
 
-            outputSig.NamedArguments.Add(new CustomAttributeNamedArgument(
+            outputSignature.NamedArguments.Add(new CustomAttributeNamedArgument(
                 namedArg.MemberType,
                 namedArg.MemberName,
                 mappedArgType,
                 clonedInnerArg));
         }
 
-        return outputSig;
+        return outputSignature;
     }
 
     /// <summary>
@@ -426,18 +426,18 @@ internal sealed partial class WinMDWriter
     /// (<c>System.Type</c>, <c>System.String</c>) that custom attribute blobs require.
     /// Enum types are imported so the blob encoder can resolve the underlying type.
     /// </remarks>
-    /// <param name="sig">The type signature to import.</param>
+    /// <param name="signature">The type signature to import.</param>
     /// <returns>The imported <see cref="TypeSignature"/> suitable for attribute parameter use.</returns>
-    private TypeSignature ImportTypeSignatureForAttribute(TypeSignature sig)
+    private TypeSignature ImportTypeSignatureForAttribute(TypeSignature signature)
     {
-        if (sig is CorLibTypeSignature)
+        if (signature is CorLibTypeSignature)
         {
-            return sig;
+            return signature;
         }
 
-        if (sig is TypeDefOrRefSignature typeDefOrRefSig)
+        if (signature is TypeDefOrRefSignature typeDefOrRefSignature)
         {
-            string? fullName = typeDefOrRefSig.Type?.FullName;
+            string? fullName = typeDefOrRefSignature.Type?.FullName;
 
             // System.Type must stay as System.Type for attribute blob encoding
             if (fullName == "System.Type")
@@ -446,18 +446,18 @@ internal sealed partial class WinMDWriter
             }
 
             // Enum types: import the reference so the blob encoder can resolve the underlying type
-            TypeDefinition? resolved = SafeResolve(typeDefOrRefSig.Type);
+            TypeDefinition? resolved = SafeResolve(typeDefOrRefSignature.Type);
             if (resolved != null && resolved.IsEnum)
             {
-                return ImportTypeReference(typeDefOrRefSig.Type!).ToTypeSignature(typeDefOrRefSig.IsValueType);
+                return ImportTypeReference(typeDefOrRefSignature.Type!).ToTypeSignature(typeDefOrRefSignature.IsValueType);
             }
 
             // For other types, import directly without Windows Runtime mapping
-            return ImportTypeReference(typeDefOrRefSig.Type!).ToTypeSignature(typeDefOrRefSig.IsValueType);
+            return ImportTypeReference(typeDefOrRefSignature.Type!).ToTypeSignature(typeDefOrRefSignature.IsValueType);
         }
 
         // Fallback: use the standard mapping
-        return MapTypeSignatureToOutput(sig);
+        return MapTypeSignatureToOutput(signature);
     }
 
     /// <summary>
@@ -484,8 +484,8 @@ internal sealed partial class WinMDWriter
             foreach (object? element in arg.Elements)
             {
                 // Type-valued elements are stored as TypeSignature and need remapping
-                clonedArg.Elements.Add(element is TypeSignature typeSig
-                    ? MapTypeSignatureToOutput(typeSig)
+                clonedArg.Elements.Add(element is TypeSignature typeSignature
+                    ? MapTypeSignatureToOutput(typeSignature)
                     : element);
             }
         }

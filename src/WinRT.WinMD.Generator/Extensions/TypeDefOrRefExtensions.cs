@@ -21,15 +21,15 @@ internal static class TypeDefOrRefExtensions
             get
             {
                 // For TypeDefinition, use the enhanced qualified name that handles nested types
-                if (type is TypeDefinition td)
+                if (type is TypeDefinition typeDefinition)
                 {
-                    return td.QualifiedName;
+                    return typeDefinition.QualifiedName;
                 }
 
                 string name = type.Name!.Value;
-                string? ns = type.Namespace?.Value;
+                string? @namespace = type.Namespace?.Value;
 
-                return ns is { Length: > 0 } ? $"{ns}.{name}" : name;
+                return @namespace is { Length: > 0 } ? $"{@namespace}.{name}" : name;
             }
         }
     }

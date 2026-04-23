@@ -124,8 +124,8 @@ internal sealed partial class WinMDWriter
     /// <returns>The resolved <see cref="TypeDefinition"/>, or <see langword="null"/> if the type cannot be resolved.</returns>
     private TypeDefinition? SafeResolve(ITypeDefOrRef? typeRef)
     {
-        return typeRef is TypeDefinition td
-            ? td
+        return typeRef is TypeDefinition typeDefinition
+            ? typeDefinition
             : typeRef is not null
                 && _runtimeContext is not null
                 && typeRef.Resolve(_runtimeContext, out TypeDefinition? resolved) == ResolutionStatus.Success

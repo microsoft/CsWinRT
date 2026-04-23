@@ -29,7 +29,7 @@ internal sealed partial class WinMDWriter
     private static bool IsApiContract(TypeDefinition type)
     {
         return type.CustomAttributes.Any(
-            attr => attr.Constructor?.DeclaringType?.Name?.Value == "ApiContractAttribute");
+            attribute => attribute.Constructor?.DeclaringType?.Name?.Value == "ApiContractAttribute");
     }
 
     /// <summary>
@@ -293,17 +293,17 @@ internal sealed partial class WinMDWriter
         }
 
         // Add events
-        foreach (EventDefinition evt in inputType.Events)
+        foreach (EventDefinition @event in inputType.Events)
         {
-            AddEventToType(outputType, evt, isInterfaceParent: true);
+            AddEventToType(outputType, @event, isInterfaceParent: true);
         }
 
         // Add interface implementations
-        foreach (InterfaceImplementation impl in inputType.Interfaces)
+        foreach (InterfaceImplementation interfaceImplementation in inputType.Interfaces)
         {
-            if (impl.Interface != null)
+            if (interfaceImplementation.Interface != null)
             {
-                ITypeDefOrRef outputInterfaceRef = EnsureTypeReference(ImportTypeReference(impl.Interface));
+                ITypeDefOrRef outputInterfaceRef = EnsureTypeReference(ImportTypeReference(interfaceImplementation.Interface));
                 outputType.Interfaces.Add(new InterfaceImplementation(outputInterfaceRef));
             }
         }
@@ -485,19 +485,19 @@ internal sealed partial class WinMDWriter
         }
 
         // Add events
-        foreach (EventDefinition evt in inputType.Events)
+        foreach (EventDefinition @event in inputType.Events)
         {
             // Skip events that belong to custom mapped or unmapped interfaces
-            if (customMappedMembers.Contains(evt.Name?.Value ?? ""))
+            if (customMappedMembers.Contains(@event.Name?.Value ?? ""))
             {
                 continue;
             }
 
-            bool hasPublicAdder = evt.AddMethod?.IsPublic == true;
-            bool hasPublicRemover = evt.RemoveMethod?.IsPublic == true;
+            bool hasPublicAdder = @event.AddMethod?.IsPublic == true;
+            bool hasPublicRemover = @event.RemoveMethod?.IsPublic == true;
             if (hasPublicAdder || hasPublicRemover)
             {
-                AddEventToType(outputType, evt, isInterfaceParent: false);
+                AddEventToType(outputType, @event, isInterfaceParent: false);
             }
         }
 
@@ -516,14 +516,14 @@ internal sealed partial class WinMDWriter
         }
 
         // Add interface implementations (excluding mapped and unmappable interfaces)
-        foreach (InterfaceImplementation impl in inputType.Interfaces)
+        foreach (InterfaceImplementation interfaceImplementation in inputType.Interfaces)
         {
-            if (impl.Interface == null || !IsPubliclyAccessible(impl.Interface))
+            if (interfaceImplementation.Interface == null || !IsPubliclyAccessible(interfaceImplementation.Interface))
             {
                 continue;
             }
 
-            string interfaceName = GetInterfaceQualifiedName(impl.Interface);
+            string interfaceName = GetInterfaceQualifiedName(interfaceImplementation.Interface);
 
             // Skip interfaces that have a Windows Runtime mapping — they'll be added as their
             // mapped equivalents by ProcessCustomMappedInterfaces below
@@ -538,7 +538,7 @@ internal sealed partial class WinMDWriter
                 continue;
             }
 
-            ITypeDefOrRef outputInterfaceRef = EnsureTypeReference(ImportTypeReference(impl.Interface));
+            ITypeDefOrRef outputInterfaceRef = EnsureTypeReference(ImportTypeReference(interfaceImplementation.Interface));
             outputType.Interfaces.Add(new InterfaceImplementation(outputInterfaceRef));
         }
 
@@ -588,8 +588,8 @@ internal sealed partial class WinMDWriter
 
         // Check if it's a mapped type (e.g., IList -> IVector)
         string targetName = _mapper.HasMappingForType(firstIfaceName)
-            ? _mapper.GetMappedType(firstIfaceName).GetMapping() is var (ns, name, _, _, _)
-                ? string.IsNullOrEmpty(ns) ? name : $"{ns}.{name}"
+            ? _mapper.GetMappedType(firstIfaceName).GetMapping() is var (@namespace, name, _, _, _)
+                ? string.IsNullOrEmpty(@namespace) ? name : $"{@namespace}.{name}"
                 : firstIfaceName
             : firstIfaceName;
 
@@ -620,7 +620,7 @@ internal sealed partial class WinMDWriter
     {
         TypeReference eventRegistrationTokenType = GetOrCreateTypeReference(
             "Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract");
-        TypeSignature tokenSig = eventRegistrationTokenType.ToTypeSignature(true);
+        TypeSignature tokenSignature = eventRegistrationTokenType.ToTypeSignature(true);
 
         foreach (MethodDefinition method in inputType.Methods)
         {
@@ -660,7 +660,7 @@ internal sealed partial class WinMDWriter
             if (winrtShortName.StartsWith("add_", StringComparison.Ordinal))
             {
                 // Event add: returns EventRegistrationToken, param is handler type named "handler"
-                returnType = tokenSig;
+                returnType = tokenSignature;
                 parameterTypes = [.. method.Signature!.ParameterTypes.Select(MapTypeSignatureToOutput)];
                 paramNames = ["handler"];
             }
@@ -668,7 +668,7 @@ internal sealed partial class WinMDWriter
             {
                 // Event remove: takes EventRegistrationToken named "token", returns void
                 returnType = _outputModule.CorLibTypeFactory.Void;
-                parameterTypes = [tokenSig];
+                parameterTypes = [tokenSignature];
                 paramNames = ["token"];
             }
             else
@@ -725,21 +725,21 @@ internal sealed partial class WinMDWriter
             }
             else if (winrtShortName.StartsWith("add_", StringComparison.Ordinal))
             {
-                string evtName = $"{interfaceQualName}.{winrtShortName[4..]}";
-                ITypeDefOrRef eventType = parameterTypes.Length > 0 && parameterTypes[0] is TypeDefOrRefSignature tdrs
-                    ? tdrs.Type
-                    : parameterTypes.Length > 0 && parameterTypes[0] is GenericInstanceTypeSignature gits
-                        ? new TypeSpecification(gits)
+                string eventName = $"{interfaceQualName}.{winrtShortName[4..]}";
+                ITypeDefOrRef eventType = parameterTypes.Length > 0 && parameterTypes[0] is TypeDefOrRefSignature typeDefOrRefSignature
+                    ? typeDefOrRefSignature.Type
+                    : parameterTypes.Length > 0 && parameterTypes[0] is GenericInstanceTypeSignature genericInstanceSignature
+                        ? new TypeSpecification(genericInstanceSignature)
                         : GetOrCreateTypeReference("Windows.Foundation", "EventHandler`1", "Windows.Foundation.FoundationContract");
-                EventDefinition evt = new(evtName, 0, eventType);
-                evt.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.AddOn));
-                outputType.Events.Add(evt);
+                EventDefinition @event = new(eventName, 0, eventType);
+                @event.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.AddOn));
+                outputType.Events.Add(@event);
             }
             else if (winrtShortName.StartsWith("remove_", StringComparison.Ordinal))
             {
-                string evtName = $"{interfaceQualName}.{winrtShortName[7..]}";
-                EventDefinition? existingEvt = outputType.Events.FirstOrDefault(e => e.Name?.Value == evtName);
-                existingEvt?.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.RemoveOn));
+                string eventName = $"{interfaceQualName}.{winrtShortName[7..]}";
+                EventDefinition? existingEvent = outputType.Events.FirstOrDefault(e => e.Name?.Value == eventName);
+                existingEvent?.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.RemoveOn));
             }
 
             TypeDeclaration interfaceDecl = _typeDefinitionMapping[interfaceQualName];

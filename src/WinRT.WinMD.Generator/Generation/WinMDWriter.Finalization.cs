@@ -63,7 +63,7 @@ internal sealed partial class WinMDWriter
                 // Skip adding VersionAttribute if the input type has ContractVersionAttribute
                 // (it will be copied in Phase 3 via CopyCustomAttributes)
                 bool hasContractVersion = declaration.InputType?.CustomAttributes.Any(
-                    attr => attr.Constructor?.DeclaringType?.Name?.Value == "ContractVersionAttribute") == true;
+                    attribute => attribute.Constructor?.DeclaringType?.Name?.Value == "ContractVersionAttribute") == true;
 
                 if (!hasContractVersion)
                 {
@@ -129,11 +129,11 @@ internal sealed partial class WinMDWriter
             TypeSignature[]? interfaceGenericArgs = null;
             TypeDefinition? interfaceDef = null;
 
-            if (classInterfaceImpl.Interface is TypeSpecification ts
-                && ts.Signature is GenericInstanceTypeSignature gits)
+            if (classInterfaceImpl.Interface is TypeSpecification outputTypeSpecification
+                && outputTypeSpecification.Signature is GenericInstanceTypeSignature genericInstanceSignature)
             {
-                interfaceDef = SafeResolve(gits.GenericType);
-                interfaceGenericArgs = [.. gits.TypeArguments];
+                interfaceDef = SafeResolve(genericInstanceSignature.GenericType);
+                interfaceGenericArgs = [.. genericInstanceSignature.TypeArguments];
             }
             else
             {
@@ -162,9 +162,9 @@ internal sealed partial class WinMDWriter
                 {
                     if (inputImpl.Interface != null && GetInterfaceQualifiedName(inputImpl.Interface) == outputIfaceName)
                     {
-                        interfaceDef = inputImpl.Interface is TypeSpecification its
-                            && its.Signature is GenericInstanceTypeSignature igits
-                            ? SafeResolve(igits.GenericType)
+                        interfaceDef = inputImpl.Interface is TypeSpecification inputTypeSpecification
+                            && inputTypeSpecification.Signature is GenericInstanceTypeSignature inputGenericInstanceSignature
+                            ? SafeResolve(inputGenericInstanceSignature.GenericType)
                             : SafeResolve(inputImpl.Interface);
                         resolvedFromInput = interfaceDef != null;
                         break;
@@ -409,8 +409,8 @@ internal sealed partial class WinMDWriter
 
         if (_mapper.HasMappingForType(lookupName))
         {
-            (string ns, string name, _, _, _) = _mapper.GetMappedType(lookupName).GetMapping();
-            string mappedName = string.IsNullOrEmpty(ns) ? name : $"{ns}.{name}";
+            (string @namespace, string name, _, _, _) = _mapper.GetMappedType(lookupName).GetMapping();
+            string mappedName = string.IsNullOrEmpty(@namespace) ? name : $"{@namespace}.{name}";
 
             // For generic types, compare the open generic name portion of both
             if (angleBracket > 0)
@@ -471,9 +471,9 @@ internal sealed partial class WinMDWriter
                 _outputModule.CorLibTypeFactory.Void,
                 [_outputModule.CorLibTypeFactory.String]));
 
-        CustomAttributeSignature sig = new();
-        sig.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.String, overloadName));
+        CustomAttributeSignature signature = new();
+        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.String, overloadName));
 
-        method.CustomAttributes.Add(new CustomAttribute(ctor, sig));
+        method.CustomAttributes.Add(new CustomAttribute(ctor, signature));
     }
 }

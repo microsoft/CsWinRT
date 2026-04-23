@@ -82,11 +82,11 @@ internal sealed partial class WinMDWriter
 
         // Use all interfaces including inherited ones from the input type
         List<InterfaceImplementation> allInterfaces = GatherAllInterfaces(inputType);
-        foreach (InterfaceImplementation impl in allInterfaces)
+        foreach (InterfaceImplementation interfaceImplementation in allInterfaces)
         {
-            TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
-                ? SafeResolve((ts.Signature as GenericInstanceTypeSignature)?.GenericType)
-                : SafeResolve(impl.Interface);
+            TypeDefinition? interfaceDef = interfaceImplementation.Interface is TypeSpecification typeSpecification
+                ? SafeResolve((typeSpecification.Signature as GenericInstanceTypeSignature)?.GenericType)
+                : SafeResolve(interfaceImplementation.Interface);
 
             if (interfaceDef != null)
             {
@@ -100,9 +100,9 @@ internal sealed partial class WinMDWriter
                     _ = membersFromInterfaces.Add(prop.Name?.Value ?? "");
                 }
 
-                foreach (EventDefinition evt in interfaceDef.Events)
+                foreach (EventDefinition @event in interfaceDef.Events)
                 {
-                    _ = membersFromInterfaces.Add(evt.Name?.Value ?? "");
+                    _ = membersFromInterfaces.Add(@event.Name?.Value ?? "");
                 }
             }
         }
@@ -169,7 +169,7 @@ internal sealed partial class WinMDWriter
         HashSet<string> membersFromInterfaces)
     {
         bool hasMembers = false;
-        string ns = inputType.EffectiveNamespace ?? "";
+        string @namespace = inputType.EffectiveNamespace ?? "";
         string className = inputType.Name!.Value;
         string interfaceName = GetSynthesizedInterfaceName(className, interfaceType);
 
@@ -181,7 +181,7 @@ internal sealed partial class WinMDWriter
             TypeAttributes.Interface |
             TypeAttributes.Abstract;
 
-        TypeDefinition synthesizedInterface = new(ns, interfaceName, typeAttributes);
+        TypeDefinition synthesizedInterface = new(@namespace, interfaceName, typeAttributes);
 
         // Add members to the synthesized interface
         foreach (MethodDefinition method in inputType.Methods)
@@ -245,10 +245,10 @@ internal sealed partial class WinMDWriter
         }
 
         // Add events
-        foreach (EventDefinition evt in inputType.Events)
+        foreach (EventDefinition @event in inputType.Events)
         {
-            bool isStatic = evt.AddMethod?.IsStatic == true;
-            bool isPublic = evt.AddMethod?.IsPublic == true || evt.RemoveMethod?.IsPublic == true;
+            bool isStatic = @event.AddMethod?.IsStatic == true;
+            bool isPublic = @event.AddMethod?.IsPublic == true || @event.RemoveMethod?.IsPublic == true;
 
             if (!isPublic)
             {
@@ -261,7 +261,7 @@ internal sealed partial class WinMDWriter
                 // For default interface, skip events already provided by an implemented interface
                 if (interfaceType == SynthesizedInterfaceType.Default)
                 {
-                    string adderName = "add_" + evt.Name!.Value;
+                    string adderName = "add_" + @event.Name!.Value;
                     if (membersFromInterfaces.Contains(adderName))
                     {
                         continue;
@@ -269,7 +269,7 @@ internal sealed partial class WinMDWriter
                 }
 
                 hasMembers = true;
-                AddEventToType(synthesizedInterface, evt, isInterfaceParent: true);
+                AddEventToType(synthesizedInterface, @event, isInterfaceParent: true);
             }
         }
 
@@ -278,7 +278,7 @@ internal sealed partial class WinMDWriter
         {
             _outputModule.TopLevelTypes.Add(synthesizedInterface);
 
-            string qualifiedInterfaceName = string.IsNullOrEmpty(ns) ? interfaceName : $"{ns}.{interfaceName}";
+            string qualifiedInterfaceName = string.IsNullOrEmpty(@namespace) ? interfaceName : $"{@namespace}.{interfaceName}";
 
             TypeDeclaration interfaceDeclaration = new(null, synthesizedInterface, isComponentType: false);
             _typeDefinitionMapping[qualifiedInterfaceName] = interfaceDeclaration;
