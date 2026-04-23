@@ -11,7 +11,7 @@ using WindowsRuntime.WinMDGenerator.Discovery;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
-internal sealed partial class WinmdWriter
+internal sealed partial class WinMDWriter
 {
     private void AddGuidAttribute(TypeDefinition outputType, TypeDefinition inputType)
     {

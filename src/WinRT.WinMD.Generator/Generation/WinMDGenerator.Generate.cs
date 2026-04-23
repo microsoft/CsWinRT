@@ -17,7 +17,7 @@ internal static partial class WinMDGenerator
     {
         TypeMapper mapper = new(args.UseWindowsUIXamlProjections);
 
-        WinmdWriter writer = new(
+        WinMDWriter writer = new(
             state.AssemblyName,
             args.AssemblyVersion,
             mapper,

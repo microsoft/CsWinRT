@@ -15,7 +15,7 @@ using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttri
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
-internal sealed partial class WinmdWriter
+internal sealed partial class WinMDWriter
 {
     /// <summary>
     /// Processes custom mapped interfaces for a class type. This maps .NET collection interfaces,

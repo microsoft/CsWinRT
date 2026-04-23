@@ -18,7 +18,7 @@ using TypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
-internal sealed partial class WinmdWriter
+internal sealed partial class WinMDWriter
 {
     /// <summary>
     /// Checks if an enum type represents a WinRT API contract (has [ApiContract] attribute).

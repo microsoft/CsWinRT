@@ -14,7 +14,7 @@ using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttri
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
-internal sealed partial class WinmdWriter
+internal sealed partial class WinMDWriter
 {
     private void AddMethodToInterface(TypeDefinition outputType, MethodDefinition inputMethod)
     {

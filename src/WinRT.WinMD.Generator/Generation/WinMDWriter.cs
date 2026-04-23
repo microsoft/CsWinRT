@@ -16,7 +16,7 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 /// <summary>
 /// Writes a WinMD file from analyzed assembly types using AsmResolver.
 /// </summary>
-internal sealed partial class WinmdWriter
+internal sealed partial class WinMDWriter
 {
     private readonly string _version;
     private readonly TypeMapper _mapper;
@@ -32,9 +32,9 @@ internal sealed partial class WinmdWriter
     private readonly Dictionary<string, TypeReference> _typeReferenceCache = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Creates a new <see cref="WinmdWriter"/> instance.
+    /// Creates a new <see cref="WinMDWriter"/> instance.
     /// </summary>
-    public WinmdWriter(
+    public WinMDWriter(
         string assemblyName,
         string version,
         TypeMapper mapper,

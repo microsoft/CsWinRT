@@ -12,7 +12,7 @@ using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttribu
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 
-internal sealed partial class WinmdWriter
+internal sealed partial class WinMDWriter
 {
     /// <summary>
     /// Maps a type signature from the input module to the output module.
