@@ -32,14 +32,14 @@ internal sealed class TypeMapper
     private readonly Dictionary<string, MappedType> _typeMapping;
 
     /// <summary>
-    /// Gets the custom mapping for <c>System.Type</c> based on the containing type context.
+    /// Gets the custom mapping for <see cref="Type"/> based on the containing type context.
     /// </summary>
     /// <remarks>
-    /// <c>System.Type</c> is context-dependent: when used in an attribute declaration, it stays as
-    /// <c>System.Type</c> (since WinMD attribute blobs use CLR types). In all other contexts, it maps
+    /// <see cref="Type"/> is context-dependent: when used in an attribute declaration, it stays as
+    /// <see cref="Type"/> (since WinMD attribute blobs use CLR types). In all other contexts, it maps
     /// to <c>Windows.UI.Xaml.Interop.TypeName</c>.
     /// </remarks>
-    /// <param name="containingType">The type that contains the <c>System.Type</c> usage, or <see langword="null"/>.</param>
+    /// <param name="containingType">The type that contains the <see cref="Type"/> usage, or <see langword="null"/>.</param>
     /// <returns>A tuple with the resolved mapping information.</returns>
     private static (string, string, string, bool, bool) GetSystemTypeCustomMapping(TypeDefinition? containingType)
     {
@@ -58,7 +58,7 @@ internal sealed class TypeMapper
     public TypeMapper(bool useWindowsUIXamlProjections)
     {
 #pragma warning disable IDE0045 // Keep if-else for readability with large dictionary initializations
-        // This should be in sync with the reverse mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
+        // This should be in sync with the reverse mapping from 'WinRT.Runtime/Projections.cs' and 'cswinrt/helpers.h'.
         if (useWindowsUIXamlProjections)
         {
             _typeMapping = new(StringComparer.Ordinal)
@@ -181,7 +181,7 @@ internal sealed class TypeMapper
     /// <remarks>
     /// Members from these interfaces should be excluded from the WinMD class definition,
     /// similar to custom-mapped interfaces, but no Windows Runtime interface implementation is added.
-    /// These include interfaces like <c>ICollection&lt;T&gt;</c> and <c>IEquatable&lt;T&gt;</c>
+    /// These include interfaces like <see cref="ICollection{T}"/> and <see cref="IEquatable{T}"/>
     /// that have no counterpart in the Windows Runtime type system.
     /// </remarks>
     internal static readonly HashSet<string> ImplementedInterfacesWithoutMapping = new(StringComparer.Ordinal)

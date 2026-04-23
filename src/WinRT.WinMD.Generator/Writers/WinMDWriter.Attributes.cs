@@ -16,13 +16,13 @@ internal sealed partial class WinMDWriter
 {
     /// <summary>
     /// Adds a <c>[Guid]</c> attribute to an output type, sourced from the input type's
-    /// <c>[GuidAttribute]</c> or generated from the type name using SHA1 (UUID v5).
+    /// <c>[Guid]</c> attribute or generated from the type name using SHA1 (UUID v5).
     /// </summary>
     /// <param name="outputType">The output <see cref="TypeDefinition"/> to add the attribute to.</param>
     /// <param name="inputType">The input <see cref="TypeDefinition"/> to read the GUID from.</param>
     private void AddGuidAttribute(TypeDefinition outputType, TypeDefinition inputType)
     {
-        // Check if the input type has a GuidAttribute
+        // Check if the input type has a [Guid] attribute
         foreach (CustomAttribute attribute in inputType.CustomAttributes)
         {
             if (attribute.Constructor?.DeclaringType?.FullName == "System.Runtime.InteropServices.GuidAttribute" &&
@@ -62,7 +62,7 @@ internal sealed partial class WinMDWriter
     /// Adds a <c>[Guid]</c> attribute to the output type with the specified GUID value.
     /// </summary>
     /// <remarks>
-    /// The <c>GuidAttribute</c> constructor in <c>Windows.Foundation.Metadata</c> takes 11 parameters:
+    /// The <c>[Guid]</c> attribute constructor in <c>Windows.Foundation.Metadata</c> takes 11 parameters:
     /// <c>(uint, ushort, ushort, byte, byte, byte, byte, byte, byte, byte, byte)</c>,
     /// matching the decomposed fields of a GUID.
     /// </remarks>
@@ -70,13 +70,13 @@ internal sealed partial class WinMDWriter
     /// <param name="guid">The GUID value to encode.</param>
     private void AddGuidAttribute(TypeDefinition outputType, Guid guid)
     {
-        // Create a reference to the GuidAttribute constructor in Windows.Foundation.Metadata
+        // Create a reference to the [Guid] attribute constructor in 'Windows.Foundation.Metadata'
         TypeReference guidAttrType = GetOrCreateTypeReference(
             "Windows.Foundation.Metadata", "GuidAttribute", "Windows.Foundation.FoundationContract");
 
         byte[] guidBytes = guid.ToByteArray();
 
-        // The GuidAttribute constructor takes (uint, ushort, ushort, byte, byte, byte, byte, byte, byte, byte, byte)
+        // The [Guid] attribute constructor takes (uint, ushort, ushort, byte, byte, byte, byte, byte, byte, byte, byte)
         MemberReference guidCtor = new(guidAttrType, ".ctor",
             MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
@@ -134,8 +134,8 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// When <paramref name="factoryInterface"/> is <see langword="null"/>, uses the single-parameter
-    /// constructor <c>ActivatableAttribute(uint)</c> for default activation. When a factory interface
-    /// is provided, uses the two-parameter constructor <c>ActivatableAttribute(Type, uint)</c> to
+    /// constructor <c>[Activatable](uint)</c> for default activation. When a factory interface
+    /// is provided, uses the two-parameter constructor <c>[Activatable](Type, uint)</c> to
     /// indicate parameterized activation via the factory.
     /// </remarks>
     /// <param name="outputType">The output class <see cref="TypeDefinition"/> to add the attribute to.</param>
@@ -148,7 +148,7 @@ internal sealed partial class WinMDWriter
 
         if (factoryInterface != null)
         {
-            // Constructor: ActivatableAttribute(Type, uint)
+            // Constructor: [Activatable](Type, uint)
             TypeReference systemType = GetOrCreateTypeReference("System", "Type", "mscorlib");
             MemberReference ctor = new(activatableAttrType, ".ctor",
                 MethodSignature.CreateInstance(
@@ -164,7 +164,7 @@ internal sealed partial class WinMDWriter
         }
         else
         {
-            // Constructor: ActivatableAttribute(uint)
+            // Constructor: [Activatable](uint)
             MemberReference ctor = new(activatableAttrType, ".ctor",
                 MethodSignature.CreateInstance(
                     _outputModule.CorLibTypeFactory.Void,
@@ -306,8 +306,8 @@ internal sealed partial class WinMDWriter
     /// Determines whether a custom attribute should be copied to the output WinMD.
     /// </summary>
     /// <remarks>
-    /// Filters out attributes that are handled separately by the generator (e.g., <c>GuidAttribute</c>,
-    /// <c>VersionAttribute</c>), compiler-generated attributes (e.g., from <c>System.Runtime.CompilerServices</c>),
+    /// Filters out attributes that are handled separately by the generator (e.g., <c>[Guid]</c>,
+    /// <c>[Version]</c>), compiler-generated attributes (e.g., from <c>System.Runtime.CompilerServices</c>),
     /// non-public attribute types, and attributes with unreadable signatures.
     /// </remarks>
     /// <param name="attribute">The custom attribute to evaluate.</param>
@@ -356,9 +356,9 @@ internal sealed partial class WinMDWriter
     /// Imports an attribute constructor reference into the output module.
     /// </summary>
     /// <remarks>
-    /// Attribute constructor parameters must use CLR types (<c>System.Type</c>, <c>System.String</c>, etc.)
+    /// Attribute constructor parameters must use CLR types (<see cref="Type"/>, <c>System.String</c>, etc.)
     /// not Windows Runtime projected types (<c>TypeName</c>, <c>HString</c>), because the custom attribute blob
-    /// serializer only supports primitives, <c>System.Type</c>, <c>System.String</c>, and enum types.
+    /// serializer only supports primitives, <see cref="Type"/>, <c>System.String</c>, and enum types.
     /// </remarks>
     /// <param name="ctor">The constructor to import.</param>
     /// <returns>The imported <see cref="MemberReference"/>, or <see langword="null"/> if the constructor is invalid.</returns>
@@ -371,9 +371,9 @@ internal sealed partial class WinMDWriter
 
         ITypeDefOrRef importedType = ImportTypeReference(ctor.DeclaringType);
 
-        // Attribute constructor parameters must use CLR types (System.Type, System.String, etc.)
-        // not Windows Runtime projected types (TypeName, HString), because the custom attribute blob
-        // serializer only supports primitives, System.Type, System.String, and enum types.
+        // Attribute constructor parameters must use CLR types ('System.Type', 'System.String', etc.)
+        // not Windows Runtime projected types ('TypeName', 'HString'), because the custom attribute blob
+        // serializer only supports primitives, 'System.Type', 'System.String', and enum types.
         TypeSignature[] importedParams = [.. methodSignature.ParameterTypes
             .Select(ImportTypeSignatureForAttribute)];
 
@@ -423,7 +423,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// Unlike <see cref="MapTypeSignatureToOutput"/>, this preserves CLR types
-    /// (<c>System.Type</c>, <c>System.String</c>) that custom attribute blobs require.
+    /// (<see cref="Type"/>, <c>System.String</c>) that custom attribute blobs require.
     /// Enum types are imported so the blob encoder can resolve the underlying type.
     /// </remarks>
     /// <param name="signature">The type signature to import.</param>
@@ -439,7 +439,7 @@ internal sealed partial class WinMDWriter
         {
             string? fullName = typeDefOrRefSignature.Type?.FullName;
 
-            // System.Type must stay as System.Type for attribute blob encoding
+            // 'System.Type' must stay as 'System.Type' for attribute blob encoding
             if (fullName == "System.Type")
             {
                 return GetOrCreateTypeReference("System", "Type", "mscorlib").ToTypeSignature(false);

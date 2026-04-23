@@ -20,7 +20,7 @@ internal static class TypeDefOrRefExtensions
         {
             get
             {
-                // For TypeDefinition, use the enhanced qualified name that handles nested types
+                // For 'TypeDefinition', use the enhanced qualified name that handles nested types
                 if (type is TypeDefinition typeDefinition)
                 {
                     return typeDefinition.QualifiedName;

@@ -23,9 +23,9 @@ namespace WindowsRuntime.WinMDGenerator.Writers;
 /// full spectrum of Windows Runtime type system requirements:
 /// </para>
 /// <list type="bullet">
-///   <item>Mapping .NET types to their Windows Runtime equivalents (e.g., <c>IList&lt;T&gt;</c> → <c>IVector&lt;T&gt;</c>).</item>
+///   <item>Mapping .NET types to their Windows Runtime equivalents (e.g., <see cref="IList{T}"/> → <c>IVector&lt;T&gt;</c>).</item>
 ///   <item>Synthesizing Windows Runtime-required interfaces (<c>IFooClass</c>, <c>IFooFactory</c>, <c>IFooStatic</c>).</item>
-///   <item>Emitting Windows Runtime metadata attributes (<c>GuidAttribute</c>, <c>VersionAttribute</c>, <c>ActivatableAttribute</c>).</item>
+///   <item>Emitting Windows Runtime metadata attributes (<c>[Guid]</c>, <c>[Version]</c>, <c>[Activatable]</c>).</item>
 ///   <item>Converting .NET naming conventions to Windows Runtime conventions (e.g., <c>set_</c> → <c>put_</c>).</item>
 /// </list>
 /// <para>
@@ -101,7 +101,7 @@ internal sealed partial class WinMDWriter
             RuntimeVersion = "WindowsRuntime 1.4"
         };
 
-        // Replace the default mscorlib reference with the WinMD-style one (v255.255.255.255 with PKT)
+        // Replace the default 'mscorlib' reference with the WinMD-style one ('v255.255.255.255' with PKT)
         AssemblyReference defaultCorLib = (AssemblyReference)_outputModule.CorLibTypeFactory.CorLibScope;
         defaultCorLib.Version = new Version(0xFF, 0xFF, 0xFF, 0xFF);
         defaultCorLib.PublicKeyOrToken = [0xb7, 0x7a, 0x5c, 0x56, 0x19, 0x34, 0xe0, 0x89];

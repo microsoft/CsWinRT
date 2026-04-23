@@ -23,9 +23,9 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This maps .NET collection interfaces, <c>IDisposable</c>, <c>INotifyPropertyChanged</c>, etc.
-    /// to their Windows Runtime equivalents (e.g., <c>IList&lt;T&gt;</c> → <c>IVector&lt;T&gt;</c>,
-    /// <c>IDisposable</c> → <c>IClosable</c>) and adds the required explicit implementation methods
+    /// This maps .NET collection interfaces, <see cref="IDisposable"/>, <c>INotifyPropertyChanged</c>, etc.
+    /// to their Windows Runtime equivalents (e.g., <see cref="IList{T}"/> → <c>IVector&lt;T&gt;</c>,
+    /// <see cref="IDisposable"/> → <c>IClosable</c>) and adds the required explicit implementation methods
     /// and <c>MethodImpl</c> records.
     /// </para>
     /// <para>
@@ -37,7 +37,7 @@ internal sealed partial class WinMDWriter
     /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
     private void ProcessCustomMappedInterfaces(TypeDefinition inputType, TypeDefinition outputType)
     {
-        // Gather all interfaces from the type and its base types (matching old generator's GetInterfaces)
+        // Gather all interfaces from the type and its base types (matching old generator's 'GetInterfaces')
         List<InterfaceImplementation> allInterfaces = GatherAllInterfaces(inputType);
 
         // Collect all mapped interfaces and determine if they are publicly or explicitly implemented
@@ -68,7 +68,7 @@ internal sealed partial class WinMDWriter
             mappedInterfaces.Add((interfaceImplementation, interfaceName, mapping, isPublic));
         }
 
-        // If generic IEnumerable<T> (IIterable) is present, skip non-generic IEnumerable (IBindableIterable)
+        // If generic 'IEnumerable<T>' ('IIterable') is present, skip non-generic 'IEnumerable' ('IBindableIterable')
         bool hasGenericEnumerable = allInterfaces.Any(i =>
             i.Interface != null && GetInterfaceQualifiedName(i.Interface) == "System.Collections.Generic.IEnumerable`1");
 
@@ -76,7 +76,7 @@ internal sealed partial class WinMDWriter
         {
             (string mappedNs, string mappedName, string mappedAssembly, _, _) = mapping.GetMapping();
 
-            // Skip non-generic IEnumerable when generic IEnumerable<T> is also implemented
+            // Skip non-generic 'IEnumerable' when generic 'IEnumerable<T>' is also implemented
             if (hasGenericEnumerable && interfaceName == "System.Collections.IEnumerable")
             {
                 continue;
@@ -86,7 +86,7 @@ internal sealed partial class WinMDWriter
             TypeReference mappedInterfaceRef = GetOrCreateTypeReference(mappedNs, mappedName, mappedAssembly);
 
             // Check if the output type already implements this mapped interface
-            // (e.g., IObservableVector<T> already brings IVector<T>)
+            // (e.g., 'IObservableVector<T>' already brings 'IVector<T>')
             string mappedFullName = string.IsNullOrEmpty(mappedNs) ? mappedName : $"{mappedNs}.{mappedName}";
             bool alreadyImplemented = outputType.Interfaces.Any(i =>
             {
@@ -103,7 +103,7 @@ internal sealed partial class WinMDWriter
 
             ITypeDefOrRef mappedInterfaceTypeRef;
 
-            // For generic interfaces, handle type arguments (mapping KeyValuePair -> IKeyValuePair, etc.)
+            // For generic interfaces, handle type arguments (mapping 'KeyValuePair' -> 'IKeyValuePair', etc.)
             if (interfaceImplementation.Interface is TypeSpecification typeSpec && typeSpec.Signature is GenericInstanceTypeSignature genericInst)
             {
                 TypeSignature[] mappedArgs = [.. genericInst.TypeArguments
@@ -137,7 +137,7 @@ internal sealed partial class WinMDWriter
     {
         TypeSignature mapped = MapTypeSignatureToOutput(arg);
 
-        // Check if the mapped type itself has a Windows Runtime mapping (e.g. KeyValuePair -> IKeyValuePair)
+        // Check if the mapped type itself has a Windows Runtime mapping (e.g. 'KeyValuePair' -> 'IKeyValuePair')
         if (mapped is TypeDefOrRefSignature typeDefOrRefSignature)
         {
             string typeName = typeDefOrRefSignature.Type.QualifiedName;

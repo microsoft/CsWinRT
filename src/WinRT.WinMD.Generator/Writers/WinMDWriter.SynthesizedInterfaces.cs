@@ -127,9 +127,9 @@ internal sealed partial class WinMDWriter
             }
         }
 
-        // Also use MethodImplementations from the input type's IL to detect implicit interface
+        // Also use 'MethodImplementations' from the input type's IL to detect implicit interface
         // implementations. This handles cases where a public class method implicitly implements
-        // an external interface method (e.g., IWwwFormUrlDecoderEntry.get_Name) — the compiler
+        // an external interface method (e.g., 'IWwwFormUrlDecoderEntry.get_Name') — the compiler
         // generates MethodImpl entries that tell us which methods come from interfaces.
         foreach (MethodImplementation methodImpl in inputType.MethodImplementations)
         {
@@ -293,7 +293,7 @@ internal sealed partial class WinMDWriter
                 InterfaceImplementation interfaceImpl = new(EnsureTypeReference(synthesizedInterface));
                 classOutputType.Interfaces.Add(interfaceImpl);
 
-                // Add DefaultAttribute on the interface implementation
+                // Add [Default] attribute on the interface implementation
                 AddDefaultAttribute(interfaceImpl);
             }
 

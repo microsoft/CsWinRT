@@ -17,8 +17,8 @@ namespace WindowsRuntime.WinMDGenerator.Models;
 /// </para>
 /// <para>
 /// Most mappings are fixed (e.g. <c>System.DateTimeOffset</c> → <c>Windows.Foundation.DateTime</c>),
-/// but some require context-dependent resolution. For example, <c>System.Type</c> maps to
-/// <c>Windows.UI.Xaml.Interop.TypeName</c> in most contexts, but stays as <c>System.Type</c> when
+/// but some require context-dependent resolution. For example, <see cref="Type"/> maps to
+/// <c>Windows.UI.Xaml.Interop.TypeName</c> in most contexts, but stays as <see cref="Type"/> when
 /// used in attribute declarations (since WinMD attribute blobs use CLR types).
 /// </para>
 /// </remarks>
@@ -83,7 +83,7 @@ internal readonly struct MappedType
     /// </summary>
     /// <param name="multipleMappingFunc">
     /// A delegate that resolves the mapping based on the containing <see cref="TypeDefinition"/>.
-    /// This is used for types like <c>System.Type</c> that map differently depending on context.
+    /// This is used for types like <see cref="Type"/> that map differently depending on context.
     /// </param>
     public MappedType(Func<TypeDefinition?, (string, string, string, bool, bool)> multipleMappingFunc)
     {

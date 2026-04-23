@@ -99,7 +99,7 @@ internal sealed partial class WinMDWriter
             typeAttributes,
             baseType);
 
-        // Add the value__ field
+        // Add the 'value__' field
         TypeSignature underlyingType = GetEnumUnderlyingType(inputType);
         FieldDefinition valueField = new(
             "value__",
@@ -120,7 +120,7 @@ internal sealed partial class WinMDWriter
         {
             if (field.IsSpecialName)
             {
-                continue; // Skip value__
+                continue; // Skip 'value__'
             }
 
             if (!field.IsPublic)
@@ -194,7 +194,7 @@ internal sealed partial class WinMDWriter
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
         _typeDefinitionMapping[qualifiedName] = declaration;
 
-        // Add .ctor(object, IntPtr) — private per Windows Runtime delegate convention
+        // Add '.ctor(object, IntPtr)' — private per Windows Runtime delegate convention
         MethodDefinition ctor = new(
             ".ctor",
             MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
@@ -209,7 +209,7 @@ internal sealed partial class WinMDWriter
         ctor.ParameterDefinitions.Add(new ParameterDefinition(2, "method", 0));
         outputType.Methods.Add(ctor);
 
-        // Add Invoke method
+        // Add 'Invoke' method
         MethodDefinition? inputInvoke = inputType.Methods.FirstOrDefault(m => m.Name?.Value == "Invoke");
         if (inputInvoke != null)
         {
@@ -526,7 +526,7 @@ internal sealed partial class WinMDWriter
             string interfaceName = GetInterfaceQualifiedName(interfaceImplementation.Interface);
 
             // Skip interfaces that have a Windows Runtime mapping — they'll be added as their
-            // mapped equivalents by ProcessCustomMappedInterfaces below
+            // mapped equivalents by 'ProcessCustomMappedInterfaces' below
             if (_mapper.HasMappingForType(interfaceName))
             {
                 continue;
@@ -549,10 +549,10 @@ internal sealed partial class WinMDWriter
             AddActivatableAttribute(outputType, (uint)version, null);
         }
 
-        // Process custom mapped interfaces (IList -> IVector, IDisposable -> IClosable, etc.)
+        // Process custom mapped interfaces ('IList' -> 'IVector', 'IDisposable' -> 'IClosable', etc.)
         ProcessCustomMappedInterfaces(inputType, outputType);
 
-        // Add synthesized interfaces (IFooClass, IFooFactory, IFooStatic)
+        // Add synthesized interfaces ('IFooClass', 'IFooFactory', 'IFooStatic')
         AddSynthesizedInterfaces(inputType, outputType, declaration);
 
         // Add explicit interface implementation methods (private methods with qualified names)
@@ -644,7 +644,7 @@ internal sealed partial class WinMDWriter
                 continue;
             }
 
-            // Apply Windows Runtime naming: set_ to put_
+            // Apply Windows Runtime naming: 'set_' to 'put_'
             string winrtShortName = shortMethodName;
             if (winrtShortName.StartsWith("set_", StringComparison.Ordinal))
             {

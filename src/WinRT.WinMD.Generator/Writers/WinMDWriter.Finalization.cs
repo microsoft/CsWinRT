@@ -22,9 +22,9 @@ internal sealed partial class WinMDWriter
     /// </para>
     /// <list type="number">
     ///   <item>Add <c>MethodImpl</c> fixups for classes (wiring interface methods to class implementations).</item>
-    ///   <item>Add default <c>VersionAttribute</c> for types that don't have one.</item>
+    ///   <item>Add a default <c>[Version]</c> attribute for types that don't have one.</item>
     ///   <item>Copy custom attributes from input types to output types.</item>
-    ///   <item>Add <c>OverloadAttribute</c> for methods with the same name.</item>
+    ///   <item>Add <c>[Overload]</c> attributes for methods with the same name.</item>
     /// </list>
     /// <para>
     /// The <c>MethodImpl</c> phase is the most complex: it resolves interfaces from both the output
@@ -35,7 +35,7 @@ internal sealed partial class WinMDWriter
     public void FinalizeGeneration()
     {
         // Phase 1: Add MethodImpl fixups for classes.
-        // Snapshot the mapping to avoid modification during iteration (ProcessType may add entries via MapTypeSignatureToOutput).
+        // Snapshot the mapping to avoid modification during iteration ('ProcessType' may add entries via 'MapTypeSignatureToOutput').
         List<KeyValuePair<string, TypeDeclaration>> typeDeclarations = [.. _typeDefinitionMapping];
 
         foreach ((string qualifiedName, TypeDeclaration declaration) in typeDeclarations)
@@ -60,8 +60,8 @@ internal sealed partial class WinMDWriter
 
             if (!HasVersionAttribute(declaration.OutputType))
             {
-                // Skip adding VersionAttribute if the input type has ContractVersionAttribute
-                // (it will be copied in Phase 3 via CopyCustomAttributes)
+                // Skip adding [Version] attribute if the input type has [ContractVersion] attribute
+                // (it will be copied in Phase 3 via 'CopyCustomAttributes')
                 bool hasContractVersion = declaration.InputType?.CustomAttributes.Any(
                     attribute => attribute.Constructor?.DeclaringType?.Name?.Value == "ContractVersionAttribute") == true;
 
@@ -139,7 +139,7 @@ internal sealed partial class WinMDWriter
             {
                 interfaceDef = SafeResolve(classInterfaceImpl.Interface);
 
-                // For same-module TypeRefs (created by EnsureTypeReference), Resolve() may fail
+                // For same-module TypeRefs (created by 'EnsureTypeReference'), 'Resolve()' may fail
                 // since the output module isn't in the resolver. Look up in our type mapping instead.
                 if (interfaceDef == null && classInterfaceImpl.Interface != null)
                 {
@@ -175,7 +175,7 @@ internal sealed partial class WinMDWriter
             if (interfaceDef == null)
             {
                 // Still unresolvable — MethodImpls for mapped interfaces are already
-                // created by AddCustomMappedTypeMembers, so this is expected for those.
+                // created by 'AddCustomMappedTypeMembers', so this is expected for those.
                 continue;
             }
 
@@ -267,7 +267,7 @@ internal sealed partial class WinMDWriter
             {
                 // Use the class method's signature for the MethodImpl declaration when resolved
                 // from input ref assemblies — the ref assembly uses .NET projection types
-                // (e.g., System.Type) but the WinMD needs Windows Runtime types (e.g., TypeName)
+                // (e.g., 'System.Type') but the WinMD needs Windows Runtime types (e.g., 'TypeName')
                 MethodSignature implSignature = resolvedFromInput ? classMethod.Signature! : interfaceMethod.Signature!;
                 MemberReference interfaceMethodRef = new(classInterfaceImpl.Interface, interfaceMethod.Name!.Value, implSignature);
                 classOutputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, classMethod));
@@ -368,7 +368,7 @@ internal sealed partial class WinMDWriter
                 if (classParamName != ifaceParamName)
                 {
                     // When comparing against externally-resolved interface methods (from ref assemblies),
-                    // check if the .NET projection type maps to the Windows Runtime type via TypeMapper
+                    // check if the .NET projection type maps to the Windows Runtime type via 'TypeMapper'
                     if (!mapInterfaceTypes || !IsProjectionEquivalent(ifaceParamName, classParamName))
                     {
                         parametersMatch = false;
@@ -427,7 +427,7 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Adds <c>OverloadAttribute</c> to overloaded methods within a type.
+    /// Adds <c>[Overload]</c> attributes to overloaded methods within a type.
     /// </summary>
     /// <remarks>
     /// Windows Runtime requires that overloaded methods have unique names. This method finds method groups

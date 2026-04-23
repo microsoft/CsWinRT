@@ -14,7 +14,7 @@ internal static class TypeDefinitionExtensions
     extension(TypeDefinition type)
     {
         /// <summary>
-        /// Checks whether the type is a Windows Runtime type (has the <c>WindowsRuntimeMetadataAttribute</c>).
+        /// Checks whether the type is a Windows Runtime type (has the <c>[WindowsRuntimeMetadata]</c> attribute).
         /// </summary>
         /// <remarks>
         /// Types marked with <c>[WindowsRuntimeMetadata]</c> are projected Windows Runtime types that come
@@ -28,11 +28,11 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
-        /// Gets the Windows Runtime contract assembly name from <c>WindowsRuntimeMetadataAttribute</c> on the type, if present.
+        /// Gets the Windows Runtime contract assembly name from <c>[WindowsRuntimeMetadata]</c> attribute on the type, if present.
         /// </summary>
         /// <returns>
         /// The Windows Runtime contract assembly name (e.g. <c>"Microsoft.UI.Xaml"</c>), or <see langword="null"/>
-        /// if the type does not have a <c>WindowsRuntimeMetadataAttribute</c>.
+        /// if the type does not have a <c>[WindowsRuntimeMetadata]</c> attribute.
         /// </returns>
         /// <remarks>
         /// For types from projection assemblies (e.g. <c>Microsoft.WinUI</c>), this returns the original
