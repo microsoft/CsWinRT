@@ -9,7 +9,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.WinMDGenerator.Models;
 
-namespace WindowsRuntime.WinMDGenerator.Generation;
+namespace WindowsRuntime.WinMDGenerator.Writers;
 
 /// <inheritdoc cref="WinMDWriter"/>
 internal sealed partial class WinMDWriter

@@ -4,6 +4,7 @@
 using System.IO;
 using AsmResolver.DotNet;
 using WindowsRuntime.WinMDGenerator.Helpers;
+using WindowsRuntime.WinMDGenerator.Writers;
 
 namespace WindowsRuntime.WinMDGenerator.Generation;
 

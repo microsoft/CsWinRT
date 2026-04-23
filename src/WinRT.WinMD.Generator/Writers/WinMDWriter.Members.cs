@@ -11,7 +11,7 @@ using MethodImplAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodImplAtt
 using MethodSemanticsAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodSemanticsAttributes;
 using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes;
 
-namespace WindowsRuntime.WinMDGenerator.Generation;
+namespace WindowsRuntime.WinMDGenerator.Writers;
 
 /// <inheritdoc cref="WinMDWriter"/>
 internal sealed partial class WinMDWriter

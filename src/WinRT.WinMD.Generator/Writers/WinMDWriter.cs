@@ -11,7 +11,7 @@ using WindowsRuntime.WinMDGenerator.Helpers;
 using WindowsRuntime.WinMDGenerator.Models;
 using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
 
-namespace WindowsRuntime.WinMDGenerator.Generation;
+namespace WindowsRuntime.WinMDGenerator.Writers;
 
 /// <summary>
 /// Writes a WinMD file from analyzed assembly types using AsmResolver.

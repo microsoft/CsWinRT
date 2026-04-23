@@ -9,7 +9,7 @@ using WindowsRuntime.WinMDGenerator.Models;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
 using TypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
 
-namespace WindowsRuntime.WinMDGenerator.Generation;
+namespace WindowsRuntime.WinMDGenerator.Writers;
 
 /// <inheritdoc cref="WinMDWriter"/>
 internal sealed partial class WinMDWriter
