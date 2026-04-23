@@ -124,13 +124,26 @@ internal sealed partial class WinMDWriter
     /// <returns>The resolved <see cref="TypeDefinition"/>, or <see langword="null"/> if the type cannot be resolved.</returns>
     private TypeDefinition? SafeResolve(ITypeDefOrRef? typeRef)
     {
-        return typeRef is TypeDefinition typeDefinition
-            ? typeDefinition
-            : typeRef is not null
-                && _runtimeContext is not null
-                && typeRef.Resolve(_runtimeContext, out TypeDefinition? resolved) == ResolutionStatus.Success
-                ? resolved
-                : null;
+        // If the reference is already a resolved definition, return it directly
+        if (typeRef is TypeDefinition typeDefinition)
+        {
+            return typeDefinition;
+        }
+
+        // We need both a non-null reference and a runtime context to attempt resolution
+        if (typeRef is null || _runtimeContext is null)
+        {
+            return null;
+        }
+
+        // Try to resolve the type reference through the runtime context's assembly resolver.
+        // This can fail for types in contract assemblies that aren't loaded, which is expected.
+        if (typeRef.Resolve(_runtimeContext, out TypeDefinition? resolved) == ResolutionStatus.Success)
+        {
+            return resolved;
+        }
+
+        return null;
     }
 
     /// <summary>
