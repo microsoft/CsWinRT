@@ -340,13 +340,13 @@ internal sealed partial class WinMDWriter
                 continue;
             }
 
-            MemberReference? importedCtor = ImportAttributeConstructor(attribute.Constructor);
-            if (importedCtor is null)
+            if (ImportAttributeConstructor(attribute.Constructor) is not MemberReference importedCtor)
             {
                 continue;
             }
 
             CustomAttributeSignature clonedSignature = CloneAttributeSignature(attribute.Signature);
+
             target.CustomAttributes.Add(new CustomAttribute(importedCtor, clonedSignature));
         }
     }
@@ -388,11 +388,11 @@ internal sealed partial class WinMDWriter
         }
 
         // Skip non-public attribute types (if resolvable)
-        if (runtimeContext is not null
-            && attribute.Constructor?.DeclaringType is { } attributeType
-            && attributeType is not TypeDefinition
-            && attributeType.Resolve(runtimeContext, out TypeDefinition? attributeTypeDefinition) == ResolutionStatus.Success
-            && !attributeTypeDefinition!.IsPublic && !attributeTypeDefinition.IsNestedPublic)
+        if (runtimeContext is not null &&
+            attribute.Constructor?.DeclaringType is { } attributeType &&
+            attributeType is not TypeDefinition &&
+            attributeType.Resolve(runtimeContext, out TypeDefinition? attributeTypeDefinition) == ResolutionStatus.Success &&
+            !attributeTypeDefinition!.IsPublic && !attributeTypeDefinition.IsNestedPublic)
         {
             return false;
         }
@@ -423,12 +423,9 @@ internal sealed partial class WinMDWriter
         // Attribute constructor parameters must use CLR types ('System.Type', 'System.String', etc.)
         // not Windows Runtime projected types ('TypeName', 'HString'), because the custom attribute blob
         // serializer only supports primitives, 'System.Type', 'System.String', and enum types.
-        TypeSignature[] importedParams = [.. methodSignature.ParameterTypes
-            .Select(ImportTypeSignatureForAttribute)];
-
         MethodSignature importedSignature = MethodSignature.CreateInstance(
-            _outputModule.CorLibTypeFactory.Void,
-            importedParams);
+            returnType: _outputModule.CorLibTypeFactory.Void,
+            parameterTypes: methodSignature.ParameterTypes.Select(ImportTypeSignatureForAttribute));
 
         return new MemberReference(importedType, ".ctor", importedSignature);
     }
@@ -495,8 +492,7 @@ internal sealed partial class WinMDWriter
             }
 
             // Enum types: import the reference so the blob encoder can resolve the underlying type
-            TypeDefinition? resolved = SafeResolve(typeDefOrRefSignature.Type);
-            if (resolved is not null && resolved.IsEnum)
+            if (SafeResolve(typeDefOrRefSignature.Type) is TypeDefinition { IsEnum: true })
             {
                 return ImportTypeReference(typeDefOrRefSignature.Type!).ToTypeSignature(typeDefOrRefSignature.IsValueType);
             }

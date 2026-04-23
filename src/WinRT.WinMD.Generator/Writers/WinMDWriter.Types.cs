@@ -49,7 +49,9 @@ internal sealed partial class WinMDWriter
             baseType: baseType);
 
         _outputModule.TopLevelTypes.Add(outputType);
+
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+
         _typeDefinitionMapping[qualifiedName] = declaration;
     }
 
@@ -94,11 +96,13 @@ internal sealed partial class WinMDWriter
             name: "value__",
             attributes: FieldAttributes.Private | FieldAttributes.SpecialName | FieldAttributes.RuntimeSpecialName,
             signature: new FieldSignature(underlyingType));
+
         outputType.Fields.Add(valueField);
 
         _outputModule.TopLevelTypes.Add(outputType);
 
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+
         _typeDefinitionMapping[qualifiedName] = declaration;
 
         // Enum literal fields use the enum type itself (not the underlying type)
@@ -178,9 +182,11 @@ internal sealed partial class WinMDWriter
             attributes: typeAttributes,
             baseType: baseType);
 
-        // Register early so self-referencing signatures can find this type
         _outputModule.TopLevelTypes.Add(outputType);
+
+        // Register early so self-referencing signatures can find this type
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+
         _typeDefinitionMapping[qualifiedName] = declaration;
 
         // Add '.ctor(object, IntPtr)' — private per Windows Runtime delegate convention
@@ -188,14 +194,16 @@ internal sealed partial class WinMDWriter
             name: ".ctor",
             attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
             signature: MethodSignature.CreateInstance(
-                _outputModule.CorLibTypeFactory.Void,
-                [_outputModule.CorLibTypeFactory.Object,
-                _outputModule.CorLibTypeFactory.IntPtr]))
+                returnType: _outputModule.CorLibTypeFactory.Void,
+                parameterTypes: [
+                    _outputModule.CorLibTypeFactory.Object,
+                    _outputModule.CorLibTypeFactory.IntPtr]))
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
-        ctor.ParameterDefinitions.Add(new ParameterDefinition(1, "object", 0));
-        ctor.ParameterDefinitions.Add(new ParameterDefinition(2, "method", 0));
+
+        ctor.ParameterDefinitions.Add(new ParameterDefinition(1, "object"u8, 0));
+        ctor.ParameterDefinitions.Add(new ParameterDefinition(2, "method"u8, 0));
         outputType.Methods.Add(ctor);
 
         // Add 'Invoke' method
@@ -222,9 +230,9 @@ internal sealed partial class WinMDWriter
             foreach (ParameterDefinition inputParam in inputInvoke.ParameterDefinitions)
             {
                 invoke.ParameterDefinitions.Add(new ParameterDefinition(
-                    (ushort)paramIndex++,
-                    inputParam.Name!.Value,
-                    ParameterAttributes.In));
+                    sequence: (ushort)paramIndex++,
+                    name: inputParam.Name!.Value,
+                    attributes: ParameterAttributes.In));
             }
 
             outputType.Methods.Add(invoke);
@@ -259,9 +267,11 @@ internal sealed partial class WinMDWriter
             name: inputType.Name!.Value,
             attributes: typeAttributes);
 
-        // Register early so self-referencing signatures can find this type
         _outputModule.TopLevelTypes.Add(outputType);
+
+        // Register early so self-referencing signatures can find this type
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+
         _typeDefinitionMapping[qualifiedName] = declaration;
 
         // Add methods (skip property/event accessors — they're added by property/event processing below)
@@ -293,6 +303,7 @@ internal sealed partial class WinMDWriter
             if (interfaceImplementation.Interface is not null)
             {
                 ITypeDefOrRef outputInterfaceRef = EnsureTypeReference(ImportTypeReference(interfaceImplementation.Interface));
+
                 outputType.Interfaces.Add(new InterfaceImplementation(outputInterfaceRef));
             }
         }
@@ -328,9 +339,11 @@ internal sealed partial class WinMDWriter
             attributes: typeAttributes,
             baseType: baseType);
 
-        // Register early so self-referencing signatures can find this type
         _outputModule.TopLevelTypes.Add(outputType);
+
+        // Register early so self-referencing signatures can find this type
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+
         _typeDefinitionMapping[qualifiedName] = declaration;
 
         // Add public fields
@@ -345,6 +358,7 @@ internal sealed partial class WinMDWriter
                 name: field.Name!.Value,
                 attributes: FieldAttributes.Public,
                 signature: new FieldSignature(MapTypeSignatureToOutput(field.Signature!.FieldType)));
+
             outputType.Fields.Add(outputField);
         }
     }
@@ -415,9 +429,11 @@ internal sealed partial class WinMDWriter
             attributes: typeAttributes,
             baseType: baseType);
 
-        // Register in the mapping early so self-referencing method signatures can find it
         _outputModule.TopLevelTypes.Add(outputType);
+
+        // Register in the mapping early so self-referencing method signatures can find it
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
+
         _typeDefinitionMapping[qualifiedName] = declaration;
 
         bool hasConstructor = false;
@@ -441,6 +457,7 @@ internal sealed partial class WinMDWriter
 
                 hasConstructor = true;
                 hasDefaultConstructor |= method.Parameters.Count == 0;
+
                 AddMethodToClass(outputType, method);
             }
             else if (method.IsPublic && !method.IsSpecialName)
@@ -467,6 +484,7 @@ internal sealed partial class WinMDWriter
             // Only add if at least one accessor is public
             bool hasPublicGetter = property.GetMethod?.IsPublic == true;
             bool hasPublicSetter = property.SetMethod?.IsPublic == true;
+
             if (hasPublicGetter || hasPublicSetter)
             {
                 AddPropertyToType(outputType, property, isInterfaceParent: false);
@@ -484,6 +502,7 @@ internal sealed partial class WinMDWriter
 
             bool hasPublicAdder = @event.AddMethod?.IsPublic == true;
             bool hasPublicRemover = @event.RemoveMethod?.IsPublic == true;
+
             if (hasPublicAdder || hasPublicRemover)
             {
                 AddEventToType(outputType, @event, isInterfaceParent: false);
@@ -500,7 +519,9 @@ internal sealed partial class WinMDWriter
             {
                 ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
             };
+
             outputType.Methods.Add(defaultCtor);
+
             hasDefaultConstructor = true;
         }
 
@@ -528,6 +549,7 @@ internal sealed partial class WinMDWriter
             }
 
             ITypeDefOrRef outputInterfaceRef = EnsureTypeReference(ImportTypeReference(interfaceImplementation.Interface));
+
             outputType.Interfaces.Add(new InterfaceImplementation(outputInterfaceRef));
         }
 
@@ -608,7 +630,10 @@ internal sealed partial class WinMDWriter
     private void AddExplicitInterfaceImplementations(TypeDefinition inputType, TypeDefinition outputType)
     {
         TypeReference eventRegistrationTokenType = GetOrCreateTypeReference(
-            "Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract");
+            @namespace: "Windows.Foundation",
+            name: "EventRegistrationToken",
+            assemblyName: "Windows.Foundation.FoundationContract");
+
         TypeSignature tokenSignature = eventRegistrationTokenType.ToTypeSignature(true);
 
         foreach (MethodDefinition method in inputType.Methods)
@@ -620,6 +645,7 @@ internal sealed partial class WinMDWriter
 
             string fullMethodName = method.Name.Value;
             int lastDot = fullMethodName.LastIndexOf('.');
+
             if (lastDot <= 0)
             {
                 continue;
@@ -691,8 +717,11 @@ internal sealed partial class WinMDWriter
                 ParameterAttributes paramAttr = i < parameterTypes.Length
                     ? GetWinRTParameterAttributes(method.Signature!.ParameterTypes[i])
                     : ParameterAttributes.In;
+
                 outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
-                    (ushort)(i + 1), paramNames[i], paramAttr));
+                    sequence: (ushort)(i + 1),
+                    name: paramNames[i],
+                    attributes: paramAttr));
             }
 
             outputType.Methods.Add(outputMethod);
@@ -701,12 +730,15 @@ internal sealed partial class WinMDWriter
             {
                 string propName = $"{interfaceQualName}.{winrtShortName[4..]}";
                 PropertyDefinition? existingProp = outputType.Properties.FirstOrDefault(p => p.Name?.Value == propName);
+
                 if (existingProp is null)
                 {
                     TypeSignature propType = winrtShortName.StartsWith("get_", StringComparison.Ordinal) ? returnType : parameterTypes[0];
                     PropertyDefinition prop = new(propName, 0, PropertySignature.CreateInstance(propType));
+
                     prop.Semantics.Add(new MethodSemantics(outputMethod,
                         winrtShortName.StartsWith("get_", StringComparison.Ordinal) ? MethodSemanticsAttributes.Getter : MethodSemanticsAttributes.Setter));
+
                     outputType.Properties.Add(prop);
                 }
                 else
@@ -723,6 +755,7 @@ internal sealed partial class WinMDWriter
                         ? new TypeSpecification(genericInstanceSignature)
                         : GetOrCreateTypeReference("Windows.Foundation", "EventHandler`1", "Windows.Foundation.FoundationContract");
                 EventDefinition @event = new(eventName, 0, eventType);
+
                 @event.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.AddOn));
                 outputType.Events.Add(@event);
             }
@@ -730,16 +763,19 @@ internal sealed partial class WinMDWriter
             {
                 string eventName = $"{interfaceQualName}.{winrtShortName[7..]}";
                 EventDefinition? existingEvent = outputType.Events.FirstOrDefault(e => e.Name?.Value == eventName);
+
                 existingEvent?.Semantics.Add(new MethodSemantics(outputMethod, MethodSemanticsAttributes.RemoveOn));
             }
 
             TypeDeclaration interfaceDecl = _typeDefinitionMapping[interfaceQualName];
+
             if (interfaceDecl.OutputType is not null)
             {
                 MemberReference interfaceMethodRef = new(
                     parent: interfaceDecl.OutputType,
                     name: winrtShortName,
                     signature: MethodSignature.CreateInstance(returnType, parameterTypes));
+
                 outputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, outputMethod));
             }
         }

@@ -336,6 +336,7 @@ internal sealed partial class WinMDWriter
             {
                 adder.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
             }
+
             adder.ParameterDefinitions.Add(new ParameterDefinition(1, "handler", ParameterAttributes.In));
             outputType.Methods.Add(adder);
             outputEvent.Semantics.Add(new MethodSemantics(adder, MethodSemanticsAttributes.AddOn));
@@ -368,6 +369,7 @@ internal sealed partial class WinMDWriter
             {
                 remover.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
             }
+
             remover.ParameterDefinitions.Add(new ParameterDefinition(1, "token", ParameterAttributes.In));
             outputType.Methods.Add(remover);
             outputEvent.Semantics.Add(new MethodSemantics(remover, MethodSemanticsAttributes.RemoveOn));

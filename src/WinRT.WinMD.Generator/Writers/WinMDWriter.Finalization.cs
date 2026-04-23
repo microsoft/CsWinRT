@@ -462,11 +462,13 @@ internal sealed partial class WinMDWriter
     private void AddOverloadAttribute(MethodDefinition method, string overloadName)
     {
         TypeReference overloadAttrType = GetOrCreateTypeReference(
-            "Windows.Foundation.Metadata", "OverloadAttribute", "Windows.Foundation.FoundationContract");
+            @namespace: "Windows.Foundation.Metadata",
+            name: "OverloadAttribute",
+            assemblyName: "Windows.Foundation.FoundationContract");
 
         MemberReference ctor = new(
             parent: overloadAttrType,
-            name: ".ctor",
+            name: ".ctor"u8,
             signature: MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
                 [_outputModule.CorLibTypeFactory.String]));

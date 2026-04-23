@@ -11,6 +11,8 @@ using WindowsRuntime.WinMDGenerator.Models;
 using WindowsRuntime.WinMDGenerator.References;
 using AssemblyAttributes = AsmResolver.PE.DotNet.Metadata.Tables.AssemblyAttributes;
 
+#pragma warning disable IDE0072
+
 namespace WindowsRuntime.WinMDGenerator.Writers;
 
 /// <inheritdoc cref="WinMDWriter"/>
@@ -39,7 +41,6 @@ internal sealed partial class WinMDWriter
         // Handle 'CorLib' types
         if (inputSignature is CorLibTypeSignature corLib)
         {
-#pragma warning disable IDE0072 // Switch already has default case handling all other element types
             return corLib.ElementType switch
             {
                 ElementType.Boolean => _outputModule.CorLibTypeFactory.Boolean,
@@ -61,7 +62,6 @@ internal sealed partial class WinMDWriter
                 ElementType.Void => _outputModule.CorLibTypeFactory.Void,
                 _ => _outputModule.CorLibTypeFactory.Object
             };
-#pragma warning restore IDE0072
         }
 
         // Handle SZArray (single-dimensional zero-based arrays)
@@ -77,8 +77,7 @@ internal sealed partial class WinMDWriter
 
             // Map 'Span<T>' and 'ReadOnlySpan<T>' to T[] (SzArray) for Windows Runtime
             // 'ReadOnlySpan<T>' → PassArray (in), 'Span<T>' → FillArray (out without BYREF)
-            if (genericTypeName is "System.Span`1" or "System.ReadOnlySpan`1"
-                && genericInst.TypeArguments.Count == 1)
+            if (genericTypeName is "System.Span`1" or "System.ReadOnlySpan`1" && genericInst.TypeArguments.Count == 1)
             {
                 return new SzArrayTypeSignature(MapTypeSignatureToOutput(genericInst.TypeArguments[0]));
             }
@@ -87,15 +86,23 @@ internal sealed partial class WinMDWriter
             if (_mapper.HasMappingForType(genericTypeName))
             {
                 MappedType mapping = _mapper.GetMappedType(genericTypeName);
+
                 (string @namespace, string name, string assembly, _, bool isValueType) = mapping.GetMapping();
+
                 ITypeDefOrRef mappedType = GetOrCreateTypeReference(@namespace, name, assembly);
-                TypeSignature[] mappedArgs = [.. genericInst.TypeArguments.Select(MapTypeSignatureToOutput)];
-                return new GenericInstanceTypeSignature(mappedType, isValueType, mappedArgs);
+
+                return new GenericInstanceTypeSignature(
+                    genericType: mappedType,
+                    isValueType: isValueType,
+                    typeArguments: genericInst.TypeArguments.Select(MapTypeSignatureToOutput));
             }
 
             ITypeDefOrRef importedType = ImportTypeReference(genericInst.GenericType);
-            TypeSignature[] importedArgs = [.. genericInst.TypeArguments.Select(MapTypeSignatureToOutput)];
-            return new GenericInstanceTypeSignature(importedType, genericInst.IsValueType, importedArgs);
+
+            return new GenericInstanceTypeSignature(
+                genericType: importedType,
+                isValueType: genericInst.IsValueType,
+                typeArguments: genericInst.TypeArguments.Select(MapTypeSignatureToOutput));
         }
 
         // Handle generic method/type parameters
@@ -119,8 +126,11 @@ internal sealed partial class WinMDWriter
             if (_mapper.HasMappingForType(typeName))
             {
                 MappedType mapping = _mapper.GetMappedType(typeName);
+
                 (string @namespace, string name, string assembly, _, bool isValueType) = mapping.GetMapping();
+
                 ITypeDefOrRef mappedType = GetOrCreateTypeReference(@namespace, name, assembly);
+
                 return new TypeDefOrRefSignature(mappedType, isValueType);
             }
 
@@ -164,6 +174,7 @@ internal sealed partial class WinMDWriter
             if (typeDef.IsPublic || typeDef.IsNestedPublic)
             {
                 ProcessType(typeDef);
+
                 if (_typeDefinitionMapping.TryGetValue(qualifiedName, out declaration) && declaration.OutputType is not null)
                 {
                     return declaration.OutputType;
@@ -194,6 +205,7 @@ internal sealed partial class WinMDWriter
             // E.g., 'StackPanel' from 'Microsoft.WinUI' → 'Microsoft.UI.Xaml' in the WinMD.
             string assembly = GetAssemblyNameFromScope(typeRef.Scope);
             TypeDefinition? resolvedType = SafeResolve(typeRef);
+
             if (resolvedType is not null)
             {
                 string? winrtAssembly = resolvedType.WindowsRuntimeAssemblyName;
@@ -248,6 +260,7 @@ internal sealed partial class WinMDWriter
             string @namespace = typeDef.EffectiveNamespace ?? "";
             string name = typeDef.Name!.Value;
             string assembly = _outputModule.Assembly?.Name?.Value ?? "mscorlib";
+
             return GetOrCreateTypeReference(@namespace, name, assembly);
         }
 
@@ -276,7 +289,9 @@ internal sealed partial class WinMDWriter
 
         AssemblyReference assemblyRef = GetOrCreateAssemblyReference(assemblyName);
         TypeReference typeRef = new(_outputModule, assemblyRef, @namespace, name);
+
         _typeReferenceCache[fullName] = typeRef;
+
         return typeRef;
     }
 
@@ -315,6 +330,7 @@ internal sealed partial class WinMDWriter
 
         _outputModule.AssemblyReferences.Add(assemblyReference);
         _assemblyReferenceCache[assemblyName] = assemblyReference;
+
         return assemblyReference;
     }
 }

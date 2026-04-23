@@ -107,6 +107,7 @@ internal sealed partial class WinMDWriter
         AssemblyReference defaultCorLib = (AssemblyReference)_outputModule.CorLibTypeFactory.CorLibScope;
         defaultCorLib.Version = WinMDValues.MSCorLibVersion;
         defaultCorLib.PublicKeyOrToken = WellKnownPublicKeyTokens.MSCorLib;
+
         _assemblyReferenceCache["mscorlib"] = defaultCorLib;
 
         // Create the output assembly with WindowsRuntime flag (keep reference alive via module)

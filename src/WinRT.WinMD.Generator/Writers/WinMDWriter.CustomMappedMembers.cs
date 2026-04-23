@@ -62,15 +62,14 @@ internal sealed partial class WinMDWriter
             // Determine if the interface is publicly implemented.
             // Check if the class has public methods that match the .NET interface members.
             // For mapped interfaces, the .NET method names differ from Windows Runtime names
-            // (e.g., Add vs Append), so we check the .NET interface's members.
+            // (e.g., 'Add' vs 'Append'), so we check the .NET interface's members.
             bool isPublic = IsInterfacePubliclyImplemented(classType: inputType, interfaceImplementation, _runtimeContext);
 
             mappedInterfaces.Add((interfaceImplementation, interfaceName, mapping, isPublic));
         }
 
         // If generic 'IEnumerable<T>' ('IIterable') is present, skip non-generic 'IEnumerable' ('IBindableIterable')
-        bool hasGenericEnumerable = allInterfaces.Any(i =>
-            i.Interface is not null && GetInterfaceQualifiedName(i.Interface) == "System.Collections.Generic.IEnumerable`1");
+        bool hasGenericEnumerable = allInterfaces.Any(i => i.Interface is not null && GetInterfaceQualifiedName(i.Interface) == "System.Collections.Generic.IEnumerable`1");
 
         foreach ((InterfaceImplementation interfaceImplementation, string interfaceName, MappedType mapping, bool isPublic) in mappedInterfaces)
         {
@@ -106,15 +105,19 @@ internal sealed partial class WinMDWriter
             // For generic interfaces, handle type arguments (mapping 'KeyValuePair' -> 'IKeyValuePair', etc.)
             if (interfaceImplementation.Interface is TypeSpecification typeSpec && typeSpec.Signature is GenericInstanceTypeSignature genericInst)
             {
-                TypeSignature[] mappedArgs = [.. genericInst.TypeArguments
-                    .Select(MapCustomMappedTypeArgument)];
-                TypeSpecification mappedSpec = new(new GenericInstanceTypeSignature(mappedInterfaceRef, false, mappedArgs));
+                TypeSpecification mappedSpec = new(new GenericInstanceTypeSignature(
+                    genericType: mappedInterfaceRef,
+                    isValueType: false,
+                    typeArguments: genericInst.TypeArguments.Select(MapCustomMappedTypeArgument)));
+
                 outputType.Interfaces.Add(new InterfaceImplementation(mappedSpec));
+
                 mappedInterfaceTypeRef = mappedSpec;
             }
             else
             {
                 outputType.Interfaces.Add(new InterfaceImplementation(mappedInterfaceRef));
+
                 mappedInterfaceTypeRef = mappedInterfaceRef;
             }
 
@@ -141,11 +144,15 @@ internal sealed partial class WinMDWriter
         if (mapped is TypeDefOrRefSignature typeDefOrRefSignature)
         {
             string typeName = typeDefOrRefSignature.Type.QualifiedName;
+
             if (_mapper.HasMappingForType(typeName))
             {
                 MappedType innerMapping = _mapper.GetMappedType(typeName);
+
                 (string @namespace, string name, string assembly, _, _) = innerMapping.GetMapping();
+
                 TypeReference innerRef = GetOrCreateTypeReference(@namespace, name, assembly);
+
                 return innerRef.ToTypeSignature(typeDefOrRefSignature.IsValueType);
             }
         }
@@ -154,13 +161,17 @@ internal sealed partial class WinMDWriter
         if (mapped is GenericInstanceTypeSignature genericInstanceSignature)
         {
             string typeName = genericInstanceSignature.GenericType.QualifiedName;
+
             if (_mapper.HasMappingForType(typeName))
             {
                 MappedType innerMapping = _mapper.GetMappedType(typeName);
+
                 (string @namespace, string name, string assembly, _, _) = innerMapping.GetMapping();
-                TypeReference innerRef = GetOrCreateTypeReference(@namespace, name, assembly);
-                TypeSignature[] innerArgs = [.. genericInstanceSignature.TypeArguments.Select(MapCustomMappedTypeArgument)];
-                return new GenericInstanceTypeSignature(innerRef, false, innerArgs);
+
+                return new GenericInstanceTypeSignature(
+                    genericType: GetOrCreateTypeReference(@namespace, name, assembly),
+                    isValueType: false,
+                    typeArguments: genericInstanceSignature.TypeArguments.Select(MapCustomMappedTypeArgument));
             }
         }
 
@@ -196,9 +207,10 @@ internal sealed partial class WinMDWriter
         // For generic types, use short type names (e.g. "IMap`2<String, Int32>" not "IMap`2<System.String, System.Int32>")
         string qualifiedPrefix = FormatQualifiedInterfaceName(mappedInterfaceRef);
 
+        TypeSignature[]? parentGenericArgs = null;
+
         // Store parent interface generic type arguments for 'MethodImpl' signature conversion.
         // 'MethodImpl' declarations on generic interfaces should reference methods using !0, !1 etc. (not resolved types).
-        TypeSignature[]? parentGenericArgs = null;
         if (mappedInterfaceRef is TypeSpecification mappedTypeSpecification && mappedTypeSpecification.Signature is GenericInstanceTypeSignature mappedGenericInstanceSignature)
         {
             parentGenericArgs = [.. mappedGenericInstanceSignature.TypeArguments];
@@ -214,6 +226,7 @@ internal sealed partial class WinMDWriter
             }
 
             string signatureFullName = signature.FullName;
+
             for (int i = 0; i < parentGenericArgs.Length; i++)
             {
                 if (parentGenericArgs[i].FullName == signatureFullName)
@@ -233,8 +246,7 @@ internal sealed partial class WinMDWriter
         {
             if (parentGenericArgs is not null)
             {
-                GenericParameterSignature? genericParameter = FindParentGenericParam(signature);
-                if (genericParameter is not null)
+                if (FindParentGenericParam(signature) is GenericParameterSignature genericParameter)
                 {
                     return genericParameter;
                 }
@@ -254,12 +266,13 @@ internal sealed partial class WinMDWriter
         GenericInstanceTypeSignature ToOpenGenericForm(GenericInstanceTypeSignature genericInstanceSignature)
         {
             TypeSignature[] openArgs = new TypeSignature[genericInstanceSignature.TypeArguments.Count];
+
             for (int i = 0; i < genericInstanceSignature.TypeArguments.Count; i++)
             {
                 TypeSignature arg = genericInstanceSignature.TypeArguments[i];
+
                 // Try parent interface generic arg substitution (first match wins for duplicate args)
-                GenericParameterSignature? parentGenericParameter = FindParentGenericParam(arg);
-                if (parentGenericParameter is not null)
+                if (FindParentGenericParam(arg) is GenericParameterSignature parentGenericParameter)
                 {
                     openArgs[i] = parentGenericParameter;
                 }
@@ -296,6 +309,7 @@ internal sealed partial class WinMDWriter
             if (parameters is not null)
             {
                 int idx = 1;
+
                 foreach ((string name, TypeSignature type, ParameterAttributes attributes) p in parameters)
                 {
                     method.ParameterDefinitions.Add(new ParameterDefinition((ushort)idx++, p.name, p.attributes));
@@ -308,6 +322,7 @@ internal sealed partial class WinMDWriter
             TypeSignature[] implParamTypes = parameters?.Select(p => ToGenericParam(p.type)).ToArray() ?? [];
             TypeSignature implReturnType = ToGenericParam(returnType ?? _outputModule.CorLibTypeFactory.Void);
             MemberReference interfaceMethodRef = new(mappedInterfaceRef, name, MethodSignature.CreateInstance(implReturnType, implParamTypes));
+
             outputType.MethodImplementations.Add(new MethodImplementation(interfaceMethodRef, method));
         }
 
@@ -329,11 +344,13 @@ internal sealed partial class WinMDWriter
 
             // Property
             PropertyDefinition prop = new(propName, 0, PropertySignature.CreateInstance(propertyType));
+
             prop.Semantics.Add(new MethodSemantics(getter, MethodSemanticsAttributes.Getter));
 
             // 'MethodImpl' for getter (use generic params for declaration signature)
             TypeSignature implPropertyType = ToGenericParam(propertyType);
             MemberReference getterRef = new(mappedInterfaceRef, $"get_{name}", MethodSignature.CreateInstance(implPropertyType, []));
+
             outputType.MethodImplementations.Add(new MethodImplementation(getterRef, getter));
 
             if (hasSetter)
@@ -343,11 +360,13 @@ internal sealed partial class WinMDWriter
                 {
                     ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
                 };
+
                 setter.ParameterDefinitions.Add(new ParameterDefinition(1, "value", ParameterAttributes.In));
                 outputType.Methods.Add(setter);
                 prop.Semantics.Add(new MethodSemantics(setter, MethodSemanticsAttributes.Setter));
 
                 MemberReference setterRef = new(mappedInterfaceRef, $"put_{name}", MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [implPropertyType]));
+
                 outputType.MethodImplementations.Add(new MethodImplementation(setterRef, setter));
             }
 
@@ -553,6 +572,7 @@ internal sealed partial class WinMDWriter
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
+
         adder.ParameterDefinitions.Add(new ParameterDefinition(1, "handler", ParameterAttributes.In));
         outputType.Methods.Add(adder);
 
@@ -561,11 +581,13 @@ internal sealed partial class WinMDWriter
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
+
         remover.ParameterDefinitions.Add(new ParameterDefinition(1, "token", ParameterAttributes.In));
         outputType.Methods.Add(remover);
 
         // Event
         EventDefinition @event = new(isPublic ? eventName : $"{qualifiedPrefix}.{eventName}", 0, handlerTypeRef);
+
         @event.Semantics.Add(new MethodSemantics(adder, MethodSemanticsAttributes.AddOn));
         @event.Semantics.Add(new MethodSemantics(remover, MethodSemanticsAttributes.RemoveOn));
         outputType.Events.Add(@event);
@@ -576,8 +598,11 @@ internal sealed partial class WinMDWriter
             ? ToOpenGenericFormStatic(handlerGenericInstanceSignature, _outputModule)
             : handlerType;
         MemberReference addRef = new(mappedInterfaceRef, $"add_{eventName}", MethodSignature.CreateInstance(tokenSignature, [implHandlerType]));
+
         outputType.MethodImplementations.Add(new MethodImplementation(addRef, adder));
+
         MemberReference removeRef = new(mappedInterfaceRef, $"remove_{eventName}", MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [tokenSignature]));
+
         outputType.MethodImplementations.Add(new MethodImplementation(removeRef, remover));
     }
 
@@ -613,15 +638,21 @@ internal sealed partial class WinMDWriter
 
                 // If we have generic args, substitute them in the interface reference
                 ITypeDefOrRef resolvedInterface = interfaceImplementation.Interface;
+
                 if (genericArgs is not null && interfaceImplementation.Interface is TypeSpecification typeSpecification &&
                     typeSpecification.Signature is GenericInstanceTypeSignature genericInstanceSignature)
                 {
                     // Resolve generic parameters in type arguments (recursively for nested generics)
-                    TypeSignature[] resolvedArgs = [.. genericInstanceSignature.TypeArguments.Select(arg => ResolveGenericArg(arg, genericArgs))];
-                    resolvedInterface = new TypeSpecification(new GenericInstanceTypeSignature(genericInstanceSignature.GenericType, genericInstanceSignature.IsValueType, resolvedArgs));
+                    IEnumerable<TypeSignature> resolvedArgs = genericInstanceSignature.TypeArguments.Select(arg => ResolveGenericArg(arg, genericArgs));
+
+                    resolvedInterface = new TypeSpecification(new GenericInstanceTypeSignature(
+                        genericType: genericInstanceSignature.GenericType,
+                        isValueType: genericInstanceSignature.IsValueType,
+                        typeArguments: resolvedArgs));
                 }
 
                 string name = resolvedInterface.FullName ?? "";
+
                 if (!seen.Add(name))
                 {
                     continue;
@@ -644,6 +675,7 @@ internal sealed partial class WinMDWriter
                         innerTypeSpecification.Signature is GenericInstanceTypeSignature innerGenericInstanceSignature
                         ? [.. innerGenericInstanceSignature.TypeArguments]
                         : null;
+
                     CollectFromType(interfaceDef, innerArgs);
                 }
             }
@@ -654,6 +686,7 @@ internal sealed partial class WinMDWriter
 
         // Walk base types, resolving generic arguments
         ITypeDefOrRef? baseTypeRef = type.BaseType;
+
         while (baseTypeRef is not null)
         {
             TypeDefinition? baseDef = SafeResolve(baseTypeRef);
@@ -669,6 +702,7 @@ internal sealed partial class WinMDWriter
                 : null;
 
             CollectFromType(baseDef, baseGenericArgs);
+
             baseTypeRef = baseDef.BaseType;
         }
 
@@ -696,6 +730,7 @@ internal sealed partial class WinMDWriter
         if (arg is GenericInstanceTypeSignature nestedGenericInstanceSignature)
         {
             TypeSignature[] resolvedInnerArgs = [.. nestedGenericInstanceSignature.TypeArguments.Select(a => ResolveGenericArg(a, genericArgs))];
+
             return new GenericInstanceTypeSignature(nestedGenericInstanceSignature.GenericType, nestedGenericInstanceSignature.IsValueType, resolvedInnerArgs);
         }
 
@@ -716,6 +751,7 @@ internal sealed partial class WinMDWriter
     private static GenericInstanceTypeSignature ToOpenGenericFormStatic(GenericInstanceTypeSignature genericInstanceSignature, ModuleDefinition module)
     {
         TypeSignature[] openArgs = new TypeSignature[genericInstanceSignature.TypeArguments.Count];
+
         for (int i = 0; i < genericInstanceSignature.TypeArguments.Count; i++)
         {
             openArgs[i] = new GenericParameterSignature(module, GenericParameterType.Type, i);
@@ -749,6 +785,7 @@ internal sealed partial class WinMDWriter
 
         // Walk the class hierarchy to find public implementations
         TypeDefinition? current = classType;
+
         while (current is not null)
         {
             foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
@@ -782,6 +819,7 @@ internal sealed partial class WinMDWriter
         {
             string baseName = genericInstanceSignature.GenericType.FullName ?? "";
             string args = string.Join(", ", genericInstanceSignature.TypeArguments.Select(FormatShortTypeName));
+
             return $"{baseName}<{args}>";
         }
 
@@ -799,6 +837,7 @@ internal sealed partial class WinMDWriter
         {
             string baseName = genericInstanceSignature.GenericType.FullName ?? "";
             string args = string.Join(", ", genericInstanceSignature.TypeArguments.Select(FormatShortTypeName));
+
             return $"{baseName}<{args}>";
         }
 
