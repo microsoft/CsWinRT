@@ -64,6 +64,14 @@ internal static class WellKnownWinMDExceptions
     }
 
     /// <summary>
+    /// Failed to probe the .NET runtime version from the input assembly.
+    /// </summary>
+    public static Exception InputAssemblyRuntimeVersionNotFound(string path)
+    {
+        return Exception(7, $"Failed to probe the .NET runtime version from the input assembly '{path}'.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     private static Exception Exception(int id, string message, Exception? innerException = null)
