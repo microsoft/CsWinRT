@@ -76,7 +76,7 @@ internal sealed partial class WinMDWriter
 
         byte[] guidBytes = guid.ToByteArray();
 
-        // The '[Guid]' attribute constructor takes (uint, ushort, ushort, byte, byte, byte, byte, byte, byte, byte, byte)
+        // The 'GuidAttribute(uint, ushort, ushort, byte, byte, byte, byte, byte, byte, byte, byte)' constructor
         MemberReference guidCtor = new(guidAttrType, ".ctor",
             MethodSignature.CreateInstance(
                 _outputModule.CorLibTypeFactory.Void,
@@ -134,8 +134,8 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// When <paramref name="factoryInterface"/> is <see langword="null"/>, uses the single-parameter
-    /// constructor <c>[Activatable](uint)</c> for default activation. When a factory interface
-    /// is provided, uses the two-parameter constructor <c>[Activatable](Type, uint)</c> to
+    /// constructor <c>ActivatableAttribute(uint)</c> for default activation. When a factory interface
+    /// is provided, uses the two-parameter constructor <c>ActivatableAttribute(Type, uint)</c> to
     /// indicate parameterized activation via the factory.
     /// </remarks>
     /// <param name="outputType">The output class <see cref="TypeDefinition"/> to add the attribute to.</param>
@@ -148,7 +148,7 @@ internal sealed partial class WinMDWriter
 
         if (factoryInterface != null)
         {
-            // Constructor: '[Activatable]'(Type, uint)
+            // Constructor: 'ActivatableAttribute(Type, uint)'
             TypeReference systemType = GetOrCreateTypeReference("System", "Type", "mscorlib");
             MemberReference ctor = new(activatableAttrType, ".ctor",
                 MethodSignature.CreateInstance(
@@ -164,7 +164,7 @@ internal sealed partial class WinMDWriter
         }
         else
         {
-            // Constructor: '[Activatable]'(uint)
+            // Constructor: 'ActivatableAttribute(uint)'
             MemberReference ctor = new(activatableAttrType, ".ctor",
                 MethodSignature.CreateInstance(
                     _outputModule.CorLibTypeFactory.Void,
