@@ -40,11 +40,6 @@ internal readonly struct MappedType
     private readonly string? _assembly;
 
     /// <summary>
-    /// Whether this mapped type is a system/CLR type (i.e. from <c>mscorlib</c>).
-    /// </summary>
-    private readonly bool _isSystemType;
-
-    /// <summary>
     /// Whether this mapped type is a value type.
     /// </summary>
     private readonly bool _isValueType;
@@ -57,7 +52,7 @@ internal readonly struct MappedType
     /// <summary>
     /// The delegate for context-dependent mappings, or <see langword="null"/> for fixed mappings.
     /// </summary>
-    private readonly Func<TypeDefinition?, (string, string, string, bool, bool)>? _multipleMappingFunc;
+    private readonly Func<TypeDefinition?, MappedTypeInfo>? _mappedTypeInfoResolver;
 
     /// <summary>
     /// Creates a new <see cref="MappedType"/> with a fixed mapping.
@@ -72,48 +67,37 @@ internal readonly struct MappedType
         _namespace = @namespace;
         _name = name;
         _assembly = assembly;
-        _isSystemType = assembly == "mscorlib";
         _isValueType = isValueType;
         _isBlittable = isBlittable;
-        _multipleMappingFunc = null;
+        _mappedTypeInfoResolver = null;
     }
 
     /// <summary>
     /// Creates a new <see cref="MappedType"/> with a context-dependent mapping.
     /// </summary>
-    /// <param name="multipleMappingFunc">
+    /// <param name="mappedTypeInfoResolver">
     /// A delegate that resolves the mapping based on the containing <see cref="TypeDefinition"/>.
     /// This is used for types like <see cref="Type"/> that map differently depending on context.
     /// </param>
-    public MappedType(Func<TypeDefinition?, (string, string, string, bool, bool)> multipleMappingFunc)
+    public MappedType(Func<TypeDefinition?, MappedTypeInfo> mappedTypeInfoResolver)
     {
         _namespace = null;
         _name = null;
         _assembly = null;
-        _isSystemType = false;
         _isValueType = false;
         _isBlittable = false;
-        _multipleMappingFunc = multipleMappingFunc;
+        _mappedTypeInfoResolver = mappedTypeInfoResolver;
     }
 
     /// <summary>
-    /// Gets the mapping tuple (namespace, name, assembly, isSystemType, isValueType).
+    /// Gets the mapping info for the current mapped type.
     /// </summary>
     /// <param name="containingType">The optional containing type for context-dependent mappings.</param>
     /// <returns>A tuple with the resolved Windows Runtime type information.</returns>
-    public (string Namespace, string Name, string Assembly, bool IsSystemType, bool IsValueType) GetMapping(TypeDefinition? containingType = null)
+    public MappedTypeInfo GetMappedTypeInfo(TypeDefinition? containingType = null)
     {
-        return _multipleMappingFunc is not null
-            ? _multipleMappingFunc(containingType)
-            : (_namespace!, _name!, _assembly!, _isSystemType, _isValueType);
-    }
-
-    /// <summary>
-    /// Gets whether the mapped type is blittable.
-    /// </summary>
-    /// <returns><see langword="true"/> if the mapped type is a blittable value type; otherwise, <see langword="false"/>.</returns>
-    public bool IsBlittable()
-    {
-        return _isValueType && _isBlittable;
+        return _mappedTypeInfoResolver is not null
+            ? _mappedTypeInfoResolver(containingType)
+            : new(_namespace!, _name!, _assembly!, _isValueType, _isBlittable);
     }
 }

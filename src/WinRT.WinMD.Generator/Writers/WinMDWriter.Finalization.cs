@@ -407,14 +407,15 @@ internal sealed partial class WinMDWriter
 
         if (_mapper.HasMappingForType(lookupName))
         {
-            (string @namespace, string name, _, _, _) = _mapper.GetMappedType(lookupName).GetMapping();
-            string mappedName = string.IsNullOrEmpty(@namespace) ? name : $"{@namespace}.{name}";
+            MappedTypeInfo mappedTypeInfo = _mapper.GetMappedType(lookupName).GetMappedTypeInfo();
+            string mappedName = mappedTypeInfo.FullName;
 
             // For generic types, compare the open generic name portion of both
             if (angleBracket > 0)
             {
                 int winrtAngle = winrtTypeName.IndexOf('<');
                 string winrtOpenName = winrtAngle > 0 ? winrtTypeName[..winrtAngle] : winrtTypeName;
+
                 return mappedName == winrtOpenName;
             }
 

@@ -599,9 +599,7 @@ internal sealed partial class WinMDWriter
 
         // Check if it's a mapped type (e.g., IList -> IVector)
         string targetName = _mapper.HasMappingForType(firstIfaceName)
-            ? _mapper.GetMappedType(firstIfaceName).GetMapping() is var (@namespace, name, _, _, _)
-                ? string.IsNullOrEmpty(@namespace) ? name : $"{@namespace}.{name}"
-                : firstIfaceName
+            ? _mapper.GetMappedType(firstIfaceName).GetMappedTypeInfo().FullName
             : firstIfaceName;
 
         // Find the matching interface on the output type

@@ -86,14 +86,12 @@ internal sealed partial class WinMDWriter
             if (_mapper.HasMappingForType(genericTypeName))
             {
                 MappedType mapping = _mapper.GetMappedType(genericTypeName);
-
-                (string @namespace, string name, string assembly, _, bool isValueType) = mapping.GetMapping();
-
-                ITypeDefOrRef mappedType = GetOrCreateTypeReference(@namespace, name, assembly);
+                MappedTypeInfo mappingInfo = mapping.GetMappedTypeInfo();
+                ITypeDefOrRef mappedType = GetOrCreateTypeReference(mappingInfo.Namespace, mappingInfo.Name, mappingInfo.Assembly);
 
                 return new GenericInstanceTypeSignature(
                     genericType: mappedType,
-                    isValueType: isValueType,
+                    isValueType: mappingInfo.IsValueType,
                     typeArguments: genericInst.TypeArguments.Select(MapTypeSignatureToOutput));
             }
 
@@ -126,15 +124,14 @@ internal sealed partial class WinMDWriter
             if (_mapper.HasMappingForType(typeName))
             {
                 MappedType mapping = _mapper.GetMappedType(typeName);
+                MappedTypeInfo mappingInfo = mapping.GetMappedTypeInfo();
+                ITypeDefOrRef mappedType = GetOrCreateTypeReference(mappingInfo.Namespace, mappingInfo.Name, mappingInfo.Assembly);
 
-                (string @namespace, string name, string assembly, _, bool isValueType) = mapping.GetMapping();
-
-                ITypeDefOrRef mappedType = GetOrCreateTypeReference(@namespace, name, assembly);
-
-                return new TypeDefOrRefSignature(mappedType, isValueType);
+                return new TypeDefOrRefSignature(mappedType, mappingInfo.IsValueType);
             }
 
             ITypeDefOrRef importedRef = ImportTypeReference(typeDefOrRef.Type);
+
             return new TypeDefOrRefSignature(importedRef, typeDefOrRef.IsValueType);
         }
 

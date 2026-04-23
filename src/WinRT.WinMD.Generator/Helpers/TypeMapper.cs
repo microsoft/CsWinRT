@@ -44,13 +44,13 @@ internal sealed class TypeMapper
     /// </remarks>
     /// <param name="containingType">The type that contains the <see cref="Type"/> usage, or <see langword="null"/>.</param>
     /// <returns>A tuple with the resolved mapping information.</returns>
-    private static (string, string, string, bool, bool) GetSystemTypeCustomMapping(TypeDefinition? containingType)
+    private static MappedTypeInfo GetSystemTypeMappingInfo(TypeDefinition? containingType)
     {
         bool isDefinedInAttribute = containingType is { BaseType.FullName: "System.Attribute" };
 
         return isDefinedInAttribute
-            ? ("System", "Type", "mscorlib", true, false)
-            : ("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract", false, true);
+            ? new("System", "Type", "mscorlib", true, false)
+            : new("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract", false, true);
     }
 
     /// <summary>
@@ -93,7 +93,7 @@ internal sealed class TypeMapper
                 new("System.Numerics.Vector2", new MappedType("Windows.Foundation.Numerics", "Vector2", "Windows.Foundation.FoundationContract", true, true)),
                 new("System.Numerics.Vector3", new MappedType("Windows.Foundation.Numerics", "Vector3", "Windows.Foundation.FoundationContract", true, true)),
                 new("System.Numerics.Vector4", new MappedType("Windows.Foundation.Numerics", "Vector4", "Windows.Foundation.FoundationContract", true, true)),
-                new("System.Type", new MappedType(GetSystemTypeCustomMapping)),
+                new("System.Type", new MappedType(GetSystemTypeMappingInfo)),
                 new("System.Collections.Generic.IEnumerable`1", new MappedType("Windows.Foundation.Collections", "IIterable`1", "Windows.Foundation.FoundationContract")),
                 new("System.Collections.Generic.IEnumerator`1", new MappedType("Windows.Foundation.Collections", "IIterator`1", "Windows.Foundation.FoundationContract")),
                 new("System.Collections.Generic.KeyValuePair`2", new MappedType("Windows.Foundation.Collections", "IKeyValuePair`2", "Windows.Foundation.FoundationContract")),
@@ -139,7 +139,7 @@ internal sealed class TypeMapper
                 new("System.Numerics.Vector2", new MappedType("Windows.Foundation.Numerics", "Vector2", "Windows.Foundation.FoundationContract", true, true)),
                 new("System.Numerics.Vector3", new MappedType("Windows.Foundation.Numerics", "Vector3", "Windows.Foundation.FoundationContract", true, true)),
                 new("System.Numerics.Vector4", new MappedType("Windows.Foundation.Numerics", "Vector4", "Windows.Foundation.FoundationContract", true, true)),
-                new("System.Type", new MappedType(GetSystemTypeCustomMapping)),
+                new("System.Type", new MappedType(GetSystemTypeMappingInfo)),
                 new("System.Collections.Generic.IEnumerable`1", new MappedType("Windows.Foundation.Collections", "IIterable`1", "Windows.Foundation.FoundationContract")),
                 new("System.Collections.Generic.IEnumerator`1", new MappedType("Windows.Foundation.Collections", "IIterator`1", "Windows.Foundation.FoundationContract")),
                 new("System.Collections.Generic.KeyValuePair`2", new MappedType("Windows.Foundation.Collections", "IKeyValuePair`2", "Windows.Foundation.FoundationContract")),

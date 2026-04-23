@@ -73,7 +73,7 @@ internal sealed partial class WinMDWriter
 
         foreach ((InterfaceImplementation interfaceImplementation, string interfaceName, MappedType mapping, bool isPublic) in mappedInterfaces)
         {
-            (string mappedNs, string mappedName, string mappedAssembly, _, _) = mapping.GetMapping();
+            MappedTypeInfo mappingInfo = mapping.GetMappedTypeInfo();
 
             // Skip non-generic 'IEnumerable' when generic 'IEnumerable<T>' is also implemented
             if (hasGenericEnumerable && interfaceName == "System.Collections.IEnumerable")
@@ -82,11 +82,11 @@ internal sealed partial class WinMDWriter
             }
 
             // Add the mapped interface as an implementation on the output type
-            TypeReference mappedInterfaceRef = GetOrCreateTypeReference(mappedNs, mappedName, mappedAssembly);
+            TypeReference mappedInterfaceRef = GetOrCreateTypeReference(mappingInfo.Namespace, mappingInfo.Name, mappingInfo.Assembly);
 
             // Check if the output type already implements this mapped interface
             // (e.g., 'IObservableVector<T>' already brings 'IVector<T>')
-            string mappedFullName = string.IsNullOrEmpty(mappedNs) ? mappedName : $"{mappedNs}.{mappedName}";
+            string mappedFullName = mappingInfo.FullName;
             bool alreadyImplemented = outputType.Interfaces.Any(i =>
             {
                 string? existingName = i.Interface is TypeSpecification existingTypeSpecification && existingTypeSpecification.Signature is GenericInstanceTypeSignature existingGenericInstanceSignature
@@ -122,7 +122,7 @@ internal sealed partial class WinMDWriter
             }
 
             // Add explicit implementation methods for the mapped interface
-            AddCustomMappedTypeMembers(outputType, mappedName, mappedInterfaceTypeRef, isPublic);
+            AddCustomMappedTypeMembers(outputType, mappingInfo.Name, mappedInterfaceTypeRef, isPublic);
         }
     }
 
@@ -148,10 +148,9 @@ internal sealed partial class WinMDWriter
             if (_mapper.HasMappingForType(typeName))
             {
                 MappedType innerMapping = _mapper.GetMappedType(typeName);
+                MappedTypeInfo innerTypeInfo = innerMapping.GetMappedTypeInfo();
 
-                (string @namespace, string name, string assembly, _, _) = innerMapping.GetMapping();
-
-                TypeReference innerRef = GetOrCreateTypeReference(@namespace, name, assembly);
+                TypeReference innerRef = GetOrCreateTypeReference(innerTypeInfo.Namespace, innerTypeInfo.Name, innerTypeInfo.Assembly);
 
                 return innerRef.ToTypeSignature(typeDefOrRefSignature.IsValueType);
             }
@@ -165,11 +164,10 @@ internal sealed partial class WinMDWriter
             if (_mapper.HasMappingForType(typeName))
             {
                 MappedType innerMapping = _mapper.GetMappedType(typeName);
-
-                (string @namespace, string name, string assembly, _, _) = innerMapping.GetMapping();
+                MappedTypeInfo innerTypeInfo = innerMapping.GetMappedTypeInfo();
 
                 return new GenericInstanceTypeSignature(
-                    genericType: GetOrCreateTypeReference(@namespace, name, assembly),
+                    genericType: GetOrCreateTypeReference(innerTypeInfo.Namespace, innerTypeInfo.Name, innerTypeInfo.Assembly),
                     isValueType: false,
                     typeArguments: genericInstanceSignature.TypeArguments.Select(MapCustomMappedTypeArgument));
             }
