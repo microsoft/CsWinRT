@@ -14,12 +14,12 @@ internal static class TypeDefinitionExtensions
     extension(TypeDefinition type)
     {
         /// <summary>
-        /// Checks whether the type is a WinRT type (has the <c>WindowsRuntimeMetadataAttribute</c>).
+        /// Checks whether the type is a Windows Runtime type (has the <c>WindowsRuntimeMetadataAttribute</c>).
         /// </summary>
         /// <remarks>
-        /// Types marked with <c>[WindowsRuntimeMetadata]</c> are projected WinRT types that come
+        /// Types marked with <c>[WindowsRuntimeMetadata]</c> are projected Windows Runtime types that come
         /// from CsWinRT-generated projection assemblies. This attribute indicates the type has a
-        /// corresponding WinRT definition and carries metadata about its contract assembly.
+        /// corresponding Windows Runtime definition and carries metadata about its contract assembly.
         /// </remarks>
         public bool IsWinRTType
         {
@@ -28,15 +28,15 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
-        /// Gets the WinRT contract assembly name from <c>WindowsRuntimeMetadataAttribute</c> on the type, if present.
+        /// Gets the Windows Runtime contract assembly name from <c>WindowsRuntimeMetadataAttribute</c> on the type, if present.
         /// </summary>
         /// <returns>
-        /// The WinRT contract assembly name (e.g. <c>"Microsoft.UI.Xaml"</c>), or <see langword="null"/>
+        /// The Windows Runtime contract assembly name (e.g. <c>"Microsoft.UI.Xaml"</c>), or <see langword="null"/>
         /// if the type does not have a <c>WindowsRuntimeMetadataAttribute</c>.
         /// </returns>
         /// <remarks>
         /// For types from projection assemblies (e.g. <c>Microsoft.WinUI</c>), this returns the original
-        /// WinRT contract assembly name so the WinMD can reference types correctly.
+        /// Windows Runtime contract assembly name so the WinMD can reference types correctly.
         /// </remarks>
         public string? WinRTAssemblyName
         {

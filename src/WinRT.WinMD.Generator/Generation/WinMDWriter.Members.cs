@@ -21,7 +21,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// Interface methods in WinMD are abstract virtual methods. The return type and parameter types
-    /// are mapped from .NET to WinRT equivalents. Custom attributes from the input method are copied
+    /// are mapped from .NET to Windows Runtime equivalents. Custom attributes from the input method are copied
     /// to the output.
     /// </remarks>
     /// <param name="outputType">The output interface <see cref="TypeDefinition"/> in the WinMD.</param>
@@ -52,7 +52,7 @@ internal sealed partial class WinMDWriter
             attrs,
             MethodSignature.CreateInstance(returnType, parameterTypes));
 
-        // Add parameter definitions with correct attributes for WinRT array conventions
+        // Add parameter definitions with correct attributes for Windows Runtime array conventions
         AddParameterDefinitions(outputMethod, inputMethod);
 
         outputType.Methods.Add(outputMethod);
@@ -68,7 +68,7 @@ internal sealed partial class WinMDWriter
     /// Class methods in WinMD are final virtual methods (sealed). Constructors receive
     /// <c>SpecialName</c> and <c>RuntimeSpecialName</c> attributes. Static methods are emitted
     /// as static. All methods use <c>Runtime | Managed</c> implementation attributes since the
-    /// actual implementation is provided at runtime by the WinRT projection.
+    /// actual implementation is provided at runtime by the Windows Runtime projection.
     /// </remarks>
     /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
     /// <param name="inputMethod">The input <see cref="MethodDefinition"/> to add.</param>
@@ -114,7 +114,7 @@ internal sealed partial class WinMDWriter
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
 
-        // Add parameter definitions with correct attributes for WinRT array conventions
+        // Add parameter definitions with correct attributes for Windows Runtime array conventions
         AddParameterDefinitions(outputMethod, inputMethod);
 
         outputType.Methods.Add(outputMethod);
@@ -124,7 +124,7 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Adds parameter definitions to an output method with correct WinRT attributes.
+    /// Adds parameter definitions to an output method with correct Windows Runtime attributes.
     /// Handles Span/ReadOnlySpan → array parameter attribute mapping:
     /// - ReadOnlySpan&lt;T&gt; → [in] T[] (PassArray)
     /// - Span&lt;T&gt; → [out] T[] without BYREF (FillArray)
@@ -154,7 +154,7 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Determines the WinRT parameter attributes based on the input parameter type.
+    /// Determines the Windows Runtime parameter attributes based on the input parameter type.
     /// </summary>
     private static ParameterAttributes GetWinRTParameterAttributes(TypeSignature inputParamType)
     {
@@ -183,9 +183,9 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// <para>
-    /// WinRT properties use <c>get_</c> for getters and <c>put_</c> for setters (instead of .NET's <c>set_</c>).
+    /// Windows Runtime properties use <c>get_</c> for getters and <c>put_</c> for setters (instead of .NET's <c>set_</c>).
     /// For interface parents (including synthesized interfaces), the methods are emitted as abstract virtual
-    /// even when the original property was static, since WinRT interface methods are always instance methods.
+    /// even when the original property was static, since Windows Runtime interface methods are always instance methods.
     /// </para>
     /// <para>
     /// Custom attributes from the input property are copied to the output property.
@@ -237,7 +237,7 @@ internal sealed partial class WinMDWriter
             outputProperty.Semantics.Add(new MethodSemantics(getter, MethodSemanticsAttributes.Getter));
         }
 
-        // Add setter (WinRT uses "put_" prefix)
+        // Add setter (Windows Runtime uses "put_" prefix)
         if (inputProperty.SetMethod != null && inputProperty.SetMethod.IsPublic)
         {
             MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
@@ -282,7 +282,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// <para>
-    /// WinRT events always use <c>EventRegistrationToken</c> for the add/remove pattern:
+    /// Windows Runtime events always use <c>EventRegistrationToken</c> for the add/remove pattern:
     /// the <c>add_</c> method returns an <c>EventRegistrationToken</c>, and the <c>remove_</c>
     /// method accepts one. This differs from the .NET event pattern where both accessors are <c>void</c>.
     /// </para>

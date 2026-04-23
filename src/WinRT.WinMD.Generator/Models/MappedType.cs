@@ -7,13 +7,13 @@ using AsmResolver.DotNet;
 namespace WindowsRuntime.WinMDGenerator.Models;
 
 /// <summary>
-/// A mapped type from a .NET type to a WinRT type.
+/// A mapped type from a .NET type to a Windows Runtime type.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Each <see cref="MappedType"/> instance represents a single .NET → WinRT type mapping entry.
+/// Each <see cref="MappedType"/> instance represents a single .NET → Windows Runtime type mapping entry.
 /// These mappings are used by <see cref="Helpers.TypeMapper"/> to translate .NET type references
-/// in the input assembly to their WinRT equivalents in the output WinMD.
+/// in the input assembly to their Windows Runtime equivalents in the output WinMD.
 /// </para>
 /// <para>
 /// Most mappings are fixed (e.g. <c>System.DateTimeOffset</c> → <c>Windows.Foundation.DateTime</c>),
@@ -25,17 +25,17 @@ namespace WindowsRuntime.WinMDGenerator.Models;
 internal readonly struct MappedType
 {
     /// <summary>
-    /// The WinRT namespace for fixed mappings, or <see langword="null"/> for context-dependent mappings.
+    /// The Windows Runtime namespace for fixed mappings, or <see langword="null"/> for context-dependent mappings.
     /// </summary>
     private readonly string? _namespace;
 
     /// <summary>
-    /// The WinRT type name for fixed mappings, or <see langword="null"/> for context-dependent mappings.
+    /// The Windows Runtime type name for fixed mappings, or <see langword="null"/> for context-dependent mappings.
     /// </summary>
     private readonly string? _name;
 
     /// <summary>
-    /// The WinRT contract assembly name for fixed mappings, or <see langword="null"/> for context-dependent mappings.
+    /// The Windows Runtime contract assembly name for fixed mappings, or <see langword="null"/> for context-dependent mappings.
     /// </summary>
     private readonly string? _assembly;
 
@@ -62,9 +62,9 @@ internal readonly struct MappedType
     /// <summary>
     /// Creates a new <see cref="MappedType"/> with a fixed mapping.
     /// </summary>
-    /// <param name="namespace">The WinRT namespace.</param>
-    /// <param name="name">The WinRT type name.</param>
-    /// <param name="assembly">The WinRT contract assembly name.</param>
+    /// <param name="namespace">The Windows Runtime namespace.</param>
+    /// <param name="name">The Windows Runtime type name.</param>
+    /// <param name="assembly">The Windows Runtime contract assembly name.</param>
     /// <param name="isValueType">Whether this mapped type is a value type.</param>
     /// <param name="isBlittable">Whether this mapped type is blittable.</param>
     public MappedType(string @namespace, string name, string assembly, bool isValueType = false, bool isBlittable = false)
@@ -100,7 +100,7 @@ internal readonly struct MappedType
     /// Gets the mapping tuple (namespace, name, assembly, isSystemType, isValueType).
     /// </summary>
     /// <param name="containingType">The optional containing type for context-dependent mappings.</param>
-    /// <returns>A tuple with the resolved WinRT type information.</returns>
+    /// <returns>A tuple with the resolved Windows Runtime type information.</returns>
     public (string Namespace, string Name, string Assembly, bool IsSystemType, bool IsValueType) GetMapping(TypeDefinition? containingType = null)
     {
         return _multipleMappingFunc != null

@@ -15,7 +15,7 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 internal sealed partial class WinMDWriter
 {
     /// <summary>
-    /// The type of synthesized WinRT interface to generate for a runtime class.
+    /// The type of synthesized Windows Runtime interface to generate for a runtime class.
     /// </summary>
     private enum SynthesizedInterfaceType
     {
@@ -30,7 +30,7 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Gets the synthesized interface name for a class, following the WinRT naming convention.
+    /// Gets the synthesized interface name for a class, following the Windows Runtime naming convention.
     /// </summary>
     /// <remarks>
     /// The convention is: <c>I{ClassName}Class</c> for default, <c>I{ClassName}Factory</c>
@@ -56,7 +56,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// <para>
-    /// WinRT requires runtime classes to express their public API surface through interfaces.
+    /// Windows Runtime requires runtime classes to express their public API surface through interfaces.
     /// This method creates up to three synthesized interfaces containing the class's own members
     /// (not those inherited from explicitly implemented interfaces):
     /// </para>
@@ -343,7 +343,7 @@ internal sealed partial class WinMDWriter
             MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot,
             MethodSignature.CreateInstance(returnType, parameterTypes));
 
-        // Add parameter definitions with correct WinRT attributes
+        // Add parameter definitions with correct Windows Runtime attributes
         AddParameterDefinitions(factoryMethod, constructor);
 
         synthesizedInterface.Methods.Add(factoryMethod);

@@ -7,7 +7,7 @@ using AsmResolver.DotNet;
 namespace WindowsRuntime.WinMDGenerator.Discovery;
 
 /// <summary>
-/// Analyzes a compiled assembly to discover its public WinRT API surface.
+/// Analyzes a compiled assembly to discover its public Windows Runtime API surface.
 /// </summary>
 /// <remarks>
 /// This type is responsible for scanning the input module and collecting all public types

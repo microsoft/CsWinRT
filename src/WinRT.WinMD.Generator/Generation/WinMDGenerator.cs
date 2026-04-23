@@ -14,9 +14,9 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 /// <remarks>
 /// <para>
 /// This generator converts a compiled .NET assembly into a Windows Runtime metadata (<c>.winmd</c>) file.
-/// It analyzes the public API surface of the assembly and emits the equivalent WinRT type definitions,
-/// handling all necessary type mappings (e.g., .NET collection interfaces → WinRT collection interfaces),
-/// synthesized interfaces, custom attributes, and WinRT naming conventions.
+/// It analyzes the public API surface of the assembly and emits the equivalent Windows Runtime type definitions,
+/// handling all necessary type mappings (e.g., .NET collection interfaces → Windows Runtime collection interfaces),
+/// synthesized interfaces, custom attributes, and Windows Runtime naming conventions.
 /// </para>
 /// <para>
 /// The generation process runs in three phases:

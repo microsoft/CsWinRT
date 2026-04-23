@@ -22,7 +22,7 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 internal sealed partial class WinMDWriter
 {
     /// <summary>
-    /// Checks if an enum type represents a WinRT API contract (has <c>[ApiContract]</c> attribute).
+    /// Checks if an enum type represents a Windows Runtime API contract (has <c>[ApiContract]</c> attribute).
     /// </summary>
     /// <param name="type">The enum <see cref="TypeDefinition"/> to check.</param>
     /// <returns><see langword="true"/> if the type has an <c>[ApiContract]</c> attribute; otherwise, <see langword="false"/>.</returns>
@@ -37,7 +37,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// In C#, API contracts are projected as enums with <c>[ApiContract]</c>, but in WinMD
-    /// metadata they are represented as empty structs per the WinRT type system spec.
+    /// metadata they are represented as empty structs per the Windows Runtime type system spec.
     /// </remarks>
     /// <param name="inputType">The API contract enum <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddApiContractType(TypeDefinition inputType)
@@ -166,7 +166,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// Creates the WinMD delegate type with the required <c>.ctor(object, IntPtr)</c> constructor
-    /// (private per WinRT delegate convention) and the <c>Invoke</c> method with mapped parameter
+    /// (private per Windows Runtime delegate convention) and the <c>Invoke</c> method with mapped parameter
     /// and return types. Also adds the <c>[Guid]</c> attribute.
     /// </remarks>
     /// <param name="inputType">The delegate <see cref="TypeDefinition"/> from the input assembly.</param>
@@ -194,7 +194,7 @@ internal sealed partial class WinMDWriter
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
         _typeDefinitionMapping[qualifiedName] = declaration;
 
-        // Add .ctor(object, IntPtr) — private per WinRT delegate convention
+        // Add .ctor(object, IntPtr) — private per Windows Runtime delegate convention
         MethodDefinition ctor = new(
             ".ctor",
             MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName,
@@ -316,8 +316,8 @@ internal sealed partial class WinMDWriter
     /// Adds a struct (value type) to the output WinMD.
     /// </summary>
     /// <remarks>
-    /// Creates the WinMD struct type with all public instance fields mapped to their WinRT
-    /// type equivalents. Static fields are excluded per WinRT struct conventions.
+    /// Creates the WinMD struct type with all public instance fields mapped to their Windows Runtime
+    /// type equivalents. Static fields are excluded per Windows Runtime struct conventions.
     /// </remarks>
     /// <param name="inputType">The struct <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddStructType(TypeDefinition inputType)
@@ -392,7 +392,7 @@ internal sealed partial class WinMDWriter
             TypeAttributes.BeforeFieldInit;
 
         // Sealed for: sealed classes and static classes (abstract+sealed in metadata)
-        // WinRT doesn't support abstract base classes, so non-static abstract classes
+        // Windows Runtime doesn't support abstract base classes, so non-static abstract classes
         // are treated as regular unsealed runtime classes
         if (inputType.IsSealed)
         {
@@ -409,7 +409,7 @@ internal sealed partial class WinMDWriter
         ITypeDefOrRef? baseType;
         if (inputType.BaseType != null && inputType.BaseType.FullName != "System.Object")
         {
-            // Check if the base type is abstract; WinRT doesn't support projecting abstract classes
+            // Check if the base type is abstract; Windows Runtime doesn't support projecting abstract classes
             TypeDefinition? baseTypeDef = SafeResolve(inputType.BaseType);
             baseType = baseTypeDef != null && baseTypeDef.IsAbstract
                 ? GetOrCreateTypeReference("System", "Object", "mscorlib")
@@ -525,14 +525,14 @@ internal sealed partial class WinMDWriter
 
             string interfaceName = GetInterfaceQualifiedName(impl.Interface);
 
-            // Skip interfaces that have a WinRT mapping — they'll be added as their
+            // Skip interfaces that have a Windows Runtime mapping — they'll be added as their
             // mapped equivalents by ProcessCustomMappedInterfaces below
             if (_mapper.HasMappingForType(interfaceName))
             {
                 continue;
             }
 
-            // Skip .NET interfaces that have no WinRT equivalent
+            // Skip .NET interfaces that have no Windows Runtime equivalent
             if (TypeMapper.ImplementedInterfacesWithoutMapping.Contains(interfaceName))
             {
                 continue;
@@ -560,7 +560,7 @@ internal sealed partial class WinMDWriter
 
         // If no default synthesized interface was created but the class implements
         // user interfaces, mark the first interface implementation as [Default].
-        // The [Default] goes on the WinRT equivalent of the first user-declared .NET interface.
+        // The [Default] goes on the Windows Runtime equivalent of the first user-declared .NET interface.
         if (declaration.DefaultInterface == null && outputType.Interfaces.Count > 0)
         {
             InterfaceImplementation? defaultImpl = FindDefaultInterface(inputType, outputType);
@@ -569,7 +569,7 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Finds the output interface that should receive <c>[Default]</c> — the WinRT equivalent
+    /// Finds the output interface that should receive <c>[Default]</c> — the Windows Runtime equivalent
     /// of the first user-declared .NET interface on the input type.
     /// </summary>
     /// <param name="inputType">The input class <see cref="TypeDefinition"/>.</param>
@@ -609,7 +609,7 @@ internal sealed partial class WinMDWriter
     /// Adds explicit interface implementation methods from the input class to the output WinMD.
     /// </summary>
     /// <remarks>
-    /// Applies WinRT conventions: <c>set_</c> → <c>put_</c>, event <c>add</c> returns
+    /// Applies Windows Runtime conventions: <c>set_</c> → <c>put_</c>, event <c>add</c> returns
     /// <c>EventRegistrationToken</c>, event <c>remove</c> takes <c>EventRegistrationToken</c>.
     /// Also creates the corresponding property/event definitions and <c>MethodImpl</c> entries
     /// to wire the explicit implementations to their interface methods.
@@ -644,7 +644,7 @@ internal sealed partial class WinMDWriter
                 continue;
             }
 
-            // Apply WinRT naming: set_ to put_
+            // Apply Windows Runtime naming: set_ to put_
             string winrtShortName = shortMethodName;
             if (winrtShortName.StartsWith("set_", StringComparison.Ordinal))
             {

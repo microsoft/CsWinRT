@@ -20,13 +20,13 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 /// <para>
 /// This is the core writer class for the WinMD generator. It transforms .NET type definitions from a
 /// compiled assembly into Windows Runtime metadata format (<c>.winmd</c>). The writer handles the
-/// full spectrum of WinRT type system requirements:
+/// full spectrum of Windows Runtime type system requirements:
 /// </para>
 /// <list type="bullet">
-///   <item>Mapping .NET types to their WinRT equivalents (e.g., <c>IList&lt;T&gt;</c> → <c>IVector&lt;T&gt;</c>).</item>
-///   <item>Synthesizing WinRT-required interfaces (<c>IFooClass</c>, <c>IFooFactory</c>, <c>IFooStatic</c>).</item>
-///   <item>Emitting WinRT metadata attributes (<c>GuidAttribute</c>, <c>VersionAttribute</c>, <c>ActivatableAttribute</c>).</item>
-///   <item>Converting .NET naming conventions to WinRT conventions (e.g., <c>set_</c> → <c>put_</c>).</item>
+///   <item>Mapping .NET types to their Windows Runtime equivalents (e.g., <c>IList&lt;T&gt;</c> → <c>IVector&lt;T&gt;</c>).</item>
+///   <item>Synthesizing Windows Runtime-required interfaces (<c>IFooClass</c>, <c>IFooFactory</c>, <c>IFooStatic</c>).</item>
+///   <item>Emitting Windows Runtime metadata attributes (<c>GuidAttribute</c>, <c>VersionAttribute</c>, <c>ActivatableAttribute</c>).</item>
+///   <item>Converting .NET naming conventions to Windows Runtime conventions (e.g., <c>set_</c> → <c>put_</c>).</item>
 /// </list>
 /// <para>
 /// The writer is split across multiple partial class files, each handling a specific aspect of
@@ -41,7 +41,7 @@ internal sealed partial class WinMDWriter
     private readonly string _version;
 
     /// <summary>
-    /// The <see cref="TypeMapper"/> instance used to map .NET types to their WinRT equivalents.
+    /// The <see cref="TypeMapper"/> instance used to map .NET types to their Windows Runtime equivalents.
     /// </summary>
     private readonly TypeMapper _mapper;
 
@@ -82,7 +82,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <param name="assemblyName">The name for the output WinMD assembly.</param>
     /// <param name="version">The version string for the output assembly (e.g. <c>"1.0.0.0"</c>).</param>
-    /// <param name="mapper">The <see cref="TypeMapper"/> for .NET-to-WinRT type mapping.</param>
+    /// <param name="mapper">The <see cref="TypeMapper"/> for .NET-to-Windows Runtime type mapping.</param>
     /// <param name="inputModule">The input <see cref="ModuleDefinition"/> to read types from.</param>
     public WinMDWriter(
         string assemblyName,

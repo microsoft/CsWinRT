@@ -24,7 +24,7 @@ internal sealed partial class WinMDWriter
     /// <remarks>
     /// <para>
     /// This maps .NET collection interfaces, <c>IDisposable</c>, <c>INotifyPropertyChanged</c>, etc.
-    /// to their WinRT equivalents (e.g., <c>IList&lt;T&gt;</c> → <c>IVector&lt;T&gt;</c>,
+    /// to their Windows Runtime equivalents (e.g., <c>IList&lt;T&gt;</c> → <c>IVector&lt;T&gt;</c>,
     /// <c>IDisposable</c> → <c>IClosable</c>) and adds the required explicit implementation methods
     /// and <c>MethodImpl</c> records.
     /// </para>
@@ -61,7 +61,7 @@ internal sealed partial class WinMDWriter
 
             // Determine if the interface is publicly implemented.
             // Check if the class has public methods that match the .NET interface members.
-            // For mapped interfaces, the .NET method names differ from WinRT names
+            // For mapped interfaces, the .NET method names differ from Windows Runtime names
             // (e.g., Add vs Append), so we check the .NET interface's members.
             bool isPublic = IsInterfacePubliclyImplemented(classType: inputType, impl, _runtimeContext);
 
@@ -137,7 +137,7 @@ internal sealed partial class WinMDWriter
     {
         TypeSignature mapped = MapTypeSignatureToOutput(arg);
 
-        // Check if the mapped type itself has a WinRT mapping (e.g. KeyValuePair -> IKeyValuePair)
+        // Check if the mapped type itself has a Windows Runtime mapping (e.g. KeyValuePair -> IKeyValuePair)
         if (mapped is TypeDefOrRefSignature tdrs)
         {
             string typeName = tdrs.Type.QualifiedName;
@@ -168,13 +168,13 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Adds the explicit implementation methods for a specific mapped WinRT interface.
+    /// Adds the explicit implementation methods for a specific mapped Windows Runtime interface.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This method generates all methods, properties, and events defined by the mapped WinRT interface
+    /// This method generates all methods, properties, and events defined by the mapped Windows Runtime interface
     /// (e.g., <c>IVector&lt;T&gt;</c> members like <c>Append</c>, <c>GetAt</c>, <c>Size</c>). Each member
-    /// is emitted with the correct WinRT signature and a <c>MethodImpl</c> entry linking it to the
+    /// is emitted with the correct Windows Runtime signature and a <c>MethodImpl</c> entry linking it to the
     /// interface method declaration.
     /// </para>
     /// <para>
@@ -183,8 +183,8 @@ internal sealed partial class WinMDWriter
     /// </para>
     /// </remarks>
     /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
-    /// <param name="mappedTypeName">The short name of the mapped WinRT interface (e.g., <c>"IVector`1"</c>).</param>
-    /// <param name="mappedInterfaceRef">The type reference for the mapped WinRT interface in the output module.</param>
+    /// <param name="mappedTypeName">The short name of the mapped Windows Runtime interface (e.g., <c>"IVector`1"</c>).</param>
+    /// <param name="mappedInterfaceRef">The type reference for the mapped Windows Runtime interface in the output module.</param>
     /// <param name="isPublic">Whether the interface is publicly implemented on the class.</param>
     private void AddCustomMappedTypeMembers(
         TypeDefinition outputType,
@@ -228,7 +228,7 @@ internal sealed partial class WinMDWriter
         // Convert a resolved type signature to use generic parameters (!0, !1) for MethodImpl declarations.
         // For parent interface generic args, substitutes resolved types back to !0, !1.
         // For all GenericInstanceTypeSignature in signatures, converts to open form
-        // (e.g., EventHandler`1<Object> -> EventHandler`1<!0>) matching WinRT metadata conventions.
+        // (e.g., EventHandler`1<Object> -> EventHandler`1<!0>) matching Windows Runtime metadata conventions.
         TypeSignature ToGenericParam(TypeSignature sig)
         {
             if (parentGenericArgs != null)
@@ -520,13 +520,13 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// The event add method returns <c>EventRegistrationToken</c> and the remove method accepts one,
-    /// following WinRT event conventions. <c>MethodImpl</c> entries are created using open generic
-    /// form for handler types in declaration signatures to match WinRT metadata conventions.
+    /// following Windows Runtime event conventions. <c>MethodImpl</c> entries are created using open generic
+    /// form for handler types in declaration signatures to match Windows Runtime metadata conventions.
     /// </remarks>
     /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
     /// <param name="eventName">The name of the event.</param>
     /// <param name="handlerType">The handler delegate type signature.</param>
-    /// <param name="mappedInterfaceRef">The mapped WinRT interface reference for <c>MethodImpl</c> declarations.</param>
+    /// <param name="mappedInterfaceRef">The mapped Windows Runtime interface reference for <c>MethodImpl</c> declarations.</param>
     /// <param name="isPublic">Whether the event is publicly implemented.</param>
     private void AddMappedEvent(
         TypeDefinition outputType,
@@ -571,7 +571,7 @@ internal sealed partial class WinMDWriter
         outputType.Events.Add(evt);
 
         // MethodImpls — use open generic form for handler type in declaration signatures
-        // to match WinRT metadata conventions (e.g., EventHandler`1<!0> not EventHandler`1<Object>)
+        // to match Windows Runtime metadata conventions (e.g., EventHandler`1<!0> not EventHandler`1<Object>)
         TypeSignature implHandlerType = handlerType is GenericInstanceTypeSignature handlerGits
             ? ToOpenGenericFormStatic(handlerGits, _outputModule)
             : handlerType;
@@ -707,7 +707,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// Replaces all resolved type arguments with generic parameter references (<c>!0</c>, <c>!1</c>, etc.)
-    /// to match WinRT metadata conventions. For example, <c>EventHandler`1&lt;Object&gt;</c> becomes
+    /// to match Windows Runtime metadata conventions. For example, <c>EventHandler`1&lt;Object&gt;</c> becomes
     /// <c>EventHandler`1&lt;!0&gt;</c>.
     /// </remarks>
     /// <param name="gits">The generic instance type signature to convert.</param>
@@ -729,7 +729,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// Checks if the class (or any type in its base class hierarchy) declares public methods
-    /// whose names match the .NET interface members. This determines whether the mapped WinRT
+    /// whose names match the .NET interface members. This determines whether the mapped Windows Runtime
     /// interface members should be emitted as public or as explicit (private) implementations.
     /// </remarks>
     /// <param name="classType">The class <see cref="TypeDefinition"/> to check.</param>
@@ -812,7 +812,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// These members should be excluded from the WinMD class definition since they are replaced
-    /// by the WinRT mapped interface members. This includes method names, property names (and their
+    /// by the Windows Runtime mapped interface members. This includes method names, property names (and their
     /// accessor names without the <c>get_</c>/<c>set_</c> prefix), and event names.
     /// </remarks>
     /// <param name="inputType">The input class <see cref="TypeDefinition"/>.</param>

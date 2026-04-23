@@ -15,7 +15,7 @@ namespace WindowsRuntime.WinMDGenerator.Generation;
 internal sealed partial class WinMDWriter
 {
     /// <summary>
-    /// Maps a type signature from the input module to the output module, applying WinRT type mappings.
+    /// Maps a type signature from the input module to the output module, applying Windows Runtime type mappings.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -27,7 +27,7 @@ internal sealed partial class WinMDWriter
     ///   <item>Generic instance types, including <c>Span&lt;T&gt;</c>/<c>ReadOnlySpan&lt;T&gt;</c> → <c>T[]</c> mapping.</item>
     ///   <item>Generic parameter signatures (<c>!0</c>, <c>!1</c>, etc.).</item>
     ///   <item>By-reference types.</item>
-    ///   <item><see cref="TypeDefOrRefSignature"/> with WinRT mapping (e.g., <c>IDisposable</c> → <c>IClosable</c>).</item>
+    ///   <item><see cref="TypeDefOrRefSignature"/> with Windows Runtime mapping (e.g., <c>IDisposable</c> → <c>IClosable</c>).</item>
     /// </list>
     /// </remarks>
     /// <param name="inputSig">The input type signature to map.</param>
@@ -73,7 +73,7 @@ internal sealed partial class WinMDWriter
         {
             string genericTypeName = genericInst.GenericType.QualifiedName;
 
-            // Map Span<T> and ReadOnlySpan<T> to T[] (SzArray) for WinRT
+            // Map Span<T> and ReadOnlySpan<T> to T[] (SzArray) for Windows Runtime
             // ReadOnlySpan<T> → PassArray (in), Span<T> → FillArray (out without BYREF)
             if (genericTypeName is "System.Span`1" or "System.ReadOnlySpan`1"
                 && genericInst.TypeArguments.Count == 1)
@@ -81,7 +81,7 @@ internal sealed partial class WinMDWriter
                 return new SzArrayTypeSignature(MapTypeSignatureToOutput(genericInst.TypeArguments[0]));
             }
 
-            // Check if the generic type itself has a WinRT mapping (e.g., IList`1 -> IVector`1)
+            // Check if the generic type itself has a Windows Runtime mapping (e.g., IList`1 -> IVector`1)
             if (_mapper.HasMappingForType(genericTypeName))
             {
                 MappedType mapping = _mapper.GetMappedType(genericTypeName);
@@ -113,7 +113,7 @@ internal sealed partial class WinMDWriter
         {
             string typeName = typeDefOrRef.Type.QualifiedName;
 
-            // Check if the type has a WinRT mapping (e.g., IDisposable -> IClosable, Type -> TypeName)
+            // Check if the type has a Windows Runtime mapping (e.g., IDisposable -> IClosable, Type -> TypeName)
             if (_mapper.HasMappingForType(typeName))
             {
                 MappedType mapping = _mapper.GetMappedType(typeName);
@@ -140,7 +140,7 @@ internal sealed partial class WinMDWriter
     /// <list type="bullet">
     ///   <item><see cref="TypeDefinition"/>: checks if already processed in the output module, processes on demand
     ///     if public, or creates an external type reference.</item>
-    ///   <item><see cref="TypeReference"/>: looks up the output mapping, resolves WinRT contract assembly names
+    ///   <item><see cref="TypeReference"/>: looks up the output mapping, resolves Windows Runtime contract assembly names
     ///     via <c>WindowsRuntimeMetadataAttribute</c>, and creates a type reference.</item>
     ///   <item><see cref="TypeSpecification"/>: creates a new specification with a mapped signature.</item>
     /// </list>
@@ -168,7 +168,7 @@ internal sealed partial class WinMDWriter
                 }
             }
 
-            // External type or non-WinRT type — create a type reference
+            // External type or non-Windows Runtime type — create a type reference
             return GetOrCreateTypeReference(
                 typeDef.EffectiveNamespace ?? "",
                 typeDef.Name!.Value,
@@ -187,7 +187,7 @@ internal sealed partial class WinMDWriter
                 return declaration.OutputType;
             }
 
-            // For WinRT types from projection assemblies, use the WinRT contract assembly name
+            // For Windows Runtime types from projection assemblies, use the Windows Runtime contract assembly name
             // from WindowsRuntimeMetadataAttribute instead of the projection assembly name.
             // E.g., StackPanel from Microsoft.WinUI → Microsoft.UI.Xaml in the WinMD.
             string assembly = GetAssemblyNameFromScope(typeRef.Scope);

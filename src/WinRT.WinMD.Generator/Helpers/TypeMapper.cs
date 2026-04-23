@@ -9,11 +9,11 @@ using WindowsRuntime.WinMDGenerator.Models;
 namespace WindowsRuntime.WinMDGenerator.Helpers;
 
 /// <summary>
-/// Maps .NET types to their WinRT equivalents for WinMD generation.
+/// Maps .NET types to their Windows Runtime equivalents for WinMD generation.
 /// </summary>
 /// <remarks>
 /// <para>
-/// This class maintains the bidirectional mapping table between .NET types and their WinRT
+/// This class maintains the bidirectional mapping table between .NET types and their Windows Runtime
 /// projections. The mapping is configuration-dependent: when <c>CsWinRTUseWindowsUIXamlProjections</c>
 /// is enabled, XAML-related types map to <c>Windows.UI.Xaml.*</c> (UWP XAML); otherwise, they map
 /// to <c>Microsoft.UI.Xaml.*</c> (WinUI).
@@ -159,7 +159,7 @@ internal sealed class TypeMapper
     /// Checks whether a mapping exists for the given fully-qualified .NET type name.
     /// </summary>
     /// <param name="typeName">The fully-qualified .NET type name (e.g., <c>"System.Collections.Generic.IList`1"</c>).</param>
-    /// <returns><see langword="true"/> if a WinRT mapping exists for the type; otherwise, <see langword="false"/>.</returns>
+    /// <returns><see langword="true"/> if a Windows Runtime mapping exists for the type; otherwise, <see langword="false"/>.</returns>
     public bool HasMappingForType(string typeName)
     {
         return _typeMapping.ContainsKey(typeName);
@@ -169,20 +169,20 @@ internal sealed class TypeMapper
     /// Gets the <see cref="MappedType"/> for the given fully-qualified .NET type name.
     /// </summary>
     /// <param name="typeName">The fully-qualified .NET type name.</param>
-    /// <returns>The <see cref="MappedType"/> containing the WinRT mapping information.</returns>
+    /// <returns>The <see cref="MappedType"/> containing the Windows Runtime mapping information.</returns>
     public MappedType GetMappedType(string typeName)
     {
         return _typeMapping[typeName];
     }
 
     /// <summary>
-    /// The set of .NET interfaces that are implemented by C# types but have no WinRT equivalent.
+    /// The set of .NET interfaces that are implemented by C# types but have no Windows Runtime equivalent.
     /// </summary>
     /// <remarks>
     /// Members from these interfaces should be excluded from the WinMD class definition,
-    /// similar to custom-mapped interfaces, but no WinRT interface implementation is added.
+    /// similar to custom-mapped interfaces, but no Windows Runtime interface implementation is added.
     /// These include interfaces like <c>ICollection&lt;T&gt;</c> and <c>IEquatable&lt;T&gt;</c>
-    /// that have no counterpart in the WinRT type system.
+    /// that have no counterpart in the Windows Runtime type system.
     /// </remarks>
     internal static readonly HashSet<string> ImplementedInterfacesWithoutMapping = new(StringComparer.Ordinal)
     {

@@ -49,7 +49,7 @@ internal sealed partial class WinMDWriter
     private void AddGuidAttributeFromName(TypeDefinition outputType, string name)
     {
         Guid guid;
-        // CodeQL [SM02196] WinRT uses UUID v5 SHA1 to generate Guids for parameterized types.
+        // CodeQL [SM02196] Windows Runtime uses UUID v5 SHA1 to generate Guids for parameterized types.
 #pragma warning disable CA5350
         byte[] hash = SHA1.HashData(Encoding.UTF8.GetBytes(name));
         guid = EncodeGuid(hash);
@@ -228,7 +228,7 @@ internal sealed partial class WinMDWriter
     /// Adds a <c>[Default]</c> attribute to an interface implementation on a class.
     /// </summary>
     /// <remarks>
-    /// The <c>[Default]</c> attribute marks the default interface for a WinRT runtime class,
+    /// The <c>[Default]</c> attribute marks the default interface for a Windows Runtime runtime class,
     /// which determines the primary vtable layout and is the interface used when casting
     /// to <c>IInspectable</c>.
     /// </remarks>
@@ -357,7 +357,7 @@ internal sealed partial class WinMDWriter
     /// </summary>
     /// <remarks>
     /// Attribute constructor parameters must use CLR types (<c>System.Type</c>, <c>System.String</c>, etc.)
-    /// not WinRT projected types (<c>TypeName</c>, <c>HString</c>), because the custom attribute blob
+    /// not Windows Runtime projected types (<c>TypeName</c>, <c>HString</c>), because the custom attribute blob
     /// serializer only supports primitives, <c>System.Type</c>, <c>System.String</c>, and enum types.
     /// </remarks>
     /// <param name="ctor">The constructor to import.</param>
@@ -372,7 +372,7 @@ internal sealed partial class WinMDWriter
         ITypeDefOrRef importedType = ImportTypeReference(ctor.DeclaringType);
 
         // Attribute constructor parameters must use CLR types (System.Type, System.String, etc.)
-        // not WinRT projected types (TypeName, HString), because the custom attribute blob
+        // not Windows Runtime projected types (TypeName, HString), because the custom attribute blob
         // serializer only supports primitives, System.Type, System.String, and enum types.
         TypeSignature[] importedParams = [.. methodSig.ParameterTypes
             .Select(ImportTypeSignatureForAttribute)];
@@ -452,7 +452,7 @@ internal sealed partial class WinMDWriter
                 return ImportTypeReference(typeDefOrRefSig.Type!).ToTypeSignature(typeDefOrRefSig.IsValueType);
             }
 
-            // For other types, import directly without WinRT mapping
+            // For other types, import directly without Windows Runtime mapping
             return ImportTypeReference(typeDefOrRefSig.Type!).ToTypeSignature(typeDefOrRefSig.IsValueType);
         }
 
@@ -517,7 +517,7 @@ internal sealed partial class WinMDWriter
     /// Encodes a GUID from a SHA1 hash following the UUID v5 format (RFC 4122).
     /// </summary>
     /// <remarks>
-    /// WinRT uses UUID v5 SHA1 hashing to generate GUIDs for parameterized types.
+    /// Windows Runtime uses UUID v5 SHA1 hashing to generate GUIDs for parameterized types.
     /// The method sets the version nibble to 5 and the variant bits to RFC 4122,
     /// handling endianness for the first three GUID fields.
     /// </remarks>
