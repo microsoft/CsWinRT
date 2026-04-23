@@ -24,6 +24,19 @@ namespace WindowsRuntime.WinMDGenerator.Models;
 internal sealed class TypeDeclaration
 {
     /// <summary>
+    /// Creates a new <see cref="TypeDeclaration"/> instance.
+    /// </summary>
+    /// <param name="inputType">The source type from the input assembly, or <see langword="null"/> for synthesized types.</param>
+    /// <param name="outputType">The generated type in the output WinMD.</param>
+    /// <param name="isComponentType">Whether this type is a component type (user-authored).</param>
+    public TypeDeclaration(TypeDefinition? inputType, TypeDefinition? outputType, bool isComponentType = false)
+    {
+        InputType = inputType;
+        OutputType = outputType;
+        IsComponentType = isComponentType;
+    }
+
+    /// <summary>
     /// Gets the source type from the input assembly, or <see langword="null"/> for synthesized types.
     /// </summary>
     public TypeDefinition? InputType { get; }
@@ -47,17 +60,4 @@ internal sealed class TypeDeclaration
     /// Gets or sets the fully-qualified name of the static synthesized interface (e.g., <c>"Namespace.IFooStatic"</c>).
     /// </summary>
     public string? StaticInterface { get; set; }
-
-    /// <summary>
-    /// Creates a new <see cref="TypeDeclaration"/> instance.
-    /// </summary>
-    /// <param name="inputType">The source type from the input assembly, or <see langword="null"/> for synthesized types.</param>
-    /// <param name="outputType">The generated type in the output WinMD.</param>
-    /// <param name="isComponentType">Whether this type is a component type (user-authored).</param>
-    public TypeDeclaration(TypeDefinition? inputType, TypeDefinition? outputType, bool isComponentType = false)
-    {
-        InputType = inputType;
-        OutputType = outputType;
-        IsComponentType = isComponentType;
-    }
 }

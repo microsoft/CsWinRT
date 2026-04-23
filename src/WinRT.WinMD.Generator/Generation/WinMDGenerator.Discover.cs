@@ -72,7 +72,6 @@ internal static partial class WinMDGenerator
 
         // Initialize the runtime context with the probed version (this will be reused to allow caching)
         RuntimeContext runtimeContext = new(targetRuntime, assemblyResolver);
-
         ModuleDefinition inputModule;
 
         // Load the module from the already-loaded PE image, reusing it to avoid a redundant file read

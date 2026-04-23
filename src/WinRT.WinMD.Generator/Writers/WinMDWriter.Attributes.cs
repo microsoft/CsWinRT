@@ -94,38 +94,49 @@ internal sealed partial class WinMDWriter
     {
         // Create a reference to the '[Guid]' attribute constructor in 'Windows.Foundation.Metadata'
         TypeReference guidAttrType = GetOrCreateTypeReference(
-            "Windows.Foundation.Metadata", "GuidAttribute", "Windows.Foundation.FoundationContract");
+            @namespace: "Windows.Foundation.Metadata",
+            name: "GuidAttribute",
+            assemblyName: "Windows.Foundation.FoundationContract");
 
         byte[] guidBytes = guid.ToByteArray();
 
         // The 'GuidAttribute(uint, ushort, ushort, byte, byte, byte, byte, byte, byte, byte, byte)' constructor
-        MemberReference guidCtor = new(guidAttrType, ".ctor",
-            MethodSignature.CreateInstance(
-                _outputModule.CorLibTypeFactory.Void,
-                [_outputModule.CorLibTypeFactory.UInt32,
-                _outputModule.CorLibTypeFactory.UInt16,
-                _outputModule.CorLibTypeFactory.UInt16,
-                _outputModule.CorLibTypeFactory.Byte,
-                _outputModule.CorLibTypeFactory.Byte,
-                _outputModule.CorLibTypeFactory.Byte,
-                _outputModule.CorLibTypeFactory.Byte,
-                _outputModule.CorLibTypeFactory.Byte,
-                _outputModule.CorLibTypeFactory.Byte,
-                _outputModule.CorLibTypeFactory.Byte,
-                _outputModule.CorLibTypeFactory.Byte]));
+        MemberReference guidCtor = new(
+            parent: guidAttrType,
+            name: ".ctor"u8,
+            signature: MethodSignature.CreateInstance(
+                returnType: _outputModule.CorLibTypeFactory.Void,
+                parameterTypes: [
+                    _outputModule.CorLibTypeFactory.UInt32,
+                    _outputModule.CorLibTypeFactory.UInt16,
+                    _outputModule.CorLibTypeFactory.UInt16,
+                    _outputModule.CorLibTypeFactory.Byte,
+                    _outputModule.CorLibTypeFactory.Byte,
+                    _outputModule.CorLibTypeFactory.Byte,
+                    _outputModule.CorLibTypeFactory.Byte,
+                    _outputModule.CorLibTypeFactory.Byte,
+                    _outputModule.CorLibTypeFactory.Byte,
+                    _outputModule.CorLibTypeFactory.Byte,
+                    _outputModule.CorLibTypeFactory.Byte]));
 
-        CustomAttributeSignature signature = new();
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, BitConverter.ToUInt32(guidBytes, 0)));
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt16, BitConverter.ToUInt16(guidBytes, 4)));
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt16, BitConverter.ToUInt16(guidBytes, 6)));
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[8]));
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[9]));
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[10]));
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[11]));
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[12]));
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[13]));
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[14]));
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[15]));
+        // Create the signature for the attribute
+        CustomAttributeSignature signature = new()
+        {
+            FixedArguments =
+            {
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, BitConverter.ToUInt32(guidBytes, 0)),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt16, BitConverter.ToUInt16(guidBytes, 4)),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt16, BitConverter.ToUInt16(guidBytes, 6)),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[8]),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[9]),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[10]),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[11]),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[12]),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[13]),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[14]),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.Byte, guidBytes[15])
+            }
+        };
 
         outputType.CustomAttributes.Add(new CustomAttribute(guidCtor, signature));
     }
@@ -138,15 +149,19 @@ internal sealed partial class WinMDWriter
     private void AddVersionAttribute(TypeDefinition outputType, int version)
     {
         TypeReference versionAttrType = GetOrCreateTypeReference(
-            "Windows.Foundation.Metadata", "VersionAttribute", "Windows.Foundation.FoundationContract");
+            @namespace: "Windows.Foundation.Metadata",
+            name: "VersionAttribute",
+            assemblyName: "Windows.Foundation.FoundationContract");
 
-        MemberReference versionCtor = new(versionAttrType, ".ctor",
-            MethodSignature.CreateInstance(
-                _outputModule.CorLibTypeFactory.Void,
-                [_outputModule.CorLibTypeFactory.UInt32]));
+        MemberReference versionCtor = new(
+            parent: versionAttrType,
+            name: ".ctor"u8,
+            signature: MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [_outputModule.CorLibTypeFactory.UInt32]));
 
-        CustomAttributeSignature signature = new();
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, (uint)version));
+        CustomAttributeSignature signature = new()
+        {
+            FixedArguments = { new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, (uint)version) }
+        };
 
         outputType.CustomAttributes.Add(new CustomAttribute(versionCtor, signature));
     }
@@ -166,34 +181,47 @@ internal sealed partial class WinMDWriter
     private void AddActivatableAttribute(TypeDefinition outputType, uint version, string? factoryInterface)
     {
         TypeReference activatableAttrType = GetOrCreateTypeReference(
-            "Windows.Foundation.Metadata", "ActivatableAttribute", "Windows.Foundation.FoundationContract");
+            @namespace: "Windows.Foundation.Metadata",
+            name: "ActivatableAttribute",
+            assemblyName: "Windows.Foundation.FoundationContract");
 
-        if (factoryInterface != null)
+        if (factoryInterface is not null)
         {
-            // Constructor: 'ActivatableAttribute(Type, uint)'
             TypeReference systemType = GetOrCreateTypeReference("System", "Type", "mscorlib");
-            MemberReference ctor = new(activatableAttrType, ".ctor",
-                MethodSignature.CreateInstance(
-                    _outputModule.CorLibTypeFactory.Void,
-                    [systemType.ToTypeSignature(false),
-                    _outputModule.CorLibTypeFactory.UInt32]));
 
-            CustomAttributeSignature signature = new();
-            signature.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(factoryInterface)));
-            signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
+            // Constructor: 'ActivatableAttribute(Type, uint)'
+            MemberReference ctor = new(
+                parent: activatableAttrType,
+                name: ".ctor"u8,
+                signature: MethodSignature.CreateInstance(
+                    returnType: _outputModule.CorLibTypeFactory.Void,
+                    parameterTypes: [
+                        systemType.ToTypeSignature(false),
+                        _outputModule.CorLibTypeFactory.UInt32]));
+
+            CustomAttributeSignature signature = new()
+            {
+                FixedArguments =
+                {
+                    new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(factoryInterface)),
+                    new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version)
+                }
+            };
 
             outputType.CustomAttributes.Add(new CustomAttribute(ctor, signature));
         }
         else
         {
             // Constructor: 'ActivatableAttribute(uint)'
-            MemberReference ctor = new(activatableAttrType, ".ctor",
-                MethodSignature.CreateInstance(
-                    _outputModule.CorLibTypeFactory.Void,
-                    [_outputModule.CorLibTypeFactory.UInt32]));
+            MemberReference ctor = new(
+                parent: activatableAttrType,
+                name: ".ctor"u8,
+                signature: MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [_outputModule.CorLibTypeFactory.UInt32]));
 
-            CustomAttributeSignature signature = new();
-            signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
+            CustomAttributeSignature signature = new()
+            {
+                FixedArguments = { new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version) }
+            };
 
             outputType.CustomAttributes.Add(new CustomAttribute(ctor, signature));
         }
@@ -208,18 +236,29 @@ internal sealed partial class WinMDWriter
     private void AddStaticAttribute(TypeDefinition classOutputType, uint version, string staticInterfaceName)
     {
         TypeReference staticAttrType = GetOrCreateTypeReference(
-            "Windows.Foundation.Metadata", "StaticAttribute", "Windows.Foundation.FoundationContract");
+            @namespace: "Windows.Foundation.Metadata",
+            name: "StaticAttribute",
+            assemblyName: "Windows.Foundation.FoundationContract");
 
         TypeReference systemType = GetOrCreateTypeReference("System", "Type", "mscorlib");
-        MemberReference ctor = new(staticAttrType, ".ctor",
-            MethodSignature.CreateInstance(
-                _outputModule.CorLibTypeFactory.Void,
-                [systemType.ToTypeSignature(false),
-                _outputModule.CorLibTypeFactory.UInt32]));
 
-        CustomAttributeSignature signature = new();
-        signature.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(staticInterfaceName)));
-        signature.FixedArguments.Add(new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version));
+        MemberReference ctor = new(
+            parent: staticAttrType,
+            name: ".ctor"u8,
+            signature: MethodSignature.CreateInstance(
+                returnType: _outputModule.CorLibTypeFactory.Void,
+                parameterTypes: [
+                    systemType.ToTypeSignature(false),
+                    _outputModule.CorLibTypeFactory.UInt32]));
+
+        CustomAttributeSignature signature = new()
+        {
+            FixedArguments =
+            {
+                new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(staticInterfaceName)),
+                new CustomAttributeArgument(_outputModule.CorLibTypeFactory.UInt32, version)
+            }
+        };
 
         classOutputType.CustomAttributes.Add(new CustomAttribute(ctor, signature));
     }
@@ -232,16 +271,21 @@ internal sealed partial class WinMDWriter
     private void AddExclusiveToAttribute(TypeDefinition interfaceType, string className)
     {
         TypeReference exclusiveToAttrType = GetOrCreateTypeReference(
-            "Windows.Foundation.Metadata", "ExclusiveToAttribute", "Windows.Foundation.FoundationContract");
+            @namespace: "Windows.Foundation.Metadata",
+            name: "ExclusiveToAttribute",
+            assemblyName: "Windows.Foundation.FoundationContract");
 
         TypeReference systemType = GetOrCreateTypeReference("System", "Type", "mscorlib");
-        MemberReference ctor = new(exclusiveToAttrType, ".ctor",
-            MethodSignature.CreateInstance(
-                _outputModule.CorLibTypeFactory.Void,
-                [systemType.ToTypeSignature(false)]));
 
-        CustomAttributeSignature signature = new();
-        signature.FixedArguments.Add(new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(className)));
+        MemberReference ctor = new(
+            parent: exclusiveToAttrType,
+            name: ".ctor"u8,
+            signature: MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [systemType.ToTypeSignature(false)]));
+
+        CustomAttributeSignature signature = new()
+        {
+            FixedArguments = { new CustomAttributeArgument(systemType.ToTypeSignature(false), ResolveTypeNameToSignature(className)) }
+        };
 
         interfaceType.CustomAttributes.Add(new CustomAttribute(ctor, signature));
     }
@@ -258,10 +302,14 @@ internal sealed partial class WinMDWriter
     private void AddDefaultAttribute(InterfaceImplementation interfaceImpl)
     {
         TypeReference defaultAttrType = GetOrCreateTypeReference(
-            "Windows.Foundation.Metadata", "DefaultAttribute", "Windows.Foundation.FoundationContract");
+            @namespace: "Windows.Foundation.Metadata",
+            name: "DefaultAttribute",
+            assemblyName: "Windows.Foundation.FoundationContract");
 
-        MemberReference ctor = new(defaultAttrType, ".ctor",
-            MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void));
+        MemberReference ctor = new(
+            parent: defaultAttrType,
+            name: ".ctor"u8,
+            signature: MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void));
 
         interfaceImpl.CustomAttributes.Add(new CustomAttribute(ctor, new CustomAttributeSignature()));
     }
