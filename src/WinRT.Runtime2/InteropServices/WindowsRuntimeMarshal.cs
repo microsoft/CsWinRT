@@ -7,8 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable CS8909
-
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -59,10 +57,7 @@ public static unsafe class WindowsRuntimeMarshal
     {
         ArgumentNullException.ThrowIfNull(externalComObject);
 
-        IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)*(void***)externalComObject;
-        IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.Vtable;
-
-        return unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface;
+        return WindowsRuntimeComWrappersMarshal.IsReferenceToManagedObjectUnsafe(externalComObject);
     }
 
     /// <summary>

@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable CS1573
+#pragma warning disable CS1573, CS8909
 
 namespace WindowsRuntime.InteropServices;
 
