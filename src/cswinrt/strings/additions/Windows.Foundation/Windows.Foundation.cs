@@ -294,6 +294,10 @@ namespace System
 #endif
     sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TResult>
     {
+        private const int RPC_E_DISCONNECTED = unchecked((int)0x80010108);
+        private const int RPC_S_SERVER_UNAVAILABLE = unchecked((int)0x800706BA);
+        private const int JSCRIPT_E_CANTEXECUTE = unchecked((int)0x89020001);
+
         private readonly CancellationToken _ct;
         private readonly CancellationTokenRegistration _asyncInfoRegistration;
         private readonly CancellationTokenRegistration _registration;
@@ -316,7 +320,27 @@ namespace System
                 // Handle Exception from Cancel() if the token is already canceled.
                 try
                 {
-                    _asyncInfoRegistration = this._ct.Register(static ai => ((IAsyncInfo)ai).Cancel(), asyncInfo);
+                    _asyncInfoRegistration = this._ct.Register(static ai =>
+                    {
+                        IAsyncInfo asyncInfo = (IAsyncInfo)ai;
+
+                        try
+                        {
+                            asyncInfo.Cancel();
+                        }
+                        catch (Exception e) when (
+                            e is COMException comException &&
+                            comException.HResult is RPC_E_DISCONNECTED or RPC_S_SERVER_UNAVAILABLE or JSCRIPT_E_CANTEXECUTE)
+                        {
+                            // In the event of the async action/operation failing because it belonged to some COM server
+                            // that was disconnected, handle the failure gracefully and do nothing here. We don't want to
+                            // crash the entire process because of this. In this case, the task being returned to the
+                            // callers will already be marked as canceled, so this way they can properly handle things.
+                            // If they then tried to call any other methods on another object from the same COM server,
+                            // that would likely also fail in the same way, but once again at least they'll be able to
+                            // handle that as needed.
+                        }
+                    }, asyncInfo);
                 }
                 catch (Exception ex)
                 {
