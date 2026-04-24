@@ -16,3 +16,4 @@ CSWINRT2006 | WindowsRuntime.SourceGenerator | Error | Property name not found f
 CSWINRT2007 | WindowsRuntime.SourceGenerator | Error | Indexer type not found for '[GeneratedCustomPropertyProvider]'
 CSWINRT2008 | WindowsRuntime.SourceGenerator | Error | Static indexer for '[GeneratedCustomPropertyProvider]'
 CSWINRT2009 | WindowsRuntime.SourceGenerator | Warning | Cast to '[ComImport]' type not supported
+CSWINRT2010 | WindowsRuntime.SourceGenerator | Warning | API contract enum type with enum cases
