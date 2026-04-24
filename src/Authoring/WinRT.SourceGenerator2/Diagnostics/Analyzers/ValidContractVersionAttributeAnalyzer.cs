@@ -3,9 +3,7 @@
 
 using System.Collections.Immutable;
 using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace WindowsRuntime.SourceGenerator.Diagnostics;
@@ -88,7 +86,7 @@ public sealed class ValidContractVersionAttributeAnalyzer : DiagnosticAnalyzer
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
                             DiagnosticDescriptors.ContractVersionAttributeRequiresApiContractTarget,
-                            GetAttributeLocation(attribute, context.CancellationToken) ?? typeSymbol.Locations.FirstOrDefault(),
+                            attribute.GetLocation(context.CancellationToken) ?? typeSymbol.Locations.FirstOrDefault(),
                             typeSymbol));
                     }
                     else if (isContractTypeConstructor)
@@ -98,7 +96,7 @@ public sealed class ValidContractVersionAttributeAnalyzer : DiagnosticAnalyzer
                         {
                             context.ReportDiagnostic(Diagnostic.Create(
                                 DiagnosticDescriptors.ContractVersionAttributeNotAllowedOnApiContractTarget,
-                                GetAttributeLocation(attribute, context.CancellationToken) ?? typeSymbol.Locations.FirstOrDefault(),
+                                attribute.GetLocation(context.CancellationToken) ?? typeSymbol.Locations.FirstOrDefault(),
                                 typeSymbol));
                         }
 
@@ -108,8 +106,8 @@ public sealed class ValidContractVersionAttributeAnalyzer : DiagnosticAnalyzer
                         {
                             context.ReportDiagnostic(Diagnostic.Create(
                                 DiagnosticDescriptors.ContractVersionAttributeInvalidContractTypeArgument,
-                                GetAttributeArgumentLocation(attribute, argumentIndex: 0, context.CancellationToken)
-                                    ?? GetAttributeLocation(attribute, context.CancellationToken)
+                                attribute.GetArgumentLocation(argumentIndex: 0, context.CancellationToken)
+                                    ?? attribute.GetLocation(context.CancellationToken)
                                     ?? typeSymbol.Locations.FirstOrDefault(),
                                 typeSymbol,
                                 contractTypeArgument));
@@ -129,30 +127,5 @@ public sealed class ValidContractVersionAttributeAnalyzer : DiagnosticAnalyzer
     private static bool IsApiContractType(INamedTypeSymbol typeSymbol, INamedTypeSymbol apiContractAttributeType)
     {
         return typeSymbol is { TypeKind: TypeKind.Enum } && typeSymbol.HasAttributeWithType(apiContractAttributeType);
-    }
-
-    /// <summary>
-    /// Gets the location of the syntax node where an attribute is applied.
-    /// </summary>
-    /// <param name="attribute">The attribute to locate.</param>
-    /// <param name="cancellationToken">The cancellation token to use.</param>
-    /// <returns>The location of the attribute application, or <see langword="null"/> if it cannot be determined.</returns>
-    private static Location? GetAttributeLocation(AttributeData attribute, CancellationToken cancellationToken)
-    {
-        return attribute.ApplicationSyntaxReference?.GetSyntax(cancellationToken).GetLocation();
-    }
-
-    /// <summary>
-    /// Gets the location of a specific positional argument of an attribute application.
-    /// </summary>
-    /// <param name="attribute">The attribute to locate.</param>
-    /// <param name="argumentIndex">The index of the positional argument.</param>
-    /// <param name="cancellationToken">The cancellation token to use.</param>
-    /// <returns>The location of the argument, or <see langword="null"/> if it cannot be determined.</returns>
-    private static Location? GetAttributeArgumentLocation(AttributeData attribute, int argumentIndex, CancellationToken cancellationToken)
-    {
-        return attribute.ApplicationSyntaxReference?.GetSyntax(cancellationToken) is AttributeSyntax { ArgumentList.Arguments: { } arguments } && argumentIndex < arguments.Count
-            ? arguments[argumentIndex].GetLocation()
-            : null;
     }
 }
