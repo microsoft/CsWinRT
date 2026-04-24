@@ -204,4 +204,17 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Enum types annotated with '[ApiContract]' must also have a '[ContractVersion]' attribute applied to them, using one of the version-only constructors, to declare the contract version of the API contract.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a public authored type missing a <c>[ContractVersion]</c> attribute.
+    /// </summary>
+    public static readonly DiagnosticDescriptor PublicTypeMissingContractVersion = new(
+        id: "CSWINRT2015",
+        title: "Public authored type missing 'ContractVersionAttribute'",
+        messageFormat: """The type '{0}' is publicly exposed in a Windows Runtime component, but it does not have a '[ContractVersion]' attribute applied to it. Public types should declare their associated API contract using '[ContractVersion(typeof(SomeContract), version)]' so that consumers can target a specific contract version.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "Public types in a Windows Runtime component should declare their associated API contract using '[ContractVersion(typeof(SomeContract), version)]', so that consumers can target a specific contract version.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
