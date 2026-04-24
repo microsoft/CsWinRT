@@ -139,4 +139,17 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Types used in cast operations must not be '[ComImport]' interfaces, as they are not compatible with Windows Runtime objects marshalled by CsWinRT.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for an <c>[ApiContract]</c> enum type that defines enum cases.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ApiContractEnumWithCases = new(
+        id: "CSWINRT2010",
+        title: "API contract enum type with enum cases",
+        messageFormat: """The type '{0}' is annotated with '[ApiContract]', but it defines one or more enum cases. API contract types are represented by empty struct types in the Windows Runtime type system, and as such defining any enum cases is invalid. The enum cases will be ignored when generating the resulting .winmd file.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Enum types annotated with '[ApiContract]' must not define any enum cases, as API contract types are represented by empty struct types in the Windows Runtime type system. Any enum cases will be ignored when generating the resulting .winmd file.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
