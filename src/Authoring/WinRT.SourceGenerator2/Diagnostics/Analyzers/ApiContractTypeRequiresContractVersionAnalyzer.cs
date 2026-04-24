@@ -58,13 +58,8 @@ public sealed class ApiContractTypeRequiresContractVersionAnalyzer : DiagnosticA
                 }
 
                 // Check whether any '[ContractVersion]' attribute using a version-only constructor is applied
-                foreach (AttributeData attribute in typeSymbol.GetAttributes())
+                foreach (AttributeData attribute in typeSymbol.GetAttributes(contractVersionAttributeType))
                 {
-                    if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, contractVersionAttributeType))
-                    {
-                        continue;
-                    }
-
                     // The version-only constructors are '(uint)' and '(string, uint)'.
                     // The contract-type constructor is '(Type, uint)', which we want to ignore here.
                     if (attribute.AttributeConstructor?.Parameters is [{ Type.SpecialType: SpecialType.System_UInt32 or SpecialType.System_String }, ..])
