@@ -152,4 +152,43 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Enum types annotated with '[ApiContract]' must not define any enum cases, as API contract types are represented by empty struct types in the Windows Runtime type system. Any enum cases will be ignored when generating the resulting .winmd file.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a <c>[ContractVersion]</c> attribute using the version-only constructors on a non-API contract type.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ContractVersionAttributeRequiresApiContractTarget = new(
+        id: "CSWINRT2011",
+        title: "Invalid 'ContractVersionAttribute' target for version-only constructor",
+        messageFormat: """The type '{0}' is annotated with '[ContractVersion]' using a constructor that only specifies the contract version, but '{0}' is not an API contract type (an enum type annotated with '[ApiContract]'). These constructors only apply to API contract types and are used to specify the contract version of that API contract.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The 'ContractVersionAttribute' constructors taking only the contract version (or the contract name and version) only apply to API contract types (enum types annotated with '[ApiContract]'), and are used to specify the contract version of that API contract.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a <c>[ContractVersion]</c> attribute using the contract-type constructor on an API contract type.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ContractVersionAttributeNotAllowedOnApiContractTarget = new(
+        id: "CSWINRT2012",
+        title: "Invalid 'ContractVersionAttribute' target for contract-type constructor",
+        messageFormat: """The type '{0}' is annotated with '[ContractVersion]' using the constructor that takes a contract type and version, but '{0}' is itself an API contract type. This constructor is used to associate a non-contract type with an API contract; use the constructor that only takes the contract version instead.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The 'ContractVersionAttribute' constructor taking a contract type and version cannot be applied to API contract types, as it is meant to associate a non-contract type with an API contract.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a <c>[ContractVersion]</c> attribute whose contract type argument is not a valid API contract type.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ContractVersionAttributeInvalidContractTypeArgument = new(
+        id: "CSWINRT2013",
+        title: "Invalid 'ContractVersionAttribute' contract type argument",
+        messageFormat: """The 'ContractVersionAttribute' applied to '{0}' specifies '{1}' as the contract type, but '{1}' is not a valid API contract type (an enum type annotated with '[ApiContract]')""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The contract type argument of '[ContractVersion]' must be a valid API contract type (an enum type annotated with '[ApiContract]').",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
