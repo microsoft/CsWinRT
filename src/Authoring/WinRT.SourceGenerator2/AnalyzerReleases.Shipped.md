@@ -20,3 +20,4 @@ CSWINRT2010 | WindowsRuntime.SourceGenerator | Warning | API contract enum type 
 CSWINRT2011 | WindowsRuntime.SourceGenerator | Warning | Invalid 'ContractVersionAttribute' target for version-only constructor
 CSWINRT2012 | WindowsRuntime.SourceGenerator | Warning | Invalid 'ContractVersionAttribute' target for contract-type constructor
 CSWINRT2013 | WindowsRuntime.SourceGenerator | Warning | Invalid 'ContractVersionAttribute' contract type argument
+CSWINRT2014 | WindowsRuntime.SourceGenerator | Warning | API contract type missing 'ContractVersionAttribute'
