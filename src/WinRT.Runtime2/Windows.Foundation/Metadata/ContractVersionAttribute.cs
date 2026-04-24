@@ -12,9 +12,6 @@ namespace Windows.Foundation.Metadata;
 /// <summary>
 /// Indicates the version of the API contract.
 /// </summary>
-/// <remarks>
-/// This type is required for ABI projection of the value types and delegates, but marshalling it is not supported.
-/// </remarks>
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
 [SupportedOSPlatform("Windows10.0.10240.0")]

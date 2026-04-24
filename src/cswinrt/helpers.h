@@ -885,6 +885,7 @@ namespace cswinrt
             },
             { "Windows.Foundation.Metadata",
                 {
+                    { "ApiContractAttribute", "Windows.Foundation.Metadata", "ApiContractAttribute"},
                     { "AttributeTargets", "System", "AttributeTargets" },
                     { "AttributeUsageAttribute", "System", "AttributeUsageAttribute" },
                     { "ContractVersionAttribute", "Windows.Foundation.Metadata", "ContractVersionAttribute"},
