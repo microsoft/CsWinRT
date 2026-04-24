@@ -98,54 +98,5 @@ internal static class TypeDefinitionExtensions
                 return null;
             }
         }
-
-        /// <summary>
-        /// Gets the effective namespace of the type. For nested types, this walks up the
-        /// declaring type chain since nested types have no namespace of their own in metadata.
-        /// </summary>
-        /// <returns>
-        /// The namespace of the type or its nearest declaring type with a namespace,
-        /// or <see langword="null"/> if no namespace can be found.
-        /// </returns>
-        public string? EffectiveNamespace
-        {
-            get
-            {
-                if (type.Namespace is { Value.Length: > 0 })
-                {
-                    return type.Namespace.Value;
-                }
-
-                // For nested types, walk up to the declaring type to find the namespace
-                TypeDefinition? current = type.DeclaringType;
-
-                while (current is not null)
-                {
-                    if (current.Namespace is { Value.Length: > 0 })
-                    {
-                        return current.Namespace.Value;
-                    }
-
-                    current = current.DeclaringType;
-                }
-
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Gets the fully qualified name of the type, including generic arity.
-        /// For nested types, uses the effective namespace from the declaring type chain.
-        /// </summary>
-        public string QualifiedName
-        {
-            get
-            {
-                string name = type.Name!.Value;
-                string? @namespace = type.EffectiveNamespace;
-
-                return @namespace is { Length: > 0 } ? $"{@namespace}.{name}" : name;
-            }
-        }
     }
 }

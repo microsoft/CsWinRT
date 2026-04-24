@@ -73,7 +73,7 @@ internal sealed partial class WinMDWriter
         // Handle generic instance types
         if (inputSignature is GenericInstanceTypeSignature genericInst)
         {
-            string genericTypeName = genericInst.GenericType.QualifiedName;
+            string genericTypeName = genericInst.GenericType.FullName;
 
             // Map 'Span<T>' and 'ReadOnlySpan<T>' to T[] (SzArray) for Windows Runtime
             // 'ReadOnlySpan<T>' → PassArray (in), 'Span<T>' → FillArray (out without BYREF)
@@ -118,7 +118,7 @@ internal sealed partial class WinMDWriter
         // Handle TypeDefOrRefSignature
         if (inputSignature is TypeDefOrRefSignature typeDefOrRef)
         {
-            string typeName = typeDefOrRef.Type.QualifiedName;
+            string typeName = typeDefOrRef.Type.FullName;
 
             // Check if the type has a Windows Runtime mapping (e.g., 'IDisposable' -> 'IClosable', 'Type' -> 'TypeName')
             if (_mapper.HasMappingForType(typeName))
@@ -160,19 +160,20 @@ internal sealed partial class WinMDWriter
     {
         if (type is TypeDefinition typeDef)
         {
+            string fullName = typeDef.FullName;
+
             // Check if we've already processed this type into the output module
-            string qualifiedName = typeDef.QualifiedName;
-            if (_typeDefinitionMapping.TryGetValue(qualifiedName, out TypeDeclaration? declaration) && declaration.OutputType is not null)
+            if (_typeDefinitionMapping.TryGetValue(fullName, out TypeDeclaration? declaration) && declaration.OutputType is not null)
             {
                 return declaration.OutputType;
             }
 
-            // If this is a public type from the input module, process it on demand
-            if (typeDef.IsPublic || typeDef.IsNestedPublic)
+            // If this is a public top-level type from the input module, process it on demand
+            if (typeDef.IsPublic)
             {
                 ProcessType(typeDef);
 
-                if (_typeDefinitionMapping.TryGetValue(qualifiedName, out declaration) && declaration.OutputType is not null)
+                if (_typeDefinitionMapping.TryGetValue(fullName, out declaration) && declaration.OutputType is not null)
                 {
                     return declaration.OutputType;
                 }
@@ -180,7 +181,7 @@ internal sealed partial class WinMDWriter
 
             // External type or non-Windows Runtime type — create a type reference
             return GetOrCreateTypeReference(
-                typeDef.EffectiveNamespace ?? "",
+                typeDef.Namespace?.Value ?? "",
                 typeDef.Name!.Value,
                 _inputModule.Assembly?.Name?.Value ?? "mscorlib");
         }
@@ -254,7 +255,7 @@ internal sealed partial class WinMDWriter
     {
         if (type is TypeDefinition typeDef)
         {
-            string @namespace = typeDef.EffectiveNamespace ?? "";
+            string @namespace = typeDef.Namespace?.Value ?? "";
             string name = typeDef.Name!.Value;
             string assembly = _outputModule.Assembly?.Name?.Value ?? "mscorlib";
 

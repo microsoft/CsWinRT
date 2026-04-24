@@ -38,7 +38,7 @@ internal sealed partial class WinMDWriter
         }
 
         // Generate a GUID from the type name using SHA1
-        string typeName = inputType.QualifiedName;
+        string typeName = inputType.FullName;
 
         AddGuidAttributeFromName(outputType, typeName);
     }

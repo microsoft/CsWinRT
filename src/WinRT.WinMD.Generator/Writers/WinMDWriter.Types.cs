@@ -31,7 +31,7 @@ internal sealed partial class WinMDWriter
     /// <param name="inputType">The API contract enum <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddApiContractType(TypeDefinition inputType)
     {
-        string qualifiedName = inputType.QualifiedName;
+        string fullName = inputType.FullName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -43,7 +43,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "ValueType", "mscorlib");
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes,
             baseType: baseType);
@@ -52,7 +52,7 @@ internal sealed partial class WinMDWriter
 
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
 
-        _typeDefinitionMapping[qualifiedName] = declaration;
+        _typeDefinitionMapping[fullName] = declaration;
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ internal sealed partial class WinMDWriter
             return;
         }
 
-        string qualifiedName = inputType.QualifiedName;
+        string fullName = inputType.FullName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -85,7 +85,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "Enum", "mscorlib");
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes,
             baseType: baseType);
@@ -103,7 +103,7 @@ internal sealed partial class WinMDWriter
 
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
 
-        _typeDefinitionMapping[qualifiedName] = declaration;
+        _typeDefinitionMapping[fullName] = declaration;
 
         // Enum literal fields use the enum type itself (not the underlying type)
         TypeSignature enumTypeSignature = new TypeDefOrRefSignature(outputType, isValueType: true);
@@ -165,7 +165,7 @@ internal sealed partial class WinMDWriter
     /// <param name="inputType">The delegate <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddDelegateType(TypeDefinition inputType)
     {
-        string qualifiedName = inputType.QualifiedName;
+        string fullName = inputType.FullName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -177,7 +177,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "MulticastDelegate", "mscorlib");
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes,
             baseType: baseType);
@@ -187,7 +187,7 @@ internal sealed partial class WinMDWriter
         // Register early so self-referencing signatures can find this type
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
 
-        _typeDefinitionMapping[qualifiedName] = declaration;
+        _typeDefinitionMapping[fullName] = declaration;
 
         // Add '.ctor(object, IntPtr)' — private per Windows Runtime delegate convention
         MethodDefinition ctor = new(
@@ -252,7 +252,7 @@ internal sealed partial class WinMDWriter
     /// <param name="inputType">The interface <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddInterfaceType(TypeDefinition inputType)
     {
-        string qualifiedName = inputType.QualifiedName;
+        string fullName = inputType.FullName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -263,7 +263,7 @@ internal sealed partial class WinMDWriter
             TypeAttributes.Abstract;
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes);
 
@@ -272,7 +272,7 @@ internal sealed partial class WinMDWriter
         // Register early so self-referencing signatures can find this type
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
 
-        _typeDefinitionMapping[qualifiedName] = declaration;
+        _typeDefinitionMapping[fullName] = declaration;
 
         // Add methods (skip property/event accessors — they're added by property/event processing below)
         foreach (MethodDefinition method in inputType.Methods)
@@ -322,7 +322,7 @@ internal sealed partial class WinMDWriter
     /// <param name="inputType">The struct <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddStructType(TypeDefinition inputType)
     {
-        string qualifiedName = inputType.QualifiedName;
+        string fullName = inputType.FullName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -334,7 +334,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "ValueType", "mscorlib");
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes,
             baseType: baseType);
@@ -344,7 +344,7 @@ internal sealed partial class WinMDWriter
         // Register early so self-referencing signatures can find this type
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
 
-        _typeDefinitionMapping[qualifiedName] = declaration;
+        _typeDefinitionMapping[fullName] = declaration;
 
         // Add public fields
         foreach (FieldDefinition field in inputType.Fields)
@@ -384,7 +384,7 @@ internal sealed partial class WinMDWriter
     /// <param name="inputType">The class <see cref="TypeDefinition"/> from the input assembly.</param>
     private void AddClassType(TypeDefinition inputType)
     {
-        string qualifiedName = inputType.QualifiedName;
+        string fullName = inputType.FullName;
 
         TypeAttributes typeAttributes =
             TypeAttributes.Public |
@@ -424,7 +424,7 @@ internal sealed partial class WinMDWriter
         }
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes,
             baseType: baseType);
@@ -434,7 +434,7 @@ internal sealed partial class WinMDWriter
         // Register in the mapping early so self-referencing method signatures can find it
         TypeDeclaration declaration = new(inputType, outputType, isComponentType: true);
 
-        _typeDefinitionMapping[qualifiedName] = declaration;
+        _typeDefinitionMapping[fullName] = declaration;
 
         bool hasConstructor = false;
         bool hasDefaultConstructor = false;
@@ -533,7 +533,7 @@ internal sealed partial class WinMDWriter
                 continue;
             }
 
-            string interfaceName = GetInterfaceQualifiedName(interfaceImplementation.Interface);
+            string interfaceName = GetInterfaceFullName(interfaceImplementation.Interface);
 
             // Skip interfaces that have a Windows Runtime mapping — they'll be added as their
             // mapped equivalents by 'ProcessCustomMappedInterfaces' below
@@ -595,7 +595,7 @@ internal sealed partial class WinMDWriter
 
         // Get the first user-declared interface
         InterfaceImplementation firstInputImpl = inputType.Interfaces[0];
-        string firstIfaceName = GetInterfaceQualifiedName(firstInputImpl.Interface!);
+        string firstIfaceName = GetInterfaceFullName(firstInputImpl.Interface!);
 
         // Check if it's a mapped type (e.g., IList -> IVector)
         string targetName = _mapper.HasMappingForType(firstIfaceName)
@@ -605,7 +605,7 @@ internal sealed partial class WinMDWriter
         // Find the matching interface on the output type
         foreach (InterfaceImplementation outputImpl in outputType.Interfaces)
         {
-            if (outputImpl.Interface is not null && GetInterfaceQualifiedName(outputImpl.Interface) == targetName)
+            if (outputImpl.Interface is not null && GetInterfaceFullName(outputImpl.Interface) == targetName)
             {
                 return outputImpl;
             }

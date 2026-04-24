@@ -169,7 +169,7 @@ internal sealed partial class WinMDWriter
         HashSet<string> membersFromInterfaces)
     {
         bool hasMembers = false;
-        string @namespace = inputType.EffectiveNamespace ?? "";
+        string @namespace = inputType.Namespace?.Value ?? "";
         string className = inputType.Name!.Value;
         string interfaceName = GetSynthesizedInterfaceName(className, interfaceType);
 
@@ -304,7 +304,7 @@ internal sealed partial class WinMDWriter
             AddGuidAttributeFromName(synthesizedInterface, interfaceName);
 
             // Add ExclusiveTo attribute
-            AddExclusiveToAttribute(synthesizedInterface, inputType.QualifiedName);
+            AddExclusiveToAttribute(synthesizedInterface, inputType.FullName);
 
             if (interfaceType == SynthesizedInterfaceType.Factory)
             {
@@ -331,8 +331,8 @@ internal sealed partial class WinMDWriter
     private void AddFactoryMethod(TypeDefinition synthesizedInterface, TypeDefinition classType, MethodDefinition constructor)
     {
         // Look up the output class TypeDefinition to use as the return type
-        string classQualifiedName = classType.QualifiedName;
-        TypeDefinition outputClassType = _typeDefinitionMapping[classQualifiedName].OutputType!;
+        string classFullName = classType.FullName;
+        TypeDefinition outputClassType = _typeDefinitionMapping[classFullName].OutputType!;
         TypeSignature returnType = new TypeDefOrRefSignature(outputClassType, isValueType: false);
 
         TypeSignature[] parameterTypes = [.. constructor.Signature!.ParameterTypes
@@ -350,18 +350,18 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Gets the fully-qualified name of an interface, stripping generic type arguments for generic interfaces.
+    /// Gets the fully name of an interface, stripping generic type arguments for generic interfaces.
     /// </summary>
     /// <remarks>
     /// For a generic interface like <c>IList&lt;string&gt;</c>, returns the open generic name
     /// <c>"System.Collections.Generic.IList`1"</c> rather than the closed form.
     /// </remarks>
     /// <param name="type">The interface type reference.</param>
-    /// <returns>The qualified name of the interface type.</returns>
-    private static string GetInterfaceQualifiedName(ITypeDefOrRef type)
+    /// <returns>The full name of the interface type.</returns>
+    private static string GetInterfaceFullName(ITypeDefOrRef type)
     {
         return type is TypeSpecification typeSpec && typeSpec.Signature is GenericInstanceTypeSignature genericInst
-            ? genericInst.GenericType.QualifiedName
-            : type.QualifiedName;
+            ? genericInst.GenericType.FullName
+            : type.FullName;
     }
 }
