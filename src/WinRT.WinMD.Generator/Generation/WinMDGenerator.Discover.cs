@@ -31,7 +31,8 @@ internal static partial class WinMDGenerator
     /// </para>
     /// <para>
     /// Type discovery is performed by <see cref="AssemblyAnalyzer"/>, which collects all public
-    /// classes, interfaces, structs, enums, and delegates (including nested public types).
+    /// top-level classes, interfaces, structs, enums, and delegates. Nested types are ignored,
+    /// since the Windows Runtime type system does not support them.
     /// </para>
     /// </remarks>
     /// <param name="args">The parsed generator arguments.</param>

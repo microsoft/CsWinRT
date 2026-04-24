@@ -10,9 +10,10 @@ namespace WindowsRuntime.WinMDGenerator.Discovery;
 /// Analyzes a compiled assembly to discover its public Windows Runtime API surface.
 /// </summary>
 /// <remarks>
-/// This type is responsible for scanning the input module and collecting all public types
-/// that should be represented in the output WinMD. It discovers public classes, interfaces,
-/// structs, enums, and delegates, including nested public types.
+/// This type is responsible for scanning the input module and collecting all public top-level
+/// types that should be represented in the output WinMD. It discovers public classes, interfaces,
+/// structs, enums, and delegates. Nested types are intentionally ignored, since the Windows
+/// Runtime type system does not support them.
 /// </remarks>
 internal sealed class AssemblyAnalyzer
 {
@@ -36,8 +37,8 @@ internal sealed class AssemblyAnalyzer
     public string AssemblyName => _inputModule.Assembly?.Name?.Value ?? _inputModule.Name!.Value;
 
     /// <summary>
-    /// Discovers all public types in the input assembly that should be included in the WinMD.
-    /// This includes public classes, interfaces, structs, enums, and delegates.
+    /// Discovers all public top-level types in the input assembly that should be included in the WinMD.
+    /// This includes public classes, interfaces, structs, enums, and delegates. Nested types are ignored.
     /// </summary>
     /// <returns>A list of <see cref="TypeDefinition"/> instances representing the public API surface.</returns>
     public IReadOnlyList<TypeDefinition> DiscoverPublicTypes()
@@ -46,34 +47,18 @@ internal sealed class AssemblyAnalyzer
 
         foreach (TypeDefinition type in _inputModule.TopLevelTypes)
         {
-            CollectPublicTypes(type, publicTypes);
+            if (!type.IsPublic)
+            {
+                continue;
+            }
+
+            // We include classes, interfaces, structs, enums, and delegates
+            if (type.IsClass || type.IsInterface || type.IsValueType || type.IsEnum || type.IsDelegate)
+            {
+                publicTypes.Add(type);
+            }
         }
 
         return publicTypes;
-    }
-
-    /// <summary>
-    /// Recursively collects public types, including nested public types.
-    /// </summary>
-    /// <param name="type">The type to check and potentially collect.</param>
-    /// <param name="publicTypes">The list to add public types to.</param>
-    private static void CollectPublicTypes(TypeDefinition type, List<TypeDefinition> publicTypes)
-    {
-        if (!type.IsPublic && !type.IsNestedPublic)
-        {
-            return;
-        }
-
-        // We include classes, interfaces, structs, enums, and delegates
-        if (type.IsClass || type.IsInterface || type.IsValueType || type.IsEnum || type.IsDelegate)
-        {
-            publicTypes.Add(type);
-        }
-
-        // Recurse into nested types
-        foreach (TypeDefinition nestedType in type.NestedTypes)
-        {
-            CollectPublicTypes(nestedType, publicTypes);
-        }
     }
 }

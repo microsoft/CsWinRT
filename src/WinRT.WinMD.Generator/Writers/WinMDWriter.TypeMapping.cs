@@ -167,8 +167,8 @@ internal sealed partial class WinMDWriter
                 return declaration.OutputType;
             }
 
-            // If this is a public type from the input module, process it on demand
-            if (typeDef.IsPublic || typeDef.IsNestedPublic)
+            // If this is a public top-level type from the input module, process it on demand
+            if (typeDef.IsPublic)
             {
                 ProcessType(typeDef);
 
