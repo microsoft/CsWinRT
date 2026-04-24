@@ -42,10 +42,8 @@ public sealed class PublicTypeRequiresContractVersionAnalyzer : DiagnosticAnalyz
 
             context.RegisterSymbolAction(context =>
             {
-                INamedTypeSymbol typeSymbol = (INamedTypeSymbol)context.Symbol;
-
                 // Only consider top-level public types
-                if (typeSymbol is not { DeclaredAccessibility: Accessibility.Public, ContainingType: null })
+                if (context.Symbol is not INamedTypeSymbol { DeclaredAccessibility: Accessibility.Public, ContainingType: null } typeSymbol)
                 {
                     return;
                 }
