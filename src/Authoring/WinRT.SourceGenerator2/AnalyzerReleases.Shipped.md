@@ -17,3 +17,6 @@ CSWINRT2007 | WindowsRuntime.SourceGenerator | Error | Indexer type not found fo
 CSWINRT2008 | WindowsRuntime.SourceGenerator | Error | Static indexer for '[GeneratedCustomPropertyProvider]'
 CSWINRT2009 | WindowsRuntime.SourceGenerator | Warning | Cast to '[ComImport]' type not supported
 CSWINRT2010 | WindowsRuntime.SourceGenerator | Warning | API contract enum type with enum cases
+CSWINRT2011 | WindowsRuntime.SourceGenerator | Warning | Invalid 'ContractVersionAttribute' target for version-only constructor
+CSWINRT2012 | WindowsRuntime.SourceGenerator | Warning | Invalid 'ContractVersionAttribute' target for contract-type constructor
+CSWINRT2013 | WindowsRuntime.SourceGenerator | Warning | Invalid 'ContractVersionAttribute' contract type argument
