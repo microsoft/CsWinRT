@@ -73,7 +73,7 @@ internal sealed partial class WinMDWriter
         // Handle generic instance types
         if (inputSignature is GenericInstanceTypeSignature genericInst)
         {
-            string genericTypeName = genericInst.GenericType.QualifiedName;
+            string genericTypeName = genericInst.GenericType.FullName;
 
             // Map 'Span<T>' and 'ReadOnlySpan<T>' to T[] (SzArray) for Windows Runtime
             // 'ReadOnlySpan<T>' → PassArray (in), 'Span<T>' → FillArray (out without BYREF)
@@ -118,7 +118,7 @@ internal sealed partial class WinMDWriter
         // Handle TypeDefOrRefSignature
         if (inputSignature is TypeDefOrRefSignature typeDefOrRef)
         {
-            string typeName = typeDefOrRef.Type.QualifiedName;
+            string typeName = typeDefOrRef.Type.FullName;
 
             // Check if the type has a Windows Runtime mapping (e.g., 'IDisposable' -> 'IClosable', 'Type' -> 'TypeName')
             if (_mapper.HasMappingForType(typeName))
@@ -160,9 +160,10 @@ internal sealed partial class WinMDWriter
     {
         if (type is TypeDefinition typeDef)
         {
+            string fullName = typeDef.FullName;
+
             // Check if we've already processed this type into the output module
-            string qualifiedName = typeDef.QualifiedName;
-            if (_typeDefinitionMapping.TryGetValue(qualifiedName, out TypeDeclaration? declaration) && declaration.OutputType is not null)
+            if (_typeDefinitionMapping.TryGetValue(fullName, out TypeDeclaration? declaration) && declaration.OutputType is not null)
             {
                 return declaration.OutputType;
             }
@@ -172,7 +173,7 @@ internal sealed partial class WinMDWriter
             {
                 ProcessType(typeDef);
 
-                if (_typeDefinitionMapping.TryGetValue(qualifiedName, out declaration) && declaration.OutputType is not null)
+                if (_typeDefinitionMapping.TryGetValue(fullName, out declaration) && declaration.OutputType is not null)
                 {
                     return declaration.OutputType;
                 }

@@ -50,7 +50,7 @@ internal sealed partial class WinMDWriter
                 continue;
             }
 
-            string interfaceName = GetInterfaceQualifiedName(interfaceImplementation.Interface);
+            string interfaceName = GetInterfaceFullName(interfaceImplementation.Interface);
 
             if (!_mapper.HasMappingForType(interfaceName))
             {
@@ -69,7 +69,7 @@ internal sealed partial class WinMDWriter
         }
 
         // If generic 'IEnumerable<T>' ('IIterable') is present, skip non-generic 'IEnumerable' ('IBindableIterable')
-        bool hasGenericEnumerable = allInterfaces.Any(i => i.Interface is not null && GetInterfaceQualifiedName(i.Interface) == "System.Collections.Generic.IEnumerable`1");
+        bool hasGenericEnumerable = allInterfaces.Any(i => i.Interface is not null && GetInterfaceFullName(i.Interface) == "System.Collections.Generic.IEnumerable`1");
 
         foreach ((InterfaceImplementation interfaceImplementation, string interfaceName, MappedType mapping, bool isPublic) in mappedInterfaces)
         {
@@ -143,7 +143,7 @@ internal sealed partial class WinMDWriter
         // Check if the mapped type itself has a Windows Runtime mapping (e.g. 'KeyValuePair' -> 'IKeyValuePair')
         if (mapped is TypeDefOrRefSignature typeDefOrRefSignature)
         {
-            string typeName = typeDefOrRefSignature.Type.QualifiedName;
+            string typeName = typeDefOrRefSignature.Type.FullName;
 
             if (_mapper.HasMappingForType(typeName))
             {
@@ -159,7 +159,7 @@ internal sealed partial class WinMDWriter
         // For generic instances, recursively map type arguments
         if (mapped is GenericInstanceTypeSignature genericInstanceSignature)
         {
-            string typeName = genericInstanceSignature.GenericType.QualifiedName;
+            string typeName = genericInstanceSignature.GenericType.FullName;
 
             if (_mapper.HasMappingForType(typeName))
             {
@@ -867,7 +867,7 @@ internal sealed partial class WinMDWriter
                 continue;
             }
 
-            string interfaceName = GetInterfaceQualifiedName(interfaceImplementation.Interface);
+            string interfaceName = GetInterfaceFullName(interfaceImplementation.Interface);
 
             // Include members from both mapped interfaces and unmapped interfaces
             if (!_mapper.HasMappingForType(interfaceName) &&

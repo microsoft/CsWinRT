@@ -93,19 +93,5 @@ internal static class TypeDefinitionExtensions
                 return null;
             }
         }
-
-        /// <summary>
-        /// Gets the fully qualified name of the type, including generic arity.
-        /// </summary>
-        public string QualifiedName
-        {
-            get
-            {
-                string name = type.Name!.Value;
-                string? @namespace = type.Namespace?.Value;
-
-                return @namespace is { Length: > 0 } ? $"{@namespace}.{name}" : name;
-            }
-        }
     }
 }

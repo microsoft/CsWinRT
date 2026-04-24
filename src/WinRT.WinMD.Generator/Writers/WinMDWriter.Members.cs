@@ -167,7 +167,8 @@ internal sealed partial class WinMDWriter
         // Span<T> → FillArray pattern: [out] without BYREF
         if (inputParamType is GenericInstanceTypeSignature genericInstanceSignature)
         {
-            string typeName = genericInstanceSignature.GenericType.QualifiedName;
+            string typeName = genericInstanceSignature.GenericType.FullName;
+
             if (typeName == "System.Span`1")
             {
                 return ParameterAttributes.Out;

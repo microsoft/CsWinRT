@@ -156,11 +156,11 @@ internal sealed partial class WinMDWriter
             // find the matching interface from the INPUT type which points to resolvable projection assemblies
             if (interfaceDef is null)
             {
-                string outputIfaceName = GetInterfaceQualifiedName(classInterfaceImpl.Interface!);
+                string outputIfaceName = GetInterfaceFullName(classInterfaceImpl.Interface!);
 
                 foreach (InterfaceImplementation inputImpl in classInputType.Interfaces)
                 {
-                    if (inputImpl.Interface is not null && GetInterfaceQualifiedName(inputImpl.Interface) == outputIfaceName)
+                    if (inputImpl.Interface is not null && GetInterfaceFullName(inputImpl.Interface) == outputIfaceName)
                     {
                         interfaceDef = inputImpl.Interface is TypeSpecification inputTypeSpecification
                             && inputTypeSpecification.Signature is GenericInstanceTypeSignature inputGenericInstanceSignature
@@ -180,9 +180,9 @@ internal sealed partial class WinMDWriter
             }
 
             // Skip the default synthesized interface — it's handled separately below
-            string interfaceQualName = interfaceDef.QualifiedName;
+            string interfaceFullName = interfaceDef.FullName;
 
-            if (interfaceQualName == declaration.DefaultInterface)
+            if (interfaceFullName == declaration.DefaultInterface)
             {
                 continue;
             }
@@ -225,14 +225,14 @@ internal sealed partial class WinMDWriter
         bool resolvedFromInput,
         TypeSignature[]? interfaceGenericArgs)
     {
-        string interfaceQualName = interfaceDef.QualifiedName;
+        string interfaceFullName = interfaceDef.FullName;
         List<MethodDefinition> interfaceMethods = [.. interfaceDef.Methods];
 
         foreach (MethodDefinition interfaceMethod in interfaceMethods)
         {
             // Check if an explicit implementation already exists for this interface method.
             // If so, prefer it — don't create a 'MethodImpl' for the public method.
-            string explicitName = $"{interfaceQualName}.{interfaceMethod.Name?.Value}";
+            string explicitName = $"{interfaceFullName}.{interfaceMethod.Name?.Value}";
             int paramCount = interfaceMethod.Signature?.ParameterTypes.Count ?? 0;
 
             bool hasExplicitImpl = classOutputType.Methods.Any(m =>
