@@ -55,14 +55,9 @@ public sealed class ValidContractVersionAttributeAnalyzer : DiagnosticAnalyzer
 
                 bool isApiContractType = IsApiContractType(typeSymbol, apiContractAttributeType);
 
-                foreach (AttributeData attribute in typeSymbol.GetAttributes())
+                foreach (AttributeData attribute in typeSymbol.GetAttributes(contractVersionAttributeType))
                 {
                     // We can have multiple '[ContractVersion]' uses, so we need to iterate and check each of them
-                    if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, contractVersionAttributeType))
-                    {
-                        continue;
-                    }
-
                     if (attribute.AttributeConstructor is not { } constructor)
                     {
                         continue;
