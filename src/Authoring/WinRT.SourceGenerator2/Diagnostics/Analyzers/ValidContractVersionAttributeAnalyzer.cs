@@ -59,6 +59,7 @@ public sealed class ValidContractVersionAttributeAnalyzer : DiagnosticAnalyzer
 
                 foreach (AttributeData attribute in typeSymbol.GetAttributes())
                 {
+                    // We can have multiple '[ContractVersion]' uses, so we need to iterate and check each of them
                     if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, contractVersionAttributeType))
                     {
                         continue;
@@ -82,20 +83,17 @@ public sealed class ValidContractVersionAttributeAnalyzer : DiagnosticAnalyzer
                     bool isContractTypeConstructor = parameters is
                         [{ Type: INamedTypeSymbol { MetadataName: "Type", ContainingNamespace.Name: "System" } }, _];
 
-                    if (isVersionOnlyConstructor)
+                    // The version-only constructors must be applied to API contract types
+                    if (isVersionOnlyConstructor && !isApiContractType)
                     {
-                        // The version-only constructors must be applied to API contract types
-                        if (!isApiContractType)
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(
-                                DiagnosticDescriptors.ContractVersionAttributeRequiresApiContractTarget,
-                                GetAttributeLocation(attribute, context.CancellationToken) ?? typeSymbol.Locations.FirstOrDefault(),
-                                typeSymbol));
-                        }
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            DiagnosticDescriptors.ContractVersionAttributeRequiresApiContractTarget,
+                            GetAttributeLocation(attribute, context.CancellationToken) ?? typeSymbol.Locations.FirstOrDefault(),
+                            typeSymbol));
                     }
                     else if (isContractTypeConstructor)
                     {
-                        // The contract-type constructor must NOT be applied to API contract types
+                        // The contract-type constructor must not be applied to API contract types
                         if (isApiContractType)
                         {
                             context.ReportDiagnostic(Diagnostic.Create(
