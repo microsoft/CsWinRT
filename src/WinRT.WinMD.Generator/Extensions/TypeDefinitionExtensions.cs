@@ -35,9 +35,14 @@ internal static class TypeDefinitionExtensions
         public bool IsApiContract => type.FindCustomAttributes("Windows.Foundation.Metadata", "ApiContractAttribute").Any();
 
         /// <summary>
-        /// Checks whether the type already has a <c>[Version]</c> or <c>[ContractVersion]</c> attribute.
+        /// Checks whether the type already has the <c>[Version]</c> attribute.
         /// </summary>
         public bool HasVersionAttribute => type.FindCustomAttributes("Windows.Foundation.Metadata", "VersionAttribute").Any();
+
+        /// <summary>
+        /// Checks whether the type already has the <c>[ContractVersion]</c> attribute.
+        /// </summary>
+        public bool HasContractVersionAttribute => type.FindCustomAttributes("Windows.Foundation.Metadata", "ContractVersionAttribute").Any();
 
         /// <summary>
         /// Gets the version number from the type's <c>[Version]</c> attribute, if present.

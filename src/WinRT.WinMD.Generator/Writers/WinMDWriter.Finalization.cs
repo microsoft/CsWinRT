@@ -38,7 +38,7 @@ internal sealed partial class WinMDWriter
         // Snapshot the mapping to avoid modification during iteration ('ProcessType' may add entries via 'MapTypeSignatureToOutput').
         List<KeyValuePair<string, TypeDeclaration>> typeDeclarations = [.. _typeDefinitionMapping];
 
-        foreach ((string qualifiedName, TypeDeclaration declaration) in typeDeclarations)
+        foreach ((_, TypeDeclaration declaration) in typeDeclarations)
         {
             if (declaration.OutputType is null || declaration.InputType is null || !declaration.IsComponentType)
             {
@@ -58,19 +58,14 @@ internal sealed partial class WinMDWriter
                 continue;
             }
 
-            if (!declaration.OutputType.HasVersionAttribute)
+            // Skip adding '[Version]' attribute if the input type has '[ContractVersion]' attribute
+            // (it will be copied in Phase 3 via 'CopyCustomAttributes').
+            if (!declaration.OutputType.HasVersionAttribute && !declaration.OutputType.HasContractVersionAttribute)
             {
-                // Skip adding '[Version]' attribute if the input type has '[ContractVersion]' attribute
-                // (it will be copied in Phase 3 via 'CopyCustomAttributes')
-                bool hasContractVersion = declaration.InputType?.CustomAttributes.Any(
-                    attribute => attribute.Constructor?.DeclaringType?.Name?.Value == "ContractVersionAttribute") == true;
+                // Use the version from the input type if available, otherwise use the default
+                int version = declaration.InputType is not null ? GetVersion(declaration.InputType) : defaultVersion;
 
-                if (!hasContractVersion)
-                {
-                    // Use the version from the input type if available, otherwise use the default
-                    int version = declaration.InputType is not null ? GetVersion(declaration.InputType) : defaultVersion;
-                    AddVersionAttribute(declaration.OutputType, version);
-                }
+                AddVersionAttribute(declaration.OutputType, version);
             }
         }
 
