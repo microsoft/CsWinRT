@@ -38,7 +38,7 @@ internal static partial class WinMDGenerator
     {
         WinMDGeneratorArgs args;
 
-        // Phase 1: Parse the actual arguments from the response file
+        // Parse the arguments from the response file
         try
         {
             args = WinMDGeneratorArgs.ParseFromResponseFile(inputFilePath, token);
@@ -50,14 +50,13 @@ internal static partial class WinMDGenerator
 
         token.ThrowIfCancellationRequested();
 
-        ConsoleApp.Log($"Generating WinMD for assembly: {System.IO.Path.GetFileName(args.InputAssemblyPath)}");
-        ConsoleApp.Log($"Output: {args.OutputWinmdPath}");
-
-        // Phase 2: Load and discover
+        // Discover the types to process
         WinMDGeneratorDiscoveryState discoveryState;
 
         try
         {
+            ConsoleApp.Log($"Processing assembly: '{System.IO.Path.GetFileName(args.InputAssemblyPath)}'");
+
             discoveryState = Discover(args);
         }
         catch (Exception e) when (!e.IsWellKnown)
@@ -67,11 +66,11 @@ internal static partial class WinMDGenerator
 
         token.ThrowIfCancellationRequested();
 
-        ConsoleApp.Log($"Found {discoveryState.PublicTypes.Count} public types");
-
-        // Phase 3: Generate and write the WinMD
+        // Generate and write the .winmd file
         try
         {
+            ConsoleApp.Log($"Defining {discoveryState.PublicTypes.Count} authored type(s)");
+
             Generate(args, discoveryState);
         }
         catch (Exception e) when (!e.IsWellKnown)
@@ -79,6 +78,6 @@ internal static partial class WinMDGenerator
             throw new UnhandledWinMDException("generation", e);
         }
 
-        ConsoleApp.Log($"WinMD generated successfully: {args.OutputWinmdPath}");
+        ConsoleApp.Log($"Windows Runtime assembly (.winmd) generated -> {args.OutputWinmdPath}");
     }
 }
