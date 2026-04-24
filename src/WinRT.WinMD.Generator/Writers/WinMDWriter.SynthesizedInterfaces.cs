@@ -169,7 +169,7 @@ internal sealed partial class WinMDWriter
         HashSet<string> membersFromInterfaces)
     {
         bool hasMembers = false;
-        string @namespace = inputType.EffectiveNamespace ?? "";
+        string @namespace = inputType.Namespace?.Value ?? "";
         string className = inputType.Name!.Value;
         string interfaceName = GetSynthesizedInterfaceName(className, interfaceType);
 

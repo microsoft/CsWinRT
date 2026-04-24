@@ -43,7 +43,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "ValueType", "mscorlib");
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes,
             baseType: baseType);
@@ -85,7 +85,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "Enum", "mscorlib");
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes,
             baseType: baseType);
@@ -177,7 +177,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "MulticastDelegate", "mscorlib");
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes,
             baseType: baseType);
@@ -263,7 +263,7 @@ internal sealed partial class WinMDWriter
             TypeAttributes.Abstract;
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes);
 
@@ -334,7 +334,7 @@ internal sealed partial class WinMDWriter
         TypeReference baseType = GetOrCreateTypeReference("System", "ValueType", "mscorlib");
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes,
             baseType: baseType);
@@ -424,7 +424,7 @@ internal sealed partial class WinMDWriter
         }
 
         TypeDefinition outputType = new(
-            ns: inputType.EffectiveNamespace,
+            ns: inputType.Namespace?.Value,
             name: inputType.Name!.Value,
             attributes: typeAttributes,
             baseType: baseType);

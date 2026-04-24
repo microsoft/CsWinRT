@@ -180,7 +180,7 @@ internal sealed partial class WinMDWriter
 
             // External type or non-Windows Runtime type — create a type reference
             return GetOrCreateTypeReference(
-                typeDef.EffectiveNamespace ?? "",
+                typeDef.Namespace?.Value ?? "",
                 typeDef.Name!.Value,
                 _inputModule.Assembly?.Name?.Value ?? "mscorlib");
         }
@@ -254,7 +254,7 @@ internal sealed partial class WinMDWriter
     {
         if (type is TypeDefinition typeDef)
         {
-            string @namespace = typeDef.EffectiveNamespace ?? "";
+            string @namespace = typeDef.Namespace?.Value ?? "";
             string name = typeDef.Name!.Value;
             string assembly = _outputModule.Assembly?.Name?.Value ?? "mscorlib";
 
