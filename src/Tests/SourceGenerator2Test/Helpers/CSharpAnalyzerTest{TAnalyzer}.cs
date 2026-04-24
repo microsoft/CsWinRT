@@ -59,11 +59,13 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
     /// <param name="expectedDiagnostics">The list of expected diagnostic for the test (used as alternative to the markdown syntax).</param>
     /// <param name="allowUnsafeBlocks">Whether to enable unsafe blocks.</param>
     /// <param name="languageVersion">The language version to use to run the test.</param>
+    /// <param name="isCsWinRTComponent">Whether to set the <c>"CsWinRTComponent"</c> MSBuild property to <see langword="true"/>.</param>
     public static Task VerifyAnalyzerAsync(
         string source,
         ReadOnlySpan<DiagnosticResult> expectedDiagnostics = default,
         bool allowUnsafeBlocks = true,
-        LanguageVersion languageVersion = LanguageVersion.CSharp14)
+        LanguageVersion languageVersion = LanguageVersion.CSharp14,
+        bool isCsWinRTComponent = false)
     {
         CSharpAnalyzerTest<TAnalyzer> test = new(allowUnsafeBlocks, languageVersion) { TestCode = source };
 
@@ -72,6 +74,16 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(CoreApplication).Assembly.Location));
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(Button).Assembly.Location));
         test.TestState.ExpectedDiagnostics.AddRange([.. expectedDiagnostics]);
+
+        // Configure the desired MSBuild properties via a global analyzer config file
+        if (isCsWinRTComponent)
+        {
+            test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", """
+                is_global = true
+
+                build_property.CsWinRTComponent = true
+                """));
+        }
 
         return test.RunAsync(CancellationToken.None);
     }
