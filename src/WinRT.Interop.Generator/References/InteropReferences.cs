@@ -190,6 +190,16 @@ internal sealed class InteropReferences
         publicKeyOrToken: WellKnownPublicKeyTokens.CsWinRT);
 
     /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Component.dll</c>.
+    /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
+    public AssemblyReference WinRTComponent => field ??= new AssemblyReference(
+        name: "WinRT.Component",
+        version: new Version(0, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.CsWinRT);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Attribute"/>.
     /// </summary>
     public TypeReference Attribute => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "Attribute"u8);
@@ -1483,6 +1493,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Size</c>.
     /// </summary>
     public TypeReference Size => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "Size"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IActivationFactory</c>.
+    /// </summary>
+    public TypeReference IActivationFactory => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IActivationFactory"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.IStringable</c>.

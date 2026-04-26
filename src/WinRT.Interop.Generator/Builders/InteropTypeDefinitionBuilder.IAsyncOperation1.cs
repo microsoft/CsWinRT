@@ -356,8 +356,8 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 implType: out implType,
                 vtableMethods: [
-                    get_CompletedMethod,
                     set_CompletedMethod,
+                    get_CompletedMethod,
                     getResultsMethod]);
 
             // Track the type (it may be needed by COM interface entries for user-defined types)

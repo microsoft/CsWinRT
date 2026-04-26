@@ -4988,7 +4988,16 @@ R"(
     trimTarget: typeof(%))]
 )",
             projection_name,
-            projection_name,
+            bind([&](writer& w) {
+                if (settings.component)
+                {
+                    write_type_name(w, type, typedef_name_type::ABI, true);
+                }
+                else
+                {
+                    w.write("%", projection_name);
+                }
+            }),
             projection_name);
     }
 
@@ -5012,8 +5021,33 @@ R"(
                 w.write(projection_name);
             }
         }),
-        projection_name, 
+        bind([&](writer& w) {
+            if (settings.component)
+            {
+                write_type_name(w, type, typedef_name_type::ABI, true);
+            }
+            else
+            {
+                w.write("%", projection_name);
+            }
+        }),
         projection_name);
+
+        // For structs, enums, and delegates that are authored,
+        // we can't put the marshaler attribute on the actual type,
+        // so we use a proxy type.
+        if (get_category(type) != category::interface_type && settings.component)
+        {
+            w.write(
+                R"(
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
+    source: typeof(%),
+    proxy: typeof(%))]
+
+)",
+                projection_name,
+                bind<write_type_name>(type, typedef_name_type::ABI, true));
+        }
     }
 
     void write_winrt_idic_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
@@ -5048,13 +5082,26 @@ R"(
             return;
         }
 
-        w.write("[WindowsRuntimeReferenceType(typeof(%?))]\n", type.TypeName());
+        w.write("[WindowsRuntimeReferenceType(typeof(%?))]\n",
+            bind<write_type_name>(type, typedef_name_type::Projected, false));
     }
 
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
     {
         std::filesystem::path db_path(type.get_database().path());
         w.write("[WindowsRuntimeMetadata(\"%\")]\n", db_path.stem().string());
+    }
+
+    void write_winrt_metadata_typename_attribute(writer& w, TypeDef const& type)
+    {
+        w.write("[WindowsRuntimeMetadataTypeName(\"%\")]\n",
+            bind<write_type_name>(type, typedef_name_type::NonProjected, true));
+    }
+
+    void write_winrt_mapped_type_attribute(writer& w, TypeDef const& type)
+    {
+        w.write("[WindowsRuntimeMappedType(typeof(%))]\n",
+            bind<write_type_name>(type, typedef_name_type::Projected, true));
     }
 
     void write_value_type_winrt_classname_attribute(writer& w, TypeDef const& type)
@@ -8744,19 +8791,17 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     void write_authoring_metadata_type(writer& w, TypeDef const& type)
     {
-        w.write("%%%%internal class % {}\n",
-            bind<write_winrt_attribute>(type),
-            bind<write_winrt_exposed_type_attribute>(type, false),
-            [&](writer& w)
-            {
-                auto category = get_category(type);
-                if (category == category::delegate_type || category == category::struct_type)
-                {
-                    write_winrt_helper_type_attribute(w, type);
-                }
-            },
-            bind<write_type_custom_attributes>(type, false),
-            bind<write_type_name>(type, typedef_name_type::CCW, false));
+        if (get_category(type) != category::delegate_type)
+        {
+            write_winrt_reference_type_attribute(w, type);
+        }
+
+        w.write("%%%%file static class % {}\n",
+            bind<write_winrt_metadata_typename_attribute>(type),
+            bind<write_winrt_mapped_type_attribute>(type),
+            bind<write_value_type_winrt_classname_attribute>(type),
+            bind<write_comwrapper_marshaller_attribute>(type),
+            bind<write_type_name>(type, typedef_name_type::ABI, false));
     }
 
     void write_contract(writer& w, TypeDef const& type)
@@ -9964,6 +10009,11 @@ internal unsafe struct %Vftbl
         write_delegate_com_wrappers_marshaller_attribute_impl(w, type);
         write_delegate_impl(w, type);
         write_reference_impl(w, type);
+
+        if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
+        }
     }
 
     void write_constant(writer& w, Constant const& value)
@@ -9983,7 +10033,6 @@ internal unsafe struct %Vftbl
     {
         if (settings.component)
         {
-            // write_authoring_metadata_type(w, type);
             return;
         }
 
@@ -10022,13 +10071,17 @@ R"(
         write_interface_entries_impl(w, type);
         write_struct_and_enum_com_wrappers_marshaller_attribute_impl(w, type);
         write_reference_impl(w, type);
+
+        if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
+        }
     }
     
     void write_struct(writer& w, TypeDef const& type)
     {
         if (settings.component)
         {
-            // write_authoring_metadata_type(w, type);
             return;
         }
 
@@ -10133,6 +10186,12 @@ R"(
     {
         if (!is_type_blittable(type))
         {
+            if (settings.component)
+            {
+                write_winrt_metadata_typename_attribute(w, type);
+                write_winrt_mapped_type_attribute(w, type);
+            }
+
             w.write("%%% unsafe struct %\n{\n",
                 bind<write_value_type_winrt_classname_attribute>(type),
                 bind<write_comwrapper_marshaller_attribute>(type),
@@ -10146,6 +10205,10 @@ R"(
                 w.write(" %;\n", field.Name());
             }
             w.write("}\n\n");
+        }
+        else if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
         }
 
         write_struct_and_enum_marshaller_class(w, type);

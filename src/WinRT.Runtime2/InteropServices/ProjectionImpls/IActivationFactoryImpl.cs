@@ -5,10 +5,12 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-namespace WindowsRuntime.InteropServices;
+namespace ABI.WindowsRuntime.InteropServices;
 
 /// <summary>
 /// The <c>IActivationFactory</c> implementation for managed types.

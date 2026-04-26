@@ -94,6 +94,23 @@ internal static class InteropInterfaceEntriesResolver
             // We always need to resolve the user-defined types in all cases below, so just do it once first
             TypeDefinition interfaceType = typeSignature.Resolve(interopReferences.RuntimeContext);
 
+            // If the type represents an '[exclusiveto]' interface for an authored type from a Windows Runtime
+            // component written in C#, we resolve the implementation from the generated 'WinRT.Component.dll' assembly.
+            // We check this before the general projected type check, because these interfaces also have
+            // '[WindowsRuntimeMetadata]' but their implementations live in 'WinRT.Component.dll', not in projections.
+            if (interopDefinitions.WindowsRuntimeComponentModule is not null &&
+                ReferenceEquals(interfaceType.DeclaringModule, interopDefinitions.WindowsRuntimeComponentModule) &&
+                !interfaceType.IsPublic)
+            {
+                (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetComponentTypeImpl(
+                    type: interfaceType,
+                    interopDefinitions: interopDefinitions);
+
+                yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
+
+                continue;
+            }
+
             // Handle the common case for all normally projected, non-generic Windows Runtime interface types. For those, all the
             // interop code will just live in the 'WinRT.Projection.dll' assembly, with all projected types for the application domain.
             if (interfaceType.IsProjectedWindowsRuntimeType)
@@ -101,6 +118,20 @@ internal static class InteropInterfaceEntriesResolver
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetProjectedTypeImpl(
                     type: interfaceType,
                     interopReferences: interopReferences);
+
+                yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
+
+                continue;
+            }
+
+            // For public (non-exclusive) interfaces from authored component assemblies, the type resolves
+            // from the authored assembly but the Impl and IID live in 'WinRT.Component.dll'.
+            if (interopDefinitions.WindowsRuntimeComponentModule is not null &&
+                interfaceType.IsInterface && interfaceType.IsComponentWindowsRuntimeType)
+            {
+                (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetComponentPublicInterfaceTypeImpl(
+                    type: interfaceType,
+                    interopDefinitions: interopDefinitions);
 
                 yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
 
@@ -130,22 +161,6 @@ internal static class InteropInterfaceEntriesResolver
                 }
 
                 yield return new ComInterfaceEntryInfo(interfaceInformationType);
-
-                continue;
-            }
-
-            // Lastly, if the type represents an '[exclusiveto]' interface for an authored type from a Windows Runtime
-            // component written in C#, we resolve the implementation from the generated 'WinRT.Component.dll' assembly.
-            // With the centralized attribute model, we check whether this interface type appears in the exclusive-to
-            // interfaces lookup from the component module, rather than checking for an attribute on the type itself.
-            if (interfaceType.DeclaringModule is { Assembly.IsWindowsRuntimeComponentAssembly: true } &&
-                !interfaceType.IsPublic)
-            {
-                (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetComponentTypeImpl(
-                    type: interfaceType,
-                    interopDefinitions: interopDefinitions);
-
-                yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
 
                 continue;
             }

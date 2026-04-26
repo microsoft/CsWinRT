@@ -700,7 +700,7 @@ TEST(AuthoringTest, GetRuntimeClassName)
     EXPECT_EQ(winrt::get_class_name(dictionary), L"AuthoringTest.CustomDictionary2");
 
     DisposableClass disposed;
-    EXPECT_EQ(winrt::get_class_name(disposed), L"AuthoringTest.DisposableClass");
+    EXPECT_EQ(winrt::get_class_name(disposed), L"AuthoringTest.DisposableClassImpl");
 
     // TestMixedWinRTCOMWrapper wrapper;
     // EXPECT_EQ(winrt::get_class_name(wrapper), L"AuthoringTest.TestMixedWinRTCOMWrapper");
@@ -710,7 +710,7 @@ TEST(AuthoringTest, GetRuntimeClassName)
     EXPECT_EQ(winrt::get_class_name(testClass.DisposableObject()), L"Windows.Foundation.IClosable");
 
     testClass.SetProjectedDisposableObject();
-    EXPECT_EQ(winrt::get_class_name(testClass.DisposableObject()), L"AuthoringTest.DisposableClass");
+    EXPECT_EQ(winrt::get_class_name(testClass.DisposableObject()), L"AuthoringTest.DisposableClassImpl");
 }
 
 TEST(AuthoringTest, XamlMetadataProvider)

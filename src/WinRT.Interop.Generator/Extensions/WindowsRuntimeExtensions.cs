@@ -111,6 +111,22 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Gets a value indicating whether the type is from a Windows Runtime component assembly.
+        /// </summary>
+        public bool IsComponentWindowsRuntimeType
+        {
+            get
+            {
+                if (type.Scope?.GetAssembly() is AssemblyDescriptor assembly)
+                {
+                    return assembly.IsWindowsRuntimeComponentAssembly;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Guid"/> type.
         /// </summary>
         /// <returns>Whether the type is some <see cref="Guid"/> type.</returns>
@@ -301,6 +317,7 @@ internal static class WindowsRuntimeExtensions
         public bool IsManuallyProjectedWindowsRuntimeNonGenericInterfaceType(InteropReferences interopReferences)
         {
             return
+                SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IActivationFactory) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncAction) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IAsyncInfo) ||
                 SignatureComparer.IgnoreVersion.Equals(type, interopReferences.IVectorChangedEventArgs) ||
@@ -645,7 +662,9 @@ internal static class WindowsRuntimeExtensions
                     ? interopReferences.WinRTSdkProjection
                     : type.IsProjectedWindowsSdkXamlType
                         ? interopReferences.WinRTSdkXamlProjection
-                        : interopReferences.WinRTProjection;
+                        : typeDefinition.IsComponentWindowsRuntimeType
+                            ? interopReferences.WinRTComponent
+                            : interopReferences.WinRTProjection;
 
                 // For all types that get here, their ABI types will be in the right projection assembly, under the 'ABI' namespace
                 return projectionAssembly.CreateTypeReference(
@@ -998,7 +1017,8 @@ internal static class WindowsRuntimeExtensions
 
             // For all other cases, just check that the type is projected. This will also include
             // manually projected types that are defined in 'WinRT.Runtime.dll' (same attributes).
-            return type.IsProjectedWindowsRuntimeType;
+            // Public types from authored component assemblies are also considered WinRT types.
+            return type.IsProjectedWindowsRuntimeType || type.IsComponentWindowsRuntimeType;
         }
 
         /// <summary>
@@ -1063,8 +1083,9 @@ internal static class WindowsRuntimeExtensions
 
             TypeDefinition type = signature.Resolve(interopReferences.RuntimeContext);
 
-            // For all other cases, first check that the type is projected (same as above)
-            if (!type.IsProjectedWindowsRuntimeType)
+            // For all other cases, first check that the type is projected. Public types from
+            // authored component assemblies are also considered projected, even without '[WindowsRuntimeMetadata]'.
+            if (!type.IsProjectedWindowsRuntimeType && !type.IsComponentWindowsRuntimeType)
             {
                 return false;
             }

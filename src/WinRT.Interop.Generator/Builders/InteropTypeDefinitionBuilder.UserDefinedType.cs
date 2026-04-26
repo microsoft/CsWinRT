@@ -206,7 +206,8 @@ internal partial class InteropTypeDefinitionBuilder
                     module: module,
                     out proxyType);
             }
-            else if (userDefinedTypeDefinition.DeclaringModule is { Assembly.IsWindowsRuntimeComponentAssembly: true })
+            else if (userDefinedTypeDefinition.IsPublic &&
+                     userDefinedTypeDefinition.DeclaringModule is { Assembly.IsWindowsRuntimeComponentAssembly: true })
             {
                 // For authored component types, the runtime class name is the type's own fully-qualified name.
                 InteropTypeDefinitionBuilder.Proxy(

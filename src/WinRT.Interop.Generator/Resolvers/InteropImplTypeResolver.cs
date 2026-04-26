@@ -115,16 +115,47 @@ internal static class InteropImplTypeResolver
         // For authored types, we use a naming convention to resolve the methods we need. This is fine, given it's all produced
         // by code generators bundled in a given CsWinRT version, so we can rely on this internal implementation detail. We also
         // validate that the naming convention is respected during the discovery phase. For each '[exclusiveto]' interface that
-        // is available for a given authored type, we expect to have an "Impl" type in the "ABI" namespace associated to the
-        // public authored type, generated in the 'WinRT.Component.dll' assembly. From there, we derive:
-        //   - The IID is from the 'ABI.InterfaceIIDs' type, matching the type name, without the "ABI." prefix and "Impl" suffix
-        //   - The type itself exposes the usual 'Vtable' property, just like the ones from projections and from the interop assembly
-        string get_IIDMethodName = $"get_IID_{type.FullName["ABI.".Length..^"Impl".Length]}";
+        // is available for a given authored type, we expect to have an "Impl" type in the "ABI.Impl" namespace associated to the
+        // public authored type, generated in the 'WinRT.Component.dll' assembly. The discovery phase tracks the interface type
+        // (e.g. 'ABI.Impl.AuthoringTest.IFooClass'), and we derive from it:
+        //   - The IID property from the 'ABI.InterfaceIIDs' type, using the original WinRT type name (stripping the 'ABI.Impl.' prefix)
+        //   - The vtable from the corresponding '*Impl' type (e.g. 'ABI.Impl.AuthoringTest.IFooClassImpl')
+        string winrtTypeName = type.FullName!["ABI.Impl.".Length..].Replace('.', '_');
+        string get_IIDMethodName = $"get_IID_{winrtTypeName}";
         TypeDefinition interfaceIIDsType = interopDefinitions.WindowsRuntimeComponentModule!.GetType("ABI"u8, "InterfaceIIDs"u8);
         MethodDefinition get_IIDMethod = interfaceIIDsType.GetMethod(get_IIDMethodName);
-        MethodDefinition get_VtableMethod = type.GetMethod("get_Vtable"u8);
+
+        // The vtable lives on the '*Impl' sibling type, but in the 'ABI.' namespace (not 'ABI.Impl.')
+        string implNamespace = type.Namespace!.ToString().Replace("ABI.Impl.", "ABI.");
+        TypeDefinition implType = interopDefinitions.WindowsRuntimeComponentModule!.GetType(implNamespace, $"{type.Name}Impl");
+        MethodDefinition get_VtableMethod = implType.GetMethod("get_Vtable"u8);
 
         // Return the pair of methods from the ABI type in the 'WinRT.Component.dll' assembly
+        return (get_IIDMethod, get_VtableMethod);
+    }
+
+    /// <summary>
+    /// Gets the "Impl" methods for a public (non-exclusive) authored interface from a Windows Runtime component.
+    /// </summary>
+    /// <param name="type">The type to get the "Impl" method for (from the authored assembly, e.g. 'AuthoringTest.IAnotherInterface').</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <returns>The "Impl" methods for <paramref name="type"/>.</returns>
+    public static (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) GetComponentPublicInterfaceTypeImpl(
+        TypeDefinition type,
+        InteropDefinitions interopDefinitions)
+    {
+        // For public (non-exclusive) interfaces from authored components, the type resolves from the authored
+        // assembly (e.g. 'AuthoringTest.IAnotherInterface'). The IID and Impl type live in 'WinRT.Component.dll':
+        //   - IID: 'ABI.InterfaceIIDs.IID_{Namespace}_{Name}' (using the original type name with dots as underscores)
+        //   - Impl: 'ABI.{Namespace}.{Name}Impl'
+        string winrtTypeName = type.FullName!.Replace('.', '_');
+        string get_IIDMethodName = $"get_IID_{winrtTypeName}";
+        TypeDefinition interfaceIIDsType = interopDefinitions.WindowsRuntimeComponentModule!.GetType("ABI"u8, "InterfaceIIDs"u8);
+        MethodDefinition get_IIDMethod = interfaceIIDsType.GetMethod(get_IIDMethodName);
+
+        TypeDefinition implType = interopDefinitions.WindowsRuntimeComponentModule!.GetType($"ABI.{type.Namespace}", $"{type.Name}Impl");
+        MethodDefinition get_VtableMethod = implType.GetMethod("get_Vtable"u8);
+
         return (get_IIDMethod, get_VtableMethod);
     }
 

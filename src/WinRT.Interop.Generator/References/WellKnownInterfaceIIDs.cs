@@ -80,6 +80,8 @@ internal static class WellKnownInterfaceIIDs
         string nameSuffix = interfaceType switch
         {
             // Shared types
+            _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IActivationFactory)
+                => "IActivationFactory",
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IDisposable)
                 => "Windows_Foundation_IClosable",
             _ when SignatureComparer.IgnoreVersion.Equals(interfaceType, interopReferences.IAsyncInfo)
