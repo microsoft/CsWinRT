@@ -77,7 +77,7 @@
       <Build Solution="*|ARM" Project="false" />
     </Project>
   </Folder>
-  <Folder Name="/Nuget/">
+  <Folder Name="/NuGet/">
     <File Path="../nuget/LICENSE" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" />
