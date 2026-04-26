@@ -5,15 +5,24 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Folder Name="/Authoring/">
-    <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj">
-      <Build Project="false" />
-    </Project>
-    <Project Path="Authoring/WinRT.Host/WinRT.Host.vcxproj" Id="7e33bcb7-19c5-4061-981d-ba695322708a">
-      <Platform Solution="*|ARM" Project="Win32" />
+  <Folder Name="/Benchmarks/">
+    <Project Path="Benchmarks/Benchmarks.csproj">
+      <BuildDependency Project="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
+      <BuildDependency Project="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
+      <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
+      <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
     </Project>
-    <Project Path="Authoring/WinRT.SourceGenerator2/WinRT.SourceGenerator2.csproj" />
+    <Project Path="TestWinRT/BenchmarkComponent/BenchmarkComponent.vcxproj" Id="78d85f23-7cb1-44a1-9238-6df2c76754e4">
+      <BuildDependency Project="cswinrt/cswinrt.vcxproj" />
+      <Platform Solution="*|ARM64" Project="Win32" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/Docs/">
     <File Path="../docs/aot-trimming.md" />
@@ -58,6 +67,15 @@
     <File Path="get_buildtools.ps1" />
     <File Path="get_testwinrt.cmd" />
     <File Path="Strings.props" />
+  </Folder>
+  <Folder Name="/Hosting/">
+    <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj">
+      <Build Project="false" />
+    </Project>
+    <Project Path="Authoring/WinRT.Host/WinRT.Host.vcxproj" Id="7e33bcb7-19c5-4061-981d-ba695322708a">
+      <Platform Solution="*|ARM" Project="Win32" />
+      <Build Solution="*|ARM" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/Nuget/">
     <File Path="../nuget/LICENSE" />
@@ -209,6 +227,13 @@
     </Project>
     <Project Path="Tests/HostTest/HostTest.vcxproj" Id="b511b7c9-c8e2-47ed-a0d1-538c00747d30">
       <Platform Solution="*|ARM" Project="Win32" />
+      <Build Project="false" />
+    </Project>
+    <Project Path="Tests/ObjectLifetimeTests/ObjectLifetimeTests.Lifted.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="arm64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
       <Build Project="false" />
     </Project>
     <Project Path="Tests/OOPExe/OOPExe.csproj">
@@ -385,36 +410,13 @@
     <File Path="Tests/FunctionalTests/PublishProfiles/win-x64.pubxml" />
     <File Path="Tests/FunctionalTests/PublishProfiles/win-x86.pubxml" />
   </Folder>
-  <Project Path="Benchmarks/Benchmarks.csproj">
-    <BuildDependency Project="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
-    <BuildDependency Project="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
-    <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
-    <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
-    <Platform Solution="*|ARM" Project="x86" />
-    <Platform Solution="*|ARM64" Project="x86" />
-    <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="*|x86" Project="x86" />
-    <Build Solution="*|ARM" Project="false" />
-    <Build Solution="*|ARM64" Project="false" />
-  </Project>
+  <Project Path="Authoring/WinRT.SourceGenerator2/WinRT.SourceGenerator2.csproj" />
   <Project Path="cswinrt/cswinrt.vcxproj" Id="6acfd2b2-e8aa-4cd4-aad8-213ce8bb2637">
     <Platform Solution="*|ARM" Project="Win32" />
     <Platform Solution="*|ARM64" Project="Win32" />
     <Build Solution="*|ARM" Project="false" />
   </Project>
   <Project Path="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" Id="d71298e7-f1c7-4534-8f5f-b9ef7c40d9de" />
-  <Project Path="Tests/ObjectLifetimeTests/ObjectLifetimeTests.Lifted.csproj">
-    <Platform Solution="*|ARM" Project="x86" />
-    <Platform Solution="*|ARM64" Project="arm64" />
-    <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="*|x86" Project="x86" />
-    <Build Project="false" />
-  </Project>
-  <Project Path="TestWinRT/BenchmarkComponent/BenchmarkComponent.vcxproj" Id="78d85f23-7cb1-44a1-9238-6df2c76754e4">
-    <BuildDependency Project="cswinrt/cswinrt.vcxproj" />
-    <Platform Solution="*|ARM64" Project="Win32" />
-    <Build Solution="*|ARM64" Project="false" />
-  </Project>
   <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
   <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
   <Project Path="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" Id="eac7df05-21df-4129-b0dd-566733fd8bdc" />
