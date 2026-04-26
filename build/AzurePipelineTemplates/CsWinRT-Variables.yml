@@ -23,8 +23,6 @@ variables:
 - name: _RunGCStress
   value: $[coalesce(variables.RunGCStress, 'false')]
 
-- name: _PublishCsWinMD
-  value: $[coalesce(variables.PublishCsWinMD, 'false')]
 - name: _PublishFunctionalTests
   value: $[coalesce(variables.PublishFunctionalTests, 'false')]
 

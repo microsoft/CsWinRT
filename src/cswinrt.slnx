@@ -6,9 +6,6 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Authoring/">
-    <Project Path="Authoring/CsWinMD/CsWinMD.csproj">
-      <Build Project="false" />
-    </Project>
     <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj" />
     <Project Path="Authoring/WinRT.Host/WinRT.Host.vcxproj" Id="7e33bcb7-19c5-4061-981d-ba695322708a">
       <Platform Solution="*|ARM" Project="Win32" />
@@ -50,15 +47,15 @@
     <File Path="SECURITY.md" />
   </Folder>
   <Folder Name="/Files/src/">
-    <File Path="../src/benchmark.cmd" />
-    <File Path="../src/benchmark_winmd.cmd" />
-    <File Path="../src/build.cmd" />
-    <File Path="../src/Directory.Build.props" />
-    <File Path="../src/Directory.Build.targets" />
-    <File Path="../src/Directory.Packages.props" />
-    <File Path="../src/get_buildtools.ps1" />
-    <File Path="../src/get_testwinrt.cmd" />
-    <File Path="../src/Strings.props" />
+    <File Path="benchmark.cmd" />
+    <File Path="benchmark_winmd.cmd" />
+    <File Path="build.cmd" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="get_buildtools.ps1" />
+    <File Path="get_testwinrt.cmd" />
+    <File Path="Strings.props" />
   </Folder>
   <Folder Name="/Nuget/">
     <File Path="../nuget/LICENSE" />
@@ -206,10 +203,6 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
-    </Project>
-    <Project Path="Tests/CSWinMDComponent/CSWinMDComponent.vcxproj" Id="d10dc47a-db45-491c-852e-2b2165f25f86">
-      <BuildDependency Project="Authoring/CsWinMD/CsWinMD.csproj" />
-      <Build Project="false" />
     </Project>
     <Project Path="Tests/DiagnosticTests/DiagnosticTests.csproj">
       <Build Project="false" />
