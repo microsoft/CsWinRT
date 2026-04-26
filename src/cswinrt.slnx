@@ -5,16 +5,10 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Folder Name="/Benchmarks/">
-    <Project Path="Benchmarks/Benchmarks.csproj">
-      <BuildDependency Project="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
-      <BuildDependency Project="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
-      <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
-      <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
-      <Platform Solution="*|ARM" Project="x86" />
-      <Platform Solution="*|ARM64" Project="x86" />
-      <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
+  <Folder Name="/Authoring/">
+    <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj" />
+    <Project Path="Authoring/WinRT.Host/WinRT.Host.vcxproj" Id="7e33bcb7-19c5-4061-981d-ba695322708a">
+      <Platform Solution="*|ARM" Project="Win32" />
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
