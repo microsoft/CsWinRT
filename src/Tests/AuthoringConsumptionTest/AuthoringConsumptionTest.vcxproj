@@ -93,7 +93,7 @@
     <ProjectReference Include="..\..\Authoring\WinRT.Host\WinRT.Host.vcxproj">
       <Project>{7e33bcb7-19c5-4061-981d-ba695322708a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj">
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj">
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
       <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
