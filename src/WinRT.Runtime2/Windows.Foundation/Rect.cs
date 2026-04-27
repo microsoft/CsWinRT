@@ -6,8 +6,10 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 
@@ -19,12 +21,15 @@ namespace Windows.Foundation;
 /// Contains number values that represent the location and size of a rectangle.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.rect"/>
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+[SupportedOSPlatform("Windows10.0.10240.0")]
+[ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Rect>")]
 [WindowsRuntimeReferenceType(typeof(Rect?))]
-[SupportedOSPlatform("Windows10.0.10240.0")]
-[ContractVersion(typeof(FoundationContract), 65536u)]
 [ABI.Windows.Foundation.RectComWrappersMarshaller]
+#endif
 public struct Rect : IEquatable<Rect>, IFormattable
 {
     /// <summary>
@@ -290,6 +295,9 @@ public struct Rect : IEquatable<Rect>, IFormattable
     /// <inheritdoc/>
     public override readonly string ToString()
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         if (IsEmpty)
         {
             return "Empty";
@@ -298,11 +306,15 @@ public struct Rect : IEquatable<Rect>, IFormattable
         char separator = TokenizerHelper.GetNumericListSeparator(null);
 
         return $"{X}{separator}{Y}{separator}{Width}{separator}{Height}";
+#endif
     }
 
     /// <inheritdoc/>
     public readonly string ToString(string? format, IFormatProvider? formatProvider)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         // Fast path if both arguments are 'null'
         if (format is null && formatProvider is null)
         {
@@ -327,6 +339,7 @@ public struct Rect : IEquatable<Rect>, IFormattable
         handler.AppendFormatted(Height, format);
 
         return handler.ToStringAndClear();
+#endif
     }
 
     /// <summary>

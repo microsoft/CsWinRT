@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -10,10 +9,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// An interface for callbacks for <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/>, for Windows Runtime arrays.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public unsafe interface IWindowsRuntimeArrayComWrappersCallback
 {
     /// <summary>

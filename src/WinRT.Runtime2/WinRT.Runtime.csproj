@@ -74,20 +74,95 @@
     -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!--
-      Workaround for: "CSC(0,0): Error AD0001: Analyzer 'ILLink.RoslynAnalyzer.DynamicallyAccessedMembersAnalyzer' threw
-      an exception of type 'System.InvalidCastException' with message 'Unable to cast object of type
-      'Microsoft.CodeAnalysis.CSharp.Symbols.PublicModel.NonErrorNamedTypeSymbol' to type 'Microsoft.CodeAnalysis.IMethodSymbol'.'.".
-    -->
-    <NoWarn>$(NoWarn);AD0001</NoWarn>
-
-    <!-- Ignore warnings for '[Obsolete]' members that are a private implementation detail (since they're allowed here) -->
-    <NoWarn>$(NoWarn);CSWINRT3001</NoWarn>
-
     <!-- Enable strong name signing -->
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <!--
+    Disable the default 'ProduceReferenceAssembly' behavior. WinRT.Runtime provides its own custom
+    reference assembly (built with 'CsWinRTBuildReferenceAssembly=true') that strips private implementation
+    detail types via '#if WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY'. The SDK-generated ref assembly would
+    include those types (since 'WINDOWS_RUNTIME_REFERENCE_ASSEMBLY' is not defined in normal builds), which
+    would leak abstract members to downstream ProjectReference consumers and break reference projections.
+  -->
+  <PropertyGroup Condition="'$(CsWinRTBuildReferenceAssembly)' != 'true'">
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+
+    <!-- Build constant to simplify '#ifdef'-s, so they don't need negation expressions -->
+    <DefineConstants>$(DefineConstants);WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY</DefineConstants>
+  </PropertyGroup>
+
+  <!--
+    When producing a reference assembly for packaging, define 'WINDOWS_RUNTIME_REFERENCE_ASSEMBLY'. This is used
+    to completely strip out the private implementation detail types from the reference assembly, so they're
+    further hidden. This is conditioned on 'CsWinRTBuildReferenceAssembly' (and NOT 'ProduceReferenceAssembly'),
+    because 'ProduceReferenceAssembly' is set to 'true' by default by the .NET SDK for library projects. The
+    stripping should only happen during the explicit reference assembly build step for NuGet packaging.
+  -->
+  <PropertyGroup Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
+    <DefineConstants>$(DefineConstants);WINDOWS_RUNTIME_REFERENCE_ASSEMBLY</DefineConstants>
+
+    <!--
+      Suppress warnings that only appear when building the reference assembly, due to types being excluded via
+      '#if !WINDOWS_RUNTIME_REFERENCE_ASSEMBLY'. These are expected and harmless in the reference assembly:
+        - CS8597: Thrown value may be null (in stubs with 'throw null' bodies).
+        - IDE0005: Unused 'using' directives (some usings are only needed by excluded code).
+        - IDE0380: 'unsafe' modifier is unnecessary (some types have 'unsafe' for excluded members).
+    -->
+    <NoWarn>$(NoWarn);CS8597;IDE0005;IDE0380</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    Strip all files whose top-level type is annotated with '[WindowsRuntimeImplementationOnlyMember]'
+    from the reference assembly build. This avoids sprinkling '#ifdefs' across the codebase and relies
+    on the attribute being the single source of truth for what constitutes a private implementation detail.
+    Runs inside a target so MSBuild applies item batching to the '%(FullPath)' metadata access.
+  -->
+  <Target
+    Name="RemoveWindowsRuntimeImplementationOnlyFiles"
+    BeforeTargets="CoreCompile"
+    Condition="'$(CsWinRTBuildReferenceAssembly)' == 'true'">
+    <ItemGroup>
+      <Compile Remove="@(Compile)" Condition="$([System.IO.File]::ReadAllText('%(FullPath)').Contains('[WindowsRuntimeImplementationOnlyMember]'))"/>
+
+      <!--
+        Also remove all files that explicitly opt out of the reference assembly by defining 'WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE'
+        at the top of the file. This provides a simple file-level opt-out for sources that reference internal types or members that
+        are stripped from the reference assembly, and that would otherwise fail to compile in the reference assembly build.
+      -->
+      <Compile Remove="@(Compile)" Condition="$([System.IO.File]::ReadAllText('%(FullPath)').Contains('#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE'))"/>
+
+      <!--
+        Also remove all ABI types, since none of these are needed for reference assemblies, and some might only contain
+        internal types, meaning they wouldn't have the attribute (so they'd be kept), but would result in build errors.
+      -->
+      <Compile Remove="ABI\**\*.cs"/>
+
+      <!-- Also remove other folders with implementation-only types, to minimize the number of code changes needed -->
+      <Compile Remove="Exceptions\**\*.cs"/>
+      <Compile Remove="InteropServices\AsyncInfo\**\*.cs"/>
+      <Compile Remove="InteropServices\Bindables\**\*.cs"/>
+      <Compile Remove="InteropServices\Buffers\**\*.cs"/>
+      <Compile Remove="InteropServices\Callbacks\**\*.cs"/>
+      <Compile Remove="InteropServices\Collections\**\*.cs"/>
+      <Compile Remove="InteropServices\Dispatching\**\*.cs"/>
+      <Compile Remove="InteropServices\Events\**\*.cs"/>
+      <Compile Remove="InteropServices\Exceptions\**\*.cs"/>
+      <Compile Remove="InteropServices\InteropDllImports\**\*.cs"/>
+      <Compile Remove="InteropServices\Marshalers\**\*.cs"/>
+      <Compile Remove="InteropServices\ObjectReference\**\*.cs"/>
+      <Compile Remove="InteropServices\Placeholders\**\*.cs"/>
+      <Compile Remove="InteropServices\ProjectionDllExports\**\*.cs"/>
+      <Compile Remove="InteropServices\ProjectionImpls\**\*.cs"/>
+      <Compile Remove="InteropServices\Streams\**\*.cs"/>
+      <Compile Remove="InteropServices\TypeMapGroups\**\*.cs"/>
+      <Compile Remove="InteropServices\TypeMapInfo\**\*.cs"/>
+      <Compile Remove="InteropServices\Vtables\**\*.cs"/>
+      <Compile Remove="InteropServices\WeakReferences\**\*.cs"/>
+      <Compile Remove="NativeObjects\**\*.cs"/>
+    </ItemGroup>
+  </Target>
     
   <!--
     Emit the [SupportedOSVersion] attribute if needed. Note that the .NET SDK already emits this attribute

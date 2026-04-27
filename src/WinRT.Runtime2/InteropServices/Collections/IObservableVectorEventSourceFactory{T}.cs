@@ -1,19 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.ComponentModel;
-
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// An interface for implementations of <see cref="Windows.Foundation.Collections.IObservableVector{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of elements in the observable vector.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public interface IObservableVectorEventSourceFactory<T>
 {
     /// <summary>

@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation.Metadata;
+#endif
 
 namespace Windows.Foundation;
 
 /// <summary>
 /// Represents the Windows Foundation API contract.
 /// </summary>
-/// <remarks>
-/// This type is required for ABI projection of the value types and delegates, but marshalling it is not supported.
-/// </remarks>
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ApiContract]
 [ContractVersion(262144u)]
+#endif
 public enum FoundationContract;

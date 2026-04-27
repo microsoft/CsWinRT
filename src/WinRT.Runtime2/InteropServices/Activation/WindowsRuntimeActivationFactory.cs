@@ -114,6 +114,9 @@ public static unsafe class WindowsRuntimeActivationFactory
     /// <inheritdoc cref="TryGetActivationFactoryUnsafe(string, in Guid, out void*)"/>
     private static HRESULT GetActivationFactoryFromAnySourceUnsafe(string runtimeClassName, in Guid iid, out void* activationFactory)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         // If we have no input IID, it means that callers just expect whatever the default interface pointer
         // returned by each attempted API is. For the activation handler and 'RoGetActivationFactory', we
         // still need to pass an IID in all cases. Unless specified, this should be 'IID_IActivationFactory'.
@@ -148,6 +151,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         return Unsafe.IsNullRef(in iid)
             ? GetActivationFactoryFromDllUnsafe(runtimeClassName, hresult, out activationFactory)
             : GetActivationFactoryFromDllUnsafe(runtimeClassName, in iid, hresult, out activationFactory);
+#endif
     }
 
     /// <summary>Tries to get the activation factory for a Windows Runtime type with the specified runtime class name, using only the registered activation handler, if present.</summary>
@@ -175,6 +179,9 @@ public static unsafe class WindowsRuntimeActivationFactory
         HRESULT hresult,
         out void* activationFactory)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         activationFactory = null;
 
         ReadOnlySpan<char> moduleName = runtimeClassName;
@@ -223,6 +230,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         }
 
         return hresult;
+#endif
     }
 
     /// <summary>Tries to get the activation factory for a Windows Runtime type with the specified runtime class name, using only manifest-free activation.</summary>
@@ -235,6 +243,9 @@ public static unsafe class WindowsRuntimeActivationFactory
         HRESULT hresult,
         out void* activationFactory)
     {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#else
         activationFactory = null;
 
         // First, try to get the activation factory with the same logic for when we don't have an IID
@@ -253,6 +264,7 @@ public static unsafe class WindowsRuntimeActivationFactory
         _ = IUnknownVftbl.ReleaseUnsafe(activationFactoryUnknown);
 
         return hresult;
+#endif
     }
 
     /// <summary>

@@ -3,8 +3,10 @@
 
 using System;
 using System.Runtime.InteropServices;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Storage.Streams;
@@ -12,9 +14,12 @@ namespace Windows.Storage.Streams;
 /// <summary>
 /// Supports random access of data in input and output streams.
 /// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [Guid("905A0FE1-BC53-11DF-8C49-001E4FC686DA")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+#endif
 public interface IRandomAccessStream : IDisposable, IInputStream, IOutputStream
 {
     /// <summary>

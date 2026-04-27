@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.ComponentModel;
 using System.Threading;
 
 namespace WindowsRuntime.InteropServices;
@@ -12,10 +11,7 @@ namespace WindowsRuntime.InteropServices;
 /// the UI thread. It needs to be installed on the UI thread through <see cref="SynchronizationContext.SetSynchronizationContext"/>
 /// invoked on a wrapping <see cref="SynchronizationContext"/> managed object (which is generated in a projection .dll).
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public readonly struct DispatcherQueueSynchronizationContext
 {
     /// <summary>

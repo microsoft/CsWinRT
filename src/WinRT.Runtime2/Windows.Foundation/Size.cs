@@ -6,8 +6,10 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using System.Runtime.Versioning;
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Foundation;
@@ -16,12 +18,15 @@ namespace Windows.Foundation;
 /// Represents number values that specify a height and width.
 /// </summary>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.size"/>
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+[SupportedOSPlatform("Windows10.0.10240.0")]
+[ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
 [WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.Foundation.Size>")]
 [WindowsRuntimeReferenceType(typeof(Size?))]
-[SupportedOSPlatform("Windows10.0.10240.0")]
-[ContractVersion(typeof(FoundationContract), 65536u)]
 [ABI.Windows.Foundation.SizeComWrappersMarshaller]
+#endif
 public struct Size : IEquatable<Size>, IFormattable
 {
     /// <summary>

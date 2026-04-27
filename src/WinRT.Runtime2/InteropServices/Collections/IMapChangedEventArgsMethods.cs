@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.Foundation.Collections;
 
@@ -11,10 +9,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Methods for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class IMapChangedEventArgsMethods
 {
     /// <summary>

@@ -1,19 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.ComponentModel;
-
 namespace WindowsRuntime.InteropServices.Marshalling;
 
 /// <summary>
 /// An interface for marshalling implementations to support <see cref="WindowsRuntimeReferenceTypeArrayMarshaller{T}"/>.
 /// </summary>
 /// <typeparam name="T">The type of elements in the array.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public unsafe interface IWindowsRuntimeReferenceTypeArrayElementMarshaller<T>
     where T : class
 {

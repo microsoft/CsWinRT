@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 #pragma warning disable CS1573
@@ -12,10 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// <summary>
 /// Methods for <c>Windows.Foundation.Collections.IMap&lt;K, V&gt;</c> types.
 /// </summary>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static unsafe class IMapMethods
 {
     /// <inheritdoc cref="System.Collections.Generic.ICollection{T}.Count"/>

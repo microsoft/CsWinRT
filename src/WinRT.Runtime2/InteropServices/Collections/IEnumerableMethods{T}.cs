@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace WindowsRuntime.InteropServices;
@@ -12,10 +10,7 @@ namespace WindowsRuntime.InteropServices;
 /// Methods for <see cref="IEnumerable{T}"/> types.
 /// </summary>
 /// <typeparam name="T">The type of objects to enumerate.</typeparam>
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public static class IEnumerableMethods<T>
 {
     /// <inheritdoc cref="IEnumerable{T}.GetEnumerator"/>

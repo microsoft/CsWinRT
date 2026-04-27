@@ -4,7 +4,9 @@
 using System;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Storage.Streams;
@@ -12,9 +14,12 @@ namespace Windows.Storage.Streams;
 /// <summary>
 /// Represents a sequential stream of bytes to be written.
 /// </summary>
-[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
 [Guid("905A0FE6-BC53-11DF-8C49-001E4FC686DA")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(UniversalApiContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.UniversalApiContract")]
+#endif
 public interface IOutputStream : IDisposable
 {
     /// <summary>

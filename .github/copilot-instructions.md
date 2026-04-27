@@ -168,6 +168,7 @@ The runtime library (`WinRT.Runtime.dll`) provides all common infrastructure for
 - **Warnings as errors**: release only. `EnforceCodeStyleInBuild` enabled, `AnalysisLevelStyle` = `latest-all`.
 - **Strong-name signed** with `key.snk`
 - **AOT compatible**: `IsAotCompatible = true`
+- **Reference assembly**: the project is built twice for NuGet packaging. With `CsWinRTBuildReferenceAssembly=true`, it produces a reference assembly (for `ref\net10.0\` in the NuGet) that strips all private implementation detail types and members. The normal build produces the full implementation assembly (for `lib\net10.0\`) and defines `WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY`; the reference assembly build defines `WINDOWS_RUNTIME_REFERENCE_ASSEMBLY` instead. Stripping is driven primarily by the `[WindowsRuntimeImplementationOnlyMember]` attribute (a `[Conditional("WINDOWS_RUNTIME_REFERENCE_ASSEMBLY")]` marker on top-level types) plus an MSBuild target that removes any source file containing that attribute, any file with a top-of-file `#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE`, and entire implementation-only folders (e.g. `ABI\`, `NativeObjects\`, most `InteropServices\` subfolders). Method bodies remaining in the reference assembly are stubbed with `throw null`. This replaces the previous approach of marking implementation details with `[Obsolete]` and `[EditorBrowsable(Never)]` attributes.
 
 **Directory structure:**
 
@@ -554,7 +555,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 - **Compiler strict mode**: `<Features>strict</Features>` in all projects
 - **XML documentation**: generated for all projects
 - **`SkipLocalsInit`**: enabled in runtime and build tools for performance
-- **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes), `CSWINRT3001` (obsolete internal members)
+- **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes)
 - **Strong-name signing**: all assemblies signed with `src/WinRT.Runtime2/key.snk`
 
 ### C++ project (cswinrt)
@@ -597,7 +598,6 @@ All four .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtint
 | Projection Generator | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0008`, `9999` |
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | Various, `9999` |
 | WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0007` |
-| Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` |
 
 ---
 

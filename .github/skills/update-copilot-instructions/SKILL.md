@@ -26,6 +26,7 @@ Launch parallel explore agents for each of the 8 CsWinRT 3.0 projects listed in 
    - Key types listed still exist and have the described purposes
    - T4 templates (`.tt` files) are accurately listed
    - Project settings (TFM, language version, nullable, unsafe, etc.) are current
+   - Reference assembly build setup (`CsWinRTBuildReferenceAssembly`, `WINDOWS_RUNTIME_REFERENCE_ASSEMBLY` / `WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY` defines, `[WindowsRuntimeImplementationOnlyMember]` attribute, `#define WINDOWS_RUNTIME_IMPLEMENTATION_ONLY_FILE` opt-out) is accurately described
    - Namespace organization matches
 
 2. **WinRT.SourceGenerator2 (`src/Authoring/WinRT.SourceGenerator2/`)**

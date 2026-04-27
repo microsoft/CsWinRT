@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Foundation.Collections;
@@ -12,6 +14,9 @@ namespace Windows.Foundation.Collections;
 /// <typeparam name="T">The type of elements in the observable vector.</typeparam>
 /// <param name="sender">The observable vector that changed.</param>
 /// <param name="event">The description of the change that occurred in the vector.</param>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 public delegate void VectorChangedEventHandler<T>(IObservableVector<T> sender, IVectorChangedEventArgs @event);

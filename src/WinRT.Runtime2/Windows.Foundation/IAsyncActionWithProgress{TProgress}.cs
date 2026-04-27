@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Runtime.InteropServices;
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 using Windows.Foundation.Metadata;
+#endif
 using WindowsRuntime;
 
 namespace Windows.Foundation;
@@ -18,9 +20,12 @@ namespace Windows.Foundation;
 /// of these as there are methods that use <see cref="IAsyncAction"/>, whose APIs don't report progress and don't have a result.
 /// </remarks>
 /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.iasyncactionwithprogress-1"/>
-[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
 [Guid("1F6DB258-E803-48A1-9546-EB7353398884")]
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
 [ContractVersion(typeof(FoundationContract), 65536u)]
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+[WindowsRuntimeMetadata("Windows.Foundation.FoundationContract")]
+#endif
 public interface IAsyncActionWithProgress<TProgress> : IAsyncInfo
 {
     /// <summary>

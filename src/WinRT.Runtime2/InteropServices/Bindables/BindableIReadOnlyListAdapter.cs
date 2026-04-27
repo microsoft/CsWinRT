@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections;
-using System.ComponentModel;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -15,10 +14,7 @@ namespace WindowsRuntime.InteropServices;
 /// still uses "IReadOnlyList" in its name to match the naming convention of adapter types matching .NET type names.
 /// </remarks>
 [WindowsRuntimeManagedOnlyType]
-[Obsolete(WindowsRuntimeConstants.PrivateImplementationDetailObsoleteMessage,
-    DiagnosticId = WindowsRuntimeConstants.PrivateImplementationDetailObsoleteDiagnosticId,
-    UrlFormat = WindowsRuntimeConstants.CsWinRTDiagnosticsUrlFormat)]
-[EditorBrowsable(EditorBrowsableState.Never)]
+[WindowsRuntimeImplementationOnlyMember]
 public sealed class BindableIReadOnlyListAdapter : IEnumerable
 {
     /// <summary>
