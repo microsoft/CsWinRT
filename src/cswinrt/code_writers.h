@@ -4758,7 +4758,7 @@ R"(public static %? UnboxToManaged(void* value)
         std::string ireference_guid_sig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guid_sig + ")";
 
         w.write(
-R"(file static unsafe class %ReferenceImpl
+R"(% static unsafe class %ReferenceImpl
 {
     [FixedAddressValueType]
     private static readonly ReferenceVftbl Vftbl;
@@ -4784,7 +4784,10 @@ R"(file static unsafe class %ReferenceImpl
         }
 
         try
-        {)", type.TypeName(), type.TypeName());
+        {)",
+            settings.component ? "public" : "file",
+            type.TypeName(),
+            type.TypeName());
         
         if (is_type_blittable(type))
         {
@@ -4999,6 +5002,19 @@ R"(
                 }
             }),
             projection_name);
+
+        if (settings.component)
+        {
+            w.write(
+                R"(
+[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
+    source: typeof(%),
+    proxy: typeof(%))]
+
+)",
+                projection_name,
+                bind<write_type_name>(type, typedef_name_type::ABI, true));
+        }
     }
 
     void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type, bool is_value_type)
@@ -5036,7 +5052,9 @@ R"(
         // For structs, enums, and delegates that are authored,
         // we can't put the marshaler attribute on the actual type,
         // so we use a proxy type.
-        if (get_category(type) != category::interface_type && settings.component)
+        if (get_category(type) != category::interface_type &&
+            get_category(type) != category::struct_type &&
+            settings.component)
         {
             w.write(
                 R"(
@@ -8791,16 +8809,26 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     void write_authoring_metadata_type(writer& w, TypeDef const& type)
     {
-        if (get_category(type) != category::delegate_type)
+        if (get_category(type) != category::delegate_type &&
+            get_category(type) != category::class_type)
         {
             write_winrt_reference_type_attribute(w, type);
         }
 
-        w.write("%%%%file static class % {}\n",
+        if (get_category(type) != category::struct_type &&
+            get_category(type) != category::class_type)
+        {
+            write_comwrapper_marshaller_attribute(w, type);
+        }
+
+        if (get_category(type) != category::class_type)
+        {
+            write_value_type_winrt_classname_attribute(w, type);
+        }
+
+        w.write("%%file static class % {}\n",
             bind<write_winrt_metadata_typename_attribute>(type),
             bind<write_winrt_mapped_type_attribute>(type),
-            bind<write_value_type_winrt_classname_attribute>(type),
-            bind<write_comwrapper_marshaller_attribute>(type),
             bind<write_type_name>(type, typedef_name_type::ABI, false));
     }
 
@@ -9770,6 +9798,7 @@ return new %(valueReference);
         if (settings.component)
         {
             write_component_class_marshaller(w, type);
+            write_authoring_metadata_type(w, type);
         }
         else
         {
@@ -10191,10 +10220,13 @@ R"(
                 write_winrt_metadata_typename_attribute(w, type);
                 write_winrt_mapped_type_attribute(w, type);
             }
+            else
+            {
+                write_comwrapper_marshaller_attribute(w, type);
+            }
 
-            w.write("%%% unsafe struct %\n{\n",
+            w.write("%% unsafe struct %\n{\n",
                 bind<write_value_type_winrt_classname_attribute>(type),
-                bind<write_comwrapper_marshaller_attribute>(type),
                 internal_accessibility(),
                 bind<write_type_name>(type, typedef_name_type::ABI, false));
 
@@ -10213,7 +10245,11 @@ R"(
 
         write_struct_and_enum_marshaller_class(w, type);
         write_interface_entries_impl(w, type);
-        write_struct_and_enum_com_wrappers_marshaller_attribute_impl(w, type);
+
+        if (!settings.component)
+        {
+            write_struct_and_enum_com_wrappers_marshaller_attribute_impl(w, type);
+        }
         write_reference_impl(w, type);
     }
 

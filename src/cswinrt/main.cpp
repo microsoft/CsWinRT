@@ -291,11 +291,21 @@ Where <spec> is one or more of:
                                 {
                                 case category::class_type:
                                     // For both static and attributes, we don't need to pass them across the ABI.
-                                    // For component types, they would be instantiated in C#.
-                                    if (!is_static(type) && !is_attribute_type(type) && !settings.component)
+                                    if (!is_static(type) && !is_attribute_type(type))
                                     {
-                                        write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, false);
+                                        // For component types, they would be instantiated in C#, so we don't need
+                                        // the ComWrappers attribute. But we do need the metadata attribute to enable
+                                        // xaml type marshaling.
+                                        if (settings.component)
+                                        {
+                                            write_winrt_windowsmetadata_typemapgroup_assembly_attribute(w, type);
+                                        }
+                                        else
+                                        {
+                                            write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, false);
+                                        }
                                     }
+
                                     break;
                                 case category::delegate_type:
                                     write_winrt_comwrappers_typemapgroup_assembly_attribute(w, type, true);

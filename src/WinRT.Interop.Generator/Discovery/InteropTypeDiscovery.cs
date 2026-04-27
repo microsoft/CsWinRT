@@ -327,7 +327,11 @@ internal static partial class InteropTypeDiscovery
 
         // If the user-defined type implements at least a Windows Runtime interface, then it's considered exposed.
         // We don't want to handle marshalling code for types with only '[GeneratedComInterface]' interfaces.
-        if (hasAnyProjectedWindowsRuntimeInterfaces)
+        // We also unconditionally track public value types from component assemblies, as they may need CCW
+        // support when boxed (e.g. as 'IReference<T>' for generic type arguments), even without interfaces.
+        if (hasAnyProjectedWindowsRuntimeInterfaces ||
+            (typeDefinition is { IsValueType: true, IsEnum: false, IsPublic: true, DeclaringType: null } &&
+             typeDefinition.IsComponentWindowsRuntimeType))
         {
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
