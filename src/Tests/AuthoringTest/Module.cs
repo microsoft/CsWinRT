@@ -11,7 +11,9 @@ namespace AuthoringTest;
 // we manually set the entry assembly which allows .NET to discover it.
 internal static class ProjectionTypesInitializer
 {
+#pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     [System.Runtime.CompilerServices.ModuleInitializer]
+#pragma warning restore CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     internal static void InitializeProjectionTypes()
     {
         Assembly.SetEntryAssembly(typeof(ProjectionTypesInitializer).Assembly);
