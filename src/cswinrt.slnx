@@ -9,9 +9,7 @@
     <Project Path="Authoring/CsWinMD/CsWinMD.csproj">
       <Build Project="false" />
     </Project>
-    <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj">
-      <Build Project="false" />
-    </Project>
+    <Project Path="Authoring/WinRT.Host.Shim/WinRT.Host.Shim.csproj" />
     <Project Path="Authoring/WinRT.Host/WinRT.Host.vcxproj" Id="7e33bcb7-19c5-4061-981d-ba695322708a">
       <Platform Solution="*|ARM" Project="Win32" />
       <Build Solution="*|ARM" Project="false" />
@@ -158,7 +156,8 @@
   <Folder Name="/Tests/">
     <Project Path="Tests/AuthoringConsumptionTest/AuthoringConsumptionTest.vcxproj" Id="0212a7c5-8d3f-443c-9ebc-1f28091fdf88">
       <Platform Solution="*|ARM" Project="Win32" />
-      <Build Project="false" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/AuthoringTest/AuthoringTest.csproj">
       <Platform Solution="*|ARM" Project="x86" />

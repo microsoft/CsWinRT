@@ -58,10 +58,10 @@ steps:
   #       dir Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0
   #       Tests\BuildDeterminismTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\BuildDeterminismTest.exe -p:CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),GenerateTestProjection=true,PublishBuildTool=true,BuildToolArch=$(CsWinRTBuildToolsArch)
 
-# Run Source Generator Tests  
+# Run Authoring Consumption Tests  
   - task: CmdLine@2
-    displayName: Run Source Generator Tests
-    enabled: false
+    displayName: Run Authoring Consumption Tests
+    enabled: true
     condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
     continueOnError: True
     inputs:
