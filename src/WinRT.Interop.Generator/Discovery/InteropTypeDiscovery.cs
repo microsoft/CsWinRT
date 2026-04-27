@@ -329,8 +329,7 @@ internal static partial class InteropTypeDiscovery
         // We also unconditionally track public value types from component assemblies, as they may need CCW
         // support when boxed (e.g. as 'IReference<T>' for generic type arguments), even without interfaces.
         if (hasAnyProjectedWindowsRuntimeInterfaces ||
-            (typeDefinition is { IsValueType: true, IsEnum: false, IsPublic: true, DeclaringType: null } &&
-             typeDefinition.IsComponentWindowsRuntimeType))
+            typeDefinition is { IsComponentWindowsRuntimeType: true, IsValueType: true, IsEnum: false, IsPublic: true, DeclaringType: null })
         {
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
