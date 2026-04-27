@@ -18,6 +18,10 @@
     <PublishAot>true</PublishAot>
     <NativeLib>Shared</NativeLib>
     <SelfContained>true</SelfContained>
+
+    <!-- Workaround to get TypeAssemblyTarget kept on AOT scenarios until fix is available. -->
+    <OutputType>Exe</OutputType>
+    <CustomNativeMain>true</CustomNativeMain>
   </PropertyGroup>
 
 </Project>
