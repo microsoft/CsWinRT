@@ -15,13 +15,13 @@ namespace WindowsRuntime.InteropGenerator;
 internal partial class ModuleDefinitionExtensions
 {
     /// <summary>
-    /// Gets a lookup of exclusive-to interfaces for projected Windows Runtime class types in a given module. The lookup is
+    /// Gets a lookup of '[exclusiveto]' interfaces for projected Windows Runtime class types in a given module. The lookup is
     /// built from the <c>[WindowsRuntimeExclusiveToInterface]</c> attributes on the <c>WindowsRuntimeExclusiveToInterfaces</c>
     /// type in the <c>ABI</c> namespace. The resulting dictionary maps class types (by namespace and name) to
     /// a list of their exclusive interface <see cref="TypeSignature"/> values.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
-    /// <returns>The resulting exclusive-to interfaces lookup.</returns>
+    /// <returns>The resulting '[exclusiveto]' interfaces lookup.</returns>
     public static IReadOnlyDictionary<(Utf8String? Namespace, Utf8String? Name), FrozenSet<TypeSignature>> GetExclusiveToInterfacesLookup(this ModuleDefinition module)
     {
         return ExclusiveToInterfacesLookupCache.Instance.GetOrAdd(
@@ -75,19 +75,19 @@ internal partial class ModuleDefinitionExtensions
                 }
 
                 return builder.ToFrozenDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.ToFrozenSet(SignatureComparer.Default));
+                    keySelector: kvp => kvp.Key,
+                    elementSelector: kvp => kvp.Value.ToFrozenSet(SignatureComparer.Default));
             });
     }
 }
 
 /// <summary>
-/// Contains a shared cache of exclusive-to interfaces lookups, to speed up search operations.
+/// Contains a shared cache of '[exclusiveto]' interfaces lookups, to speed up search operations.
 /// </summary>
 file static class ExclusiveToInterfacesLookupCache
 {
     /// <summary>
-    /// The singleton exclusive-to interfaces lookups map.
+    /// The singleton '[exclusiveto]' interfaces lookups map.
     /// </summary>
     public static readonly ConditionalWeakTable<ModuleDefinition, FrozenDictionary<(Utf8String? Namespace, Utf8String? Name), FrozenSet<TypeSignature>>> Instance = [];
 }
