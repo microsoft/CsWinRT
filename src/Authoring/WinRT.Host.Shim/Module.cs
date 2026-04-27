@@ -2,8 +2,8 @@
 // to simplify deployment
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading;
@@ -24,21 +24,60 @@ public static class Shim
 
     public unsafe delegate int GetActivationFactoryDelegate(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory);
 
-    private const string UseLoadComponentsInDefaultALCPropertyName = "CSWINRT_LOAD_COMPONENTS_IN_DEFAULT_ALC";
-    private readonly static bool _IsLoadInDefaultContext = IsLoadInDefaultContext();
+    private unsafe delegate void* ManagedExportsGetActivationFactoryDelegate(ReadOnlySpan<char> activatableClassId);
 
-    private static HashSet<string> _InitializedResolversInDefaultContext = null;
+    private static HashSet<string> _InitializedResolvers;
 
-    public static Assembly LoadInDefaultContext(string targetAssembly)
+    public static unsafe int GetActivationFactory(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory)
     {
-        if (_InitializedResolversInDefaultContext == null)
+        *activationFactory = IntPtr.Zero;
+
+        var targetAssembly = HStringMarshaller.ConvertToManaged((void*)hstrTargetAssembly);
+        var runtimeClassId = HStringMarshaller.ConvertToManaged((void*)hstrRuntimeClassId);
+
+        try
         {
-            Interlocked.CompareExchange(ref _InitializedResolversInDefaultContext, new HashSet<string>(StringComparer.OrdinalIgnoreCase), null);
+            Assembly assembly = LoadInDefaultContext(targetAssembly);
+
+            // ABI.<ModuleName>.ManagedExports.GetActivationFactory(ReadOnlySpan<char>) -> void*
+            string moduleName = Path.GetFileNameWithoutExtension(targetAssembly);
+            var managedExportsType = assembly.GetType($"ABI.{moduleName}.ManagedExports");
+            if (managedExportsType == null)
+            {
+                return REGDB_E_READREGDB;
+            }
+            var GetActivationFactory = managedExportsType.GetMethod("GetActivationFactory", new Type[] { typeof(ReadOnlySpan<char>) });
+            if (GetActivationFactory == null)
+            {
+                return REGDB_E_READREGDB;
+            }
+            // ReadOnlySpan<char> is a ref struct and can't be used with MethodInfo.Invoke.
+            // Use a delegate to call the method directly.
+            var del = GetActivationFactory.CreateDelegate<ManagedExportsGetActivationFactoryDelegate>();
+            void* factory = del(runtimeClassId.AsSpan());
+            if (factory == null)
+            {
+                return CLASS_E_CLASSNOTAVAILABLE;
+            }
+            *activationFactory = (IntPtr)factory;
+            return S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
+    }
+
+    private static Assembly LoadInDefaultContext(string targetAssembly)
+    {
+        if (_InitializedResolvers == null)
+        {
+            Interlocked.CompareExchange(ref _InitializedResolvers, new HashSet<string>(StringComparer.OrdinalIgnoreCase), null);
         }
 
-        lock (_InitializedResolversInDefaultContext)
+        lock (_InitializedResolvers)
         {
-            if (!_InitializedResolversInDefaultContext.Contains(targetAssembly))
+            if (!_InitializedResolvers.Contains(targetAssembly))
             {
                 var resolver = new AssemblyDependencyResolver(targetAssembly);
                 AssemblyLoadContext.Default.Resolving += (AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName) =>
@@ -51,118 +90,10 @@ public static class Shim
                     return null;
                 };
 
-                _InitializedResolversInDefaultContext.Add(targetAssembly);
+                _InitializedResolvers.Add(targetAssembly);
             }
         }
 
         return AssemblyLoadContext.Default.LoadFromAssemblyPath(targetAssembly);
-    }
-
-    public static bool IsLoadInDefaultContext()
-    {
-        if (AppContext.TryGetSwitch(UseLoadComponentsInDefaultALCPropertyName, out bool isEnabled))
-        {
-            return isEnabled;
-        }
-
-        return false;
-    }
-
-    public static unsafe int GetActivationFactory(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory)
-    {
-        *activationFactory = IntPtr.Zero;
-
-        var targetAssembly = HStringMarshaller.ConvertToManaged((void*)hstrTargetAssembly);
-        var runtimeClassId = HStringMarshaller.ConvertToManaged((void*)hstrRuntimeClassId);
-
-        try
-        {
-            Assembly assembly;
-            if (_IsLoadInDefaultContext)
-            {
-                assembly = LoadInDefaultContext(targetAssembly);
-            }
-            else
-            {
-                assembly = ActivationLoader.LoadAssembly(targetAssembly);
-            }
-
-            var type = assembly.GetType("WinRT.Module");
-            if (type == null)
-            {
-                return REGDB_E_READREGDB;
-            }
-            var GetActivationFactory = type.GetMethod("GetActivationFactory", new Type[] { typeof(string) });
-            if (GetActivationFactory == null)
-            {
-                return REGDB_E_READREGDB;
-            }
-            IntPtr factory = (IntPtr)GetActivationFactory.Invoke(null, new object[] { runtimeClassId });
-            if (factory == IntPtr.Zero)
-            {
-                return CLASS_E_CLASSNOTAVAILABLE;
-            }
-            *activationFactory = factory;
-            return S_OK;
-        }
-        catch (Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
-    }
-
-    private class ActivationLoader : AssemblyLoadContext
-    {
-        private static readonly ConcurrentDictionary<string, ActivationLoader> ALCMapping = new ConcurrentDictionary<string, ActivationLoader>(StringComparer.Ordinal);
-        private AssemblyDependencyResolver _resolver;
-
-        public static Assembly LoadAssembly(string targetAssembly)
-        {
-            return ALCMapping.GetOrAdd(targetAssembly, (_) => new ActivationLoader(targetAssembly))
-                .LoadFromAssemblyPath(targetAssembly);
-        }
-
-        private ActivationLoader(string path)
-        {
-            _resolver = new AssemblyDependencyResolver(path);
-            AssemblyLoadContext.Default.Resolving += (AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName) =>
-            {
-                // Consolidate all WinRT.Runtime loads to the default ALC, or failing that, the first shim ALC 
-                if (string.CompareOrdinal(assemblyName.Name, "WinRT.Runtime") == 0)
-                {
-                    string assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
-                    if (assemblyPath != null)
-                    {
-                        return LoadFromAssemblyPath(assemblyPath);
-                    }
-                }
-                return null;
-            };
-        }
-
-        protected override Assembly Load(AssemblyName assemblyName)
-        {
-            if (string.CompareOrdinal(assemblyName.Name, "WinRT.Runtime") != 0)
-            {
-                string assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
-                if (assemblyPath != null)
-                {
-                    return LoadFromAssemblyPath(assemblyPath);
-                }
-            }
-
-            return null;
-        }
-
-        protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
-        {
-            string libraryPath = _resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
-            if (libraryPath != null)
-            {
-                return LoadUnmanagedDllFromPath(libraryPath);
-            }
-
-            return IntPtr.Zero;
-        }
     }
 }

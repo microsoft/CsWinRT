@@ -127,6 +127,32 @@
       <ReferenceCopyLocalPaths Include="$(NativeLibraryPublishedDllPath)" />
     </ItemGroup>
   </Target>
+  <!--
+    For JIT (non-AOT) configs, build the component project with interop generation enabled
+    to produce WinRT.Component.dll and WinRT.Interop.dll, then copy to output.
+  -->
+  <PropertyGroup Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')">
+    <_CsWinRTComponentProjectPath>..\AuthoringTest\AuthoringTest.csproj</_CsWinRTComponentProjectPath>
+    <_CsWinRTComponentOutputDir>..\AuthoringTest\bin\$(Platform)\$(Configuration)\net10.0\</_CsWinRTComponentOutputDir>
+    <_CsWinRTComponentIntermediateDir>..\AuthoringTest\obj\$(Platform)\$(Configuration)\net10.0\</_CsWinRTComponentIntermediateDir>
+  </PropertyGroup>
+  <Target Name="CsWinRTBuildComponentInterop" DependsOnTargets="ComputeLinkSwitches" BeforeTargets="Link"
+          Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')">
+    <!-- Build the component project with interop generation enabled.
+         CsWinRTBuildForNativeConsumer only triggers interop gen on CsWinRTComponent=true projects. -->
+    <MSBuild Projects="$(_CsWinRTComponentProjectPath)"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);Platform=$(Platform);TargetFramework=net10.0;CsWinRTBuildForNativeConsumer=true" />
+    <!-- Copy generated interop DLLs to our output folder -->
+    <ItemGroup>
+      <_CsWinRTJitGeneratedDlls Include="$(_CsWinRTComponentIntermediateDir)WinRT.Component.dll" Condition="Exists('$(_CsWinRTComponentIntermediateDir)WinRT.Component.dll')" />
+      <_CsWinRTJitGeneratedDlls Include="$(_CsWinRTComponentIntermediateDir)WinRT.Interop.dll" Condition="Exists('$(_CsWinRTComponentIntermediateDir)WinRT.Interop.dll')" />
+      <_CsWinRTJitGeneratedDlls Include="$(_CsWinRTComponentIntermediateDir)WinRT.Projection.dll" Condition="Exists('$(_CsWinRTComponentIntermediateDir)WinRT.Projection.dll')" />
+      <_CsWinRTJitGeneratedDlls Include="$(_CsWinRTComponentIntermediateDir)WinRT.Sdk.Projection.dll" Condition="Exists('$(_CsWinRTComponentIntermediateDir)WinRT.Sdk.Projection.dll')" />
+      <_CsWinRTJitGeneratedDlls Include="$(_CsWinRTComponentIntermediateDir)WinRT.Sdk.Xaml.Projection.dll" Condition="Exists('$(_CsWinRTComponentIntermediateDir)WinRT.Sdk.Xaml.Projection.dll')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_CsWinRTJitGeneratedDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
   <ItemGroup>
     <Reference Include="AuthoringTest">
       <HintPath>..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net10.0\win-$(Platform)\AuthoringTest.winmd</HintPath>
@@ -141,6 +167,8 @@
     <Manifest Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Include="AuthoringConsumptionTest.exe.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <!-- CsWinRT native targets for shipped NuGet scenarios (not used in local dev - see CsWinRTBuildComponentInterop above) -->
+  <!-- <Import Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')" Project="..\..\..\nuget\Microsoft.Windows.CsWinRT.Native.targets" /> -->
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets" Condition="Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" />
     <Import Project="..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets" Condition="Exists('..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets')" />

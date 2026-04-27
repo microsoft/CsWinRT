@@ -40,6 +40,12 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
             return options.GlobalOptions.GetCsWinRTUseWindowsUIXamlProjections();
         });
 
+        // Get whether the project is being built for a native consumer
+        IncrementalValueProvider<bool> isBuildForNativeConsumer = context.AnalyzerConfigOptionsProvider.Select(static (options, token) =>
+        {
+            return options.GlobalOptions.GetBuildForNativeConsumer();
+        });
+
         // Get whether the current project is a library published with Native AOT
         IncrementalValueProvider<bool> isPublishAotLibrary =
             isOutputTypeLibrary
@@ -50,7 +56,8 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
         IncrementalValueProvider<bool> isGeneratorEnabled =
             isOutputTypeExe
             .Combine(isPublishAotLibrary)
-            .Select(static (flags, token) => flags.Left || flags.Right);
+            .Combine(isBuildForNativeConsumer)
+            .Select(static (flags, token) => flags.Left.Left || flags.Left.Right || flags.Right);
 
         // Gather all PE references from the current compilation
         IncrementalValuesProvider<EquatablePortableExecutableReference> executableReferences =
