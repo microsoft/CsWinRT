@@ -155,6 +155,7 @@
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="Tests/AuthoringConsumptionTest/AuthoringConsumptionTest.vcxproj" Id="0212a7c5-8d3f-443c-9ebc-1f28091fdf88">
+      <BuildDependency Project="Tests/AuthoringTest/AuthoringTest.csproj" />
       <Platform Solution="*|ARM" Project="Win32" />
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
