@@ -170,6 +170,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <Primary>true</Primary>
         <!-- Flag for consumers to detect this is a WinRT component -->
         <CsWinRTComponent>true</CsWinRTComponent>
+        <!-- Expose TFM so native consumers can generate a compatible temp project -->
+        <CsWinRTComponentTargetFramework>$(TargetFramework)</CsWinRTComponentTargetFramework>
       </TargetPathWithTargetPlatformMoniker>
     </ItemGroup>
     

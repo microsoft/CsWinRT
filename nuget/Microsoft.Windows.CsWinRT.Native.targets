@@ -1,0 +1,133 @@
+<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Targets for native (C++) projects consuming C# WinRT component projects.
+Import this file in your .vcxproj after Microsoft.Cpp.targets to enable
+automatic generation of WinRT.Component.dll and WinRT.Interop.dll for
+JIT hosting of authored WinRT components.
+
+This target:
+  1. Detects component project references (via CsWinRTComponent metadata)
+  2. Generates a temporary C# project that references all component projects
+  3. Builds the temporary project to produce interop assemblies
+  4. Copies generated DLLs to the output directory
+
+Properties:
+  - CsWinRTDisableNativeComponentInterop: set to 'true' to disable
+***********************************************************************************************
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <_CsWinRTNativeConsumerIntermediateDir>$(IntDir)cswinrt\</_CsWinRTNativeConsumerIntermediateDir>
+  </PropertyGroup>
+
+  <!--
+    ============================================================
+                    _DetectCsWinRTNativeComponentReferences
+
+    Collects component project reference metadata.
+    ============================================================
+  -->
+  <Target Name="_DetectCsWinRTNativeComponentReferences"
+          DependsOnTargets="ResolveProjectReferences;ResolveAssemblyReferences">
+
+    <!-- Collect component project file paths and TFM from resolved project references -->
+    <ItemGroup>
+      <_CsWinRTComponentProjectPaths Include="%(_ResolvedProjectReferencePaths.MSBuildSourceProjectFile)"
+                                      Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true'" />
+    </ItemGroup>
+
+    <!-- Use the TFM from the first component reference -->
+    <PropertyGroup>
+      <_CsWinRTComponentTargetFramework>%(_ResolvedProjectReferencePaths.CsWinRTComponentTargetFramework)</_CsWinRTComponentTargetFramework>
+      <_CsWinRTComponentTargetFramework Condition="'$(_CsWinRTComponentTargetFramework)' == ''">net10.0-windows10.0.26100.1</_CsWinRTComponentTargetFramework>
+    </PropertyGroup>
+
+  </Target>
+
+  <!--
+    ============================================================
+                    CsWinRTGenerateComponentInterop
+
+    Generates a temporary C# project that references all component
+    projects, builds it to produce interop assemblies, then copies
+    results to the output directory.
+    ============================================================
+  -->
+  <Target Name="CsWinRTGenerateComponentInterop"
+          DependsOnTargets="_DetectCsWinRTNativeComponentReferences"
+          BeforeTargets="Link"
+          Condition="'$(CsWinRTDisableNativeComponentInterop)' != 'true'">
+
+    <!-- Skip if no component references were found -->
+    <PropertyGroup>
+      <_CsWinRTHasComponentReferences Condition="'@(_CsWinRTComponentProjectPaths)' != ''">true</_CsWinRTHasComponentReferences>
+    </PropertyGroup>
+
+    <Message Condition="'$(_CsWinRTHasComponentReferences)' != 'true'" Importance="Low" Text="No CsWinRT component project references found. Skipping interop generation." />
+
+    <!-- Generate a temporary .csproj that references all component projects -->
+    <PropertyGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
+      <_CsWinRTTempProjectDir>$(_CsWinRTNativeConsumerIntermediateDir)</_CsWinRTTempProjectDir>
+      <_CsWinRTTempProjectPath>$(_CsWinRTTempProjectDir)CsWinRT.NativeConsumer.csproj</_CsWinRTTempProjectPath>
+      <!-- Extract just 'net10.0-windows10.0.XXXXX.Y' portion for intermediate path (no platform suffix) -->
+      <_CsWinRTTempProjectTFMDir>$(_CsWinRTComponentTargetFramework)</_CsWinRTTempProjectTFMDir>
+    </PropertyGroup>
+
+    <MakeDir Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" Directories="$(_CsWinRTTempProjectDir)" />
+
+    <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
+      <_CsWinRTTempProjectLines Include="&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;PropertyGroup&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;TargetFramework&gt;$(_CsWinRTComponentTargetFramework)&lt;/TargetFramework&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;Platforms&gt;x64%3Bx86%3BARM64&lt;/Platforms&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;CsWinRTBuildForNativeConsumer&gt;true&lt;/CsWinRTBuildForNativeConsumer&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateInteropAssembly&gt;true&lt;/CsWinRTGenerateInteropAssembly&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateProjection&gt;false&lt;/CsWinRTGenerateProjection&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;EnableDefaultItems&gt;false&lt;/EnableDefaultItems&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;GenerateAssemblyInfo&gt;false&lt;/GenerateAssemblyInfo&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;ProduceReferenceAssembly&gt;false&lt;/ProduceReferenceAssembly&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;NoWarn&gt;$(NoWarn)%3BNETSDK1130&lt;/NoWarn&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;/PropertyGroup&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;/ItemGroup&gt;" />
+      <_CsWinRTTempProjectLines Include="&lt;/Project&gt;" />
+    </ItemGroup>
+
+    <WriteLinesToFile Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+                      File="$(_CsWinRTTempProjectPath)"
+                      Lines="@(_CsWinRTTempProjectLines)"
+                      Overwrite="true" />
+
+    <!-- Restore and build the temporary project -->
+    <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+             Projects="$(_CsWinRTTempProjectPath)"
+             Targets="Restore"
+             Properties="Configuration=$(Configuration);Platform=$(Platform)" />
+
+    <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+             Projects="$(_CsWinRTTempProjectPath)"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);Platform=$(Platform)" />
+
+    <!-- Copy generated DLLs to the output directory -->
+    <PropertyGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
+      <_CsWinRTTempProjectIntermediateDir>$(_CsWinRTTempProjectDir)obj\$(Configuration)\$(_CsWinRTTempProjectTFMDir)\</_CsWinRTTempProjectIntermediateDir>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
+      <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll')" />
+      <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Interop.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Interop.dll')" />
+      <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Projection.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Projection.dll')" />
+      <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Projection.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Projection.dll')" />
+      <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Xaml.Projection.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Xaml.Projection.dll')" />
+    </ItemGroup>
+
+    <Copy Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" SourceFiles="@(_CsWinRTGeneratedDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+
+  </Target>
+
+</Project>
