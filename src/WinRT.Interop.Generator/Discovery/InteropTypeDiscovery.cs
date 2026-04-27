@@ -5,7 +5,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
@@ -504,12 +503,11 @@ internal static partial class InteropTypeDiscovery
             throw WellKnownInteropExceptions.EnsureWindowsRuntimeComponentModuleError();
         }
 
-        // Use the centralized lookup from '[WindowsRuntimeExclusiveToInterface]' attributes on the
-        // 'WindowsRuntimeExclusiveToInterfaces' type. This avoids scanning all types in the component .dll.
-        IReadOnlyDictionary<(Utf8String? Namespace, Utf8String? Name), System.Collections.Frozen.FrozenSet<TypeSignature>> exclusiveToLookup =
-            interopDefinitions.WindowsRuntimeComponentModule.GetExclusiveToInterfacesLookup();
-
-        if (!exclusiveToLookup.TryGetValue((typeSignature.Namespace, typeSignature.Name), out System.Collections.Frozen.FrozenSet<TypeSignature>? exclusiveInterfaces))
+        // Use the centralized lookup from '[WindowsRuntimeExclusiveToInterface]' attributes (they're all on the
+        // 'WindowsRuntimeExclusiveToInterfaces' type). This avoids scanning all types in the component assembly.
+        if (!interopDefinitions.WindowsRuntimeComponentModule.GetExclusiveToInterfacesLookup().TryGetValue(
+            key: (typeSignature.Namespace, typeSignature.Name),
+            value: out System.Collections.Frozen.FrozenSet<TypeSignature>? exclusiveInterfaces))
         {
             return true;
         }
