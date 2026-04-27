@@ -168,6 +168,79 @@ internal static class InteropInterfaceEntriesResolver
     }
 
     /// <summary>
+    /// Enumerates all <see cref="InteropInterfaceEntryInfo"/> values for a given component type, if applicable.
+    /// </summary>
+    /// <param name="componentType">The component type to analyze.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <remarks>
+    /// This method doesn't enumerate a set of interfaces, because it's responsible for producing Windows Runtime interfaces
+    /// for a value type from a component written in C# (as such, there's no managed interface type to use). If the type is
+    /// not a value type from a component, this method will just return an empty set. The logic is here for consistency.
+    /// </remarks>
+    public static IEnumerable<InteropInterfaceEntryInfo> EnumerateComponentInterfaceEntries(
+        TypeSignature componentType,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences)
+    {
+        // For public value types from component assemblies, add 'IReference<T>' and 'IPropertyValue' entries.
+        // These are needed so the struct can be boxed as 'IReference<T>' when used as a generic type argument.
+        TypeDefinition userDefinedTypeDefinition = componentType.Resolve(interopReferences.RuntimeContext);
+
+        // We're only looking for value types (classes are already handled just like any other user-defined type)
+        if (!userDefinedTypeDefinition.IsValueType)
+        {
+            yield break;
+        }
+
+        // Filter down to just authored types from components written in C#
+        if (!userDefinedTypeDefinition.IsComponentWindowsRuntimeType ||
+            interopDefinitions.WindowsRuntimeComponentModule is not { } componentModule)
+        {
+            yield break;
+        }
+
+        // Special case: we want to exclude enum types, and only look at user-defined structs. The reason why we are handling
+        // struct types here is that they might be implementing 'ICustomPropertyProvider', which is the only special Windows
+        // Runtime interface that's allowed in authored struct types. For enum types, the set of implemented interfaces is
+        // fixed, so the full CCW implementation is just statically generated as part of 'WinRT.Component.dll', meaning it
+        // doesn't require any supporting dynamic code produced by this generator.
+        if (userDefinedTypeDefinition.IsEnum)
+        {
+            yield break;
+        }
+
+        // Look up the 'ReferenceImpl' type in the component module by exact name
+        string referenceImplName = $"{userDefinedTypeDefinition.Name}ReferenceImpl";
+        string abiNamespace = $"ABI.{userDefinedTypeDefinition.Namespace}";
+
+        // Retrieve the 'ReferenceImpl' type from the component module via the optimized mapping
+        if (!componentModule.GetTopLevelTypesLookup().TryGetValue(
+            key: (abiNamespace, referenceImplName),
+            value: out TypeDefinition? referenceImplType))
+        {
+            yield break;
+        }
+
+        // Get the 'IReference<T>' IID from the component module's 'ABI.InterfaceIIDs'
+        string referenceIidName = $"{userDefinedTypeDefinition.FullName}Reference";
+        MethodDefinition referenceIidMethod = componentModule
+            .GetType("ABI"u8, "InterfaceIIDs"u8)
+            .GetMethod($"get_IID_{referenceIidName.Replace('.', '_')}");
+
+        // Get the vtable from the 'ReferenceImpl' type
+        MethodDefinition referenceVtableMethod = referenceImplType.GetMethod("get_Vtable"u8);
+
+        // Add the 'IReferenceValue' entry
+        yield return new WindowsRuntimeInterfaceEntryInfo(referenceIidMethod, referenceVtableMethod);
+
+        // Add the 'IPropertyValue' entry
+        yield return new WindowsRuntimeInterfaceEntryInfo(
+            interopReferences.WellKnownInterfaceIIDsget_IID_IPropertyValue,
+            interopReferences.IPropertyValueImplget_OtherTypeVtable);
+    }
+
+    /// <summary>
     /// Enumerates all <see cref="InteropInterfaceEntryInfo"/> values for native interfaces.
     /// </summary>
     /// <param name="vtableTypes">The vtable types to use as source.</param>

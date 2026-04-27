@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
@@ -71,40 +70,11 @@ internal partial class InteropTypeDefinitionBuilder
                 emitState: emitState,
                 useWindowsUIXamlProjections: useWindowsUIXamlProjections));
 
-            // For public value types from component assemblies, add 'IReference<T>' and 'IPropertyValue' entries.
-            // These are needed so the struct can be boxed as 'IReference<T>' when used as a generic type argument.
-            TypeDefinition userDefinedTypeDefinition = userDefinedType.Resolve(interopReferences.RuntimeContext);
-
-            if (userDefinedTypeDefinition is { IsValueType: true, IsEnum: false } &&
-                userDefinedTypeDefinition.IsComponentWindowsRuntimeType &&
-                interopDefinitions.WindowsRuntimeComponentModule is { } componentModule)
-            {
-                // Look up the 'ReferenceImpl' type in the component module by exact name.
-                string referenceImplName = $"{userDefinedTypeDefinition.Name}ReferenceImpl";
-                string abiNamespace = $"ABI.{userDefinedTypeDefinition.Namespace}";
-
-                if (componentModule.GetTopLevelTypesLookup().TryGetValue(
-                    (new Utf8String(abiNamespace), new Utf8String(referenceImplName)),
-                    out TypeDefinition? referenceImplType))
-                {
-                    // Get the IReference<T> IID from the component module's 'ABI.InterfaceIIDs'
-                    string referenceIidName = $"{userDefinedTypeDefinition.FullName}Reference";
-                    MethodDefinition referenceIidMethod = componentModule
-                        .GetType("ABI"u8, "InterfaceIIDs"u8)
-                        .GetMethod($"get_IID_{referenceIidName.Replace('.', '_')}");
-
-                    // Get the vtable from the ReferenceImpl type
-                    MethodDefinition referenceVtableMethod = referenceImplType.GetMethod("get_Vtable"u8);
-
-                    // Add the 'IReferenceValue' entry
-                    entriesList.Add(InteropInterfaceEntriesResolver.Create(referenceIidMethod, referenceVtableMethod));
-
-                    // Add the 'IPropertyValue' entry
-                    entriesList.Add(InteropInterfaceEntriesResolver.Create(
-                        interopReferences.WellKnownInterfaceIIDsget_IID_IPropertyValue,
-                        interopReferences.IPropertyValueImplget_OtherTypeVtable));
-                }
-            }
+            // Add entries for authored struct types, if needed
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateComponentInterfaceEntries(
+                componentType: userDefinedType,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences));
 
             // Add the built-in native interfaces at the end
             entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateNativeInterfaceEntries(
