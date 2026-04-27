@@ -3,6 +3,7 @@
 using namespace winrt;
 using namespace Windows::Foundation;
 using namespace AuthoringTest;
+using namespace AuthoringTest::AnotherNamespace;
 
 TEST(AuthoringTest, Statics)
 {
@@ -823,4 +824,315 @@ TEST(AuthoringTest, CustomPropertyRecordStructTypeFactoryAndICPP)
 
     auto propertyValue = customProperty.GetValue(userObject);
     EXPECT_EQ(winrt::unbox_value<hstring>(propertyValue), L"CsWinRTFromRecordStructType");
+}
+
+TEST(AuthoringTest, MultiConstructorClass)
+{
+    MultiConstructorClass obj0;
+    EXPECT_EQ(obj0.Name(), L"");
+    EXPECT_EQ(obj0.Value(), 0);
+
+    MultiConstructorClass obj1(L"hello");
+    EXPECT_EQ(obj1.Name(), L"hello");
+    EXPECT_EQ(obj1.Value(), 0);
+
+    MultiConstructorClass obj2(L"hello", 42);
+    EXPECT_EQ(obj2.Name(), L"hello");
+    EXPECT_EQ(obj2.Value(), 42);
+
+    BasicStruct bs{ 1, 2, L"test" };
+    MultiConstructorClass obj3(L"hello", 42, bs);
+    EXPECT_EQ(obj3.Name(), L"hello");
+    EXPECT_EQ(obj3.Value(), 42);
+    EXPECT_EQ(obj3.Data().X, 1);
+    EXPECT_EQ(obj3.Data().Y, 2);
+    EXPECT_EQ(obj3.Data().Value, L"test");
+}
+
+TEST(AuthoringTest, FactoryAndStaticClass)
+{
+    FactoryAndStaticClass obj1(L"myId");
+    EXPECT_EQ(obj1.Id(), L"myId");
+
+    FactoryAndStaticClass obj2(L"myId", 2);
+    EXPECT_EQ(obj2.Id(), L"myId_v2");
+
+    EXPECT_EQ(FactoryAndStaticClass::DefaultId(), L"default");
+
+    auto defaultObj = FactoryAndStaticClass::CreateDefault();
+    EXPECT_EQ(defaultObj.Id(), L"default");
+}
+
+TEST(AuthoringTest, AsyncMethodClass)
+{
+    AsyncMethodClass asyncClass;
+
+    auto action = asyncClass.DoWorkAsync();
+    EXPECT_EQ(action.wait_for(std::chrono::seconds(2)), AsyncStatus::Completed);
+
+    auto operation = asyncClass.ComputeAsync();
+    EXPECT_EQ(operation.wait_for(std::chrono::seconds(2)), AsyncStatus::Completed);
+    EXPECT_EQ(operation.GetResults(), 42);
+}
+
+TEST(AuthoringTest, DeprecatedMembersClass)
+{
+    DeprecatedMembersClass obj;
+    obj.OldMethod();
+    obj.NewMethod();
+    EXPECT_EQ(obj.OldProp(), L"");
+    EXPECT_EQ(obj.NewProp(), L"");
+}
+
+TEST(AuthoringTest, FullFeaturedClass)
+{
+    FullFeaturedClass obj;
+    EXPECT_EQ(obj.Name(), L"");
+    obj.Name(L"test");
+    EXPECT_EQ(obj.Name(), L"test");
+    EXPECT_EQ(obj.Count(), 0);
+
+    obj.DoWork();
+    EXPECT_EQ(obj.GetData(0), L"");
+
+    hstring eventData;
+    auto token = obj.DataChanged(auto_revoke, [&eventData](IInspectable const&, hstring const& args)
+    {
+        eventData = args;
+    });
+    obj.RaiseDataChanged();
+    EXPECT_EQ(eventData, L"changed");
+}
+
+TEST(AuthoringTest, ContractVersionedClasses)
+{
+    ContractVersionedClass obj1;
+    obj1.Name(L"versioned");
+    EXPECT_EQ(obj1.Name(), L"versioned");
+
+    ContractVersionedClassV2 obj2;
+    obj2.Name(L"v2");
+    obj2.Count(42);
+    EXPECT_EQ(obj2.Name(), L"v2");
+    EXPECT_EQ(obj2.Count(), 42);
+}
+
+TEST(AuthoringTest, ContractVersionedMembersClass)
+{
+    ContractVersionedMembersClass obj;
+    obj.TrackName(L"Song");
+    obj.Volume(80);
+    EXPECT_EQ(obj.TrackName(), L"Song");
+    EXPECT_EQ(obj.Volume(), 80);
+    EXPECT_EQ(obj.GetNowPlaying(), L"Song (Vol=80)");
+
+    IContractVersionedMembersV1 v1 = obj;
+    EXPECT_EQ(v1.TrackName(), L"Song");
+
+    IContractVersionedMembersV2 v2 = obj;
+    EXPECT_EQ(v2.Volume(), 80);
+
+    hstring changedTrack;
+    auto token = obj.TrackChanged(auto_revoke, [&changedTrack](IInspectable const&, hstring const& args)
+    {
+        changedTrack = args;
+    });
+    obj.RaiseTrackChanged();
+    EXPECT_EQ(changedTrack, L"Song");
+}
+
+TEST(AuthoringTest, VersionedMembersClass)
+{
+    VersionedMembersClass obj;
+    obj.Message(L"Alert");
+    obj.Urgency(3.5);
+    EXPECT_EQ(obj.Message(), L"Alert");
+    EXPECT_EQ(obj.Urgency(), 3.5);
+    EXPECT_EQ(obj.Format(), L"Alert: 3.5");
+
+    IVersionedMembersV1 v1 = obj;
+    EXPECT_EQ(v1.Message(), L"Alert");
+
+    IVersionedMembersV2 v2 = obj;
+    EXPECT_EQ(v2.Urgency(), 3.5);
+
+    double changedUrgency = 0;
+    auto token = obj.UrgencyChanged(auto_revoke, [&changedUrgency](IInspectable const&, double args)
+    {
+        changedUrgency = args;
+    });
+    obj.RaiseUrgencyChanged();
+    EXPECT_EQ(changedUrgency, 3.5);
+}
+
+TEST(AuthoringTest, OverloadedMethodClass)
+{
+    OverloadedMethodClass obj;
+    EXPECT_EQ(obj.Format(42), L"42");
+    EXPECT_EQ(obj.Format(3.14), L"3.14");
+    EXPECT_EQ(obj.Format(L"hello"), L"hello");
+
+    EXPECT_EQ(OverloadedMethodClass::Parse(L"123"), 123);
+    EXPECT_EQ(OverloadedMethodClass::Parse(L"FF", 16), 255);
+}
+
+TEST(AuthoringTest, NestedStructs)
+{
+    InnerStruct inner{ 10, 20 };
+    EXPECT_EQ(inner.A, 10);
+    EXPECT_EQ(inner.B, 20);
+
+    OuterStruct outer{ inner, 30 };
+    EXPECT_EQ(outer.Inner.A, 10);
+    EXPECT_EQ(outer.Inner.B, 20);
+    EXPECT_EQ(outer.C, 30);
+}
+
+TEST(AuthoringTest, FlagsAndSignedEnums)
+{
+    EXPECT_EQ(static_cast<uint32_t>(DetailedFlags::None), 0u);
+    EXPECT_EQ(static_cast<uint32_t>(DetailedFlags::ReadWrite), 3u);
+    EXPECT_EQ(static_cast<uint32_t>(DetailedFlags::All), 7u);
+
+    EXPECT_EQ(static_cast<int32_t>(Priority::Low), -1);
+    EXPECT_EQ(static_cast<int32_t>(Priority::Normal), 0);
+    EXPECT_EQ(static_cast<int32_t>(Priority::Critical), 2);
+}
+
+TEST(AuthoringTest, StaticComplexProps)
+{
+    EXPECT_EQ(StaticComplexProps::DefaultName(), L"Default");
+    auto defaultStruct = StaticComplexProps::DefaultStruct();
+    EXPECT_EQ(defaultStruct.X, 1);
+    EXPECT_EQ(defaultStruct.Y, 2);
+    EXPECT_EQ(StaticComplexProps::MaxCount(), 100);
+    StaticComplexProps::MaxCount(50);
+    EXPECT_EQ(StaticComplexProps::MaxCount(), 50);
+}
+
+TEST(AuthoringTest, NullableParamClass)
+{
+    NullableParamClass obj;
+    EXPECT_EQ(obj.NullableIntProp(), nullptr);
+    obj.NullableIntProp(42);
+    EXPECT_EQ(obj.NullableIntProp().Value(), 42);
+
+    obj.NullableDoubleProp(3.14);
+    EXPECT_EQ(obj.NullableDoubleProp().Value(), 3.14);
+
+    obj.NullableBoolProp(true);
+    EXPECT_EQ(obj.NullableBoolProp().Value(), true);
+
+    EXPECT_EQ(obj.GetValueOrDefault(IReference<int>(5), 0), 5);
+    EXPECT_EQ(obj.GetValueOrDefault(nullptr, 99), 99);
+
+    EXPECT_EQ(obj.TryGetValue(L"key"), nullptr);
+}
+
+TEST(AuthoringTest, MappedTypeParamClass)
+{
+    MappedTypeParamClass obj;
+
+    auto timestamp = obj.GetTimestamp();
+    EXPECT_TRUE(timestamp.time_since_epoch().count() != 0);
+    obj.SetTimestamp(timestamp);
+
+    auto duration = obj.GetDuration();
+    EXPECT_TRUE(duration.count() > 0);
+    obj.SetDuration(duration);
+
+    auto uri = obj.GetUri();
+    EXPECT_NE(uri, nullptr);
+    obj.SetUri(uri);
+
+    auto formatted = obj.FormatTimestamp(timestamp, duration);
+    EXPECT_FALSE(formatted.empty());
+}
+
+TEST(AuthoringTest, DisposableResource)
+{
+    DisposableResource resource;
+    EXPECT_EQ(resource.Name(), L"Resource");
+    resource.Reset();
+    resource.Close();
+
+    ICustomResource customResource = resource;
+    EXPECT_EQ(customResource.Name(), L"Resource");
+}
+
+TEST(AuthoringTest, NotifyWithCustomInterface)
+{
+    NotifyWithCustomInterface obj;
+    obj.Name(L"test");
+    EXPECT_EQ(obj.Name(), L"test");
+
+    ICustomResource customResource = obj;
+    EXPECT_EQ(customResource.Name(), L"test");
+
+    obj.Reset();
+    EXPECT_EQ(obj.Name(), L"");
+}
+
+TEST(AuthoringTest, MixedArrayClass)
+{
+    MixedArrayClass obj;
+
+    std::array<int, 3> src = { 10, 20, 30 };
+    std::array<int, 3> dst = {};
+    obj.CopyToSpan(src, dst);
+    EXPECT_EQ(dst[0], 10);
+    EXPECT_EQ(dst[1], 20);
+    EXPECT_EQ(dst[2], 30);
+
+    auto result = obj.TransformArray(src);
+    EXPECT_EQ(result.size(), 3);
+    EXPECT_EQ(result[0], 10);
+    EXPECT_EQ(result[1], 20);
+    EXPECT_EQ(result[2], 30);
+
+    std::array<int, 4> buf = {};
+    obj.FillWithIndex(buf);
+    EXPECT_EQ(buf[0], 0);
+    EXPECT_EQ(buf[1], 1);
+    EXPECT_EQ(buf[2], 2);
+    EXPECT_EQ(buf[3], 3);
+}
+
+TEST(AuthoringTest, CustomNotifyPropertyChanged)
+{
+    CustomNotifyPropertyChanged obj;
+    // Verify we can cast to INotifyPropertyChanged
+    auto npc = obj.as<Microsoft::UI::Xaml::Data::INotifyPropertyChanged>();
+    EXPECT_NE(npc, nullptr);
+}
+
+TEST(AuthoringTest, CustomNotifyCollectionChanged)
+{
+    CustomNotifyCollectionChanged obj;
+    // Verify we can cast to INotifyCollectionChanged
+    auto ncc = obj.as<Microsoft::UI::Xaml::Interop::INotifyCollectionChanged>();
+    EXPECT_NE(ncc, nullptr);
+}
+
+TEST(AuthoringTest, CustomNotifyDataErrorInfo)
+{
+    CustomNotifyDataErrorInfo obj;
+    EXPECT_FALSE(obj.HasErrors());
+}
+
+TEST(AuthoringTest, CustomEnumerable)
+{
+    CustomVector2 vector;
+    vector.Append(DisposableClass());
+    vector.Append(DisposableClass());
+    CustomEnumerable enumerable(vector);
+    auto iterator = enumerable.First();
+    EXPECT_TRUE(iterator.HasCurrent());
+}
+
+TEST(AuthoringTest, NonActivatableType)
+{
+    // NonActivatableType can only be created via NonActivatableFactory
+    auto obj = NonActivatableFactory::Create();
+    EXPECT_EQ(obj.GetText(), L"Test123");
 }

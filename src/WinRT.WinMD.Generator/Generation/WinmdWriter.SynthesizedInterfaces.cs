@@ -170,12 +170,33 @@ internal sealed partial class WinmdWriter
             if ((interfaceType == SynthesizedInterfaceType.Static && isStatic) ||
                 (interfaceType == SynthesizedInterfaceType.Default && !isStatic))
             {
-                // For default interface, skip properties already provided by an implemented interface
+                // For default interface, skip properties already fully provided by an implemented interface.
+                // If the interface only has a getter but the class also has a setter, emit the setter
+                // on the exclusive interface so it's accessible from native consumers.
                 if (interfaceType == SynthesizedInterfaceType.Default)
                 {
                     string getterName = "get_" + property.Name!.Value;
-                    if (membersFromInterfaces.Contains(getterName))
+                    string setterName = "set_" + property.Name!.Value;
+                    bool getterFromInterface = membersFromInterfaces.Contains(getterName);
+                    bool setterFromInterface = membersFromInterfaces.Contains(setterName);
+
+                    if (getterFromInterface && setterFromInterface)
                     {
+                        // Both getter and setter are from an interface, skip entirely
+                        continue;
+                    }
+
+                    if (getterFromInterface && !setterFromInterface && property.SetMethod?.IsPublic == true)
+                    {
+                        // Getter is from an interface but class adds a public setter - emit setter only
+                        hasMembers = true;
+                        AddSetterOnlyPropertyToType(synthesizedInterface, property);
+                        continue;
+                    }
+
+                    if (getterFromInterface)
+                    {
+                        // Getter is from interface, no setter to add
                         continue;
                     }
                 }

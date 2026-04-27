@@ -24,5 +24,6 @@
 #include <winrt/Windows.UI.Xaml.Interop.h>
 
 #include <winrt/AuthoringTest.h>
+#include <winrt/AuthoringTest.AnotherNamespace.h>
 
 #include "gtest/gtest.h"
