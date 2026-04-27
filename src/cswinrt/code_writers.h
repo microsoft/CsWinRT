@@ -2582,8 +2582,8 @@ remove => %;
                 {
                     allow_multiple = true;
                 }
-                // ContractVersion is only emitted for reference assemblies
-                if (attribute_name == "ContractVersion")
+                // ContractVersion and ApiContract are only emitted for reference assemblies
+                if (attribute_name == "ContractVersion" || attribute_name == "ApiContract")
                 {
                     if (!settings.reference_projection)
                     {
