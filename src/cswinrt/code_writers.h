@@ -4785,6 +4785,8 @@ R"(% static unsafe class %ReferenceImpl
 
         try
         {)",
+            // For component types, the IReferenceImpl is referenced by cswinrtgen
+            // as part of generating the vtable for structs.
             settings.component ? "public" : "file",
             type.TypeName(),
             type.TypeName());
@@ -5003,6 +5005,7 @@ R"(
             }),
             projection_name);
 
+        // Component types attributes are placed on a proxy type.
         if (settings.component)
         {
             w.write(
@@ -10215,6 +10218,7 @@ R"(
     {
         if (!is_type_blittable(type))
         {
+            // For component structs, cswinrtgen handles the vtable and comwrappers attribute.
             if (settings.component)
             {
                 write_winrt_metadata_typename_attribute(w, type);

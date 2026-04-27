@@ -127,8 +127,7 @@ internal partial class ProjectionGenerator
 
         using StreamWriter fileStream = new(rspFile);
 
-        // Filter out .winmd files from the resolver paths — they use version 255.255
-        // which AsmResolver 6.0.0-rc.1 cannot handle when creating a RuntimeContext.
+        // Filter out .winmd files from the resolver paths
         string[] resolverPaths = [.. args.ReferenceAssemblyPaths
             .Where(p => !p.EndsWith(".winmd", StringComparison.OrdinalIgnoreCase))];
 
