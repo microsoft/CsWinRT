@@ -27,24 +27,30 @@ internal static class InterfaceIIDResolver
     {
         TypeDefinition? interfaceIIDsType = null;
 
+        // Look for the 'ABI.InterfaceIIDs' type, which is where IIDs for interface types are generated.
+        // This type is guaranteed to exist in the generated implementation .dll-s, by naming convention.
         foreach (TypeDefinition type in module.TopLevelTypes)
         {
             if (type.Namespace is Utf8String ns && ns.AsSpan().SequenceEqual("ABI"u8) &&
                 type.Name is Utf8String name && name.AsSpan().SequenceEqual("InterfaceIIDs"u8))
             {
                 interfaceIIDsType = type;
+
                 break;
             }
         }
 
+        // If we didn't find the type, the assembly is invalid (callers will throw as needed)
         if (interfaceIIDsType is null)
         {
             iid = Guid.Empty;
+
             return false;
         }
 
         DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
 
+        // All IID properties use the same prefix for the 'get' accessor names
         handler.AppendLiteral("get_IID_");
         handler.AppendLiteral(typeFullName);
 
@@ -58,35 +64,34 @@ internal static class InterfaceIIDResolver
             ? stackalloc byte[256]
             : (arrayFromPool = ArrayPool<byte>.Shared.Rent(maxByteCount));
 
+        // The metadata method names is encoded in UTF8, so transcode the formatted name first
         int writtenBytes = Encoding.UTF8.GetBytes(handler.Text, utf8Bytes);
 
         handler.Clear();
 
         // Try to find the method
-        MethodDefinition? get_IIDMethod = null;
+        _ = interfaceIIDsType.TryGetMethod(utf8Bytes[..writtenBytes], out MethodDefinition? get_IIDMethod);
 
-        foreach (MethodDefinition method in interfaceIIDsType.Methods)
-        {
-            if (method.Name is Utf8String methodName && methodName.AsSpan().SequenceEqual(utf8Bytes[..writtenBytes]))
-            {
-                get_IIDMethod = method;
-                break;
-            }
-        }
-
+        // At this point we're done with the UTF8 buffer, so return it to the pool if we rented one
         if (arrayFromPool is not null)
         {
             ArrayPool<byte>.Shared.Return(arrayFromPool);
         }
 
+        // If we failed to find a matching method with the name, we can't do anything else
         if (get_IIDMethod?.CilMethodBody is null)
         {
             iid = Guid.Empty;
+
             return false;
         }
 
+        // Each method is returning a 'Guid' value from the .rdata section, and the instructions
+        // will contain an 'ldsflda' opcode loading from a constant data field. So we need to
+        // look for that, access the target RVA field, and extract the underlying IID data.
         foreach (CilInstruction instruction in get_IIDMethod.CilMethodBody.Instructions)
         {
+            // The current instruction isn't 'ldsflda', so ignore it
             if (instruction.OpCode != CilOpCodes.Ldsflda)
             {
                 continue;
@@ -94,26 +99,33 @@ internal static class InterfaceIIDResolver
 
             FieldDefinition rvaField = (FieldDefinition)instruction.Operand!;
 
+            // If the target field isn't an RVA field, the accessor is (somehow) invalid
             if (!rvaField.HasFieldRva)
             {
                 break;
             }
 
-            Span<byte> iidBytes = stackalloc byte[16];
-
+            // Make sure the target RVA field is a segment we can extract data from
             if (rvaField.FieldRva is not IReadableSegment readableSegment)
             {
                 break;
             }
 
             BinaryStreamReader reader = readableSegment.CreateReader(readableSegment.Offset, 16);
+
+            Span<byte> iidBytes = stackalloc byte[16];
+
+            // Read the RVA data into our span, so we can create a 'Guid' from it
             _ = reader.ReadBytes(iidBytes);
 
+            // Note: we don't need to fixup the endianness, the IID data is already correct
             iid = new(iidBytes);
+
             return true;
         }
 
         iid = Guid.Empty;
+
         return false;
     }
 }
