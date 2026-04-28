@@ -161,7 +161,7 @@ internal partial class ProjectionGenerator
                 }
             }
 
-            // Scan WinMD files matching component assembly names (e.g. "MyComponent.winmd")
+            // Scan WinMD files matching component assembly names (e.g. 'MyComponent.winmd')
             foreach (string winmdPath in args.WinMDPaths)
             {
                 string winmdFileName = Path.GetFileNameWithoutExtension(winmdPath);
@@ -187,14 +187,14 @@ internal partial class ProjectionGenerator
         }
 
         // In non-component mode, scan reference assemblies to determine type includes.
-        // Component mode handles this above via WinMD scanning.
+        // Component mode handles this above via .winmd scanning.
         if (!isComponentMode)
         {
             foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
             {
                 ModuleDefinition moduleDefinition = ModuleDefinition.FromFile(referenceAssemblyPath, resolver.ReaderParameters);
 
-                // For non-component assemblies, check if this is a WinRT reference assembly.
+                // For non-component assemblies, check if this is a Windows Runtime reference assembly.
                 if (!IsReferenceAssembly(moduleDefinition) || !IsWindowsRuntimeReferenceAssembly(moduleDefinition))
                 {
                     continue;
@@ -202,14 +202,15 @@ internal partial class ProjectionGenerator
 
                 bool isWindowsSdk = IsWindowsSdkAssembly(moduleDefinition);
 
-                // By default, Windows SDK types are excluded (they go into WinRT.Sdk.Projection.dll
-                // and WinRT.Sdk.Xaml.Projection.dll). In WindowsSdkOnly mode where we are generating
-                // those dlls is when we will include them.
+                // By default, Windows SDK types are excluded (they go into 'WinRT.Sdk.Projection.dll'
+                // and 'WinRT.Sdk.Xaml.Projection.dll'). In 'WindowsSdkOnly' mode where we are generating
+                // those .dll-s is when we will include them.
                 if (isWindowsSdk && !isWindowsSdkMode)
                 {
                     // Track this as a projection assembly so it's excluded from compilation references.
-                    // WinRT.Sdk.Projection.dll and WinRT.Sdk.Xaml.Projection.dll replace these types.
+                    // 'WinRT.Sdk.Projection.dll' and 'WinRT.Sdk.Xaml.Projection.dll' replace these types.
                     _ = projectionReferenceAssemblies.Add(referenceAssemblyPath);
+
                     continue;
                 }
 
@@ -227,6 +228,7 @@ internal partial class ProjectionGenerator
                     {
                         // Write the filtes for the Windows SDK projection mode.
                         WriteWindowsSdkFilters(fileStream, args.WindowsUIXamlProjection);
+
                         hasTypesToProject = true;
 
                         continue;
@@ -266,7 +268,7 @@ internal partial class ProjectionGenerator
         fileStream.WriteLine($"-input {args.WindowsMetadata}");
         fileStream.WriteLine($"-output \"{outputFolder}\"");
 
-        // When generating WinRT.Component.dll, pass -component to cswinrt.exe to enable
+        // When generating 'WinRT.Component.dll', pass -component to 'cswinrt.exe' to enable
         // component-specific code generation (activation factories, exclusive-to interfaces, etc.)
         if (args.AssemblyName == "WinRT.Component")
         {

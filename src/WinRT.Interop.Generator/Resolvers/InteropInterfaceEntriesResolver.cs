@@ -94,10 +94,10 @@ internal static class InteropInterfaceEntriesResolver
             // We always need to resolve the user-defined types in all cases below, so just do it once first
             TypeDefinition interfaceType = typeSignature.Resolve(interopReferences.RuntimeContext);
 
-            // If the type represents an '[exclusiveto]' interface for an authored type from a Windows Runtime
-            // component written in C#, we resolve the implementation from the generated 'WinRT.Component.dll' assembly.
-            // We check this before the general projected type check, because these interfaces also have
-            // '[WindowsRuntimeMetadata]' but their implementations live in 'WinRT.Component.dll', not in projections.
+            // If the type represents an '[exclusiveto]' interface for an authored type from a Windows Runtime component
+            // written in C#, we resolve the implementation from the generated 'WinRT.Component.dll' assembly. We check
+            // this before the general projected type check, because these interfaces also have '[WindowsRuntimeMetadata]'
+            // but their implementations live in 'WinRT.Component.dll', not in projections.
             if (interopDefinitions.WindowsRuntimeComponentModule is not null &&
                 ReferenceEquals(interfaceType.DeclaringModule, interopDefinitions.WindowsRuntimeComponentModule) &&
                 !interfaceType.IsPublic)

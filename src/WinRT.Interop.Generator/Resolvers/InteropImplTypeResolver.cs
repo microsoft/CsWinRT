@@ -120,8 +120,8 @@ internal static class InteropImplTypeResolver
         // (e.g. 'ABI.Impl.AuthoringTest.IFooClass'), and we derive from it:
         //   - The IID property from the 'ABI.InterfaceIIDs' type, using the original WinRT type name (stripping the 'ABI.Impl.' prefix)
         //   - The vtable from the corresponding '*Impl' type (e.g. 'ABI.Impl.AuthoringTest.IFooClassImpl')
-        string winrtTypeName = type.FullName!["ABI.Impl.".Length..].Replace('.', '_');
-        string get_IIDMethodName = $"get_IID_{winrtTypeName}";
+        string windowsRuntimeTypeName = type.FullName!["ABI.Impl.".Length..].Replace('.', '_');
+        string get_IIDMethodName = $"get_IID_{windowsRuntimeTypeName}";
         TypeDefinition interfaceIIDsType = interopDefinitions.WindowsRuntimeComponentModule!.GetType("ABI"u8, "InterfaceIIDs"u8);
         MethodDefinition get_IIDMethod = interfaceIIDsType.GetMethod(get_IIDMethodName);
 
@@ -148,8 +148,8 @@ internal static class InteropImplTypeResolver
         // assembly (e.g. 'AuthoringTest.IAnotherInterface'). The IID and Impl type live in 'WinRT.Component.dll':
         //   - IID: 'ABI.InterfaceIIDs.IID_{Namespace}_{Name}' (using the original type name with dots as underscores)
         //   - Impl: 'ABI.{Namespace}.{Name}Impl'
-        string winrtTypeName = type.FullName!.Replace('.', '_');
-        string get_IIDMethodName = $"get_IID_{winrtTypeName}";
+        string windowsRuntimeTypeName = type.FullName!.Replace('.', '_');
+        string get_IIDMethodName = $"get_IID_{windowsRuntimeTypeName}";
         TypeDefinition interfaceIIDsType = interopDefinitions.WindowsRuntimeComponentModule!.GetType("ABI"u8, "InterfaceIIDs"u8);
         MethodDefinition get_IIDMethod = interfaceIIDsType.GetMethod(get_IIDMethodName);
 
