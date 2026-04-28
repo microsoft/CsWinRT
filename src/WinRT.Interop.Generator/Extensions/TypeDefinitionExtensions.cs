@@ -81,6 +81,28 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
+        /// Determines whether the type implements a particular interface.
+        /// </summary>
+        /// <param name="interfaceType">The interface type to check for.</param>
+        /// <param name="comparer">The <see cref="SignatureComparer"/> instance to use.</param>
+        /// <returns>Whether the current <see cref="TypeDefinition"/> implements the interface.
+        /// </returns>
+        public bool Implements(ITypeDescriptor interfaceType, SignatureComparer? comparer = null)
+        {
+            comparer ??= SignatureComparer.Default;
+
+            foreach (InterfaceImplementation interfaceImpl in type.Interfaces)
+            {
+                if (comparer.Equals(interfaceImpl.Interface, interfaceType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Gets the first method with a given name from the specified type.
         /// </summary>
         /// <param name="name">The name of the method to get.</param>
