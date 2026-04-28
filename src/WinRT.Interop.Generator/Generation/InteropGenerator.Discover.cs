@@ -469,6 +469,7 @@ internal partial class InteropGenerator
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState)
     {
+        // Stop immediately if we don't have a loaded 'WinRT.Component.dll' module at all
         if (discoveryState.WindowsRuntimeComponentModule is not { } componentModule)
         {
             return;
@@ -488,25 +489,13 @@ internal partial class InteropGenerator
             {
                 args.Token.ThrowIfCancellationRequested();
 
-                // Only look for types implementing IActivationFactory
-                bool implementsIActivationFactory = false;
-
-                foreach (InterfaceImplementation interfaceImpl in type.Interfaces)
-                {
-                    if (interfaceImpl.Interface is { Namespace: { } ns, Name: { } name } &&
-                        ns == "WindowsRuntime.InteropServices" &&
-                        name == "IActivationFactory")
-                    {
-                        implementsIActivationFactory = true;
-                        break;
-                    }
-                }
-
-                if (!implementsIActivationFactory)
+                // Ignore types that don't implement 'IActivationFactory'
+                if (!type.Implements(interopReferences.IActivationFactory, SignatureComparer.IgnoreVersion))
                 {
                     continue;
                 }
 
+                // Track the activation factory type as a user-defined type (functionally the same)
                 InteropTypeDiscovery.TryTrackExposedUserDefinedType(
                     typeDefinition: type,
                     typeSignature: type.ToTypeSignature(),
@@ -519,7 +508,7 @@ internal partial class InteropGenerator
         }
         catch (Exception e)
         {
-            WellKnownInteropExceptions.DiscoverExposedUserDefinedTypesError(componentModule.Name, e).ThrowOrAttach(e);
+            WellKnownInteropExceptions.DiscoverActivationFactoryTypesError(componentModule.Name, e).ThrowOrAttach(e);
         }
     }
 
