@@ -36,13 +36,11 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Get the set of assemblies to actually process (filtered from all input assemblies),
-        // and the full set of paths for the assembly resolver (which also includes the actual
-        // projection assembly paths, needed for dependency resolution).
-        (string[] assembliesToProcess, string[] resolverPaths) = GetAssembliesToProcess(args);
+        // Get the set of assemblies to actually process (filtered from all input assemblies)
+        string[] assembliesToProcess = GetAssembliesToProcess(args);
 
         // Initialize the assembly resolver (we need to reuse this to allow caching)
-        PathAssemblyResolver pathAssemblyResolver = new(resolverPaths);
+        PathAssemblyResolver pathAssemblyResolver = new(assembliesToProcess);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -579,8 +577,8 @@ internal partial class InteropGenerator
     /// Gets the set of assemblies that need to be processed by the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
-    /// <returns>A tuple of (assemblies to process, resolver paths including projection assemblies).</returns>
-    private static (string[] AssembliesToProcess, string[] ResolverPaths) GetAssembliesToProcess(InteropGeneratorArgs args)
+    /// <returns>The set of assemblies that need to be processed by the generator.</returns>
+    private static string[] GetAssembliesToProcess(InteropGeneratorArgs args)
     {
         // Local path assembly resolver just scoped to the full set of reference assemblies
         PathAssemblyResolver pathAssemblyResolver = new(args.ReferenceAssemblyPaths);
@@ -629,6 +627,6 @@ internal partial class InteropGenerator
             assembliesToProcess.Add(path);
         }
 
-        return ([.. assembliesToProcess], [.. assembliesToProcess]);
+        return [.. assembliesToProcess];
     }
 }
