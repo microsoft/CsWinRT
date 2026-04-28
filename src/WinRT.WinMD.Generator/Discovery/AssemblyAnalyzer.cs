@@ -57,8 +57,8 @@ internal sealed class AssemblyAnalyzer
             return;
         }
 
-        // Skip ABI namespace types — these are source generator implementation details,
-        // not WinRT types to be included in the .winmd.
+        // Skip ABI namespace types, as these are source generator implementation
+        // details, not Windows Runtime types to be included in the .winmd file.
         if (type.Namespace is Utf8String ns &&
             (ns.AsSpan().SequenceEqual("ABI"u8) || ns.AsSpan().StartsWith("ABI."u8)))
         {
