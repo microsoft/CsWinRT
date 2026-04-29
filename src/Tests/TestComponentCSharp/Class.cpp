@@ -2073,6 +2073,19 @@ namespace winrt::TestComponentCSharp::implementation
 
     WF::IInspectable Class::ComInterop()
     {
+        struct drag_drop_manager_mock : winrt::implements<drag_drop_manager_mock, winrt::Windows::ApplicationModel::DataTransfer::DragDrop::Core::ICoreDragDropManager>
+        {
+            bool AreConcurrentOperationsEnabled() { return false; }
+            void AreConcurrentOperationsEnabled(bool) {}
+            winrt::event_token TargetRequested(
+                WF::TypedEventHandler<winrt::Windows::ApplicationModel::DataTransfer::DragDrop::Core::CoreDragDropManager,
+                winrt::Windows::ApplicationModel::DataTransfer::DragDrop::Core::CoreDropOperationTargetRequestedEventArgs> const&)
+            {
+                return {};
+            }
+            void TargetRequested(winrt::event_token) {}
+        };
+
         struct com_interop : winrt::implements<com_interop, WF::IInspectable, IComInterop, IDragDropManagerInterop>
         {
             HRESULT __stdcall ReturnWindowHandle(HWND window, guid riid, int64_t* value) noexcept override
@@ -2083,10 +2096,9 @@ namespace winrt::TestComponentCSharp::implementation
 
             HRESULT __stdcall GetForWindow(HWND window, guid const& riid, void** value) noexcept override
             {
-                static const guid ICoreDragDropManager("7D56D344-8464-4FAF-AA49-37EA6E2D7BD1");
-                if (riid == ICoreDragDropManager)
+                if (riid == winrt::guid_of<winrt::Windows::ApplicationModel::DataTransfer::DragDrop::Core::ICoreDragDropManager>())
                 {
-                    auto dummy = winrt::make<com_interop>();
+                    auto dummy = winrt::make<drag_drop_manager_mock>();
                     *value = winrt::detach_abi(dummy);
                     return 0;
                 }

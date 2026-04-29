@@ -4151,6 +4151,39 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestOverridable()
+        {
+            var obj = new OverridableTestClass();
+
+            // Test overridable property round-trip through native overrides interface
+            Assert.AreEqual(42, obj.CallOverridablePropertyGetter());
+            obj.CallOverridablePropertySetter(99);
+            Assert.AreEqual(99, obj.CallOverridablePropertyGetter());
+
+            // Test overridable method round-trip through native overrides interface
+            Assert.IsFalse(obj.MethodWasCalled);
+            obj.CallOverridableMethod();
+            Assert.IsTrue(obj.MethodWasCalled);
+        }
+
+        class OverridableTestClass : WarningClass
+        {
+            private int _value = 42;
+            public bool MethodWasCalled { get; private set; }
+
+            protected override int WarningOverridableProperty
+            {
+                get => _value;
+                set => _value = value;
+            }
+
+            protected override void WarningOverridableMethod()
+            {
+                MethodWasCalled = true;
+            }
+        }
+
+        [TestMethod]
         public void TestObjectFunctions()
         {
             CustomEquals first = new()

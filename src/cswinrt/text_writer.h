@@ -126,7 +126,7 @@ namespace cswinrt
         template <typename... Args>
         void write_printf(char const* format, Args const&... args)
         {
-            char buffer[256];
+            char buffer[1024];
             size_t const size = sprintf_s(buffer, format, args...);
             write(std::string_view{ buffer, size });
         }
