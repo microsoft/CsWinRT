@@ -4,7 +4,7 @@ This document describes the CsWinRT repository organization. Documentation and s
 
 ## [`build`](../build)
 
-Contains source files for Azure DevOps pipeline that handles official builds and testing for C#/WinRT. Uses Maestro to publish builds conveniently for dependent projects; Maestro is a dependency manager 
+Contains source files for Azure DevOps pipeline that handles official builds and testing for C#/WinRT. Uses Maestro to publish builds conveniently for dependent projects. Maestro is a dependency manager 
 developed by dotnet as part of the [Arcade Build System](https://github.com/dotnet/arcade).
 
 ## [`eng`](../eng)
@@ -13,7 +13,7 @@ Contains files that assist with publishing to Maestro.
 
 ## [`nuget`](../nuget)
 
-Contains source files for producing the C#/WinRT NuGet package, which is regularly built, signed, and published to nuget.org by Microsoft. The package contains the **cswinrt.exe** projection compiler, the post-build tools (**cswinrtprojectiongen.exe**, **cswinrtimplgen.exe**, **cswinrtinteropgen.exe**), the runtime assembly (`WinRT.Runtime.dll`), precompiled SDK projection assemblies, MSBuild `.props`/`.targets` files, and the Roslyn source generator.
+Contains source files for producing the C#/WinRT NuGet package, which is regularly built, signed, and published to nuget.org by Microsoft. The package contains the **cswinrt.exe** projection compiler, the post-build tools (**cswinrtprojectiongen.exe**, **cswinrtimplgen.exe**, **cswinrtinteropgen.exe**, **cswinrtwinmdgen.exe**), the runtime assembly (`WinRT.Runtime.dll`), precompiled SDK projection assemblies, MSBuild `.props`/`.targets` files, and the Roslyn source generator.
 
 ## [`src/Authoring`](../src/Authoring)
 
@@ -65,7 +65,7 @@ C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/Te
 
 ## [`src/WinRT.Generator.Tasks`](../src/WinRT.Generator.Tasks)
 
-Contains MSBuild task wrappers that invoke the CsWinRT code generators during the build. These tasks orchestrate the three post-build tools — the projection generator, the impl/forwarder generator, and the interop generator — and are called from the MSBuild targets in the `nuget/` directory.
+Contains MSBuild task wrappers that invoke the CsWinRT code generators during the build. These tasks orchestrate the post-build tools — the projection generator, the impl/forwarder generator, the interop generator, and the WinMD generator — and are called from the MSBuild targets in the `nuget/` directory.
 
 ## [`src/WinRT.Impl.Generator`](../src/WinRT.Impl.Generator)
 
@@ -78,6 +78,10 @@ Contains the **interop assembly generator** (`cswinrtinteropgen.exe`). This tool
 ## [`src/WinRT.Projection.Generator`](../src/WinRT.Projection.Generator)
 
 Contains the **projection assembly generator** (`cswinrtprojectiongen.exe`). This tool runs at **app build time** and produces `WinRT.Projection.dll`, which contains the actual projection implementations for all WinRT types used by the application. The forwarder assemblies from component NuGet packages route their types into this assembly. For Windows SDK types, the CsWinRT NuGet package includes precompiled `WinRT.Sdk.Projection.dll` binaries, so this tool only needs to generate projections for third-party components.
+
+## [`src/WinRT.WinMD.Generator`](../src/WinRT.WinMD.Generator)
+
+Contains the **WinMD generator** (`cswinrtwinmdgen.exe`). This tool, distributed as a Native AOT binary alongside the other CsWinRT post-build tools, generates a `.winmd` metadata file from a compiled C# component assembly so developers can author Windows Runtime components in C#. It is a port and restructuring of the previous WinMD generator from CsWinRT 2.x, which was implemented as a Roslyn source generator. In addition to consistency with the other CsWinRT 3.0 build tools, moving it out of a source generator addresses a fundamental design issue: the 2.x generator emitted a `.winmd` file **on disk**, but arbitrary file I/O is explicitly unsupported in Roslyn source generators (which may only contribute additional source to the compilation). The new tool runs as a normal MSBuild step — invoked by the `RunCsWinRTWinMDGenerator` MSBuild task wired up through `nuget/Microsoft.Windows.CsWinMD.Generator.targets`, after `CoreCompile` when `CsWinRTComponent == true` — where file I/O is the expected output mechanism.
 
 ## [`src/WinRT.Runtime2`](../src/WinRT.Runtime2) 
 

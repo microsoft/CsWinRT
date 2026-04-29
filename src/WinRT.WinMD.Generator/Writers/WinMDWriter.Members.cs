@@ -279,6 +279,34 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
+    /// Adds a setter-only property to the output type. This is used when a class adds a public setter
+    /// for a property whose getter is already defined on a public interface.
+    /// </summary>
+    private void AddSetterOnlyPropertyToType(TypeDefinition outputType, PropertyDefinition inputProperty)
+    {
+        TypeSignature propertyType = MapTypeSignatureToOutput(inputProperty.Signature!.ReturnType);
+
+        PropertyDefinition outputProperty = new(
+            inputProperty.Name!.Value,
+            0,
+            PropertySignature.CreateInstance(propertyType));
+
+        MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName |
+                                 MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+
+        MethodSignature setSignature = MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [propertyType]);
+        MethodDefinition setter = new("put_" + inputProperty.Name.Value, attrs, setSignature);
+        setter.ParameterDefinitions.Add(new ParameterDefinition(1, "value", ParameterAttributes.In));
+
+        outputType.Methods.Add(setter);
+        outputProperty.Semantics.Add(new MethodSemantics(setter, MethodSemanticsAttributes.Setter));
+
+        outputType.Properties.Add(outputProperty);
+
+        CopyCustomAttributes(inputProperty, outputProperty);
+    }
+
+    /// <summary>
     /// Adds an event definition to a WinMD type (interface or class).
     /// </summary>
     /// <remarks>

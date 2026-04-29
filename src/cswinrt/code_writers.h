@@ -1,12 +1,14 @@
 #pragma once
 
 #include <functional>
+#include <map>
 #include <set>
 #include <filesystem>
 #include <iostream>
 #include <regex>
 #include <concurrent_unordered_map.h>
 #include <concurrent_unordered_set.h>
+#include <concurrent_vector.h>
 #include "guid_generator.h"
 
 #define INSPECTABLE_METHOD_COUNT 6
@@ -342,6 +344,16 @@ namespace cswinrt
             {
                 name_type_to_write = typedef_name_type::CCW;
             }
+        }
+
+        // Authored interfaces that aren't exclusive just use the same authored interface.
+        // It is only for exclusive ones where we generate our own.
+        if (authoredType &&
+            name_type_to_write == typedef_name_type::CCW &&
+            get_category(type) == category::interface_type &&
+            !is_exclusive_to(type))
+        {
+            name_type_to_write = typedef_name_type::Projected;
         }
 
         if (name_type_to_write == typedef_name_type::EventSource && typeNamespace == "System")
@@ -4507,27 +4519,29 @@ return %.AsValue();
     {
         auto projection_name = w.write_temp("%", bind<write_projection_type>(type));
         auto abi_name = w.write_temp("%", bind<write_abi_type>(type));
-        w.write("public static % ConvertToManaged(% value)\n{\nreturn new %(\n%\n);\n}\n",
+        w.write("public static % ConvertToManaged(% value)\n{\nreturn new %%\n%\n%;\n}\n",
             projection_name,
             abi_name,
             projection_name,
+            settings.component ? "(){" : "(",
             bind_list([](writer& w, auto&& field)
             {
                 auto semantics = get_type_semantics(field.Signature().Type());
                 auto field_name = field.Name();
+                auto field_prefix = settings.component ? w.write_temp("    % = ", field_name) : "    ";
 
                 call(semantics,
                     [&](object_type)
                     {
-                        w.write("    WindowsRuntimeObjectMarshaller.ConvertToManaged(value.%)", field_name);
+                        w.write("%WindowsRuntimeObjectMarshaller.ConvertToManaged(value.%)", field_prefix, field_name);
                     },
                     [&](guid_type)
                     {
-                        w.write("    value.%", field_name);
+                        w.write("%value.%", field_prefix, field_name);
                     },
                     [&](type_type)
                     {
-                        w.write("    value.%", field_name);
+                        w.write("%value.%", field_prefix, field_name);
                     },
                     [&](type_definition const& td)
                     {
@@ -4538,23 +4552,23 @@ return %.AsValue();
                             w.write("    // Unsupported interface_type for %", field_name);
                             break;
                         case category::class_type:
-                            w.write("    %Marshaller.ConvertToManaged(value.%)", field_abi_name, field_name);
+                            w.write("%%Marshaller.ConvertToManaged(value.%)", field_prefix, field_abi_name, field_name);
                             break;
                         case category::delegate_type:
-                            w.write("    WindowsRuntimeDelegateMarshaller.ConvertToManaged(value.%)", field_name);
+                            w.write("%WindowsRuntimeDelegateMarshaller.ConvertToManaged(value.%)", field_prefix, field_name);
                             break;
                         case category::enum_type:
-                            w.write("    value.%", field_name);
+                            w.write("%value.%", field_prefix, field_name);
                             // TODO: array case
                             break;
                         case category::struct_type:
                             if (!is_type_blittable(td))
                             {
-                                w.write("    %Marshaller.ConvertToManaged(value.%)", field_abi_name, field_name);
+                                w.write("%%Marshaller.ConvertToManaged(value.%)", field_prefix, field_abi_name, field_name);
                             }
                             else
                             {
-                                w.write("    value.%", field_name);
+                                w.write("%value.%", field_prefix, field_name);
                             }
                             break;
                         default:
@@ -4572,7 +4586,7 @@ return %.AsValue();
                         call(td.generic_args[0],
                             [&](fundamental_type const& gtd)
                             {
-                                w.write("    ABI.System.%Marshaller.UnboxToManaged(value.%)", to_string(gtd), field_name);
+                                w.write("%ABI.System.%Marshaller.UnboxToManaged(value.%)", field_prefix, to_string(gtd), field_name);
                             },
                             [&](auto const&)
                             {
@@ -4588,14 +4602,15 @@ return %.AsValue();
                     {
                         if (td == fundamental_type::String)
                         {
-                            w.write("    HStringMarshaller.ConvertToManaged(value.%)", field_name);
+                            w.write("%HStringMarshaller.ConvertToManaged(value.%)", field_prefix, field_name);
                         }
                         else
                         {
-                            w.write("    value.%", field_name);
+                            w.write("%value.%", field_prefix, field_name);
                         }
                     });
-            }, ",\n", type.FieldList())
+            }, ",\n", type.FieldList()),
+            settings.component ? "}" : ")"
         );
     }
 
@@ -4743,7 +4758,7 @@ R"(public static %? UnboxToManaged(void* value)
         std::string ireference_guid_sig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guid_sig + ")";
 
         w.write(
-R"(file static unsafe class %ReferenceImpl
+R"(% static unsafe class %ReferenceImpl
 {
     [FixedAddressValueType]
     private static readonly ReferenceVftbl Vftbl;
@@ -4769,7 +4784,12 @@ R"(file static unsafe class %ReferenceImpl
         }
 
         try
-        {)", type.TypeName(), type.TypeName());
+        {)",
+            // For component types, the IReferenceImpl is referenced by cswinrtgen
+            // as part of generating the vtable for structs.
+            settings.component ? "public" : "file",
+            type.TypeName(),
+            type.TypeName());
         
         if (is_type_blittable(type))
         {
@@ -4973,8 +4993,31 @@ R"(
     trimTarget: typeof(%))]
 )",
             projection_name,
-            projection_name,
+            bind([&](writer& w) {
+                if (settings.component)
+                {
+                    write_type_name(w, type, typedef_name_type::ABI, true);
+                }
+                else
+                {
+                    w.write("%", projection_name);
+                }
+            }),
             projection_name);
+
+        // Component types attributes are placed on a proxy type.
+        if (settings.component)
+        {
+            w.write(
+                R"(
+[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
+    source: typeof(%),
+    proxy: typeof(%))]
+
+)",
+                projection_name,
+                bind<write_type_name>(type, typedef_name_type::ABI, true));
+        }
     }
 
     void write_winrt_comwrappers_typemapgroup_assembly_attribute(writer& w, TypeDef const& type, bool is_value_type)
@@ -4997,8 +5040,35 @@ R"(
                 w.write(projection_name);
             }
         }),
-        projection_name, 
+        bind([&](writer& w) {
+            if (settings.component)
+            {
+                write_type_name(w, type, typedef_name_type::ABI, true);
+            }
+            else
+            {
+                w.write("%", projection_name);
+            }
+        }),
         projection_name);
+
+        // For structs, enums, and delegates that are authored,
+        // we can't put the marshaler attribute on the actual type,
+        // so we use a proxy type.
+        if (get_category(type) != category::interface_type &&
+            get_category(type) != category::struct_type &&
+            settings.component)
+        {
+            w.write(
+                R"(
+[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
+    source: typeof(%),
+    proxy: typeof(%))]
+
+)",
+                projection_name,
+                bind<write_type_name>(type, typedef_name_type::ABI, true));
+        }
     }
 
     void write_winrt_idic_typemapgroup_assembly_attribute(writer& w, TypeDef const& type)
@@ -5033,13 +5103,26 @@ R"(
             return;
         }
 
-        w.write("[WindowsRuntimeReferenceType(typeof(%?))]\n", type.TypeName());
+        w.write("[WindowsRuntimeReferenceType(typeof(%?))]\n",
+            bind<write_type_name>(type, typedef_name_type::Projected, false));
     }
 
     void write_winrt_metadata_attribute(writer& w, TypeDef const& type)
     {
         std::filesystem::path db_path(type.get_database().path());
         w.write("[WindowsRuntimeMetadata(\"%\")]\n", db_path.stem().string());
+    }
+
+    void write_winrt_metadata_typename_attribute(writer& w, TypeDef const& type)
+    {
+        w.write("[WindowsRuntimeMetadataTypeName(\"%\")]\n",
+            bind<write_type_name>(type, typedef_name_type::NonProjected, true));
+    }
+
+    void write_winrt_mapped_type_attribute(writer& w, TypeDef const& type)
+    {
+        w.write("[WindowsRuntimeMappedType(typeof(%))]\n",
+            bind<write_type_name>(type, typedef_name_type::Projected, true));
     }
 
     void write_value_type_winrt_classname_attribute(writer& w, TypeDef const& type)
@@ -5132,6 +5215,63 @@ namespace ABI
             }));
 
         w.flush_to_file(settings.output_folder / "WindowsRuntimeDefaultInterfaces.cs");
+    }
+
+    void add_exclusive_to_interface_entries(writer& w, TypeDef const& type,
+        concurrency::concurrent_vector<std::pair<std::string, std::string>>& exclusiveToInterfaceEntries)
+    {
+        if (!settings.component || settings.reference_projection)
+        {
+            return;
+        }
+
+        auto class_name = w.write_temp("global::%.@", type.TypeNamespace(), type.TypeName());
+
+        for (auto&& iface : type.InterfaceImpl())
+        {
+            auto semantics = get_type_semantics(iface.Interface());
+
+            for_typedef(w, semantics, [&](auto iface_type)
+            {
+                if (is_exclusive_to(iface_type))
+                {
+                    auto interface_name = w.write_temp("%", bind<write_type_name>(iface_type, typedef_name_type::CCW, true));
+                    exclusiveToInterfaceEntries.push_back({ class_name, std::move(interface_name) });
+                }
+            });
+        }
+    }
+
+    void write_exclusive_to_interfaces_class(
+        std::vector<std::pair<std::string, std::string>> const& sortedEntries)
+    {
+        if (sortedEntries.empty())
+        {
+            return;
+        }
+
+        writer w;
+        write_file_header(w);
+        w.write(R"(using System;
+using WindowsRuntime;
+
+#pragma warning disable CSWINRT3001
+
+namespace ABI
+{
+%internal static class WindowsRuntimeExclusiveToInterfaces;
+}
+)",
+            bind([&](writer& w)
+            {
+                for (auto& [class_name, interface_name] : sortedEntries)
+                {
+                    w.write("[WindowsRuntimeExclusiveToInterface(typeof(%), typeof(%))]\n",
+                        class_name, interface_name);
+                }
+            }));
+
+        w.flush_to_file(settings.output_folder / "WindowsRuntimeExclusiveToInterfaces.cs");
     }
 
     void write_winrt_attribute(writer& w, TypeDef const& type)
@@ -8672,23 +8812,36 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     void write_authoring_metadata_type(writer& w, TypeDef const& type)
     {
-        w.write("%%%%internal class % {}\n",
-            bind<write_winrt_attribute>(type),
-            bind<write_winrt_exposed_type_attribute>(type, false),
-            [&](writer& w)
-            {
-                auto category = get_category(type);
-                if (category == category::delegate_type || category == category::struct_type)
-                {
-                    write_winrt_helper_type_attribute(w, type);
-                }
-            },
-            bind<write_type_custom_attributes>(type, false),
-            bind<write_type_name>(type, typedef_name_type::CCW, false));
+        if (get_category(type) != category::delegate_type &&
+            get_category(type) != category::class_type)
+        {
+            write_winrt_reference_type_attribute(w, type);
+        }
+
+        if (get_category(type) != category::struct_type &&
+            get_category(type) != category::class_type)
+        {
+            write_comwrapper_marshaller_attribute(w, type);
+        }
+
+        if (get_category(type) != category::class_type)
+        {
+            write_value_type_winrt_classname_attribute(w, type);
+        }
+
+        w.write("%%file static class % {}\n",
+            bind<write_winrt_metadata_typename_attribute>(type),
+            bind<write_winrt_mapped_type_attribute>(type),
+            bind<write_type_name>(type, typedef_name_type::ABI, false));
     }
 
     void write_contract(writer& w, TypeDef const& type)
     {
+        if (settings.component)
+        {
+            return;
+        }
+
         auto type_name = write_type_name_temp(w, type);
         w.write(R"(%% enum %
 {
@@ -8774,6 +8927,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         // generator can discover them and include them as part of the includes to allow the
         // ABI types to still get generated.
         if (!settings.reference_projection &&
+            !settings.component &&
             is_exclusive_to(type) &&
             !settings.public_exclusiveto &&
             !is_default_or_overridable_interface_typedef(w, type))
@@ -8781,7 +8935,13 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             return;
         }
 
-        auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
+        // For component interfaces, if it isn't exclusive, we can just use the authored one.
+        if (settings.component && !is_exclusive_to(type))
+        {
+            return;
+        }
+
+        auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
 
         w.write(R"(
 %%
@@ -8974,9 +9134,14 @@ private IObjectReference % => __% ?? Make__%();
     // Determines whether to emit the impl type with the vtable.
     // For exclusive interfaces which aren't overridable interfaces that are implemented by unsealed types,
     // we do not need any of the Do_Abi functions or the vtable logic as we will not create CCWs for them.
-    // The only exception to this is if public_exclusiveto is set.
+    // The only exception to this is if public_exclusiveto is set or if it is a component type.
     bool emit_impl_type(writer& w, TypeDef const& type)
     {
+        if (settings.component)
+        {
+            return true;
+        }
+
         if (is_exclusive_to(type) && !settings.public_exclusiveto)
         {
             bool hasOverridableAttribute = false;
@@ -9216,6 +9381,43 @@ protected override bool IsOverridableInterface(in Guid iid) => %%;
             }));
     }
 
+    void write_component_class_marshaller(writer& w, TypeDef const& type)
+    {
+        auto projected_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
+        auto default_type_semantics = get_type_semantics(get_default_interface(type));
+
+        w.write(R"(
+public static unsafe class %Marshaller
+{
+    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(% value)
+    {%
+        return WindowsRuntimeInterfaceMarshaller<%>.ConvertToUnmanaged(value, %);
+    }
+
+    public static %? ConvertToManaged(void* value)
+    {
+        return (%?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);
+    }
+}
+)",
+type.TypeName(),
+projected_type,
+bind([&](writer& w) {
+    for_typedef(w, default_type_semantics, [&](TypeDef const& interface_type)
+    {
+        if (size(interface_type.GenericParam()) != 0)
+        {
+            write_unsafe_accessor_for_iid(w, interface_type, true);
+        }
+    });
+}),
+projected_type,
+bind<write_iid_guid_with_type_semantics>(default_type_semantics),
+projected_type,
+projected_type
+);
+    }
+
     void write_wrapper_class(writer& w, TypeDef const& type)
     {
         if (is_static(type))
@@ -9255,7 +9457,6 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 
         if (settings.component)
         {
-            write_wrapper_class(w, type);
             return;
         }
 
@@ -9597,14 +9798,27 @@ return new %(valueReference);
         }
 
         w.write("#nullable enable\n");
-        write_class_marshaller(w, type);
-        write_class_comwrappers_marshaller_attribute(w, type);
-        write_class_comwrappers_callback(w, type);
+        if (settings.component)
+        {
+            write_component_class_marshaller(w, type);
+            write_authoring_metadata_type(w, type);
+        }
+        else
+        {
+            write_class_marshaller(w, type);
+            write_class_comwrappers_marshaller_attribute(w, type);
+            write_class_comwrappers_callback(w, type);
+        }
         w.write("#nullable disable\n");
     }
 
     void write_delegate(writer& w, TypeDef const& type)
     {
+        if (settings.component)
+        {
+            return;
+        }
+
         method_signature signature{ get_delegate_invoke(type) };
         w.write(R"(
 %%%%% delegate % %(%);
@@ -9827,6 +10041,11 @@ internal unsafe struct %Vftbl
         write_delegate_com_wrappers_marshaller_attribute_impl(w, type);
         write_delegate_impl(w, type);
         write_reference_impl(w, type);
+
+        if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
+        }
     }
 
     void write_constant(writer& w, Constant const& value)
@@ -9846,7 +10065,6 @@ internal unsafe struct %Vftbl
     {
         if (settings.component)
         {
-            write_authoring_metadata_type(w, type);
             return;
         }
 
@@ -9885,13 +10103,17 @@ R"(
         write_interface_entries_impl(w, type);
         write_struct_and_enum_com_wrappers_marshaller_attribute_impl(w, type);
         write_reference_impl(w, type);
+
+        if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
+        }
     }
     
     void write_struct(writer& w, TypeDef const& type)
     {
         if (settings.component)
         {
-            write_authoring_metadata_type(w, type);
             return;
         }
 
@@ -9996,9 +10218,19 @@ R"(
     {
         if (!is_type_blittable(type))
         {
-            w.write("%%% unsafe struct %\n{\n",
+            // For component structs, cswinrtgen handles the vtable and comwrappers attribute.
+            if (settings.component)
+            {
+                write_winrt_metadata_typename_attribute(w, type);
+                write_winrt_mapped_type_attribute(w, type);
+            }
+            else
+            {
+                write_comwrapper_marshaller_attribute(w, type);
+            }
+
+            w.write("%% unsafe struct %\n{\n",
                 bind<write_value_type_winrt_classname_attribute>(type),
-                bind<write_comwrapper_marshaller_attribute>(type),
                 internal_accessibility(),
                 bind<write_type_name>(type, typedef_name_type::ABI, false));
 
@@ -10010,10 +10242,18 @@ R"(
             }
             w.write("}\n\n");
         }
+        else if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
+        }
 
         write_struct_and_enum_marshaller_class(w, type);
         write_interface_entries_impl(w, type);
-        write_struct_and_enum_com_wrappers_marshaller_attribute_impl(w, type);
+
+        if (!settings.component)
+        {
+            write_struct_and_enum_com_wrappers_marshaller_attribute_impl(w, type);
+        }
         write_reference_impl(w, type);
     }
 
@@ -10064,13 +10304,13 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
             {
                 if (factory.activatable)
                 {
-                w.write_each<write_factory_activatable_method>(factory.type.MethodList(), projected_type_name);
+                   w.write_each<write_factory_activatable_method>(factory.type.MethodList(), projected_type_name);
                 }
                 else if (factory.statics)
                 {
-                w.write_each<write_static_factory_method>(factory.type.MethodList(), projected_type_name, ""sv);
-                w.write_each<write_static_factory_property>(factory.type.PropertyList(), projected_type_name, ""sv);
-                w.write_each<write_static_factory_event>(factory.type.EventList(), projected_type_name, ""sv);
+                    w.write_each<write_static_factory_method>(factory.type.MethodList(), projected_type_name, ""sv);
+                    w.write_each<write_static_factory_property>(factory.type.PropertyList(), projected_type_name, ""sv);
+                    w.write_each<write_static_factory_event>(factory.type.EventList(), projected_type_name, ""sv);
                 }
             }
         }
@@ -10079,36 +10319,32 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
 
     void write_factory_class(writer& w, TypeDef const& type)
     {
-        auto factory_type_name = write_type_name_temp(w, type, "%ServerActivationFactory", typedef_name_type::CCW);
+        auto factory_type_name = w.write_temp("%ServerActivationFactory", type.TypeName());
         auto is_activatable = !is_static(type) && has_default_constructor(type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
 
-        // If the type is activatable, we implement IActivationFactory by creating an
-        // instance and marshalling it to IntPtr. Otherwise, we just throw an exception.
         auto activate_instance_body = is_activatable
-            ? w.write_temp(R"(% comp = new %();
-
-    return MarshalInspectable<%>.FromManaged(comp);)", type_name, type_name, type_name)
+            ? w.write_temp("return new %();", type_name)
             : "throw new NotImplementedException();";
 
         w.write(R"(
-%
-internal sealed class % : global::WinRT.Interop.IActivationFactory%
+internal sealed class % : global::WindowsRuntime.InteropServices.IActivationFactory%
 {
-
 static %()
 {
-RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
+    global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
 }
 
-public static IntPtr Make()
+public static unsafe void* Make()
 {
-    return MarshalInspectable<%>.CreateMarshaler2(_factory, IID.IID_IActivationFactory).Detach();
+    return global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeInterfaceMarshaller<global::WindowsRuntime.InteropServices.IActivationFactory>
+        .ConvertToUnmanaged(_factory, in global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IActivationFactory)
+        .DetachThisPtrUnsafe();
 }
 
-static readonly % _factory = new %();
+private static readonly % _factory = new();
 
-public IntPtr ActivateInstance()
+public object ActivateInstance()
 {
     %
 }
@@ -10116,89 +10352,56 @@ public IntPtr ActivateInstance()
 %
 }
 )",
-bind<write_winrt_exposed_type_attribute>(type, true),
-factory_type_name,
-bind<write_factory_class_inheritance>(type),
-factory_type_name,
-type_name,
-factory_type_name,
-factory_type_name,
-factory_type_name,
-activate_instance_body,
-bind<write_factory_class_members>(type)
-);
+        factory_type_name,
+        bind<write_factory_class_inheritance>(type),
+        factory_type_name,
+        type_name,
+        factory_type_name,
+        activate_instance_body,
+        bind<write_factory_class_members>(type)
+        );
     }
 
-    void write_module_activation_factory(writer& w, std::set<TypeDef> const& types)
+    void write_module_activation_factory(writer& w, std::map<std::string, std::set<TypeDef>> const& typesByModule)
     {
         w.write(R"(
 using System;
-namespace WinRT
+)");
+        for (auto&& [module_name, types] : typesByModule)
+        {
+            w.write(R"(
+namespace ABI.%
 {
-% static partial class Module
+public static class ManagedExports
 {
-public static unsafe IntPtr GetActivationFactory(% runtimeClassId)
+public static unsafe void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)
 {
-switch (runtimeClassId)
+switch (activatableClassId)
 {
 %
 default:
-    return %;
+    return null;
 }
 }
-%
-%
 }
 }
 )",
-    internal_accessibility(),
-    // We want to leverage C# support for switching on a ReadOnlySpan<char>, which allows the exported
-    // 'DllGetActivationFactory' method to avoid the temporary allocation of the string instance for the
-    // input runtime class name. Because that's a C# 11 feature, we only enable this on .NET 7 and above.
-    // If that's the TFM in use, we generate this method using ReadOnlySpan<char>, and then a string overload
-    // just calling it. Otherwise, we switch on the string parameter, and generate a dummy ReadOnlySpan<char>
-    // overload just allocating and calling that. We always need both exports to make sure that hosting
-    // scenarios also work, since those will be looking up the string overload via reflection.
-    settings.netstandard_compat ? "string" : "ReadOnlySpan<char>",
-bind_each([](writer& w, TypeDef const& type)
-    {
-        w.write(R"(
+            module_name,
+            bind_each([](writer& w, TypeDef const& type)
+                {
+                    w.write(R"(
 case "%.%":
     return %ServerActivationFactory.Make();
 )",
-type.TypeNamespace(),
-type.TypeName(),
-bind<write_type_name>(type, typedef_name_type::CCW, true)
-);
-    },
-    types
-        ),
-    settings.partial_factory ? "GetActivationFactoryPartial(runtimeClassId)" : "IntPtr.Zero",
-    settings.netstandard_compat ? R"(
-public static IntPtr GetActivationFactory(ReadOnlySpan<char> runtimeClassId)
-{
-    return GetActivationFactory(runtimeClassId.ToString());
-}
-)" : R"(
-public static IntPtr GetActivationFactory(string runtimeClassId)
-{
-    return GetActivationFactory(runtimeClassId.AsSpan());
-}
-)",
-bind([&](writer& w) {
-        if (settings.partial_factory)
-        {
-            if (!settings.netstandard_compat)
-            {
-                w.write("private static partial IntPtr GetActivationFactoryPartial(ReadOnlySpan<char> runtimeClassId);");
-            }
-            else
-            {
-                w.write("private static partial IntPtr GetActivationFactoryPartial(string runtimeClassId);");
-            }
+                    type.TypeNamespace(),
+                    type.TypeName(),
+                    bind<write_type_name>(type, typedef_name_type::CCW, true)
+                    );
+                },
+                types
+            )
+            );
         }
-    })
-);
     }
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics)

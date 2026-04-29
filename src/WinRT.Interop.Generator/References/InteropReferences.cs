@@ -130,6 +130,16 @@ internal sealed class InteropReferences
         publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel);
 
     /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>System.ComponentModel.dll</c>.
+    /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
+    public AssemblyReference SystemComponentModel => field ??= new AssemblyReference(
+        name: "System.ComponentModel"u8,
+        version: new Version(10, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel);
+
+    /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Memory.dll</c>.
     /// </summary>
     /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
@@ -167,7 +177,7 @@ internal sealed class InteropReferences
         name: InteropNames.WindowsRuntimeSdkProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: default);
+        publicKeyOrToken: WellKnownPublicKeyTokens.CsWinRT);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Sdk.Xaml.Projection.dll</c>.
@@ -177,7 +187,7 @@ internal sealed class InteropReferences
         name: InteropNames.WindowsRuntimeSdkXamlProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: default);
+        publicKeyOrToken: WellKnownPublicKeyTokens.CsWinRT);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Projection.dll</c>.
@@ -187,7 +197,17 @@ internal sealed class InteropReferences
         name: InteropNames.WindowsRuntimeProjectionAssemblyNameUtf8,
         version: new Version(0, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: default);
+        publicKeyOrToken: WellKnownPublicKeyTokens.CsWinRT);
+
+    /// <summary>
+    /// Gets the <see cref="AssemblyReference"/> for <c>WinRT.Component.dll</c>.
+    /// </summary>
+    /// <remarks><inheritdoc cref="SystemRuntimeInteropServices" path="/remarks/node()"/></remarks>
+    public AssemblyReference WinRTComponent => field ??= new AssemblyReference(
+        name: "WinRT.Component",
+        version: new Version(0, 0, 0, 0),
+        publicKey: false,
+        publicKeyOrToken: WellKnownPublicKeyTokens.CsWinRT);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Attribute"/>.
@@ -407,7 +427,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.IServiceProvider"/>.
     /// </summary>
-    public TypeReference IServiceProvider => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System"u8, "IServiceProvider"u8);
+    public TypeReference IServiceProvider => field ??= SystemComponentModel.CreateTypeReference("System"u8, "IServiceProvider"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Windows.Input.ICommand"/>.
@@ -1483,6 +1503,11 @@ internal sealed class InteropReferences
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.Size</c>.
     /// </summary>
     public TypeReference Size => field ??= _windowsRuntimeModule.CreateTypeReference("Windows.Foundation"u8, "Size"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IActivationFactory</c>.
+    /// </summary>
+    public TypeReference IActivationFactory => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IActivationFactory"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>Windows.Foundation.IStringable</c>.

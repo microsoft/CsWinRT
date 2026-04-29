@@ -7,8 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable CS8909
-
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
@@ -59,13 +57,7 @@ public static unsafe class WindowsRuntimeMarshal
     {
         ArgumentNullException.ThrowIfNull(externalComObject);
 
-        IUnknownVftbl* unknownVftbl = (IUnknownVftbl*)*(void***)externalComObject;
-        IUnknownVftbl* runtimeVftbl = (IUnknownVftbl*)IUnknownImpl.Vtable;
-
-        return
-            unknownVftbl->QueryInterface == runtimeVftbl->QueryInterface &&
-            unknownVftbl->AddRef == runtimeVftbl->AddRef &&
-            unknownVftbl->Release == runtimeVftbl->Release;
+        return WindowsRuntimeComWrappersMarshal.IsReferenceToManagedObjectUnsafe(externalComObject);
     }
 
     /// <summary>
@@ -77,7 +69,7 @@ public static unsafe class WindowsRuntimeMarshal
     public static bool TryGetManagedObject(void* externalComObject, [NotNullWhen(true)] out object? result)
     {
         // If the input pointer is a reference to a managed object, we can resolve the original managed object
-        if (externalComObject is not null && IsReferenceToManagedObject(externalComObject))
+        if (externalComObject is not null && WindowsRuntimeComWrappersMarshal.IsReferenceToManagedObjectUnsafe(externalComObject))
         {
             result = ComWrappers.ComInterfaceDispatch.GetInstance<object>((ComWrappers.ComInterfaceDispatch*)externalComObject);
 

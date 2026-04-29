@@ -811,6 +811,14 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
+    /// Failed to discover activation factory types.
+    /// </summary>
+    public static WellKnownInteropException DiscoverActivationFactoryTypesError(string? name, Exception exception)
+    {
+        return Exception(97, $"Failed to discover activation factory types for module '{name}'.", exception);
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>

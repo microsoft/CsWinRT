@@ -321,10 +321,14 @@ file static class UncachedTypeMarshaller
             // can always just use the fully qualified type name (as it will always match the one in the .winmd file).
             // We can check if a given type matches this by just checking whether it has '[WindowsRuntimeMetadata]'.
             // Note that we're intentionally skipping generic types, as for those we need the 'cswinrtinteropgen' info.
-            // Additionally, this path isn't taken if we have a nullable value type, which avoids the lookup too.
-            if (!value.IsGenericType && value.IsDefined(typeof(WindowsRuntimeMetadataAttribute)))
+            // Additionally, this path isn't taken if we have a nullable value type, which avoids the lookup too and
+            // for component project types in authoring scenarios.
+            if (!value.IsGenericType)
             {
-                return new(value.FullName!, TypeKind.Metadata);
+                if (value.IsDefined(typeof(WindowsRuntimeMetadataAttribute)))
+                {
+                    return new(value.FullName!, TypeKind.Metadata);
+                }
             }
 
             // Use the metadata info lookup first to handle custom-mapped interface types. These would not have a proxy
