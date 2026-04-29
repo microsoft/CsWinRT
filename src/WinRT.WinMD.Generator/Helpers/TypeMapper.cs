@@ -50,7 +50,7 @@ internal sealed class TypeMapper
 
         return isDefinedInAttribute
             ? new("System", "Type", "mscorlib", true, false)
-            : new("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract", false, true);
+            : new("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract", true, true);
     }
 
     /// <summary>
