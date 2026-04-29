@@ -35,13 +35,45 @@
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
+        name="AuthoringTest.CustomButton"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringTest.CustomEnumerable"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringTest.CustomEnumerator"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringTest.CustomNotifyCollectionChanged"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringTest.CustomNotifyDataErrorInfo"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringTest.CustomNotifyDataErrorInfo2"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringTest.CustomNotifyPropertyChanged"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringTest.CustomStackPanel"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
         name="AuthoringTest.CustomWWW"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
         name="AuthoringTest.CustomXamlServiceProvider"
         threadingModel="both"
-        xmlns="urn:schemas-microsoft-com:winrt.v1" />    
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
         name="AuthoringTest.DisposableClass"
         threadingModel="both"
@@ -104,6 +136,78 @@
        xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
        name="AuthoringTest.CustomPropertyRecordTypeFactory"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.ObservableVector"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.TestCollection"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.NullableParamClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.MappedTypeParamClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.MixedArrayClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.DisposableResource"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.MultiConstructorClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.StaticComplexProps"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.OverloadedMethodClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.AsyncMethodClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.DeprecatedMembersClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.NotifyWithCustomInterface"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.FactoryAndStaticClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.FullFeaturedClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.ContractVersionedClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.ContractVersionedClassV2"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.ContractVersionedMembersClass"
+       threadingModel="both"
+       xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+       name="AuthoringTest.AnotherNamespace.VersionedMembersClass"
        threadingModel="both"
        xmlns="urn:schemas-microsoft-com:winrt.v1" />
   </file>

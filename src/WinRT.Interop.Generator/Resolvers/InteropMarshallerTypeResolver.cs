@@ -73,7 +73,9 @@ internal static class InteropMarshallerTypeResolver
                 ? interopReferences.WinRTSdkProjection
                 : type.IsProjectedWindowsSdkXamlType
                     ? interopReferences.WinRTSdkXamlProjection
-                    : interopReferences.WinRTProjection;
+                    : type.IsComponentWindowsRuntimeType
+                        ? interopReferences.WinRTComponent
+                        : interopReferences.WinRTProjection;
 
             // In all other cases, the marshaller type will be in the right merged projection
             ITypeDefOrRef marshallerType = projectionAssembly.CreateTypeReference(

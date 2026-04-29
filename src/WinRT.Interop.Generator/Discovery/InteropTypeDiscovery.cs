@@ -5,11 +5,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Errors;
-using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Models;
@@ -190,8 +188,7 @@ internal static partial class InteropTypeDiscovery
             typeSignature: typeSignature,
             interfaces: interfaces,
             args: args,
-            interopDefinitions: interopDefinitions,
-            interopReferences: interopReferences))
+            interopDefinitions: interopDefinitions))
         {
             goto FinalizeUserDefinedType;
         }
@@ -329,7 +326,10 @@ internal static partial class InteropTypeDiscovery
 
         // If the user-defined type implements at least a Windows Runtime interface, then it's considered exposed.
         // We don't want to handle marshalling code for types with only '[GeneratedComInterface]' interfaces.
-        if (hasAnyProjectedWindowsRuntimeInterfaces)
+        // We also unconditionally track public value types from component assemblies, as they may need CCW
+        // support when boxed (e.g. as 'IReference<T>' for generic type arguments), even without interfaces.
+        if (hasAnyProjectedWindowsRuntimeInterfaces ||
+            typeDefinition is { IsComponentWindowsRuntimeType: true, IsValueType: true, IsEnum: false, IsPublic: true, DeclaringType: null })
         {
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
@@ -474,15 +474,13 @@ internal static partial class InteropTypeDiscovery
     /// <param name="interfaces">The set of interfaces being populated.</param>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>Whether the new interfaces could be added.</returns>
     private static bool TryAddComponentExclusiveToInterfaceTypes(
         TypeDefinition typeDefinition,
         TypeSignature typeSignature,
         TypeSignatureEquatableSet.Builder interfaces,
         InteropGeneratorArgs args,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences)
+        InteropDefinitions interopDefinitions)
     {
         // Runtime class types from authored components can't be generic, so we can filter those
         // out immediately. Only the Windows SDK is allowed to define generic types. And even then,
@@ -504,52 +502,26 @@ internal static partial class InteropTypeDiscovery
             throw WellKnownInteropExceptions.EnsureWindowsRuntimeComponentModuleError();
         }
 
-        Utf8String @namespace = InteropUtf8NameFactory.TypeNamespace(typeSignature, interopReferences.RuntimeContext);
-
-        // Go over all declared types in the component .dll to try to find those for '[exclusiveto]' interfaces
-        foreach (TypeDefinition componentType in interopDefinitions.WindowsRuntimeComponentModule.TopLevelTypes)
+        // Use the centralized lookup from '[WindowsRuntimeExclusiveToInterface]' attributes (they're all on the
+        // 'WindowsRuntimeExclusiveToInterfaces' type). This avoids scanning all types in the component assembly.
+        if (!interopDefinitions.WindowsRuntimeComponentModule.GetExclusiveToInterfacesLookup().TryGetValue(
+            key: (typeSignature.Namespace, typeSignature.Name),
+            value: out System.Collections.Frozen.FrozenSet<TypeSignature>? exclusiveInterfaces))
         {
-            // We know that the ones we might want will only be in the ABI namespace for this type,
-            // so if that's not the case we can quickly ignore all other ones to speed up the search.
-            if (componentType.Namespace != @namespace)
+            return true;
+        }
+
+        foreach (TypeSignature interfaceType in exclusiveInterfaces)
+        {
+            // Try to track the current implementation type. Note that this is not actually an interface (since we don't
+            // actually need a managed interface type for this scenario). The emit code will handle this as appropriate.
+            if (!TryAddExposedInterfaceType(
+                typeSignature: typeSignature,
+                interfaceType: interfaceType,
+                interfaces: interfaces,
+                args: args))
             {
-                continue;
-            }
-
-            // Try to lookup '[WindowsRuntimeExclusiveToInterface]' from the authored type (there can be any number of them)
-            if (componentType.IsClass && componentType.TryGetCustomAttribute(interopReferences.WindowsRuntimeExclusiveToInterfaceAttribute, out CustomAttribute? customAttribute))
-            {
-                // Validate that we can resolve the target type for the attribute. We can safely ignore failures here
-                // since this would realistically never happen, since that .dll is being compiled from C# (not from IL).
-                if (customAttribute.Signature is not { FixedArguments: [{ Element: TypeSignature runtimeClassSignature }, ..] })
-                {
-                    continue;
-                }
-
-                // We might have any number of types with this attribute in the same ABI namespace (since it could contain any
-                // number of authored types). So if the target type doesn't match, we just ignore it and continue iterating.
-                if (!SignatureComparer.IgnoreVersion.Equals(runtimeClassSignature, typeSignature))
-                {
-                    continue;
-                }
-
-                // We use a naming convention to map each generated '[exclusiveto]' interface to its IID, so we need to validate
-                // that the name for this type is in fact the one we expect, before actually tracking it for code generation.
-                if (!componentType.Namespace!.AsSpan().StartsWith("ABI."u8) || !componentType.Name!.AsSpan().EndsWith("Impl"u8))
-                {
-                    WellKnownInteropExceptions.ComponentTypeExclusiveToInterfaceInvalidFullNameError(componentType, typeDefinition).LogOrThrow(args.TreatWarningsAsErrors);
-                }
-
-                // Try to track the current implementation type. Note that this is not actually an interface (since we don't
-                // actually need a managed interface type for this scenario). The emit code will handle this as appropriate.
-                if (!TryAddExposedInterfaceType(
-                    typeSignature: typeSignature,
-                    interfaceType: componentType.ToTypeSignature(),
-                    interfaces: interfaces,
-                    args: args))
-                {
-                    return false;
-                }
+                return false;
             }
         }
 

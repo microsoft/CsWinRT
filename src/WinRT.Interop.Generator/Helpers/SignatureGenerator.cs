@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 
 #pragma warning disable IDE0072
 
@@ -176,6 +177,14 @@ internal static partial class SignatureGenerator
             }
         }
 
+        // For types from authored component assemblies, the IID lives in the generated
+        // 'ABI.InterfaceIIDs' type in 'WinRT.Component.dll', not as a '[Guid]' attribute.
+        if (type.IsComponentWindowsRuntimeType &&
+            interopDefinitions.WindowsRuntimeComponentModule is { } componentModule)
+        {
+            return InterfaceIIDResolver.TryGetIID(componentModule, type.FullName!, out iid);
+        }
+
         iid = Guid.Empty;
 
         return false;
@@ -204,6 +213,15 @@ internal static partial class SignatureGenerator
 
         // Use the cached default interfaces lookup for O(1) lookups by (Namespace, Name) key
         if (projectionModule?.GetDefaultInterfacesLookup().TryGetValue((type.Namespace, type.Name), out TypeSignature? signature) is true)
+        {
+            defaultInterface = signature;
+
+            return true;
+        }
+
+        // For types from authored component assemblies, the default interface info is in 'WinRT.Component.dll'
+        if (type.IsComponentWindowsRuntimeType &&
+            interopDefinitions.WindowsRuntimeComponentModule?.GetDefaultInterfacesLookup().TryGetValue((type.Namespace, type.Name), out signature) is true)
         {
             defaultInterface = signature;
 

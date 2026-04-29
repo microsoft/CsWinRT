@@ -60,7 +60,8 @@ internal sealed partial class WinMDWriter
 
             // Skip adding '[Version]' attribute if the input type has '[ContractVersion]' attribute
             // (it will be copied in Phase 3 via 'CopyCustomAttributes').
-            if (!declaration.OutputType.HasVersionAttribute && !declaration.OutputType.HasContractVersionAttribute)
+            if (!declaration.OutputType.HasVersionAttribute &&
+                !(declaration.InputType is not null && declaration.InputType.HasContractVersionAttribute))
             {
                 // Use the version from the input type if available, otherwise use the default
                 int version = declaration.InputType is not null ? GetVersion(declaration.InputType) : defaultVersion;

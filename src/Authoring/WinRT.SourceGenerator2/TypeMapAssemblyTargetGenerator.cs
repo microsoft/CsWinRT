@@ -40,6 +40,12 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
             return options.GlobalOptions.GetCsWinRTUseWindowsUIXamlProjections();
         });
 
+        // Get whether the project is being built for a native consumer
+        IncrementalValueProvider<bool> isBuildForNativeConsumer = context.AnalyzerConfigOptionsProvider.Select(static (options, token) =>
+        {
+            return options.GlobalOptions.GetBuildForNativeConsumer();
+        });
+
         // Get whether the current project is a library published with Native AOT
         IncrementalValueProvider<bool> isPublishAotLibrary =
             isOutputTypeLibrary
@@ -50,7 +56,8 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
         IncrementalValueProvider<bool> isGeneratorEnabled =
             isOutputTypeExe
             .Combine(isPublishAotLibrary)
-            .Select(static (flags, token) => flags.Left || flags.Right);
+            .Combine(isBuildForNativeConsumer)
+            .Select(static (flags, token) => flags.Left.Left || flags.Left.Right || flags.Right);
 
         // Gather all PE references from the current compilation
         IncrementalValuesProvider<EquatablePortableExecutableReference> executableReferences =
@@ -59,13 +66,28 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
             .SelectMany(Execute.GetAllPortableExecutableReferences);
 
         // Get all the names of assemblies with '[WindowsRuntimeReferenceAssembly]'
-        IncrementalValuesProvider<string?> assemblyNames = executableReferences.Select(Execute.GetAssemblyNameIfWindowsRuntimeReferenceAssembly);
+        IncrementalValuesProvider<string?> referenceAssemblyNames =
+            executableReferences.Select(Execute.GetAssemblyNameIfWindowsRuntimeReferenceAssembly);
 
-        // Combine all matching assembly names and filter out the Windows SDK ones
+        // Get all the names of assemblies with '[WindowsRuntimeComponentAssembly]'
+        IncrementalValuesProvider<string?> componentAssemblyNames =
+            executableReferences.Select(Execute.GetAssemblyNameIfWindowsRuntimeComponentAssembly);
+
+        // Collect component assembly names
+        IncrementalValueProvider<ImmutableArray<string>> collectedComponentAssemblyNames =
+            componentAssemblyNames
+            .Where(static name => name is not null)
+            .Select(static (name, _) => name!)
+            .Collect();
+
+        // Combine all matching assembly names (reference + component) and filter out the Windows SDK ones
         IncrementalValueProvider<ImmutableArray<string>> filteredAssemblyNames =
-            assemblyNames
+            referenceAssemblyNames
             .Where(static name => name is not null and not "Microsoft.Windows.SDK.NET" and not "Microsoft.Windows.UI.Xaml")
-            .Collect()!;
+            .Select(static (name, _) => name!)
+            .Collect()
+            .Combine(collectedComponentAssemblyNames)
+            .Select(static (pair, token) => pair.Left.AddRange(pair.Right));
 
         // Sort the assembly names
         IncrementalValueProvider<EquatableArray<string>> sortedAssemblyNames =
@@ -85,6 +107,24 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
 
         // Also generate the '[TypeMapAssemblyTarget]' entry for the merged projection
         context.RegisterImplementationSourceOutput(hasMergedProjection, Execute.EmitMergedProjectionTypeMapAssemblyTargetAttributes);
+
+        // Get whether the current project is a component
+        IncrementalValueProvider<bool> isComponent = context.AnalyzerConfigOptionsProvider.Select(static (options, token) =>
+        {
+            return options.GlobalOptions.GetCsWinRTComponent();
+        });
+
+        // Whether any component assemblies are referenced, or the current project is itself a component
+        IncrementalValueProvider<bool> hasComponentAssembly =
+            collectedComponentAssemblyNames
+            .Select(static (names, token) => !names.IsDefaultOrEmpty)
+            .Combine(isComponent)
+            .Select(static (pair, token) => pair.Left || pair.Right)
+            .Combine(isGeneratorEnabled)
+            .Select(static (pair, token) => pair.Left && pair.Right);
+
+        // Also generate the '[TypeMapAssemblyTarget]' entry for WinRT.Component if any component assemblies exist
+        context.RegisterImplementationSourceOutput(hasComponentAssembly, Execute.EmitComponentTypeMapAssemblyTargetAttributes);
 
         // Get whether the xaml type map attributes should be emitted.
         IncrementalValueProvider<bool> isXamlGeneratorEnabled =

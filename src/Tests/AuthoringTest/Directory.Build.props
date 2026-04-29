@@ -3,6 +3,7 @@
   <PropertyGroup>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
   
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
@@ -17,6 +18,10 @@
     <PublishAot>true</PublishAot>
     <NativeLib>Shared</NativeLib>
     <SelfContained>true</SelfContained>
+
+    <!-- Workaround to get TypeAssemblyTarget kept on AOT scenarios until fix is available. -->
+    <OutputType>Exe</OutputType>
+    <CustomNativeMain>true</CustomNativeMain>
   </PropertyGroup>
 
 </Project>

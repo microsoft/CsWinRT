@@ -8,7 +8,7 @@
 
 - **AOT-first**: all features must work and be fast on Native AOT. All vtables and CCW entries should be foldable by ILC into readonly data sections.
 - **Trim-safe and trim-friendly**: all generated code is fully trimmable without user action.
-- **Security**: all vtables and COM interface entries are in readonly data sections; all native object lifetime/concurrency issues from 2.x are addressed.
+- **Security**: all vtables and COM interface entries are in readonly data sections. All native object lifetime/concurrency issues from 2.x are addressed.
 - **Performance**: minimal overhead marshalling, zero-allocation vtables, pre-initialized type hierarchies.
 - **Modern C#**: targets .NET 10 / C# 14, uses `Span<T>` projections, `extension` types, `allows ref struct`, `static abstract` interface members, `file`-scoped types, etc.
 - **No source generators at publish time**: heavy code generation is done by post-build CLI tools (not source generators), so IntelliSense is never impacted.
@@ -22,7 +22,7 @@ CsWinRT 3.0 is fundamentally incompatible with CsWinRT 2.x. The .NET SDK uses th
 
 The `CSWINRT3_0` define constant is set when CsWinRT 3.0 is active.
 
-> **Note:** The repository is in active migration from CsWinRT 2.x to 3.0. Not all code in the repo is actively used; focus on the projects described below.
+> **Note:** The repository is in active migration from CsWinRT 2.x to 3.0. Not all code in the repo is actively used. Focus on the projects described below.
 
 ---
 
@@ -38,8 +38,9 @@ CsWinRT/
 │   ├── WinRT.Impl.Generator/              # (4) Impl/forwarder DLL generator (cswinrtimplgen.exe)
 │   ├── WinRT.Projection.Generator/        # (5) Projection DLL generator (cswinrtprojectiongen.exe)
 │   ├── WinRT.Interop.Generator/           # (6) Interop sidecar generator (cswinrtinteropgen.exe)
-│   ├── WinRT.Generator.Tasks/             # (7) MSBuild tasks for the build tools
-│   └── WinRT.Sdk.Projection/              # (8) Precompiled Windows SDK projection builds
+│   ├── WinRT.WinMD.Generator/             # (7) Component .winmd generator (cswinrtwinmdgen.exe)
+│   ├── WinRT.Generator.Tasks/             # (8) MSBuild tasks for the build tools
+│   └── WinRT.Sdk.Projection/              # (9) Precompiled Windows SDK projection builds
 ├── nuget/                                 # MSBuild .props/.targets for NuGet package
 ├── docs/                                  # Specifications and documentation
 └── eng/                                   # Engineering/CI infrastructure
@@ -163,7 +164,7 @@ The runtime library (`WinRT.Runtime.dll`) provides all common infrastructure for
 
 - **Target**: `net10.0`, C# 14, `AllowUnsafeBlocks`, `DisableRuntimeMarshalling`
 - **Root namespace**: `WindowsRuntime`
-- **Assembly name**: `WinRT.Runtime` (fixed name; other components depend on it, e.g. the UWP XAML compiler)
+- **Assembly name**: `WinRT.Runtime` (fixed name: other components depend on it, e.g. the UWP XAML compiler)
 - **Warnings as errors**: release only. `EnforceCodeStyleInBuild` enabled, `AnalysisLevelStyle` = `latest-all`.
 - **Strong-name signed** with `key.snk`
 - **AOT compatible**: `IsAotCompatible = true`
@@ -439,7 +440,52 @@ There's two reasons for this:
 
 **Debug repro support**: can capture all inputs into a `.zip` file for reproducible debugging.
 
-### 7. Generator tasks (`src/WinRT.Generator.Tasks/`)
+### 7. WinMD generator (`src/WinRT.WinMD.Generator/`)
+
+A **.NET CLI tool** (`cswinrtwinmdgen.exe`) published as a **Native AOT** binary. Generates a `.winmd` metadata file from a compiled C# component assembly, allowing developers to author Windows Runtime components in C#. This is a port and restructuring of the previous WinMD generator from CsWinRT 2.x, which was implemented as a Roslyn source generator. Moving it to a post-build CLI tool keeps it consistent with the other CsWinRT 3.0 build tools (interop, impl, projection generators) and removes the design-time/IntelliSense overhead of analyzing the entire component at every keystroke. It also addresses a more fundamental issue with the 2.x design: the generator produced a `.winmd` file **on disk**, but doing arbitrary file I/O from a Roslyn source generator is explicitly unsupported (source generators are only allowed to contribute additional source code to the compilation). The 2.x approach was therefore technically not even supported. The 3.0 post-build tool runs as a normal MSBuild step where file I/O is the expected output mechanism.
+
+**Project settings:**
+
+- **Target**: `net10.0`, C# 14, `PublishAot = true`, `DisableRuntimeMarshalling`
+- **Root namespace**: `WindowsRuntime.WinMDGenerator`
+- **Assembly name**: `cswinrtwinmdgen`
+- **Dependencies**: `AsmResolver.DotNet`, `ConsoleAppFramework`
+- **Security**: Control Flow Guard enabled, `IlcResilient = false`
+
+**Directory structure:**
+
+```
+WinRT.WinMD.Generator/
+├── Program.cs            # Entry point (ConsoleAppFramework dispatch to WinMDGenerator.Run)
+├── Attributes/           # CLI argument metadata attributes
+├── Discovery/            # Assembly analysis to discover authored Windows Runtime types
+├── Errors/               # WellKnownWinMDException + UnhandledWinMDException (CSWINRTWINMDGEN error IDs)
+├── Extensions/           # AsmResolver helper extensions
+├── Generation/           # Top-level driver (WinMDGenerator), CLI args, discovery state
+├── Helpers/              # Type mapping and utility helpers
+├── Models/               # Intermediate data models
+├── References/           # Reference assembly resolution
+└── Writers/              # Emits the .winmd file via AsmResolver
+```
+
+**CLI parameters** (defined on `WinMDGeneratorArgs`):
+
+| Argument | Purpose |
+|----------|---------|
+| `--input-assembly-path` | Compiled component .dll to analyze |
+| `--reference-assembly-paths` | Reference .dll paths for type resolution |
+| `--output-winmd-path` | Output `.winmd` file path |
+| `--assembly-version` | Assembly version stamped into the generated WinMD |
+| `--use-windows-ui-xaml-projections` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI |
+
+**How it integrates with the build:**
+
+- Wired into MSBuild via `nuget/Microsoft.Windows.CsWinMD.Generator.targets` (imported by `Microsoft.Windows.CsWinRT.targets` when `CsWinRTComponent == true`)
+- Invoked through the `RunCsWinRTWinMDGenerator` MSBuild task (in `WinRT.Generator.Tasks`)
+- Runs after `CoreCompile` (it needs the compiled .dll), gated on `CsWinRTComponent == true` and `DesignTimeBuild != true`
+- Output is `$(IntermediateOutputPath)$(AssemblyName).winmd`, then copied to `$(TargetDir)` by the authoring targets and packaged into the component's NuGet
+
+### 8. Generator tasks (`src/WinRT.Generator.Tasks/`)
 
 MSBuild task wrappers that bridge the MSBuild build system with the CLI tools above.
 
@@ -448,17 +494,18 @@ MSBuild task wrappers that bridge the MSBuild build system with the CLI tools ab
 - **Target**: `netstandard2.0` (for MSBuild compatibility)
 - **Dependency**: `Microsoft.Build.Utilities.Core`
 
-**Three tasks:**
+**Four tasks:**
 
 | Task Class | Tool | Purpose |
 |------------|------|---------|
 | `RunCsWinRTForwarderImplGenerator` | `cswinrtimplgen.exe` | Generate forwarder/impl assemblies |
 | `RunCsWinRTMergedProjectionGenerator` | `cswinrtprojectiongen.exe` | Generate merged projection assemblies |
 | `RunCsWinRTInteropGenerator` | `cswinrtinteropgen.exe` | Generate interop sidecar assembly |
+| `RunCsWinRTWinMDGenerator` | `cswinrtwinmdgen.exe` | Generate component `.winmd` metadata |
 
 All tasks extend `ToolTask`, generate response files for their respective CLI tools, and support architecture selection (`win-x86`, `win-x64`, `win-arm64`).
 
-### 8. SDK projection builds (`src/WinRT.Sdk.Projection/`)
+### 9. SDK projection builds (`src/WinRT.Sdk.Projection/`)
 
 A build project (not a tool) used during **official CsWinRT builds** to produce precompiled `WinRT.Sdk.Projection.dll` and `WinRT.Sdk.Xaml.Projection.dll` for each supported Windows SDK version. These precompiled .dll-s are bundled into the CsWinRT NuGet package so that consumers don't have to regenerate the entire Windows SDK projection on every publish (as described in the architecture overview).
 
@@ -490,6 +537,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 | `Microsoft.Windows.CsWinRT.CsWinRTGen.targets` | Post-build tools: interop generation, impl generation, merged projection generation |
 | `Microsoft.Windows.CsWinRT.Authoring.targets` | Windows Runtime component authoring: managed DLL output, WinMD generation, NuGet packaging |
 | `Microsoft.Windows.CsWinRT.Authoring.Transitive.targets` | Transitive target rules for component consumers |
+| `Microsoft.Windows.CsWinMD.Generator.targets` | Component `.winmd` generation: invokes `cswinrtwinmdgen.exe` after `CoreCompile` (only when `CsWinRTComponent == true`) |
 
 ---
 
@@ -521,14 +569,14 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 - C# namespaces follow the `WindowsRuntime.*` pattern (root namespace: `WindowsRuntime`)
   - `WindowsRuntime.InteropServices` for interop infrastructure
   - `WindowsRuntime.SourceGenerator` for the source generator
-  - `WindowsRuntime.ImplGenerator`, `WindowsRuntime.ProjectionGenerator`, `WindowsRuntime.InteropGenerator` for build tools
+  - `WindowsRuntime.ImplGenerator`, `WindowsRuntime.ProjectionGenerator`, `WindowsRuntime.InteropGenerator`, `WindowsRuntime.WinMDGenerator` for build tools
 - ABI types live under `ABI.{OriginalNamespace}` (e.g., `ABI.System.Collections.Generic`)
-- CLI tool assembly names are short: `cswinrt`, `cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtinteropgen`
+- CLI tool assembly names are short: `cswinrt`, `cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtinteropgen`, `cswinrtwinmdgen`
 - C# keywords in generated identifiers are escaped with `@` prefix
 
 ### Build tool patterns
 
-All three .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtinteropgen`) share common patterns:
+All four .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtinteropgen`, `cswinrtwinmdgen`) share common patterns:
 
 - Published as **Native AOT** self-contained binaries for fast startup
 - Use **ConsoleAppFramework** for CLI argument parsing
@@ -548,6 +596,7 @@ All three .NET build tools (`cswinrtimplgen`, `cswinrtprojectiongen`, `cswinrtin
 | Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0010`, `9999` |
 | Projection Generator | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0008`, `9999` |
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | Various, `9999` |
+| WinMD Generator | `CSWINRTWINMDGENxxxx` | `0001`–`0007` |
 | Runtime (obsolete markers) | `CSWINRT3xxx` | `CSWINRT3001` |
 
 ---
@@ -577,7 +626,7 @@ Assembly-level `[TypeMapAssemblyTarget]` attributes (generated by the source gen
 - `T[]` parameters → `ReadOnlySpan<T>` / `Span<T>` (leveraging C# 14 first-class spans)
 - `Point`/`Rect`/`Size` fields → `float` instead of `double`
 - `Windows.Foundation.TypedEventHandler<TSender, TResult>` → `System.EventHandler<TSender, TEventArgs>` (new .NET 10 type)
-- `IWinRTObject` removed; all shared functionality in `WindowsRuntimeObject` base class
+- `IWinRTObject` removed. All shared functionality in `WindowsRuntimeObject` base class
 - `As<I>()`, `FromAbi()`, `FromManaged()`, `IEquatable<T>` on runtime classes — all removed
 
 ---

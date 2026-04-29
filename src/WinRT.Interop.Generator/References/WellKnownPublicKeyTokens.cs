@@ -32,4 +32,9 @@ internal static class WellKnownPublicKeyTokens
     /// The public key data for <c>System.Threading.dll</c>.
     /// </summary>
     public static readonly byte[] SystemThreading = [0xB0, 0x3F, 0x5F, 0x7F, 0x11, 0xD5, 0x0A, 0x3A];
+
+    /// <summary>
+    /// The public key token for CsWinRT assemblies (<c>31bf3856ad364e35</c>).
+    /// </summary>
+    public static readonly byte[] CsWinRT = [0x31, 0xBF, 0x38, 0x56, 0xAD, 0x36, 0x4E, 0x35];
 }

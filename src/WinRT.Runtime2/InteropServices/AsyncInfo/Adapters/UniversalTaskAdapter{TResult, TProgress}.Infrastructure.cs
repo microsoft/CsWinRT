@@ -207,7 +207,7 @@ internal partial class UniversalTaskAdapter<
         }
         catch (Exception ex)
         {
-            ExceptionDispatchInfo.ThrowAsync(ex, synchronizationContext: null);
+            ExceptionDispatchInfo.ThrowAsync(ex);
         }
     }
 

@@ -59,6 +59,13 @@ internal static partial class ProjectionGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // If no types were found to project (e.g., component mode with no component references),
+        // skip the source generation and emit phases entirely (no .dll will be produced at all).
+        if (!processingState.HasTypesToProject)
+        {
+            return;
+        }
+
         // Invoke 'cswinrt.exe' to generate the projection sources
         try
         {

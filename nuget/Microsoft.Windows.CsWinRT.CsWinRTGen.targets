@@ -19,7 +19,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       We only enable this automatically if the project is explicitly targeting CsWinRT 3.0.
     -->
     <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == '' and '$(_TargetPlatformVersionUsesCsWinRT3)' == 'true' and ('$(OutputType)' == 'Exe' or '$(OutputType)' == 'Winexe')">true</CsWinRTGenerateInteropAssembly>
-    <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == '' and '$(_TargetPlatformVersionUsesCsWinRT3)' == 'true' and '$(OutputType)' == 'Library' and '$(PublishAOT)' == 'true'">true</CsWinRTGenerateInteropAssembly>   
+    <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == '' and '$(_TargetPlatformVersionUsesCsWinRT3)' == 'true' and '$(OutputType)' == 'Library' and '$(PublishAOT)' == 'true'">true</CsWinRTGenerateInteropAssembly>
+    <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == '' and '$(CsWinRTComponent)' == 'true' and '$(CsWinRTBuildForNativeConsumer)' == 'true'">true</CsWinRTGenerateInteropAssembly>
     <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == ''">false</CsWinRTGenerateInteropAssembly>
 
     <!--
@@ -67,6 +68,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       Default property values for `cswinrtprojectiongen`.
     -->      
     <_CsWinRTGeneratorMergedProjectionAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'WinRT.Projection.dll'))</_CsWinRTGeneratorMergedProjectionAssemblyPath>
+    <_CsWinRTGeneratorComponentAssemblyPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'WinRT.Component.dll'))</_CsWinRTGeneratorComponentAssemblyPath>
 
     <!--
       Default property values for the Windows SDK projection (`WinRT.Sdk.Projection.dll`).
@@ -157,7 +159,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTInteropGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTInteropGenerator"
-    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache;_RunCsWinRTMergedProjectionGenerator"
+    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ComputeRunCsWinRTGeneratorCache;_RunCsWinRTMergedProjectionGenerator;_RunCsWinRTComponentProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);@(IntermediateAssembly);$(_RunCsWinRTGeneratorPropertyInputsCachePath);@(CsWinRTGeneratorMergedProjectionPath)"
     Outputs="$(_CsWinRTGeneratorInteropAssemblyPath)"
@@ -171,6 +173,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WinRTSdkProjectionAssemblyPath="$(_CsWinRTSdkProjectionAssemblyPath)"
       WinRTSdkXamlProjectionAssemblyPath="$(_CsWinRTSdkXamlAssemblyPath)"
       WinRTProjectionAssemblyPath="@(CsWinRTGeneratorMergedProjectionPath)"
+      WinRTComponentAssemblyPath="@(CsWinRTGeneratorComponentPath)"
       InteropAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
       DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
       CsWinRTToolsDirectory="$(CsWinRTInteropGenEffectiveToolsDirectory)"
@@ -364,6 +367,68 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
       <!-- Append to 'FileWrites' so the forwarder .dll will be removed on clean -->
       <FileWrites Include="@(CsWinRTGeneratorMergedProjectionPath)"/>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    ============================================================
+                 _RunCsWinRTComponentProjectionGenerator
+
+    Runs 'cswinrtprojectiongen' to produce the 'WinRT.Component.dll'
+    assembly. The projection generator detects component
+    assemblies by checking for [WindowsRuntimeComponentAssembly] on
+    the assemblies and only includes types from those.
+    If no component types are found, the tool produces no output DLL.
+    ============================================================
+  -->
+  <Target
+    Name="_RunCsWinRTComponentProjectionGenerator"
+    DependsOnTargets="CoreCompile;_ResolveCsWinRToolsDirectory;_RunCsWinRTMergedProjectionGenerator"
+    Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
+    Outputs="$(_CsWinRTGeneratorComponentAssemblyPath)"
+    Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
+
+    <ItemGroup>
+      <_ComponentProjectionReferenceAssemblyPaths Include="@(ReferencePath)" Condition="!$([System.String]::new('%(Identity)').EndsWith('.winmd'))" />
+      <_ComponentProjectionReferenceAssemblyPaths Include="@(IntermediateAssembly)" Condition="'$(CsWinRTComponent)' == 'true'" />
+      <!-- Add the current project's .winmd so cswinrt.exe can process it -->
+      <_ComponentWinMDPaths Include="@(_WinMDPathsList)" />
+      <_ComponentWinMDPaths Include="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', '$(AssemblyName).winmd'))"
+                            Condition="'$(CsWinRTComponent)' == 'true'" />
+    </ItemGroup>
+
+    <!-- Invoke 'cswinrtprojectiongen' with assembly name 'WinRT.Component' (triggers component mode) -->
+    <RunCsWinRTMergedProjectionGenerator
+      ReferenceAssemblyPaths="@(_ComponentProjectionReferenceAssemblyPaths)"
+      GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
+      WinMDPaths="@(_ComponentWinMDPaths)"
+      TargetFramework="$(CsWinRTExeTFM)"
+      WindowsMetadata="$(CsWinRTWindowsMetadata)"
+      CsWinRTExePath="$(CsWinRTExe)"
+      AssemblyName="WinRT.Component"
+      CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
+      CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+      StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
+      StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
+
+    <!-- Only wire up the component DLL if it was actually produced (i.e. component types were found) -->
+    <ItemGroup Condition="Exists('$(_CsWinRTGeneratorComponentAssemblyPath)')">
+      <CsWinRTGeneratorComponentPath Include="$(_CsWinRTGeneratorComponentAssemblyPath)">
+        <AssemblyName>WinRT.Component</AssemblyName>
+        <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+        <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        <IncludeRuntimeDependency>true</IncludeRuntimeDependency>
+        <Private>true</Private>
+        <MSBuildSourceTargetName>_RunCsWinRTComponentProjectionGenerator</MSBuildSourceTargetName>
+        <Platforms>AnyCPU</Platforms>
+      </CsWinRTGeneratorComponentPath>
+
+      <ReferencePath Include="@(CsWinRTGeneratorComponentPath)" />
+      <ReferenceCopyLocalPaths Include="@(CsWinRTGeneratorComponentPath)" />
+
+      <!-- Append to 'FileWrites' so the component .dll will be removed on clean -->
+      <FileWrites Include="@(CsWinRTGeneratorComponentPath)"/>
     </ItemGroup>
   </Target>
 
