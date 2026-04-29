@@ -6,16 +6,26 @@ using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.WinMDGenerator.Discovery;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
 using MethodImplAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodImplAttributes;
 using MethodSemanticsAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodSemanticsAttributes;
 using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes;
 
-namespace WindowsRuntime.WinMDGenerator.Generation;
+namespace WindowsRuntime.WinMDGenerator.Writers;
 
-internal sealed partial class WinmdWriter
+/// <inheritdoc cref="WinMDWriter"/>
+internal sealed partial class WinMDWriter
 {
+    /// <summary>
+    /// Adds a method definition to a WinMD interface type.
+    /// </summary>
+    /// <remarks>
+    /// Interface methods in WinMD are abstract virtual methods. The return type and parameter types
+    /// are mapped from .NET to Windows Runtime equivalents. Custom attributes from the input method are copied
+    /// to the output.
+    /// </remarks>
+    /// <param name="outputType">The output interface <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="inputMethod">The input <see cref="MethodDefinition"/> to add.</param>
     private void AddMethodToInterface(TypeDefinition outputType, MethodDefinition inputMethod)
     {
         TypeSignature returnType = inputMethod.Signature!.ReturnType is CorLibTypeSignature { ElementType: ElementType.Void }
@@ -25,7 +35,7 @@ internal sealed partial class WinmdWriter
         TypeSignature[] parameterTypes = [.. inputMethod.Signature.ParameterTypes
             .Select(MapTypeSignatureToOutput)];
 
-        MethodAttributes attrs =
+        MethodAttributes attributes =
             MethodAttributes.Public |
             MethodAttributes.HideBySig |
             MethodAttributes.Abstract |
@@ -34,15 +44,15 @@ internal sealed partial class WinmdWriter
 
         if (inputMethod.IsSpecialName)
         {
-            attrs |= MethodAttributes.SpecialName;
+            attributes |= MethodAttributes.SpecialName;
         }
 
         MethodDefinition outputMethod = new(
-            inputMethod.Name!.Value,
-            attrs,
-            MethodSignature.CreateInstance(returnType, parameterTypes));
+            name: inputMethod.Name!.Value,
+            attributes: attributes,
+            signature: MethodSignature.CreateInstance(returnType, parameterTypes));
 
-        // Add parameter definitions with correct attributes for WinRT array conventions
+        // Add parameter definitions with correct attributes for Windows Runtime array conventions
         AddParameterDefinitions(outputMethod, inputMethod);
 
         outputType.Methods.Add(outputMethod);
@@ -51,6 +61,17 @@ internal sealed partial class WinmdWriter
         CopyCustomAttributes(inputMethod, outputMethod);
     }
 
+    /// <summary>
+    /// Adds a method definition to a WinMD class type.
+    /// </summary>
+    /// <remarks>
+    /// Class methods in WinMD are final virtual methods (sealed). Constructors receive
+    /// <c>SpecialName</c> and <c>RuntimeSpecialName</c> attributes. Static methods are emitted
+    /// as static. All methods use <c>Runtime | Managed</c> implementation attributes since the
+    /// actual implementation is provided at runtime by the Windows Runtime projection.
+    /// </remarks>
+    /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="inputMethod">The input <see cref="MethodDefinition"/> to add.</param>
     private void AddMethodToClass(TypeDefinition outputType, MethodDefinition inputMethod)
     {
         TypeSignature returnType = inputMethod.Signature!.ReturnType is CorLibTypeSignature { ElementType: ElementType.Void }
@@ -61,24 +82,24 @@ internal sealed partial class WinmdWriter
             .Select(MapTypeSignatureToOutput)];
 
         bool isConstructor = inputMethod.IsConstructor;
-        MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig;
+        MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig;
 
         if (isConstructor)
         {
-            attrs |= MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName;
+            attributes |= MethodAttributes.SpecialName | MethodAttributes.RuntimeSpecialName;
         }
         else if (inputMethod.IsStatic)
         {
-            attrs |= MethodAttributes.Static;
+            attributes |= MethodAttributes.Static;
         }
         else
         {
-            attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
+            attributes |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
         }
 
         if (inputMethod.IsSpecialName && !isConstructor)
         {
-            attrs |= MethodAttributes.SpecialName;
+            attributes |= MethodAttributes.SpecialName;
         }
 
         MethodSignature signature = isConstructor || !inputMethod.IsStatic
@@ -86,14 +107,14 @@ internal sealed partial class WinmdWriter
             : MethodSignature.CreateStatic(returnType, parameterTypes);
 
         MethodDefinition outputMethod = new(
-            inputMethod.Name!.Value,
-            attrs,
-            signature)
+            name: inputMethod.Name!.Value,
+            attributes: attributes,
+            signature: signature)
         {
             ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed
         };
 
-        // Add parameter definitions with correct attributes for WinRT array conventions
+        // Add parameter definitions with correct attributes for Windows Runtime array conventions
         AddParameterDefinitions(outputMethod, inputMethod);
 
         outputType.Methods.Add(outputMethod);
@@ -103,7 +124,7 @@ internal sealed partial class WinmdWriter
     }
 
     /// <summary>
-    /// Adds parameter definitions to an output method with correct WinRT attributes.
+    /// Adds parameter definitions to an output method with correct Windows Runtime attributes.
     /// Handles Span/ReadOnlySpan → array parameter attribute mapping:
     /// - ReadOnlySpan&lt;T&gt; → [in] T[] (PassArray)
     /// - Span&lt;T&gt; → [out] T[] without BYREF (FillArray)
@@ -118,22 +139,22 @@ internal sealed partial class WinmdWriter
         foreach (ParameterDefinition inputParam in inputMethod.ParameterDefinitions)
         {
             int sigIndex = paramIndex - 1;
-            ParameterAttributes paramAttrs = ParameterAttributes.In;
+            ParameterAttributes paramattributes = ParameterAttributes.In;
 
             if (sigIndex < inputParamTypes.Count)
             {
-                paramAttrs = GetWinRTParameterAttributes(inputParamTypes[sigIndex]);
+                paramattributes = GetWinRTParameterAttributes(inputParamTypes[sigIndex]);
             }
 
             outputMethod.ParameterDefinitions.Add(new ParameterDefinition(
                 (ushort)paramIndex++,
                 inputParam.Name!.Value,
-                paramAttrs));
+                paramattributes));
         }
     }
 
     /// <summary>
-    /// Determines the WinRT parameter attributes based on the input parameter type.
+    /// Determines the Windows Runtime parameter attributes based on the input parameter type.
     /// </summary>
     private static ParameterAttributes GetWinRTParameterAttributes(TypeSignature inputParamType)
     {
@@ -144,9 +165,10 @@ internal sealed partial class WinmdWriter
         }
 
         // Span<T> → FillArray pattern: [out] without BYREF
-        if (inputParamType is GenericInstanceTypeSignature gits)
+        if (inputParamType is GenericInstanceTypeSignature genericInstanceSignature)
         {
-            string typeName = AssemblyAnalyzer.GetQualifiedName(gits.GenericType);
+            string typeName = genericInstanceSignature.GenericType.FullName;
+
             if (typeName == "System.Span`1")
             {
                 return ParameterAttributes.Out;
@@ -157,6 +179,22 @@ internal sealed partial class WinmdWriter
         return ParameterAttributes.In;
     }
 
+    /// <summary>
+    /// Adds a property definition to a WinMD type (interface or class).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Windows Runtime properties use <c>get_</c> for getters and <c>put_</c> for setters (instead of .NET's <c>set_</c>).
+    /// For interface parents (including synthesized interfaces), the methods are emitted as abstract virtual
+    /// even when the original property was static, since Windows Runtime interface methods are always instance methods.
+    /// </para>
+    /// <para>
+    /// Custom attributes from the input property are copied to the output property.
+    /// </para>
+    /// </remarks>
+    /// <param name="outputType">The output <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="inputProperty">The input <see cref="PropertyDefinition"/> to add.</param>
+    /// <param name="isInterfaceParent">Whether the parent type is an interface (forces instance signatures).</param>
     private void AddPropertyToType(TypeDefinition outputType, PropertyDefinition inputProperty, bool isInterfaceParent)
     {
         TypeSignature propertyType = MapTypeSignatureToOutput(inputProperty.Signature!.ReturnType);
@@ -166,32 +204,32 @@ internal sealed partial class WinmdWriter
         bool isStatic = !isInterfaceParent && (inputProperty.GetMethod?.IsStatic == true || inputProperty.SetMethod?.IsStatic == true);
 
         PropertyDefinition outputProperty = new(
-            inputProperty.Name!.Value,
-            0,
-            isStatic ? PropertySignature.CreateStatic(propertyType) : PropertySignature.CreateInstance(propertyType));
+            name: inputProperty.Name!.Value,
+            attributes: PropertyAttributes.None,
+            signature: isStatic ? PropertySignature.CreateStatic(propertyType) : PropertySignature.CreateInstance(propertyType));
 
         // Add getter
-        if (inputProperty.GetMethod != null)
+        if (inputProperty.GetMethod is not null)
         {
-            MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
+            MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
             if (isInterfaceParent)
             {
-                attrs |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+                attributes |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
             }
             else if (isStatic)
             {
-                attrs |= MethodAttributes.Static;
+                attributes |= MethodAttributes.Static;
             }
             else
             {
-                attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
+                attributes |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
             }
 
             MethodSignature getSignature = isStatic
                 ? MethodSignature.CreateStatic(propertyType)
                 : MethodSignature.CreateInstance(propertyType);
 
-            MethodDefinition getter = new("get_" + inputProperty.Name.Value, attrs, getSignature);
+            MethodDefinition getter = new("get_" + inputProperty.Name.Value, attributes, getSignature);
             if (!isInterfaceParent)
             {
                 getter.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
@@ -200,28 +238,28 @@ internal sealed partial class WinmdWriter
             outputProperty.Semantics.Add(new MethodSemantics(getter, MethodSemanticsAttributes.Getter));
         }
 
-        // Add setter (WinRT uses "put_" prefix)
-        if (inputProperty.SetMethod != null && inputProperty.SetMethod.IsPublic)
+        // Add setter (Windows Runtime uses "put_" prefix)
+        if (inputProperty.SetMethod is not null && inputProperty.SetMethod.IsPublic)
         {
-            MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
+            MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
             if (isInterfaceParent)
             {
-                attrs |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+                attributes |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
             }
             else if (isStatic)
             {
-                attrs |= MethodAttributes.Static;
+                attributes |= MethodAttributes.Static;
             }
             else
             {
-                attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
+                attributes |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
             }
 
             MethodSignature setSignature = isStatic
                 ? MethodSignature.CreateStatic(_outputModule.CorLibTypeFactory.Void, [propertyType])
                 : MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [propertyType]);
 
-            MethodDefinition setter = new("put_" + inputProperty.Name.Value, attrs, setSignature);
+            MethodDefinition setter = new("put_" + inputProperty.Name.Value, attributes, setSignature);
             if (!isInterfaceParent)
             {
                 setter.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
@@ -268,11 +306,31 @@ internal sealed partial class WinmdWriter
         CopyCustomAttributes(inputProperty, outputProperty);
     }
 
+    /// <summary>
+    /// Adds an event definition to a WinMD type (interface or class).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Windows Runtime events always use <c>EventRegistrationToken</c> for the add/remove pattern:
+    /// the <c>add_</c> method returns an <c>EventRegistrationToken</c>, and the <c>remove_</c>
+    /// method accepts one. This differs from the .NET event pattern where both accessors are <c>void</c>.
+    /// </para>
+    /// <para>
+    /// For interface parents (including synthesized interfaces), the methods are emitted as abstract virtual
+    /// even when the original event was static.
+    /// </para>
+    /// </remarks>
+    /// <param name="outputType">The output <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="inputEvent">The input <see cref="EventDefinition"/> to add.</param>
+    /// <param name="isInterfaceParent">Whether the parent type is an interface (forces instance signatures).</param>
     private void AddEventToType(TypeDefinition outputType, EventDefinition inputEvent, bool isInterfaceParent)
     {
         ITypeDefOrRef eventType = ImportTypeReference(inputEvent.EventType!);
+
         TypeReference eventRegistrationTokenType = GetOrCreateTypeReference(
-            "Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract");
+            @namespace: "Windows.Foundation",
+            name: "EventRegistrationToken",
+            assemblyName: "Windows.Foundation.FoundationContract");
 
         EventDefinition outputEvent = new(inputEvent.Name!.Value, 0, eventType);
 
@@ -281,32 +339,33 @@ internal sealed partial class WinmdWriter
 
         // Add method
         {
-            MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
+            MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
             if (isInterfaceParent)
             {
-                attrs |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+                attributes |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
             }
             else if (isStatic)
             {
-                attrs |= MethodAttributes.Static;
+                attributes |= MethodAttributes.Static;
             }
             else
             {
-                attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
+                attributes |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
             }
 
-            TypeSignature handlerSig = eventType.ToTypeSignature(false);
-            TypeSignature tokenSig = eventRegistrationTokenType.ToTypeSignature(true);
+            TypeSignature handlerSignature = eventType.ToTypeSignature(false);
+            TypeSignature tokenSignature = eventRegistrationTokenType.ToTypeSignature(true);
 
             MethodSignature addSignature = isStatic
-                ? MethodSignature.CreateStatic(tokenSig, [handlerSig])
-                : MethodSignature.CreateInstance(tokenSig, [handlerSig]);
+                ? MethodSignature.CreateStatic(tokenSignature, [handlerSignature])
+                : MethodSignature.CreateInstance(tokenSignature, [handlerSignature]);
 
-            MethodDefinition adder = new("add_" + inputEvent.Name.Value, attrs, addSignature);
+            MethodDefinition adder = new("add_" + inputEvent.Name.Value, attributes, addSignature);
             if (!isInterfaceParent)
             {
                 adder.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
             }
+
             adder.ParameterDefinitions.Add(new ParameterDefinition(1, "handler", ParameterAttributes.In));
             outputType.Methods.Add(adder);
             outputEvent.Semantics.Add(new MethodSemantics(adder, MethodSemanticsAttributes.AddOn));
@@ -314,31 +373,32 @@ internal sealed partial class WinmdWriter
 
         // Remove method
         {
-            MethodAttributes attrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
+            MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName;
             if (isInterfaceParent)
             {
-                attrs |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
+                attributes |= MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot;
             }
             else if (isStatic)
             {
-                attrs |= MethodAttributes.Static;
+                attributes |= MethodAttributes.Static;
             }
             else
             {
-                attrs |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
+                attributes |= MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final;
             }
 
-            TypeSignature tokenSig = eventRegistrationTokenType.ToTypeSignature(true);
+            TypeSignature tokenSignature = eventRegistrationTokenType.ToTypeSignature(true);
 
             MethodSignature removeSignature = isStatic
-                ? MethodSignature.CreateStatic(_outputModule.CorLibTypeFactory.Void, [tokenSig])
-                : MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [tokenSig]);
+                ? MethodSignature.CreateStatic(_outputModule.CorLibTypeFactory.Void, [tokenSignature])
+                : MethodSignature.CreateInstance(_outputModule.CorLibTypeFactory.Void, [tokenSignature]);
 
-            MethodDefinition remover = new("remove_" + inputEvent.Name.Value, attrs, removeSignature);
+            MethodDefinition remover = new("remove_" + inputEvent.Name.Value, attributes, removeSignature);
             if (!isInterfaceParent)
             {
                 remover.ImplAttributes = MethodImplAttributes.Runtime | MethodImplAttributes.Managed;
             }
+
             remover.ParameterDefinitions.Add(new ParameterDefinition(1, "token", ParameterAttributes.In));
             outputType.Methods.Add(remover);
             outputEvent.Semantics.Add(new MethodSemantics(remover, MethodSemanticsAttributes.RemoveOn));

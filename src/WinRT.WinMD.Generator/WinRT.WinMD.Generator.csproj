@@ -2,6 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishAot>true</PublishAot>
@@ -16,13 +17,13 @@
 
     <!-- Emit the '[module: SkipLocalsInit]' attribute (same as the runtime) -->
     <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
-      
+
     <!-- Set the root namespace to match the other projects -->
     <RootNamespace>WindowsRuntime.WinMDGenerator</RootNamespace>
 
     <!-- This project produces a CLI tool, so we want a nice short name for it -->
     <AssemblyName>cswinrtwinmdgen</AssemblyName>
-      
+
     <!-- Same settings as 'WinRT.Runtime' -->
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
     <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>

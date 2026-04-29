@@ -5,21 +5,40 @@ using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.WinMDGenerator.Discovery;
+using WindowsRuntime.WinMDGenerator.Models;
 using MethodAttributes = AsmResolver.PE.DotNet.Metadata.Tables.MethodAttributes;
 using TypeAttributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes;
 
-namespace WindowsRuntime.WinMDGenerator.Generation;
+namespace WindowsRuntime.WinMDGenerator.Writers;
 
-internal sealed partial class WinmdWriter
+/// <inheritdoc cref="WinMDWriter"/>
+internal sealed partial class WinMDWriter
 {
+    /// <summary>
+    /// The type of synthesized Windows Runtime interface to generate for a runtime class.
+    /// </summary>
     private enum SynthesizedInterfaceType
     {
+        /// <summary>Contains static methods, properties, and events from the class.</summary>
         Static,
+
+        /// <summary>Contains factory methods (parameterized constructors projected as <c>Create</c> methods).</summary>
         Factory,
+
+        /// <summary>Contains instance methods, properties, and events not from implemented interfaces.</summary>
         Default
     }
 
+    /// <summary>
+    /// Gets the synthesized interface name for a class, following the Windows Runtime naming convention.
+    /// </summary>
+    /// <remarks>
+    /// The convention is: <c>I{ClassName}Class</c> for default, <c>I{ClassName}Factory</c>
+    /// for factory, and <c>I{ClassName}Static</c> for static interfaces.
+    /// </remarks>
+    /// <param name="className">The simple name of the runtime class.</param>
+    /// <param name="type">The type of synthesized interface.</param>
+    /// <returns>The synthesized interface name (e.g., <c>"IFooClass"</c>).</returns>
     private static string GetSynthesizedInterfaceName(string className, SynthesizedInterfaceType type)
     {
         return "I" + className + type switch
@@ -31,6 +50,29 @@ internal sealed partial class WinmdWriter
         };
     }
 
+    /// <summary>
+    /// Adds all synthesized interfaces (<c>IFooClass</c>, <c>IFooFactory</c>, <c>IFooStatic</c>)
+    /// for a runtime class.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Windows Runtime requires runtime classes to express their public API surface through interfaces.
+    /// This method creates up to three synthesized interfaces containing the class's own members
+    /// (not those inherited from explicitly implemented interfaces):
+    /// </para>
+    /// <list type="bullet">
+    ///   <item><c>IFooStatic</c>: static methods, properties, and events.</item>
+    ///   <item><c>IFooFactory</c>: parameterized constructors projected as factory methods.</item>
+    ///   <item><c>IFooClass</c>: instance members not already provided by implemented interfaces.</item>
+    /// </list>
+    /// <para>
+    /// Members are excluded from synthesized interfaces if they come from implemented interfaces
+    /// (including custom-mapped interfaces, explicit implementations, and <c>MethodImpl</c> entries).
+    /// </para>
+    /// </remarks>
+    /// <param name="inputType">The input class <see cref="TypeDefinition"/>.</param>
+    /// <param name="classOutputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="classDeclaration">The <see cref="TypeDeclaration"/> tracking the class.</param>
     private void AddSynthesizedInterfaces(TypeDefinition inputType, TypeDefinition classOutputType, TypeDeclaration classDeclaration)
     {
         // Static vs non-static member filtering is handled below per-member
@@ -40,13 +82,13 @@ internal sealed partial class WinmdWriter
 
         // Use all interfaces including inherited ones from the input type
         List<InterfaceImplementation> allInterfaces = GatherAllInterfaces(inputType);
-        foreach (InterfaceImplementation impl in allInterfaces)
+        foreach (InterfaceImplementation interfaceImplementation in allInterfaces)
         {
-            TypeDefinition? interfaceDef = impl.Interface is TypeSpecification ts
-                ? SafeResolve((ts.Signature as GenericInstanceTypeSignature)?.GenericType)
-                : SafeResolve(impl.Interface);
+            TypeDefinition? interfaceDef = interfaceImplementation.Interface is TypeSpecification typeSpecification
+                ? SafeResolve((typeSpecification.Signature as GenericInstanceTypeSignature)?.GenericType)
+                : SafeResolve(interfaceImplementation.Interface);
 
-            if (interfaceDef != null)
+            if (interfaceDef is not null)
             {
                 foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
                 {
@@ -58,9 +100,9 @@ internal sealed partial class WinmdWriter
                     _ = membersFromInterfaces.Add(prop.Name?.Value ?? "");
                 }
 
-                foreach (EventDefinition evt in interfaceDef.Events)
+                foreach (EventDefinition @event in interfaceDef.Events)
                 {
-                    _ = membersFromInterfaces.Add(evt.Name?.Value ?? "");
+                    _ = membersFromInterfaces.Add(@event.Name?.Value ?? "");
                 }
             }
         }
@@ -85,10 +127,10 @@ internal sealed partial class WinmdWriter
             }
         }
 
-        // Also use MethodImplementations from the input type's IL to detect implicit interface
+        // Also use 'MethodImplementations' from the input type's IL to detect implicit interface
         // implementations. This handles cases where a public class method implicitly implements
-        // an external interface method (e.g., IWwwFormUrlDecoderEntry.get_Name) — the compiler
-        // generates MethodImpl entries that tell us which methods come from interfaces.
+        // an external interface method (e.g., 'IWwwFormUrlDecoderEntry.get_Name') — the compiler
+        // generates 'MethodImpl' entries that tell us which methods come from interfaces.
         foreach (MethodImplementation methodImpl in inputType.MethodImplementations)
         {
             if (methodImpl.Body is MethodDefinition bodyMethod && bodyMethod.IsPublic)
@@ -102,6 +144,23 @@ internal sealed partial class WinmdWriter
         AddSynthesizedInterface(inputType, classOutputType, classDeclaration, SynthesizedInterfaceType.Default, membersFromInterfaces);
     }
 
+    /// <summary>
+    /// Adds a single synthesized interface of the specified type for a runtime class.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The interface is only emitted if it has at least one member, or if it is the default interface
+    /// and the class has no other interface implementations. When emitted, the interface receives
+    /// <c>[Version]</c>, <c>[Guid]</c>, and <c>[ExclusiveTo]</c> attributes, and the appropriate
+    /// metadata attribute is added to the class (<c>[Activatable]</c> for factory, <c>[Static]</c>
+    /// for static, <c>[Default]</c> for default).
+    /// </para>
+    /// </remarks>
+    /// <param name="inputType">The input class <see cref="TypeDefinition"/>.</param>
+    /// <param name="classOutputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
+    /// <param name="classDeclaration">The <see cref="TypeDeclaration"/> tracking the class.</param>
+    /// <param name="interfaceType">The type of synthesized interface to create.</param>
+    /// <param name="membersFromInterfaces">Set of member names already provided by implemented interfaces.</param>
     private void AddSynthesizedInterface(
         TypeDefinition inputType,
         TypeDefinition classOutputType,
@@ -110,7 +169,7 @@ internal sealed partial class WinmdWriter
         HashSet<string> membersFromInterfaces)
     {
         bool hasMembers = false;
-        string ns = AssemblyAnalyzer.GetEffectiveNamespace(inputType) ?? "";
+        string @namespace = inputType.Namespace?.Value ?? "";
         string className = inputType.Name!.Value;
         string interfaceName = GetSynthesizedInterfaceName(className, interfaceType);
 
@@ -122,7 +181,7 @@ internal sealed partial class WinmdWriter
             TypeAttributes.Interface |
             TypeAttributes.Abstract;
 
-        TypeDefinition synthesizedInterface = new(ns, interfaceName, typeAttributes);
+        TypeDefinition synthesizedInterface = new(@namespace, interfaceName, typeAttributes);
 
         // Add members to the synthesized interface
         foreach (MethodDefinition method in inputType.Methods)
@@ -207,10 +266,10 @@ internal sealed partial class WinmdWriter
         }
 
         // Add events
-        foreach (EventDefinition evt in inputType.Events)
+        foreach (EventDefinition @event in inputType.Events)
         {
-            bool isStatic = evt.AddMethod?.IsStatic == true;
-            bool isPublic = evt.AddMethod?.IsPublic == true || evt.RemoveMethod?.IsPublic == true;
+            bool isStatic = @event.AddMethod?.IsStatic == true;
+            bool isPublic = @event.AddMethod?.IsPublic == true || @event.RemoveMethod?.IsPublic == true;
 
             if (!isPublic)
             {
@@ -223,7 +282,7 @@ internal sealed partial class WinmdWriter
                 // For default interface, skip events already provided by an implemented interface
                 if (interfaceType == SynthesizedInterfaceType.Default)
                 {
-                    string adderName = "add_" + evt.Name!.Value;
+                    string adderName = "add_" + @event.Name!.Value;
                     if (membersFromInterfaces.Contains(adderName))
                     {
                         continue;
@@ -231,7 +290,7 @@ internal sealed partial class WinmdWriter
                 }
 
                 hasMembers = true;
-                AddEventToType(synthesizedInterface, evt, isInterfaceParent: true);
+                AddEventToType(synthesizedInterface, @event, isInterfaceParent: true);
             }
         }
 
@@ -240,7 +299,7 @@ internal sealed partial class WinmdWriter
         {
             _outputModule.TopLevelTypes.Add(synthesizedInterface);
 
-            string qualifiedInterfaceName = string.IsNullOrEmpty(ns) ? interfaceName : $"{ns}.{interfaceName}";
+            string qualifiedInterfaceName = string.IsNullOrEmpty(@namespace) ? interfaceName : $"{@namespace}.{interfaceName}";
 
             TypeDeclaration interfaceDeclaration = new(null, synthesizedInterface, isComponentType: false);
             _typeDefinitionMapping[qualifiedInterfaceName] = interfaceDeclaration;
@@ -251,11 +310,11 @@ internal sealed partial class WinmdWriter
             {
                 classDeclaration.DefaultInterface = qualifiedInterfaceName;
 
-                // Add interface implementation on the class (use TypeRef per WinMD convention)
+                // Add interface implementation on the class (use 'TypeRef' per WinMD convention)
                 InterfaceImplementation interfaceImpl = new(EnsureTypeReference(synthesizedInterface));
                 classOutputType.Interfaces.Add(interfaceImpl);
 
-                // Add DefaultAttribute on the interface implementation
+                // Add '[Default]' attribute on the interface implementation
                 AddDefaultAttribute(interfaceImpl);
             }
 
@@ -266,7 +325,7 @@ internal sealed partial class WinmdWriter
             AddGuidAttributeFromName(synthesizedInterface, interfaceName);
 
             // Add ExclusiveTo attribute
-            AddExclusiveToAttribute(synthesizedInterface, AssemblyAnalyzer.GetQualifiedName(inputType));
+            AddExclusiveToAttribute(synthesizedInterface, inputType.FullName);
 
             if (interfaceType == SynthesizedInterfaceType.Factory)
             {
@@ -280,31 +339,50 @@ internal sealed partial class WinmdWriter
         }
     }
 
+    /// <summary>
+    /// Adds a factory method to a synthesized factory interface.
+    /// </summary>
+    /// <remarks>
+    /// Parameterized constructors are projected as <c>Create{ClassName}</c> factory methods
+    /// in the factory interface. The return type is the runtime class itself.
+    /// </remarks>
+    /// <param name="synthesizedInterface">The factory interface to add the method to.</param>
+    /// <param name="classType">The input class <see cref="TypeDefinition"/>.</param>
+    /// <param name="constructor">The parameterized constructor <see cref="MethodDefinition"/>.</param>
     private void AddFactoryMethod(TypeDefinition synthesizedInterface, TypeDefinition classType, MethodDefinition constructor)
     {
         // Look up the output class TypeDefinition to use as the return type
-        string classQualifiedName = AssemblyAnalyzer.GetQualifiedName(classType);
-        TypeDefinition outputClassType = _typeDefinitionMapping[classQualifiedName].OutputType!;
+        string classFullName = classType.FullName;
+        TypeDefinition outputClassType = _typeDefinitionMapping[classFullName].OutputType!;
         TypeSignature returnType = new TypeDefOrRefSignature(outputClassType, isValueType: false);
 
         TypeSignature[] parameterTypes = [.. constructor.Signature!.ParameterTypes
             .Select(MapTypeSignatureToOutput)];
 
         MethodDefinition factoryMethod = new(
-            "Create" + classType.Name!.Value,
-            MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot,
-            MethodSignature.CreateInstance(returnType, parameterTypes));
+            name: "Create" + classType.Name!.Value,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot,
+            signature: MethodSignature.CreateInstance(returnType, parameterTypes));
 
-        // Add parameter definitions with correct WinRT attributes
+        // Add parameter definitions with correct Windows Runtime attributes
         AddParameterDefinitions(factoryMethod, constructor);
 
         synthesizedInterface.Methods.Add(factoryMethod);
     }
 
-    private static string GetInterfaceQualifiedName(ITypeDefOrRef type)
+    /// <summary>
+    /// Gets the fully name of an interface, stripping generic type arguments for generic interfaces.
+    /// </summary>
+    /// <remarks>
+    /// For a generic interface like <c>IList&lt;string&gt;</c>, returns the open generic name
+    /// <c>"System.Collections.Generic.IList`1"</c> rather than the closed form.
+    /// </remarks>
+    /// <param name="type">The interface type reference.</param>
+    /// <returns>The full name of the interface type.</returns>
+    private static string GetInterfaceFullName(ITypeDefOrRef type)
     {
         return type is TypeSpecification typeSpec && typeSpec.Signature is GenericInstanceTypeSignature genericInst
-            ? AssemblyAnalyzer.GetQualifiedName(genericInst.GenericType)
-            : AssemblyAnalyzer.GetQualifiedName(type);
+            ? genericInst.GenericType.FullName
+            : type.FullName;
     }
 }
