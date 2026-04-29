@@ -23,6 +23,15 @@ internal static class AnalyzerConfigOptionsExtensions
         }
 
         /// <summary>
+        /// Gets the value of the <c>"CsWinRTBuildForNativeConsumer"</c> property.
+        /// </summary>
+        /// <returns>The value of the <c>"CsWinRTBuildForNativeConsumer"</c> property.</returns>
+        public bool GetBuildForNativeConsumer()
+        {
+            return options.GetBooleanProperty("CsWinRTBuildForNativeConsumer");
+        }
+
+        /// <summary>
         /// Gets the value of the <c>"CsWinRTComponent"</c> property.
         /// </summary>
         /// <returns>The value of the <c>"CsWinRTComponent"</c> property.</returns>

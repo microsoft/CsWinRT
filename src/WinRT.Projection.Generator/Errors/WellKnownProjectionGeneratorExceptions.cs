@@ -47,7 +47,7 @@ internal static class WellKnownProjectionGeneratorExceptions
     /// </summary>
     public static Exception EmitDllError(IEnumerable<Diagnostic> diagnostics)
     {
-        string combinedDiagnostics = string.Join("\n", diagnostics.Select(static diagnostic => $"{diagnostic.Severity}: '{diagnostic.GetMessage()}'"));
+        string combinedDiagnostics = string.Join("\n", diagnostics.Select(static diagnostic => diagnostic.ToString()));
 
         return Exception(4, $"Failed to emit the projection dll.\n{combinedDiagnostics}");
     }

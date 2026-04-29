@@ -58,6 +58,13 @@ public static class WellKnownInterfaceIIDs
         get => ref WellKnownWindowsInterfaceIIDs.IID_IInspectable;
     }
 
+    /// <summary>The IID for <c>IActivationFactory</c>.</summary>
+    public static ref readonly Guid IID_IActivationFactory
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IActivationFactory;
+    }
+
     /// <summary>The IID for <c>IStringable</c> (mapped to <see cref="global::Windows.Foundation.IStringable"/>.</summary>
     public static ref readonly Guid IID_IStringable
     {

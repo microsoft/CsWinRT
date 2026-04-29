@@ -94,6 +94,23 @@ internal static class InteropInterfaceEntriesResolver
             // We always need to resolve the user-defined types in all cases below, so just do it once first
             TypeDefinition interfaceType = typeSignature.Resolve(interopReferences.RuntimeContext);
 
+            // If the type represents an '[exclusiveto]' interface for an authored type from a Windows Runtime component
+            // written in C#, we resolve the implementation from the generated 'WinRT.Component.dll' assembly. We check
+            // this before the general projected type check, because these interfaces also have '[WindowsRuntimeMetadata]'
+            // but their implementations live in 'WinRT.Component.dll', not in projections.
+            if (interopDefinitions.WindowsRuntimeComponentModule is not null &&
+                ReferenceEquals(interfaceType.DeclaringModule, interopDefinitions.WindowsRuntimeComponentModule) &&
+                !interfaceType.IsPublic)
+            {
+                (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetComponentTypeImpl(
+                    type: interfaceType,
+                    interopDefinitions: interopDefinitions);
+
+                yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
+
+                continue;
+            }
+
             // Handle the common case for all normally projected, non-generic Windows Runtime interface types. For those, all the
             // interop code will just live in the 'WinRT.Projection.dll' assembly, with all projected types for the application domain.
             if (interfaceType.IsProjectedWindowsRuntimeType)
@@ -101,6 +118,20 @@ internal static class InteropInterfaceEntriesResolver
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetProjectedTypeImpl(
                     type: interfaceType,
                     interopReferences: interopReferences);
+
+                yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
+
+                continue;
+            }
+
+            // For public (non-exclusive) interfaces from authored component assemblies, the type resolves
+            // from the authored assembly but the Impl and IID live in 'WinRT.Component.dll'.
+            if (interopDefinitions.WindowsRuntimeComponentModule is not null &&
+                interfaceType.IsInterface && interfaceType.IsComponentWindowsRuntimeType)
+            {
+                (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetComponentPublicInterfaceTypeImpl(
+                    type: interfaceType,
+                    interopDefinitions: interopDefinitions);
 
                 yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
 
@@ -133,20 +164,80 @@ internal static class InteropInterfaceEntriesResolver
 
                 continue;
             }
-
-            // Lastly, if the type represents an '[exclusiveto]' interface for an authored type from a Windows Runtime
-            // component written in C#, we resolve the implementation from the generated 'WinRT.Component.dll' assembly.
-            if (interfaceType.HasCustomAttribute(interopReferences.WindowsRuntimeExclusiveToInterfaceAttribute))
-            {
-                (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetComponentTypeImpl(
-                    type: interfaceType,
-                    interopDefinitions: interopDefinitions);
-
-                yield return new WindowsRuntimeInterfaceEntryInfo(get_IIDMethod, get_VtableMethod);
-
-                continue;
-            }
         }
+    }
+
+    /// <summary>
+    /// Enumerates all <see cref="InteropInterfaceEntryInfo"/> values for a given component type, if applicable.
+    /// </summary>
+    /// <param name="componentType">The component type to analyze.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <remarks>
+    /// This method doesn't enumerate a set of interfaces, because it's responsible for producing Windows Runtime interfaces
+    /// for a value type from a component written in C# (as such, there's no managed interface type to use). If the type is
+    /// not a value type from a component, this method will just return an empty set. The logic is here for consistency.
+    /// </remarks>
+    public static IEnumerable<InteropInterfaceEntryInfo> EnumerateComponentInterfaceEntries(
+        TypeSignature componentType,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences)
+    {
+        // For public value types from component assemblies, add 'IReference<T>' and 'IPropertyValue' entries.
+        // These are needed so the struct can be boxed as 'IReference<T>' when used as a generic type argument.
+        TypeDefinition userDefinedTypeDefinition = componentType.Resolve(interopReferences.RuntimeContext);
+
+        // We're only looking for value types (classes are already handled just like any other user-defined type)
+        if (!userDefinedTypeDefinition.IsValueType)
+        {
+            yield break;
+        }
+
+        // Filter down to just authored types from components written in C#
+        if (!userDefinedTypeDefinition.IsComponentWindowsRuntimeType ||
+            interopDefinitions.WindowsRuntimeComponentModule is not { } componentModule)
+        {
+            yield break;
+        }
+
+        // Special case: we want to exclude enum types, and only look at user-defined structs. The reason why we are handling
+        // struct types here is that they might be implementing 'ICustomPropertyProvider', which is the only special Windows
+        // Runtime interface that's allowed in authored struct types. For enum types, the set of implemented interfaces is
+        // fixed, so the full CCW implementation is just statically generated as part of 'WinRT.Component.dll', meaning it
+        // doesn't require any supporting dynamic code produced by this generator.
+        if (userDefinedTypeDefinition.IsEnum)
+        {
+            yield break;
+        }
+
+        // Look up the 'ReferenceImpl' type in the component module by exact name
+        string referenceImplName = $"{userDefinedTypeDefinition.Name}ReferenceImpl";
+        string abiNamespace = $"ABI.{userDefinedTypeDefinition.Namespace}";
+
+        // Retrieve the 'ReferenceImpl' type from the component module via the optimized mapping
+        if (!componentModule.GetTopLevelTypesLookup().TryGetValue(
+            key: (abiNamespace, referenceImplName),
+            value: out TypeDefinition? referenceImplType))
+        {
+            yield break;
+        }
+
+        // Get the 'IReference<T>' IID from the component module's 'ABI.InterfaceIIDs'
+        string referenceIidName = $"{userDefinedTypeDefinition.FullName}Reference";
+        MethodDefinition referenceIidMethod = componentModule
+            .GetType("ABI"u8, "InterfaceIIDs"u8)
+            .GetMethod($"get_IID_{referenceIidName.Replace('.', '_')}");
+
+        // Get the vtable from the 'ReferenceImpl' type
+        MethodDefinition referenceVtableMethod = referenceImplType.GetMethod("get_Vtable"u8);
+
+        // Add the 'IReferenceValue' entry
+        yield return new WindowsRuntimeInterfaceEntryInfo(referenceIidMethod, referenceVtableMethod);
+
+        // Add the 'IPropertyValue' entry
+        yield return new WindowsRuntimeInterfaceEntryInfo(
+            interopReferences.WellKnownInterfaceIIDsget_IID_IPropertyValue,
+            interopReferences.IPropertyValueImplget_OtherTypeVtable);
     }
 
     /// <summary>
