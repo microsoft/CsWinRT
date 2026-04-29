@@ -4358,9 +4358,16 @@ return %.AsValue();
                             if (getter || base_getter)
                             {
                                 w.write("%get => %; ", base_getter_platform_attribute, bind([&](writer& w) {
-                                    auto iface = base_getter ? getter_property_iface : prop.Parent();
-                                    w.write("%", bind<write_abi_get_property_static_method_call>(iface, prop,
-                                        w.write_temp("%", bind<write_objref_type_name>(iface))));
+                                    if (is_private)
+                                    {
+                                        auto iface = base_getter ? getter_property_iface : prop.Parent();
+                                        w.write("%", bind<write_abi_get_property_static_method_call>(iface, prop,
+                                            w.write_temp("%", bind<write_objref_type_name>(iface))));
+                                    }
+                                    else
+                                    {
+                                        w.write("%", prop.Name());
+                                    }
                                 }));
                             }
                         }),
@@ -4369,8 +4376,15 @@ return %.AsValue();
                             if (setter)
                             {
                                 w.write("set => %;", bind([&](writer& w) {
-                                    w.write("%", bind<write_abi_set_property_static_method_call>(prop.Parent(), prop,
-                                        w.write_temp("%", bind<write_objref_type_name>(prop.Parent()))));
+                                    if (is_private)
+                                    {
+                                        w.write("%", bind<write_abi_set_property_static_method_call>(prop.Parent(), prop,
+                                            w.write_temp("%", bind<write_objref_type_name>(prop.Parent()))));
+                                    }
+                                    else
+                                    {
+                                        w.write("% = value", prop.Name());
+                                    }
                                 }));
                             }
                         }));
