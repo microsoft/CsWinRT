@@ -18,7 +18,7 @@ internal static partial class CodeWriters
     /// <summary>
     /// Dispatches type emission based on the type category.
     /// </summary>
-    public static void WriteType(TypeWriter w, TypeDefinition type, TypeCategory category, Settings settings)
+    public static void WriteType(TypeWriter w, TypeDefinition type, TypeCategory category, Settings settings, MetadataCache cache)
     {
         switch (category)
         {
@@ -52,6 +52,68 @@ internal static partial class CodeWriters
                 }
                 break;
         }
+    }
+
+    /// <summary>
+    /// Dispatches ABI emission based on the type category.
+    /// </summary>
+    public static void WriteAbiType(TypeWriter w, TypeDefinition type, TypeCategory category, Settings settings)
+    {
+        switch (category)
+        {
+            case TypeCategory.Class:
+                WriteAbiClass(w, type);
+                break;
+            case TypeCategory.Delegate:
+                WriteAbiDelegate(w, type);
+                WriteTempDelegateEventSourceSubclass(w, type);
+                break;
+            case TypeCategory.Enum:
+                WriteAbiEnum(w, type);
+                break;
+            case TypeCategory.Interface:
+                WriteAbiInterface(w, type);
+                break;
+            case TypeCategory.Struct:
+                WriteAbiStruct(w, type);
+                break;
+        }
+    }
+
+    /// <summary>Emits an ABI class wrapper. Stub.</summary>
+    public static void WriteAbiClass(TypeWriter w, TypeDefinition type)
+    {
+        // Stub: full implementation will be in a later commit.
+    }
+
+    /// <summary>Emits an ABI delegate. Stub.</summary>
+    public static void WriteAbiDelegate(TypeWriter w, TypeDefinition type)
+    {
+        // Stub
+    }
+
+    /// <summary>Emits a temporary delegate event source subclass. Stub.</summary>
+    public static void WriteTempDelegateEventSourceSubclass(TypeWriter w, TypeDefinition type)
+    {
+        // Stub
+    }
+
+    /// <summary>Emits an ABI enum (stub).</summary>
+    public static void WriteAbiEnum(TypeWriter w, TypeDefinition type)
+    {
+        // Stub: full implementation will be in a later commit.
+    }
+
+    /// <summary>Emits an ABI interface (stub).</summary>
+    public static void WriteAbiInterface(TypeWriter w, TypeDefinition type)
+    {
+        // Stub
+    }
+
+    /// <summary>Emits an ABI struct (stub).</summary>
+    public static void WriteAbiStruct(TypeWriter w, TypeDefinition type)
+    {
+        // Stub
     }
 
     /// <summary>

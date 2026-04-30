@@ -65,15 +65,53 @@ internal sealed class ProjectionGenerator
             Console.Out.WriteLine($"output: {_settings.OutputFolder}");
         }
 
-        // Write GUID property file (placeholder for now)
+        // Write GeneratedInterfaceIIDs file (mirrors main.cpp logic)
+        bool iidWritten = false;
         if (!_settings.ReferenceProjection)
         {
-            // The C++ implementation iterates all types and writes their IID properties.
-            // Full implementation requires write_iid_guid_property_from_signature/from_type/for_class_interfaces.
-            // For now, we skip generating this file - it's emitted only when there are real types to process.
+            HashSet<TypeDefinition> interfacesFromClassesEmitted = new();
+            TypeWriter guidWriter = new(_settings, "ABI");
+            CodeWriters.WriteInterfaceIidsBegin(guidWriter);
+            foreach ((string ns, NamespaceMembers members) in _cache.Namespaces)
+            {
+                foreach (TypeDefinition type in members.Types)
+                {
+                    if (!_settings.Filter.Includes(type)) { continue; }
+                    if (TypeCategorization.IsGeneric(type)) { continue; }
+                    string ns2 = type.Namespace?.Value ?? string.Empty;
+                    string nm2 = type.Name?.Value ?? string.Empty;
+                    MappedType? m = MappedTypes.Get(ns2, nm2);
+                    if (m is not null && !m.EmitAbi) { continue; }
+                    iidWritten = true;
+                    TypeCategory cat = TypeCategorization.GetCategory(type);
+                    switch (cat)
+                    {
+                        case TypeCategory.Delegate:
+                            CodeWriters.WriteIidGuidPropertyFromSignature(guidWriter, type);
+                            CodeWriters.WriteIidGuidPropertyFromType(guidWriter, type);
+                            break;
+                        case TypeCategory.Enum:
+                            CodeWriters.WriteIidGuidPropertyFromSignature(guidWriter, type);
+                            break;
+                        case TypeCategory.Interface:
+                            CodeWriters.WriteIidGuidPropertyFromType(guidWriter, type);
+                            break;
+                        case TypeCategory.Struct:
+                            CodeWriters.WriteIidGuidPropertyFromSignature(guidWriter, type);
+                            break;
+                        case TypeCategory.Class:
+                            CodeWriters.WriteIidGuidPropertyForClassInterfaces(guidWriter, type, interfacesFromClassesEmitted);
+                            break;
+                    }
+                }
+            }
+            CodeWriters.WriteInterfaceIidsEnd(guidWriter);
+            if (iidWritten)
+            {
+                guidWriter.FlushToFile(Path.Combine(_settings.OutputFolder, "GeneratedInterfaceIIDs.cs"));
+            }
         }
 
-        ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = new();
         ConcurrentDictionary<string, string> defaultInterfaceEntries = new();
         ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries = new();
         bool projectionFileWritten = false;
@@ -82,11 +120,26 @@ internal sealed class ProjectionGenerator
         foreach ((string ns, NamespaceMembers members) in _cache.Namespaces)
         {
             _token.ThrowIfCancellationRequested();
-            bool wrote = ProcessNamespace(ns, members, componentActivatable);
+            bool wrote = ProcessNamespace(ns, members, componentActivatable, defaultInterfaceEntries, exclusiveToInterfaceEntries);
             if (wrote)
             {
                 projectionFileWritten = true;
             }
+        }
+
+        // Write WindowsRuntimeDefaultInterfaces.cs and WindowsRuntimeExclusiveToInterfaces.cs
+        if (defaultInterfaceEntries.Count > 0 && !_settings.ReferenceProjection)
+        {
+            List<KeyValuePair<string, string>> sorted = new(defaultInterfaceEntries);
+            sorted.Sort((a, b) => System.StringComparer.Ordinal.Compare(a.Key, b.Key));
+            CodeWriters.WriteDefaultInterfacesClass(_settings, sorted);
+        }
+
+        if (!exclusiveToInterfaceEntries.IsEmpty && _settings.Component && !_settings.ReferenceProjection)
+        {
+            List<KeyValuePair<string, string>> sorted = new(exclusiveToInterfaceEntries);
+            sorted.Sort((a, b) => System.StringComparer.Ordinal.Compare(a.Key, b.Key));
+            CodeWriters.WriteExclusiveToInterfacesClass(_settings, sorted);
         }
 
         // Write strings/ base files (ComInteropExtensions etc.)
@@ -99,14 +152,66 @@ internal sealed class ProjectionGenerator
     /// <summary>
     /// Processes a single namespace and writes its projection file. Returns whether a file was written.
     /// </summary>
-    private bool ProcessNamespace(string ns, NamespaceMembers members, HashSet<TypeDefinition> componentActivatable)
+    private bool ProcessNamespace(string ns, NamespaceMembers members, HashSet<TypeDefinition> componentActivatable,
+        ConcurrentDictionary<string, string> defaultInterfaceEntries, ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries)
     {
         TypeWriter w = new(_settings, ns);
         w.WriteFileHeader();
 
         bool written = false;
 
-        // Phase 1 (C++): TypeMapGroup assembly attributes (skipped for now in this initial port)
+        // Phase 1: TypeMapGroup assembly attributes
+        if (!_settings.ReferenceProjection)
+        {
+            CodeWriters.WritePragmaDisableIL2026(w);
+            foreach (TypeDefinition type in members.Types)
+            {
+                if (!_settings.Filter.Includes(type)) { continue; }
+                if (TypeCategorization.IsGeneric(type)) { continue; }
+                string ns2 = type.Namespace?.Value ?? string.Empty;
+                string nm2 = type.Name?.Value ?? string.Empty;
+                MappedType? m = MappedTypes.Get(ns2, nm2);
+                if (m is not null && !m.EmitAbi) { continue; }
+
+                TypeCategory cat = TypeCategorization.GetCategory(type);
+                switch (cat)
+                {
+                    case TypeCategory.Class:
+                        if (!TypeCategorization.IsStatic(type) && !TypeCategorization.IsAttributeType(type))
+                        {
+                            if (_settings.Component)
+                            {
+                                CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w, type);
+                            }
+                            else
+                            {
+                                CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(w, type, false);
+                            }
+                        }
+                        break;
+                    case TypeCategory.Delegate:
+                        CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(w, type, true);
+                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w, type);
+                        break;
+                    case TypeCategory.Enum:
+                        CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(w, type, true);
+                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w, type);
+                        break;
+                    case TypeCategory.Interface:
+                        CodeWriters.WriteWinRTIdicTypeMapGroupAssemblyAttribute(w, type);
+                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w, type);
+                        break;
+                    case TypeCategory.Struct:
+                        if (!TypeCategorization.IsApiContractType(type))
+                        {
+                            CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(w, type, true);
+                            CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w, type);
+                        }
+                        break;
+                }
+            }
+            CodeWriters.WritePragmaRestoreIL2026(w);
+        }
 
         // Phase 2: Projected types
         w.WriteBeginProjectedNamespace();
@@ -114,15 +219,24 @@ internal sealed class ProjectionGenerator
         foreach (TypeDefinition type in members.Types)
         {
             if (!_settings.Filter.Includes(type)) { continue; }
-            // Skip generic types and mapped types (mirrors C++ logic)
-            if (TypeCategorization.IsGeneric(type)) { written = true; continue; }
             string ns2 = type.Namespace?.Value ?? string.Empty;
             string nm2 = type.Name?.Value ?? string.Empty;
-            if (MappedTypes.Get(ns2, nm2) is not null) { written = true; continue; }
+            // Skip generic types and mapped types (mirrors C++ logic)
+            if (MappedTypes.Get(ns2, nm2) is not null || TypeCategorization.IsGeneric(type))
+            {
+                written = true;
+                continue;
+            }
 
             // Write the projected type per category
             TypeCategory category = TypeCategorization.GetCategory(type);
-            CodeWriters.WriteType(w, type, category, _settings);
+            CodeWriters.WriteType(w, type, category, _settings, _cache);
+
+            if (category == TypeCategory.Class && !TypeCategorization.IsAttributeType(type))
+            {
+                CodeWriters.AddDefaultInterfaceEntry(w, type, defaultInterfaceEntries);
+                CodeWriters.AddExclusiveToInterfaceEntries(w, type, exclusiveToInterfaceEntries);
+            }
 
             written = true;
         }
@@ -132,6 +246,27 @@ internal sealed class ProjectionGenerator
         if (!written)
         {
             return false;
+        }
+
+        // Phase 3: ABI types (when not reference projection)
+        if (!_settings.ReferenceProjection)
+        {
+            w.WriteBeginAbiNamespace();
+            foreach (TypeDefinition type in members.Types)
+            {
+                if (!_settings.Filter.Includes(type)) { continue; }
+                if (TypeCategorization.IsGeneric(type)) { continue; }
+                string ns2 = type.Namespace?.Value ?? string.Empty;
+                string nm2 = type.Name?.Value ?? string.Empty;
+                MappedType? m = MappedTypes.Get(ns2, nm2);
+                if (m is not null && !m.EmitAbi) { continue; }
+                if (TypeCategorization.IsApiContractType(type)) { continue; }
+                if (TypeCategorization.IsAttributeType(type)) { continue; }
+
+                TypeCategory category = TypeCategorization.GetCategory(type);
+                CodeWriters.WriteAbiType(w, type, category, _settings);
+            }
+            w.WriteEndAbiNamespace();
         }
 
         // Output to file
