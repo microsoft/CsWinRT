@@ -224,6 +224,9 @@ internal class TextWriter
     /// <summary>Writes a single character with indentation handling.</summary>
     private void WriteChar(char c)
     {
+        // Normalize line endings: skip CR characters (we use LF only).
+        if (c == '\r') { return; }
+
         if (_enableIndent)
         {
             UpdateState(c);
