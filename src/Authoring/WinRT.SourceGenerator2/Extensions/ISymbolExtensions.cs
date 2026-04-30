@@ -69,6 +69,22 @@ internal static class ISymbolExtensions
         }
 
         /// <summary>
+        /// Gets all attributes applied to a symbol with a specified type.
+        /// </summary>
+        /// <param name="typeSymbol">The <see cref="INamedTypeSymbol"/> instance for the attribute type to look for.</param>
+        /// <returns>The sequence of attributes applied to <paramref name="symbol"/> with the specified type.</returns>
+        public IEnumerable<AttributeData> GetAttributes(INamedTypeSymbol typeSymbol)
+        {
+            foreach (AttributeData attribute in symbol.GetAttributes())
+            {
+                if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, typeSymbol))
+                {
+                    yield return attribute;
+                }
+            }
+        }
+
+        /// <summary>
         /// Checks whether a given symbol is accessible from the assembly of a given compilation (including eg. through nested types).
         /// </summary>
         /// <param name="compilation">The <see cref="Compilation"/> instance currently in use.</param>

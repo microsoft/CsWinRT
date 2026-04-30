@@ -139,4 +139,82 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Types used in cast operations must not be '[ComImport]' interfaces, as they are not compatible with Windows Runtime objects marshalled by CsWinRT.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for an <c>[ApiContract]</c> enum type that defines enum cases.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ApiContractEnumWithCases = new(
+        id: "CSWINRT2010",
+        title: "API contract enum type with enum cases",
+        messageFormat: """The type '{0}' is annotated with '[ApiContract]', but it defines one or more enum cases. API contract types are represented by empty struct types in the Windows Runtime type system, and as such defining any enum cases is invalid. The enum cases will be ignored when generating the resulting .winmd file.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Enum types annotated with '[ApiContract]' must not define any enum cases, as API contract types are represented by empty struct types in the Windows Runtime type system. Any enum cases will be ignored when generating the resulting .winmd file.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a <c>[ContractVersion]</c> attribute using the version-only constructors on a non-API contract type.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ContractVersionAttributeRequiresApiContractTarget = new(
+        id: "CSWINRT2011",
+        title: "Invalid 'ContractVersionAttribute' target for version-only constructor",
+        messageFormat: """The type '{0}' is annotated with '[ContractVersion]' using a constructor that only specifies the contract version, but '{0}' is not an API contract type (an enum type annotated with '[ApiContract]'). These constructors only apply to API contract types and are used to specify the contract version of that API contract.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The 'ContractVersionAttribute' constructors taking only the contract version (or the contract name and version) only apply to API contract types (enum types annotated with '[ApiContract]'), and are used to specify the contract version of that API contract.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a <c>[ContractVersion]</c> attribute using the contract-type constructor on an API contract type.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ContractVersionAttributeNotAllowedOnApiContractTarget = new(
+        id: "CSWINRT2012",
+        title: "Invalid 'ContractVersionAttribute' target for contract-type constructor",
+        messageFormat: """The type '{0}' is annotated with '[ContractVersion]' using the constructor that takes a contract type and version, but '{0}' is itself an API contract type. This constructor is used to associate a non-contract type with an API contract; use the constructor that only takes the contract version instead.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The 'ContractVersionAttribute' constructor taking a contract type and version cannot be applied to API contract types, as it is meant to associate a non-contract type with an API contract.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a <c>[ContractVersion]</c> attribute whose contract type argument is not a valid API contract type.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ContractVersionAttributeInvalidContractTypeArgument = new(
+        id: "CSWINRT2013",
+        title: "Invalid 'ContractVersionAttribute' contract type argument",
+        messageFormat: """The 'ContractVersionAttribute' applied to '{0}' specifies '{1}' as the contract type, but '{1}' is not a valid API contract type (an enum type annotated with '[ApiContract]')""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The contract type argument of '[ContractVersion]' must be a valid API contract type (an enum type annotated with '[ApiContract]').",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for an <c>[ApiContract]</c> enum type that is missing a <c>[ContractVersion]</c> attribute.
+    /// </summary>
+    public static readonly DiagnosticDescriptor ApiContractTypeMissingContractVersion = new(
+        id: "CSWINRT2014",
+        title: "API contract type missing 'ContractVersionAttribute'",
+        messageFormat: """The type '{0}' is annotated with '[ApiContract]', but it does not have a '[ContractVersion]' attribute applied to it. API contract types must declare their contract version using one of the version-only constructors of '[ContractVersion]'.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Enum types annotated with '[ApiContract]' must also have a '[ContractVersion]' attribute applied to them, using one of the version-only constructors, to declare the contract version of the API contract.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a public authored type missing a <c>[ContractVersion]</c> attribute.
+    /// </summary>
+    public static readonly DiagnosticDescriptor PublicTypeMissingContractVersion = new(
+        id: "CSWINRT2015",
+        title: "Public authored type missing 'ContractVersionAttribute'",
+        messageFormat: """The type '{0}' is publicly exposed in a Windows Runtime component, but it does not have a '[ContractVersion]' attribute applied to it. Public types should declare their associated API contract using '[ContractVersion(typeof(SomeContract), version)]' so that consumers can target a specific contract version.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "Public types in a Windows Runtime component should declare their associated API contract using '[ContractVersion(typeof(SomeContract), version)]', so that consumers can target a specific contract version.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
