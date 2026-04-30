@@ -117,17 +117,28 @@ internal sealed class ProjectionGenerator
 
         ConcurrentDictionary<string, string> defaultInterfaceEntries = new();
         ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries = new();
+        ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = new();
         bool projectionFileWritten = false;
 
         // Process namespaces sequentially for now (C++ used task_group / parallel processing)
         foreach ((string ns, NamespaceMembers members) in _cache.Namespaces)
         {
             _token.ThrowIfCancellationRequested();
-            bool wrote = ProcessNamespace(ns, members, componentActivatable, defaultInterfaceEntries, exclusiveToInterfaceEntries);
+            bool wrote = ProcessNamespace(ns, members, componentActivatable, defaultInterfaceEntries, exclusiveToInterfaceEntries, authoredTypeNameToMetadataMap);
             if (wrote)
             {
                 projectionFileWritten = true;
             }
+        }
+
+        // Component mode: write the WinRT_Module.cs file with activation factory entry points
+        if (_settings.Component)
+        {
+            TextWriter wm = new();
+            CodeWriters.WriteFileHeader(wm);
+            CodeWriters.WriteModuleActivationFactory(wm, componentByModule);
+            wm.FlushToFile(Path.Combine(_settings.OutputFolder, "WinRT_Module.cs"));
+            projectionFileWritten = true;
         }
 
         // Write WindowsRuntimeDefaultInterfaces.cs and WindowsRuntimeExclusiveToInterfaces.cs
@@ -156,7 +167,8 @@ internal sealed class ProjectionGenerator
     /// Processes a single namespace and writes its projection file. Returns whether a file was written.
     /// </summary>
     private bool ProcessNamespace(string ns, NamespaceMembers members, HashSet<TypeDefinition> componentActivatable,
-        ConcurrentDictionary<string, string> defaultInterfaceEntries, ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries)
+        ConcurrentDictionary<string, string> defaultInterfaceEntries, ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries,
+        ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap)
     {
         TypeWriter w = new(_settings, ns);
         w.WriteFileHeader();
@@ -239,6 +251,19 @@ internal sealed class ProjectionGenerator
             {
                 CodeWriters.AddDefaultInterfaceEntry(w, type, defaultInterfaceEntries);
                 CodeWriters.AddExclusiveToInterfaceEntries(w, type, exclusiveToInterfaceEntries);
+                CodeWriters.AddMetadataTypeEntry(w, type, authoredTypeNameToMetadataMap);
+                if (_settings.Component && componentActivatable.Contains(type))
+                {
+                    CodeWriters.WriteFactoryClass(w, type);
+                }
+            }
+            else if (category is TypeCategory.Delegate or TypeCategory.Enum or TypeCategory.Interface)
+            {
+                CodeWriters.AddMetadataTypeEntry(w, type, authoredTypeNameToMetadataMap);
+            }
+            else if (category == TypeCategory.Struct && !TypeCategorization.IsApiContractType(type))
+            {
+                CodeWriters.AddMetadataTypeEntry(w, type, authoredTypeNameToMetadataMap);
             }
 
             written = true;
