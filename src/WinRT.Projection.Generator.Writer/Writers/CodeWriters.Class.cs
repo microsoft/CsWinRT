@@ -149,6 +149,9 @@ internal static partial class CodeWriters
             w.Write("\n");
         }
 
+        // Class members from interfaces (instance methods, properties, events)
+        WriteClassMembers(w, type);
+
         w.Write("}\n");
     }
 }

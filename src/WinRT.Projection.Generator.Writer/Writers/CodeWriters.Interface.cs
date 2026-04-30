@@ -37,43 +37,86 @@ internal static partial class CodeWriters
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            TypeDefinition? ifaceType = impl.Interface as TypeDefinition;
 
-            // For TypeRef interfaces, we just emit them as plain projected types
-            if (ifaceType is null)
+            bool isOverridable = Helpers.IsOverridable(impl);
+
+            // For TypeDef interfaces, check exclusive_to attribute to decide inclusion.
+            // For TypeRef interfaces, we can't easily resolve - default to include all unless excluded.
+            bool isExclusive = false;
+            if (impl.Interface is TypeDefinition ifaceTypeDef)
             {
-                if (impl.Interface is TypeReference tr)
-                {
-                    bool isOverridable = Helpers.IsOverridable(impl);
-                    if (isOverridable || includeExclusiveInterface)
-                    {
-                        w.Write(delimiter);
-                        delimiter = ", ";
-                        w.Write("global::");
-                        w.Write(tr.Namespace?.Value ?? string.Empty);
-                        w.Write(".");
-                        w.WriteCode(tr.Name?.Value ?? string.Empty);
-                    }
-                }
+                isExclusive = TypeCategorization.IsExclusiveTo(ifaceTypeDef);
+            }
+
+            if (!(isOverridable || !isExclusive || includeExclusiveInterface))
+            {
                 continue;
             }
 
-            bool isOverr = Helpers.IsOverridable(impl);
-            bool isExcl = TypeCategorization.IsExclusiveTo(ifaceType);
-            if (isOverr || !isExcl || includeExclusiveInterface)
+            w.Write(delimiter);
+            delimiter = ", ";
+
+            // Emit the interface name (CCW)
+            if (impl.Interface is TypeDefinition ifaceType)
             {
-                w.Write(delimiter);
-                delimiter = ", ";
                 WriteTypedefName(w, ifaceType, TypedefNameType.CCW, false);
                 WriteTypeParams(w, ifaceType);
-
-                if (includeWindowsRuntimeObject && !w.Settings.ReferenceProjection)
+            }
+            else if (impl.Interface is TypeReference tr)
+            {
+                w.Write("global::");
+                w.Write(tr.Namespace?.Value ?? string.Empty);
+                w.Write(".");
+                w.WriteCode(tr.Name?.Value ?? string.Empty);
+            }
+            else if (impl.Interface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+            {
+                // Generic instance interface
+                ITypeDefOrRef gt = gi.GenericType;
+                w.Write("global::");
+                w.Write(gt.Namespace?.Value ?? string.Empty);
+                w.Write(".");
+                w.WriteCode(gt.Name?.Value ?? string.Empty);
+                w.Write("<");
+                for (int i = 0; i < gi.TypeArguments.Count; i++)
                 {
-                    w.Write(", IWindowsRuntimeInterface<");
-                    WriteTypedefName(w, ifaceType, TypedefNameType.CCW, false);
-                    WriteTypeParams(w, ifaceType);
+                    if (i > 0) { w.Write(", "); }
+                    WriteTypeName(w, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
+                }
+                w.Write(">");
+            }
+
+            if (includeWindowsRuntimeObject && !w.Settings.ReferenceProjection)
+            {
+                w.Write(", IWindowsRuntimeInterface<");
+                if (impl.Interface is TypeDefinition ifaceType2)
+                {
+                    WriteTypedefName(w, ifaceType2, TypedefNameType.CCW, false);
+                    WriteTypeParams(w, ifaceType2);
+                }
+                else if (impl.Interface is TypeReference tr2)
+                {
+                    w.Write("global::");
+                    w.Write(tr2.Namespace?.Value ?? string.Empty);
+                    w.Write(".");
+                    w.WriteCode(tr2.Name?.Value ?? string.Empty);
+                }
+                else if (impl.Interface is TypeSpecification ts2 && ts2.Signature is GenericInstanceTypeSignature gi2)
+                {
+                    ITypeDefOrRef gt2 = gi2.GenericType;
+                    w.Write("global::");
+                    w.Write(gt2.Namespace?.Value ?? string.Empty);
+                    w.Write(".");
+                    w.WriteCode(gt2.Name?.Value ?? string.Empty);
+                    w.Write("<");
+                    for (int i = 0; i < gi2.TypeArguments.Count; i++)
+                    {
+                        if (i > 0) { w.Write(", "); }
+                        WriteTypeName(w, TypeSemanticsFactory.Get(gi2.TypeArguments[i]), TypedefNameType.Projected, true);
+                    }
                     w.Write(">");
                 }
+                w.Write(">");
             }
         }
     }
