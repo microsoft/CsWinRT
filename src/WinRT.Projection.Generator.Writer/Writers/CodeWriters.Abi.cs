@@ -122,22 +122,290 @@ internal static partial class CodeWriters
     {
         // Generic interfaces are handled by interopgen
         if (type.GenericParameters.Count > 0) { return; }
-        // Emit a static class that serves as the marshaller surface
+
+        // The C++ also emits write_static_abi_classes here - we emit a basic stub for now
         WriteInterfaceMarshallerStub(w, type);
+
+        // For internal projections, just the static ABI methods class is enough.
+        if (TypeCategorization.IsProjectionInternal(type)) { return; }
+
+        WriteInterfaceVftbl(w, type);
+        WriteInterfaceImpl(w, type);
+        WriteInterfaceIdicImpl(w, type);
+        WriteInterfaceMarshaller(w, type);
+    }
+
+    /// <summary>Mirrors C++ <c>emit_impl_type</c>.</summary>
+    public static bool EmitImplType(TypeWriter w, TypeDefinition type)
+    {
+        if (w.Settings.Component) { return true; }
+        if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
+        {
+            // Without resolving the exclusive_to class to check overridable status, we conservatively
+            // emit. The full check requires walking the exclusive_to class's interfaces.
+            // For simplified port: emit so that the impl is available.
+            return true;
+        }
+        return true;
+    }
+
+    /// <summary>Mirrors C++ <c>get_vmethod_name</c>.</summary>
+    public static string GetVMethodName(TypeDefinition type, MethodDefinition method)
+    {
+        // Index of method in the type's method list
+        int index = 0;
+        foreach (MethodDefinition m in type.Methods)
+        {
+            if (m == method) { break; }
+            index++;
+        }
+        return (method.Name?.Value ?? string.Empty) + "_" + index.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>Mirrors C++ <c>write_abi_parameter_types_pointer</c>.</summary>
+    public static void WriteAbiParameterTypesPointer(TypeWriter w, MethodSig sig)
+    {
+        // void*, then each param's ABI type, then return type pointer
+        w.Write("void*");
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            w.Write(", ");
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
+            {
+                // length pointer + value pointer
+                w.Write("uint, ");
+                WriteAbiType(w, TypeSemanticsFactory.Get(sz.BaseType));
+                w.Write("*");
+            }
+            else if (p.Type is AsmResolver.DotNet.Signatures.ByReferenceTypeSignature br)
+            {
+                WriteAbiType(w, TypeSemanticsFactory.Get(br.BaseType));
+                w.Write("*");
+            }
+            else
+            {
+                WriteAbiType(w, TypeSemanticsFactory.Get(p.Type));
+                if (cat is ParamCategory.Out or ParamCategory.Ref) { w.Write("*"); }
+            }
+        }
+        // Return parameter
+        if (sig.ReturnType is not null)
+        {
+            w.Write(", ");
+            WriteAbiType(w, TypeSemanticsFactory.Get(sig.ReturnType));
+            w.Write("*");
+        }
+    }
+
+    /// <summary>Mirrors C++ <c>write_interface_vftbl</c>.</summary>
+    public static void WriteInterfaceVftbl(TypeWriter w, TypeDefinition type)
+    {
+        if (!EmitImplType(w, type)) { return; }
+        if (type.GenericParameters.Count > 0) { return; }
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+
+        w.Write("\n[StructLayout(LayoutKind.Sequential)]\n");
+        w.Write("internal unsafe struct ");
+        w.Write(nameStripped);
+        w.Write("Vftbl\n{\n");
+        w.Write("public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;\n");
+        w.Write("public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;\n");
+        w.Write("public delegate* unmanaged[MemberFunction]<void*, uint> Release;\n");
+        w.Write("public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;\n");
+        w.Write("public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;\n");
+        w.Write("public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;\n");
+
+        foreach (MethodDefinition method in type.Methods)
+        {
+            string vm = GetVMethodName(type, method);
+            MethodSig sig = new(method);
+            w.Write("public delegate* unmanaged[MemberFunction]<");
+            WriteAbiParameterTypesPointer(w, sig);
+            w.Write(", int> ");
+            w.Write(vm);
+            w.Write(";\n");
+        }
+        w.Write("}\n");
+    }
+
+    /// <summary>Mirrors C++ <c>write_interface_impl</c> (simplified).</summary>
+    public static void WriteInterfaceImpl(TypeWriter w, TypeDefinition type)
+    {
+        if (!EmitImplType(w, type)) { return; }
+        if (type.GenericParameters.Count > 0) { return; }
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+
+        w.Write("\npublic static unsafe class ");
+        w.Write(nameStripped);
+        w.Write("Impl\n{\n");
+        w.Write("[FixedAddressValueType]\n");
+        w.Write("private static readonly ");
+        w.Write(nameStripped);
+        w.Write("Vftbl Vftbl;\n\n");
+
+        w.Write("static ");
+        w.Write(nameStripped);
+        w.Write("Impl()\n{\n");
+        w.Write("    *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;\n");
+        foreach (MethodDefinition method in type.Methods)
+        {
+            string vm = GetVMethodName(type, method);
+            w.Write("    Vftbl.");
+            w.Write(vm);
+            w.Write(" = &Do_Abi_");
+            w.Write(vm);
+            w.Write(";\n");
+        }
+        w.Write("}\n\n");
+
+        w.Write("public static ref readonly Guid IID\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => ref ");
+        WriteIidGuidReference(w, type);
+        w.Write(";\n}\n\n");
+
+        w.Write("public static nint Vtable\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => (nint)Unsafe.AsPointer(in Vftbl);\n}\n\n");
+
+        // Stubbed Do_Abi_* implementations for all methods - returns S_OK (0)
+        foreach (MethodDefinition method in type.Methods)
+        {
+            string vm = GetVMethodName(type, method);
+            MethodSig sig = new(method);
+            w.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
+            w.Write("private static int Do_Abi_");
+            w.Write(vm);
+            w.Write("(");
+            WriteAbiParameterTypesPointer(w, sig);
+            w.Write(") => throw null!;\n\n");
+        }
+        w.Write("}\n");
+    }
+
+    /// <summary>Mirrors C++ <c>write_interface_idic_impl</c>.</summary>
+    public static void WriteInterfaceIdicImpl(TypeWriter w, TypeDefinition type)
+    {
+        if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.IdicExclusiveTo) { return; }
+        if (type.GenericParameters.Count > 0) { return; }
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+
+        w.Write("\n[DynamicInterfaceCastableImplementation]\n");
+        WriteGuidAttribute(w, type);
+        w.Write("\n");
+        w.Write("file interface ");
+        w.Write(nameStripped);
+        w.Write(" : ");
+        WriteTypedefName(w, type, TypedefNameType.Projected, false);
+        WriteTypeParams(w, type);
+        w.Write("\n{\n");
+        // Emit interface members (stub bodies)
+        WriteInterfaceMemberSignatures(w, type);
+        w.Write("\n}\n");
+    }
+
+    /// <summary>Mirrors C++ <c>write_interface_marshaller</c>.</summary>
+    public static void WriteInterfaceMarshaller(TypeWriter w, TypeDefinition type)
+    {
+        if (TypeCategorization.IsExclusiveTo(type)) { return; }
+        if (type.GenericParameters.Count > 0) { return; }
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+
+        w.Write("\n#nullable enable\n");
+        w.Write("public static unsafe class ");
+        w.Write(nameStripped);
+        w.Write("Marshaller\n{\n");
+        w.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
+        WriteTypedefName(w, type, TypedefNameType.Projected, false);
+        WriteTypeParams(w, type);
+        w.Write(" value)\n    {\n");
+        w.Write("        return WindowsRuntimeInterfaceMarshaller<");
+        WriteTypedefName(w, type, TypedefNameType.Projected, false);
+        WriteTypeParams(w, type);
+        w.Write(">.ConvertToUnmanaged(value, ");
+        WriteIidGuidReference(w, type);
+        w.Write(");\n    }\n\n");
+        w.Write("    public static ");
+        WriteTypedefName(w, type, TypedefNameType.Projected, false);
+        WriteTypeParams(w, type);
+        w.Write("? ConvertToManaged(void* value)\n    {\n");
+        w.Write("        return (");
+        WriteTypedefName(w, type, TypedefNameType.Projected, false);
+        WriteTypeParams(w, type);
+        w.Write("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n");
+        w.Write("#nullable disable\n");
+    }
+
+    /// <summary>Mirrors C++ <c>write_iid_guid</c> for use by ABI helpers.</summary>
+    public static void WriteIidGuidReference(TypeWriter w, TypeDefinition type)
+    {
+        if (type.GenericParameters.Count != 0)
+        {
+            // Generic interface IID - call the unsafe accessor
+            WriteIidGuidPropertyName(w, type);
+            w.Write("(null)");
+            return;
+        }
+        string ns = type.Namespace?.Value ?? string.Empty;
+        string nm = type.Name?.Value ?? string.Empty;
+        if (MappedTypes.Get(ns, nm) is { } m && m.MappedName == "IStringable")
+        {
+            w.Write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable");
+            return;
+        }
+        w.Write("global::ABI.InterfaceIIDs.");
+        WriteIidGuidPropertyName(w, type);
     }
 
     /// <summary>
-    /// Writes a minimal marshaller class for a struct or enum.
+    /// Writes a marshaller class for a struct or enum (mirrors C++ write_struct_and_enum_marshaller_class).
     /// </summary>
     private static void WriteStructEnumMarshallerClass(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = Helpers.StripBackticks(name);
-        w.Write("public static class ");
-        w.Write(nameStripped);
-        w.Write("ComWrappersMarshallerAttributeData\n{\n}\n");
+        bool blittable = IsTypeBlittable(type);
 
-        // Marshaller class
+        w.Write("public static unsafe class ");
+        w.Write(nameStripped);
+        w.Write("Marshaller\n{\n");
+
+        if (!blittable)
+        {
+            // ConvertToUnmanaged/ConvertToManaged/Dispose stubs (full implementations would emit
+            // per-field marshalling logic - we emit throw null! placeholders for now)
+            w.Write("    public static ");
+            WriteTypedefName(w, type, TypedefNameType.ABI, true);
+            w.Write(" ConvertToUnmanaged(");
+            WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write(" value) => throw null!;\n");
+
+            w.Write("    public static ");
+            WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write(" ConvertToManaged(");
+            WriteTypedefName(w, type, TypedefNameType.ABI, true);
+            w.Write(" value) => throw null!;\n");
+
+            w.Write("    public static void Dispose(");
+            WriteTypedefName(w, type, TypedefNameType.ABI, true);
+            w.Write(" value) => throw null!;\n");
+        }
+
+        // BoxToUnmanaged - wraps the value as an IReference<T>
+        w.Write("    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(");
+        WriteTypedefName(w, type, TypedefNameType.Projected, true);
+        w.Write("? value) => throw null!;\n");
+
+        // UnboxToManaged - unwraps an IReference<T> back to the value
+        w.Write("    public static ");
+        WriteTypedefName(w, type, TypedefNameType.Projected, true);
+        w.Write("? UnboxToManaged(void* value) => throw null!;\n");
+
+        w.Write("}\n\n");
+
+        // Marshaller attribute class (for [TypeMap<WindowsRuntimeComWrappersTypeMapGroup>])
         w.Write("internal sealed class ");
         w.Write(nameStripped);
         w.Write("ComWrappersMarshaller : global::System.Attribute\n{\n}\n");
@@ -180,11 +448,32 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Writes a minimal IReference&lt;T&gt; implementation for the type.
+    /// Writes the IReference&lt;T&gt; implementation for a struct/enum/delegate
+    /// (mirrors C++ <c>write_reference_impl</c>).
     /// </summary>
     private static void WriteReferenceImpl(TypeWriter w, TypeDefinition type)
     {
-        // The full implementation emits IReferenceImpl<T> with vtable. Skip for now.
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+        string visibility = w.Settings.Component ? "public" : "file";
+
+        w.Write("\n");
+        w.Write(visibility);
+        w.Write(" static unsafe class ");
+        w.Write(nameStripped);
+        w.Write("ReferenceImpl\n{\n");
+        w.Write("    [FixedAddressValueType]\n");
+        w.Write("    private static readonly ReferenceVftbl Vftbl;\n\n");
+        w.Write("    static ");
+        w.Write(nameStripped);
+        w.Write("ReferenceImpl()\n    {\n");
+        w.Write("        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;\n");
+        w.Write("        Vftbl.get_Value = &get_Value;\n");
+        w.Write("    }\n\n");
+        w.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
+        w.Write("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
+        w.Write("    public static int get_Value(void* thisPtr, void* result) => throw null!;\n");
+        w.Write("}\n\n");
     }
 
     /// <summary>Mirrors C++ <c>write_abi_type</c>: writes the ABI type for a type semantics.</summary>
