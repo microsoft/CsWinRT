@@ -449,9 +449,9 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_class</c>. Emits a class projection.
+    /// Mirrors C++ <c>write_class</c>. (Now implemented in CodeWriters.Class.cs.)
     /// </summary>
-    public static void WriteClass(TypeWriter w, TypeDefinition type)
+    public static void WriteClassPlaceholder(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         w.Write("public partial class ");
