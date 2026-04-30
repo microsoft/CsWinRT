@@ -438,9 +438,9 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_interface</c>. Emits an interface projection.
+    /// Mirrors C++ <c>write_interface</c>. (Now implemented in CodeWriters.Interface.cs.)
     /// </summary>
-    public static void WriteInterface(TypeWriter w, TypeDefinition type)
+    public static void WriteInterfacePlaceholder(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         w.Write("public partial interface ");
