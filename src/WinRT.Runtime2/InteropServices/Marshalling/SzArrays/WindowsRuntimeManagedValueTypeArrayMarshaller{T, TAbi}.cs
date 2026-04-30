@@ -33,7 +33,7 @@ public static unsafe class WindowsRuntimeManagedValueTypeArrayMarshaller<T, TAbi
             return;
         }
 
-        TAbi* destination = (TAbi*)Marshal.AllocCoTaskMem(sizeof(T) * source.Length);
+        TAbi* destination = (TAbi*)Marshal.AllocCoTaskMem(sizeof(TAbi) * source.Length);
 
         int i = 0;
 
