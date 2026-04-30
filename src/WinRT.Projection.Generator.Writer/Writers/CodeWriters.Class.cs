@@ -11,6 +11,15 @@ namespace WindowsRuntime.ProjectionGenerator.Writer;
 /// </summary>
 internal static partial class CodeWriters
 {
+    /// <summary>Mirrors C++ <c>is_fast_abi_class</c>.</summary>
+    public static bool IsFastAbiClass(TypeDefinition type, Settings settings)
+    {
+        // Fast ABI is enabled when the type is marked [FastAbi] and netstandard_compat is off
+        // (CsWinRT 3.0 always has netstandard_compat = false, but we keep the gate for fidelity).
+        return !settings.NetstandardCompat &&
+               TypeCategorization.HasAttribute(type, "Windows.Foundation.Metadata", "FastAbiAttribute");
+    }
+
     /// <summary>Mirrors C++ <c>write_class_modifiers</c>.</summary>
     public static void WriteClassModifiers(TypeWriter w, TypeDefinition type)
     {
@@ -23,6 +32,73 @@ internal static partial class CodeWriters
         {
             w.Write("sealed ");
         }
+    }
+
+    /// <summary>
+    /// Returns the [Default] interface and the [ExclusiveTo] interfaces (sorted) for fast ABI.
+    /// Mirrors C++ <c>get_default_and_exclusive_interfaces</c> + <c>sort_fast_abi_ifaces</c>.
+    /// </summary>
+    public static (TypeDefinition? DefaultInterface, System.Collections.Generic.List<TypeDefinition> OtherInterfaces) GetFastAbiInterfaces(TypeDefinition classType)
+    {
+        TypeDefinition? defaultIface = null;
+        System.Collections.Generic.List<TypeDefinition> exclusiveIfaces = new();
+        foreach (InterfaceImplementation impl in classType.Interfaces)
+        {
+            if (impl.Interface is null) { continue; }
+            TypeDefinition? ifaceTd = impl.Interface as TypeDefinition;
+            if (ifaceTd is null && _cacheRef is not null)
+            {
+                try { ifaceTd = impl.Interface.Resolve(_cacheRef.RuntimeContext); }
+                catch { ifaceTd = null; }
+            }
+            if (ifaceTd is null) { continue; }
+
+            if (Helpers.IsDefaultInterface(impl))
+            {
+                defaultIface = ifaceTd;
+            }
+            else if (TypeCategorization.IsExclusiveTo(ifaceTd))
+            {
+                exclusiveIfaces.Add(ifaceTd);
+            }
+        }
+        // Sort exclusive interfaces by:
+        // 1. Number of [PreviousContractVersion] attrs (ascending; newer interfaces have more)
+        // 2. Contract version (ascending)
+        // 3. Type version (ascending)
+        // 4. Type namespace and name (ascending)
+        exclusiveIfaces.Sort((a, b) =>
+        {
+            int aPrev = -CountAttributes(a, "Windows.Foundation.Metadata", "PreviousContractVersionAttribute");
+            int bPrev = -CountAttributes(b, "Windows.Foundation.Metadata", "PreviousContractVersionAttribute");
+            if (aPrev != bPrev) { return aPrev.CompareTo(bPrev); }
+
+            int? aCV = Helpers.GetContractVersion(a);
+            int? bCV = Helpers.GetContractVersion(b);
+            if (aCV.HasValue && bCV.HasValue && aCV.Value != bCV.Value) { return aCV.Value.CompareTo(bCV.Value); }
+
+            int? aV = Helpers.GetVersion(a);
+            int? bV = Helpers.GetVersion(b);
+            if (aV.HasValue && bV.HasValue && aV.Value != bV.Value) { return aV.Value.CompareTo(bV.Value); }
+
+            string aNs = a.Namespace?.Value ?? string.Empty;
+            string bNs = b.Namespace?.Value ?? string.Empty;
+            if (aNs != bNs) { return System.StringComparer.Ordinal.Compare(aNs, bNs); }
+            return System.StringComparer.Ordinal.Compare(a.Name?.Value ?? string.Empty, b.Name?.Value ?? string.Empty);
+        });
+        return (defaultIface, exclusiveIfaces);
+    }
+
+    private static int CountAttributes(IHasCustomAttribute member, string ns, string name)
+    {
+        int count = 0;
+        for (int i = 0; i < member.CustomAttributes.Count; i++)
+        {
+            CustomAttribute attr = member.CustomAttributes[i];
+            ITypeDefOrRef? type = attr.Constructor?.DeclaringType;
+            if (type is not null && type.Namespace == ns && type.Name == name) { count++; }
+        }
+        return count;
     }
 
     /// <summary>Mirrors C++ <c>get_gc_pressure_amount</c>.</summary>
