@@ -193,11 +193,145 @@ internal static partial class CodeWriters
     /// </summary>
     public static void WriteStruct(TypeWriter w, TypeDefinition type)
     {
-        // Simple stub
-        string name = type.Name?.Value ?? string.Empty;
-        w.Write("public partial struct ");
-        w.Write(name);
-        w.Write(" { /* TODO: struct fields */ }\n\n");
+        if (w.Settings.Component) { return; }
+
+        // Collect field info
+        System.Collections.Generic.List<(string TypeStr, string Name, string ParamName, bool IsInterface)> fields = new();
+        foreach (FieldDefinition field in type.Fields)
+        {
+            if (field.IsStatic || field.Signature is null) { continue; }
+            TypeSemantics semantics = TypeSemanticsFactory.Get(field.Signature.FieldType);
+            string fieldType = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, semantics)));
+            string fieldName = field.Name?.Value ?? string.Empty;
+            string paramName = ToCamelCase(fieldName);
+            bool isInterface = false;
+            if (semantics is TypeSemantics.Definition d)
+            {
+                isInterface = TypeCategorization.GetCategory(d.Type) == TypeCategory.Interface;
+            }
+            else if (semantics is TypeSemantics.GenericInstance gi)
+            {
+                isInterface = TypeCategorization.GetCategory(gi.GenericType) == TypeCategory.Interface;
+            }
+            fields.Add((fieldType, fieldName, paramName, isInterface));
+        }
+
+        string projectionName = type.Name?.Value ?? string.Empty;
+        bool hasAddition = AdditionTypes.HasAdditionToType(type.Namespace?.Value ?? string.Empty, projectionName);
+
+        // Header attributes
+        WriteWinRTMetadataAttribute(w, type, _cacheRef!);
+        WriteValueTypeWinRTClassNameAttribute(w, type);
+        WriteComWrapperMarshallerAttribute(w, type);
+        WriteWinRTReferenceTypeAttribute(w, type);
+        w.Write("public");
+        if (hasAddition) { w.Write(" partial"); }
+        w.Write(" struct ");
+        w.Write(projectionName);
+        w.Write(": IEquatable<");
+        w.Write(projectionName);
+        w.Write(">\n{\n");
+
+        // ctor
+        w.Write("public ");
+        w.Write(projectionName);
+        w.Write("(");
+        for (int i = 0; i < fields.Count; i++)
+        {
+            if (i > 0) { w.Write(", "); }
+            w.Write(fields[i].TypeStr);
+            w.Write(" ");
+            Helpers.WriteEscapedIdentifier(w, fields[i].ParamName);
+        }
+        w.Write(")\n{\n");
+        foreach (var f in fields)
+        {
+            // When the param name matches the field name (i.e. ToCamelCase couldn't change casing),
+            // qualify with this. to disambiguate.
+            if (f.Name == f.ParamName)
+            {
+                w.Write("this.");
+                w.Write(f.Name);
+                w.Write(" = ");
+                Helpers.WriteEscapedIdentifier(w, f.ParamName);
+                w.Write("; ");
+            }
+            else
+            {
+                w.Write(f.Name);
+                w.Write(" = ");
+                Helpers.WriteEscapedIdentifier(w, f.ParamName);
+                w.Write("; ");
+            }
+        }
+        w.Write("\n}\n");
+
+        // properties
+        foreach (var f in fields)
+        {
+            w.Write("public ");
+            w.Write(f.TypeStr);
+            w.Write(" ");
+            w.Write(f.Name);
+            w.Write("\n{\nreadonly get; set;\n}\n");
+        }
+
+        // ==
+        w.Write("public static bool operator ==(");
+        w.Write(projectionName);
+        w.Write(" x, ");
+        w.Write(projectionName);
+        w.Write(" y) => ");
+        if (fields.Count == 0)
+        {
+            w.Write("true");
+        }
+        else
+        {
+            for (int i = 0; i < fields.Count; i++)
+            {
+                if (i > 0) { w.Write(" && "); }
+                w.Write("x.");
+                w.Write(fields[i].Name);
+                w.Write(" == y.");
+                w.Write(fields[i].Name);
+            }
+        }
+        w.Write(";\n");
+
+        // !=
+        w.Write("public static bool operator !=(");
+        w.Write(projectionName);
+        w.Write(" x, ");
+        w.Write(projectionName);
+        w.Write(" y) => !(x == y);\n");
+
+        // equals
+        w.Write("public bool Equals(");
+        w.Write(projectionName);
+        w.Write(" other) => this == other;\n");
+
+        w.Write("public override bool Equals(object obj) => obj is ");
+        w.Write(projectionName);
+        w.Write(" that && this == that;\n");
+
+        // hashcode
+        w.Write("public override int GetHashCode() => ");
+        if (fields.Count == 0)
+        {
+            w.Write("0");
+        }
+        else
+        {
+            for (int i = 0; i < fields.Count; i++)
+            {
+                if (i > 0) { w.Write(" ^ "); }
+                w.Write(fields[i].Name);
+                w.Write(".GetHashCode()");
+            }
+        }
+        w.Write(";\n");
+        w.Write("}\n\n");
     }
 
     /// <summary>
@@ -205,10 +339,13 @@ internal static partial class CodeWriters
     /// </summary>
     public static void WriteContract(TypeWriter w, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        w.Write("public static class ");
-        w.Write(name);
-        w.Write(" { /* TODO: contract version */ }\n\n");
+        if (w.Settings.Component) { return; }
+
+        string typeName = type.Name?.Value ?? string.Empty;
+        w.Write(Helpers.InternalAccessibility(w.Settings));
+        w.Write(" enum ");
+        w.Write(typeName);
+        w.Write("\n{\n}\n");
     }
 
     /// <summary>
@@ -216,10 +353,88 @@ internal static partial class CodeWriters
     /// </summary>
     public static void WriteDelegate(TypeWriter w, TypeDefinition type)
     {
-        string name = type.Name?.Value ?? string.Empty;
-        w.Write("public delegate void ");
-        w.Write(name);
-        w.Write("(); // TODO: delegate signature\n\n");
+        if (w.Settings.Component) { return; }
+
+        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        if (invoke is null) { return; }
+        MethodSig sig = new(invoke);
+
+        w.Write("\n");
+        WriteWinRTMetadataAttribute(w, type, _cacheRef!);
+        WriteComWrapperMarshallerAttribute(w, type);
+        if (!w.Settings.ReferenceProjection)
+        {
+            // GUID attribute
+            w.Write("[Guid(\"");
+            WriteGuid(w, type, false);
+            w.Write("\")]\n");
+        }
+        w.Write(Helpers.InternalAccessibility(w.Settings));
+        w.Write(" delegate ");
+        WriteProjectionReturnType(w, sig);
+        w.Write(" ");
+        WriteTypedefName(w, type, TypedefNameType.Projected, false);
+        WriteTypeParams(w, type);
+        w.Write("(");
+        WriteParameterList(w, sig);
+        w.Write(");\n");
+    }
+
+    /// <summary>
+    /// Mirrors C++ <c>write_attribute</c>. Emits an attribute projection.
+    /// </summary>
+    public static void WriteAttribute(TypeWriter w, TypeDefinition type)
+    {
+        string typeName = type.Name?.Value ?? string.Empty;
+
+        WriteWinRTMetadataAttribute(w, type, _cacheRef!);
+        w.Write(Helpers.InternalAccessibility(w.Settings));
+        w.Write(" sealed class ");
+        w.Write(typeName);
+        w.Write(": Attribute\n{\n");
+
+        // Constructors
+        foreach (MethodDefinition method in type.Methods)
+        {
+            if (method.Name?.Value != ".ctor") { continue; }
+            MethodSig sig = new(method);
+            w.Write("public ");
+            w.Write(typeName);
+            w.Write("(");
+            WriteParameterList(w, sig);
+            w.Write("){}\n");
+        }
+        // Fields
+        foreach (FieldDefinition field in type.Fields)
+        {
+            if (field.IsStatic || field.Signature is null) { continue; }
+            w.Write("public ");
+            WriteProjectionType(w, TypeSemanticsFactory.Get(field.Signature.FieldType));
+            w.Write(" ");
+            w.Write(field.Name?.Value ?? string.Empty);
+            w.Write(";\n");
+        }
+        w.Write("}\n");
+    }
+
+    private static MetadataCache? _cacheRef;
+
+    /// <summary>Sets the cache reference used by writers that need source-file paths.</summary>
+    public static void SetMetadataCache(MetadataCache cache)
+    {
+        _cacheRef = cache;
+    }
+
+    /// <summary>Mirrors C++ <c>to_camel_case</c>.</summary>
+    public static string ToCamelCase(string name)
+    {
+        if (string.IsNullOrEmpty(name)) { return name; }
+        char c = name[0];
+        if (c >= 'A' && c <= 'Z')
+        {
+            return char.ToLowerInvariant(c) + name.Substring(1);
+        }
+        return name;
     }
 
     /// <summary>
@@ -247,7 +462,7 @@ internal static partial class CodeWriters
     /// <summary>
     /// Mirrors C++ <c>write_attribute</c>. Emits an attribute projection.
     /// </summary>
-    public static void WriteAttribute(TypeWriter w, TypeDefinition type)
+    public static void WriteAttributePlaceholder(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         w.Write("public sealed class ");

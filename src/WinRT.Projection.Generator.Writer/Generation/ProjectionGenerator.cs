@@ -29,6 +29,9 @@ internal sealed class ProjectionGenerator
 
     public void Run()
     {
+        // Set the static cache reference for writers that need source-file paths
+        CodeWriters.SetMetadataCache(_cache);
+
         // Find component activatable classes (component mode only)
         HashSet<TypeDefinition> componentActivatable = new();
         Dictionary<string, HashSet<TypeDefinition>> componentByModule = new(StringComparer.Ordinal);
