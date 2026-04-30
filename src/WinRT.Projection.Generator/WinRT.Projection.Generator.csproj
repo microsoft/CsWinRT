@@ -54,6 +54,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\WinRT.Projection.Generator.Writer\WinRT.Projection.Generator.Writer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AsmResolver.DotNet" />
     <PackageReference Include="ConsoleAppFramework" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />

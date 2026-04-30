@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PublishAot>true</PublishAot>
+    <IsAotCompatible>true</IsAotCompatible>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+
+    <!-- Emit the '[module: SkipLocalsInit]' attribute (same as the runtime) -->
+    <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
+      
+    <!-- Set the root namespace to match the other projects -->
+    <RootNamespace>WindowsRuntime.ProjectionGenerator.Writer</RootNamespace>
+      
+    <!-- Same settings as 'WinRT.Runtime' -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</CodeAnalysisTreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Features>strict</Features>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>
