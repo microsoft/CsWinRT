@@ -210,6 +210,7 @@ internal static partial class CodeWriters
         WriteWinRTMetadataAttribute(w, type, _cacheRef!);
         WriteGuidAttribute(w, type);
         w.Write("\n");
+        WriteTypeCustomAttributes(w, type, false);
 
         bool isInternal = (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo) ||
                           TypeCategorization.IsProjectionInternal(type);

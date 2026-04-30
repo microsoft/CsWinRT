@@ -105,6 +105,10 @@ internal static partial class CodeWriters
         {
             w.Write("\n");
         }
+        WriteWinRTMetadataAttribute(w, type, _cacheRef!);
+        WriteValueTypeWinRTClassNameAttribute(w, type);
+        WriteTypeCustomAttributes(w, type, true);
+        WriteComWrapperMarshallerAttribute(w, type);
 
         w.Write(accessibility);
         w.Write(" enum ");
@@ -188,6 +192,7 @@ internal static partial class CodeWriters
         // Header attributes
         WriteWinRTMetadataAttribute(w, type, _cacheRef!);
         WriteValueTypeWinRTClassNameAttribute(w, type);
+        WriteTypeCustomAttributes(w, type, true);
         WriteComWrapperMarshallerAttribute(w, type);
         WriteWinRTReferenceTypeAttribute(w, type);
         w.Write("public");
@@ -308,6 +313,7 @@ internal static partial class CodeWriters
         if (w.Settings.Component) { return; }
 
         string typeName = type.Name?.Value ?? string.Empty;
+        WriteTypeCustomAttributes(w, type, false);
         w.Write(Helpers.InternalAccessibility(w.Settings));
         w.Write(" enum ");
         w.Write(typeName);
@@ -327,6 +333,7 @@ internal static partial class CodeWriters
 
         w.Write("\n");
         WriteWinRTMetadataAttribute(w, type, _cacheRef!);
+        WriteTypeCustomAttributes(w, type, false);
         WriteComWrapperMarshallerAttribute(w, type);
         if (!w.Settings.ReferenceProjection)
         {
@@ -354,6 +361,7 @@ internal static partial class CodeWriters
         string typeName = type.Name?.Value ?? string.Empty;
 
         WriteWinRTMetadataAttribute(w, type, _cacheRef!);
+        WriteTypeCustomAttributes(w, type, true);
         w.Write(Helpers.InternalAccessibility(w.Settings));
         w.Write(" sealed class ");
         w.Write(typeName);

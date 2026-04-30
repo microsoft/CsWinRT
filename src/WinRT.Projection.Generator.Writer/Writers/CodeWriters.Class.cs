@@ -54,6 +54,7 @@ internal static partial class CodeWriters
     public static void WriteStaticClass(TypeWriter w, TypeDefinition type)
     {
         WriteWinRTMetadataAttribute(w, type, _cacheRef!);
+        WriteTypeCustomAttributes(w, type, true);
         w.Write(Helpers.InternalAccessibility(w.Settings));
         w.Write(" static partial class ");
         WriteTypedefName(w, type, TypedefNameType.Projected, false);
@@ -162,6 +163,7 @@ internal static partial class CodeWriters
         // Header attributes
         w.Write("\n");
         WriteWinRTMetadataAttribute(w, type, _cacheRef!);
+        WriteTypeCustomAttributes(w, type, true);
         WriteComWrapperMarshallerAttribute(w, type);
         w.Write(w.Settings.Internal ? "internal" : "public");
         w.Write(" ");
