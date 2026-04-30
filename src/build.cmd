@@ -259,7 +259,6 @@ set source_generator=%this_dir%Authoring\WinRT.SourceGenerator2\bin\%cswinrt_con
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll.mui
 set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net10.0\WinRT.Host.Shim.dll
-set cswinmd_outpath=%this_dir%Authoring\cswinmd\bin\%cswinrt_configuration%\net10.0
 set cswinrtinteropgen_%cswinrt_platform%=%this_dir%WinRT.Interop.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtinteropgen.exe
 set cswinrtimplgen_%cswinrt_platform%=%this_dir%WinRT.Impl.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtimplgen.exe
 set cswinrtprojectiongen_%cswinrt_platform%=%this_dir%WinRT.Projection.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtprojectiongen.exe
@@ -268,7 +267,6 @@ set run_cswinrt_generator_task=%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_conf
 rem Now call pack
 echo Creating nuget package
 call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;interop_winmd=%interop_winmd%;net10_runtime=%net10_runtime%;net10_runtime_xml=%net10_runtime_xml%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;cswinrtinteropgen_x64=%cswinrtinteropgen_x64%;cswinrtinteropgen_arm64=%cswinrtinteropgen_arm64%;cswinrtimplgen_x64=%cswinrtimplgen_x64%;cswinrtimplgen_arm64=%cswinrtimplgen_arm64%;cswinrtprojectiongen_x64=%cswinrtprojectiongen_x64%;cswinrtprojectiongen_arm64=%cswinrtprojectiongen_arm64%;run_cswinrt_generator_task=%run_cswinrt_generator_task%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
-call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinMD.nuspec -Properties cswinmd_outpath=%cswinmd_outpath%;source_generator_roslyn4120=%source_generator_roslyn4120%;cswinmd_nuget_version=%cswinrt_version_string%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 goto :eof
 
 :exec

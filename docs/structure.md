@@ -17,7 +17,7 @@ Contains source files for producing the C#/WinRT NuGet package, which is regular
 
 ## [`src/Authoring`](../src/Authoring)
 
-Contains projects for implementing authoring and hosting support, including the source generators, the WinRT host, and the cswinmd tool.
+Contains projects for implementing authoring and hosting support, including the source generators and the WinRT host.
 
 ## [`src/Benchmarks`](../src/Benchmarks)
 
@@ -81,7 +81,7 @@ Contains the **projection assembly generator** (`cswinrtprojectiongen.exe`). Thi
 
 ## [`src/WinRT.WinMD.Generator`](../src/WinRT.WinMD.Generator)
 
-Contains the **WinMD generator** (`cswinrtwinmdgen.exe`). This tool, distributed as a Native AOT binary alongside the other CsWinRT post-build tools, generates a `.winmd` metadata file from a compiled C# component assembly so developers can author Windows Runtime components in C#. It is a port and restructuring of the previous WinMD generator from CsWinRT 2.x, which was implemented as a Roslyn source generator. In addition to consistency with the other CsWinRT 3.0 build tools, moving it out of a source generator addresses a fundamental design issue: the 2.x generator emitted a `.winmd` file **on disk**, but arbitrary file I/O is explicitly unsupported in Roslyn source generators (which may only contribute additional source to the compilation). The new tool runs as a normal MSBuild step — invoked by the `RunCsWinRTWinMDGenerator` MSBuild task wired up through `nuget/Microsoft.Windows.CsWinMD.Generator.targets`, after `CoreCompile` when `CsWinRTComponent == true` — where file I/O is the expected output mechanism.
+Contains the **WinMD generator** (`cswinrtwinmdgen.exe`). This tool, distributed as a Native AOT binary alongside the other CsWinRT post-build tools, generates a `.winmd` metadata file from a compiled C# component assembly so developers can author Windows Runtime components in C#. It is a port and restructuring of the previous WinMD generator from CsWinRT 2.x, which was implemented as a Roslyn source generator. In addition to consistency with the other CsWinRT 3.0 build tools, moving it out of a source generator addresses a fundamental design issue: the 2.x generator emitted a `.winmd` file **on disk**, but arbitrary file I/O is explicitly unsupported in Roslyn source generators (which may only contribute additional source to the compilation). The new tool runs as a normal MSBuild step — invoked by the `RunCsWinRTWinMDGenerator` MSBuild task wired up through `nuget/Microsoft.Windows.CsWinRT.Authoring.WinMD.targets`, after `CoreCompile` when `CsWinRTComponent == true` — where file I/O is the expected output mechanism.
 
 ## [`src/WinRT.Runtime2`](../src/WinRT.Runtime2) 
 
