@@ -9,6 +9,7 @@ using test_component_derived.Nested;
 using TestComponentCSharp;
 using Windows.Foundation;
 using WindowsRuntime.InteropServices;
+using Windows.Web.Http;
 
 var instance = new Class();
 
@@ -356,6 +357,37 @@ if (sum != 7)
 {
     return 101;
 }*/
+
+// Regression test for https://github.com/microsoft/CsWinRT/issues/2337:
+// passing a generic managed collection to a WinRT constructor should
+// generate the necessary CCW vtable entries even when the local is 'var'.
+sum = 0;
+
+var intLinkedList = new LinkedList<int>();
+intLinkedList.AddLast(3);
+intLinkedList.AddLast(5);
+intLinkedList.AddLast(7);
+var customIterableTest4 = new CustomIterableTest(intLinkedList);
+foreach (var i in customIterableTest4)
+{
+    sum += i;
+}
+
+if (sum != 15)
+{
+    return 101;
+}
+
+// Exact regression test for https://github.com/microsoft/CsWinRT/issues/2337:
+// HttpFormUrlEncodedContent takes IIterable<IKeyValuePair<String, String>> in
+// its constructor. Passing a List<KeyValuePair<string, string>> declared with
+// 'var' must generate the required CCW vtable entries for the AOT scenario.
+var pairs = new List<KeyValuePair<string, string>>
+{
+    new KeyValuePair<string, string>("aaa", "1234"),
+    new KeyValuePair<string, string>("bbb", "5678")
+};
+using var bodyContent = new HttpFormUrlEncodedContent(pairs);
 
 var nullableDoubleList = new List<double?>() { 1, 2, null, 3, 4, null };
 var result = instance.Calculate(nullableDoubleList);

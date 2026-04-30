@@ -1054,6 +1054,8 @@ namespace cswinrt
                     { 1, "10.0.17763.0" },
                     { 2, "10.0.18362.0" },
                     { 3, "10.0.19041.0" },
+                    { 4, "10.0.20348.0" },
+                    { 5, "10.0.22000.0" },
                 }
             },
             { "Windows.AI.MachineLearning.Preview.MachineLearningPreviewContract",
@@ -1066,12 +1068,16 @@ namespace cswinrt
                 {
                     { 1, "10.0.17763.0" },
                     { 2, "10.0.18362.0" },
+                    { 3, "10.0.20348.0" },
+                    { 4, "10.0.22621.0" },
                 }
             },
             { "Windows.ApplicationModel.Calls.CallsPhoneContract",
                 {
                     { 4, "10.0.17763.0" },
                     { 5, "10.0.18362.0" },
+                    { 6, "10.0.20348.0" },
+                    { 7, "10.0.22621.0" },
                 }
             },
             { "Windows.ApplicationModel.Calls.CallsVoipContract",
@@ -1080,6 +1086,7 @@ namespace cswinrt
                     { 2, "10.0.16299.0" },
                     { 3, "10.0.17134.0" },
                     { 4, "10.0.17763.0" },
+                    { 5, "10.0.26100.0" },
                 }
             },
             { "Windows.ApplicationModel.CommunicationBlocking.CommunicationBlockingContract",
@@ -1145,6 +1152,10 @@ namespace cswinrt
                     { 7, "10.0.17763.0" },
                     { 8, "10.0.18362.0" },
                     { 10, "10.0.19041.0" },
+                    { 12, "10.0.20348.0" },
+                    { 14, "10.0.22000.0" },
+                    { 15, "10.0.22621.0" },
+                    { 19, "10.0.26100.0" },
                 }
             },
             { "Windows.Foundation.VelocityIntegration.VelocityIntegrationContract",
@@ -1168,6 +1179,7 @@ namespace cswinrt
                 {
                     { 1, "10.0.10240.0" },
                     { 2, "10.0.17134.0" },
+                    { 3, "10.0.26100.0" },
                 }
             },
             { "Windows.Networking.Sockets.ControlChannelTriggerContract",
@@ -1178,6 +1190,9 @@ namespace cswinrt
             { "Windows.Security.Isolation.IsolatedWindowsEnvironmentContract",
                 {
                     { 1, "10.0.19041.0" },
+                    { 3, "10.0.20348.0" },
+                    { 4, "10.0.22621.0" },
+                    { 5, "10.0.26100.0" },
                 }
             },
             { "Windows.Services.Maps.GuidanceContract",
@@ -1206,11 +1221,18 @@ namespace cswinrt
             { "Windows.Storage.Provider.CloudFilesContract",
                 {
                     { 4, "10.0.19041.0" },
+                    { 6, "10.0.20348.0" },
+                    { 7, "10.0.22621.0" },
                 }
             },
             { "Windows.System.Profile.ProfileHardwareTokenContract",
                 {
                     { 1, "10.0.14393.0" },
+                }
+            },
+            { "Windows.System.Profile.ProfileRetailInfoContract",
+                {
+                    { 1, "10.0.20348.0" },
                 }
             },
             { "Windows.System.Profile.ProfileSharedModeContract",
@@ -1230,6 +1252,12 @@ namespace cswinrt
                     { 7, "10.0.19041.0" },
                 }
             },
+            { "Windows.UI.UIAutomation.UIAutomationContract",
+                {
+                    { 1, "10.0.20348.0" },
+                    { 2, "10.0.22000.0" },
+                }
+            },
             { "Windows.UI.ViewManagement.ViewManagementViewScalingContract",
                 {
                     { 1, "10.0.14393.0" },
@@ -1239,6 +1267,8 @@ namespace cswinrt
                 {
                     { 1, "10.0.17763.0" },
                     { 2, "10.0.18362.0" },
+                    { 3, "10.0.20348.0" },
+                    { 5, "10.0.22000.0" },
                 }
             },
         };
@@ -1259,7 +1289,7 @@ namespace cswinrt
             return v.contract_version < contract_version;
         });
 
-        if ((versionItr == std::end(versions)) || (versionItr->contract_version != contract_version))
+        if (versionItr == std::end(versions))
         {
             return {};
         }

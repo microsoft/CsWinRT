@@ -3,7 +3,7 @@
 // This script can be run periodically from within LINQPad (https://www.linqpad.net) 
 // to generate aggregate data for get_contract_platform in helpers.h
 
-var doc = XDocument.Load(@"C:\Program Files (x86)\Windows Kits\10\Platforms\UAP\10.0.19041.0\PreviousPlatforms.xml");
+var doc = XDocument.Load(@"C:\Program Files (x86)\Windows Kits\10\Platforms\UAP\10.0.26100.0\PreviousPlatforms.xml");
 
 XNamespace pp = "http://microsoft.com/schemas/Windows/SDK/PreviousPlatforms";
 

@@ -672,6 +672,9 @@ namespace TestComponentCSharp
             overridable Int32 WarningOverridableProperty;
             // see https://github.com/microsoft/cppwinrt/issues/782
             //overridable event Windows.Foundation.EventHandler<Int32> WarningOverridableEvent;
+            Int32 CallOverridablePropertyGetter();
+            void CallOverridablePropertySetter(Int32 value);
+            void CallOverridableMethod();
         }
     }
 

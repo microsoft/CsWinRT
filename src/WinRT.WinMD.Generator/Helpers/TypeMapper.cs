@@ -165,6 +165,7 @@ internal sealed class TypeMapper
         "System.Collections.Generic.IReadOnlyCollection`1",
         "System.Collections.ICollection",
         "System.Collections.IEnumerator",
+        "System.ComponentModel.INotifyPropertyChanging",
         "System.IEquatable`1",
         "System.Runtime.InteropServices.ICustomQueryInterface",
         "System.Runtime.InteropServices.IDynamicInterfaceCastable");

@@ -249,12 +249,12 @@ public unsafe partial class WindowsRuntimeObjectReference
             // by the 'IsAggregated' and 'PreventReleaseOnDispose' flags on the returned object reference.
             createObjectReferenceFlags |= CreateObjectReferenceFlags.IsAggregated;
 
-            // If we have a reference tracker and we're aggregating, we should not release
-            // the wrapped COM object on disposal. The reference tracker will handle things.
+            // In aggregation scenarios, the inner is passed to .NET and it manages
+            // its release when the RCW goes away, so don't release it.
+            createObjectReferenceFlags |= CreateObjectReferenceFlags.PreventReleaseOnDispose;
+
             if (referenceTracker is not null)
             {
-                createObjectReferenceFlags |= CreateObjectReferenceFlags.PreventReleaseOnDispose;
-
                 // We can release the reference tracker first, since we said it's not going to be needed here
                 _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
             }
