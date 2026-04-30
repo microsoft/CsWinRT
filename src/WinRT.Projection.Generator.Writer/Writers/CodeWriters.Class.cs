@@ -187,8 +187,6 @@ internal static partial class CodeWriters
                 w.Write("if (GetType() == typeof(");
                 w.Write(typeName);
                 w.Write("))\n{\n");
-                // For non-sealed, store ObjectReference for the default interface.
-                // Simplified: skip the objref initialization (write_objref_type_name needs full impl).
                 w.Write("// Default interface objref initialization (simplified port)\n}\n");
             }
             if (gcPressure > 0)
@@ -200,8 +198,8 @@ internal static partial class CodeWriters
             w.Write("}\n");
         }
 
-        // Other constructors from [Activatable]/[Composable] factories: simplified port
-        // (the full version walks ActivatableAttribute/ComposableAttribute with factory interfaces)
+        // Activator/composer constructors from [Activatable]/[Composable] factory interfaces
+        WriteAttributedTypes(w, type);
 
         // Conditional finalizer
         if (gcPressure > 0)
