@@ -383,6 +383,18 @@ internal static partial class CodeWriters
         w.Write("}\n");
     }
 
+    /// <summary>
+    /// Mirrors C++ <c>add_generic_type_references_in_type</c>.
+    /// Tracks generic types referenced by delegate signatures and method/property/field signatures.
+    /// In the C++ version this populates a concurrent set used internally; in this port it's a no-op
+    /// because the set is never used in the file output (only for internal tracking).
+    /// </summary>
+    public static void AddGenericTypeReferencesInType(TypeDefinition type)
+    {
+        // No-op: the C++ version collects entries into a set that's never used in main.cpp output.
+        _ = type;
+    }
+
     private static MetadataCache? _cacheRef;
 
     /// <summary>Sets the cache reference used by writers that need source-file paths.</summary>

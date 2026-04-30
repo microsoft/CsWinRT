@@ -266,6 +266,7 @@ internal sealed class ProjectionGenerator
                 CodeWriters.AddMetadataTypeEntry(w, type, authoredTypeNameToMetadataMap);
             }
 
+            CodeWriters.AddGenericTypeReferencesInType(type);
             written = true;
         }
 
@@ -295,6 +296,19 @@ internal sealed class ProjectionGenerator
                 CodeWriters.WriteAbiType(w, type, category, _settings);
             }
             w.WriteEndAbiNamespace();
+        }
+
+        // Phase 4: Custom additions to namespaces (mirrors C++ main.cpp)
+        foreach ((string addNs, string resName) in Additions.All)
+        {
+            if (addNs == ns && _settings.AdditionFilter.Includes(ns))
+            {
+                using System.IO.Stream? stream = typeof(ProjectionWriter).Assembly.GetManifestResourceStream(resName);
+                if (stream is null) { continue; }
+                using System.IO.StreamReader reader = new(stream);
+                string content = reader.ReadToEnd();
+                w.Write(content);
+            }
         }
 
         // Output to file
