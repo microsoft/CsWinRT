@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using AsmResolver.DotNet;
 
 namespace WindowsRuntime.ProjectionGenerator.Writer;
@@ -54,12 +55,92 @@ internal static partial class CodeWriters
     {
         WriteWinRTMetadataAttribute(w, type, _cacheRef!);
         w.Write(Helpers.InternalAccessibility(w.Settings));
-        w.Write(" static class ");
+        w.Write(" static partial class ");
         WriteTypedefName(w, type, TypedefNameType.Projected, false);
         WriteTypeParams(w, type);
         w.Write("\n{\n");
-        // Static classes only have static members from factory interfaces - emit empty body for now.
+        WriteStaticClassMembers(w, type);
         w.Write("}\n");
+    }
+
+    /// <summary>
+    /// Emits static members from [Static] factory interfaces. Mirrors C++ <c>write_static_members</c>.
+    /// </summary>
+    public static void WriteStaticClassMembers(TypeWriter w, TypeDefinition type)
+    {
+        if (_cacheRef is null) { return; }
+        Dictionary<string, (string Type, bool HasGetter, bool HasSetter)> properties = new(System.StringComparer.Ordinal);
+
+        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cacheRef))
+        {
+            AttributedType factory = kv.Value;
+            if (factory.Statics && factory.Type is not null)
+            {
+                TypeDefinition staticIface = factory.Type;
+                // Methods
+                foreach (MethodDefinition method in staticIface.Methods)
+                {
+                    if (Helpers.IsSpecial(method)) { continue; }
+                    MethodSig sig = new(method);
+                    w.Write("\npublic static ");
+                    WriteProjectionReturnType(w, sig);
+                    w.Write(" ");
+                    w.Write(method.Name?.Value ?? string.Empty);
+                    w.Write("(");
+                    WriteParameterList(w, sig);
+                    w.Write(") => throw null!;\n");
+                }
+                // Events
+                foreach (EventDefinition evt in staticIface.Events)
+                {
+                    string evtName = evt.Name?.Value ?? string.Empty;
+                    w.Write("\npublic static event ");
+                    if (evt.EventType is TypeDefinition etDef)
+                    {
+                        WriteTypedefName(w, etDef, TypedefNameType.Projected, false);
+                        WriteTypeParams(w, etDef);
+                    }
+                    else if (evt.EventType is TypeReference etRef)
+                    {
+                        w.Write("global::");
+                        w.Write(etRef.Namespace?.Value ?? string.Empty);
+                        w.Write(".");
+                        w.WriteCode(etRef.Name?.Value ?? string.Empty);
+                    }
+                    w.Write(" ");
+                    w.Write(evtName);
+                    w.Write(" { add => throw null!; remove => throw null!; }\n");
+                }
+                // Properties (merge getter/setter across interfaces)
+                foreach (PropertyDefinition prop in staticIface.Properties)
+                {
+                    string propName = prop.Name?.Value ?? string.Empty;
+                    (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+                    string propType = WritePropType(w, prop);
+                    if (properties.TryGetValue(propName, out var existing))
+                    {
+                        properties[propName] = (existing.Type, existing.HasGetter || getter is not null, existing.HasSetter || setter is not null);
+                    }
+                    else
+                    {
+                        properties[propName] = (propType, getter is not null, setter is not null);
+                    }
+                }
+            }
+        }
+
+        // Emit properties with merged accessors
+        foreach (KeyValuePair<string, (string Type, bool HasGetter, bool HasSetter)> kv in properties)
+        {
+            w.Write("\npublic static ");
+            w.Write(kv.Value.Type);
+            w.Write(" ");
+            w.Write(kv.Key);
+            w.Write(" { ");
+            if (kv.Value.HasGetter) { w.Write("get => throw null!; "); }
+            if (kv.Value.HasSetter) { w.Write("set => throw null!; "); }
+            w.Write("}\n");
+        }
     }
 
     /// <summary>
