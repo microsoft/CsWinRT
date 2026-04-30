@@ -80,41 +80,7 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>Emits an ABI class wrapper. Stub.</summary>
-    public static void WriteAbiClass(TypeWriter w, TypeDefinition type)
-    {
-        // Stub: full implementation will be in a later commit.
-    }
-
-    /// <summary>Emits an ABI delegate. Stub.</summary>
-    public static void WriteAbiDelegate(TypeWriter w, TypeDefinition type)
-    {
-        // Stub
-    }
-
-    /// <summary>Emits a temporary delegate event source subclass. Stub.</summary>
-    public static void WriteTempDelegateEventSourceSubclass(TypeWriter w, TypeDefinition type)
-    {
-        // Stub
-    }
-
-    /// <summary>Emits an ABI enum (stub).</summary>
-    public static void WriteAbiEnum(TypeWriter w, TypeDefinition type)
-    {
-        // Stub: full implementation will be in a later commit.
-    }
-
-    /// <summary>Emits an ABI interface (stub).</summary>
-    public static void WriteAbiInterface(TypeWriter w, TypeDefinition type)
-    {
-        // Stub
-    }
-
-    /// <summary>Emits an ABI struct (stub).</summary>
-    public static void WriteAbiStruct(TypeWriter w, TypeDefinition type)
-    {
-        // Stub
-    }
+    // ABI emission methods are implemented in CodeWriters.Abi.cs
 
     /// <summary>
     /// Mirrors C++ <c>write_enum</c>. Emits an enum projection.

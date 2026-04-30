@@ -85,7 +85,8 @@ internal static partial class CodeWriters
         w.Write(w.Settings.Internal ? "internal" : "public");
         w.Write(" ");
         WriteClassModifiers(w, type);
-        w.Write("class ");
+        // Mark as partial so user-provided implementations can complete the interface methods.
+        w.Write("partial class ");
         WriteTypedefName(w, type, TypedefNameType.Projected, false);
         WriteTypeParams(w, type);
         WriteTypeInheritance(w, type, false, true);
