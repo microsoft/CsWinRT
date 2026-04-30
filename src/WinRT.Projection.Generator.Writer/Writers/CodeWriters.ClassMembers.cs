@@ -62,11 +62,23 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>Resolves a TypeRef to a TypeDef using the cache.</summary>
+    /// <summary>Resolves a TypeRef to a TypeDef using the cache or runtime context.</summary>
     private static TypeDefinition? ResolveInterface(ITypeDefOrRef typeRef)
     {
         if (typeRef is TypeDefinition td) { return td; }
-        if (typeRef is TypeReference tr && _cacheRef is not null)
+        if (_cacheRef is null) { return null; }
+        // Try the runtime context resolver first (handles cross-module references via the resolver)
+        try
+        {
+            TypeDefinition? resolved = typeRef.Resolve(_cacheRef.RuntimeContext);
+            if (resolved is not null) { return resolved; }
+        }
+        catch
+        {
+            // Fall through to local lookup
+        }
+        // Fall back to local lookup by full name
+        if (typeRef is TypeReference tr)
         {
             string ns = tr.Namespace?.Value ?? string.Empty;
             string name = tr.Name?.Value ?? string.Empty;

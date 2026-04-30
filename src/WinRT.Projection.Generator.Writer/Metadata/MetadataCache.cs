@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using AsmResolver.DotNet;
 
 namespace WindowsRuntime.ProjectionGenerator.Writer;
@@ -23,37 +24,71 @@ internal sealed class MetadataCache
 
     public IReadOnlyList<ModuleDefinition> Modules => _modules;
 
+    /// <summary>
+    /// The shared <see cref="RuntimeContext"/> used for resolving TypeRefs in the loaded .winmd files.
+    /// All .winmd files share an mscorlib reference (v255.255.255.255 with the standard PKT), so we can
+    /// safely use a single runtime context for all of them.
+    /// </summary>
+    public RuntimeContext RuntimeContext { get; }
+
+    private MetadataCache(RuntimeContext runtimeContext)
+    {
+        RuntimeContext = runtimeContext;
+    }
+
     public static MetadataCache Load(IEnumerable<string> inputs)
     {
-        MetadataCache cache = new();
+        // Collect all .winmd files first so the resolver knows about all of them
+        List<string> winmdFiles = new();
         foreach (string input in inputs)
         {
-            cache.LoadOne(input);
+            if (Directory.Exists(input))
+            {
+                winmdFiles.AddRange(Directory.EnumerateFiles(input, "*.winmd", SearchOption.AllDirectories));
+            }
+            else if (File.Exists(input))
+            {
+                winmdFiles.Add(input);
+            }
+            else
+            {
+                throw new FileNotFoundException($"Input metadata file/directory not found: {input}", input);
+            }
+        }
+
+        // Set up a PathAssemblyResolver scoped to the input .winmd files
+        // (and any sibling .winmd files in their directories) so type forwards and cross-references resolve.
+        string[] searchDirectories = winmdFiles
+            .Select(Path.GetDirectoryName)
+            .Where(d => d is not null)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray()!;
+
+        PathAssemblyResolver resolver = PathAssemblyResolver.FromSearchDirectories(searchDirectories);
+
+        // For .winmd files, mscorlib is referenced as v255.255.255.255. We use a synthetic runtime info
+        // (NetCoreApp 10.0 to match the project's TFM) — the actual version isn't important for resolving
+        // .winmd-internal TypeRefs since all .winmd cross-references go through PathAssemblyResolver
+        // by name. The AsmResolver runtime context just needs to be valid to bypass the implicit
+        // "probe runtime from PE image" path that fails for .winmd files (v255.255).
+        DotNetRuntimeInfo targetRuntime = DotNetRuntimeInfo.NetCoreApp(10, 0);
+        RuntimeContext runtimeContext = new(targetRuntime, resolver);
+
+        MetadataCache cache = new(runtimeContext);
+        foreach (string winmd in winmdFiles)
+        {
+            cache.LoadFile(winmd);
         }
         return cache;
     }
 
-    private void LoadOne(string path)
-    {
-        if (Directory.Exists(path))
-        {
-            foreach (string winmd in Directory.EnumerateFiles(path, "*.winmd", SearchOption.AllDirectories))
-            {
-                LoadFile(winmd);
-            }
-            return;
-        }
-        if (File.Exists(path))
-        {
-            LoadFile(path);
-            return;
-        }
-        throw new FileNotFoundException($"Input metadata file/directory not found: {path}", path);
-    }
-
     private void LoadFile(string path)
     {
-        ModuleDefinition module = ModuleDefinition.FromFile(path, new AsmResolver.DotNet.Serialized.ModuleReaderParameters(), createRuntimeContext: false);
+        AssemblyDefinition assemblyDefinition = RuntimeContext.LoadAssembly(path);
+        if (assemblyDefinition.Modules is not [ModuleDefinition module])
+        {
+            throw new System.BadImageFormatException($"Expected exactly one module in '{path}'.");
+        }
         _modules.Add(module);
         string moduleFilePath = path;
 
