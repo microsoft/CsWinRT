@@ -480,7 +480,7 @@ WinRT.WinMD.Generator/
 
 **How it integrates with the build:**
 
-- Wired into MSBuild via `nuget/Microsoft.Windows.CsWinMD.Generator.targets` (imported by `Microsoft.Windows.CsWinRT.targets` when `CsWinRTComponent == true`)
+- Wired into MSBuild via `nuget/Microsoft.Windows.CsWinRT.Authoring.WinMD.targets` (imported by `Microsoft.Windows.CsWinRT.targets` when `CsWinRTComponent == true`)
 - Invoked through the `RunCsWinRTWinMDGenerator` MSBuild task (in `WinRT.Generator.Tasks`)
 - Runs after `CoreCompile` (it needs the compiled .dll), gated on `CsWinRTComponent == true` and `DesignTimeBuild != true`
 - Output is `$(IntermediateOutputPath)$(AssemblyName).winmd`, then copied to `$(TargetDir)` by the authoring targets and packaged into the component's NuGet
@@ -537,7 +537,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 | `Microsoft.Windows.CsWinRT.CsWinRTGen.targets` | Post-build tools: interop generation, impl generation, merged projection generation |
 | `Microsoft.Windows.CsWinRT.Authoring.targets` | Windows Runtime component authoring: managed DLL output, WinMD generation, NuGet packaging |
 | `Microsoft.Windows.CsWinRT.Authoring.Transitive.targets` | Transitive target rules for component consumers |
-| `Microsoft.Windows.CsWinMD.Generator.targets` | Component `.winmd` generation: invokes `cswinrtwinmdgen.exe` after `CoreCompile` (only when `CsWinRTComponent == true`) |
+| `Microsoft.Windows.CsWinRT.Authoring.WinMD.targets` | Component `.winmd` generation: invokes `cswinrtwinmdgen.exe` after `CoreCompile` (only when `CsWinRTComponent == true`) |
 
 ---
 

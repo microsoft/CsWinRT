@@ -59,7 +59,7 @@ Launch parallel explore agents for each of the 8 CsWinRT 3.0 projects listed in 
    - CLI parameters on `WinMDGeneratorArgs` are current
    - Error ID range (`CSWINRTWINMDGENxxxx`) in `Errors/WellKnownWinMDExceptions.cs` is accurate
    - Project settings and dependencies are current
-   - MSBuild integration via `nuget/Microsoft.Windows.CsWinMD.Generator.targets` is wired (gated on `CsWinRTComponent`)
+   - MSBuild integration via `nuget/Microsoft.Windows.CsWinRT.Authoring.WinMD.targets` is wired (gated on `CsWinRTComponent`)
 
 8. **Generator tasks (`src/WinRT.Generator.Tasks/`)**
    - MSBuild task classes are accurately listed (including `RunCsWinRTWinMDGenerator`)
