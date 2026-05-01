@@ -87,10 +87,13 @@ internal static partial class CodeWriters
         {
             if (impl.Interface is null) { continue; }
             if (!IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false)) { continue; }
+            string objRefName = GetObjRefName(w, impl.Interface);
             w.Write("\n");
             w.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
             WriteInterfaceTypeNameForCcw(w, impl.Interface);
-            w.Write(">.GetInterface() => throw null!;\n");
+            w.Write(">.GetInterface() => ");
+            w.Write(objRefName);
+            w.Write(".AsValue();\n");
         }
     }
 

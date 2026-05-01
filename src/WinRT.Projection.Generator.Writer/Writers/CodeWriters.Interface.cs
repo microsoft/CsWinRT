@@ -81,7 +81,7 @@ internal static partial class CodeWriters
     /// generic instance), applying mapped-type remapping (e.g.,
     /// <c>Windows.Foundation.Collections.IMap&lt;K,V&gt;</c> → <c>System.Collections.Generic.IDictionary&lt;K,V&gt;</c>).
     /// </summary>
-    private static void WriteInterfaceTypeName(TypeWriter w, ITypeDefOrRef ifaceType)
+    public static void WriteInterfaceTypeName(TypeWriter w, ITypeDefOrRef ifaceType)
     {
         if (ifaceType is TypeDefinition td)
         {

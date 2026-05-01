@@ -240,6 +240,11 @@ internal static partial class CodeWriters
         WriteTypeInheritance(w, type, false, true);
         w.Write("\n{\n");
 
+        // ObjRef field definitions for each implemented interface (mirrors C++ write_class_objrefs_definition).
+        // These back the per-interface dispatch in instance methods/properties and the
+        // IWindowsRuntimeInterface<T>.GetInterface() implementations.
+        WriteClassObjRefDefinitions(w, type);
+
         // Constructor: WindowsRuntimeObjectReference-based constructor (RCW-like)
         if (!w.Settings.ReferenceProjection)
         {
