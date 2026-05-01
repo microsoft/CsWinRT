@@ -65,10 +65,10 @@ internal static partial class CodeWriters
                 EmitDisposable(w, objRefName);
                 break;
             case "IIterable`1":
-                EmitGenericEnumerable(w, typeArgs);
+                EmitGenericEnumerable(w, typeArgs, typeArgSigs, objRefName);
                 break;
             case "IIterator`1":
-                EmitGenericEnumerator(w, typeArgs);
+                EmitGenericEnumerator(w, typeArgs, typeArgSigs, objRefName);
                 break;
             case "IMap`2":
                 EmitDictionary(w, typeArgs, typeArgSigs, objRefName);
@@ -108,23 +108,42 @@ internal static partial class CodeWriters
         w.Write(");\n");
     }
 
-    private static void EmitGenericEnumerable(TypeWriter w, List<TypeSemantics> args)
+    private static void EmitGenericEnumerable(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
     {
         if (args.Count != 1) { return; }
         string t = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
-        w.Write($"\npublic global::System.Collections.Generic.IEnumerator<{t}> GetEnumerator() => throw null!;\n");
-        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
+        string elementId = EncodeArgIdentifier(w, args[0]);
+        string interopTypeArgs = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopType = "ABI.System.Collections.Generic.<#corlib>IEnumerable'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
+        string prefix = "IEnumerableMethods_" + elementId + "_";
+
+        w.Write("\n");
+        EmitUnsafeAccessor(w, "GetEnumerator", $"global::System.Collections.Generic.IEnumerator<{t}>", $"{prefix}GetEnumerator", interopType, "");
+
+        w.Write($"\npublic global::System.Collections.Generic.IEnumerator<{t}> GetEnumerator() => {prefix}GetEnumerator(null, {objRefName});\n");
+        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
 
-    private static void EmitGenericEnumerator(TypeWriter w, List<TypeSemantics> args)
+    private static void EmitGenericEnumerator(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
     {
         if (args.Count != 1) { return; }
         string t = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
-        w.Write($"\npublic bool MoveNext() => throw null!;\n");
-        w.Write("public void Reset() => throw null!;\n");
-        w.Write($"public {t} Current => throw null!;\n");
-        w.Write("object global::System.Collections.IEnumerator.Current => throw null!;\n");
-        w.Write("public void Dispose() => throw null!;\n");
+        string elementId = EncodeArgIdentifier(w, args[0]);
+        string interopTypeArgs = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopType = "ABI.System.Collections.Generic.<#corlib>IEnumerator'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
+        string prefix = "IEnumeratorMethods_" + elementId + "_";
+
+        w.Write("\n");
+        EmitUnsafeAccessor(w, "Current", t, $"{prefix}Current", interopType, "");
+        EmitUnsafeAccessor(w, "MoveNext", "bool", $"{prefix}MoveNext", interopType, "");
+        EmitUnsafeAccessor(w, "Reset", "void", $"{prefix}Reset", interopType, "");
+        EmitUnsafeAccessor(w, "Dispose", "void", $"{prefix}Dispose", interopType, "");
+
+        w.Write($"\npublic bool MoveNext() => {prefix}MoveNext(null, {objRefName});\n");
+        w.Write($"public void Reset() => {prefix}Reset(null, {objRefName});\n");
+        w.Write($"public {t} Current => {prefix}Current(null, {objRefName});\n");
+        w.Write("object global::System.Collections.IEnumerator.Current => Current!;\n");
+        w.Write($"public void Dispose() => {prefix}Dispose(null, {objRefName});\n");
     }
 
     private static void EmitDictionary(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
