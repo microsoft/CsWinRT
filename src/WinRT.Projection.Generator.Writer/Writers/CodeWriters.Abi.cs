@@ -40,14 +40,21 @@ internal static partial class CodeWriters
                 _ => true
             };
         }
-        // For TypeRef/TypeDef, conservatively return false unless we resolve to an enum.
+        // For TypeRef/TypeDef, resolve and check blittability.
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature todr)
         {
             if (todr.Type is TypeDefinition td)
             {
                 return IsTypeBlittable(td);
             }
-            // Can't resolve — be conservative.
+            // Cross-module: try metadata cache.
+            if (todr.Type is TypeReference tr && _cacheRef is not null)
+            {
+                string ns = tr.Namespace?.Value ?? string.Empty;
+                string name = tr.Name?.Value ?? string.Empty;
+                TypeDefinition? resolved = _cacheRef.Find(ns + "." + name);
+                if (resolved is not null) { return IsTypeBlittable(resolved); }
+            }
             return false;
         }
         return false;
@@ -501,8 +508,7 @@ internal static partial class CodeWriters
                 {
                     w.Write("(ushort)__result;\n");
                 }
-                else if (rt is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td &&
-                         td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
+                else if (IsEnumType(rt))
                 {
                     w.Write("(");
                     w.Write(abiType);
@@ -555,8 +561,7 @@ internal static partial class CodeWriters
         {
             EmitMarshallerConvertToManaged(w, p.Type, pname);
         }
-        else if (p.Type is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td &&
-                 td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
+        else if (IsEnumType(p.Type))
         {
             w.Write("(");
             string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
@@ -920,7 +925,7 @@ internal static partial class CodeWriters
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
-        // Check that all parameters are types we can marshal (blittable primitives, string, runtime class, object, or generic instance).
+        // Check that all parameters are types we can marshal (blittable primitives, blittable struct, string, runtime class, object, or generic instance).
         bool allParamsSimple = true;
         foreach (ParamInfo p in sig.Params)
         {
@@ -928,6 +933,7 @@ internal static partial class CodeWriters
             // Only support 'In' parameters
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
+            if (IsBlittableStruct(p.Type)) { continue; }
             if (IsString(p.Type)) { continue; }
             if (IsRuntimeClassOrInterface(p.Type)) { continue; }
             if (IsObject(p.Type)) { continue; }
@@ -937,6 +943,7 @@ internal static partial class CodeWriters
         }
         bool returnSimple = rt is null
             || IsBlittablePrimitive(rt)
+            || IsBlittableStruct(rt)
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
             || IsObject(rt)
@@ -950,6 +957,7 @@ internal static partial class CodeWriters
 
         bool returnIsString = rt is not null && IsString(rt);
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
+        bool returnIsBlittableStruct = rt is not null && IsBlittableStruct(rt);
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
         System.Text.StringBuilder fp = new();
@@ -958,12 +966,14 @@ internal static partial class CodeWriters
         {
             fp.Append(", ");
             if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { fp.Append("void*"); }
+            else if (IsBlittableStruct(p.Type)) { fp.Append(GetBlittableStructAbiType(w, p.Type)); }
             else { fp.Append(GetAbiPrimitiveType(p.Type)); }
         }
         if (rt is not null)
         {
             fp.Append(", ");
             if (returnIsString || returnIsRefType) { fp.Append("void**"); }
+            else if (returnIsBlittableStruct) { fp.Append(GetBlittableStructAbiType(w, rt)); fp.Append('*'); }
             else { fp.Append(GetAbiPrimitiveType(rt)); fp.Append('*'); }
         }
         fp.Append(", int");
@@ -1024,6 +1034,12 @@ internal static partial class CodeWriters
         {
             w.Write("        void* __retval = default;\n");
         }
+        else if (returnIsBlittableStruct)
+        {
+            w.Write("        ");
+            w.Write(GetBlittableStructAbiType(w, rt!));
+            w.Write(" __retval = default;\n");
+        }
         else if (rt is not null)
         {
             w.Write("        ");
@@ -1075,6 +1091,11 @@ internal static partial class CodeWriters
                 w.Write(GetParamLocalName(p, paramNameOverride));
                 w.Write(".GetThisPtrUnsafe()");
             }
+            else if (IsBlittableStruct(p.Type))
+            {
+                // Blittable struct: pass directly (projected type == ABI type)
+                w.Write(GetParamName(p, paramNameOverride));
+            }
             else
             {
                 EmitParamArgConversion(w, p, paramNameOverride);
@@ -1119,6 +1140,11 @@ internal static partial class CodeWriters
                     EmitMarshallerConvertToManaged(w, rt, "__retval");
                     w.Write(";\n");
                 }
+            }
+            else if (returnIsBlittableStruct)
+            {
+                w.Write(indent);
+                w.Write("return __retval;\n");
             }
             else
             {
@@ -1172,6 +1198,24 @@ internal static partial class CodeWriters
     {
         return sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
                corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object;
+    }
+
+    /// <summary>True if the type signature represents an enum (resolves cross-module typerefs).</summary>
+    private static bool IsEnumType(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
+        if (td.Type is TypeDefinition def)
+        {
+            return TypeCategorization.GetCategory(def) == TypeCategory.Enum;
+        }
+        if (td.Type is TypeReference tr && _cacheRef is not null)
+        {
+            string ns = tr.Namespace?.Value ?? string.Empty;
+            string name = tr.Name?.Value ?? string.Empty;
+            TypeDefinition? resolved = _cacheRef.Find(ns + "." + name);
+            return resolved is not null && TypeCategorization.GetCategory(resolved) == TypeCategory.Enum;
+        }
+        return false;
     }
 
     /// <summary>True if the type signature represents a generic instantiation that needs WinRT.Interop UnsafeAccessor marshalling.</summary>
@@ -1305,9 +1349,8 @@ internal static partial class CodeWriters
             w.Write("(ushort)");
             w.Write(pname);
         }
-        // Enums -> their underlying numeric type (cast)
-        else if (p.Type is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td &&
-                 td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
+        // Enums -> their underlying numeric type (cast). Handles both same-module and cross-module enums.
+        else if (IsEnumType(p.Type))
         {
             w.Write("(");
             w.Write(GetAbiPrimitiveType(p.Type));
@@ -1340,15 +1383,53 @@ internal static partial class CodeWriters
                 AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8 or
                 AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char;
         }
-        // Enum (TypeDefOrRef-based value type with non-Object base)
+        // Enum (TypeDefOrRef-based value type with non-Object base) - same module or cross-module
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
         {
             if (td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
             {
                 return true;
             }
+            // Cross-module enum: try to resolve via the metadata cache.
+            if (td.Type is TypeReference tr && _cacheRef is not null)
+            {
+                string ns = tr.Namespace?.Value ?? string.Empty;
+                string name = tr.Name?.Value ?? string.Empty;
+                TypeDefinition? resolved = _cacheRef.Find(ns + "." + name);
+                if (resolved is not null && TypeCategorization.GetCategory(resolved) == TypeCategory.Enum)
+                {
+                    return true;
+                }
+            }
         }
         return false;
+    }
+
+    /// <summary>True if the type is a blittable struct (TypeDef with all blittable fields, no enum).
+    /// These types have an identical ABI representation to their projected form.</summary>
+    private static bool IsBlittableStruct(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
+        TypeDefinition? def = td.Type as TypeDefinition;
+        if (def is null && _cacheRef is not null && td.Type is TypeReference tr)
+        {
+            string ns = tr.Namespace?.Value ?? string.Empty;
+            string name = tr.Name?.Value ?? string.Empty;
+            // Well-known cross-assembly blittable structs
+            if (ns == "System" && name == "Guid") { return true; }
+            def = _cacheRef.Find(ns + "." + name);
+        }
+        if (def is null) { return false; }
+        TypeCategory cat = TypeCategorization.GetCategory(def);
+        if (cat == TypeCategory.Enum) { return false; }  // handled by IsBlittablePrimitive
+        if (cat != TypeCategory.Struct) { return false; }
+        return IsTypeBlittable(def);
+    }
+
+    /// <summary>Returns the ABI type name for a blittable struct (the projected type name).</summary>
+    private static string GetBlittableStructAbiType(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        return w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, sig, false)));
     }
 
     private static string GetAbiPrimitiveType(AsmResolver.DotNet.Signatures.TypeSignature sig)
@@ -1363,14 +1444,24 @@ internal static partial class CodeWriters
             };
         }
         // Enum: use its underlying numeric type
-        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td && td.Type is TypeDefinition def)
+        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
         {
-            // Find the enum's value__ field for the underlying type
-            foreach (FieldDefinition f in def.Fields)
+            TypeDefinition? def = td.Type as TypeDefinition;
+            if (def is null && _cacheRef is not null && td.Type is TypeReference tr)
             {
-                if (!f.IsStatic && f.Signature?.FieldType is AsmResolver.DotNet.Signatures.CorLibTypeSignature ut)
+                string ns = tr.Namespace?.Value ?? string.Empty;
+                string name = tr.Name?.Value ?? string.Empty;
+                def = _cacheRef.Find(ns + "." + name);
+            }
+            if (def is not null)
+            {
+                // Find the enum's value__ field for the underlying type
+                foreach (FieldDefinition f in def.Fields)
                 {
-                    return GetAbiFundamentalTypeFromCorLib(ut.ElementType);
+                    if (!f.IsStatic && f.Signature?.FieldType is AsmResolver.DotNet.Signatures.CorLibTypeSignature ut)
+                    {
+                        return GetAbiFundamentalTypeFromCorLib(ut.ElementType);
+                    }
                 }
             }
         }
@@ -1465,7 +1556,12 @@ internal static partial class CodeWriters
                 w.Write("global::WindowsRuntime.InteropServices.WindowsRuntimeTypeName");
                 break;
             case TypeSemantics.Definition d:
-                if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Enum or TypeCategory.Struct)
+                if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Enum)
+                {
+                    // For enums, use the underlying primitive type at the ABI (matches truth output).
+                    w.Write(GetAbiPrimitiveType(d.Type.ToTypeSignature()));
+                }
+                else if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Struct)
                 {
                     if (IsTypeBlittable(d.Type))
                     {
@@ -1480,6 +1576,43 @@ internal static partial class CodeWriters
                 {
                     w.Write("void*");
                 }
+                break;
+            case TypeSemantics.Reference r:
+                // Cross-module typeref: try mapped-type lookup first (e.g. System.Exception -> Windows.Foundation.HResult),
+                // then resolve to check if it's an enum/struct.
+                if (_cacheRef is not null)
+                {
+                    string rns = r.Reference_.Namespace?.Value ?? string.Empty;
+                    string rname = r.Reference_.Name?.Value ?? string.Empty;
+                    // Apply mapped-type remapping first.
+                    MappedType? rmapped = MappedTypes.Get(rns, rname);
+                    string lookupNs = rmapped?.MappedNamespace ?? rns;
+                    string lookupName = rmapped?.MappedName ?? rname;
+                    TypeDefinition? rd = _cacheRef.Find(lookupNs + "." + lookupName);
+                    if (rd is not null)
+                    {
+                        TypeCategory cat = TypeCategorization.GetCategory(rd);
+                        if (cat == TypeCategory.Enum)
+                        {
+                            // Use the underlying primitive type for enums.
+                            w.Write(GetAbiPrimitiveType(rd.ToTypeSignature()));
+                            break;
+                        }
+                        if (cat == TypeCategory.Struct)
+                        {
+                            if (IsTypeBlittable(rd))
+                            {
+                                WriteTypedefName(w, rd, TypedefNameType.Projected, true);
+                            }
+                            else
+                            {
+                                WriteTypedefName(w, rd, TypedefNameType.ABI, true);
+                            }
+                            break;
+                        }
+                    }
+                }
+                w.Write("void*");
                 break;
             case TypeSemantics.GenericInstance:
                 w.Write("void*");
