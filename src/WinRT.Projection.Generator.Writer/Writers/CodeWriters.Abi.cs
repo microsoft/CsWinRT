@@ -332,21 +332,24 @@ internal static partial class CodeWriters
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
         bool allParamsSimple = true;
+        bool hasStringParams = false;
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
-            if (!IsBlittablePrimitive(p.Type)) { allParamsSimple = false; break; }
+            if (IsBlittablePrimitive(p.Type)) { continue; }
+            if (IsString(p.Type)) { hasStringParams = true; continue; }
+            allParamsSimple = false;
+            break;
         }
-        bool returnSimple = rt is null || IsBlittablePrimitive(rt);
+        bool returnSimple = rt is null || IsBlittablePrimitive(rt) || IsString(rt);
+        bool returnIsString = rt is not null && IsString(rt);
 
         bool isGetter = methodName.StartsWith("get_", System.StringComparison.Ordinal);
         bool isSetter = methodName.StartsWith("put_", System.StringComparison.Ordinal);
         bool isAddEvent = methodName.StartsWith("add_", System.StringComparison.Ordinal);
         bool isRemoveEvent = methodName.StartsWith("remove_", System.StringComparison.Ordinal);
 
-        // Event accessors require event lifetime tracking (token return, registration storage) —
-        // too involved for a primitive-only fast path; defer.
         if (isAddEvent || isRemoveEvent || !allParamsSimple || !returnSimple)
         {
             w.Write(" => throw null!;\n\n");
@@ -356,19 +359,27 @@ internal static partial class CodeWriters
         w.Write("\n{\n");
         if (rt is not null)
         {
-            // Initialize the out parameter to default first
             w.Write("    *__retval = default;\n");
         }
-        w.Write("    try\n    {\n        ");
-        if (rt is not null)
+        w.Write("    try\n    {\n");
+        if (returnIsString)
+        {
+            w.Write("        string __result = ");
+        }
+        else if (rt is not null)
         {
             string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
+            w.Write("        ");
             w.Write(projected);
             w.Write(" __result = ");
         }
+        else
+        {
+            w.Write("        ");
+        }
+
         if (isGetter)
         {
-            // Property getter: instance.PropertyName
             string propName = methodName.Substring(4);
             w.Write("ComInterfaceDispatch.GetInstance<");
             w.Write(ifaceFullName);
@@ -378,7 +389,6 @@ internal static partial class CodeWriters
         }
         else if (isSetter)
         {
-            // Property setter: instance.PropertyName = value (cast as needed)
             string propName = methodName.Substring(4);
             w.Write("ComInterfaceDispatch.GetInstance<");
             w.Write(ifaceFullName);
@@ -390,7 +400,6 @@ internal static partial class CodeWriters
         }
         else
         {
-            // Method call: instance.Method(args)
             w.Write("ComInterfaceDispatch.GetInstance<");
             w.Write(ifaceFullName);
             w.Write(">((ComInterfaceDispatch*)thisPtr).");
@@ -405,34 +414,44 @@ internal static partial class CodeWriters
         }
         if (rt is not null)
         {
-            string abiType = GetAbiPrimitiveType(rt);
-            w.Write("        *__retval = ");
-            // Convert managed -> ABI
-            if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
-                corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+            if (returnIsString)
             {
-                w.Write("(byte)(__result ? 1 : 0);\n");
-            }
-            else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
-                     corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
-            {
-                w.Write("(ushort)__result;\n");
-            }
-            else if (rt is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td &&
-                     td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
-            {
-                w.Write("(");
-                w.Write(abiType);
-                w.Write(")__result;\n");
+                w.Write("        *__retval = HStringMarshaller.ConvertToUnmanaged(__result);\n");
             }
             else
             {
-                w.Write("__result;\n");
+                string abiType = GetAbiPrimitiveType(rt);
+                w.Write("        *__retval = ");
+                if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
+                    corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+                {
+                    w.Write("(byte)(__result ? 1 : 0);\n");
+                }
+                else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
+                         corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+                {
+                    w.Write("(ushort)__result;\n");
+                }
+                else if (rt is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td &&
+                         td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
+                {
+                    w.Write("(");
+                    w.Write(abiType);
+                    w.Write(")__result;\n");
+                }
+                else
+                {
+                    w.Write("__result;\n");
+                }
             }
         }
         w.Write("        return 0;\n    }\n");
         w.Write("    catch (Exception __exception__)\n    {\n");
         w.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n\n");
+        // Note: hasStringParams unused — input string params already converted via
+        // EmitDoAbiParamArgConversion which currently treats them as ABI void* and
+        // calls HStringMarshaller.ConvertToManaged inline.
+        _ = hasStringParams;
     }
 
     /// <summary>Converts an ABI parameter to its projected (managed) form for the Do_Abi call.</summary>
@@ -450,6 +469,13 @@ internal static partial class CodeWriters
         {
             w.Write("(char)");
             w.Write(pname);
+        }
+        else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibStr &&
+                 corlibStr.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String)
+        {
+            w.Write("HStringMarshaller.ConvertToManaged(");
+            w.Write(pname);
+            w.Write(")");
         }
         else if (p.Type is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td &&
                  td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
