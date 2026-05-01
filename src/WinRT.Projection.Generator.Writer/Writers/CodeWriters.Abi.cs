@@ -780,14 +780,18 @@ internal static partial class CodeWriters
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
-        // Check that all parameters are blittable primitives that we can marshal directly.
+        // Check that all parameters are types we can marshal (blittable primitives or string).
         bool allParamsSimple = true;
+        bool hasStringParams = false;
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            // Only support 'In' parameters that are blittable primitives.
+            // Only support 'In' parameters that are blittable primitives or string.
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
-            if (!IsBlittablePrimitive(p.Type)) { allParamsSimple = false; break; }
+            if (IsBlittablePrimitive(p.Type)) { continue; }
+            if (IsString(p.Type)) { hasStringParams = true; continue; }
+            allParamsSimple = false;
+            break;
         }
         bool returnSimple = rt is null || IsBlittablePrimitive(rt) || IsString(rt);
 
@@ -797,23 +801,22 @@ internal static partial class CodeWriters
             return;
         }
 
+        bool returnIsString = rt is not null && IsString(rt);
+
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
         System.Text.StringBuilder fp = new();
         fp.Append("void*");
         foreach (ParamInfo p in sig.Params)
         {
             fp.Append(", ");
-            fp.Append(GetAbiPrimitiveType(p.Type));
+            if (IsString(p.Type)) { fp.Append("void*"); }
+            else { fp.Append(GetAbiPrimitiveType(p.Type)); }
         }
         if (rt is not null)
         {
             fp.Append(", ");
-            if (IsString(rt)) { fp.Append("void**"); }
-            else
-            {
-                fp.Append(GetAbiPrimitiveType(rt));
-                fp.Append('*');
-            }
+            if (returnIsString) { fp.Append("void**"); }
+            else { fp.Append(GetAbiPrimitiveType(rt)); fp.Append('*'); }
         }
         fp.Append(", int");
 
@@ -821,77 +824,126 @@ internal static partial class CodeWriters
         w.Write("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();\n");
         w.Write("        void* ThisPtr = thisValue.GetThisPtrUnsafe();\n");
 
-        if (rt is null)
+        // Declare locals for string parameters (input HSTRINGs to be freed) and the string return.
+        for (int i = 0; i < sig.Params.Count; i++)
         {
-            // Void return
-            w.Write("        RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
-            w.Write(fp.ToString());
-            w.Write(">**)ThisPtr)[");
-            w.Write(slot);
-            w.Write("](ThisPtr");
-            for (int i = 0; i < sig.Params.Count; i++)
+            if (IsString(sig.Params[i].Type))
             {
-                w.Write(", ");
-                EmitParamArgConversion(w, sig.Params[i], paramNameOverride);
+                w.Write("        void* __");
+                w.Write(GetParamName(sig.Params[i], paramNameOverride));
+                w.Write(" = default;\n");
             }
-            w.Write("));\n    }\n");
         }
-        else if (IsString(rt))
+        if (returnIsString)
         {
-            // String return: void* __retval, HStringMarshaller.ConvertToManaged + Free in finally
             w.Write("        void* __retval = default;\n");
-            w.Write("        try\n        {\n");
-            w.Write("            RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
-            w.Write(fp.ToString());
-            w.Write(">**)ThisPtr)[");
-            w.Write(slot);
-            w.Write("](ThisPtr");
-            for (int i = 0; i < sig.Params.Count; i++)
-            {
-                w.Write(", ");
-                EmitParamArgConversion(w, sig.Params[i], paramNameOverride);
-            }
-            w.Write(", &__retval));\n");
-            w.Write("            return HStringMarshaller.ConvertToManaged(__retval);\n");
-            w.Write("        }\n        finally\n        {\n");
-            w.Write("            HStringMarshaller.Free(__retval);\n");
-            w.Write("        }\n    }\n");
         }
-        else
+        else if (rt is not null)
         {
-            // Primitive return
-            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
-            string abiType = GetAbiPrimitiveType(rt);
             w.Write("        ");
-            w.Write(abiType);
+            w.Write(GetAbiPrimitiveType(rt));
             w.Write(" __retval = default;\n");
-            w.Write("        RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
-            w.Write(fp.ToString());
-            w.Write(">**)ThisPtr)[");
-            w.Write(slot);
-            w.Write("](ThisPtr");
-            for (int i = 0; i < sig.Params.Count; i++)
+        }
+
+        // Determine if we need a try/finally (for cleanup of string params or string return).
+        bool needsTryFinally = hasStringParams || returnIsString;
+        if (needsTryFinally) { w.Write("        try\n        {\n"); }
+
+        // Build the call line.
+        string indent = needsTryFinally ? "            " : "        ";
+        // First, marshal string params to local void* vars.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            if (IsString(sig.Params[i].Type))
             {
-                w.Write(", ");
-                EmitParamArgConversion(w, sig.Params[i], paramNameOverride);
+                string pname = GetParamName(sig.Params[i], paramNameOverride);
+                w.Write(indent);
+                w.Write("__");
+                w.Write(pname);
+                w.Write(" = HStringMarshaller.ConvertToUnmanaged(");
+                w.Write(pname);
+                w.Write(");\n");
             }
-            w.Write(", &__retval));\n");
-            if (projected == "bool")
+        }
+
+        w.Write(indent);
+        w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
+        w.Write(fp.ToString());
+        w.Write(">**)ThisPtr)[");
+        w.Write(slot);
+        w.Write("](ThisPtr");
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            w.Write(", ");
+            if (IsString(sig.Params[i].Type))
             {
-                w.Write("        return __retval != 0;\n");
-            }
-            else if (projected == abiType)
-            {
-                w.Write("        return __retval;\n");
+                w.Write("__");
+                w.Write(GetParamName(sig.Params[i], paramNameOverride));
             }
             else
             {
-                w.Write("        return (");
-                w.Write(projected);
-                w.Write(")__retval;\n");
+                EmitParamArgConversion(w, sig.Params[i], paramNameOverride);
             }
-            w.Write("    }\n");
         }
+        if (rt is not null)
+        {
+            w.Write(", &__retval");
+        }
+        w.Write("));\n");
+
+        // Return value
+        if (rt is not null)
+        {
+            if (returnIsString)
+            {
+                w.Write(indent);
+                w.Write("return HStringMarshaller.ConvertToManaged(__retval);\n");
+            }
+            else
+            {
+                w.Write(indent);
+                w.Write("return ");
+                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
+                string abiType = GetAbiPrimitiveType(rt);
+                if (projected == "bool") { w.Write("__retval != 0;\n"); }
+                else if (projected == abiType) { w.Write("__retval;\n"); }
+                else
+                {
+                    w.Write("(");
+                    w.Write(projected);
+                    w.Write(")__retval;\n");
+                }
+            }
+        }
+
+        if (needsTryFinally)
+        {
+            w.Write("        }\n        finally\n        {\n");
+            // Free string params (input)
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                if (IsString(sig.Params[i].Type))
+                {
+                    string pname = GetParamName(sig.Params[i], paramNameOverride);
+                    w.Write("            HStringMarshaller.Free(__");
+                    w.Write(pname);
+                    w.Write(");\n");
+                }
+            }
+            // Free string return
+            if (returnIsString)
+            {
+                w.Write("            HStringMarshaller.Free(__retval);\n");
+            }
+            w.Write("        }\n");
+        }
+
+        w.Write("    }\n");
+    }
+
+    private static string GetParamName(ParamInfo p, string? paramNameOverride)
+    {
+        return paramNameOverride ?? p.Parameter.Name ?? "param";
     }
 
     private static bool IsString(AsmResolver.DotNet.Signatures.TypeSignature sig)
