@@ -243,15 +243,34 @@ internal static partial class CodeWriters
         {
             string ins = ifaceRef.Namespace?.Value ?? string.Empty;
             string inm = ifaceRef.Name?.Value ?? string.Empty;
+            // Apply mapped-type remapping (e.g. IClosable -> System.IDisposable)
+            MappedType? mapped = MappedTypes.Get(ins, inm);
+            if (mapped is not null)
+            {
+                ins = mapped.MappedNamespace;
+                inm = mapped.MappedName;
+            }
             interfaceName = $"global::{ins}.{Helpers.StripBackticks(inm)}";
         }
         else if (ifaceDef is not null)
         {
-            interfaceName = w.WriteTemp("%", new Action<TextWriter>(tw =>
+            // Apply mapped-type remapping
+            string ins = ifaceDef.Namespace?.Value ?? string.Empty;
+            string inm = ifaceDef.Name?.Value ?? string.Empty;
+            MappedType? mappedDef = MappedTypes.Get(ins, inm);
+            if (mappedDef is not null)
             {
-                WriteTypedefName(w, ifaceDef, TypedefNameType.CCW, true);
-                WriteTypeParams(w, ifaceDef);
-            }));
+                interfaceName = $"global::{mappedDef.MappedNamespace}.{Helpers.StripBackticks(mappedDef.MappedName)}";
+            }
+            else
+            {
+                TypeDefinition capturedIface = ifaceDef;
+                interfaceName = w.WriteTemp("%", new Action<TextWriter>(tw =>
+                {
+                    WriteTypedefName(w, capturedIface, TypedefNameType.CCW, true);
+                    WriteTypeParams(w, capturedIface);
+                }));
+            }
         }
         else
         {

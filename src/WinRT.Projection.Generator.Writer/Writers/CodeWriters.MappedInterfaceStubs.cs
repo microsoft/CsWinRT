@@ -166,7 +166,8 @@ internal static partial class CodeWriters
     {
         if (args.Count != 1) { return; }
         string t = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
-        w.Write($"\npublic {t} this[int index] {{ get => throw null!; set => throw null!; }}\n");
+        w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"ListItem\")]\n");
+        w.Write($"public {t} this[int index] {{ get => throw null!; set => throw null!; }}\n");
         w.Write("public int Count => throw null!;\n");
         w.Write("public bool IsReadOnly => throw null!;\n");
         w.Write($"public void Add({t} item) => throw null!;\n");
@@ -185,7 +186,8 @@ internal static partial class CodeWriters
     {
         if (args.Count != 1) { return; }
         string t = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
-        w.Write($"\npublic {t} this[int index] => throw null!;\n");
+        w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"ReadOnlyListItem\")]\n");
+        w.Write($"public {t} this[int index] => throw null!;\n");
         w.Write("public int Count => throw null!;\n");
         w.Write($"public global::System.Collections.Generic.IEnumerator<{t}> GetEnumerator() => throw null!;\n");
         w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
@@ -193,7 +195,8 @@ internal static partial class CodeWriters
 
     private static void EmitNonGenericList(TypeWriter w)
     {
-        w.Write("\npublic object this[int index] { get => throw null!; set => throw null!; }\n");
+        w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"BindableListItem\")]\n");
+        w.Write("public object this[int index] { get => throw null!; set => throw null!; }\n");
         w.Write("public int Count => throw null!;\n");
         w.Write("public bool IsReadOnly => throw null!;\n");
         w.Write("public bool IsFixedSize => throw null!;\n");

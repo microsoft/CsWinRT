@@ -27,6 +27,41 @@ internal static partial class CodeWriters
         HashSet<string> writtenEvents = new(System.StringComparer.Ordinal);
         HashSet<TypeDefinition> writtenInterfaces = new();
 
+        // Pre-pass: walk all (transitive) implemented interfaces to identify mapped interfaces
+        // that are *subsumed* by another mapped interface in the implemented set (e.g. IIterable`1
+        // is subsumed by IVector`1 because IList<T>'s stub members already cover IEnumerable<T>'s).
+        // Mark subsumed interfaces as already-written so the recursion skips them.
+        HashSet<TypeDefinition> allMappedImplemented = new();
+        CollectAllMappedInterfaces(type, allMappedImplemented);
+        bool hasIVector = HasMapped(allMappedImplemented, "Windows.Foundation.Collections", "IVector`1");
+        bool hasIVectorView = HasMapped(allMappedImplemented, "Windows.Foundation.Collections", "IVectorView`1");
+        bool hasIMap = HasMapped(allMappedImplemented, "Windows.Foundation.Collections", "IMap`2");
+        bool hasIMapView = HasMapped(allMappedImplemented, "Windows.Foundation.Collections", "IMapView`2");
+        bool hasIBindableVector = HasMapped(allMappedImplemented, "Microsoft.UI.Xaml.Interop", "IBindableVector")
+                                  || HasMapped(allMappedImplemented, "Windows.UI.Xaml.Interop", "IBindableVector");
+        if (hasIVector || hasIVectorView || hasIMap || hasIMapView)
+        {
+            // IIterable`1 is subsumed by any of the above.
+            foreach (TypeDefinition td in allMappedImplemented)
+            {
+                if (td.Namespace?.Value == "Windows.Foundation.Collections" && td.Name?.Value == "IIterable`1")
+                {
+                    _ = writtenInterfaces.Add(td);
+                }
+            }
+        }
+        if (hasIBindableVector)
+        {
+            foreach (TypeDefinition td in allMappedImplemented)
+            {
+                if ((td.Namespace?.Value == "Microsoft.UI.Xaml.Interop" || td.Namespace?.Value == "Windows.UI.Xaml.Interop")
+                    && td.Name?.Value == "IBindableIterable")
+                {
+                    _ = writtenInterfaces.Add(td);
+                }
+            }
+        }
+
         WriteInterfaceMembersRecursive(w, type, type, null, writtenMethods, propertyState, writtenEvents, writtenInterfaces);
 
         // After collecting all properties (with merged accessors), emit them.
@@ -56,6 +91,46 @@ internal static partial class CodeWriters
             w.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
             WriteInterfaceTypeNameForCcw(w, impl.Interface);
             w.Write(">.GetInterface() => throw null!;\n");
+        }
+    }
+
+    private static string BuildMethodSignatureKey(string name, MethodSig sig)
+    {
+        System.Text.StringBuilder sb = new();
+        sb.Append(name);
+        sb.Append('(');
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            if (i > 0) { sb.Append(','); }
+            sb.Append(sig.Params[i].Type?.FullName ?? "?");
+        }
+        sb.Append(')');
+        return sb.ToString();
+    }
+
+    private static bool HasMapped(HashSet<TypeDefinition> set, string ns, string name)
+    {
+        foreach (TypeDefinition td in set)
+        {
+            if (td.Namespace?.Value == ns && td.Name?.Value == name) { return true; }
+        }
+        return false;
+    }
+
+    private static void CollectAllMappedInterfaces(TypeDefinition declaringType, HashSet<TypeDefinition> result)
+    {
+        foreach (InterfaceImplementation impl in declaringType.Interfaces)
+        {
+            if (impl.Interface is null) { continue; }
+            TypeDefinition? td = ResolveInterface(impl.Interface);
+            if (td is null) { continue; }
+            string ns = td.Namespace?.Value ?? string.Empty;
+            string name = td.Name?.Value ?? string.Empty;
+            if (MappedTypes.Get(ns, name) is { HasCustomMembersOutput: true })
+            {
+                _ = result.Add(td);
+            }
+            CollectAllMappedInterfaces(td, result);
         }
     }
 
@@ -224,9 +299,10 @@ internal static partial class CodeWriters
         {
             if (Helpers.IsSpecial(method)) { continue; }
             string name = method.Name?.Value ?? string.Empty;
-            // Track by signature key (name + param count) to avoid trivial overload duplicates
+            // Track by full signature (name + each param's element-type code) to avoid trivial overload duplicates.
+            // This prevents collapsing distinct overloads like Format(double) and Format(ulong).
             MethodSig sig = new(method, genCtx);
-            string key = name + ":" + sig.Params.Count;
+            string key = BuildMethodSignatureKey(name, sig);
             if (!writtenMethods.Add(key)) { continue; }
 
             w.Write("\n");
