@@ -344,7 +344,9 @@ internal static partial class CodeWriters
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
+            if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
+            if (IsBlittableStruct(p.Type)) { continue; }
             if (IsString(p.Type)) { hasStringParams = true; continue; }
             if (IsRuntimeClassOrInterface(p.Type)) { continue; }
             if (IsObject(p.Type)) { continue; }
@@ -353,7 +355,8 @@ internal static partial class CodeWriters
             break;
         }
         bool returnSimple = rt is null
-            || IsBlittablePrimitive(rt)
+            || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
+            || (IsBlittableStruct(rt) && !IsHResultException(rt))
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
             || IsObject(rt)
@@ -361,6 +364,7 @@ internal static partial class CodeWriters
         bool returnIsString = rt is not null && IsString(rt);
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
         bool returnIsGenericInstance = rt is not null && IsGenericInstance(rt);
+        bool returnIsBlittableStruct = rt is not null && IsBlittableStruct(rt);
 
         bool isGetter = methodName.StartsWith("get_", System.StringComparison.Ordinal);
         bool isSetter = methodName.StartsWith("put_", System.StringComparison.Ordinal);
@@ -494,6 +498,10 @@ internal static partial class CodeWriters
                     w.Write(".DetachThisPtrUnsafe();\n");
                 }
             }
+            else if (returnIsBlittableStruct)
+            {
+                w.Write("        *__retval = __result;\n");
+            }
             else
             {
                 string abiType = GetAbiPrimitiveType(rt);
@@ -560,6 +568,11 @@ internal static partial class CodeWriters
         else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type))
         {
             EmitMarshallerConvertToManaged(w, p.Type, pname);
+        }
+        else if (IsBlittableStruct(p.Type))
+        {
+            // Blittable struct: pass directly (projected type == ABI type)
+            w.Write(pname);
         }
         else if (IsEnumType(p.Type))
         {
@@ -932,6 +945,7 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             // Only support 'In' parameters
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
+            if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
             if (IsBlittableStruct(p.Type)) { continue; }
             if (IsString(p.Type)) { continue; }
@@ -942,8 +956,8 @@ internal static partial class CodeWriters
             break;
         }
         bool returnSimple = rt is null
-            || IsBlittablePrimitive(rt)
-            || IsBlittableStruct(rt)
+            || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
+            || (IsBlittableStruct(rt) && !IsHResultException(rt))
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
             || IsObject(rt)
@@ -1198,6 +1212,17 @@ internal static partial class CodeWriters
     {
         return sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
                corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object;
+    }
+
+    /// <summary>True if the type signature represents Windows.Foundation.HResult / System.Exception
+    /// (special-cased: ABI is int but projected is Exception, requires custom marshalling).</summary>
+    private static bool IsHResultException(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
+        string ns = td.Type?.Namespace?.Value ?? string.Empty;
+        string name = td.Type?.Name?.Value ?? string.Empty;
+        return (ns == "System" && name == "Exception")
+            || (ns == "Windows.Foundation" && name == "HResult");
     }
 
     /// <summary>True if the type signature represents an enum (resolves cross-module typerefs).</summary>
@@ -1578,17 +1603,23 @@ internal static partial class CodeWriters
                 }
                 break;
             case TypeSemantics.Reference r:
-                // Cross-module typeref: try mapped-type lookup first (e.g. System.Exception -> Windows.Foundation.HResult),
-                // then resolve to check if it's an enum/struct.
+                // Cross-module typeref: try resolving the type, applying mapped-type translation
+                // for the field/parameter type after resolution.
                 if (_cacheRef is not null)
                 {
                     string rns = r.Reference_.Namespace?.Value ?? string.Empty;
                     string rname = r.Reference_.Name?.Value ?? string.Empty;
-                    // Apply mapped-type remapping first.
-                    MappedType? rmapped = MappedTypes.Get(rns, rname);
-                    string lookupNs = rmapped?.MappedNamespace ?? rns;
-                    string lookupName = rmapped?.MappedName ?? rname;
-                    TypeDefinition? rd = _cacheRef.Find(lookupNs + "." + lookupName);
+                    // Look up the type by its ORIGINAL (unmapped) name in the cache.
+                    TypeDefinition? rd = _cacheRef.Find(rns + "." + rname);
+                    // If not found, try the mapped name (for cases where the mapping target is in the cache).
+                    if (rd is null)
+                    {
+                        MappedType? rmapped = MappedTypes.Get(rns, rname);
+                        if (rmapped is not null)
+                        {
+                            rd = _cacheRef.Find(rmapped.MappedNamespace + "." + rmapped.MappedName);
+                        }
+                    }
                     if (rd is not null)
                     {
                         TypeCategory cat = TypeCategorization.GetCategory(rd);
@@ -1600,6 +1631,15 @@ internal static partial class CodeWriters
                         }
                         if (cat == TypeCategory.Struct)
                         {
+                            // Special case: HResult is mapped to System.Exception (a reference type)
+                            // but its ABI representation is int (the underlying value).
+                            string rdNs = rd.Namespace?.Value ?? string.Empty;
+                            string rdName = rd.Name?.Value ?? string.Empty;
+                            if (rdNs == "Windows.Foundation" && rdName == "HResult")
+                            {
+                                w.Write("int");
+                                break;
+                            }
                             if (IsTypeBlittable(rd))
                             {
                                 WriteTypedefName(w, rd, TypedefNameType.Projected, true);
