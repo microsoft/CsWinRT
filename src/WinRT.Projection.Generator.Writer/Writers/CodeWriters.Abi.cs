@@ -555,9 +555,10 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Writes a minimal interface 'Methods' static class with method signature stubs (no bodies).
-    /// Mirrors C++ <c>write_static_abi_methods</c> at signature level — bodies are 'throw null!'
-    /// stubs so consumers (e.g. handcrafted ComInteropExtensions.cs) can compile against them.
+    /// Writes a minimal interface 'Methods' static class with method body emission.
+    /// Mirrors C++ <c>write_static_abi_methods</c>: void/no-args methods and
+    /// blittable-primitive-return/no-args methods get real implementations; everything else
+    /// remains as 'throw null!' stubs (deferred — needs full per-parameter marshalling).
     /// </summary>
     private static void WriteInterfaceMarshallerStub(TypeWriter w, TypeDefinition type)
     {
@@ -567,6 +568,9 @@ internal static partial class CodeWriters
         w.Write(nameStripped);
         w.Write("Methods\n{\n");
 
+        // Compute the index of each non-special method in the interface (for vtable slot calculation).
+        // The first non-special method gets slot 6 (after the 6 IUnknown+IInspectable slots).
+        int slot = 6;
         foreach (MethodDefinition method in type.Methods)
         {
             if (Helpers.IsSpecial(method)) { continue; }
@@ -580,34 +584,180 @@ internal static partial class CodeWriters
             w.Write("(WindowsRuntimeObjectReference thisReference");
             if (sig.Params.Count > 0) { w.Write(", "); }
             WriteParameterList(w, sig);
-            w.Write(") => throw null!;\n");
+            w.Write(")");
+
+            // Emit the body if we can handle this case
+            EmitAbiMethodBodyIfSimple(w, sig, slot);
+            slot++;
         }
 
-        // Emit property accessors
+        // Emit property accessors. Each getter / setter consumes one vtable slot.
         foreach (PropertyDefinition prop in type.Properties)
         {
             string pname = prop.Name?.Value ?? string.Empty;
             (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
             string propType = WritePropType(w, prop);
-            if (getter is not null)
+            (MethodDefinition? gMethod, MethodDefinition? sMethod) = (getter, setter);
+            if (gMethod is not null)
             {
                 w.Write("    public static ");
                 w.Write(propType);
                 w.Write(" ");
                 w.Write(pname);
-                w.Write("(WindowsRuntimeObjectReference thisReference) => throw null!;\n");
+                w.Write("(WindowsRuntimeObjectReference thisReference)");
+                MethodSig getSig = new(gMethod);
+                EmitAbiMethodBodyIfSimple(w, getSig, slot);
+                slot++;
             }
-            if (setter is not null)
+            if (sMethod is not null)
             {
                 w.Write("    public static void ");
                 w.Write(pname);
                 w.Write("(WindowsRuntimeObjectReference thisReference, ");
                 w.Write(propType);
-                w.Write(" value) => throw null!;\n");
+                w.Write(" value)");
+                MethodSig setSig = new(sMethod);
+                EmitAbiMethodBodyIfSimple(w, setSig, slot);
+                slot++;
             }
         }
 
         w.Write("}\n");
+    }
+
+    /// <summary>
+    /// Emits a real method body for the cases we can fully marshal, otherwise emits
+    /// the 'throw null!' stub. Trailing newline is included.
+    /// </summary>
+    private static void EmitAbiMethodBodyIfSimple(TypeWriter w, MethodSig sig, int slot)
+    {
+        AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
+
+        // Case 1: void method, no parameters
+        if (rt is null && sig.Params.Count == 0)
+        {
+            w.Write("\n    {\n");
+            w.Write("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();\n");
+            w.Write("        void* ThisPtr = thisValue.GetThisPtrUnsafe();\n");
+            w.Write("        RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, int>**)ThisPtr)[");
+            w.Write(slot);
+            w.Write("](ThisPtr));\n    }\n");
+            return;
+        }
+
+        // Case 2: blittable primitive return, no parameters
+        if (rt is not null && sig.Params.Count == 0 && IsBlittablePrimitive(rt))
+        {
+            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
+            string abiType = GetAbiPrimitiveType(rt);
+            w.Write("\n    {\n");
+            w.Write("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();\n");
+            w.Write("        void* ThisPtr = thisValue.GetThisPtrUnsafe();\n");
+            w.Write("        ");
+            w.Write(abiType);
+            w.Write(" __retval = default;\n");
+            w.Write("        RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
+            w.Write(abiType);
+            w.Write("*, int>**)ThisPtr)[");
+            w.Write(slot);
+            w.Write("](ThisPtr, &__retval));\n");
+            // bool needs the byte->bool conversion
+            if (projected == "bool")
+            {
+                w.Write("        return __retval != 0;\n");
+            }
+            else if (projected == abiType)
+            {
+                w.Write("        return __retval;\n");
+            }
+            else
+            {
+                // Enums: same bit width but different type; cast.
+                w.Write("        return (");
+                w.Write(projected);
+                w.Write(")__retval;\n");
+            }
+            w.Write("    }\n");
+            return;
+        }
+
+        // Default: throw null! stub
+        w.Write(" => throw null!;\n");
+    }
+
+    /// <summary>True if the type is a blittable primitive (or enum) directly representable
+    /// at the ABI: bool/byte/sbyte/short/ushort/int/uint/long/ulong/float/double/char and enums.</summary>
+    private static bool IsBlittablePrimitive(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
+        {
+            return corlib.ElementType is
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean or
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1 or
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1 or
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2 or
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2 or
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 or
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 or
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8 or
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8 or
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R4 or
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8 or
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char;
+        }
+        // Enum (TypeDefOrRef-based value type with non-Object base)
+        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+        {
+            if (td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static string GetAbiPrimitiveType(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
+        {
+            return corlib.ElementType switch
+            {
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean => "byte",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char => "ushort",
+                _ => GetAbiFundamentalTypeFromCorLib(corlib.ElementType),
+            };
+        }
+        // Enum: use its underlying numeric type
+        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td && td.Type is TypeDefinition def)
+        {
+            // Find the enum's value__ field for the underlying type
+            foreach (FieldDefinition f in def.Fields)
+            {
+                if (!f.IsStatic && f.Signature?.FieldType is AsmResolver.DotNet.Signatures.CorLibTypeSignature ut)
+                {
+                    return GetAbiFundamentalTypeFromCorLib(ut.ElementType);
+                }
+            }
+        }
+        return "int";
+    }
+
+    private static string GetAbiFundamentalTypeFromCorLib(AsmResolver.PE.DotNet.Metadata.Tables.ElementType et)
+    {
+        return et switch
+        {
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1 => "sbyte",
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1 => "byte",
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2 => "short",
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2 => "ushort",
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 => "int",
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 => "uint",
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8 => "long",
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8 => "ulong",
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R4 => "float",
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8 => "double",
+            _ => "int",
+        };
     }
 
     /// <summary>
