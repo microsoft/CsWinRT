@@ -671,9 +671,45 @@ internal static partial class CodeWriters
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = Helpers.StripBackticks(name);
-        w.Write("internal sealed class ");
+        string typeNs = type.Namespace?.Value ?? string.Empty;
+        string fullProjected = $"global::{typeNs}.{nameStripped}";
+
+        // Compute the IID expression for this delegate (uses the DelegateMarshaller's IID convention).
+        string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
+
+        // Public *Marshaller class
+        w.Write("\npublic static unsafe class ");
         w.Write(nameStripped);
-        w.Write("ComWrappersMarshaller : global::System.Attribute\n{\n}\n");
+        w.Write("Marshaller\n{\n");
+        w.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
+        w.Write(fullProjected);
+        w.Write(" value)\n    {\n");
+        w.Write("        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in ");
+        w.Write(iidExpr);
+        w.Write(");\n    }\n\n");
+        w.Write("    public static ");
+        w.Write(fullProjected);
+        w.Write("? ConvertToManaged(void* value)\n    {\n");
+        w.Write("        return (");
+        w.Write(fullProjected);
+        w.Write("?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<");
+        w.Write(nameStripped);
+        w.Write("ComWrappersCallback>(value);\n    }\n}\n\n");
+
+        // The *ComWrappersMarshallerAttribute class — referenced via [ABI.NS.NameComWrappersMarshaller]
+        // on the delegate definition. For now keep an empty attribute that derives from the base.
+        w.Write("internal sealed unsafe class ");
+        w.Write(nameStripped);
+        w.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
+        w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags) => throw null!;\n");
+        w.Write("}\n\n");
+
+        // file-scoped *ComWrappersCallback for delegate
+        w.Write("file sealed unsafe class ");
+        w.Write(nameStripped);
+        w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
+        w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags) => throw null!;\n");
+        w.Write("}\n");
     }
 
     /// <summary>
@@ -1038,7 +1074,7 @@ internal static partial class CodeWriters
                corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object;
     }
 
-    /// <summary>True if the type signature represents a WinRT runtime class or interface (reference type marshallable via *Marshaller).</summary>
+    /// <summary>True if the type signature represents a WinRT runtime class, interface, or delegate (reference type marshallable via *Marshaller).</summary>
     private static bool IsRuntimeClassOrInterface(AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
@@ -1047,7 +1083,7 @@ internal static partial class CodeWriters
             if (td.Type is TypeDefinition def)
             {
                 TypeCategory cat = TypeCategorization.GetCategory(def);
-                return cat is TypeCategory.Class or TypeCategory.Interface;
+                return cat is TypeCategory.Class or TypeCategory.Interface or TypeCategory.Delegate;
             }
             // Cross-module typeref: try to resolve via the metadata cache to check category.
             string ns = td.Type?.Namespace?.Value ?? string.Empty;
@@ -1066,7 +1102,7 @@ internal static partial class CodeWriters
                 if (resolved is not null)
                 {
                     TypeCategory cat = TypeCategorization.GetCategory(resolved);
-                    return cat is TypeCategory.Class or TypeCategory.Interface;
+                    return cat is TypeCategory.Class or TypeCategory.Interface or TypeCategory.Delegate;
                 }
             }
             return false;
