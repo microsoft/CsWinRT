@@ -806,20 +806,25 @@ internal static partial class CodeWriters
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
-        // Check that all parameters are types we can marshal (blittable primitives or string).
+        // Check that all parameters are types we can marshal (blittable primitives, string, runtime class, or object).
         bool allParamsSimple = true;
-        bool hasStringParams = false;
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            // Only support 'In' parameters that are blittable primitives or string.
+            // Only support 'In' parameters
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
-            if (IsString(p.Type)) { hasStringParams = true; continue; }
+            if (IsString(p.Type)) { continue; }
+            if (IsRuntimeClassOrInterface(p.Type)) { continue; }
+            if (IsObject(p.Type)) { continue; }
             allParamsSimple = false;
             break;
         }
-        bool returnSimple = rt is null || IsBlittablePrimitive(rt) || IsString(rt);
+        bool returnSimple = rt is null
+            || IsBlittablePrimitive(rt)
+            || IsString(rt)
+            || IsRuntimeClassOrInterface(rt)
+            || IsObject(rt);
 
         if (!allParamsSimple || !returnSimple)
         {
@@ -828,6 +833,7 @@ internal static partial class CodeWriters
         }
 
         bool returnIsString = rt is not null && IsString(rt);
+        bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt));
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
         System.Text.StringBuilder fp = new();
@@ -835,13 +841,13 @@ internal static partial class CodeWriters
         foreach (ParamInfo p in sig.Params)
         {
             fp.Append(", ");
-            if (IsString(p.Type)) { fp.Append("void*"); }
+            if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type)) { fp.Append("void*"); }
             else { fp.Append(GetAbiPrimitiveType(p.Type)); }
         }
         if (rt is not null)
         {
             fp.Append(", ");
-            if (returnIsString) { fp.Append("void**"); }
+            if (returnIsString || returnIsRefType) { fp.Append("void**"); }
             else { fp.Append(GetAbiPrimitiveType(rt)); fp.Append('*'); }
         }
         fp.Append(", int");
@@ -850,17 +856,32 @@ internal static partial class CodeWriters
         w.Write("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();\n");
         w.Write("        void* ThisPtr = thisValue.GetThisPtrUnsafe();\n");
 
-        // Declare locals for string parameters (input HSTRINGs to be freed) and the string return.
+        // Declare 'using' marshaller values for ref-type parameters (these need disposing).
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type))
+            {
+                string localName = GetParamLocalName(p, paramNameOverride);
+                string callName = GetParamName(p, paramNameOverride);
+                w.Write("        using WindowsRuntimeObjectReferenceValue __");
+                w.Write(localName);
+                w.Write(" = ");
+                EmitMarshallerConvertToUnmanaged(w, p.Type, callName);
+                w.Write(";\n");
+            }
+        }
+        // Declare locals for string parameters (input HSTRINGs to be freed)
         for (int i = 0; i < sig.Params.Count; i++)
         {
             if (IsString(sig.Params[i].Type))
             {
                 w.Write("        void* __");
-                w.Write(GetParamName(sig.Params[i], paramNameOverride));
+                w.Write(GetParamLocalName(sig.Params[i], paramNameOverride));
                 w.Write(" = default;\n");
             }
         }
-        if (returnIsString)
+        if (returnIsString || returnIsRefType)
         {
             w.Write("        void* __retval = default;\n");
         }
@@ -871,23 +892,25 @@ internal static partial class CodeWriters
             w.Write(" __retval = default;\n");
         }
 
-        // Determine if we need a try/finally (for cleanup of string params or string return).
-        bool needsTryFinally = hasStringParams || returnIsString;
+        // Determine if we need a try/finally (for cleanup of string params or string/refType return).
+        bool hasStringParams = false;
+        for (int i = 0; i < sig.Params.Count; i++) { if (IsString(sig.Params[i].Type)) { hasStringParams = true; break; } }
+        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
 
-        // Build the call line.
         string indent = needsTryFinally ? "            " : "        ";
         // First, marshal string params to local void* vars.
         for (int i = 0; i < sig.Params.Count; i++)
         {
             if (IsString(sig.Params[i].Type))
             {
-                string pname = GetParamName(sig.Params[i], paramNameOverride);
+                string callName = GetParamName(sig.Params[i], paramNameOverride);
+                string localName = GetParamLocalName(sig.Params[i], paramNameOverride);
                 w.Write(indent);
                 w.Write("__");
-                w.Write(pname);
+                w.Write(localName);
                 w.Write(" = HStringMarshaller.ConvertToUnmanaged(");
-                w.Write(pname);
+                w.Write(callName);
                 w.Write(");\n");
             }
         }
@@ -901,14 +924,21 @@ internal static partial class CodeWriters
         for (int i = 0; i < sig.Params.Count; i++)
         {
             w.Write(", ");
-            if (IsString(sig.Params[i].Type))
+            ParamInfo p = sig.Params[i];
+            if (IsString(p.Type))
             {
                 w.Write("__");
-                w.Write(GetParamName(sig.Params[i], paramNameOverride));
+                w.Write(GetParamLocalName(p, paramNameOverride));
+            }
+            else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type))
+            {
+                w.Write("__");
+                w.Write(GetParamLocalName(p, paramNameOverride));
+                w.Write(".GetThisPtrUnsafe()");
             }
             else
             {
-                EmitParamArgConversion(w, sig.Params[i], paramNameOverride);
+                EmitParamArgConversion(w, p, paramNameOverride);
             }
         }
         if (rt is not null)
@@ -924,6 +954,13 @@ internal static partial class CodeWriters
             {
                 w.Write(indent);
                 w.Write("return HStringMarshaller.ConvertToManaged(__retval);\n");
+            }
+            else if (returnIsRefType)
+            {
+                w.Write(indent);
+                w.Write("return ");
+                EmitMarshallerConvertToManaged(w, rt, "__retval");
+                w.Write(";\n");
             }
             else
             {
@@ -950,9 +987,9 @@ internal static partial class CodeWriters
             {
                 if (IsString(sig.Params[i].Type))
                 {
-                    string pname = GetParamName(sig.Params[i], paramNameOverride);
+                    string localName = GetParamLocalName(sig.Params[i], paramNameOverride);
                     w.Write("            HStringMarshaller.Free(__");
-                    w.Write(pname);
+                    w.Write(localName);
                     w.Write(");\n");
                 }
             }
@@ -961,14 +998,121 @@ internal static partial class CodeWriters
             {
                 w.Write("            HStringMarshaller.Free(__retval);\n");
             }
+            // Free runtime class / object return
+            if (returnIsRefType)
+            {
+                w.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
+            }
             w.Write("        }\n");
         }
 
         w.Write("    }\n");
     }
 
+    /// <summary>True if the type signature represents the System.Object root type.</summary>
+    private static bool IsObject(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        return sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
+               corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object;
+    }
+
+    /// <summary>True if the type signature represents a WinRT runtime class or interface (reference type marshallable via *Marshaller).</summary>
+    private static bool IsRuntimeClassOrInterface(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+        {
+            // Same-module: use the resolved category directly.
+            if (td.Type is TypeDefinition def)
+            {
+                TypeCategory cat = TypeCategorization.GetCategory(def);
+                return cat is TypeCategory.Class or TypeCategory.Interface;
+            }
+            // Cross-module typeref: try to resolve via the metadata cache to check category.
+            string ns = td.Type?.Namespace?.Value ?? string.Empty;
+            string name = td.Type?.Name?.Value ?? string.Empty;
+            if (ns == "System")
+            {
+                return name switch
+                {
+                    "Uri" or "Type" or "IDisposable" or "Exception" => true,
+                    _ => false,
+                };
+            }
+            if (_cacheRef is not null)
+            {
+                TypeDefinition? resolved = _cacheRef.Find(ns + "." + name);
+                if (resolved is not null)
+                {
+                    TypeCategory cat = TypeCategorization.GetCategory(resolved);
+                    return cat is TypeCategory.Class or TypeCategory.Interface;
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+
+    /// <summary>Emits the call to the appropriate marshaller's ConvertToUnmanaged for a runtime class / object input parameter.</summary>
+    private static void EmitMarshallerConvertToUnmanaged(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig, string argName)
+    {
+        if (IsObject(sig))
+        {
+            w.Write("WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(");
+            w.Write(argName);
+            w.Write(")");
+            return;
+        }
+        // Runtime class / interface: use ABI.<NS>.<Name>Marshaller
+        w.Write(GetMarshallerFullName(w, sig));
+        w.Write(".ConvertToUnmanaged(");
+        w.Write(argName);
+        w.Write(")");
+    }
+
+    /// <summary>Emits the call to the appropriate marshaller's ConvertToManaged for a runtime class / object return value.</summary>
+    private static void EmitMarshallerConvertToManaged(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig, string argName)
+    {
+        if (IsObject(sig))
+        {
+            w.Write("WindowsRuntimeObjectMarshaller.ConvertToManaged(");
+            w.Write(argName);
+            w.Write(")");
+            return;
+        }
+        w.Write(GetMarshallerFullName(w, sig));
+        w.Write(".ConvertToManaged(");
+        w.Write(argName);
+        w.Write(")");
+    }
+
+    /// <summary>Returns the full marshaller name (e.g. <c>global::ABI.Windows.Foundation.UriMarshaller</c>).</summary>
+    private static string GetMarshallerFullName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+        {
+            string ns = td.Type?.Namespace?.Value ?? string.Empty;
+            string name = td.Type?.Name?.Value ?? string.Empty;
+            // Apply mapped type remapping (e.g. System.Uri -> Windows.Foundation.Uri)
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
+            return "global::ABI." + ns + "." + Helpers.StripBackticks(name) + "Marshaller";
+        }
+        return "global::ABI.Object.Marshaller";
+    }
+
     private static string GetParamName(ParamInfo p, string? paramNameOverride)
     {
+        string name = paramNameOverride ?? p.Parameter.Name ?? "param";
+        return Helpers.IsKeyword(name) ? "@" + name : name;
+    }
+
+    private static string GetParamLocalName(ParamInfo p, string? paramNameOverride)
+    {
+        // For local helper variables (e.g. __<name>), strip the @ escape since `__event` is valid.
         return paramNameOverride ?? p.Parameter.Name ?? "param";
     }
 
