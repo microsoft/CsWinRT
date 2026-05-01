@@ -150,12 +150,79 @@ internal static partial class CodeWriters
         if (w.Settings.Component) { return true; }
         if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
         {
-            // Without resolving the exclusive_to class to check overridable status, we conservatively
-            // emit. The full check requires walking the exclusive_to class's interfaces.
-            // For simplified port: emit so that the impl is available.
-            return true;
+            // Mirror C++ emit_impl_type: only emit Impl for exclusive-to interfaces if at least
+            // one interface impl on the exclusive_to class is marked [Overridable] and matches
+            // this interface. Otherwise the Impl wouldn't be reachable as a CCW.
+            TypeDefinition? exclusiveToType = GetExclusiveToType(type);
+            if (exclusiveToType is null) { return true; }
+            bool hasOverridable = false;
+            foreach (InterfaceImplementation impl in exclusiveToType.Interfaces)
+            {
+                if (impl.Interface is null) { continue; }
+                TypeDefinition? ifaceTd = ResolveInterfaceTypeDef(impl.Interface);
+                if (ifaceTd == type && Helpers.IsOverridable(impl)) { hasOverridable = true; break; }
+            }
+            return hasOverridable;
         }
         return true;
+    }
+
+    /// <summary>
+    /// Returns the parent class for an interface marked <c>[ExclusiveToAttribute(typeof(T))]</c>.
+    /// Mirrors C++ <c>get_exclusive_to_type</c>.
+    /// </summary>
+    private static TypeDefinition? GetExclusiveToType(TypeDefinition iface)
+    {
+        if (_cacheRef is null) { return null; }
+        for (int i = 0; i < iface.CustomAttributes.Count; i++)
+        {
+            CustomAttribute attr = iface.CustomAttributes[i];
+            ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
+            if (attrType is null) { continue; }
+            if (attrType.Namespace?.Value != "Windows.Foundation.Metadata" ||
+                attrType.Name?.Value != "ExclusiveToAttribute") { continue; }
+            if (attr.Signature is null) { continue; }
+            for (int j = 0; j < attr.Signature.FixedArguments.Count; j++)
+            {
+                AsmResolver.DotNet.Signatures.CustomAttributeArgument arg = attr.Signature.FixedArguments[j];
+                if (arg.Element is AsmResolver.DotNet.Signatures.TypeSignature sig)
+                {
+                    string fullName = sig.FullName ?? string.Empty;
+                    TypeDefinition? td = _cacheRef.Find(fullName);
+                    if (td is not null) { return td; }
+                }
+                else if (arg.Element is string s)
+                {
+                    TypeDefinition? td = _cacheRef.Find(s);
+                    if (td is not null) { return td; }
+                }
+            }
+        }
+        return null;
+    }
+
+    /// <summary>Resolves an InterfaceImpl's interface reference to a TypeDefinition (same module or via metadata cache).</summary>
+    private static TypeDefinition? ResolveInterfaceTypeDef(ITypeDefOrRef ifaceRef)
+    {
+        if (ifaceRef is TypeDefinition td) { return td; }
+        if (ifaceRef is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+        {
+            ITypeDefOrRef? gen = gi.GenericType;
+            if (gen is TypeDefinition gtd) { return gtd; }
+            if (gen is TypeReference gtr && _cacheRef is not null)
+            {
+                string ns = gtr.Namespace?.Value ?? string.Empty;
+                string nm = gtr.Name?.Value ?? string.Empty;
+                return _cacheRef.Find(ns + "." + nm);
+            }
+        }
+        if (ifaceRef is TypeReference tr && _cacheRef is not null)
+        {
+            string ns = tr.Namespace?.Value ?? string.Empty;
+            string nm = tr.Name?.Value ?? string.Empty;
+            return _cacheRef.Find(ns + "." + nm);
+        }
+        return null;
     }
 
     /// <summary>Mirrors C++ <c>get_vmethod_name</c>.</summary>
