@@ -872,7 +872,7 @@ internal static partial class CodeWriters
     /// <summary>Emits the conversion of a parameter from its projected (managed) form to the ABI argument form.</summary>
     private static void EmitParamArgConversion(TypeWriter w, ParamInfo p, string? paramNameOverride = null)
     {
-        string pname = paramNameOverride ?? (p.Parameter.Name ?? "param");
+        string pname = paramNameOverride ?? p.Parameter.Name ?? "param";
         // bool -> byte (truthy = 1, false = 0)
         if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
             corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
