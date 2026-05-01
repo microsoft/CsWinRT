@@ -142,6 +142,21 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
+    /// Writes the IReference&lt;T&gt; IID expression for a value type (used by BoxToUnmanaged).
+    /// Mirrors the C++ output: <c>global::ABI.InterfaceIIDs.IID_&lt;EscapedABIName&gt;Reference</c>.
+    /// </summary>
+    public static void WriteIidReferenceExpression(TypeWriter w, TypeDefinition type)
+    {
+        string ns = type.Namespace?.Value ?? string.Empty;
+        string name = type.Name?.Value ?? string.Empty;
+        string abiQualified = "global::ABI." + ns + "." + Helpers.StripBackticks(name);
+        string id = EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
+        w.Write("global::ABI.InterfaceIIDs.IID_");
+        w.Write(id);
+        w.Write("Reference");
+    }
+
+    /// <summary>
     /// Emits the lazy <c>_objRef_*</c> field definitions for each interface implementation on
     /// the given runtime class (mirrors C++ <c>write_class_objrefs_definition</c>).
     /// </summary>

@@ -430,14 +430,36 @@ internal static partial class CodeWriters
         }
 
         // BoxToUnmanaged - wraps the value as an IReference<T>
+        // (Real implementation only for blittable types — non-blittable structs need
+        // per-field marshalling via *Marshaller.ConvertToUnmanaged before boxing.)
         w.Write("    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(");
         WriteTypedefName(w, type, TypedefNameType.Projected, true);
-        w.Write("? value) => throw null!;\n");
+        if (blittable)
+        {
+            w.Write("? value)\n    {\n");
+            w.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in ");
+            WriteIidReferenceExpression(w, type);
+            w.Write(");\n    }\n");
+        }
+        else
+        {
+            w.Write("? value) => throw null!;\n");
+        }
 
         // UnboxToManaged - unwraps an IReference<T> back to the value
         w.Write("    public static ");
         WriteTypedefName(w, type, TypedefNameType.Projected, true);
-        w.Write("? UnboxToManaged(void* value) => throw null!;\n");
+        if (blittable)
+        {
+            w.Write("? UnboxToManaged(void* value)\n    {\n");
+            w.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
+            WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write(">(value);\n    }\n");
+        }
+        else
+        {
+            w.Write("? UnboxToManaged(void* value) => throw null!;\n");
+        }
 
         w.Write("}\n\n");
 
