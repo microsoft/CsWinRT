@@ -789,7 +789,7 @@ internal static partial class CodeWriters
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
             if (!IsBlittablePrimitive(p.Type)) { allParamsSimple = false; break; }
         }
-        bool returnSimple = rt is null || IsBlittablePrimitive(rt);
+        bool returnSimple = rt is null || IsBlittablePrimitive(rt) || IsString(rt);
 
         if (!allParamsSimple || !returnSimple)
         {
@@ -808,8 +808,12 @@ internal static partial class CodeWriters
         if (rt is not null)
         {
             fp.Append(", ");
-            fp.Append(GetAbiPrimitiveType(rt));
-            fp.Append('*');
+            if (IsString(rt)) { fp.Append("void**"); }
+            else
+            {
+                fp.Append(GetAbiPrimitiveType(rt));
+                fp.Append('*');
+            }
         }
         fp.Append(", int");
 
@@ -831,6 +835,27 @@ internal static partial class CodeWriters
                 EmitParamArgConversion(w, sig.Params[i], paramNameOverride);
             }
             w.Write("));\n    }\n");
+        }
+        else if (IsString(rt))
+        {
+            // String return: void* __retval, HStringMarshaller.ConvertToManaged + Free in finally
+            w.Write("        void* __retval = default;\n");
+            w.Write("        try\n        {\n");
+            w.Write("            RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
+            w.Write(fp.ToString());
+            w.Write(">**)ThisPtr)[");
+            w.Write(slot);
+            w.Write("](ThisPtr");
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                w.Write(", ");
+                EmitParamArgConversion(w, sig.Params[i], paramNameOverride);
+            }
+            w.Write(", &__retval));\n");
+            w.Write("            return HStringMarshaller.ConvertToManaged(__retval);\n");
+            w.Write("        }\n        finally\n        {\n");
+            w.Write("            HStringMarshaller.Free(__retval);\n");
+            w.Write("        }\n    }\n");
         }
         else
         {
@@ -867,6 +892,12 @@ internal static partial class CodeWriters
             }
             w.Write("    }\n");
         }
+    }
+
+    private static bool IsString(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        return sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
+               corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String;
     }
 
     /// <summary>Emits the conversion of a parameter from its projected (managed) form to the ABI argument form.</summary>
