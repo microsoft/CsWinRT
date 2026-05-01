@@ -237,9 +237,19 @@ internal static partial class CodeWriters
             {
                 if (IsMappedInterfaceRequiringStubs(ifaceNs, ifaceName))
                 {
-                    // Use the actual InterfaceImpl reference (which may be a TypeSpec for generic
-                    // instances) so the objref name includes the type arguments.
-                    string objRefName = GetObjRefName(w, impl.Interface);
+                    // For generic interfaces, use the substituted nextInstance to compute the
+                    // objref name so type arguments are concrete (matches the field name emitted
+                    // by WriteClassObjRefDefinitions). For non-generic, fall back to impl.Interface.
+                    string objRefName;
+                    if (nextInstance is not null)
+                    {
+                        AsmResolver.DotNet.ITypeDefOrRef? specRef = nextInstance.ToTypeDefOrRef();
+                        objRefName = specRef is not null ? GetObjRefName(w, specRef) : GetObjRefName(w, impl.Interface);
+                    }
+                    else
+                    {
+                        objRefName = GetObjRefName(w, impl.Interface);
+                    }
                     WriteMappedInterfaceStubs(w, nextInstance, ifaceName, objRefName);
                     // Mark sibling/parent mapped interfaces whose members are already covered
                     // (e.g., IMap`2/IVector`1/etc. include the IIterable`1 GetEnumerator stubs).

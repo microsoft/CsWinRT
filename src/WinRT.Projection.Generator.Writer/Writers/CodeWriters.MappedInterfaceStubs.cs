@@ -71,7 +71,7 @@ internal static partial class CodeWriters
                 EmitGenericEnumerator(w, typeArgs);
                 break;
             case "IMap`2":
-                EmitDictionary(w, typeArgs);
+                EmitDictionary(w, typeArgs, typeArgSigs, objRefName);
                 break;
             case "IMapView`2":
                 EmitReadOnlyDictionary(w, typeArgs);
@@ -127,26 +127,50 @@ internal static partial class CodeWriters
         w.Write("public void Dispose() => throw null!;\n");
     }
 
-    private static void EmitDictionary(TypeWriter w, List<TypeSemantics> args)
+    private static void EmitDictionary(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
     {
         if (args.Count != 2) { return; }
         string k = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
         string v = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[1], TypedefNameType.Projected, true)));
         string kv = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
-        w.Write($"\npublic {v} this[{k} key] {{ get => throw null!; set => throw null!; }}\n");
-        w.Write($"public global::System.Collections.Generic.ICollection<{k}> Keys => throw null!;\n");
-        w.Write($"public global::System.Collections.Generic.ICollection<{v}> Values => throw null!;\n");
-        w.Write("public int Count => throw null!;\n");
-        w.Write("public bool IsReadOnly => throw null!;\n");
-        w.Write($"public void Add({k} key, {v} value) => throw null!;\n");
-        w.Write($"public bool ContainsKey({k} key) => throw null!;\n");
-        w.Write($"public bool Remove({k} key) => throw null!;\n");
-        w.Write($"public bool TryGetValue({k} key, out {v} value) => throw null!;\n");
-        w.Write($"public void Add({kv} item) => throw null!;\n");
-        w.Write("public void Clear() => throw null!;\n");
-        w.Write($"public bool Contains({kv} item) => throw null!;\n");
+        string keyId = EncodeArgIdentifier(w, args[0]);
+        string valId = EncodeArgIdentifier(w, args[1]);
+        string keyInteropArg = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string valInteropArg = EncodeInteropTypeName(argSigs[1], TypedefNameType.Projected);
+        string interopType = "ABI.System.Collections.Generic.<#corlib>IDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
+        string prefix = "IDictionaryMethods_" + keyId + "_" + valId + "_";
+
+        w.Write("\n");
+        EmitUnsafeAccessor(w, "Keys", $"global::System.Collections.Generic.ICollection<{k}>", $"{prefix}Keys", interopType, "");
+        EmitUnsafeAccessor(w, "Values", $"global::System.Collections.Generic.ICollection<{v}>", $"{prefix}Values", interopType, "");
+        EmitUnsafeAccessor(w, "Count", "int", $"{prefix}Count", interopType, "");
+        EmitUnsafeAccessor(w, "Item", v, $"{prefix}Item", interopType, $", {k} key");
+        EmitUnsafeAccessor(w, "Item", "void", $"{prefix}Item", interopType, $", {k} key, {v} value");
+        EmitUnsafeAccessor(w, "Add", "void", $"{prefix}Add", interopType, $", {k} key, {v} value");
+        EmitUnsafeAccessor(w, "ContainsKey", "bool", $"{prefix}ContainsKey", interopType, $", {k} key");
+        EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {k} key");
+        EmitUnsafeAccessor(w, "TryGetValue", "bool", $"{prefix}TryGetValue", interopType, $", {k} key, out {v} value");
+        EmitUnsafeAccessor(w, "Add", "void", $"{prefix}AddPair", interopType, $", {kv} item");
+        EmitUnsafeAccessor(w, "Clear", "void", $"{prefix}Clear", interopType, "");
+        EmitUnsafeAccessor(w, "Contains", "bool", $"{prefix}Contains", interopType, $", {kv} item");
+        EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}RemovePair", interopType, $", {kv} item");
+
+        w.Write($"\npublic {v} this[{k} key] {{ get => {prefix}Item(null, {objRefName}, key); set => {prefix}Item(null, {objRefName}, key, value); }}\n");
+        w.Write($"public global::System.Collections.Generic.ICollection<{k}> Keys => {prefix}Keys(null, {objRefName});\n");
+        w.Write($"public global::System.Collections.Generic.ICollection<{v}> Values => {prefix}Values(null, {objRefName});\n");
+        w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
+        w.Write("public bool IsReadOnly => false;\n");
+        w.Write($"public void Add({k} key, {v} value) => {prefix}Add(null, {objRefName}, key, value);\n");
+        w.Write($"public bool ContainsKey({k} key) => {prefix}ContainsKey(null, {objRefName}, key);\n");
+        w.Write($"public bool Remove({k} key) => {prefix}Remove(null, {objRefName}, key);\n");
+        w.Write($"public bool TryGetValue({k} key, out {v} value) => {prefix}TryGetValue(null, {objRefName}, key, out value);\n");
+        w.Write($"public void Add({kv} item) => {prefix}AddPair(null, {objRefName}, item);\n");
+        w.Write($"public void Clear() => {prefix}Clear(null, {objRefName});\n");
+        w.Write($"public bool Contains({kv} item) => {prefix}Contains(null, {objRefName}, item);\n");
+        // CopyTo requires the IEnumerable<KeyValuePair<K,V>> objref - leave as throw null! for now.
         w.Write($"public void CopyTo({kv}[] array, int arrayIndex) => throw null!;\n");
-        w.Write($"public bool Remove({kv} item) => throw null!;\n");
+        w.Write($"public bool Remove({kv} item) => {prefix}RemovePair(null, {objRefName}, item);\n");
+        // GetEnumerator: still throw null - requires IEnumerable<T> objref
         w.Write($"public global::System.Collections.Generic.IEnumerator<{kv}> GetEnumerator() => throw null!;\n");
         w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
     }
