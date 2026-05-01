@@ -146,67 +146,168 @@ internal static partial class CodeWriters
     public static void WriteStaticClassMembers(TypeWriter w, TypeDefinition type)
     {
         if (_cacheRef is null) { return; }
-        Dictionary<string, (string Type, bool HasGetter, bool HasSetter)> properties = new(System.StringComparer.Ordinal);
+        // Per-property accessor state (origin tracking for getter/setter)
+        Dictionary<string, StaticPropertyAccessorState> properties = new(System.StringComparer.Ordinal);
+        // Track the static factory ifaces we've emitted objref fields for (to dedupe)
+        HashSet<string> emittedObjRefs = new(System.StringComparer.Ordinal);
+
+        string runtimeClassFullName = (type.Namespace?.Value ?? string.Empty) + "." + (type.Name?.Value ?? string.Empty);
 
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cacheRef))
         {
             AttributedType factory = kv.Value;
-            if (factory.Statics && factory.Type is not null)
+            if (!(factory.Statics && factory.Type is not null)) { continue; }
+            TypeDefinition staticIface = factory.Type;
+
+            // Compute the objref name for this static factory interface.
+            string objRef = GetObjRefName(w, staticIface);
+            // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.System.ILauncherStaticsMethods")
+            string abiClass = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
             {
-                TypeDefinition staticIface = factory.Type;
-                // Methods
-                foreach (MethodDefinition method in staticIface.Methods)
+                WriteTypedefName(w, staticIface, TypedefNameType.StaticAbiClass, true);
+            }));
+            if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal))
+            {
+                abiClass = "global::" + abiClass;
+            }
+
+            // Emit the lazy static objref field (mirrors truth's pattern) once per static iface.
+            if (emittedObjRefs.Add(objRef))
+            {
+                WriteStaticFactoryObjRef(w, staticIface, runtimeClassFullName, objRef);
+            }
+
+            // Methods
+            foreach (MethodDefinition method in staticIface.Methods)
+            {
+                if (Helpers.IsSpecial(method)) { continue; }
+                MethodSig sig = new(method);
+                string mname = method.Name?.Value ?? string.Empty;
+                w.Write("\npublic static ");
+                WriteProjectionReturnType(w, sig);
+                w.Write(" ");
+                w.Write(mname);
+                w.Write("(");
+                WriteParameterList(w, sig);
+                w.Write(") => ");
+                w.Write(abiClass);
+                w.Write(".");
+                w.Write(mname);
+                w.Write("(");
+                w.Write(objRef);
+                for (int i = 0; i < sig.Params.Count; i++)
                 {
-                    if (Helpers.IsSpecial(method)) { continue; }
-                    MethodSig sig = new(method);
-                    w.Write("\npublic static ");
-                    WriteProjectionReturnType(w, sig);
-                    w.Write(" ");
-                    w.Write(method.Name?.Value ?? string.Empty);
-                    w.Write("(");
-                    WriteParameterList(w, sig);
-                    w.Write(") => throw null!;\n");
+                    w.Write(", ");
+                    WriteParameterNameWithModifier(w, sig.Params[i]);
                 }
-                // Events
-                foreach (EventDefinition evt in staticIface.Events)
+                w.Write(");\n");
+            }
+            // Events (deferred — keep stub bodies)
+            foreach (EventDefinition evt in staticIface.Events)
+            {
+                string evtName = evt.Name?.Value ?? string.Empty;
+                w.Write("\npublic static event ");
+                WriteEventType(w, evt);
+                w.Write(" ");
+                w.Write(evtName);
+                w.Write(" { add => throw null!; remove => throw null!; }\n");
+            }
+            // Properties (merge getter/setter across interfaces, tracking origin per accessor)
+            foreach (PropertyDefinition prop in staticIface.Properties)
+            {
+                string propName = prop.Name?.Value ?? string.Empty;
+                (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+                string propType = WritePropType(w, prop);
+                if (!properties.TryGetValue(propName, out StaticPropertyAccessorState? state))
                 {
-                    string evtName = evt.Name?.Value ?? string.Empty;
-                    w.Write("\npublic static event ");
-                    WriteEventType(w, evt);
-                    w.Write(" ");
-                    w.Write(evtName);
-                    w.Write(" { add => throw null!; remove => throw null!; }\n");
+                    state = new StaticPropertyAccessorState { PropTypeText = propType };
+                    properties[propName] = state;
                 }
-                // Properties (merge getter/setter across interfaces)
-                foreach (PropertyDefinition prop in staticIface.Properties)
+                if (getter is not null && !state.HasGetter)
                 {
-                    string propName = prop.Name?.Value ?? string.Empty;
-                    (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
-                    string propType = WritePropType(w, prop);
-                    if (properties.TryGetValue(propName, out var existing))
-                    {
-                        properties[propName] = (existing.Type, existing.HasGetter || getter is not null, existing.HasSetter || setter is not null);
-                    }
-                    else
-                    {
-                        properties[propName] = (propType, getter is not null, setter is not null);
-                    }
+                    state.HasGetter = true;
+                    state.GetterAbiClass = abiClass;
+                    state.GetterObjRef = objRef;
+                }
+                if (setter is not null && !state.HasSetter)
+                {
+                    state.HasSetter = true;
+                    state.SetterAbiClass = abiClass;
+                    state.SetterObjRef = objRef;
                 }
             }
         }
 
         // Emit properties with merged accessors
-        foreach (KeyValuePair<string, (string Type, bool HasGetter, bool HasSetter)> kv in properties)
+        foreach (KeyValuePair<string, StaticPropertyAccessorState> kv in properties)
         {
+            StaticPropertyAccessorState s = kv.Value;
             w.Write("\npublic static ");
-            w.Write(kv.Value.Type);
+            w.Write(s.PropTypeText);
             w.Write(" ");
             w.Write(kv.Key);
             w.Write(" { ");
-            if (kv.Value.HasGetter) { w.Write("get => throw null!; "); }
-            if (kv.Value.HasSetter) { w.Write("set => throw null!; "); }
+            if (s.HasGetter)
+            {
+                w.Write("get => ");
+                w.Write(s.GetterAbiClass);
+                w.Write(".");
+                w.Write(kv.Key);
+                w.Write("(");
+                w.Write(s.GetterObjRef);
+                w.Write("); ");
+            }
+            if (s.HasSetter)
+            {
+                w.Write("set => ");
+                w.Write(s.SetterAbiClass);
+                w.Write(".");
+                w.Write(kv.Key);
+                w.Write("(");
+                w.Write(s.SetterObjRef);
+                w.Write(", value); ");
+            }
             w.Write("}\n");
         }
+    }
+
+    private sealed class StaticPropertyAccessorState
+    {
+        public bool HasGetter;
+        public bool HasSetter;
+        public string PropTypeText = string.Empty;
+        public string GetterAbiClass = string.Empty;
+        public string GetterObjRef = string.Empty;
+        public string SetterAbiClass = string.Empty;
+        public string SetterObjRef = string.Empty;
+    }
+
+    /// <summary>
+    /// Emits the static lazy objref property for a static factory interface (mirrors truth's
+    /// pattern: lazy <c>WindowsRuntimeObjectReference.GetActivationFactory(...)</c>).
+    /// </summary>
+    private static void WriteStaticFactoryObjRef(TypeWriter w, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
+    {
+        w.Write("\nprivate static WindowsRuntimeObjectReference ");
+        w.Write(objRefName);
+        w.Write("\n{\n");
+        w.Write("    get\n    {\n");
+        w.Write("        var __");
+        w.Write(objRefName);
+        w.Write(" = field;\n");
+        w.Write("        if (__");
+        w.Write(objRefName);
+        w.Write(" != null && __");
+        w.Write(objRefName);
+        w.Write(".IsInCurrentContext)\n        {\n");
+        w.Write("            return __");
+        w.Write(objRefName);
+        w.Write(";\n        }\n");
+        w.Write("        return field = WindowsRuntimeObjectReference.GetActivationFactory(\"");
+        w.Write(runtimeClassFullName);
+        w.Write("\", ");
+        WriteIidExpression(w, staticIface);
+        w.Write(");\n    }\n}\n");
     }
 
     /// <summary>
