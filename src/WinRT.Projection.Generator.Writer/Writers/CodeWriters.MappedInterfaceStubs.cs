@@ -74,13 +74,13 @@ internal static partial class CodeWriters
                 EmitDictionary(w, typeArgs, typeArgSigs, objRefName);
                 break;
             case "IMapView`2":
-                EmitReadOnlyDictionary(w, typeArgs);
+                EmitReadOnlyDictionary(w, typeArgs, typeArgSigs, objRefName);
                 break;
             case "IVector`1":
                 EmitList(w, typeArgs, typeArgSigs, objRefName);
                 break;
             case "IVectorView`1":
-                EmitReadOnlyList(w, typeArgs);
+                EmitReadOnlyList(w, typeArgs, typeArgSigs, objRefName);
                 break;
             case "IBindableIterable":
                 w.Write("\nglobal::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
@@ -175,19 +175,56 @@ internal static partial class CodeWriters
         w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
     }
 
-    private static void EmitReadOnlyDictionary(TypeWriter w, List<TypeSemantics> args)
+    private static void EmitReadOnlyDictionary(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
     {
         if (args.Count != 2) { return; }
         string k = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
         string v = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[1], TypedefNameType.Projected, true)));
         string kv = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
-        w.Write($"\npublic {v} this[{k} key] => throw null!;\n");
-        w.Write($"public global::System.Collections.Generic.IEnumerable<{k}> Keys => throw null!;\n");
-        w.Write($"public global::System.Collections.Generic.IEnumerable<{v}> Values => throw null!;\n");
-        w.Write("public int Count => throw null!;\n");
-        w.Write($"public bool ContainsKey({k} key) => throw null!;\n");
-        w.Write($"public bool TryGetValue({k} key, out {v} value) => throw null!;\n");
+        string keyId = EncodeArgIdentifier(w, args[0]);
+        string valId = EncodeArgIdentifier(w, args[1]);
+        string keyInteropArg = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string valInteropArg = EncodeInteropTypeName(argSigs[1], TypedefNameType.Projected);
+        string interopType = "ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
+        string prefix = "IReadOnlyDictionaryMethods_" + keyId + "_" + valId + "_";
+
+        w.Write("\n");
+        EmitUnsafeAccessor(w, "Keys", $"global::System.Collections.Generic.IEnumerable<{k}>", $"{prefix}Keys", interopType, "");
+        EmitUnsafeAccessor(w, "Values", $"global::System.Collections.Generic.IEnumerable<{v}>", $"{prefix}Values", interopType, "");
+        EmitUnsafeAccessor(w, "Count", "int", $"{prefix}Count", interopType, "");
+        EmitUnsafeAccessor(w, "Item", v, $"{prefix}Item", interopType, $", {k} key");
+        EmitUnsafeAccessor(w, "ContainsKey", "bool", $"{prefix}ContainsKey", interopType, $", {k} key");
+        EmitUnsafeAccessor(w, "TryGetValue", "bool", $"{prefix}TryGetValue", interopType, $", {k} key, out {v} value");
+
+        w.Write($"\npublic {v} this[{k} key] => {prefix}Item(null, {objRefName}, key);\n");
+        w.Write($"public global::System.Collections.Generic.IEnumerable<{k}> Keys => {prefix}Keys(null, {objRefName});\n");
+        w.Write($"public global::System.Collections.Generic.IEnumerable<{v}> Values => {prefix}Values(null, {objRefName});\n");
+        w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
+        w.Write($"public bool ContainsKey({k} key) => {prefix}ContainsKey(null, {objRefName}, key);\n");
+        w.Write($"public bool TryGetValue({k} key, out {v} value) => {prefix}TryGetValue(null, {objRefName}, key, out value);\n");
+        // GetEnumerator: still throw null - requires IEnumerable<KVP> objref
         w.Write($"public global::System.Collections.Generic.IEnumerator<{kv}> GetEnumerator() => throw null!;\n");
+        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
+    }
+
+    private static void EmitReadOnlyList(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
+    {
+        if (args.Count != 1) { return; }
+        string t = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
+        string elementId = EncodeArgIdentifier(w, args[0]);
+        string interopTypeArgs = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopType = "ABI.System.Collections.Generic.<#corlib>IReadOnlyList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
+        string prefix = "IReadOnlyListMethods_" + elementId + "_";
+
+        w.Write("\n");
+        EmitUnsafeAccessor(w, "Count", "int", $"{prefix}Count", interopType, "");
+        EmitUnsafeAccessor(w, "Item", t, $"{prefix}Item", interopType, ", int index");
+
+        w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"ReadOnlyListItem\")]\n");
+        w.Write($"public {t} this[int index] => {prefix}Item(null, {objRefName}, index);\n");
+        w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
+        // GetEnumerator: still throw null - requires IEnumerable<T> objref
+        w.Write($"public global::System.Collections.Generic.IEnumerator<{t}> GetEnumerator() => throw null!;\n");
         w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
     }
 
