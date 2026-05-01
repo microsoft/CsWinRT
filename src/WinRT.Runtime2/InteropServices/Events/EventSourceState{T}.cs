@@ -209,7 +209,7 @@ public abstract unsafe class EventSourceState<T> : IDisposable
         // ensures that no cache object is kept alive unnecessarily when no longer needed.
         if (thisPtr is not null)
         {
-            EventSourceCache.Remove(_thisPtr, _index, _weakReferenceToSelf);
+            EventSourceCache.Remove(thisPtr, _index, _weakReferenceToSelf);
         }
     }
 }
