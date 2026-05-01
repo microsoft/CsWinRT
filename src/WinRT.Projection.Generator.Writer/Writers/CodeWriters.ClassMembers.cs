@@ -27,6 +27,17 @@ internal static partial class CodeWriters
         HashSet<TypeDefinition> writtenInterfaces = new();
 
         WriteInterfaceMembersRecursive(w, type, type, writtenMethods, writtenProperties, writtenEvents, writtenInterfaces);
+
+        // Emit explicit IWindowsRuntimeInterface<T>.GetInterface() implementations once at the end,
+        // matching the inheritance list emitted by WriteTypeInheritance.
+        foreach (InterfaceImplementation impl in type.Interfaces)
+        {
+            if (impl.Interface is null) { continue; }
+            w.Write("\n");
+            w.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
+            WriteInterfaceTypeNameForCcw(w, impl.Interface);
+            w.Write(">.GetInterface() => throw null!;\n");
+        }
     }
 
     private static void WriteInterfaceMembersRecursive(TypeWriter w, TypeDefinition classType, TypeDefinition declaringType,
@@ -46,11 +57,20 @@ internal static partial class CodeWriters
             bool isOverridable = Helpers.IsOverridable(impl);
             bool isProtected = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "ProtectedAttribute");
 
-            // Skip mapped interfaces (they're handled by the runtime's adapter classes)
+            // For mapped interfaces with custom members output (e.g. IClosable -> IDisposable, IMap`2
+            // -> IDictionary<K,V>), emit stubs for the C# interface's required members so the class
+            // satisfies its inheritance contract. The runtime's adapter actually services them.
             string ifaceNs = ifaceType.Namespace?.Value ?? string.Empty;
             string ifaceName = ifaceType.Name?.Value ?? string.Empty;
             if (MappedTypes.Get(ifaceNs, ifaceName) is { HasCustomMembersOutput: true })
             {
+                if (IsMappedInterfaceRequiringStubs(ifaceNs, ifaceName))
+                {
+                    WriteMappedInterfaceStubs(w, impl, ifaceName);
+                    // Mark sibling/parent mapped interfaces whose members are already covered
+                    // (e.g., IMap`2/IVector`1/etc. include the IIterable`1 GetEnumerator stubs).
+                    MarkCoveredMappedInterfaces(declaringType, ifaceName, writtenInterfaces);
+                }
                 continue;
             }
 
@@ -62,7 +82,42 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>Resolves a TypeRef to a TypeDef using the cache or runtime context.</summary>
+    /// <summary>
+    /// When emitting stubs for a mapped interface (e.g. IMap`2 -> IDictionary&lt;K,V&gt;), mark
+    /// other mapped interfaces whose member contracts are already covered (e.g. IIterable`1
+    /// -> IEnumerable&lt;T&gt;) so they don't get re-emitted later in the recursion.
+    /// </summary>
+    private static void MarkCoveredMappedInterfaces(TypeDefinition declaringType, string emittedName, HashSet<TypeDefinition> writtenInterfaces)
+    {
+        // IMap/IMapView/IVector/IVectorView all include the IIterable`1 GetEnumerator stubs.
+        bool coversIterable = emittedName is "IMap`2" or "IMapView`2" or "IVector`1" or "IVectorView`1";
+        // IBindableVector covers IBindableIterable.
+        bool coversBindableIterable = emittedName == "IBindableVector";
+
+        if (!coversIterable && !coversBindableIterable) { return; }
+
+        void Walk(TypeDefinition td)
+        {
+            foreach (InterfaceImplementation imp in td.Interfaces)
+            {
+                if (imp.Interface is null) { continue; }
+                TypeDefinition? rt = ResolveInterface(imp.Interface);
+                if (rt is null) { continue; }
+
+                string n = rt.Name?.Value ?? string.Empty;
+                string ns = rt.Namespace?.Value ?? string.Empty;
+                if ((coversIterable && ns == "Windows.Foundation.Collections" && n == "IIterable`1") ||
+                    (coversBindableIterable && ns == "Microsoft.UI.Xaml.Interop" && n == "IBindableIterable") ||
+                    (coversBindableIterable && ns == "Windows.UI.Xaml.Interop" && n == "IBindableIterable"))
+                {
+                    _ = writtenInterfaces.Add(rt);
+                }
+                Walk(rt);
+            }
+        }
+        Walk(declaringType);
+    }
+
     private static TypeDefinition? ResolveInterface(ITypeDefOrRef typeRef)
     {
         if (typeRef is TypeDefinition td) { return td; }
@@ -163,16 +218,56 @@ internal static partial class CodeWriters
             w.Write(name);
             w.Write(" { add => throw null!; remove => throw null!; }\n");
         }
+    }
 
-        // Explicit IWindowsRuntimeInterface<T>.GetInterface() implementation, required by the
-        // class's inheritance list (which always also implements IWindowsRuntimeInterface<T>).
-        if (!w.Settings.ReferenceProjection)
+    /// <summary>
+    /// Writes the projected name for an interface reference (TypeDefinition, TypeReference, or
+    /// generic instance), applying mapped-type remapping. Used inside <c>IWindowsRuntimeInterface&lt;T&gt;</c>.
+    /// </summary>
+    private static void WriteInterfaceTypeNameForCcw(TypeWriter w, ITypeDefOrRef ifaceType)
+    {
+        if (ifaceType is TypeDefinition td)
         {
-            w.Write("\n");
-            w.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
-            WriteTypedefName(w, ifaceType, TypedefNameType.CCW, false);
-            WriteTypeParams(w, ifaceType);
-            w.Write(">.GetInterface() => throw null!;\n");
+            WriteTypedefName(w, td, TypedefNameType.CCW, false);
+            WriteTypeParams(w, td);
+        }
+        else if (ifaceType is TypeReference tr)
+        {
+            string ns = tr.Namespace?.Value ?? string.Empty;
+            string name = tr.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
+            w.Write("global::");
+            w.Write(ns);
+            w.Write(".");
+            w.WriteCode(name);
+        }
+        else if (ifaceType is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+        {
+            ITypeDefOrRef gt = gi.GenericType;
+            string ns = gt.Namespace?.Value ?? string.Empty;
+            string name = gt.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
+            w.Write("global::");
+            w.Write(ns);
+            w.Write(".");
+            w.WriteCode(name);
+            w.Write("<");
+            for (int i = 0; i < gi.TypeArguments.Count; i++)
+            {
+                if (i > 0) { w.Write(", "); }
+                WriteTypeName(w, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
+            }
+            w.Write(">");
         }
     }
 }

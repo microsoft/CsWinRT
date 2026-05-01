@@ -56,68 +56,67 @@ internal static partial class CodeWriters
             w.Write(delimiter);
             delimiter = ", ";
 
-            // Emit the interface name (CCW)
-            if (impl.Interface is TypeDefinition ifaceType)
-            {
-                WriteTypedefName(w, ifaceType, TypedefNameType.CCW, false);
-                WriteTypeParams(w, ifaceType);
-            }
-            else if (impl.Interface is TypeReference tr)
-            {
-                w.Write("global::");
-                w.Write(tr.Namespace?.Value ?? string.Empty);
-                w.Write(".");
-                w.WriteCode(tr.Name?.Value ?? string.Empty);
-            }
-            else if (impl.Interface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
-            {
-                // Generic instance interface
-                ITypeDefOrRef gt = gi.GenericType;
-                w.Write("global::");
-                w.Write(gt.Namespace?.Value ?? string.Empty);
-                w.Write(".");
-                w.WriteCode(gt.Name?.Value ?? string.Empty);
-                w.Write("<");
-                for (int i = 0; i < gi.TypeArguments.Count; i++)
-                {
-                    if (i > 0) { w.Write(", "); }
-                    WriteTypeName(w, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
-                }
-                w.Write(">");
-            }
+            // Emit the interface name (CCW) with mapped-type remapping
+            WriteInterfaceTypeName(w, impl.Interface);
 
             if (includeWindowsRuntimeObject && !w.Settings.ReferenceProjection)
             {
                 w.Write(", IWindowsRuntimeInterface<");
-                if (impl.Interface is TypeDefinition ifaceType2)
-                {
-                    WriteTypedefName(w, ifaceType2, TypedefNameType.CCW, false);
-                    WriteTypeParams(w, ifaceType2);
-                }
-                else if (impl.Interface is TypeReference tr2)
-                {
-                    w.Write("global::");
-                    w.Write(tr2.Namespace?.Value ?? string.Empty);
-                    w.Write(".");
-                    w.WriteCode(tr2.Name?.Value ?? string.Empty);
-                }
-                else if (impl.Interface is TypeSpecification ts2 && ts2.Signature is GenericInstanceTypeSignature gi2)
-                {
-                    ITypeDefOrRef gt2 = gi2.GenericType;
-                    w.Write("global::");
-                    w.Write(gt2.Namespace?.Value ?? string.Empty);
-                    w.Write(".");
-                    w.WriteCode(gt2.Name?.Value ?? string.Empty);
-                    w.Write("<");
-                    for (int i = 0; i < gi2.TypeArguments.Count; i++)
-                    {
-                        if (i > 0) { w.Write(", "); }
-                        WriteTypeName(w, TypeSemanticsFactory.Get(gi2.TypeArguments[i]), TypedefNameType.Projected, true);
-                    }
-                    w.Write(">");
-                }
+                WriteInterfaceTypeName(w, impl.Interface);
                 w.Write(">");
             }
+        }
+    }
+
+    /// <summary>
+    /// Writes the projected name for an interface reference (TypeDefinition, TypeReference, or
+    /// generic instance), applying mapped-type remapping (e.g.,
+    /// <c>Windows.Foundation.Collections.IMap&lt;K,V&gt;</c> → <c>System.Collections.Generic.IDictionary&lt;K,V&gt;</c>).
+    /// </summary>
+    private static void WriteInterfaceTypeName(TypeWriter w, ITypeDefOrRef ifaceType)
+    {
+        if (ifaceType is TypeDefinition td)
+        {
+            WriteTypedefName(w, td, TypedefNameType.CCW, false);
+            WriteTypeParams(w, td);
+        }
+        else if (ifaceType is TypeReference tr)
+        {
+            string ns = tr.Namespace?.Value ?? string.Empty;
+            string name = tr.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
+            w.Write("global::");
+            w.Write(ns);
+            w.Write(".");
+            w.WriteCode(name);
+        }
+        else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        {
+            ITypeDefOrRef gt = gi.GenericType;
+            string ns = gt.Namespace?.Value ?? string.Empty;
+            string name = gt.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
+            w.Write("global::");
+            w.Write(ns);
+            w.Write(".");
+            w.WriteCode(name);
+            w.Write("<");
+            for (int i = 0; i < gi.TypeArguments.Count; i++)
+            {
+                if (i > 0) { w.Write(", "); }
+                WriteTypeName(w, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
+            }
+            w.Write(">");
         }
     }
 
