@@ -304,7 +304,7 @@ internal static partial class CodeWriters
 
         w.Write("public static nint Vtable\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => (nint)Unsafe.AsPointer(in Vftbl);\n}\n\n");
 
-        // Do_Abi_* implementations: emit real bodies for void/no-args (and similarly simple cases),
+        // Do_Abi_* implementations: emit real bodies for simple primitive cases,
         // throw null! for everything else (deferred — needs full per-parameter marshalling).
         string ifaceFullName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
         if (!ifaceFullName.StartsWith("global::", System.StringComparison.Ordinal)) { ifaceFullName = "global::" + ifaceFullName; }
@@ -319,26 +319,125 @@ internal static partial class CodeWriters
             w.Write("(");
             WriteAbiParameterTypesPointer(w, sig, includeParamNames: true);
             w.Write(")");
-            if (sig.ReturnType is null && sig.Params.Count == 0)
+            EmitDoAbiBodyIfSimple(w, sig, ifaceFullName, mname);
+        }
+        w.Write("}\n");
+    }
+
+    /// <summary>
+    /// Emits a real Do_Abi (CCW) body for the cases we can handle, else throw null!.
+    /// </summary>
+    private static void EmitDoAbiBodyIfSimple(TypeWriter w, MethodSig sig, string ifaceFullName, string methodName)
+    {
+        AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
+
+        bool allParamsSimple = true;
+        foreach (ParamInfo p in sig.Params)
+        {
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.In) { allParamsSimple = false; break; }
+            if (!IsBlittablePrimitive(p.Type)) { allParamsSimple = false; break; }
+        }
+        bool returnSimple = rt is null || IsBlittablePrimitive(rt);
+
+        // Property/event accessors require C# property/event syntax which is too involved
+        // to handle in this simplified port — defer them.
+        bool isAccessor = methodName.StartsWith("get_", System.StringComparison.Ordinal)
+                       || methodName.StartsWith("put_", System.StringComparison.Ordinal)
+                       || methodName.StartsWith("add_", System.StringComparison.Ordinal)
+                       || methodName.StartsWith("remove_", System.StringComparison.Ordinal);
+
+        if (!allParamsSimple || !returnSimple || isAccessor)
+        {
+            w.Write(" => throw null!;\n\n");
+            return;
+        }
+
+        w.Write("\n{\n");
+        if (rt is not null)
+        {
+            // Initialize the out parameter to default first
+            w.Write("    *__retval = default;\n");
+        }
+        w.Write("    try\n    {\n        ");
+        if (rt is not null)
+        {
+            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
+            w.Write(projected);
+            w.Write(" __result = ");
+        }
+        w.Write("ComInterfaceDispatch.GetInstance<");
+        w.Write(ifaceFullName);
+        w.Write(">((ComInterfaceDispatch*)thisPtr).");
+        w.Write(methodName);
+        w.Write("(");
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            if (i > 0) { w.Write(", "); }
+            EmitDoAbiParamArgConversion(w, sig.Params[i]);
+        }
+        w.Write(");\n");
+        if (rt is not null)
+        {
+            string abiType = GetAbiPrimitiveType(rt);
+            w.Write("        *__retval = ");
+            // Convert managed -> ABI
+            if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
+                corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
             {
-                // Simple void/no-params CCW callback
-                w.Write("\n{\n");
-                w.Write("    try\n    {\n");
-                w.Write("        ComInterfaceDispatch.GetInstance<");
-                w.Write(ifaceFullName);
-                w.Write(">((ComInterfaceDispatch*)thisPtr).");
-                w.Write(mname);
-                w.Write("();\n");
-                w.Write("        return 0;\n    }\n");
-                w.Write("    catch (Exception __exception__)\n    {\n");
-                w.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n\n");
+                w.Write("(byte)(__result ? 1 : 0);\n");
+            }
+            else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
+                     corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+            {
+                w.Write("(ushort)__result;\n");
+            }
+            else if (rt is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td &&
+                     td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
+            {
+                w.Write("(");
+                w.Write(abiType);
+                w.Write(")__result;\n");
             }
             else
             {
-                w.Write(" => throw null!;\n\n");
+                w.Write("__result;\n");
             }
         }
-        w.Write("}\n");
+        w.Write("        return 0;\n    }\n");
+        w.Write("    catch (Exception __exception__)\n    {\n");
+        w.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n\n");
+    }
+
+    /// <summary>Converts an ABI parameter to its projected (managed) form for the Do_Abi call.</summary>
+    private static void EmitDoAbiParamArgConversion(TypeWriter w, ParamInfo p)
+    {
+        string pname = p.Parameter.Name ?? "param";
+        if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
+            corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+        {
+            w.Write(pname);
+            w.Write(" != 0");
+        }
+        else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
+                 corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+        {
+            w.Write("(char)");
+            w.Write(pname);
+        }
+        else if (p.Type is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td &&
+                 td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
+        {
+            w.Write("(");
+            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
+            w.Write(projected);
+            w.Write(")");
+            w.Write(pname);
+        }
+        else
+        {
+            w.Write(pname);
+        }
     }
 
     /// <summary>Mirrors C++ <c>write_interface_idic_impl</c>.</summary>
