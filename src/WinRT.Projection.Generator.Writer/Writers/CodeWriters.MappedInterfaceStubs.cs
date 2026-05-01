@@ -44,7 +44,8 @@ internal static partial class CodeWriters
     /// <param name="w">The writer.</param>
     /// <param name="instance">The (possibly substituted) generic instance signature for the interface, or null if non-generic.</param>
     /// <param name="ifaceName">The WinRT interface name (e.g. "IMap`2").</param>
-    public static void WriteMappedInterfaceStubs(TypeWriter w, GenericInstanceTypeSignature? instance, string ifaceName)
+    /// <param name="objRefName">The name of the lazy <c>_objRef_*</c> field for the interface on the class.</param>
+    public static void WriteMappedInterfaceStubs(TypeWriter w, GenericInstanceTypeSignature? instance, string ifaceName, string objRefName)
     {
         // Resolve type arguments from the (substituted) generic instance signature, if any.
         List<TypeSemantics> typeArgs = new();
@@ -59,7 +60,7 @@ internal static partial class CodeWriters
         switch (ifaceName)
         {
             case "IClosable":
-                EmitDisposable(w);
+                EmitDisposable(w, objRefName);
                 break;
             case "IIterable`1":
                 EmitGenericEnumerable(w, typeArgs);
@@ -98,9 +99,11 @@ internal static partial class CodeWriters
         }
     }
 
-    private static void EmitDisposable(TypeWriter w)
+    private static void EmitDisposable(TypeWriter w, string objRefName)
     {
-        w.Write("\npublic void Dispose() => throw null!;\n");
+        w.Write("\npublic void Dispose() => global::ABI.System.IDisposableMethods.Dispose(");
+        w.Write(objRefName);
+        w.Write(");\n");
     }
 
     private static void EmitGenericEnumerable(TypeWriter w, List<TypeSemantics> args)

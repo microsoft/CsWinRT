@@ -237,7 +237,8 @@ internal static partial class CodeWriters
             {
                 if (IsMappedInterfaceRequiringStubs(ifaceNs, ifaceName))
                 {
-                    WriteMappedInterfaceStubs(w, nextInstance, ifaceName);
+                    string objRefName = GetObjRefName(w, ifaceType);
+                    WriteMappedInterfaceStubs(w, nextInstance, ifaceName, objRefName);
                     // Mark sibling/parent mapped interfaces whose members are already covered
                     // (e.g., IMap`2/IVector`1/etc. include the IIterable`1 GetEnumerator stubs).
                     MarkCoveredMappedInterfaces(declaringType, ifaceName, writtenInterfaces);
