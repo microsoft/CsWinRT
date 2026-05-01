@@ -341,6 +341,7 @@ internal static partial class CodeWriters
             if (IsString(p.Type)) { hasStringParams = true; continue; }
             if (IsRuntimeClassOrInterface(p.Type)) { continue; }
             if (IsObject(p.Type)) { continue; }
+            if (IsGenericInstance(p.Type)) { continue; }
             allParamsSimple = false;
             break;
         }
@@ -348,9 +349,11 @@ internal static partial class CodeWriters
             || IsBlittablePrimitive(rt)
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
-            || IsObject(rt);
+            || IsObject(rt)
+            || IsGenericInstance(rt);
         bool returnIsString = rt is not null && IsString(rt);
-        bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt));
+        bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
+        bool returnIsGenericInstance = rt is not null && IsGenericInstance(rt);
 
         bool isGetter = methodName.StartsWith("get_", System.StringComparison.Ordinal);
         bool isSetter = methodName.StartsWith("put_", System.StringComparison.Ordinal);
@@ -369,6 +372,36 @@ internal static partial class CodeWriters
             w.Write("    *__retval = default;\n");
         }
         w.Write("    try\n    {\n");
+
+        // For generic instance ABI input parameters, emit local UnsafeAccessor delegates and locals
+        // first so the call site can reference them.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (IsGenericInstance(p.Type))
+            {
+                string rawName = p.Parameter.Name ?? "param";
+                string callName = Helpers.IsKeyword(rawName) ? "@" + rawName : rawName;
+                string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+                string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
+                w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                w.Write("        static extern ");
+                w.Write(projectedTypeName);
+                w.Write(" ConvertToManaged_arg_");
+                w.Write(rawName);
+                w.Write("([UnsafeAccessorType(\"");
+                w.Write(interopTypeName);
+                w.Write("\")] object _, void* value);\n");
+                w.Write("        var __arg_");
+                w.Write(rawName);
+                w.Write(" = ConvertToManaged_arg_");
+                w.Write(rawName);
+                w.Write("(null, ");
+                w.Write(callName);
+                w.Write(");\n");
+            }
+        }
+
         if (returnIsString)
         {
             w.Write("        string __result = ");
@@ -434,9 +467,25 @@ internal static partial class CodeWriters
             }
             else if (returnIsRefType)
             {
-                w.Write("        *__retval = ");
-                EmitMarshallerConvertToUnmanaged(w, rt!, "__result");
-                w.Write(".DetachThisPtrUnsafe();\n");
+                if (returnIsGenericInstance)
+                {
+                    // Generic instance return: emit local UnsafeAccessor delegate to ConvertToUnmanaged + .DetachThisPtrUnsafe()
+                    string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+                    string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+                    w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+                    w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_result([UnsafeAccessorType(\"");
+                    w.Write(interopTypeName);
+                    w.Write("\")] object _, ");
+                    w.Write(projectedTypeName);
+                    w.Write(" value);\n");
+                    w.Write("        *__retval = ConvertToUnmanaged_result(null, __result).DetachThisPtrUnsafe();\n");
+                }
+                else
+                {
+                    w.Write("        *__retval = ");
+                    EmitMarshallerConvertToUnmanaged(w, rt!, "__result");
+                    w.Write(".DetachThisPtrUnsafe();\n");
+                }
             }
             else
             {
@@ -494,6 +543,13 @@ internal static partial class CodeWriters
             w.Write("HStringMarshaller.ConvertToManaged(");
             w.Write(pname);
             w.Write(")");
+        }
+        else if (IsGenericInstance(p.Type))
+        {
+            // Generic instance ABI parameter: caller already declared a local UnsafeAccessor +
+            // local var __arg_<name> that holds the converted value.
+            w.Write("__arg_");
+            w.Write(rawName);
         }
         else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type))
         {
