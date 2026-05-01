@@ -304,17 +304,39 @@ internal static partial class CodeWriters
 
         w.Write("public static nint Vtable\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => (nint)Unsafe.AsPointer(in Vftbl);\n}\n\n");
 
-        // Stubbed Do_Abi_* implementations for all methods - returns S_OK (0)
+        // Do_Abi_* implementations: emit real bodies for void/no-args (and similarly simple cases),
+        // throw null! for everything else (deferred — needs full per-parameter marshalling).
+        string ifaceFullName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
+        if (!ifaceFullName.StartsWith("global::", System.StringComparison.Ordinal)) { ifaceFullName = "global::" + ifaceFullName; }
         foreach (MethodDefinition method in type.Methods)
         {
             string vm = GetVMethodName(type, method);
             MethodSig sig = new(method);
+            string mname = method.Name?.Value ?? string.Empty;
             w.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
             w.Write("private static int Do_Abi_");
             w.Write(vm);
             w.Write("(");
             WriteAbiParameterTypesPointer(w, sig, includeParamNames: true);
-            w.Write(") => throw null!;\n\n");
+            w.Write(")");
+            if (sig.ReturnType is null && sig.Params.Count == 0)
+            {
+                // Simple void/no-params CCW callback
+                w.Write("\n{\n");
+                w.Write("    try\n    {\n");
+                w.Write("        ComInterfaceDispatch.GetInstance<");
+                w.Write(ifaceFullName);
+                w.Write(">((ComInterfaceDispatch*)thisPtr).");
+                w.Write(mname);
+                w.Write("();\n");
+                w.Write("        return 0;\n    }\n");
+                w.Write("    catch (Exception __exception__)\n    {\n");
+                w.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n\n");
+            }
+            else
+            {
+                w.Write(" => throw null!;\n\n");
+            }
         }
         w.Write("}\n");
     }
