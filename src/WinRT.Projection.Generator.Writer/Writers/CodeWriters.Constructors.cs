@@ -231,19 +231,18 @@ internal static partial class CodeWriters
 
         // Bind each arg from the args struct to a local of its ABI-marshalable input type.
         // For simple cases (primitives, blittable structs, enums) this is a direct copy. For
-        // string params we'd need to marshal to HSTRING. For runtime classes we'd need to
-        // marshal to IInspectable*. For now, only emit the body for the cases we can handle;
-        // otherwise emit throw null! so the file still compiles.
+        // string params we marshal via HStringMarshaller. For runtime classes we marshal via
+        // the appropriate marshaller. For unsupported parameter kinds we emit throw null!.
         bool canEmit = true;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (!IsBlittablePrimitive(sig.Params[i].Type) &&
-                !IsBlittableStruct(sig.Params[i].Type) &&
-                !IsEnumType(sig.Params[i].Type))
+            AsmResolver.DotNet.Signatures.TypeSignature pt = sig.Params[i].Type;
+            if (IsBlittablePrimitive(pt) || IsBlittableStruct(pt) || IsEnumType(pt) || IsString(pt))
             {
-                canEmit = false;
-                break;
+                continue;
             }
+            canEmit = false;
+            break;
         }
 
         if (!canEmit)
@@ -268,8 +267,41 @@ internal static partial class CodeWriters
         }
 
         w.Write("        void* __retval = default;\n");
+
+        // For string params, open a `fixed(void* _<name> = <name>)` block and an HStringMarshaller
+        // call before the function pointer call. Each string param adds nesting.
+        int stringParamCount = 0;
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            if (!IsString(sig.Params[i].Type)) { continue; }
+            ParamInfo p = sig.Params[i];
+            string raw = p.Parameter.Name ?? "param";
+            string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string indent = new(' ', 8 + (stringParamCount * 4));
+            w.Write(indent);
+            w.Write("fixed(void* _");
+            w.Write(raw);
+            w.Write(" = ");
+            w.Write(pname);
+            w.Write(")\n");
+            w.Write(indent);
+            w.Write("{\n");
+            stringParamCount++;
+            string innerIndent = new(' ', 8 + (stringParamCount * 4));
+            w.Write(innerIndent);
+            w.Write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
+            w.Write(raw);
+            w.Write(", ");
+            w.Write(pname);
+            w.Write("?.Length, out HStringReference __");
+            w.Write(raw);
+            w.Write(");\n");
+        }
+
+        string callIndent = new(' ', 8 + (stringParamCount * 4));
+        w.Write(callIndent);
         // delegate* signature: void*, then each ABI param type, then void**, then int.
-        w.Write("        RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
+        w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
         for (int i = 0; i < sig.Params.Count; i++)
         {
             WriteAbiType(w, TypeSemanticsFactory.Get(sig.Params[i].Type));
@@ -285,6 +317,7 @@ internal static partial class CodeWriters
             string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
             w.Write(", ");
             // For enums, cast to underlying type. For bool, cast to byte. For char, cast to ushort.
+            // For string params, use the marshalled HString from the fixed block.
             if (IsEnumType(p.Type))
             {
                 w.Write("(");
@@ -305,13 +338,30 @@ internal static partial class CodeWriters
                 w.Write("(ushort)");
                 w.Write(pname);
             }
+            else if (IsString(p.Type))
+            {
+                w.Write("__");
+                w.Write(raw);
+                w.Write(".HString");
+            }
             else
             {
                 w.Write(pname);
             }
         }
         w.Write(", &__retval));\n");
-        w.Write("        retval = __retval;\n    }\n}\n");
+        w.Write(callIndent);
+        w.Write("retval = __retval;\n");
+
+        // Close fixed blocks (innermost first).
+        for (int i = stringParamCount - 1; i >= 0; i--)
+        {
+            string indent = new(' ', 8 + (i * 4));
+            w.Write(indent);
+            w.Write("}\n");
+        }
+
+        w.Write("    }\n}\n");
     }
 
     /// <summary>Returns the IID expression for the class's default interface.</summary>
