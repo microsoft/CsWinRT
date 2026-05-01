@@ -252,7 +252,11 @@ internal partial class ProjectionGenerator
         fileStream.WriteLine($"-target {args.TargetFramework}");
         fileStream.WriteLine($"-input {args.WindowsMetadata}");
         fileStream.WriteLine($"-output \"{outputFolder}\"");
-        winmdInputs.Add(args.WindowsMetadata);
+
+        // Expand the windows metadata token (path | "local" | "sdk[+]" | version[+]) into actual
+        // .winmd file paths (or directories the writer will recursively scan). The C++ cswinrt.exe
+        // tool did this in cmd_reader.h via reader.files() — see WindowsMetadataExpander.
+        winmdInputs.AddRange(WindowsMetadataExpander.Expand(args.WindowsMetadata));
 
         // When generating 'WinRT.Component.dll', enable component-specific code generation
         // (activation factories, exclusive-to interfaces, etc.).
