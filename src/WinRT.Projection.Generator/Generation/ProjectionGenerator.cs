@@ -66,12 +66,12 @@ internal static partial class ProjectionGenerator
             return;
         }
 
-        // Invoke 'cswinrt.exe' to generate the projection sources
+        // Invoke the projection writer (in-process) to generate the projection sources
         try
         {
             ConsoleApp.Log("Generating projection code");
 
-            GenerateSources(args, processingState);
+            GenerateSources(processingState);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
