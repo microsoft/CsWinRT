@@ -315,20 +315,185 @@ internal static partial class CodeWriters
         // throw null! for everything else (deferred — needs full per-parameter marshalling).
         string ifaceFullName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
         if (!ifaceFullName.StartsWith("global::", System.StringComparison.Ordinal)) { ifaceFullName = "global::" + ifaceFullName; }
+
+        // Build a map of event add/remove methods to their event so we can emit the table field
+        // and the proper Do_Abi_add_*/Do_Abi_remove_* bodies (mirrors C++ write_event_abi_invoke).
+        System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition>? eventMap = BuildEventMethodMap(type);
+
         foreach (MethodDefinition method in type.Methods)
         {
             string vm = GetVMethodName(type, method);
             MethodSig sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
+
+            // If this method is an event add accessor, emit the per-event ConditionalWeakTable
+            // before the Do_Abi method (mirrors C++ ordering).
+            if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt) && evt.AddMethod == method)
+            {
+                EmitEventTableField(w, evt, type);
+            }
+
             w.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
             w.Write("private static int Do_Abi_");
             w.Write(vm);
             w.Write("(");
             WriteAbiParameterTypesPointer(w, sig, includeParamNames: true);
             w.Write(")");
-            EmitDoAbiBodyIfSimple(w, sig, ifaceFullName, mname);
+
+            if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt2))
+            {
+                if (evt2.AddMethod == method)
+                {
+                    EmitDoAbiAddEvent(w, evt2, sig, ifaceFullName);
+                }
+                else
+                {
+                    EmitDoAbiRemoveEvent(w, evt2, sig, ifaceFullName);
+                }
+            }
+            else
+            {
+                EmitDoAbiBodyIfSimple(w, sig, ifaceFullName, mname);
+            }
         }
         w.Write("}\n");
+    }
+
+    /// <summary>Build a method-to-event map for add/remove accessors of a type.</summary>
+    private static System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition>? BuildEventMethodMap(TypeDefinition type)
+    {
+        if (type.Events.Count == 0) { return null; }
+        System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition> map = new();
+        foreach (EventDefinition evt in type.Events)
+        {
+            if (evt.AddMethod is MethodDefinition add) { map[add] = evt; }
+            if (evt.RemoveMethod is MethodDefinition rem) { map[rem] = evt; }
+        }
+        return map;
+    }
+
+    /// <summary>
+    /// Emits the per-event <c>ConditionalWeakTable&lt;TInterface, EventRegistrationTokenTable&lt;THandler&gt;&gt;</c>
+    /// backing field property. Mirrors the table emission in C++ <c>write_event_abi_invoke</c>.
+    /// </summary>
+    private static void EmitEventTableField(TypeWriter w, EventDefinition evt, TypeDefinition iface)
+    {
+        string evName = evt.Name?.Value ?? "Event";
+        string ifaceProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, iface, TypedefNameType.Projected, true)));
+        if (!ifaceProjected.StartsWith("global::", System.StringComparison.Ordinal)) { ifaceProjected = "global::" + ifaceProjected; }
+        string evtType = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteEventType(w, evt)));
+
+        w.Write("\nprivate static ConditionalWeakTable<");
+        w.Write(ifaceProjected);
+        w.Write(", EventRegistrationTokenTable<");
+        w.Write(evtType);
+        w.Write(">> _");
+        w.Write(evName);
+        w.Write("\n{\n");
+        w.Write("    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
+        w.Write("    get\n    {\n");
+        w.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
+        w.Write("        static ConditionalWeakTable<");
+        w.Write(ifaceProjected);
+        w.Write(", EventRegistrationTokenTable<");
+        w.Write(evtType);
+        w.Write(">> MakeTable()\n        {\n");
+        w.Write("            _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);\n\n");
+        w.Write("            return global::System.Threading.Volatile.Read(in field);\n");
+        w.Write("        }\n\n");
+        w.Write("        return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n    }\n}\n");
+    }
+
+    /// <summary>
+    /// Emits the body of the <c>Do_Abi_add_&lt;EventName&gt;_N</c> method. Mirrors the corresponding
+    /// branch in C++ <c>write_event_abi_invoke</c>.
+    /// </summary>
+    private static void EmitDoAbiAddEvent(TypeWriter w, EventDefinition evt, MethodSig sig, string ifaceFullName)
+    {
+        string evName = evt.Name?.Value ?? "Event";
+        // Handler is the (last) input parameter of the add method. The emitted parameter name in the
+        // signature comes from WriteAbiParameterTypesPointer which uses the metadata name verbatim.
+        string handlerRawName = sig.Params.Count > 0 ? (sig.Params[^1].Parameter.Name ?? "handler") : "handler";
+        string handlerRef = Helpers.IsKeyword(handlerRawName) ? "@" + handlerRawName : handlerRawName;
+
+        // The cookie return parameter is emitted as "__retval" by WriteAbiParameterTypesPointer.
+        const string cookieName = "__retval";
+
+        AsmResolver.DotNet.Signatures.TypeSignature evtTypeSig = evt.EventType!.ToTypeSignature(false);
+        bool isGeneric = evtTypeSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
+
+        w.Write("\n{\n");
+        w.Write("    *");
+        w.Write(cookieName);
+        w.Write(" = default;\n");
+        w.Write("    try\n    {\n");
+        w.Write("        var __this = ComInterfaceDispatch.GetInstance<");
+        w.Write(ifaceFullName);
+        w.Write(">((ComInterfaceDispatch*)thisPtr);\n");
+
+        if (isGeneric)
+        {
+            string interopTypeName = EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+            string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, evtTypeSig, false)));
+            w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+            w.Write("        static extern ");
+            w.Write(projectedTypeName);
+            w.Write(" ConvertToManaged([UnsafeAccessorType(\"");
+            w.Write(interopTypeName);
+            w.Write("\")] object _, void* value);\n");
+            w.Write("        var __handler = ConvertToManaged(null, ");
+            w.Write(handlerRef);
+            w.Write(");\n");
+        }
+        else
+        {
+            w.Write("        var __handler = ");
+            WriteTypeName(w, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
+            w.Write("Marshaller.ConvertToManaged(");
+            w.Write(handlerRef);
+            w.Write(");\n");
+        }
+
+        w.Write("        *");
+        w.Write(cookieName);
+        w.Write(" = _");
+        w.Write(evName);
+        w.Write(".GetOrCreateValue(__this).AddEventHandler(__handler);\n");
+        w.Write("        __this.");
+        w.Write(evName);
+        w.Write(" += __handler;\n");
+        w.Write("        return 0;\n    }\n");
+        w.Write("    catch (Exception __exception__)\n    {\n");
+        w.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");
+    }
+
+    /// <summary>
+    /// Emits the body of the <c>Do_Abi_remove_&lt;EventName&gt;_N</c> method. Mirrors the corresponding
+    /// branch in C++ <c>write_event_abi_invoke</c>.
+    /// </summary>
+    private static void EmitDoAbiRemoveEvent(TypeWriter w, EventDefinition evt, MethodSig sig, string ifaceFullName)
+    {
+        string evName = evt.Name?.Value ?? "Event";
+        string tokenRawName = sig.Params.Count > 0 ? (sig.Params[^1].Parameter.Name ?? "token") : "token";
+        string tokenRef = Helpers.IsKeyword(tokenRawName) ? "@" + tokenRawName : tokenRawName;
+
+        w.Write("\n{\n");
+        w.Write("    try\n    {\n");
+        w.Write("        var __this = ComInterfaceDispatch.GetInstance<");
+        w.Write(ifaceFullName);
+        w.Write(">((ComInterfaceDispatch*)thisPtr);\n");
+        w.Write("        if(__this is not null && _");
+        w.Write(evName);
+        w.Write(".TryGetValue(__this, out var __table) && __table.RemoveEventHandler(");
+        w.Write(tokenRef);
+        w.Write(", out var __handler))\n        {\n");
+        w.Write("            __this.");
+        w.Write(evName);
+        w.Write(" -= __handler;\n");
+        w.Write("        }\n");
+        w.Write("        return 0;\n    }\n");
+        w.Write("    catch (Exception __exception__)\n    {\n");
+        w.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");
     }
 
     /// <summary>

@@ -184,9 +184,20 @@ internal static partial class CodeWriters
                         ns = mapped.MappedNamespace;
                         name = mapped.MappedName;
                     }
-                    if (!string.IsNullOrEmpty(ns))
+                    bool needsNsPrefix = !string.IsNullOrEmpty(ns) && (
+                        forceWriteNamespace ||
+                        ns != w.CurrentNamespace ||
+                        (nameType == TypedefNameType.Projected && (w.InAbiNamespace || w.InAbiImplNamespace)) ||
+                        (nameType == TypedefNameType.ABI && !w.InAbiNamespace) ||
+                        (nameType == TypedefNameType.EventSource && !w.InAbiNamespace) ||
+                        (nameType == TypedefNameType.CCW && (w.InAbiNamespace || w.InAbiImplNamespace)));
+                    if (needsNsPrefix)
                     {
                         w.Write("global::");
+                        if (nameType is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource)
+                        {
+                            w.Write("ABI.");
+                        }
                         w.Write(ns);
                         w.Write(".");
                     }
