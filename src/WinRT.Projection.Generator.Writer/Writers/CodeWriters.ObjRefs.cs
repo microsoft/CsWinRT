@@ -16,17 +16,53 @@ internal static partial class CodeWriters
 {
     /// <summary>
     /// Returns the field name for the given interface impl (e.g. <c>_objRef_System_IDisposable</c>).
-    /// Mirrors C++ <c>write_objref_type_name</c>: takes the projected interface name, strips
-    /// the <c>global::</c> prefix and replaces non-identifier characters with <c>_</c>.
+    /// Mirrors C++ <c>write_objref_type_name</c>: takes the projected interface name (with the
+    /// namespace forcibly included), strips the <c>global::</c> prefix and replaces
+    /// non-identifier characters with <c>_</c>.
     /// </summary>
     public static string GetObjRefName(TypeWriter w, ITypeDefOrRef ifaceType)
     {
-        string projected = w.WriteTemp("%", new Action<TextWriter>(_ =>
+        // Build the projected, fully-qualified name with global::.
+        string projected;
+        if (ifaceType is TypeDefinition td)
         {
-            // Use the same projection logic that the inheritance list uses: applies
-            // mapped-type remapping (e.g. IClosable -> System.IDisposable).
-            WriteInterfaceTypeName(w, ifaceType);
-        }));
+            string ns = td.Namespace?.Value ?? string.Empty;
+            string name = td.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
+            projected = "global::" + ns + "." + Helpers.StripBackticks(name);
+        }
+        else if (ifaceType is TypeReference tr)
+        {
+            string ns = tr.Namespace?.Value ?? string.Empty;
+            string name = tr.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
+            projected = "global::" + ns + "." + Helpers.StripBackticks(name);
+        }
+        else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        {
+            // Generic instantiation: full qualified name with type args (matches C++ projected name).
+            projected = w.WriteTemp("%", new Action<TextWriter>(_ =>
+            {
+                WriteInterfaceTypeName(w, ifaceType);
+            }));
+        }
+        else
+        {
+            projected = w.WriteTemp("%", new Action<TextWriter>(_ =>
+            {
+                WriteInterfaceTypeName(w, ifaceType);
+            }));
+        }
         return "_objRef_" + EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
 

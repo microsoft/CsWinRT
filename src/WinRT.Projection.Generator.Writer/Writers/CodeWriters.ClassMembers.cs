@@ -75,8 +75,40 @@ internal static partial class CodeWriters
             w.Write(" ");
             w.Write(kvp.Key);
             w.Write(" { ");
-            if (s.HasGetter) { w.Write("get => throw null!; "); }
-            if (s.HasSetter) { w.Write("set => throw null!; "); }
+            if (s.HasGetter)
+            {
+                if (s.GetterIsGeneric)
+                {
+                    w.Write("get => throw null!; ");
+                }
+                else
+                {
+                    w.Write("get => ");
+                    w.Write(s.GetterAbiClass);
+                    w.Write(".");
+                    w.Write(kvp.Key);
+                    w.Write("(");
+                    w.Write(s.GetterObjRef);
+                    w.Write("); ");
+                }
+            }
+            if (s.HasSetter)
+            {
+                if (s.SetterIsGeneric)
+                {
+                    w.Write("set => throw null!; ");
+                }
+                else
+                {
+                    w.Write("set => ");
+                    w.Write(s.SetterAbiClass);
+                    w.Write(".");
+                    w.Write(kvp.Key);
+                    w.Write("(");
+                    w.Write(s.SetterObjRef);
+                    w.Write(", value); ");
+                }
+            }
             w.Write("}\n");
         }
 
@@ -144,6 +176,13 @@ internal static partial class CodeWriters
         public string PropTypeText = string.Empty;
         public string Access = "public ";
         public string MethodSpec = string.Empty;
+        public string GetterAbiClass = string.Empty;
+        public string GetterObjRef = string.Empty;
+        public string SetterAbiClass = string.Empty;
+        public string SetterObjRef = string.Empty;
+        public string Name = string.Empty;
+        public bool GetterIsGeneric;
+        public bool SetterIsGeneric;
     }
 
     /// <summary>
@@ -206,7 +245,7 @@ internal static partial class CodeWriters
                 continue;
             }
 
-            WriteInterfaceMembers(w, classType, ifaceType, isOverridable, isProtected, nextInstance,
+            WriteInterfaceMembers(w, classType, ifaceType, impl.Interface, isOverridable, isProtected, nextInstance,
                 writtenMethods, propertyState, writtenEvents);
 
             // Recurse into derived interfaces
@@ -280,6 +319,7 @@ internal static partial class CodeWriters
     }
 
     private static void WriteInterfaceMembers(TypeWriter w, TypeDefinition classType, TypeDefinition ifaceType,
+        ITypeDefOrRef originalInterface,
         bool isOverridable, bool isProtected, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance,
         HashSet<string> writtenMethods, Dictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents)
     {
@@ -296,6 +336,25 @@ internal static partial class CodeWriters
         AsmResolver.DotNet.Signatures.GenericContext? genCtx = currentInstance is not null
             ? new AsmResolver.DotNet.Signatures.GenericContext(currentInstance, null)
             : null;
+
+        // Generic interfaces require UnsafeAccessor-based dispatch (real ABI lives in the
+        // post-build interop assembly). For now we keep the throw-null stubs for them — they
+        // will be ported as part of the dedicated UnsafeAccessor work item.
+        bool isGenericInterface = ifaceType.GenericParameters.Count > 0;
+
+        // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.Foundation.IDeferralMethods")
+        // — note this is the ungenerified Methods class for generic interfaces (matches truth output).
+        // The _objRef_ field name uses the full instantiated interface name so generic instantiations
+        // (e.g. IAsyncOperation<uint>) get a per-instantiation field.
+        string abiClass = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
+        {
+            WriteTypedefName(w, ifaceType, TypedefNameType.StaticAbiClass, true);
+        }));
+        if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal))
+        {
+            abiClass = "global::" + abiClass;
+        }
+        string objRef = GetObjRefName(w, originalInterface);
 
         // Methods
         foreach (MethodDefinition method in ifaceType.Methods)
@@ -316,10 +375,30 @@ internal static partial class CodeWriters
             w.Write(name);
             w.Write("(");
             WriteParameterList(w, sig);
-            w.Write(") => throw null!;\n");
+            if (isGenericInterface)
+            {
+                w.Write(") => throw null!;\n");
+            }
+            else
+            {
+                w.Write(") => ");
+                w.Write(abiClass);
+                w.Write(".");
+                w.Write(name);
+                w.Write("(");
+                w.Write(objRef);
+                for (int i = 0; i < sig.Params.Count; i++)
+                {
+                    w.Write(", ");
+                    WriteParameterNameWithModifier(w, sig.Params[i]);
+                }
+                w.Write(");\n");
+            }
         }
 
         // Properties: collect into propertyState (merging accessors from multiple interfaces).
+        // Track per-accessor origin so that the getter/setter dispatch to the right ABI Methods
+        // class on the right _objRef_ field.
         foreach (PropertyDefinition prop in ifaceType.Properties)
         {
             string name = prop.Name?.Value ?? string.Empty;
@@ -334,11 +413,24 @@ internal static partial class CodeWriters
                 };
                 propertyState[name] = state;
             }
-            if (getter is not null) { state.HasGetter = true; }
-            if (setter is not null) { state.HasSetter = true; }
+            if (getter is not null && !state.HasGetter)
+            {
+                state.HasGetter = true;
+                state.GetterAbiClass = abiClass;
+                state.GetterObjRef = objRef;
+                state.GetterIsGeneric = isGenericInterface;
+            }
+            if (setter is not null && !state.HasSetter)
+            {
+                state.HasSetter = true;
+                state.SetterAbiClass = abiClass;
+                state.SetterObjRef = objRef;
+                state.SetterIsGeneric = isGenericInterface;
+            }
         }
 
-        // Events
+        // Events (deferred port: real implementation requires lazy event source field generation;
+        // the throw-null stub remains compatible since events resolve at runtime via the adapter).
         foreach (EventDefinition evt in ifaceType.Events)
         {
             string name = evt.Name?.Value ?? string.Empty;
@@ -353,6 +445,27 @@ internal static partial class CodeWriters
             w.Write(name);
             w.Write(" { add => throw null!; remove => throw null!; }\n");
         }
+    }
+
+    /// <summary>
+    /// Writes a parameter name prefixed with its modifier (in/out/ref) for use as a call argument.
+    /// </summary>
+    private static void WriteParameterNameWithModifier(TypeWriter w, ParamInfo p)
+    {
+        ParamCategory cat = ParamHelpers.GetParamCategory(p);
+        switch (cat)
+        {
+            case ParamCategory.Out:
+                w.Write("out ");
+                break;
+            case ParamCategory.Ref:
+                w.Write("in ");
+                break;
+            case ParamCategory.ReceiveArray:
+                w.Write("out ");
+                break;
+        }
+        WriteParameterName(w, p);
     }
 
     /// <summary>
