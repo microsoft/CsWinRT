@@ -317,17 +317,6 @@ internal static partial class CodeWriters
         w.Write(");\n");
     }
 
-    private static void EmitReadOnlyList(TypeWriter w, List<TypeSemantics> args)
-    {
-        if (args.Count != 1) { return; }
-        string t = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
-        w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"ReadOnlyListItem\")]\n");
-        w.Write($"public {t} this[int index] => throw null!;\n");
-        w.Write("public int Count => throw null!;\n");
-        w.Write($"public global::System.Collections.Generic.IEnumerator<{t}> GetEnumerator() => throw null!;\n");
-        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
-    }
-
     private static void EmitNonGenericList(TypeWriter w)
     {
         w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"BindableListItem\")]\n");
