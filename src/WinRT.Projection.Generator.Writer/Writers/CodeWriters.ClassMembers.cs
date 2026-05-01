@@ -128,7 +128,7 @@ internal static partial class CodeWriters
                 continue;
             }
 
-            WriteInterfaceMembers(w, classType, ifaceType, isOverridable, isProtected,
+            WriteInterfaceMembers(w, classType, ifaceType, isOverridable, isProtected, nextInstance,
                 writtenMethods, propertyState, writtenEvents);
 
             // Recurse into derived interfaces
@@ -202,7 +202,7 @@ internal static partial class CodeWriters
     }
 
     private static void WriteInterfaceMembers(TypeWriter w, TypeDefinition classType, TypeDefinition ifaceType,
-        bool isOverridable, bool isProtected,
+        bool isOverridable, bool isProtected, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance,
         HashSet<string> writtenMethods, Dictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents)
     {
         bool sealed_ = classType.IsSealed;
@@ -215,13 +215,17 @@ internal static partial class CodeWriters
             methodSpec = "virtual ";
         }
 
+        AsmResolver.DotNet.Signatures.GenericContext? genCtx = currentInstance is not null
+            ? new AsmResolver.DotNet.Signatures.GenericContext(currentInstance, null)
+            : null;
+
         // Methods
         foreach (MethodDefinition method in ifaceType.Methods)
         {
             if (Helpers.IsSpecial(method)) { continue; }
             string name = method.Name?.Value ?? string.Empty;
             // Track by signature key (name + param count) to avoid trivial overload duplicates
-            MethodSig sig = new(method);
+            MethodSig sig = new(method, genCtx);
             string key = name + ":" + sig.Params.Count;
             if (!writtenMethods.Add(key)) { continue; }
 
@@ -245,7 +249,7 @@ internal static partial class CodeWriters
             {
                 state = new PropertyAccessorState
                 {
-                    PropTypeText = WritePropType(w, prop),
+                    PropTypeText = WritePropType(w, prop, genCtx),
                     Access = access,
                     MethodSpec = methodSpec,
                 };
@@ -265,7 +269,7 @@ internal static partial class CodeWriters
             w.Write(access);
             w.Write(methodSpec);
             w.Write("event ");
-            WriteEventType(w, evt);
+            WriteEventType(w, evt, currentInstance);
             w.Write(" ");
             w.Write(name);
             w.Write(" { add => throw null!; remove => throw null!; }\n");

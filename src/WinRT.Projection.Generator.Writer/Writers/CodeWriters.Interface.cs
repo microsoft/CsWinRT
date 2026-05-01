@@ -131,8 +131,14 @@ internal static partial class CodeWriters
     /// <summary>Mirrors C++ <c>write_prop_type</c>.</summary>
     public static string WritePropType(TypeWriter w, PropertyDefinition prop, bool isSetProperty = false)
     {
+        return WritePropType(w, prop, null, isSetProperty);
+    }
+
+    public static string WritePropType(TypeWriter w, PropertyDefinition prop, AsmResolver.DotNet.Signatures.GenericContext? genCtx, bool isSetProperty = false)
+    {
         TypeSignature? typeSig = prop.Signature?.ReturnType;
         if (typeSig is null) { return "object"; }
+        if (genCtx is not null) { typeSig = typeSig.InstantiateGenericTypes(genCtx.Value); }
         return w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, typeSig, isSetProperty)));
     }
 

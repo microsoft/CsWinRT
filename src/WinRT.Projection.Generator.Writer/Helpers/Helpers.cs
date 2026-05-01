@@ -175,7 +175,9 @@ internal sealed class MethodSig
     public List<ParamInfo> Params { get; }
     public ParameterDefinition? ReturnParam { get; }
 
-    public MethodSig(MethodDefinition method)
+    public MethodSig(MethodDefinition method) : this(method, null) { }
+
+    public MethodSig(MethodDefinition method, AsmResolver.DotNet.Signatures.GenericContext? genCtx)
     {
         Method = method;
         Params = new List<ParamInfo>(method.Parameters.Count);
@@ -193,17 +195,25 @@ internal sealed class MethodSig
         // Iterate signature parameters
         if (method.Signature is MethodSignature sig)
         {
+            _substitutedReturnType = genCtx is not null && sig.ReturnType is not null
+                ? sig.ReturnType.InstantiateGenericTypes(genCtx.Value)
+                : sig.ReturnType;
             for (int i = 0; i < sig.ParameterTypes.Count; i++)
             {
-                Params.Add(new ParamInfo(method.Parameters[i], sig.ParameterTypes[i]));
+                TypeSignature pt = sig.ParameterTypes[i];
+                if (genCtx is not null) { pt = pt.InstantiateGenericTypes(genCtx.Value); }
+                Params.Add(new ParamInfo(method.Parameters[i], pt));
             }
         }
     }
 
-    public TypeSignature? ReturnType => Method.Signature is MethodSignature sig &&
-                                        sig.ReturnType is TypeSignature t &&
+#pragma warning disable IDE0032 // Use auto property — manual backing field needed for substituted return type
+    private readonly TypeSignature? _substitutedReturnType;
+#pragma warning restore IDE0032
+
+    public TypeSignature? ReturnType => _substitutedReturnType is TypeSignature t &&
                                         t is not CorLibTypeSignature { ElementType: ElementType.Void }
-                                          ? sig.ReturnType
+                                          ? _substitutedReturnType
                                           : null;
 
     public string ReturnParamName(string defaultName = "__return_value__")

@@ -212,11 +212,26 @@ internal static partial class CodeWriters
     /// </summary>
     public static void WriteEventType(TypeWriter w, EventDefinition evt)
     {
+        WriteEventType(w, evt, null);
+    }
+
+    /// <summary>
+    /// Same as <see cref="WriteEventType(TypeWriter, EventDefinition)"/> but applies the supplied
+    /// generic context for substitution (e.g., <c>T0</c>/<c>T1</c> -&gt; concrete type arguments
+    /// when emitting members for an instantiated parent generic interface).
+    /// </summary>
+    public static void WriteEventType(TypeWriter w, EventDefinition evt, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance)
+    {
         if (evt.EventType is null)
         {
             w.Write("global::Windows.Foundation.EventHandler");
             return;
         }
-        WriteTypeName(w, TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType), TypedefNameType.Projected, true);
+        AsmResolver.DotNet.Signatures.TypeSignature sig = evt.EventType.ToTypeSignature(false);
+        if (currentInstance is not null)
+        {
+            sig = sig.InstantiateGenericTypes(new AsmResolver.DotNet.Signatures.GenericContext(currentInstance, null));
+        }
+        WriteTypeName(w, TypeSemanticsFactory.Get(sig), TypedefNameType.Projected, true);
     }
 }
