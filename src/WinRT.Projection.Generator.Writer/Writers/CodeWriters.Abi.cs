@@ -864,7 +864,7 @@ internal static partial class CodeWriters
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
-        // Check that all parameters are types we can marshal (blittable primitives, string, runtime class, or object).
+        // Check that all parameters are types we can marshal (blittable primitives, string, runtime class, object, or generic instance).
         bool allParamsSimple = true;
         foreach (ParamInfo p in sig.Params)
         {
@@ -875,6 +875,7 @@ internal static partial class CodeWriters
             if (IsString(p.Type)) { continue; }
             if (IsRuntimeClassOrInterface(p.Type)) { continue; }
             if (IsObject(p.Type)) { continue; }
+            if (IsGenericInstance(p.Type)) { continue; }
             allParamsSimple = false;
             break;
         }
@@ -882,7 +883,8 @@ internal static partial class CodeWriters
             || IsBlittablePrimitive(rt)
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
-            || IsObject(rt);
+            || IsObject(rt)
+            || IsGenericInstance(rt);
 
         if (!allParamsSimple || !returnSimple)
         {
@@ -891,7 +893,7 @@ internal static partial class CodeWriters
         }
 
         bool returnIsString = rt is not null && IsString(rt);
-        bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt));
+        bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
         System.Text.StringBuilder fp = new();
@@ -899,7 +901,7 @@ internal static partial class CodeWriters
         foreach (ParamInfo p in sig.Params)
         {
             fp.Append(", ");
-            if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type)) { fp.Append("void*"); }
+            if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { fp.Append("void*"); }
             else { fp.Append(GetAbiPrimitiveType(p.Type)); }
         }
         if (rt is not null)
@@ -927,6 +929,29 @@ internal static partial class CodeWriters
                 w.Write(" = ");
                 EmitMarshallerConvertToUnmanaged(w, p.Type, callName);
                 w.Write(";\n");
+            }
+            else if (IsGenericInstance(p.Type))
+            {
+                // Generic instance param: emit a local UnsafeAccessor delegate to get the marshaller method.
+                string localName = GetParamLocalName(p, paramNameOverride);
+                string callName = GetParamName(p, paramNameOverride);
+                string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+                string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
+                w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+                w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
+                w.Write(localName);
+                w.Write("([UnsafeAccessorType(\"");
+                w.Write(interopTypeName);
+                w.Write("\")] object _, ");
+                w.Write(projectedTypeName);
+                w.Write(" value);\n");
+                w.Write("        using WindowsRuntimeObjectReferenceValue __");
+                w.Write(localName);
+                w.Write(" = ConvertToUnmanaged_");
+                w.Write(localName);
+                w.Write("(null, ");
+                w.Write(callName);
+                w.Write(");\n");
             }
         }
         // Declare locals for string parameters (input HSTRINGs to be freed)
@@ -988,7 +1013,7 @@ internal static partial class CodeWriters
                 w.Write("__");
                 w.Write(GetParamLocalName(p, paramNameOverride));
             }
-            else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type))
+            else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type))
             {
                 w.Write("__");
                 w.Write(GetParamLocalName(p, paramNameOverride));
@@ -1015,10 +1040,29 @@ internal static partial class CodeWriters
             }
             else if (returnIsRefType)
             {
-                w.Write(indent);
-                w.Write("return ");
-                EmitMarshallerConvertToManaged(w, rt, "__retval");
-                w.Write(";\n");
+                if (IsGenericInstance(rt))
+                {
+                    // Generic instance return: use a local UnsafeAccessor delegate.
+                    string interopTypeName = EncodeInteropTypeName(rt, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+                    string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
+                    w.Write(indent);
+                    w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                    w.Write(indent);
+                    w.Write("static extern ");
+                    w.Write(projectedTypeName);
+                    w.Write(" ConvertToManaged_retval([UnsafeAccessorType(\"");
+                    w.Write(interopTypeName);
+                    w.Write("\")] object _, void* value);\n");
+                    w.Write(indent);
+                    w.Write("return ConvertToManaged_retval(null, __retval);\n");
+                }
+                else
+                {
+                    w.Write(indent);
+                    w.Write("return ");
+                    EmitMarshallerConvertToManaged(w, rt, "__retval");
+                    w.Write(";\n");
+                }
             }
             else
             {
@@ -1072,6 +1116,12 @@ internal static partial class CodeWriters
     {
         return sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
                corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object;
+    }
+
+    /// <summary>True if the type signature represents a generic instantiation that needs WinRT.Interop UnsafeAccessor marshalling.</summary>
+    private static bool IsGenericInstance(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        return sig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
     }
 
     /// <summary>True if the type signature represents a WinRT runtime class, interface, or delegate (reference type marshallable via *Marshaller).</summary>
