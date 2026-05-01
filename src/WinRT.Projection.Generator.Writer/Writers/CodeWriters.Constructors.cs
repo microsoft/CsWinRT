@@ -237,7 +237,12 @@ internal static partial class CodeWriters
         for (int i = 0; i < sig.Params.Count; i++)
         {
             AsmResolver.DotNet.Signatures.TypeSignature pt = sig.Params[i].Type;
+            if (IsHResultException(pt)) { canEmit = false; break; }
             if (IsBlittablePrimitive(pt) || IsBlittableStruct(pt) || IsEnumType(pt) || IsString(pt))
+            {
+                continue;
+            }
+            if (IsRuntimeClassOrInterface(pt) || IsObject(pt) || IsGenericInstance(pt))
             {
                 continue;
             }
@@ -263,6 +268,47 @@ internal static partial class CodeWriters
             w.Write(pname);
             w.Write(" = args.");
             w.Write(pname);
+            w.Write(";\n");
+        }
+
+        // For generic instance params, emit local UnsafeAccessor delegates.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (!IsGenericInstance(p.Type)) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+            string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
+            w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
+            w.Write(raw);
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(interopTypeName);
+            w.Write("\")] object _, ");
+            w.Write(projectedTypeName);
+            w.Write(" value);\n");
+            w.Write("        using WindowsRuntimeObjectReferenceValue __");
+            w.Write(raw);
+            w.Write(" = ConvertToUnmanaged_");
+            w.Write(raw);
+            w.Write("(null, ");
+            w.Write(pname);
+            w.Write(");\n");
+        }
+
+        // For runtime class / object params, emit `using WindowsRuntimeObjectReferenceValue __<name> = ...ConvertToUnmanaged(<name>);`
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (IsGenericInstance(p.Type)) { continue; } // already handled above
+            if (!IsRuntimeClassOrInterface(p.Type) && !IsObject(p.Type)) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            w.Write("        using WindowsRuntimeObjectReferenceValue __");
+            w.Write(raw);
+            w.Write(" = ");
+            EmitMarshallerConvertToUnmanaged(w, p.Type, pname);
             w.Write(";\n");
         }
 
@@ -318,6 +364,7 @@ internal static partial class CodeWriters
             w.Write(", ");
             // For enums, cast to underlying type. For bool, cast to byte. For char, cast to ushort.
             // For string params, use the marshalled HString from the fixed block.
+            // For runtime class / object / generic instance params, use __<name>.GetThisPtrUnsafe().
             if (IsEnumType(p.Type))
             {
                 w.Write("(");
@@ -343,6 +390,12 @@ internal static partial class CodeWriters
                 w.Write("__");
                 w.Write(raw);
                 w.Write(".HString");
+            }
+            else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type))
+            {
+                w.Write("__");
+                w.Write(raw);
+                w.Write(".GetThisPtrUnsafe()");
             }
             else
             {
