@@ -619,6 +619,7 @@ internal static partial class CodeWriters
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = Helpers.StripBackticks(name);
         string visibility = w.Settings.Component ? "public" : "file";
+        bool blittable = IsTypeBlittable(type);
 
         w.Write("\n");
         w.Write(visibility);
@@ -635,7 +636,29 @@ internal static partial class CodeWriters
         w.Write("    }\n\n");
         w.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
         w.Write("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
-        w.Write("    public static int get_Value(void* thisPtr, void* result) => throw null!;\n");
+        if (blittable)
+        {
+            // Real implementation for blittable types: extract managed instance from CCW,
+            // dereference into the result pointer, return S_OK.
+            w.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
+            w.Write("        if (result is null)\n        {\n");
+            w.Write("            return unchecked((int)0x80004003);\n        }\n\n");
+            w.Write("        try\n        {\n");
+            w.Write("            var value = (");
+            WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write(")(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));\n");
+            w.Write("            *(");
+            WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write("*)result = value;\n");
+            w.Write("            return 0;\n        }\n");
+            w.Write("        catch (Exception e)\n        {\n");
+            w.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
+            w.Write("    }\n");
+        }
+        else
+        {
+            w.Write("    public static int get_Value(void* thisPtr, void* result) => throw null!;\n");
+        }
         w.Write("}\n\n");
     }
 
