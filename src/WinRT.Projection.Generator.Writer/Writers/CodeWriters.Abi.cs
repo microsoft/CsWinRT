@@ -460,9 +460,11 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Writes a marshaller stub for a class: a public static unsafe *Marshaller class with
-    /// ConvertToUnmanaged/ConvertToManaged methods, plus the file-scoped *ComWrappersMarshaller
-    /// attribute and *ComWrappersCallback callback class. Bodies are 'throw null!' stubs.
+    /// Writes the marshaller infrastructure for a runtime class:
+    /// * Public *Marshaller class with real ConvertToUnmanaged/ConvertToManaged bodies
+    /// * file-scoped *ComWrappersMarshallerAttribute (CreateObject implementation)
+    /// * file-scoped *ComWrappersCallback (IWindowsRuntimeObjectComWrappersCallback)
+    /// Mirrors C++ <c>write_class_marshaller</c>, <c>write_marshaller_callback_class</c>, etc.
     /// </summary>
     private static void WriteClassMarshallerStub(TypeWriter w, TypeDefinition type)
     {
@@ -471,22 +473,63 @@ internal static partial class CodeWriters
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
 
-        // Public *Marshaller class with ConvertToUnmanaged/ConvertToManaged
+        // Get the IID expression for the default interface (used by CreateObject).
+        ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
+        string defaultIfaceIid = defaultIface is not null
+            ? w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, defaultIface)))
+            : "default(global::System.Guid)";
+
+        // Public *Marshaller class
         w.Write("public static unsafe class ");
         w.Write(nameStripped);
         w.Write("Marshaller\n{\n");
         w.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
         w.Write(fullProjected);
-        w.Write(" value) => throw null!;\n");
+        w.Write(" value)\n    {\n");
+        w.Write("        if (value is not null)\n        {\n");
+        w.Write("            return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();\n");
+        w.Write("        }\n");
+        w.Write("        return default;\n    }\n\n");
         w.Write("    public static ");
         w.Write(fullProjected);
-        w.Write("? ConvertToManaged(void* value) => throw null!;\n");
-        w.Write("}\n\n");
-
-        // The original *ComWrappersMarshaller attribute (kept for compatibility).
-        w.Write("internal sealed class ");
+        w.Write("? ConvertToManaged(void* value)\n    {\n");
+        w.Write("        return (");
+        w.Write(fullProjected);
+        w.Write("?)WindowsRuntimeObjectMarshaller.ConvertToManaged<");
         w.Write(nameStripped);
-        w.Write("ComWrappersMarshaller : global::System.Attribute\n{\n}\n");
+        w.Write("ComWrappersCallback>(value);\n    }\n}\n\n");
+
+        // file-scoped *ComWrappersMarshallerAttribute - implements WindowsRuntimeComWrappersMarshallerAttribute.CreateObject
+        w.Write("file sealed unsafe class ");
+        w.Write(nameStripped);
+        w.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
+        w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+        w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(\n");
+        w.Write("            externalComObject: value,\n");
+        w.Write("            iid: ");
+        w.Write(defaultIfaceIid);
+        w.Write(",\n");
+        w.Write("            marshalingType: CreateObjectReferenceMarshalingType.Standard,\n");
+        w.Write("            wrapperFlags: out wrapperFlags);\n\n");
+        w.Write("        return new ");
+        w.Write(fullProjected);
+        w.Write("(valueReference);\n    }\n}\n\n");
+
+        // file-scoped *ComWrappersCallback - implements IWindowsRuntimeObjectComWrappersCallback
+        w.Write("file sealed unsafe class ");
+        w.Write(nameStripped);
+        w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
+        w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+        w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
+        w.Write("            externalComObject: value,\n");
+        w.Write("            iid: ");
+        w.Write(defaultIfaceIid);
+        w.Write(",\n");
+        w.Write("            marshalingType: CreateObjectReferenceMarshalingType.Agile,\n");
+        w.Write("            wrapperFlags: out wrapperFlags);\n\n");
+        w.Write("        return new ");
+        w.Write(fullProjected);
+        w.Write("(valueReference);\n    }\n}\n");
     }
 
     /// <summary>
