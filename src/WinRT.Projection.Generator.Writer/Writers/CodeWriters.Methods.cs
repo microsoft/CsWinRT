@@ -40,7 +40,7 @@ internal static partial class CodeWriters
                 WriteProjectedSignature(w, p.Type, true);
                 break;
             case ParamCategory.Ref:
-                w.Write("ref ");
+                w.Write("in ");
                 WriteProjectedSignature(w, p.Type, true);
                 break;
             case ParamCategory.PassArray:

@@ -242,7 +242,10 @@ internal static class ParamHelpers
         bool isArray = p.Type is SzArrayTypeSignature;
         bool isOut = p.Parameter.Definition?.IsOut == true;
         bool isIn = p.Parameter.Definition?.IsIn == true;
-        bool isByRef = p.Type is ByReferenceTypeSignature;
+        // Check both the captured signature type and the parameter's own type (handles cases where
+        // the signature is wrapped in a ByReferenceTypeSignature only on one side after substitution).
+        // Also peel custom modifiers (e.g. modreq[InAttribute]) which can hide a ByRef beneath.
+        bool isByRef = IsByRefType(p.Type) || IsByRefType(p.Parameter.ParameterType);
         if (isArray)
         {
             if (isIn) { return ParamCategory.PassArray; }
@@ -252,5 +255,16 @@ internal static class ParamHelpers
         if (isOut) { return ParamCategory.Out; }
         if (isByRef) { return ParamCategory.Ref; }
         return ParamCategory.In;
+    }
+
+    private static bool IsByRefType(TypeSignature? sig)
+    {
+        // Strip custom modifiers (e.g. modreq[InAttribute] or modopt[IsExternalInit]) before checking byref.
+        TypeSignature? cur = sig;
+        while (cur is CustomModifierTypeSignature cm)
+        {
+            cur = cm.BaseType;
+        }
+        return cur is ByReferenceTypeSignature;
     }
 }

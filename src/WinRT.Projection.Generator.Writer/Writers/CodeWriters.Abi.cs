@@ -113,6 +113,8 @@ internal static partial class CodeWriters
     /// <summary>Mirrors C++ <c>write_abi_class</c>.</summary>
     public static void WriteAbiClass(TypeWriter w, TypeDefinition type)
     {
+        // Static classes don't get a *Marshaller (no instances).
+        if (TypeCategorization.IsStatic(type)) { return; }
         // Emit a ComWrappers marshaller class so the attribute reference resolves
         WriteClassMarshallerStub(w, type);
     }
@@ -458,27 +460,89 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Writes a minimal marshaller stub for a class.
+    /// Writes a marshaller stub for a class: a public static unsafe *Marshaller class with
+    /// ConvertToUnmanaged/ConvertToManaged methods, plus the file-scoped *ComWrappersMarshaller
+    /// attribute and *ComWrappersCallback callback class. Bodies are 'throw null!' stubs.
     /// </summary>
     private static void WriteClassMarshallerStub(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = Helpers.StripBackticks(name);
+        string typeNs = type.Namespace?.Value ?? string.Empty;
+        string fullProjected = $"global::{typeNs}.{nameStripped}";
+
+        // Public *Marshaller class with ConvertToUnmanaged/ConvertToManaged
+        w.Write("public static unsafe class ");
+        w.Write(nameStripped);
+        w.Write("Marshaller\n{\n");
+        w.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
+        w.Write(fullProjected);
+        w.Write(" value) => throw null!;\n");
+        w.Write("    public static ");
+        w.Write(fullProjected);
+        w.Write("? ConvertToManaged(void* value) => throw null!;\n");
+        w.Write("}\n\n");
+
+        // The original *ComWrappersMarshaller attribute (kept for compatibility).
         w.Write("internal sealed class ");
         w.Write(nameStripped);
         w.Write("ComWrappersMarshaller : global::System.Attribute\n{\n}\n");
     }
 
     /// <summary>
-    /// Writes a minimal interface marshaller stub.
+    /// Writes a minimal interface 'Methods' static class with method signature stubs (no bodies).
+    /// Mirrors C++ <c>write_static_abi_methods</c> at signature level — bodies are 'throw null!'
+    /// stubs so consumers (e.g. handcrafted ComInteropExtensions.cs) can compile against them.
     /// </summary>
     private static void WriteInterfaceMarshallerStub(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = Helpers.StripBackticks(name);
-        w.Write("internal static class ");
+        w.Write("internal static unsafe class ");
         w.Write(nameStripped);
-        w.Write("Methods\n{\n}\n");
+        w.Write("Methods\n{\n");
+
+        foreach (MethodDefinition method in type.Methods)
+        {
+            if (Helpers.IsSpecial(method)) { continue; }
+            string mname = method.Name?.Value ?? string.Empty;
+            MethodSig sig = new(method);
+
+            w.Write("    public static ");
+            WriteProjectionReturnType(w, sig);
+            w.Write(" ");
+            w.Write(mname);
+            w.Write("(WindowsRuntimeObjectReference thisReference");
+            if (sig.Params.Count > 0) { w.Write(", "); }
+            WriteParameterList(w, sig);
+            w.Write(") => throw null!;\n");
+        }
+
+        // Emit property accessors
+        foreach (PropertyDefinition prop in type.Properties)
+        {
+            string pname = prop.Name?.Value ?? string.Empty;
+            (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+            string propType = WritePropType(w, prop);
+            if (getter is not null)
+            {
+                w.Write("    public static ");
+                w.Write(propType);
+                w.Write(" ");
+                w.Write(pname);
+                w.Write("(WindowsRuntimeObjectReference thisReference) => throw null!;\n");
+            }
+            if (setter is not null)
+            {
+                w.Write("    public static void ");
+                w.Write(pname);
+                w.Write("(WindowsRuntimeObjectReference thisReference, ");
+                w.Write(propType);
+                w.Write(" value) => throw null!;\n");
+            }
+        }
+
+        w.Write("}\n");
     }
 
     /// <summary>
