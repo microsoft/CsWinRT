@@ -340,14 +340,14 @@ internal static partial class CodeWriters
         }
         bool returnSimple = rt is null || IsBlittablePrimitive(rt);
 
-        // Property/event accessors require C# property/event syntax which is too involved
-        // to handle in this simplified port — defer them.
-        bool isAccessor = methodName.StartsWith("get_", System.StringComparison.Ordinal)
-                       || methodName.StartsWith("put_", System.StringComparison.Ordinal)
-                       || methodName.StartsWith("add_", System.StringComparison.Ordinal)
-                       || methodName.StartsWith("remove_", System.StringComparison.Ordinal);
+        bool isGetter = methodName.StartsWith("get_", System.StringComparison.Ordinal);
+        bool isSetter = methodName.StartsWith("put_", System.StringComparison.Ordinal);
+        bool isAddEvent = methodName.StartsWith("add_", System.StringComparison.Ordinal);
+        bool isRemoveEvent = methodName.StartsWith("remove_", System.StringComparison.Ordinal);
 
-        if (!allParamsSimple || !returnSimple || isAccessor)
+        // Event accessors require event lifetime tracking (token return, registration storage) —
+        // too involved for a primitive-only fast path; defer.
+        if (isAddEvent || isRemoveEvent || !allParamsSimple || !returnSimple)
         {
             w.Write(" => throw null!;\n\n");
             return;
@@ -366,17 +366,43 @@ internal static partial class CodeWriters
             w.Write(projected);
             w.Write(" __result = ");
         }
-        w.Write("ComInterfaceDispatch.GetInstance<");
-        w.Write(ifaceFullName);
-        w.Write(">((ComInterfaceDispatch*)thisPtr).");
-        w.Write(methodName);
-        w.Write("(");
-        for (int i = 0; i < sig.Params.Count; i++)
+        if (isGetter)
         {
-            if (i > 0) { w.Write(", "); }
-            EmitDoAbiParamArgConversion(w, sig.Params[i]);
+            // Property getter: instance.PropertyName
+            string propName = methodName.Substring(4);
+            w.Write("ComInterfaceDispatch.GetInstance<");
+            w.Write(ifaceFullName);
+            w.Write(">((ComInterfaceDispatch*)thisPtr).");
+            w.Write(propName);
+            w.Write(";\n");
         }
-        w.Write(");\n");
+        else if (isSetter)
+        {
+            // Property setter: instance.PropertyName = value (cast as needed)
+            string propName = methodName.Substring(4);
+            w.Write("ComInterfaceDispatch.GetInstance<");
+            w.Write(ifaceFullName);
+            w.Write(">((ComInterfaceDispatch*)thisPtr).");
+            w.Write(propName);
+            w.Write(" = ");
+            EmitDoAbiParamArgConversion(w, sig.Params[0]);
+            w.Write(";\n");
+        }
+        else
+        {
+            // Method call: instance.Method(args)
+            w.Write("ComInterfaceDispatch.GetInstance<");
+            w.Write(ifaceFullName);
+            w.Write(">((ComInterfaceDispatch*)thisPtr).");
+            w.Write(methodName);
+            w.Write("(");
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                if (i > 0) { w.Write(", "); }
+                EmitDoAbiParamArgConversion(w, sig.Params[i]);
+            }
+            w.Write(");\n");
+        }
         if (rt is not null)
         {
             string abiType = GetAbiPrimitiveType(rt);
