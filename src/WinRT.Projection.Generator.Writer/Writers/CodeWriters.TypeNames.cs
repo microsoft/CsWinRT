@@ -148,10 +148,50 @@ internal static partial class CodeWriters
                 }
                 w.Write(">");
                 break;
+            case TypeSemantics.GenericInstanceRef gir:
+                // Emit the type reference's full name with global:: qualification, applying mapped-type
+                // remapping if applicable (e.g., Windows.Foundation.IReference`1<T> -> System.Nullable<T>,
+                // Windows.Foundation.TypedEventHandler`2<S,R> -> System.EventHandler<S,R>).
+                {
+                    string ns = gir.GenericType.Namespace?.Value ?? string.Empty;
+                    string name = gir.GenericType.Name?.Value ?? string.Empty;
+                    MappedType? mapped = MappedTypes.Get(ns, name);
+                    if (mapped is not null)
+                    {
+                        ns = mapped.MappedNamespace;
+                        name = mapped.MappedName;
+                    }
+                    w.Write("global::");
+                    w.Write(ns);
+                    w.Write(".");
+                    w.WriteCode(name);
+                    w.Write("<");
+                    for (int i = 0; i < gir.GenericArgs.Count; i++)
+                    {
+                        if (i > 0) { w.Write(", "); }
+                        WriteTypeName(w, gir.GenericArgs[i], nameType, forceWriteNamespace);
+                    }
+                    w.Write(">");
+                }
+                break;
             case TypeSemantics.Reference r:
-                w.Write(r.Reference_.Namespace?.Value ?? string.Empty);
-                w.Write(".");
-                w.WriteCode(r.Reference_.Name?.Value ?? string.Empty);
+                {
+                    string ns = r.Reference_.Namespace?.Value ?? string.Empty;
+                    string name = r.Reference_.Name?.Value ?? string.Empty;
+                    MappedType? mapped = MappedTypes.Get(ns, name);
+                    if (mapped is not null)
+                    {
+                        ns = mapped.MappedNamespace;
+                        name = mapped.MappedName;
+                    }
+                    if (!string.IsNullOrEmpty(ns))
+                    {
+                        w.Write("global::");
+                        w.Write(ns);
+                        w.Write(".");
+                    }
+                    w.WriteCode(name);
+                }
                 break;
             case TypeSemantics.GenericTypeIndex gti:
                 w.Write($"T{gti.Index}");
@@ -163,5 +203,20 @@ internal static partial class CodeWriters
     public static void WriteProjectionType(TypeWriter w, TypeSemantics semantics)
     {
         WriteTypeName(w, semantics, TypedefNameType.Projected, false);
+    }
+
+    /// <summary>
+    /// Writes the event handler type for an EventDefinition. Handles all the cases:
+    /// TypeDefinition, TypeReference, TypeSpecification (generic instances like <c>EventHandler&lt;T&gt;</c>),
+    /// and any other ITypeDefOrRef.
+    /// </summary>
+    public static void WriteEventType(TypeWriter w, EventDefinition evt)
+    {
+        if (evt.EventType is null)
+        {
+            w.Write("global::Windows.Foundation.EventHandler");
+            return;
+        }
+        WriteTypeName(w, TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType), TypedefNameType.Projected, true);
     }
 }

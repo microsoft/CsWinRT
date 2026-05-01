@@ -165,18 +165,7 @@ internal static partial class CodeWriters
         foreach (EventDefinition evt in type.Events)
         {
             w.Write("\nevent ");
-            if (evt.EventType is TypeDefinition etDef)
-            {
-                WriteTypedefName(w, etDef, TypedefNameType.Projected, false);
-                WriteTypeParams(w, etDef);
-            }
-            else if (evt.EventType is TypeReference etRef)
-            {
-                w.Write("global::");
-                w.Write(etRef.Namespace?.Value ?? string.Empty);
-                w.Write(".");
-                w.WriteCode(etRef.Name?.Value ?? string.Empty);
-            }
+            WriteEventType(w, evt);
             w.Write(" ");
             w.Write(evt.Name?.Value ?? string.Empty);
             w.Write(";");

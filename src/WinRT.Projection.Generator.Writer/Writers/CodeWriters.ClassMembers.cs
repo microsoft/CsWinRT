@@ -158,21 +158,21 @@ internal static partial class CodeWriters
             w.Write(access);
             w.Write(methodSpec);
             w.Write("event ");
-            if (evt.EventType is TypeDefinition etDef)
-            {
-                WriteTypedefName(w, etDef, TypedefNameType.Projected, false);
-                WriteTypeParams(w, etDef);
-            }
-            else if (evt.EventType is TypeReference etRef)
-            {
-                w.Write("global::");
-                w.Write(etRef.Namespace?.Value ?? string.Empty);
-                w.Write(".");
-                w.WriteCode(etRef.Name?.Value ?? string.Empty);
-            }
+            WriteEventType(w, evt);
             w.Write(" ");
             w.Write(name);
             w.Write(" { add => throw null!; remove => throw null!; }\n");
+        }
+
+        // Explicit IWindowsRuntimeInterface<T>.GetInterface() implementation, required by the
+        // class's inheritance list (which always also implements IWindowsRuntimeInterface<T>).
+        if (!w.Settings.ReferenceProjection)
+        {
+            w.Write("\n");
+            w.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
+            WriteTypedefName(w, ifaceType, TypedefNameType.CCW, false);
+            WriteTypeParams(w, ifaceType);
+            w.Write(">.GetInterface() => throw null!;\n");
         }
     }
 }

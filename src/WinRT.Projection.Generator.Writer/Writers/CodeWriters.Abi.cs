@@ -165,8 +165,18 @@ internal static partial class CodeWriters
     /// <summary>Mirrors C++ <c>write_abi_parameter_types_pointer</c>.</summary>
     public static void WriteAbiParameterTypesPointer(TypeWriter w, MethodSig sig)
     {
-        // void*, then each param's ABI type, then return type pointer
+        WriteAbiParameterTypesPointer(w, sig, includeParamNames: false);
+    }
+
+    /// <summary>
+    /// Writes the ABI parameter types for a vtable function pointer signature, optionally
+    /// including parameter names (for method declarations vs. function pointer type lists).
+    /// </summary>
+    public static void WriteAbiParameterTypesPointer(TypeWriter w, MethodSig sig, bool includeParamNames)
+    {
+        // void* thisPtr, then each param's ABI type, then return type pointer
         w.Write("void*");
+        if (includeParamNames) { w.Write(" thisPtr"); }
         for (int i = 0; i < sig.Params.Count; i++)
         {
             w.Write(", ");
@@ -175,19 +185,42 @@ internal static partial class CodeWriters
             if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
             {
                 // length pointer + value pointer
-                w.Write("uint, ");
-                WriteAbiType(w, TypeSemanticsFactory.Get(sz.BaseType));
-                w.Write("*");
+                if (includeParamNames)
+                {
+                    w.Write("uint ");
+                    w.Write("__");
+                    w.Write(p.Parameter.Name ?? "param");
+                    w.Write("Length, ");
+                    WriteAbiType(w, TypeSemanticsFactory.Get(sz.BaseType));
+                    w.Write("* ");
+                    Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                }
+                else
+                {
+                    w.Write("uint, ");
+                    WriteAbiType(w, TypeSemanticsFactory.Get(sz.BaseType));
+                    w.Write("*");
+                }
             }
             else if (p.Type is AsmResolver.DotNet.Signatures.ByReferenceTypeSignature br)
             {
                 WriteAbiType(w, TypeSemanticsFactory.Get(br.BaseType));
                 w.Write("*");
+                if (includeParamNames)
+                {
+                    w.Write(" ");
+                    Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                }
             }
             else
             {
                 WriteAbiType(w, TypeSemanticsFactory.Get(p.Type));
                 if (cat is ParamCategory.Out or ParamCategory.Ref) { w.Write("*"); }
+                if (includeParamNames)
+                {
+                    w.Write(" ");
+                    Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                }
             }
         }
         // Return parameter
@@ -196,6 +229,7 @@ internal static partial class CodeWriters
             w.Write(", ");
             WriteAbiType(w, TypeSemanticsFactory.Get(sig.ReturnType));
             w.Write("*");
+            if (includeParamNames) { w.Write(" __retval"); }
         }
     }
 
@@ -277,7 +311,7 @@ internal static partial class CodeWriters
             w.Write("private static int Do_Abi_");
             w.Write(vm);
             w.Write("(");
-            WriteAbiParameterTypesPointer(w, sig);
+            WriteAbiParameterTypesPointer(w, sig, includeParamNames: true);
             w.Write(") => throw null!;\n\n");
         }
         w.Write("}\n");

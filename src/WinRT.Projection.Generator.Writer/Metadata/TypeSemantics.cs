@@ -41,6 +41,7 @@ internal abstract record TypeSemantics
     public sealed record Type_ : TypeSemantics;
     public sealed record Definition(TypeDefinition Type) : TypeSemantics;
     public sealed record GenericInstance(TypeDefinition GenericType, List<TypeSemantics> GenericArgs) : TypeSemantics;
+    public sealed record GenericInstanceRef(ITypeDefOrRef GenericType, List<TypeSemantics> GenericArgs) : TypeSemantics;
     public sealed record GenericTypeIndex(int Index) : TypeSemantics;
     public sealed record GenericMethodIndex(int Index) : TypeSemantics;
     public sealed record GenericParameter_(GenericParameter Parameter) : TypeSemantics;
@@ -117,7 +118,7 @@ internal static class TypeSemanticsFactory
     {
         ITypeDefOrRef genericType = gi.GenericType;
         TypeDefinition? def = genericType as TypeDefinition;
-        // For TypeReference, we generally don't need to resolve - we just need namespace+name.
+        // Always preserve the type arguments.
         List<TypeSemantics> args = new(gi.TypeArguments.Count);
         foreach (TypeSignature arg in gi.TypeArguments)
         {
@@ -125,8 +126,8 @@ internal static class TypeSemanticsFactory
         }
         if (def is null)
         {
-            // Synthesize - for write_typedef_name, we just need namespace and name.
-            return new TypeSemantics.Reference((TypeReference)genericType);
+            // Wrap the generic-type reference along with the resolved type arguments.
+            return new TypeSemantics.GenericInstanceRef(genericType, args);
         }
         return new TypeSemantics.GenericInstance(def, args);
     }
