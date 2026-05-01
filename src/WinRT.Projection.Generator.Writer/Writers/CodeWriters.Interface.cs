@@ -41,11 +41,19 @@ internal static partial class CodeWriters
             bool isOverridable = Helpers.IsOverridable(impl);
 
             // For TypeDef interfaces, check exclusive_to attribute to decide inclusion.
-            // For TypeRef interfaces, we can't easily resolve - default to include all unless excluded.
+            // For TypeRef interfaces, attempt to resolve via the runtime context.
             bool isExclusive = false;
             if (impl.Interface is TypeDefinition ifaceTypeDef)
             {
                 isExclusive = TypeCategorization.IsExclusiveTo(ifaceTypeDef);
+            }
+            else
+            {
+                TypeDefinition? resolved = ResolveInterface(impl.Interface);
+                if (resolved is not null)
+                {
+                    isExclusive = TypeCategorization.IsExclusiveTo(resolved);
+                }
             }
 
             if (!(isOverridable || !isExclusive || includeExclusiveInterface))

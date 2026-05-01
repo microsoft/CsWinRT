@@ -22,17 +22,36 @@ internal static partial class CodeWriters
         if (w.Settings.ReferenceProjection) { return; }
 
         HashSet<string> writtenMethods = new(System.StringComparer.Ordinal);
-        HashSet<string> writtenProperties = new(System.StringComparer.Ordinal);
+        // For properties: track per-name accessor presence so we can merge get/set across interfaces.
+        Dictionary<string, PropertyAccessorState> propertyState = new(System.StringComparer.Ordinal);
         HashSet<string> writtenEvents = new(System.StringComparer.Ordinal);
         HashSet<TypeDefinition> writtenInterfaces = new();
 
-        WriteInterfaceMembersRecursive(w, type, type, writtenMethods, writtenProperties, writtenEvents, writtenInterfaces);
+        WriteInterfaceMembersRecursive(w, type, type, null, writtenMethods, propertyState, writtenEvents, writtenInterfaces);
+
+        // After collecting all properties (with merged accessors), emit them.
+        foreach (KeyValuePair<string, PropertyAccessorState> kvp in propertyState)
+        {
+            PropertyAccessorState s = kvp.Value;
+            w.Write("\n");
+            w.Write(s.Access);
+            w.Write(s.MethodSpec);
+            w.Write(s.PropTypeText);
+            w.Write(" ");
+            w.Write(kvp.Key);
+            w.Write(" { ");
+            if (s.HasGetter) { w.Write("get => throw null!; "); }
+            if (s.HasSetter) { w.Write("set => throw null!; "); }
+            w.Write("}\n");
+        }
 
         // Emit explicit IWindowsRuntimeInterface<T>.GetInterface() implementations once at the end,
-        // matching the inheritance list emitted by WriteTypeInheritance.
+        // matching the inheritance list emitted by WriteTypeInheritance. We must skip interfaces
+        // that were filtered out of the inheritance list (e.g. ExclusiveTo non-overridable interfaces).
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
+            if (!IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false)) { continue; }
             w.Write("\n");
             w.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
             WriteInterfaceTypeNameForCcw(w, impl.Interface);
@@ -40,9 +59,35 @@ internal static partial class CodeWriters
         }
     }
 
-    private static void WriteInterfaceMembersRecursive(TypeWriter w, TypeDefinition classType, TypeDefinition declaringType,
-        HashSet<string> writtenMethods, HashSet<string> writtenProperties, HashSet<string> writtenEvents, HashSet<TypeDefinition> writtenInterfaces)
+    private sealed class PropertyAccessorState
     {
+        public bool HasGetter;
+        public bool HasSetter;
+        public string PropTypeText = string.Empty;
+        public string Access = "public ";
+        public string MethodSpec = string.Empty;
+    }
+
+    /// <summary>
+    /// Returns true if the given interface implementation should appear in the class's inheritance list
+    /// (i.e., it has [Overridable], or is not [ExclusiveTo], or includeExclusiveInterface is set).
+    /// </summary>
+    private static bool IsInterfaceInInheritanceList(InterfaceImplementation impl, bool includeExclusiveInterface)
+    {
+        if (impl.Interface is null) { return false; }
+        if (Helpers.IsOverridable(impl)) { return true; }
+        if (includeExclusiveInterface) { return true; }
+        TypeDefinition? td = ResolveInterface(impl.Interface);
+        if (td is null) { return true; }
+        return !TypeCategorization.IsExclusiveTo(td);
+    }
+
+    private static void WriteInterfaceMembersRecursive(TypeWriter w, TypeDefinition classType, TypeDefinition declaringType,
+        AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance,
+        HashSet<string> writtenMethods, Dictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents, HashSet<TypeDefinition> writtenInterfaces)
+    {
+        AsmResolver.DotNet.Signatures.GenericContext genCtx = new(currentInstance, null);
+
         foreach (InterfaceImplementation impl in declaringType.Interfaces)
         {
             if (impl.Interface is null) { continue; }
@@ -57,6 +102,15 @@ internal static partial class CodeWriters
             bool isOverridable = Helpers.IsOverridable(impl);
             bool isProtected = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "ProtectedAttribute");
 
+            // Determine the (possibly substituted) interface signature for the recursion.
+            AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? nextInstance = null;
+            if (impl.Interface is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+            {
+                nextInstance = currentInstance is not null
+                    ? gi.InstantiateGenericTypes(genCtx) as AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature
+                    : gi;
+            }
+
             // For mapped interfaces with custom members output (e.g. IClosable -> IDisposable, IMap`2
             // -> IDictionary<K,V>), emit stubs for the C# interface's required members so the class
             // satisfies its inheritance contract. The runtime's adapter actually services them.
@@ -66,7 +120,7 @@ internal static partial class CodeWriters
             {
                 if (IsMappedInterfaceRequiringStubs(ifaceNs, ifaceName))
                 {
-                    WriteMappedInterfaceStubs(w, impl, ifaceName);
+                    WriteMappedInterfaceStubs(w, nextInstance, ifaceName);
                     // Mark sibling/parent mapped interfaces whose members are already covered
                     // (e.g., IMap`2/IVector`1/etc. include the IIterable`1 GetEnumerator stubs).
                     MarkCoveredMappedInterfaces(declaringType, ifaceName, writtenInterfaces);
@@ -75,10 +129,10 @@ internal static partial class CodeWriters
             }
 
             WriteInterfaceMembers(w, classType, ifaceType, isOverridable, isProtected,
-                writtenMethods, writtenProperties, writtenEvents);
+                writtenMethods, propertyState, writtenEvents);
 
             // Recurse into derived interfaces
-            WriteInterfaceMembersRecursive(w, classType, ifaceType, writtenMethods, writtenProperties, writtenEvents, writtenInterfaces);
+            WriteInterfaceMembersRecursive(w, classType, ifaceType, nextInstance, writtenMethods, propertyState, writtenEvents, writtenInterfaces);
         }
     }
 
@@ -149,7 +203,7 @@ internal static partial class CodeWriters
 
     private static void WriteInterfaceMembers(TypeWriter w, TypeDefinition classType, TypeDefinition ifaceType,
         bool isOverridable, bool isProtected,
-        HashSet<string> writtenMethods, HashSet<string> writtenProperties, HashSet<string> writtenEvents)
+        HashSet<string> writtenMethods, Dictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents)
     {
         bool sealed_ = classType.IsSealed;
         // Determine accessibility and method modifier
@@ -182,25 +236,23 @@ internal static partial class CodeWriters
             w.Write(") => throw null!;\n");
         }
 
-        // Properties
+        // Properties: collect into propertyState (merging accessors from multiple interfaces).
         foreach (PropertyDefinition prop in ifaceType.Properties)
         {
             string name = prop.Name?.Value ?? string.Empty;
-            if (!writtenProperties.Add(name)) { continue; }
-
             (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
-            string propType = WritePropType(w, prop);
-
-            w.Write("\n");
-            w.Write(access);
-            w.Write(methodSpec);
-            w.Write(propType);
-            w.Write(" ");
-            w.Write(name);
-            w.Write(" { ");
-            if (getter is not null) { w.Write("get => throw null!; "); }
-            if (setter is not null) { w.Write("set => throw null!; "); }
-            w.Write("}\n");
+            if (!propertyState.TryGetValue(name, out PropertyAccessorState? state))
+            {
+                state = new PropertyAccessorState
+                {
+                    PropTypeText = WritePropType(w, prop),
+                    Access = access,
+                    MethodSpec = methodSpec,
+                };
+                propertyState[name] = state;
+            }
+            if (getter is not null) { state.HasGetter = true; }
+            if (setter is not null) { state.HasSetter = true; }
         }
 
         // Events

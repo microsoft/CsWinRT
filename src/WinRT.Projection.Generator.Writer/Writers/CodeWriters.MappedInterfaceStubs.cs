@@ -42,15 +42,15 @@ internal static partial class CodeWriters
     /// .NET interface.
     /// </summary>
     /// <param name="w">The writer.</param>
-    /// <param name="ifaceImpl">The InterfaceImpl carrying the generic type arguments.</param>
+    /// <param name="instance">The (possibly substituted) generic instance signature for the interface, or null if non-generic.</param>
     /// <param name="ifaceName">The WinRT interface name (e.g. "IMap`2").</param>
-    public static void WriteMappedInterfaceStubs(TypeWriter w, InterfaceImplementation ifaceImpl, string ifaceName)
+    public static void WriteMappedInterfaceStubs(TypeWriter w, GenericInstanceTypeSignature? instance, string ifaceName)
     {
-        // Resolve type arguments from the InterfaceImpl signature, if any.
+        // Resolve type arguments from the (substituted) generic instance signature, if any.
         List<TypeSemantics> typeArgs = new();
-        if (ifaceImpl.Interface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        if (instance is not null)
         {
-            foreach (TypeSignature arg in gi.TypeArguments)
+            foreach (TypeSignature arg in instance.TypeArguments)
             {
                 typeArgs.Add(TypeSemanticsFactory.Get(arg));
             }
