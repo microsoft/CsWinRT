@@ -49,11 +49,13 @@ internal static partial class CodeWriters
     {
         // Resolve type arguments from the (substituted) generic instance signature, if any.
         List<TypeSemantics> typeArgs = new();
+        List<TypeSignature> typeArgSigs = new();
         if (instance is not null)
         {
             foreach (TypeSignature arg in instance.TypeArguments)
             {
                 typeArgs.Add(TypeSemanticsFactory.Get(arg));
+                typeArgSigs.Add(arg);
             }
         }
 
@@ -75,7 +77,7 @@ internal static partial class CodeWriters
                 EmitReadOnlyDictionary(w, typeArgs);
                 break;
             case "IVector`1":
-                EmitList(w, typeArgs);
+                EmitList(w, typeArgs, typeArgSigs, objRefName);
                 break;
             case "IVectorView`1":
                 EmitReadOnlyList(w, typeArgs);
@@ -165,24 +167,74 @@ internal static partial class CodeWriters
         w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
     }
 
-    private static void EmitList(TypeWriter w, List<TypeSemantics> args)
+    /// <summary>
+    /// Helper to encode the WinRT.Interop dictionary key for a type-arg encoded identifier
+    /// (used in UnsafeAccessor function names and method-name prefixes). Mirrors C++
+    /// <c>escape_type_name_for_identifier(write_type_name(arg), true)</c>.
+    /// </summary>
+    private static string EncodeArgIdentifier(TypeWriter w, TypeSemantics arg)
+    {
+        string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, arg, TypedefNameType.Projected, true)));
+        return EscapeTypeNameForIdentifier(projected, stripGlobal: true);
+    }
+
+    private static void EmitList(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
     {
         if (args.Count != 1) { return; }
         string t = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
+        string elementId = EncodeArgIdentifier(w, args[0]);
+        string interopTypeArgs = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopType = "ABI.System.Collections.Generic.<#corlib>IList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
+        string prefix = "IListMethods_" + elementId + "_";
+
+        w.Write("\n");
+        EmitUnsafeAccessor(w, "Count", "int", $"{prefix}Count", interopType, "");
+        EmitUnsafeAccessor(w, "Item", t, $"{prefix}Item", interopType, ", int index");
+        EmitUnsafeAccessor(w, "Item", "void", $"{prefix}Item", interopType, $", int index, {t} value");
+        EmitUnsafeAccessor(w, "IndexOf", "int", $"{prefix}IndexOf", interopType, $", {t} item");
+        EmitUnsafeAccessor(w, "Insert", "void", $"{prefix}Insert", interopType, $", int index, {t} item");
+        EmitUnsafeAccessor(w, "RemoveAt", "void", $"{prefix}RemoveAt", interopType, ", int index");
+        EmitUnsafeAccessor(w, "Add", "void", $"{prefix}Add", interopType, $", {t} item");
+        EmitUnsafeAccessor(w, "Clear", "void", $"{prefix}Clear", interopType, "");
+        EmitUnsafeAccessor(w, "Contains", "bool", $"{prefix}Contains", interopType, $", {t} item");
+        EmitUnsafeAccessor(w, "CopyTo", "void", $"{prefix}CopyTo", interopType, $", {t}[] array, int arrayIndex");
+        EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {t} item");
+
         w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"ListItem\")]\n");
-        w.Write($"public {t} this[int index] {{ get => throw null!; set => throw null!; }}\n");
-        w.Write("public int Count => throw null!;\n");
-        w.Write("public bool IsReadOnly => throw null!;\n");
-        w.Write($"public void Add({t} item) => throw null!;\n");
-        w.Write("public void Clear() => throw null!;\n");
-        w.Write($"public bool Contains({t} item) => throw null!;\n");
-        w.Write($"public void CopyTo({t}[] array, int arrayIndex) => throw null!;\n");
-        w.Write($"public int IndexOf({t} item) => throw null!;\n");
-        w.Write($"public void Insert(int index, {t} item) => throw null!;\n");
-        w.Write($"public bool Remove({t} item) => throw null!;\n");
-        w.Write("public void RemoveAt(int index) => throw null!;\n");
+        w.Write($"public {t} this[int index]\n{{\n    get => {prefix}Item(null, {objRefName}, index);\n    set => {prefix}Item(null, {objRefName}, index, value);\n}}\n");
+        w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
+        w.Write("public bool IsReadOnly => false;\n");
+        w.Write($"public void Add({t} item) => {prefix}Add(null, {objRefName}, item);\n");
+        w.Write($"public void Clear() => {prefix}Clear(null, {objRefName});\n");
+        w.Write($"public bool Contains({t} item) => {prefix}Contains(null, {objRefName}, item);\n");
+        w.Write($"public void CopyTo({t}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, array, arrayIndex);\n");
+        w.Write($"public int IndexOf({t} item) => {prefix}IndexOf(null, {objRefName}, item);\n");
+        w.Write($"public void Insert(int index, {t} item) => {prefix}Insert(null, {objRefName}, index, item);\n");
+        w.Write($"public bool Remove({t} item) => {prefix}Remove(null, {objRefName}, item);\n");
+        w.Write($"public void RemoveAt(int index) => {prefix}RemoveAt(null, {objRefName}, index);\n");
+        // GetEnumerator: still throw null - requires IEnumerable<T> objref
         w.Write($"public global::System.Collections.Generic.IEnumerator<{t}> GetEnumerator() => throw null!;\n");
         w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
+    }
+
+    /// <summary>
+    /// Emits a single <c>[UnsafeAccessor]</c> static extern declaration that targets a method on a
+    /// WinRT.Interop helper type. The function signature is built from the supplied parts.
+    /// </summary>
+    private static void EmitUnsafeAccessor(TypeWriter w, string accessName, string returnType, string functionName, string interopType, string extraParams)
+    {
+        w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
+        w.Write(accessName);
+        w.Write("\")]\n");
+        w.Write("static extern ");
+        w.Write(returnType);
+        w.Write(" ");
+        w.Write(functionName);
+        w.Write("([UnsafeAccessorType(\"");
+        w.Write(interopType);
+        w.Write("\")] object _, WindowsRuntimeObjectReference objRef");
+        w.Write(extraParams);
+        w.Write(");\n");
     }
 
     private static void EmitReadOnlyList(TypeWriter w, List<TypeSemantics> args)

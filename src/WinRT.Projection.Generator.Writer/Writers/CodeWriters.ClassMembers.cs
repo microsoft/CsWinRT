@@ -237,7 +237,9 @@ internal static partial class CodeWriters
             {
                 if (IsMappedInterfaceRequiringStubs(ifaceNs, ifaceName))
                 {
-                    string objRefName = GetObjRefName(w, ifaceType);
+                    // Use the actual InterfaceImpl reference (which may be a TypeSpec for generic
+                    // instances) so the objref name includes the type arguments.
+                    string objRefName = GetObjRefName(w, impl.Interface);
                     WriteMappedInterfaceStubs(w, nextInstance, ifaceName, objRefName);
                     // Mark sibling/parent mapped interfaces whose members are already covered
                     // (e.g., IMap`2/IVector`1/etc. include the IIterable`1 GetEnumerator stubs).
