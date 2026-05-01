@@ -611,13 +611,13 @@ internal static partial class CodeWriters
             }
             if (sMethod is not null)
             {
+                MethodSig setSig = new(sMethod);
                 w.Write("    public static void ");
                 w.Write(pname);
                 w.Write("(WindowsRuntimeObjectReference thisReference, ");
                 w.Write(propType);
                 w.Write(" value)");
-                MethodSig setSig = new(sMethod);
-                EmitAbiMethodBodyIfSimple(w, setSig, slot);
+                EmitAbiMethodBodyIfSimple(w, setSig, slot, paramNameOverride: "value");
                 slot++;
             }
         }
@@ -629,39 +629,81 @@ internal static partial class CodeWriters
     /// Emits a real method body for the cases we can fully marshal, otherwise emits
     /// the 'throw null!' stub. Trailing newline is included.
     /// </summary>
-    private static void EmitAbiMethodBodyIfSimple(TypeWriter w, MethodSig sig, int slot)
+    private static void EmitAbiMethodBodyIfSimple(TypeWriter w, MethodSig sig, int slot, string? paramNameOverride = null)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
-        // Case 1: void method, no parameters
-        if (rt is null && sig.Params.Count == 0)
+        // Check that all parameters are blittable primitives that we can marshal directly.
+        bool allParamsSimple = true;
+        foreach (ParamInfo p in sig.Params)
         {
-            w.Write("\n    {\n");
-            w.Write("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();\n");
-            w.Write("        void* ThisPtr = thisValue.GetThisPtrUnsafe();\n");
-            w.Write("        RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, int>**)ThisPtr)[");
-            w.Write(slot);
-            w.Write("](ThisPtr));\n    }\n");
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            // Only support 'In' parameters that are blittable primitives.
+            if (cat != ParamCategory.In) { allParamsSimple = false; break; }
+            if (!IsBlittablePrimitive(p.Type)) { allParamsSimple = false; break; }
+        }
+        bool returnSimple = rt is null || IsBlittablePrimitive(rt);
+
+        if (!allParamsSimple || !returnSimple)
+        {
+            w.Write(" => throw null!;\n");
             return;
         }
 
-        // Case 2: blittable primitive return, no parameters
-        if (rt is not null && sig.Params.Count == 0 && IsBlittablePrimitive(rt))
+        // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
+        System.Text.StringBuilder fp = new();
+        fp.Append("void*");
+        foreach (ParamInfo p in sig.Params)
         {
+            fp.Append(", ");
+            fp.Append(GetAbiPrimitiveType(p.Type));
+        }
+        if (rt is not null)
+        {
+            fp.Append(", ");
+            fp.Append(GetAbiPrimitiveType(rt));
+            fp.Append('*');
+        }
+        fp.Append(", int");
+
+        w.Write("\n    {\n");
+        w.Write("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();\n");
+        w.Write("        void* ThisPtr = thisValue.GetThisPtrUnsafe();\n");
+
+        if (rt is null)
+        {
+            // Void return
+            w.Write("        RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
+            w.Write(fp.ToString());
+            w.Write(">**)ThisPtr)[");
+            w.Write(slot);
+            w.Write("](ThisPtr");
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                w.Write(", ");
+                EmitParamArgConversion(w, sig.Params[i], paramNameOverride);
+            }
+            w.Write("));\n    }\n");
+        }
+        else
+        {
+            // Primitive return
             string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
             string abiType = GetAbiPrimitiveType(rt);
-            w.Write("\n    {\n");
-            w.Write("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();\n");
-            w.Write("        void* ThisPtr = thisValue.GetThisPtrUnsafe();\n");
             w.Write("        ");
             w.Write(abiType);
             w.Write(" __retval = default;\n");
-            w.Write("        RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
-            w.Write(abiType);
-            w.Write("*, int>**)ThisPtr)[");
+            w.Write("        RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
+            w.Write(fp.ToString());
+            w.Write(">**)ThisPtr)[");
             w.Write(slot);
-            w.Write("](ThisPtr, &__retval));\n");
-            // bool needs the byte->bool conversion
+            w.Write("](ThisPtr");
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                w.Write(", ");
+                EmitParamArgConversion(w, sig.Params[i], paramNameOverride);
+            }
+            w.Write(", &__retval));\n");
             if (projected == "bool")
             {
                 w.Write("        return __retval != 0;\n");
@@ -672,17 +714,46 @@ internal static partial class CodeWriters
             }
             else
             {
-                // Enums: same bit width but different type; cast.
                 w.Write("        return (");
                 w.Write(projected);
                 w.Write(")__retval;\n");
             }
             w.Write("    }\n");
-            return;
         }
+    }
 
-        // Default: throw null! stub
-        w.Write(" => throw null!;\n");
+    /// <summary>Emits the conversion of a parameter from its projected (managed) form to the ABI argument form.</summary>
+    private static void EmitParamArgConversion(TypeWriter w, ParamInfo p, string? paramNameOverride = null)
+    {
+        string pname = paramNameOverride ?? (p.Parameter.Name ?? "param");
+        // bool -> byte (truthy = 1, false = 0)
+        if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
+            corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+        {
+            w.Write("(byte)(");
+            w.Write(pname);
+            w.Write(" ? 1 : 0)");
+        }
+        // char -> ushort (no conversion needed; cast)
+        else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
+                 corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+        {
+            w.Write("(ushort)");
+            w.Write(pname);
+        }
+        // Enums -> their underlying numeric type (cast)
+        else if (p.Type is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td &&
+                 td.Type is TypeDefinition def && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
+        {
+            w.Write("(");
+            w.Write(GetAbiPrimitiveType(p.Type));
+            w.Write(")");
+            w.Write(pname);
+        }
+        else
+        {
+            w.Write(pname);
+        }
     }
 
     /// <summary>True if the type is a blittable primitive (or enum) directly representable
