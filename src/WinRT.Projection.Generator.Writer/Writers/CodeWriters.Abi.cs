@@ -2399,6 +2399,28 @@ internal static partial class CodeWriters
             w.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
             w.Write("    }\n");
         }
+        else if (TypeCategorization.GetCategory(type) is TypeCategory.Class or TypeCategory.Delegate)
+        {
+            // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
+            w.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
+            w.Write("        if (result is null)\n        {\n");
+            w.Write("            return unchecked((int)0x80004003);\n        }\n\n");
+            w.Write("        try\n        {\n");
+            w.Write("            ");
+            WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write(" unboxedValue = (");
+            WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);\n");
+            w.Write("            void* value = ");
+            // Use the same-namespace short marshaller name (we're in the ABI namespace).
+            w.Write(nameStripped);
+            w.Write("Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();\n");
+            w.Write("            *(void**)result = value;\n");
+            w.Write("            return 0;\n        }\n");
+            w.Write("        catch (Exception e)\n        {\n");
+            w.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
+            w.Write("    }\n");
+        }
         else
         {
             w.Write("    public static int get_Value(void* thisPtr, void* result) => throw null!;\n");
