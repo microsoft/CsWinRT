@@ -1033,21 +1033,36 @@ internal static partial class CodeWriters
             if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
             {
                 // length pointer + value pointer
+                bool isRefElem = IsString(sz.BaseType) || IsRuntimeClassOrInterface(sz.BaseType) || IsObject(sz.BaseType) || IsGenericInstance(sz.BaseType);
                 if (includeParamNames)
                 {
                     w.Write("uint ");
                     w.Write("__");
                     w.Write(p.Parameter.Name ?? "param");
                     w.Write("Length, ");
-                    WriteAbiType(w, TypeSemanticsFactory.Get(sz.BaseType));
-                    w.Write("* ");
+                    if (isRefElem)
+                    {
+                        w.Write("void* ");
+                    }
+                    else
+                    {
+                        WriteAbiType(w, TypeSemanticsFactory.Get(sz.BaseType));
+                        w.Write("* ");
+                    }
                     Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
                 }
                 else
                 {
                     w.Write("uint, ");
-                    WriteAbiType(w, TypeSemanticsFactory.Get(sz.BaseType));
-                    w.Write("*");
+                    if (isRefElem)
+                    {
+                        w.Write("void*");
+                    }
+                    else
+                    {
+                        WriteAbiType(w, TypeSemanticsFactory.Get(sz.BaseType));
+                        w.Write("*");
+                    }
                 }
             }
             else if (p.Type is AsmResolver.DotNet.Signatures.ByReferenceTypeSignature br)
@@ -1382,11 +1397,14 @@ internal static partial class CodeWriters
             }
             if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
-                // Allow blittable primitive arrays only (per Do_Abi receive of fixed buffer).
+                // Allow blittable primitive arrays, almost-blittable structs, strings, runtime classes, objects.
                 if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
                 {
                     if (IsBlittablePrimitive(sz.BaseType)) { continue; }
                     if (IsAnyStruct(sz.BaseType)) { continue; }
+                    if (IsString(sz.BaseType)) { continue; }
+                    if (IsRuntimeClassOrInterface(sz.BaseType)) { continue; }
+                    if (IsObject(sz.BaseType)) { continue; }
                 }
                 allParamsSimple = false;
                 break;
@@ -1473,6 +1491,8 @@ internal static partial class CodeWriters
         }
         // For each blittable array (PassArray / FillArray) parameter, declare a Span<T> local that
         // wraps the (length, pointer) pair from the ABI signature.
+        // For non-blittable element types (string/runtime class/object), declare InlineArray16<T> +
+        // ArrayPool fallback then CopyToManaged via UnsafeAccessor.
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
@@ -1482,18 +1502,84 @@ internal static partial class CodeWriters
             string raw = p.Parameter.Name ?? "param";
             string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
             string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sz.BaseType))));
-            w.Write("    ");
-            w.Write(cat == ParamCategory.PassArray ? "global::System.ReadOnlySpan<" : "global::System.Span<");
-            w.Write(elementProjected);
-            w.Write("> __");
-            w.Write(raw);
-            w.Write(" = new(");
-            w.Write(ptr);
-            w.Write(", (int)__");
-            w.Write(raw);
-            w.Write("Length);\n");
+            bool isBlittableElem = IsBlittablePrimitive(sz.BaseType) || IsAnyStruct(sz.BaseType);
+            if (isBlittableElem)
+            {
+                w.Write("    ");
+                w.Write(cat == ParamCategory.PassArray ? "global::System.ReadOnlySpan<" : "global::System.Span<");
+                w.Write(elementProjected);
+                w.Write("> __");
+                w.Write(raw);
+                w.Write(" = new(");
+                w.Write(ptr);
+                w.Write(", (int)__");
+                w.Write(raw);
+                w.Write("Length);\n");
+            }
+            else
+            {
+                // Non-blittable element: InlineArray16<T> + ArrayPool<T> with size from ABI.
+                w.Write("\n    Unsafe.SkipInit(out InlineArray16<");
+                w.Write(elementProjected);
+                w.Write("> __");
+                w.Write(raw);
+                w.Write("_inlineArray);\n");
+                w.Write("    ");
+                w.Write(elementProjected);
+                w.Write("[] __");
+                w.Write(raw);
+                w.Write("_arrayFromPool = null;\n");
+                w.Write("    Span<");
+                w.Write(elementProjected);
+                w.Write("> __");
+                w.Write(raw);
+                w.Write(" = __");
+                w.Write(raw);
+                w.Write("Length <= 16\n        ? __");
+                w.Write(raw);
+                w.Write("_inlineArray[..(int)__");
+                w.Write(raw);
+                w.Write("Length]\n        : (__");
+                w.Write(raw);
+                w.Write("_arrayFromPool = global::System.Buffers.ArrayPool<");
+                w.Write(elementProjected);
+                w.Write(">.Shared.Rent((int)__");
+                w.Write(raw);
+                w.Write("Length));\n");
+            }
         }
         w.Write("    try\n    {\n");
+
+        // For non-blittable PassArray params, emit CopyToManaged_<name> via UnsafeAccessor.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+            if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
+            string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+            w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]\n");
+            w.Write("        static extern void CopyToManaged_");
+            w.Write(raw);
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(GetArrayMarshallerInteropPath(w, szArr.BaseType, elementInteropArg));
+            w.Write("\")] object _, uint length, void** data, Span<");
+            w.Write(elementProjected);
+            w.Write("> span);\n");
+            w.Write("        CopyToManaged_");
+            w.Write(raw);
+            w.Write("(null, __");
+            w.Write(raw);
+            w.Write("Length, (void**)");
+            w.Write(ptr);
+            w.Write(", __");
+            w.Write(raw);
+            w.Write(");\n");
+        }
 
         // For generic instance ABI input parameters, emit local UnsafeAccessor delegates and locals
         // first so the call site can reference them.
@@ -1756,7 +1842,45 @@ internal static partial class CodeWriters
         }
         w.Write("        return 0;\n    }\n");
         w.Write("    catch (Exception __exception__)\n    {\n");
-        w.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n\n");
+        w.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n");
+
+        // For non-blittable PassArray params, emit finally block with ArrayPool<T>.Shared.Return.
+        bool hasNonBlittableArrayDoAbi = false;
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+            if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
+            hasNonBlittableArrayDoAbi = true;
+            break;
+        }
+        if (hasNonBlittableArrayDoAbi)
+        {
+            w.Write("    finally\n    {\n");
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+                if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+                if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
+                w.Write("\n        if (__");
+                w.Write(raw);
+                w.Write("_arrayFromPool is not null)\n        {\n");
+                w.Write("            global::System.Buffers.ArrayPool<");
+                w.Write(elementProjected);
+                w.Write(">.Shared.Return(__");
+                w.Write(raw);
+                w.Write("_arrayFromPool);\n        }\n");
+            }
+            w.Write("    }\n");
+        }
+
+        w.Write("}\n\n");
         _ = hasStringParams;
     }
 
