@@ -4424,6 +4424,13 @@ internal static partial class CodeWriters
         {
             w.Write("    public static int get_Value(void* thisPtr, void* result) => throw null!;\n");
         }
+        // IID property: matches C++ write_reference_impl, which appends a 'public static ref readonly Guid IID'
+        // property pointing at the reference type's IID (e.g. IID_Windows_AI_Actions_ActionEntityKindReference).
+        w.Write("\n    public static ref readonly Guid IID\n    {\n");
+        w.Write("        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
+        w.Write("        get => ref global::ABI.InterfaceIIDs.");
+        WriteIidReferenceGuidPropertyName(w, type);
+        w.Write(";\n    }\n");
         w.Write("}\n\n");
     }
 
