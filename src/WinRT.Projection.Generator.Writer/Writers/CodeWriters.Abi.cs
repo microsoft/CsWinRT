@@ -1544,6 +1544,14 @@ internal static partial class CodeWriters
                 if (IsObject(underlying)) { continue; }
                 allParamsSimple = false; break;
             }
+            if (cat == ParamCategory.Ref)
+            {
+                AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
+                if (IsHResultException(underlying)) { allParamsSimple = false; break; }
+                if (IsBlittablePrimitive(underlying)) { continue; }
+                if (IsBlittableStruct(underlying)) { continue; }
+                allParamsSimple = false; break;
+            }
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
             if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
@@ -1594,6 +1602,14 @@ internal static partial class CodeWriters
                 if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { fp.Append("void**"); }
                 else if (IsBlittableStruct(uOut)) { fp.Append(GetBlittableStructAbiType(w, uOut)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(uOut)); fp.Append('*'); }
+                continue;
+            }
+            if (cat == ParamCategory.Ref)
+            {
+                AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
+                fp.Append(", ");
+                if (IsBlittableStruct(uRef)) { fp.Append(GetBlittableStructAbiType(w, uRef)); }
+                else { fp.Append(GetAbiPrimitiveType(uRef)); }
                 continue;
             }
             fp.Append(", ");
@@ -1794,6 +1810,14 @@ internal static partial class CodeWriters
                 string localName = GetParamLocalName(p, paramNameOverride);
                 w.Write(", &__");
                 w.Write(localName);
+                continue;
+            }
+            if (cat == ParamCategory.Ref)
+            {
+                // 'in T' projected param: pass directly (Guid, blittable structs).
+                string callName = GetParamName(p, paramNameOverride);
+                w.Write(", ");
+                w.Write(callName);
                 continue;
             }
             w.Write(", ");
