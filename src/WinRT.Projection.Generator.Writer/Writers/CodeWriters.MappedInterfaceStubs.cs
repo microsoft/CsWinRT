@@ -266,9 +266,15 @@ internal static partial class CodeWriters
     /// (used in UnsafeAccessor function names and method-name prefixes). Mirrors C++
     /// <c>escape_type_name_for_identifier(write_type_name(arg), true)</c>.
     /// </summary>
+    /// <summary>
+    /// Encodes a type semantics as a C# identifier-safe name. Mirrors C++
+    /// <c>escape_type_name_for_identifier(write_projection_type(arg), true)</c>:
+    /// uses the projected type name WITHOUT forcing namespace qualification, then strips
+    /// 'global::' and replaces '.' with '_'.
+    /// </summary>
     private static string EncodeArgIdentifier(TypeWriter w, TypeSemantics arg)
     {
-        string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, arg, TypedefNameType.Projected, true)));
+        string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, arg, TypedefNameType.Projected, false)));
         return EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
 
