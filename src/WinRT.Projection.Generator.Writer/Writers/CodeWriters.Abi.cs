@@ -182,6 +182,16 @@ internal static partial class CodeWriters
             foreach (ParamInfo p in sig.Params)
             {
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+                {
+                    // Allow blittable primitive arrays only (Span<byte>, Span<int>, etc.).
+                    if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szP)
+                    {
+                        if (IsBlittablePrimitive(szP.BaseType)) { continue; }
+                        if (IsAnyStruct(szP.BaseType)) { continue; }
+                    }
+                    simple = false; break;
+                }
                 if (cat != ParamCategory.In) { simple = false; break; }
                 if (IsHResultException(p.Type)) { simple = false; break; }
                 if (IsBlittablePrimitive(p.Type)) { continue; }
@@ -232,8 +242,31 @@ internal static partial class CodeWriters
             string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
             w.Write(projected);
             w.Write(" __result = default;\n");
-            w.Write("        *__retval = default;\n\n");
+            w.Write("        *__retval = default;\n");
         }
+
+        // Construct ReadOnlySpan<T> for each PassArray param.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+            string raw = p.Parameter.Name ?? ("p" + i);
+            string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
+            w.Write("        ");
+            w.Write(cat == ParamCategory.PassArray ? "ReadOnlySpan<" : "Span<");
+            w.Write(elementProjected);
+            w.Write("> __");
+            w.Write(raw);
+            w.Write(" = new(");
+            w.Write(callName);
+            w.Write(", (int)__");
+            w.Write(raw);
+            w.Write("Length);\n");
+        }
+        w.Write("\n");
 
         w.Write("        try\n        {\n");
         if (hasReturn) { w.Write("            __result = "); }
@@ -247,6 +280,13 @@ internal static partial class CodeWriters
             ParamInfo p = sig.Params[i];
             string raw = p.Parameter.Name ?? ("p" + i);
             string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            {
+                w.Write("__");
+                w.Write(raw);
+                continue;
+            }
             // bool: native byte -> managed bool
             if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibB &&
                 corlibB.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
