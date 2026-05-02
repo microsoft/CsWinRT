@@ -2186,7 +2186,7 @@ internal static partial class CodeWriters
                     }
                     else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                     {
-                        w.Write(nullableMarshaller);
+                        w.Write(nullableMarshaller!);
                         w.Write(".BoxToUnmanaged(value.");
                         w.Write(fname);
                         w.Write(").DetachThisPtrUnsafe()");
@@ -2232,7 +2232,7 @@ internal static partial class CodeWriters
                     }
                     else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                     {
-                        w.Write(nullableMarshaller);
+                        w.Write(nullableMarshaller!);
                         w.Write(".UnboxToManaged(value.");
                         w.Write(fname);
                         w.Write(")");
