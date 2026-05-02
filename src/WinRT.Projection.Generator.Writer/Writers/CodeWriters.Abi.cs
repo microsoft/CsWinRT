@@ -91,9 +91,10 @@ internal static partial class CodeWriters
                 if (field.IsStatic || field.Signature is null) { continue; }
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
                 w.Write("public ");
-                // Truth uses void* for string fields, but keeps the projected type for everything else
-                // (including enums and bool — their C# layout matches the WinRT ABI directly).
-                if (IsString(ft))
+                // Truth uses void* for string and Nullable<T> fields, but keeps the projected type
+                // for everything else (including enums and bool — their C# layout matches the WinRT
+                // ABI directly).
+                if (IsString(ft) || TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
                     w.Write("void*");
                 }
@@ -1878,23 +1879,26 @@ internal static partial class CodeWriters
         bool isEnum = cat == TypeCategory.Enum;
         // Complex structs are non-almost-blittable structs with reference fields (string, object, etc.).
         bool isComplexStruct = cat == TypeCategory.Struct && !almostBlittable;
-        // For complex structs, check if all reference fields are strings (the only kind we support today).
-        bool allReferenceFieldsAreStrings = true;
+        // For complex structs, check if all reference fields are types we can marshal:
+        // strings (via HStringMarshaller) or Nullable<T> of supported primitive types
+        // (via ABI.System.<T>Marshaller).
+        bool allFieldsSupported = true;
+        bool hasReferenceFields = false;
         if (isComplexStruct)
         {
             foreach (FieldDefinition field in type.Fields)
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                // Allow primitive fields (incl. bool/char) and string fields. Reject other reference types.
                 if (IsBlittablePrimitive(ft)) { continue; }
-                if (IsString(ft)) { continue; }
                 if (IsAnyStruct(ft)) { continue; }
-                allReferenceFieldsAreStrings = false;
+                if (IsString(ft)) { hasReferenceFields = true; continue; }
+                if (TryGetNullablePrimitiveMarshallerName(ft, out _)) { hasReferenceFields = true; continue; }
+                allFieldsSupported = false;
                 break;
             }
         }
-        bool emitComplexBodies = isComplexStruct && allReferenceFieldsAreStrings;
+        bool emitComplexBodies = isComplexStruct && allFieldsSupported;
 
         w.Write("public static unsafe class ");
         w.Write(nameStripped);
@@ -1931,6 +1935,13 @@ internal static partial class CodeWriters
                         w.Write("HStringMarshaller.ConvertToUnmanaged(value.");
                         w.Write(fname);
                         w.Write(")");
+                    }
+                    else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
+                    {
+                        w.Write(nullableMarshaller);
+                        w.Write(".BoxToUnmanaged(value.");
+                        w.Write(fname);
+                        w.Write(").DetachThisPtrUnsafe()");
                     }
                     else
                     {
@@ -1971,6 +1982,13 @@ internal static partial class CodeWriters
                         w.Write(fname);
                         w.Write(")");
                     }
+                    else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
+                    {
+                        w.Write(nullableMarshaller);
+                        w.Write(".UnboxToManaged(value.");
+                        w.Write(fname);
+                        w.Write(")");
+                    }
                     else
                     {
                         w.Write("value.");
@@ -2001,18 +2019,28 @@ internal static partial class CodeWriters
                         w.Write(fname);
                         w.Write(");\n");
                     }
+                    else if (TryGetNullablePrimitiveMarshallerName(ft, out _))
+                    {
+                        w.Write("        WindowsRuntimeUnknownMarshaller.Free(value.");
+                        w.Write(fname);
+                        w.Write(");\n");
+                    }
                 }
                 w.Write("    }\n");
             }
         }
 
         // BoxToUnmanaged: same pattern for all (enum, almost-blittable, complex).
+        // Truth uses CreateComInterfaceFlags.TrackerSupport when the struct has reference type
+        // fields (Nullable<T>, etc.) to avoid GC issues with the boxed managed object reference.
         w.Write("    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(");
         WriteTypedefName(w, type, TypedefNameType.Projected, true);
         if (isEnum || almostBlittable || emitComplexBodies)
         {
             w.Write("? value)\n    {\n");
-            w.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in ");
+            w.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.");
+            w.Write(hasReferenceFields ? "TrackerSupport" : "None");
+            w.Write(", in ");
             WriteIidReferenceExpression(w, type);
             w.Write(");\n    }\n");
         }
@@ -3420,6 +3448,49 @@ internal static partial class CodeWriters
         }
 
         w.Write("    }\n");
+    }
+
+    /// <summary>True if the type signature is a Nullable&lt;T&gt; where T is a primitive
+    /// supported by an ABI.System.&lt;T&gt;Marshaller (e.g. UInt64Marshaller, Int32Marshaller, etc.).
+    /// Returns the fully-qualified marshaller name in <paramref name="marshallerName"/>.</summary>
+    private static bool TryGetNullablePrimitiveMarshallerName(AsmResolver.DotNet.Signatures.TypeSignature sig, out string? marshallerName)
+    {
+        marshallerName = null;
+        if (sig is not AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi) { return false; }
+        var gt = gi.GenericType;
+        string ns = gt?.Namespace?.Value ?? string.Empty;
+        string name = gt?.Name?.Value ?? string.Empty;
+        // In WinMD metadata, Nullable<T> is encoded as Windows.Foundation.IReference<T>.
+        // It only later gets projected to System.Nullable<T> by the projection layer.
+        bool isNullable = (ns == "System" && name == "Nullable`1")
+            || (ns == "Windows.Foundation" && name == "IReference`1");
+        if (!isNullable) { return false; }
+        if (gi.TypeArguments.Count != 1) { return false; }
+        AsmResolver.DotNet.Signatures.TypeSignature arg = gi.TypeArguments[0];
+        // Map primitive corlib element type to its ABI marshaller name.
+        if (arg is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
+        {
+            string? mn = corlib.ElementType switch
+            {
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean => "Boolean",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char => "Char",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1 => "SByte",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1 => "Byte",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2 => "Int16",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2 => "UInt16",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 => "Int32",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 => "UInt32",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8 => "Int64",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8 => "UInt64",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R4 => "Single",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8 => "Double",
+                _ => null
+            };
+            if (mn is null) { return false; }
+            marshallerName = "ABI.System." + mn + "Marshaller";
+            return true;
+        }
+        return false;
     }
 
     /// <summary>True if the type signature represents the System.Object root type.</summary>
