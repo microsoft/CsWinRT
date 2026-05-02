@@ -376,10 +376,20 @@ internal static partial class CodeWriters
             w.Write("(WindowsRuntimeObjectReference nativeObjectReference)\n: base(nativeObjectReference)\n{\n");
             if (!type.IsSealed)
             {
-                w.Write("if (GetType() == typeof(");
-                w.Write(typeName);
-                w.Write("))\n{\n");
-                w.Write("// Default interface objref initialization (simplified port)\n}\n");
+                // For unsealed classes, the default interface objref needs to be initialized only
+                // when GetType() matches the projected class exactly (derived classes have their own
+                // default interface). The init; accessor on _objRef_<DefaultIface> allows this set.
+                ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
+                if (defaultIface is not null)
+                {
+                    string defaultObjRefName = GetObjRefName(w, defaultIface);
+                    w.Write("if (GetType() == typeof(");
+                    w.Write(typeName);
+                    w.Write("))\n{\n");
+                    w.Write(defaultObjRefName);
+                    w.Write(" = NativeObjectReference;\n");
+                    w.Write("}\n");
+                }
             }
             if (gcPressure > 0)
             {

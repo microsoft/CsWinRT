@@ -159,6 +159,11 @@ internal static partial class CodeWriters
     /// <summary>
     /// Emits the lazy <c>_objRef_*</c> field definitions for each interface implementation on
     /// the given runtime class (mirrors C++ <c>write_class_objrefs_definition</c>).
+    /// The C++ uses <c>replaceDefaultByInner = type.Flags().Sealed()</c>: for sealed classes,
+    /// the default interface is emitted as a simple <c>=> NativeObjectReference</c> expression;
+    /// for unsealed classes, ALL interfaces (including the default) use the lazy
+    /// MakeObjectReference pattern, and the default also gets an <c>init;</c> accessor so the
+    /// constructor can set it via <c>_objRef_X = NativeObjectReference</c>.
     /// </summary>
     public static void WriteClassObjRefDefinitions(TypeWriter w, TypeDefinition type)
     {
@@ -167,6 +172,7 @@ internal static partial class CodeWriters
         // Track names emitted so we don't emit duplicates (e.g. when both IFoo and IFoo2
         // produce the same _objRef_<name>).
         HashSet<string> emitted = new(System.StringComparer.Ordinal);
+        bool isSealed = type.IsSealed;
 
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
@@ -177,7 +183,8 @@ internal static partial class CodeWriters
                 continue;
             }
 
-            EmitObjRefForInterface(w, impl.Interface, emitted, isDefault: TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute"));
+            bool isDefault = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute");
+            EmitObjRefForInterface(w, impl.Interface, emitted, isDefault: isDefault, useSimplePattern: isSealed && isDefault);
 
             // Walk transitively-inherited interfaces and emit objrefs for them too. This is needed
             // because mapped collection stubs (IList<T>, IDictionary<K,V>) need the _objRef field
@@ -187,21 +194,24 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Emits an _objRef_ field for a single interface impl reference.</summary>
-    private static void EmitObjRefForInterface(TypeWriter w, ITypeDefOrRef ifaceRef, HashSet<string> emitted, bool isDefault)
+    /// <param name="useSimplePattern">When true, emit the simple expression-bodied form
+    /// <c>=> NativeObjectReference</c>. Otherwise emit the lazy MakeObjectReference pattern.</param>
+    private static void EmitObjRefForInterface(TypeWriter w, ITypeDefOrRef ifaceRef, HashSet<string> emitted, bool isDefault, bool useSimplePattern = false)
     {
         string objRefName = GetObjRefName(w, ifaceRef);
         if (!emitted.Add(objRefName)) { return; }
 
-        if (isDefault)
+        if (useSimplePattern)
         {
-            // Default interface: simple expression-bodied property pointing at NativeObjectReference.
+            // Sealed-class default interface: simple expression-bodied property pointing at NativeObjectReference.
             w.Write("private WindowsRuntimeObjectReference ");
             w.Write(objRefName);
             w.Write(" => NativeObjectReference;\n");
         }
         else
         {
-            // Non-default interface: lazy CompareExchange pattern.
+            // Lazy CompareExchange pattern. For unsealed-class defaults, also emit 'init;' so the
+            // constructor can assign NativeObjectReference for the exact-type case.
             w.Write("private WindowsRuntimeObjectReference ");
             w.Write(objRefName);
             w.Write("\n{\n");
@@ -215,7 +225,9 @@ internal static partial class CodeWriters
             w.Write("),\n");
             w.Write("                comparand: null);\n\n");
             w.Write("            return field;\n        }\n\n");
-            w.Write("        return field ?? MakeObjectReference();\n    }\n}\n");
+            w.Write("        return field ?? MakeObjectReference();\n    }\n");
+            if (isDefault) { w.Write("    init;\n"); }
+            w.Write("}\n");
         }
     }
 
