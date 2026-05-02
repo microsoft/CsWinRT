@@ -1373,16 +1373,17 @@ internal static partial class CodeWriters
                 AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
                 if (IsHResultException(underlying)) { allParamsSimple = false; break; }
                 if (IsBlittablePrimitive(underlying)) { continue; }
-                if (IsBlittableStruct(underlying)) { continue; }
+                if (IsAnyStruct(underlying)) { continue; }
                 allParamsSimple = false;
                 break;
             }
             if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
-                // Allow blittable primitive arrays only.
+                // Allow blittable primitive arrays only (per Do_Abi receive of fixed buffer).
                 if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
                 {
                     if (IsBlittablePrimitive(sz.BaseType)) { continue; }
+                    if (IsAnyStruct(sz.BaseType)) { continue; }
                 }
                 allParamsSimple = false;
                 break;
@@ -1390,7 +1391,7 @@ internal static partial class CodeWriters
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
             if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
-            if (IsBlittableStruct(p.Type)) { continue; }
+            if (IsAnyStruct(p.Type)) { continue; }
             if (IsString(p.Type)) { hasStringParams = true; continue; }
             if (IsRuntimeClassOrInterface(p.Type)) { continue; }
             if (IsObject(p.Type)) { continue; }
@@ -1398,10 +1399,11 @@ internal static partial class CodeWriters
             allParamsSimple = false;
             break;
         }
-        bool returnIsReceiveArrayDoAbi = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzAbi && IsBlittablePrimitive(retSzAbi.BaseType);
+        bool returnIsReceiveArrayDoAbi = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzAbi
+            && (IsBlittablePrimitive(retSzAbi.BaseType) || IsAnyStruct(retSzAbi.BaseType));
         bool returnSimple = rt is null
             || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
-            || (IsBlittableStruct(rt) && !IsHResultException(rt))
+            || (IsAnyStruct(rt) && !IsHResultException(rt))
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
             || IsObject(rt)
@@ -1410,7 +1412,7 @@ internal static partial class CodeWriters
         bool returnIsString = rt is not null && IsString(rt);
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
         bool returnIsGenericInstance = rt is not null && IsGenericInstance(rt);
-        bool returnIsBlittableStruct = rt is not null && IsBlittableStruct(rt);
+        bool returnIsBlittableStruct = rt is not null && IsAnyStruct(rt);
 
         bool isGetter = methodName.StartsWith("get_", System.StringComparison.Ordinal);
         bool isSetter = methodName.StartsWith("put_", System.StringComparison.Ordinal);
@@ -1763,9 +1765,9 @@ internal static partial class CodeWriters
         {
             EmitMarshallerConvertToManaged(w, p.Type, pname);
         }
-        else if (IsBlittableStruct(p.Type))
+        else if (IsAnyStruct(p.Type))
         {
-            // Blittable struct: pass directly (projected type == ABI type)
+            // Blittable / almost-blittable struct: pass directly (projected type == ABI type).
             w.Write(pname);
         }
         else if (IsEnumType(p.Type))
@@ -4093,7 +4095,12 @@ internal static partial class CodeWriters
                 }
                 else if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Struct)
                 {
-                    if (IsTypeBlittable(d.Type))
+                    AsmResolver.DotNet.Signatures.TypeSignature dts = d.Type.ToTypeSignature();
+                    // "Almost-blittable" structs (with bool/char fields but no reference-type
+                    // fields) can pass through using the projected type since the C# layout
+                    // matches the WinRT ABI directly. Truly complex structs (with string/object/
+                    // Nullable<T> fields) need the ABI struct.
+                    if (IsAnyStruct(dts))
                     {
                         WriteTypedefName(w, d.Type, TypedefNameType.Projected, true);
                     }
@@ -4145,7 +4152,7 @@ internal static partial class CodeWriters
                                 w.Write("int");
                                 break;
                             }
-                            if (IsTypeBlittable(rd))
+                            if (IsAnyStruct(rd.ToTypeSignature()))
                             {
                                 WriteTypedefName(w, rd, TypedefNameType.Projected, true);
                             }
