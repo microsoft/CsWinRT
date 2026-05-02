@@ -32,6 +32,15 @@ internal static partial class CodeWriters
 
     private static void EncodeInteropTypeNameInto(StringBuilder sb, TypeSignature sig, TypedefNameType nameType)
     {
+        // Special case for System.Guid: matches C++ guid_type case in write_interop_dll_type_name.
+        if (sig is TypeDefOrRefSignature gtd
+            && gtd.Type?.Namespace?.Value == "System"
+            && gtd.Type?.Name?.Value == "Guid")
+        {
+            if (nameType == TypedefNameType.Projected) { sb.Append("System-Guid"); }
+            else { sb.Append("ABI.System.<<#corlib>Guid>"); }
+            return;
+        }
         switch (sig)
         {
             case CorLibTypeSignature corlib:

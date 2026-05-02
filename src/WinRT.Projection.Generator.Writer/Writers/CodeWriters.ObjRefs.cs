@@ -72,15 +72,13 @@ internal static partial class CodeWriters
     /// </summary>
     public static void WriteIidExpression(TypeWriter w, ITypeDefOrRef ifaceType)
     {
-        // Generic instance: use UnsafeAccessor (we don't yet emit those; fall back to ABI.InterfaceIIDs)
-        // For now, only handle TypeDef/TypeRef (non-generic) cases. Generic instances will be
-        // wired up in a follow-up commit.
-        if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature)
+        // Generic instantiation: use the UnsafeAccessor extern method declared above the field
+        // (e.g. IID_Windows_Foundation_Collections_IObservableMap_string__object_(null)).
+        if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
-            // Generic instantiation: this requires an UnsafeAccessor delegate. For now, we
-            // emit a placeholder that compiles (returns ref to a dummy), but ideally would be
-            // the actual UnsafeAccessor. Will be fully ported in a follow-up commit.
-            w.Write("default(global::System.Guid)");
+            string propName = BuildIidPropertyNameForGenericInterface(w, gi);
+            w.Write(propName);
+            w.Write("(null)");
             return;
         }
 
@@ -129,6 +127,37 @@ internal static partial class CodeWriters
             w.Write("global::ABI.InterfaceIIDs.IID_");
             w.Write(id);
         }
+    }
+
+    /// <summary>
+    /// Builds the IID property name for a generic interface instantiation. Mirrors C++
+    /// <c>write_iid_guid_property_name</c>: <c>write_type_name(type, ABI, true)</c> + escape.
+    /// E.g. <c>IObservableMap&lt;string, object&gt;</c> -> <c>IID_Windows_Foundation_Collections_IObservableMap_string__object_</c>.
+    /// </summary>
+    private static string BuildIidPropertyNameForGenericInterface(TypeWriter w, GenericInstanceTypeSignature gi)
+    {
+        TypeSemantics sem = TypeSemanticsFactory.Get(gi);
+        string name = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
+        {
+            WriteTypeName(w, sem, TypedefNameType.ABI, forceWriteNamespace: true);
+        }));
+        return "IID_" + EscapeTypeNameForIdentifier(name, stripGlobal: true, stripGlobalABI: true);
+    }
+
+    /// <summary>
+    /// Emits the [UnsafeAccessor] extern method declaration that exposes the IID for a generic
+    /// interface instantiation. Mirrors C++ <c>write_unsafe_accessor_for_iid</c>.
+    /// </summary>
+    private static void EmitUnsafeAccessorForIid(TypeWriter w, GenericInstanceTypeSignature gi)
+    {
+        string propName = BuildIidPropertyNameForGenericInterface(w, gi);
+        string interopName = EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
+        w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"get_IID_");
+        w.Write(interopName);
+        w.Write("\")]\n");
+        w.Write("static extern ref readonly Guid ");
+        w.Write(propName);
+        w.Write("([UnsafeAccessorType(\"ABI.InterfaceIIDs, WinRT.Interop\")] object _);\n");
     }
 
     private static string EscapeIdentifier(string s)
@@ -201,15 +230,34 @@ internal static partial class CodeWriters
         string objRefName = GetObjRefName(w, ifaceRef);
         if (!emitted.Add(objRefName)) { return; }
 
+        // Mirrors C++ write_class_objrefs_definition: for generic interface instantiations, emit
+        // the [UnsafeAccessor] extern method declaration (used by the IID expression in both
+        // simple and lazy patterns).
+        bool isGenericInstance = ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature;
+        GenericInstanceTypeSignature? gi = isGenericInstance
+            ? (GenericInstanceTypeSignature)((TypeSpecification)ifaceRef).Signature!
+            : null;
+
         if (useSimplePattern)
         {
             // Sealed-class default interface: simple expression-bodied property pointing at NativeObjectReference.
             w.Write("private WindowsRuntimeObjectReference ");
             w.Write(objRefName);
             w.Write(" => NativeObjectReference;\n");
+            // Emit the unsafe accessor AFTER the field so it can be used to pass the IID in the
+            // constructor for the default interface (mirrors C++ ordering at line ~3018-3022).
+            if (gi is not null)
+            {
+                EmitUnsafeAccessorForIid(w, gi);
+            }
         }
         else
         {
+            // Emit the unsafe accessor BEFORE the lazy field so it's referenced inside the As(...) call.
+            if (gi is not null)
+            {
+                EmitUnsafeAccessorForIid(w, gi);
+            }
             // Lazy CompareExchange pattern. For unsealed-class defaults, also emit 'init;' so the
             // constructor can assign NativeObjectReference for the exact-type case.
             w.Write("private WindowsRuntimeObjectReference ");

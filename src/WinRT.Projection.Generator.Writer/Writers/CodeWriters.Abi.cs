@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
 
 namespace WindowsRuntime.ProjectionGenerator.Writer;
 
@@ -2825,6 +2826,7 @@ internal static partial class CodeWriters
         w.Write("file sealed unsafe class ");
         w.Write(nameStripped);
         w.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
+        EmitUnsafeAccessorForDefaultIfaceIfGeneric(w, defaultIface);
         w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
         w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(\n");
         w.Write("            externalComObject: value,\n");
@@ -2845,6 +2847,7 @@ internal static partial class CodeWriters
             w.Write("file sealed unsafe class ");
             w.Write(nameStripped);
             w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
+            EmitUnsafeAccessorForDefaultIfaceIfGeneric(w, defaultIface);
             w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
             w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
             w.Write("            externalComObject: value,\n");
@@ -2866,6 +2869,7 @@ internal static partial class CodeWriters
             w.Write("file sealed unsafe class ");
             w.Write(nameStripped);
             w.Write("ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback\n{\n");
+            EmitUnsafeAccessorForDefaultIfaceIfGeneric(w, defaultIface);
 
             // TryCreateObject (non-projected runtime class name match)
             w.Write("    public static unsafe bool TryCreateObject(\n");
@@ -2904,6 +2908,20 @@ internal static partial class CodeWriters
             w.Write("        return new ");
             w.Write(fullProjected);
             w.Write("(valueReference);\n    }\n}\n");
+        }
+    }
+
+    /// <summary>
+    /// Emits the [UnsafeAccessor] declaration for the default interface IID inside a file-scoped
+    /// ComWrappers class. Only emits if the default interface is a generic instantiation.
+    /// Mirrors C++ <c>write_class_comwrappers_marshaller_attribute</c> / <c>write_class_comwrappers_callback</c>
+    /// behavior of inserting <c>write_unsafe_accessor_for_iid</c> at the top of the class body.
+    /// </summary>
+    private static void EmitUnsafeAccessorForDefaultIfaceIfGeneric(TypeWriter w, ITypeDefOrRef? defaultIface)
+    {
+        if (defaultIface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        {
+            EmitUnsafeAccessorForIid(w, gi);
         }
     }
 

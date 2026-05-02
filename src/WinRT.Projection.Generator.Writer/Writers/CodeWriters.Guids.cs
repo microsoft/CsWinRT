@@ -37,10 +37,12 @@ internal static partial class CodeWriters
     /// <summary>Mirrors C++ <c>escape_type_name_for_identifier</c>.</summary>
     public static string EscapeTypeNameForIdentifier(string typeName, bool stripGlobal = false, bool stripGlobalABI = false)
     {
+        // Match C++ behavior: escape special chars first, then strip ONLY the prefix (not all
+        // occurrences). C++ uses rfind(prefix, 0) + erase(0, len) which only removes the prefix.
         string result = s_typeNameEscapeRe.Replace(typeName, "_");
         if (stripGlobalABI && typeName.StartsWith("global::ABI.", StringComparison.Ordinal))
         {
-            result = result.Substring(12); // Remove "global::ABI." (with "::" and "." already replaced)
+            result = result.Substring(12); // Remove "global::ABI." (with ":" and "." already replaced)
         }
         else if (stripGlobal && typeName.StartsWith("global::", StringComparison.Ordinal))
         {
