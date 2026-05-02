@@ -55,8 +55,19 @@ internal static partial class CodeWriters
                 break;
             case ParamCategory.ReceiveArray:
                 w.Write("out ");
-                WriteProjectionType(w, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
-                w.Write("[]");
+                {
+                    SzArrayTypeSignature? sz = p.Type as SzArrayTypeSignature
+                        ?? (p.Type is ByReferenceTypeSignature br ? br.BaseType as SzArrayTypeSignature : null);
+                    if (sz is not null)
+                    {
+                        WriteProjectionType(w, TypeSemanticsFactory.Get(sz.BaseType));
+                        w.Write("[]");
+                    }
+                    else
+                    {
+                        WriteProjectedSignature(w, p.Type, true);
+                    }
+                }
                 break;
             default:
                 WriteProjectedSignature(w, p.Type, true);

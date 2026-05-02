@@ -246,15 +246,30 @@ internal static class ParamHelpers
         // the signature is wrapped in a ByReferenceTypeSignature only on one side after substitution).
         // Also peel custom modifiers (e.g. modreq[InAttribute]) which can hide a ByRef beneath.
         bool isByRef = IsByRefType(p.Type) || IsByRefType(p.Parameter.ParameterType);
-        if (isArray)
+        // If byref and underlying is an array, treat as array param (PassArray/ReceiveArray/FillArray)
+        // based on in/out flags. WinRT metadata represents 'out byte[]' as 'byte[]&' with [out].
+        bool isByRefArray = isByRef && PeelByRefAndCustomModifiers(p.Type) is SzArrayTypeSignature;
+        if (isArray || isByRefArray)
         {
             if (isIn) { return ParamCategory.PassArray; }
-            if (isByRef) { return ParamCategory.ReceiveArray; }
+            if (isByRef && isOut) { return ParamCategory.ReceiveArray; }
             return ParamCategory.FillArray;
         }
         if (isOut) { return ParamCategory.Out; }
         if (isByRef) { return ParamCategory.Ref; }
         return ParamCategory.In;
+    }
+
+    private static TypeSignature? PeelByRefAndCustomModifiers(TypeSignature? sig)
+    {
+        TypeSignature? cur = sig;
+        while (true)
+        {
+            if (cur is CustomModifierTypeSignature cm) { cur = cm.BaseType; continue; }
+            if (cur is ByReferenceTypeSignature br) { cur = br.BaseType; continue; }
+            break;
+        }
+        return cur;
     }
 
     private static bool IsByRefType(TypeSignature? sig)
