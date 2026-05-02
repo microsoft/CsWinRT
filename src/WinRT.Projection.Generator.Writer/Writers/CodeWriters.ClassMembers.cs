@@ -479,6 +479,16 @@ internal static partial class CodeWriters
             string key = BuildMethodSignatureKey(name, sig);
             if (!writtenMethods.Add(key)) { continue; }
 
+            // Detect a 'string ToString()' that overrides Object.ToString(). C++ uses 'override'
+            // here (and even forces 'string' as the return type). See code_writers.h:1942-1959.
+            string methodSpecForThis = methodSpec;
+            if (name == "ToString" && sig.Params.Count == 0
+                && sig.ReturnType is AsmResolver.DotNet.Signatures.CorLibTypeSignature crt
+                && crt.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String)
+            {
+                methodSpecForThis = "override ";
+            }
+
             if (isGenericInterface && !string.IsNullOrEmpty(genericInteropType))
             {
                 // Emit UnsafeAccessor static extern + body that dispatches through it.
@@ -501,7 +511,7 @@ internal static partial class CodeWriters
                 w.Write(");\n");
 
                 w.Write(access);
-                w.Write(methodSpec);
+                w.Write(methodSpecForThis);
                 WriteProjectionReturnType(w, sig);
                 w.Write(" ");
                 w.Write(name);
@@ -522,7 +532,7 @@ internal static partial class CodeWriters
             {
                 w.Write("\n");
                 w.Write(access);
-                w.Write(methodSpec);
+                w.Write(methodSpecForThis);
                 WriteProjectionReturnType(w, sig);
                 w.Write(" ");
                 w.Write(name);
