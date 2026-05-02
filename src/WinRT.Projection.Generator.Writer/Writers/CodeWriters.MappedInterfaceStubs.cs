@@ -151,11 +151,14 @@ internal static partial class CodeWriters
         if (args.Count != 2) { return; }
         string k = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
         string v = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[1], TypedefNameType.Projected, true)));
-        // Truth uses the fully-qualified 'global::System.Collections.Generic.KeyValuePair<K,V>' form for KeyValuePair
-        // generic args (the C++ generator emits via the IKeyValuePair mapped type which forces the global:: prefix).
-        string kv = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
-        // Long form (same as kv now) used for objref field-name computation.
-        string kvLong = kv;
+        // Truth uses two forms for KeyValuePair:
+        // - 'kv' (unqualified) for plain type usages: parameters, field/return types
+        // - 'kvNested' (fully qualified) for generic argument usages (inside IEnumerator<>, ICollection<>)
+        string kv = $"KeyValuePair<{k}, {v}>";
+        string kvNested = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
+        // Long form (always fully qualified) used for objref field-name computation
+        // (matches the form WriteClassObjRefDefinitions emits transitively).
+        string kvLong = kvNested;
         string keyId = EncodeArgIdentifier(w, args[0]);
         string valId = EncodeArgIdentifier(w, args[1]);
         string keyInteropArg = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
@@ -183,7 +186,7 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "Contains", "bool", $"{prefix}Contains", interopType, $", {kv} item");
         EmitUnsafeAccessor(w, "CopyTo", "void", $"{prefix}CopyTo", interopType, $", WindowsRuntimeObjectReference enumObjRef, {kv}[] array, int arrayIndex");
         EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {kv} item");
-        EmitUnsafeAccessor(w, "GetEnumerator", $"IEnumerator<{kv}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
+        EmitUnsafeAccessor(w, "GetEnumerator", $"IEnumerator<{kvNested}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
 
         w.Write($"\npublic {v} this[{k} key] {{ get => {prefix}Item(null, {objRefName}, key); set => {prefix}Item(null, {objRefName}, key, value); }}\n");
         w.Write($"public ICollection<{k}> Keys => {prefix}Keys(null, {objRefName});\n");
@@ -200,7 +203,7 @@ internal static partial class CodeWriters
         w.Write($"public void CopyTo({kv}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, {enumerableObjRefName}, array, arrayIndex);\n");
         // ICollection<KVP>.Remove must be explicit to avoid clashing with IDictionary<K,V>.Remove(K key).
         w.Write($"bool ICollection<{kv}>.Remove({kv} item) => {prefix}Remove(null, {objRefName}, item);\n");
-        w.Write($"public IEnumerator<{kv}> GetEnumerator() => {enumerablePrefix}GetEnumerator(null, {enumerableObjRefName});\n");
+        w.Write($"public IEnumerator<{kvNested}> GetEnumerator() => {enumerablePrefix}GetEnumerator(null, {enumerableObjRefName});\n");
         w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
 
@@ -209,9 +212,10 @@ internal static partial class CodeWriters
         if (args.Count != 2) { return; }
         string k = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
         string v = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[1], TypedefNameType.Projected, true)));
-        // Truth uses fully-qualified KeyValuePair (mirrors C++ IKeyValuePair mapped projection).
-        string kv = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
-        string kvLong = kv;
+        // See EmitDictionary comment about kv vs kvNested forms.
+        string kv = $"KeyValuePair<{k}, {v}>";
+        string kvNested = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
+        string kvLong = kvNested;
         string keyId = EncodeArgIdentifier(w, args[0]);
         string valId = EncodeArgIdentifier(w, args[1]);
         string keyInteropArg = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
@@ -231,7 +235,7 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "Item", v, $"{prefix}Item", interopType, $", {k} key");
         EmitUnsafeAccessor(w, "ContainsKey", "bool", $"{prefix}ContainsKey", interopType, $", {k} key");
         EmitUnsafeAccessor(w, "TryGetValue", "bool", $"{prefix}TryGetValue", interopType, $", {k} key, out {v} value");
-        EmitUnsafeAccessor(w, "GetEnumerator", $"IEnumerator<{kv}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
+        EmitUnsafeAccessor(w, "GetEnumerator", $"IEnumerator<{kvNested}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
 
         w.Write($"\npublic {v} this[{k} key] => {prefix}Item(null, {objRefName}, key);\n");
         w.Write($"public IEnumerable<{k}> Keys => {prefix}Keys(null, {objRefName});\n");
@@ -239,7 +243,7 @@ internal static partial class CodeWriters
         w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
         w.Write($"public bool ContainsKey({k} key) => {prefix}ContainsKey(null, {objRefName}, key);\n");
         w.Write($"public bool TryGetValue({k} key, out {v} value) => {prefix}TryGetValue(null, {objRefName}, key, out value);\n");
-        w.Write($"public IEnumerator<{kv}> GetEnumerator() => {enumerablePrefix}GetEnumerator(null, {enumerableObjRefName});\n");
+        w.Write($"public IEnumerator<{kvNested}> GetEnumerator() => {enumerablePrefix}GetEnumerator(null, {enumerableObjRefName});\n");
         w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
 
