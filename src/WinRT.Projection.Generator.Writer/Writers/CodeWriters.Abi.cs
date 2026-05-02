@@ -2556,6 +2556,23 @@ internal static partial class CodeWriters
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = Helpers.StripBackticks(name);
+        // Skip emission for empty interfaces (no non-special methods, no properties, no events).
+        // The C++ generator has the same behaviour: 'if (members.empty()) { return; }'.
+        bool hasMembers = false;
+        foreach (MethodDefinition m in type.Methods)
+        {
+            if (!Helpers.IsSpecial(m)) { hasMembers = true; break; }
+        }
+        if (!hasMembers)
+        {
+            foreach (PropertyDefinition _ in type.Properties) { hasMembers = true; break; }
+        }
+        if (!hasMembers)
+        {
+            foreach (EventDefinition _ in type.Events) { hasMembers = true; break; }
+        }
+        if (!hasMembers) { return; }
+
         // Mirrors C++ write_static_abi_classes: visibility is internal if the interface is
         // exclusive to a class (and not opted into PublicExclusiveTo) or if it's marked
         // [ProjectionInternal]; public otherwise.
