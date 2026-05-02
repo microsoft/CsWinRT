@@ -4169,13 +4169,6 @@ internal static partial class CodeWriters
         return mappedName != "Exception";
     }
 
-    /// <summary>Returns the projected type name for a mapped value type (e.g. 'global::System.TimeSpan').</summary>
-    private static string GetMappedProjectedTypeName(AsmResolver.DotNet.Signatures.TypeSignature sig)
-    {
-        if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
-        return "global::" + ns + "." + name;
-    }
-
     /// <summary>Returns the ABI type name for a mapped value type (e.g. 'global::ABI.System.TimeSpan').</summary>
     private static string GetMappedAbiTypeName(AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
