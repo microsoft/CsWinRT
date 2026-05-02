@@ -190,17 +190,16 @@ internal static partial class CodeWriters
     /// </summary>
     public static void WriteInterface(TypeWriter w, TypeDefinition type)
     {
-        // Skip exclusive interfaces in non-component, non-reference mode (unless public_exclusiveto).
-        // Simplified - also skip if not a default-or-overridable interface.
+        // Mirrors C++ write_interface skip rule: exclusive interfaces other than the default
+        // and overridable one are not used in the projection. Skip them unless public_exclusiveto
+        // is set (or in reference projection or component mode).
         if (!w.Settings.ReferenceProjection &&
             !w.Settings.Component &&
             TypeCategorization.IsExclusiveTo(type) &&
-            !w.Settings.PublicExclusiveTo)
+            !w.Settings.PublicExclusiveTo &&
+            !IsDefaultOrOverridableInterfaceTypedef(type))
         {
-            // We may still need to emit if it's a default/overridable interface used by a class.
-            // Simplified port: emit anyway when not in component/reference mode.
-            // The C++ checks is_default_or_overridable_interface_typedef which requires resolving
-            // exclusive_to_type. We omit that resolution here for simplicity.
+            return;
         }
 
         if (w.Settings.Component && !TypeCategorization.IsExclusiveTo(type))
@@ -224,5 +223,41 @@ internal static partial class CodeWriters
         w.Write("\n{");
         WriteInterfaceMemberSignatures(w, type);
         w.Write("\n}\n");
+    }
+
+    /// <summary>Mirrors C++ <c>is_default_or_overridable_interface_typedef</c>: returns true if the
+    /// given exclusive interface is referenced as a [Default] or [Overridable] interface impl on
+    /// the class it's exclusive to.</summary>
+    private static bool IsDefaultOrOverridableInterfaceTypedef(TypeDefinition iface)
+    {
+        if (!TypeCategorization.IsExclusiveTo(iface)) { return false; }
+        TypeDefinition? classType = GetExclusiveToType(iface);
+        if (classType is null) { return false; }
+        foreach (InterfaceImplementation impl in classType.Interfaces)
+        {
+            if (!Helpers.IsDefaultInterface(impl) && !Helpers.IsOverridable(impl)) { continue; }
+            ITypeDefOrRef? implRef = impl.Interface;
+            if (implRef is null) { continue; }
+            TypeDefinition? implDef = ResolveInterfaceTypeDefForExclusiveCheck(implRef);
+            if (implDef is not null && implDef == iface) { return true; }
+        }
+        return false;
+    }
+
+    private static TypeDefinition? ResolveInterfaceTypeDefForExclusiveCheck(ITypeDefOrRef ifaceRef)
+    {
+        if (ifaceRef is TypeDefinition td) { return td; }
+        if (ifaceRef is TypeReference tr && _cacheRef is not null)
+        {
+            string ns = tr.Namespace?.Value ?? string.Empty;
+            string nm = tr.Name?.Value ?? string.Empty;
+            return _cacheRef.Find(ns + "." + nm);
+        }
+        if (ifaceRef is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+        {
+            ITypeDefOrRef? gen = gi.GenericType;
+            return ResolveInterfaceTypeDefForExclusiveCheck(gen!);
+        }
+        return null;
     }
 }

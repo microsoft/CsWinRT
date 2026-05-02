@@ -943,7 +943,7 @@ internal static partial class CodeWriters
     /// Returns the parent class for an interface marked <c>[ExclusiveToAttribute(typeof(T))]</c>.
     /// Mirrors C++ <c>get_exclusive_to_type</c>.
     /// </summary>
-    private static TypeDefinition? GetExclusiveToType(TypeDefinition iface)
+    internal static TypeDefinition? GetExclusiveToType(TypeDefinition iface)
     {
         if (_cacheRef is null) { return null; }
         for (int i = 0; i < iface.CustomAttributes.Count; i++)
@@ -2324,10 +2324,89 @@ internal static partial class CodeWriters
 
         w.Write("}\n\n");
 
-        // Marshaller attribute class (for [TypeMap<WindowsRuntimeComWrappersTypeMapGroup>])
-        w.Write("internal sealed class ");
-        w.Write(nameStripped);
-        w.Write("ComWrappersMarshaller : global::System.Attribute\n{\n}\n");
+        // Emit the InterfaceEntriesImpl static class and the proper ComWrappersMarshallerAttribute
+        // class derived from WindowsRuntimeComWrappersMarshallerAttribute (matches truth).
+        // For enums and almost-blittable structs, GetOrCreateComInterfaceForObject uses None.
+        // For complex structs (with reference fields), it uses TrackerSupport.
+        // For complex structs, CreateObject converts via the *Marshaller.ConvertToManaged after
+        // unboxing to the ABI struct.
+        if (isEnum || almostBlittable || emitComplexBodies)
+        {
+            string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
+
+            // InterfaceEntriesImpl
+            w.Write("file static class ");
+            w.Write(nameStripped);
+            w.Write("InterfaceEntriesImpl\n{\n");
+            w.Write("    [FixedAddressValueType]\n");
+            w.Write("    public static readonly ReferenceInterfaceEntries Entries;\n\n");
+            w.Write("    static ");
+            w.Write(nameStripped);
+            w.Write("InterfaceEntriesImpl()\n    {\n");
+            w.Write("        Entries.IReferenceValue.IID = ");
+            w.Write(iidRefExpr);
+            w.Write(";\n");
+            w.Write("        Entries.IReferenceValue.Vtable = ");
+            w.Write(nameStripped);
+            w.Write("ReferenceImpl.Vtable;\n");
+            w.Write("        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;\n");
+            w.Write("        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;\n");
+            w.Write("        Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;\n");
+            w.Write("        Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;\n");
+            w.Write("        Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;\n");
+            w.Write("        Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;\n");
+            w.Write("        Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;\n");
+            w.Write("        Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;\n");
+            w.Write("        Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;\n");
+            w.Write("        Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;\n");
+            w.Write("        Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;\n");
+            w.Write("        Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;\n");
+            w.Write("        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;\n");
+            w.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
+            w.Write("    }\n}\n\n");
+
+            // ComWrappersMarshallerAttribute (full body)
+            w.Write("internal sealed unsafe class ");
+            w.Write(nameStripped);
+            w.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
+            w.Write("    public override void* GetOrCreateComInterfaceForObject(object value)\n    {\n");
+            w.Write("        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.");
+            w.Write(hasReferenceFields ? "TrackerSupport" : "None");
+            w.Write(");\n    }\n\n");
+            w.Write("    public override ComInterfaceEntry* ComputeVtables(out int count)\n    {\n");
+            w.Write("        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);\n");
+            w.Write("        return (ComInterfaceEntry*)Unsafe.AsPointer(in ");
+            w.Write(nameStripped);
+            w.Write("InterfaceEntriesImpl.Entries);\n    }\n\n");
+            w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+            w.Write("        wrapperFlags = CreatedWrapperFlags.NonWrapping;\n");
+            if (isComplexStruct && emitComplexBodies)
+            {
+                w.Write("        return ");
+                w.Write(nameStripped);
+                w.Write("Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
+                WriteTypedefName(w, type, TypedefNameType.ABI, true);
+                w.Write(">(value, in ");
+                w.Write(iidRefExpr);
+                w.Write("));\n");
+            }
+            else
+            {
+                w.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
+                WriteTypedefName(w, type, TypedefNameType.Projected, true);
+                w.Write(">(value, in ");
+                w.Write(iidRefExpr);
+                w.Write(");\n");
+            }
+            w.Write("    }\n}\n");
+        }
+        else
+        {
+            // Fallback: keep the placeholder class so consumer attribute references resolve.
+            w.Write("internal sealed class ");
+            w.Write(nameStripped);
+            w.Write("ComWrappersMarshallerAttribute : global::System.Attribute\n{\n}\n");
+        }
     }
 
     /// <summary>
