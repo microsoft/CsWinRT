@@ -2737,8 +2737,11 @@ internal static partial class CodeWriters
         }
 
         // Emit event member methods (returns an event source, takes thisObject + thisReference).
+        // Skip events on exclusive interfaces used by their class — they're inlined directly in
+        // the RCW class. (Mirrors C++ skip_exclusive_events.)
         foreach (EventDefinition evt in type.Events)
         {
+            if (skipExclusiveEvents) { continue; }
             string evtName = evt.Name?.Value ?? string.Empty;
             AsmResolver.DotNet.Signatures.TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
             bool isGenericEvent = evtSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
