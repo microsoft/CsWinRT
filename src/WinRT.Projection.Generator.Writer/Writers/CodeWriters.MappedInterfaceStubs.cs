@@ -177,6 +177,7 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "Add", "void", $"{prefix}AddPair", interopType, $", {kv} item");
         EmitUnsafeAccessor(w, "Clear", "void", $"{prefix}Clear", interopType, "");
         EmitUnsafeAccessor(w, "Contains", "bool", $"{prefix}Contains", interopType, $", {kv} item");
+        EmitUnsafeAccessor(w, "CopyTo", "void", $"{prefix}CopyTo", interopType, $", WindowsRuntimeObjectReference enumObjRef, {kv}[] array, int arrayIndex");
         EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}RemovePair", interopType, $", {kv} item");
         EmitUnsafeAccessor(w, "GetEnumerator", $"global::System.Collections.Generic.IEnumerator<{kv}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
 
@@ -192,8 +193,7 @@ internal static partial class CodeWriters
         w.Write($"public void Add({kv} item) => {prefix}AddPair(null, {objRefName}, item);\n");
         w.Write($"public void Clear() => {prefix}Clear(null, {objRefName});\n");
         w.Write($"public bool Contains({kv} item) => {prefix}Contains(null, {objRefName}, item);\n");
-        // CopyTo requires the IEnumerable<KeyValuePair<K,V>> objref - leave as throw null! for now.
-        w.Write($"public void CopyTo({kv}[] array, int arrayIndex) => throw null!;\n");
+        w.Write($"public void CopyTo({kv}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, {enumerableObjRefName}, array, arrayIndex);\n");
         w.Write($"public bool Remove({kv} item) => {prefix}RemovePair(null, {objRefName}, item);\n");
         w.Write($"public global::System.Collections.Generic.IEnumerator<{kv}> GetEnumerator() => {enumerablePrefix}GetEnumerator(null, {enumerableObjRefName});\n");
         w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
