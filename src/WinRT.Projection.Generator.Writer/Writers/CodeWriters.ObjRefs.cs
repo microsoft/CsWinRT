@@ -177,35 +177,83 @@ internal static partial class CodeWriters
                 continue;
             }
 
-            string objRefName = GetObjRefName(w, impl.Interface);
-            if (!emitted.Add(objRefName)) { continue; }
+            EmitObjRefForInterface(w, impl.Interface, emitted, isDefault: TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute"));
 
-            bool isDefault = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute");
-            if (isDefault)
+            // Walk transitively-inherited interfaces and emit objrefs for them too. This is needed
+            // because mapped collection stubs (IList<T>, IDictionary<K,V>) need the _objRef field
+            // for IEnumerable<T>/IEnumerable<KeyValuePair<K,V>> to dispatch GetEnumerator through.
+            EmitTransitiveInterfaceObjRefs(w, impl.Interface, emitted);
+        }
+    }
+
+    /// <summary>Emits an _objRef_ field for a single interface impl reference.</summary>
+    private static void EmitObjRefForInterface(TypeWriter w, ITypeDefOrRef ifaceRef, HashSet<string> emitted, bool isDefault)
+    {
+        string objRefName = GetObjRefName(w, ifaceRef);
+        if (!emitted.Add(objRefName)) { return; }
+
+        if (isDefault)
+        {
+            // Default interface: simple expression-bodied property pointing at NativeObjectReference.
+            w.Write("private WindowsRuntimeObjectReference ");
+            w.Write(objRefName);
+            w.Write(" => NativeObjectReference;\n");
+        }
+        else
+        {
+            // Non-default interface: lazy CompareExchange pattern.
+            w.Write("private WindowsRuntimeObjectReference ");
+            w.Write(objRefName);
+            w.Write("\n{\n");
+            w.Write("    get\n    {\n");
+            w.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
+            w.Write("        WindowsRuntimeObjectReference MakeObjectReference()\n        {\n");
+            w.Write("            _ = global::System.Threading.Interlocked.CompareExchange(\n");
+            w.Write("                location1: ref field,\n");
+            w.Write("                value: NativeObjectReference.As(");
+            WriteIidExpression(w, ifaceRef);
+            w.Write("),\n");
+            w.Write("                comparand: null);\n\n");
+            w.Write("            return field;\n        }\n\n");
+            w.Write("        return field ?? MakeObjectReference();\n    }\n}\n");
+        }
+    }
+
+    /// <summary>
+    /// Walks transitively-inherited interfaces and emits an objref field for each one. Mirrors
+    /// the recursive interface walk needed for mapped collection dispatch.
+    /// </summary>
+    private static void EmitTransitiveInterfaceObjRefs(TypeWriter w, ITypeDefOrRef ifaceRef, HashSet<string> emitted)
+    {
+        // Resolve the interface to its TypeDefinition; if cross-module, look it up in the cache.
+        TypeDefinition? ifaceTd = ResolveInterfaceTypeDef(ifaceRef);
+        if (ifaceTd is null) { return; }
+
+        // Compute a substitution context if the parent is a closed generic instance.
+        AsmResolver.DotNet.Signatures.GenericContext? ctx = null;
+        if (ifaceRef is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+        {
+            ctx = new AsmResolver.DotNet.Signatures.GenericContext(gi, null);
+        }
+
+        foreach (InterfaceImplementation childImpl in ifaceTd.Interfaces)
+        {
+            if (childImpl.Interface is null) { continue; }
+
+            // If the parent is a closed generic, substitute the child's signature.
+            ITypeDefOrRef childRef = childImpl.Interface;
+            if (ctx is not null)
             {
-                // Default interface: simple expression-bodied property pointing at NativeObjectReference.
-                w.Write("private WindowsRuntimeObjectReference ");
-                w.Write(objRefName);
-                w.Write(" => NativeObjectReference;\n");
+                AsmResolver.DotNet.Signatures.TypeSignature childSig = childRef.ToTypeSignature(false);
+                AsmResolver.DotNet.Signatures.TypeSignature substitutedSig = childSig.InstantiateGenericTypes(ctx.Value);
+                AsmResolver.DotNet.ITypeDefOrRef? newRef = substitutedSig.ToTypeDefOrRef();
+                if (newRef is not null) { childRef = newRef; }
             }
-            else
-            {
-                // Non-default interface: lazy CompareExchange pattern.
-                w.Write("private WindowsRuntimeObjectReference ");
-                w.Write(objRefName);
-                w.Write("\n{\n");
-                w.Write("    get\n    {\n");
-                w.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
-                w.Write("        WindowsRuntimeObjectReference MakeObjectReference()\n        {\n");
-                w.Write("            _ = global::System.Threading.Interlocked.CompareExchange(\n");
-                w.Write("                location1: ref field,\n");
-                w.Write("                value: NativeObjectReference.As(");
-                WriteIidExpression(w, impl.Interface);
-                w.Write("),\n");
-                w.Write("                comparand: null);\n\n");
-                w.Write("            return field;\n        }\n\n");
-                w.Write("        return field ?? MakeObjectReference();\n    }\n}\n");
-            }
+
+            // Skip exclusive-to-someone-else interfaces. Mirrors EmitImplType-like check.
+            // For now, just emit (no-op if exclusive — the field still works for QI lookup).
+            EmitObjRefForInterface(w, childRef, emitted, isDefault: false);
+            EmitTransitiveInterfaceObjRefs(w, childRef, emitted);
         }
     }
 
