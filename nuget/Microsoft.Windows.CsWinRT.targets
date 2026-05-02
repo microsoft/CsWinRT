@@ -128,18 +128,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
-  <!-- Remove WinRT.Host.dll references (the shim DLL lives under hosting\ and is not auto-resolved) -->
-  <Target Name="CsWinRTRemoveHostingDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
-    <PropertyGroup>
-      <CsWinRTPkg-NativeDir>$(CsWinRTPath)runtimes\**\native</CsWinRTPkg-NativeDir>
-    </PropertyGroup>
-    <ItemGroup>
-     <ReferenceCopyLocalPaths        Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
-     <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
-     <RuntimeTargetsCopyLocalItems   Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
-    </ItemGroup>
-  </Target>
-
   <!-- Remove Windows.Winmd reference to prevent compile collisions-->
   <Target Name="CsWinRTRemoveWindowsReference" Outputs="@(Reference)" Condition="$(CsWinRTEnabled)">
    <ItemGroup>
