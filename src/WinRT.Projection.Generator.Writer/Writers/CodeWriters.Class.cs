@@ -451,6 +451,9 @@ internal static partial class CodeWriters
         // Class members from interfaces (instance methods, properties, events)
         WriteClassMembers(w, type);
 
+        // Static members from [Static] factory interfaces (e.g. GetForCurrentView).
+        WriteStaticClassMembers(w, type);
+
         w.Write("}\n");
     }
 }
