@@ -3301,6 +3301,24 @@ internal static partial class CodeWriters
             w.Write(callName);
             w.Write(");\n");
         }
+        // Declare locals for mapped value-type input parameters (DateTime/TimeSpan): convert via marshaller up-front.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
+            if (!IsMappedAbiValueType(p.Type)) { continue; }
+            string localName = GetParamLocalName(p, paramNameOverride);
+            string callName = GetParamName(p, paramNameOverride);
+            w.Write("        ");
+            w.Write(GetMappedAbiTypeName(p.Type));
+            w.Write(" __");
+            w.Write(localName);
+            w.Write(" = ");
+            w.Write(GetMappedMarshallerName(p.Type));
+            w.Write(".ConvertToUnmanaged(");
+            w.Write(callName);
+            w.Write(");\n");
+        }
         // Declare locals for Out parameters (need to be passed as &__<name> to the call).
         for (int i = 0; i < sig.Params.Count; i++)
         {
@@ -3697,6 +3715,12 @@ internal static partial class CodeWriters
                 w.Write(GetParamLocalName(p, paramNameOverride));
                 w.Write(".GetThisPtrUnsafe()");
             }
+            else if (IsMappedAbiValueType(p.Type))
+            {
+                // Mapped value-type input: pass the pre-converted ABI local.
+                w.Write("__");
+                w.Write(GetParamLocalName(p, paramNameOverride));
+            }
             else if (IsAnyStruct(p.Type))
             {
                 w.Write(GetParamName(p, paramNameOverride));
@@ -3876,7 +3900,17 @@ internal static partial class CodeWriters
             else if (returnIsAnyStruct)
             {
                 w.Write(callIndent);
-                w.Write("return __retval;\n");
+                if (IsMappedAbiValueType(rt))
+                {
+                    // Mapped value type return: convert ABI struct back to projected via marshaller.
+                    w.Write("return ");
+                    w.Write(GetMappedMarshallerName(rt));
+                    w.Write(".ConvertToManaged(__retval);\n");
+                }
+                else
+                {
+                    w.Write("return __retval;\n");
+                }
             }
             else if (returnIsComplexStruct)
             {
@@ -4488,6 +4522,8 @@ internal static partial class CodeWriters
     /// <summary>Returns the ABI type name for a blittable struct (the projected type name).</summary>
     private static string GetBlittableStructAbiType(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
+        // Mapped value types (DateTime/TimeSpan) use the ABI type, not the projected type.
+        if (IsMappedAbiValueType(sig)) { return GetMappedAbiTypeName(sig); }
         return w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, sig, false)));
     }
 
