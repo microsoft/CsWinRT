@@ -178,7 +178,7 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "Clear", "void", $"{prefix}Clear", interopType, "");
         EmitUnsafeAccessor(w, "Contains", "bool", $"{prefix}Contains", interopType, $", {kv} item");
         EmitUnsafeAccessor(w, "CopyTo", "void", $"{prefix}CopyTo", interopType, $", WindowsRuntimeObjectReference enumObjRef, {kv}[] array, int arrayIndex");
-        EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}RemovePair", interopType, $", {kv} item");
+        EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {kv} item");
         EmitUnsafeAccessor(w, "GetEnumerator", $"global::System.Collections.Generic.IEnumerator<{kv}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
 
         w.Write($"\npublic {v} this[{k} key] {{ get => {prefix}Item(null, {objRefName}, key); set => {prefix}Item(null, {objRefName}, key, value); }}\n");
@@ -195,7 +195,7 @@ internal static partial class CodeWriters
         w.Write($"public bool Contains({kv} item) => {prefix}Contains(null, {objRefName}, item);\n");
         w.Write($"public void CopyTo({kv}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, {enumerableObjRefName}, array, arrayIndex);\n");
         // ICollection<KVP>.Remove must be explicit to avoid clashing with IDictionary<K,V>.Remove(K key).
-        w.Write($"bool global::System.Collections.Generic.ICollection<{kv}>.Remove({kv} item) => {prefix}RemovePair(null, {objRefName}, item);\n");
+        w.Write($"bool global::System.Collections.Generic.ICollection<{kv}>.Remove({kv} item) => {prefix}Remove(null, {objRefName}, item);\n");
         w.Write($"public global::System.Collections.Generic.IEnumerator<{kv}> GetEnumerator() => {enumerablePrefix}GetEnumerator(null, {enumerableObjRefName});\n");
         w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
