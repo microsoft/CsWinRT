@@ -242,7 +242,9 @@ internal static partial class CodeWriters
             string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
             w.Write(projected);
             w.Write(" __result = default;\n");
-            w.Write("        *__retval = default;\n");
+            w.Write("        *");
+            w.Write(GetReturnParamName(sig));
+            w.Write(" = default;\n");
         }
 
         // Construct ReadOnlySpan<T> for each PassArray param.
@@ -333,34 +335,47 @@ internal static partial class CodeWriters
 
         if (hasReturn)
         {
-            // Marshal the managed result back to the native *__retval pointer.
+            string retName = GetReturnParamName(sig);
+            // Marshal the managed result back to the native pointer.
             if (returnIsString)
             {
-                w.Write("            *__retval = HStringMarshaller.ConvertToUnmanaged(__result);\n");
+                w.Write("            *");
+                w.Write(retName);
+                w.Write(" = HStringMarshaller.ConvertToUnmanaged(__result);\n");
             }
             else if (returnIsRefType)
             {
-                w.Write("            *__retval = ");
+                w.Write("            *");
+                w.Write(retName);
+                w.Write(" = ");
                 EmitMarshallerConvertToUnmanaged(w, rt!, "__result");
                 w.Write(".DetachThisPtrUnsafe();\n");
             }
             else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBoolRet &&
                      corlibBoolRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
             {
-                w.Write("            *__retval = __result;\n");
+                w.Write("            *");
+                w.Write(retName);
+                w.Write(" = __result;\n");
             }
             else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibCharRet &&
                      corlibCharRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
             {
-                w.Write("            *__retval = __result;\n");
+                w.Write("            *");
+                w.Write(retName);
+                w.Write(" = __result;\n");
             }
             else if (IsEnumType(rt!))
             {
-                w.Write("            *__retval = __result;\n");
+                w.Write("            *");
+                w.Write(retName);
+                w.Write(" = __result;\n");
             }
             else
             {
-                w.Write("            *__retval = __result;\n");
+                w.Write("            *");
+                w.Write(retName);
+                w.Write(" = __result;\n");
             }
         }
 
@@ -1136,14 +1151,19 @@ internal static partial class CodeWriters
         if (sig.ReturnType is not null)
         {
             w.Write(", ");
+            string retName = GetReturnParamName(sig);
+            string retSizeName = GetReturnSizeParamName(sig);
             // Special handling for SzArray return types: WinRT projects them as a (uint*, T**) pair.
             if (sig.ReturnType is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz)
             {
                 if (includeParamNames)
                 {
-                    w.Write("uint* __retvalLength, ");
+                    w.Write("uint* ");
+                    w.Write(retSizeName);
+                    w.Write(", ");
                     WriteAbiType(w, TypeSemanticsFactory.Get(retSz.BaseType));
-                    w.Write("** __retval");
+                    w.Write("** ");
+                    w.Write(retName);
                 }
                 else
                 {
@@ -1156,9 +1176,25 @@ internal static partial class CodeWriters
             {
                 WriteAbiType(w, TypeSemanticsFactory.Get(sig.ReturnType));
                 w.Write("*");
-                if (includeParamNames) { w.Write(" __retval"); }
+                if (includeParamNames) { w.Write(' '); w.Write(retName); }
             }
         }
+    }
+
+    /// <summary>Returns the metadata-derived name for the return parameter (or '__retval' fallback).</summary>
+    internal static string GetReturnParamName(MethodSig sig)
+    {
+        string? n = sig.ReturnParam?.Name?.Value;
+        if (string.IsNullOrEmpty(n)) { return "__retval"; }
+        return Helpers.IsKeyword(n) ? "@" + n : n;
+    }
+
+    /// <summary>Returns '__&lt;returnName&gt;Size' (matches C++ '__%Size' convention) or '__retvalLength' fallback.</summary>
+    internal static string GetReturnSizeParamName(MethodSig sig)
+    {
+        string? n = sig.ReturnParam?.Name?.Value;
+        if (string.IsNullOrEmpty(n)) { return "__retvalLength"; }
+        return "__" + n + "Size";
     }
 
     /// <summary>Mirrors C++ <c>write_interface_vftbl</c>.</summary>
@@ -1335,8 +1371,8 @@ internal static partial class CodeWriters
         string handlerRawName = sig.Params.Count > 0 ? (sig.Params[^1].Parameter.Name ?? "handler") : "handler";
         string handlerRef = Helpers.IsKeyword(handlerRawName) ? "@" + handlerRawName : handlerRawName;
 
-        // The cookie return parameter is emitted as "__retval" by WriteAbiParameterTypesPointer.
-        const string cookieName = "__retval";
+        // The cookie/token return parameter takes the metadata return param name (matches truth).
+        string cookieName = GetReturnParamName(sig);
 
         AsmResolver.DotNet.Signatures.TypeSignature evtTypeSig = evt.EventType!.ToTypeSignature(false);
         bool isGeneric = evtTypeSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
@@ -1495,16 +1531,24 @@ internal static partial class CodeWriters
         }
 
         w.Write("\n{\n");
+        string retParamName = GetReturnParamName(sig);
+        string retSizeParamName = GetReturnSizeParamName(sig);
         if (rt is not null)
         {
             if (returnIsReceiveArrayDoAbi)
             {
-                w.Write("    *__retval = default;\n");
-                w.Write("    *__retvalLength = default;\n");
+                w.Write("    *");
+                w.Write(retParamName);
+                w.Write(" = default;\n");
+                w.Write("    *");
+                w.Write(retSizeParamName);
+                w.Write(" = default;\n");
             }
             else
             {
-                w.Write("    *__retval = default;\n");
+                w.Write("    *");
+                w.Write(retParamName);
+                w.Write(" = default;\n");
             }
         }
         // For each out parameter, clear the destination and declare a local.
@@ -1807,11 +1851,15 @@ internal static partial class CodeWriters
         {
             if (returnIsHResultExceptionDoAbi)
             {
-                w.Write("        *__retval = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(__result);\n");
+                w.Write("        *");
+                w.Write(retParamName);
+                w.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(__result);\n");
             }
             else if (returnIsString)
             {
-                w.Write("        *__retval = HStringMarshaller.ConvertToUnmanaged(__result);\n");
+                w.Write("        *");
+                w.Write(retParamName);
+                w.Write(" = HStringMarshaller.ConvertToUnmanaged(__result);\n");
             }
             else if (returnIsRefType)
             {
@@ -1826,11 +1874,15 @@ internal static partial class CodeWriters
                     w.Write("\")] object _, ");
                     w.Write(projectedTypeName);
                     w.Write(" value);\n");
-                    w.Write("        *__retval = ConvertToUnmanaged_result(null, __result).DetachThisPtrUnsafe();\n");
+                    w.Write("        *");
+                    w.Write(retParamName);
+                    w.Write(" = ConvertToUnmanaged_result(null, __result).DetachThisPtrUnsafe();\n");
                 }
                 else
                 {
-                    w.Write("        *__retval = ");
+                    w.Write("        *");
+                    w.Write(retParamName);
+                    w.Write(" = ");
                     EmitMarshallerConvertToUnmanaged(w, rt!, "__result");
                     w.Write(".DetachThisPtrUnsafe();\n");
                 }
@@ -1849,16 +1901,24 @@ internal static partial class CodeWriters
                 w.Write("> span, out uint length, out ");
                 w.Write(elementAbi);
                 w.Write("* data);\n");
-                w.Write("        ConvertToUnmanaged_result(null, __result, out *__retvalLength, out *__retval);\n");
+                w.Write("        ConvertToUnmanaged_result(null, __result, out *");
+                w.Write(retSizeParamName);
+                w.Write(", out *");
+                w.Write(retParamName);
+                w.Write(");\n");
             }
             else if (returnIsBlittableStruct)
             {
-                w.Write("        *__retval = __result;\n");
+                w.Write("        *");
+                w.Write(retParamName);
+                w.Write(" = __result;\n");
             }
             else
             {
                 string abiType = GetAbiPrimitiveType(rt);
-                w.Write("        *__retval = ");
+                w.Write("        *");
+                w.Write(retParamName);
+                w.Write(" = ");
                 if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
                     corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
                 {
