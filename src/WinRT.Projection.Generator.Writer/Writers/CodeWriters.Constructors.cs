@@ -582,14 +582,11 @@ internal static partial class CodeWriters
             else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool &&
                      corlibBool.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
             {
-                w.Write("(byte)(");
                 w.Write(pname);
-                w.Write(" ? 1 : 0)");
             }
             else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar &&
                      corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
             {
-                w.Write("(ushort)");
                 w.Write(pname);
             }
             else if (IsString(p.Type))

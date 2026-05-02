@@ -287,18 +287,16 @@ internal static partial class CodeWriters
                 w.Write(raw);
                 continue;
             }
-            // bool: native byte -> managed bool
+            // bool: native bool -> managed bool (no conversion needed)
             if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibB &&
                 corlibB.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
             {
                 w.Write(callName);
-                w.Write(" != 0");
             }
-            // char: native ushort -> managed char (cast)
+            // char: native char -> managed char (no conversion needed)
             else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibC &&
                      corlibC.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
             {
-                w.Write("(char)");
                 w.Write(callName);
             }
             // String: HStringMarshaller.ConvertToManaged
@@ -349,12 +347,12 @@ internal static partial class CodeWriters
             else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBoolRet &&
                      corlibBoolRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
             {
-                w.Write("            *__retval = (byte)(__result ? 1 : 0);\n");
+                w.Write("            *__retval = __result;\n");
             }
             else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibCharRet &&
                      corlibCharRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
             {
-                w.Write("            *__retval = (ushort)__result;\n");
+                w.Write("            *__retval = __result;\n");
             }
             else if (IsEnumType(rt!))
             {
@@ -656,13 +654,10 @@ internal static partial class CodeWriters
             }
             else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool && corlibBool.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
             {
-                w.Write("(byte)(");
                 w.Write(callName);
-                w.Write(" ? 1 : 0)");
             }
             else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar && corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
             {
-                w.Write("(ushort)");
                 w.Write(callName);
             }
             else if (IsEnumType(p.Type))
@@ -698,11 +693,11 @@ internal static partial class CodeWriters
             }
             else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBoolRet && corlibBoolRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
             {
-                w.Write("return __retval != 0;\n");
+                w.Write("return __retval;\n");
             }
             else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibCharRet && corlibCharRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
             {
-                w.Write("return (char)__retval;\n");
+                w.Write("return __retval;\n");
             }
             else if (IsEnumType(rt!))
             {
@@ -1714,15 +1709,13 @@ internal static partial class CodeWriters
             else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool &&
                      corlibBool.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
             {
-                w.Write("(byte)(");
                 w.Write("__");
                 w.Write(raw);
-                w.Write(" ? 1 : 0)");
             }
             else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar &&
                      corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
             {
-                w.Write("(ushort)__");
+                w.Write("__");
                 w.Write(raw);
             }
             else
@@ -1791,12 +1784,12 @@ internal static partial class CodeWriters
                 if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
                     corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
                 {
-                    w.Write("(byte)(__result ? 1 : 0);\n");
+                    w.Write("__result;\n");
                 }
                 else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
                          corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
                 {
-                    w.Write("(ushort)__result;\n");
+                    w.Write("__result;\n");
                 }
                 else if (IsEnumType(rt))
                 {
@@ -1862,12 +1855,10 @@ internal static partial class CodeWriters
             corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
         {
             w.Write(pname);
-            w.Write(" != 0");
         }
         else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
                  corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
         {
-            w.Write("(char)");
             w.Write(pname);
         }
         else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibStr &&
@@ -3588,11 +3579,10 @@ internal static partial class CodeWriters
             {
                 w.Write("__");
                 w.Write(localName);
-                w.Write(" != 0");
             }
             else if (uOut is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar && corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
             {
-                w.Write("(char)__");
+                w.Write("__");
                 w.Write(localName);
             }
             else if (IsEnumType(uOut))
@@ -3724,8 +3714,7 @@ internal static partial class CodeWriters
                 w.Write("return ");
                 string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
                 string abiType = GetAbiPrimitiveType(rt);
-                if (projected == "bool") { w.Write("__retval != 0;\n"); }
-                else if (projected == abiType) { w.Write("__retval;\n"); }
+                if (projected == abiType) { w.Write("__retval;\n"); }
                 else
                 {
                     w.Write("(");
@@ -4114,19 +4103,16 @@ internal static partial class CodeWriters
     private static void EmitParamArgConversion(TypeWriter w, ParamInfo p, string? paramNameOverride = null)
     {
         string pname = paramNameOverride ?? p.Parameter.Name ?? "param";
-        // bool -> byte (truthy = 1, false = 0)
+        // bool: ABI is 'bool' directly; pass as-is.
         if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
             corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
         {
-            w.Write("(byte)(");
             w.Write(pname);
-            w.Write(" ? 1 : 0)");
         }
-        // char -> ushort (no conversion needed; cast)
+        // char: ABI is 'char' directly; pass as-is.
         else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
                  corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
         {
-            w.Write("(ushort)");
             w.Write(pname);
         }
         // Enums: function pointer signature uses the projected enum type, so pass directly.
@@ -4296,8 +4282,8 @@ internal static partial class CodeWriters
         {
             return corlib.ElementType switch
             {
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean => "byte",
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char => "ushort",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean => "bool",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char => "char",
                 _ => GetAbiFundamentalTypeFromCorLib(corlib.ElementType),
             };
         }
@@ -4528,8 +4514,8 @@ internal static partial class CodeWriters
 
     private static string GetAbiFundamentalType(FundamentalType t) => t switch
     {
-        FundamentalType.Boolean => "byte",
-        FundamentalType.Char => "ushort",
+        FundamentalType.Boolean => "bool",
+        FundamentalType.Char => "char",
         FundamentalType.String => "void*",
         _ => FundamentalTypes.ToCSharpType(t)
     };
