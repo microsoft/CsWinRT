@@ -418,6 +418,34 @@ internal static partial class CodeWriters
                 w.Write("true;");
             }
             w.Write("\n");
+
+            // IsOverridableInterface override (mirrors C++ write_custom_query_interface_impl).
+            // Emit '|| <iidExpr> == iid' for each [Overridable] interface impl, then '|| base.IsOverridableInterface(in iid)'
+            // if the type has a base class, finally fall back to 'false' if no entries.
+            w.Write("\nprotected override bool IsOverridableInterface(in Guid iid) => ");
+            bool firstClause = true;
+            foreach (InterfaceImplementation impl in type.Interfaces)
+            {
+                if (!Helpers.IsOverridable(impl)) { continue; }
+                ITypeDefOrRef? implRef = impl.Interface;
+                if (implRef is null) { continue; }
+                if (!firstClause) { w.Write(" || "); }
+                firstClause = false;
+                WriteIidExpression(w, implRef);
+                w.Write(" == iid");
+            }
+            // base call when type has a non-object base class
+            bool hasBaseClass = type.BaseType is not null
+                && !(type.BaseType.Namespace?.Value == "System" && type.BaseType.Name?.Value == "Object")
+                && !(type.BaseType.Namespace?.Value == "WindowsRuntime" && type.BaseType.Name?.Value == "WindowsRuntimeObject");
+            if (hasBaseClass)
+            {
+                if (!firstClause) { w.Write(" || "); }
+                w.Write("base.IsOverridableInterface(in iid)");
+                firstClause = false;
+            }
+            if (firstClause) { w.Write("false"); }
+            w.Write(";\n");
         }
 
         // Class members from interfaces (instance methods, properties, events)
