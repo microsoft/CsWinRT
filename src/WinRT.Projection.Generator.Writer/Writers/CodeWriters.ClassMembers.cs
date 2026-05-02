@@ -179,6 +179,36 @@ internal static partial class CodeWriters
             w.Write(objRefName);
             w.Write(".AsValue();\n");
         }
+
+        // For unsealed classes with an exclusive default interface, the C++ generator emits
+        // an additional 'internal WindowsRuntimeObjectReferenceValue GetDefaultInterface()'
+        // method (see write_class_member). This is needed because the default interface's
+        // 'IWindowsRuntimeInterface<>.GetInterface' isn't emitted (since it's exclusive).
+        if (!type.IsSealed)
+        {
+            ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
+            if (defaultIface is not null)
+            {
+                TypeDefinition? defaultIfaceTd = ResolveInterface(defaultIface);
+                if (defaultIfaceTd is not null && TypeCategorization.IsExclusiveTo(defaultIfaceTd))
+                {
+                    string objRefName = GetObjRefName(w, defaultIface);
+                    bool hasBaseType = false;
+                    if (type.BaseType is not null)
+                    {
+                        string? baseNs = type.BaseType.Namespace?.Value;
+                        string? baseName = type.BaseType.Name?.Value;
+                        // Object base = no real base class; everything else (i.e. another runtime class) is.
+                        hasBaseType = !(baseNs == "System" && baseName == "Object");
+                    }
+                    w.Write("\ninternal ");
+                    if (hasBaseType) { w.Write("new "); }
+                    w.Write("WindowsRuntimeObjectReferenceValue GetDefaultInterface() => ");
+                    w.Write(objRefName);
+                    w.Write(".AsValue();\n");
+                }
+            }
+        }
     }
 
     private static string BuildMethodSignatureKey(string name, MethodSig sig)

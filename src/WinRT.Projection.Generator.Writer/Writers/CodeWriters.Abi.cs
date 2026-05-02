@@ -2522,8 +2522,10 @@ internal static partial class CodeWriters
     /// Writes the marshaller infrastructure for a runtime class:
     /// * Public *Marshaller class with real ConvertToUnmanaged/ConvertToManaged bodies
     /// * file-scoped *ComWrappersMarshallerAttribute (CreateObject implementation)
-    /// * file-scoped *ComWrappersCallback (IWindowsRuntimeObjectComWrappersCallback)
-    /// Mirrors C++ <c>write_class_marshaller</c>, <c>write_marshaller_callback_class</c>, etc.
+    /// * file-scoped *ComWrappersCallback (IWindowsRuntimeObjectComWrappersCallback for sealed,
+    ///   IWindowsRuntimeUnsealedObjectComWrappersCallback for unsealed)
+    /// Mirrors C++ <c>write_class_marshaller</c>, <c>write_class_comwrappers_marshaller_attribute</c>,
+    /// and <c>write_class_comwrappers_callback</c>.
     /// </summary>
     private static void WriteClassMarshallerStub(TypeWriter w, TypeDefinition type)
     {
@@ -2538,6 +2540,18 @@ internal static partial class CodeWriters
             ? w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, defaultIface)))
             : "default(global::System.Guid)";
 
+        // Determine the marshalingType expression from the class's [MarshalingBehaviorAttribute]
+        // (mirrors C++ get_marshaling_type_name). This is used by both the marshaller attribute and the
+        // callback (the C++ code uses the same value for both).
+        string marshalingType = GetMarshalingTypeName(type);
+
+        bool isSealed = type.IsSealed;
+
+        // For unsealed classes, the ConvertToUnmanaged path needs to know whether the default interface is
+        // exclusive-to (mirrors C++ logic).
+        TypeDefinition? defaultIfaceTd = defaultIface is null ? null : ResolveInterfaceTypeDef(defaultIface);
+        bool defaultIfaceIsExclusive = defaultIfaceTd is not null && TypeCategorization.IsExclusiveTo(defaultIfaceTd);
+
         // Public *Marshaller class
         w.Write("public static unsafe class ");
         w.Write(nameStripped);
@@ -2545,16 +2559,37 @@ internal static partial class CodeWriters
         w.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
         w.Write(fullProjected);
         w.Write(" value)\n    {\n");
-        w.Write("        if (value is not null)\n        {\n");
-        w.Write("            return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();\n");
-        w.Write("        }\n");
+        if (isSealed)
+        {
+            // For projected sealed runtime classes, the RCW type is always unwrappable.
+            w.Write("        if (value is not null)\n        {\n");
+            w.Write("            return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();\n");
+            w.Write("        }\n");
+        }
+        else if (!defaultIfaceIsExclusive && defaultIface is not null)
+        {
+            string defIfaceTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false)));
+            w.Write("        if (value is IWindowsRuntimeInterface<");
+            w.Write(defIfaceTypeName);
+            w.Write("> windowsRuntimeInterface)\n        {\n");
+            w.Write("            return windowsRuntimeInterface.GetInterface();\n");
+            w.Write("        }\n");
+        }
+        else
+        {
+            w.Write("        if (value is not null)\n        {\n");
+            w.Write("            return value.GetDefaultInterface();\n");
+            w.Write("        }\n");
+        }
         w.Write("        return default;\n    }\n\n");
         w.Write("    public static ");
         w.Write(fullProjected);
         w.Write("? ConvertToManaged(void* value)\n    {\n");
         w.Write("        return (");
         w.Write(fullProjected);
-        w.Write("?)WindowsRuntimeObjectMarshaller.ConvertToManaged<");
+        w.Write("?)");
+        w.Write(isSealed ? "WindowsRuntimeObjectMarshaller" : "WindowsRuntimeUnsealedObjectMarshaller");
+        w.Write(".ConvertToManaged<");
         w.Write(nameStripped);
         w.Write("ComWrappersCallback>(value);\n    }\n}\n\n");
 
@@ -2568,27 +2603,80 @@ internal static partial class CodeWriters
         w.Write("            iid: ");
         w.Write(defaultIfaceIid);
         w.Write(",\n");
-        w.Write("            marshalingType: CreateObjectReferenceMarshalingType.Standard,\n");
+        w.Write("            marshalingType: ");
+        w.Write(marshalingType);
+        w.Write(",\n");
         w.Write("            wrapperFlags: out wrapperFlags);\n\n");
         w.Write("        return new ");
         w.Write(fullProjected);
         w.Write("(valueReference);\n    }\n}\n\n");
 
-        // file-scoped *ComWrappersCallback - implements IWindowsRuntimeObjectComWrappersCallback
-        w.Write("file sealed unsafe class ");
-        w.Write(nameStripped);
-        w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
-        w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
-        w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
-        w.Write("            externalComObject: value,\n");
-        w.Write("            iid: ");
-        w.Write(defaultIfaceIid);
-        w.Write(",\n");
-        w.Write("            marshalingType: CreateObjectReferenceMarshalingType.Agile,\n");
-        w.Write("            wrapperFlags: out wrapperFlags);\n\n");
-        w.Write("        return new ");
-        w.Write(fullProjected);
-        w.Write("(valueReference);\n    }\n}\n");
+        if (isSealed)
+        {
+            // file-scoped *ComWrappersCallback - implements IWindowsRuntimeObjectComWrappersCallback
+            w.Write("file sealed unsafe class ");
+            w.Write(nameStripped);
+            w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
+            w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+            w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
+            w.Write("            externalComObject: value,\n");
+            w.Write("            iid: ");
+            w.Write(defaultIfaceIid);
+            w.Write(",\n");
+            w.Write("            marshalingType: ");
+            w.Write(marshalingType);
+            w.Write(",\n");
+            w.Write("            wrapperFlags: out wrapperFlags);\n\n");
+            w.Write("        return new ");
+            w.Write(fullProjected);
+            w.Write("(valueReference);\n    }\n}\n");
+        }
+        else
+        {
+            // file-scoped *ComWrappersCallback - implements IWindowsRuntimeUnsealedObjectComWrappersCallback
+            string nonProjectedRcn = $"{typeNs}.{nameStripped}";
+            w.Write("file sealed unsafe class ");
+            w.Write(nameStripped);
+            w.Write("ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback\n{\n");
+
+            // TryCreateObject (non-projected runtime class name match)
+            w.Write("    public static unsafe bool TryCreateObject(\n");
+            w.Write("        void* value,\n");
+            w.Write("        ReadOnlySpan<char> runtimeClassName,\n");
+            w.Write("        [global::System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out object? wrapperObject,\n");
+            w.Write("        out CreatedWrapperFlags wrapperFlags)\n    {\n");
+            w.Write("        if (runtimeClassName.SequenceEqual(\"");
+            w.Write(nonProjectedRcn);
+            w.Write("\".AsSpan()))\n        {\n");
+            w.Write("            WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
+            w.Write("                externalComObject: value,\n");
+            w.Write("                iid: ");
+            w.Write(defaultIfaceIid);
+            w.Write(",\n");
+            w.Write("                marshalingType: ");
+            w.Write(marshalingType);
+            w.Write(",\n");
+            w.Write("                wrapperFlags: out wrapperFlags);\n\n");
+            w.Write("            wrapperObject = new ");
+            w.Write(fullProjected);
+            w.Write("(valueReference);\n            return true;\n        }\n\n");
+            w.Write("        wrapperObject = null;\n        wrapperFlags = CreatedWrapperFlags.None;\n        return false;\n    }\n\n");
+
+            // CreateObject (fallback)
+            w.Write("    public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+            w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
+            w.Write("            externalComObject: value,\n");
+            w.Write("            iid: ");
+            w.Write(defaultIfaceIid);
+            w.Write(",\n");
+            w.Write("            marshalingType: ");
+            w.Write(marshalingType);
+            w.Write(",\n");
+            w.Write("            wrapperFlags: out wrapperFlags);\n\n");
+            w.Write("        return new ");
+            w.Write(fullProjected);
+            w.Write("(valueReference);\n    }\n}\n");
+        }
     }
 
     /// <summary>
