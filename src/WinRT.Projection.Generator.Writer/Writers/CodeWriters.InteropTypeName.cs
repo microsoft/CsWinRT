@@ -98,6 +98,39 @@ internal static partial class CodeWriters
     {
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string typeName = type.Name?.Value ?? string.Empty;
+
+        bool isAbi = nameType != TypedefNameType.Projected && nameType != TypedefNameType.InteropIID;
+        if (isAbi) { sb.Append("ABI."); }
+
+        // Special case for EventSource on Windows.Foundation event-handler delegate types
+        // (e.g. EventHandler<T>, TypedEventHandler<S,R>). Mirrors C++:
+        //     ABI.WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'<arity>
+        // Note the namespace check uses the ORIGINAL .winmd namespace (before mapping).
+        if (nameType == TypedefNameType.EventSource && typeNs == "Windows.Foundation")
+        {
+            // Determine generic arity from the .winmd type name (e.g. "EventHandler`1" => 1).
+            int arity = 0;
+            int tickIdx = typeName.IndexOf('`');
+            if (tickIdx >= 0 && int.TryParse(typeName.AsSpan(tickIdx + 1), out int parsed))
+            {
+                arity = parsed;
+            }
+            sb.Append("WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'");
+            sb.Append(arity.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            // Append the generic args (if any).
+            if (generic_args is { Count: > 0 })
+            {
+                sb.Append('<');
+                for (int i = 0; i < generic_args.Count; i++)
+                {
+                    if (i > 0) { sb.Append('|'); }
+                    EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
+                }
+                sb.Append('>');
+            }
+            return;
+        }
+
         // Apply mapped-type remapping
         MappedType? mapped = MappedTypes.Get(typeNs, typeName);
         if (mapped is not null)
@@ -107,9 +140,6 @@ internal static partial class CodeWriters
         }
         // Replace generic arity backtick with apostrophe.
         typeName = typeName.Replace('`', '\'');
-
-        bool isAbi = nameType != TypedefNameType.Projected && nameType != TypedefNameType.InteropIID;
-        if (isAbi) { sb.Append("ABI."); }
 
         if (nameType == TypedefNameType.InteropIID)
         {
