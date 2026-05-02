@@ -1608,8 +1608,8 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", ");
-                if (IsBlittableStruct(uRef)) { fp.Append(GetBlittableStructAbiType(w, uRef)); }
-                else { fp.Append(GetAbiPrimitiveType(uRef)); }
+                if (IsBlittableStruct(uRef)) { fp.Append(GetBlittableStructAbiType(w, uRef)); fp.Append('*'); }
+                else { fp.Append(GetAbiPrimitiveType(uRef)); fp.Append('*'); }
                 continue;
             }
             fp.Append(", ");
@@ -1763,25 +1763,48 @@ internal static partial class CodeWriters
 
         // For PassArray params, open a fixed block (one per param). The function pointer call
         // happens inside the innermost fixed block. Track nesting for indentation.
+        // Also for Ref (in T) params, we need a fixed block to pin and pass the pointer.
         int fixedNesting = 0;
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.PassArray) { continue; }
-            string callName = GetParamName(p, paramNameOverride);
-            string localName = GetParamLocalName(p, paramNameOverride);
-            w.Write(indent);
-            w.Write(new string(' ', fixedNesting * 4));
-            w.Write("fixed(void* _");
-            w.Write(localName);
-            w.Write(" = ");
-            w.Write(callName);
-            w.Write(")\n");
-            w.Write(indent);
-            w.Write(new string(' ', fixedNesting * 4));
-            w.Write("{\n");
-            fixedNesting++;
+            if (cat == ParamCategory.PassArray)
+            {
+                string callName = GetParamName(p, paramNameOverride);
+                string localName = GetParamLocalName(p, paramNameOverride);
+                w.Write(indent);
+                w.Write(new string(' ', fixedNesting * 4));
+                w.Write("fixed(void* _");
+                w.Write(localName);
+                w.Write(" = ");
+                w.Write(callName);
+                w.Write(")\n");
+                w.Write(indent);
+                w.Write(new string(' ', fixedNesting * 4));
+                w.Write("{\n");
+                fixedNesting++;
+            }
+            else if (cat == ParamCategory.Ref)
+            {
+                string callName = GetParamName(p, paramNameOverride);
+                string localName = GetParamLocalName(p, paramNameOverride);
+                AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
+                string abiType = IsBlittableStruct(uRef) ? GetBlittableStructAbiType(w, uRef) : GetAbiPrimitiveType(uRef);
+                w.Write(indent);
+                w.Write(new string(' ', fixedNesting * 4));
+                w.Write("fixed(");
+                w.Write(abiType);
+                w.Write("* _");
+                w.Write(localName);
+                w.Write(" = &");
+                w.Write(callName);
+                w.Write(")\n");
+                w.Write(indent);
+                w.Write(new string(' ', fixedNesting * 4));
+                w.Write("{\n");
+                fixedNesting++;
+            }
         }
 
         string callIndent = indent + new string(' ', fixedNesting * 4);
@@ -1814,10 +1837,10 @@ internal static partial class CodeWriters
             }
             if (cat == ParamCategory.Ref)
             {
-                // 'in T' projected param: pass directly (Guid, blittable structs).
-                string callName = GetParamName(p, paramNameOverride);
-                w.Write(", ");
-                w.Write(callName);
+                // 'in T' projected param: pass the pinned pointer.
+                string localName = GetParamLocalName(p, paramNameOverride);
+                w.Write(", _");
+                w.Write(localName);
                 continue;
             }
             w.Write(", ");
