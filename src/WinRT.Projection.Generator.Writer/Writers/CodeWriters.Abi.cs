@@ -3070,10 +3070,11 @@ internal static partial class CodeWriters
         w.Write("    }\n\n");
         w.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
         w.Write("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
-        if (blittable)
+        if (blittable || TypeCategorization.GetCategory(type) == TypeCategory.Struct)
         {
-            // Real implementation for blittable types: extract managed instance from CCW,
-            // dereference into the result pointer, return S_OK.
+            // For both blittable and non-blittable structs, the body uses direct memcpy via
+            // C# struct assignment. Even bool/char fields work because their managed layout
+            // (1 byte / 2 bytes) matches the WinRT ABI.
             w.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
             w.Write("        if (result is null)\n        {\n");
             w.Write("            return unchecked((int)0x80004003);\n        }\n\n");
