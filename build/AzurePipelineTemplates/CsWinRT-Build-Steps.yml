@@ -255,8 +255,6 @@ steps:
     - task: CopyFiles@2 
       displayName: Stage WinRT.Host.Shim
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
-      enabled: false
-      continueOnError: True
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Host.Shim\bin\$(BuildConfiguration)\net10.0
         Contents: |
@@ -293,6 +291,16 @@ steps:
         Contents: |
           cswinrtprojectiongen.exe
           cswinrtprojectiongen.pdb
+        TargetFolder: $(StagingFolder)\net10.0\native
+
+    - task: CopyFiles@2
+      displayName: Stage cswinrtwinmdgen
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.WinMD.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        Contents: |
+          cswinrtwinmdgen.exe
+          cswinrtwinmdgen.pdb
         TargetFolder: $(StagingFolder)\net10.0\native
 
     - task: CopyFiles@2

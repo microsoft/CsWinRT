@@ -37,7 +37,7 @@
     <file src="$winrt_host_x64$" target ="hosting\x64\native"/>
     <file src="$winrt_host_x86$" target ="hosting\x86\native"/>
     <file src="$winrt_host_arm64$" target ="hosting\arm64\native"/>
-    <!-- <file src="$winrt_shim$" target ="lib\net10.0\"/> -->
+    <file src="$winrt_shim$" target ="lib\net10.0\"/>
 
     <!-- Localized resources for error strings 
          The paths here leads to a folder of folders, 
@@ -56,6 +56,8 @@
     <file src="$cswinrtimplgen_arm64$" target ="tools\win-arm64"/>
     <file src="$cswinrtprojectiongen_x64$" target ="tools\win-x64"/>
     <file src="$cswinrtprojectiongen_arm64$" target ="tools\win-arm64"/>
+    <file src="$cswinrtwinmdgen_x64$" target ="tools\win-x64"/>
+    <file src="$cswinrtwinmdgen_arm64$" target ="tools\win-arm64"/>
     <file src="$run_cswinrt_generator_task$" target ="tools\"/>
 
     <file src="sources\StubExe.c" target="build\sources"/>
