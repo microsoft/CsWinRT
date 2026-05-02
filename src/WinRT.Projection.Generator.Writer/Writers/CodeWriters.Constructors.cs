@@ -196,9 +196,9 @@ internal static partial class CodeWriters
             string raw = p.Parameter.Name ?? "param";
             string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
             w.Write("    public readonly ");
-            // Use the projected type as field type. For arrays (ReadOnlySpan<T>) we'd need different
-            // handling, but those don't appear in factory ctors in the SDK projection.
-            WriteProjectedSignature(w, p.Type, true);
+            // Use the parameter's projected type (matches the constructor parameter type, including
+            // ReadOnlySpan<T>/Span<T> for array params).
+            WriteProjectionParameterType(w, p);
             w.Write(" ");
             w.Write(pname);
             w.Write(" = ");

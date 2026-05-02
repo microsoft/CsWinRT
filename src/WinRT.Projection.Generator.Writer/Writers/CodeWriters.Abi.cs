@@ -647,6 +647,16 @@ internal static partial class CodeWriters
                 allParamsSimple = false;
                 break;
             }
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            {
+                // Allow blittable primitive arrays only.
+                if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
+                {
+                    if (IsBlittablePrimitive(sz.BaseType)) { continue; }
+                }
+                allParamsSimple = false;
+                break;
+            }
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
             if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
@@ -713,6 +723,28 @@ internal static partial class CodeWriters
             w.Write(" __");
             w.Write(raw);
             w.Write(" = default;\n");
+        }
+        // For each blittable array (PassArray / FillArray) parameter, declare a Span<T> local that
+        // wraps the (length, pointer) pair from the ABI signature.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sz.BaseType))));
+            w.Write("    ");
+            w.Write(cat == ParamCategory.PassArray ? "global::System.ReadOnlySpan<" : "global::System.Span<");
+            w.Write(elementProjected);
+            w.Write("> __");
+            w.Write(raw);
+            w.Write(" = new(");
+            w.Write(ptr);
+            w.Write(", (int)__");
+            w.Write(raw);
+            w.Write("Length);\n");
         }
         w.Write("    try\n    {\n");
 
@@ -810,6 +842,12 @@ internal static partial class CodeWriters
                 {
                     string raw = p.Parameter.Name ?? "param";
                     w.Write("ref __");
+                    w.Write(raw);
+                }
+                else if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+                {
+                    string raw = p.Parameter.Name ?? "param";
+                    w.Write("__");
                     w.Write(raw);
                 }
                 else

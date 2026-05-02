@@ -44,12 +44,14 @@ internal static partial class CodeWriters
                 WriteProjectedSignature(w, p.Type, true);
                 break;
             case ParamCategory.PassArray:
+                w.Write("global::System.ReadOnlySpan<");
                 WriteProjectionType(w, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
-                w.Write("[]");
+                w.Write(">");
                 break;
             case ParamCategory.FillArray:
+                w.Write("global::System.Span<");
                 WriteProjectionType(w, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
-                w.Write("[]");
+                w.Write(">");
                 break;
             case ParamCategory.ReceiveArray:
                 w.Write("out ");
