@@ -369,25 +369,82 @@ internal static partial class CodeWriters
         w.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n        }\n");
     }
 
-    /// <summary>Returns the interop assembly path for an array marshaller of a given element type.</summary>
+    /// <summary>
+    /// Returns the interop assembly path for an array marshaller of a given element type.
+    /// The interop generator names array marshallers <c>ABI.&lt;&lt;assembly&gt;ElementName&gt;ArrayMarshaller</c>
+    /// (no namespace prefix outside the brackets, and the element inside the brackets uses just the
+    /// type name without its namespace because depth=0 in the interop generator's AppendRawTypeName).
+    /// </summary>
     private static string GetArrayMarshallerInteropPath(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature elementType, string encodedElement)
     {
-        // For runtime class / object element types, the marshaller lives in the element type's namespace.
-        // For string and blittable element types, the marshaller lives in ABI.System.
-        if (IsRuntimeClassOrInterface(elementType) || IsObject(elementType))
+        // The 'encodedElement' passed in uses the depth>0 form (assembly + hyphenated namespace + name),
+        // but inside the array brackets the interop generator uses the depth=0 form (assembly + just name).
+        // Re-encode the element with the top-level form for accurate matching.
+        string topLevelElement = EncodeArrayElementName(elementType);
+        return "ABI.<" + topLevelElement + ">ArrayMarshaller, WinRT.Interop";
+    }
+
+    /// <summary>
+    /// Encodes the array element type name as the interop generator's AppendRawTypeName at depth=0:
+    /// fundamentals use their short C# name; typedefs use just the type name (no namespace) prefixed
+    /// with the assembly marker; generic instances include their assembly marker, name, and type arguments.
+    /// </summary>
+    private static string EncodeArrayElementName(AsmResolver.DotNet.Signatures.TypeSignature elementType)
+    {
+        System.Text.StringBuilder sb = new();
+        EncodeArrayElementNameInto(sb, elementType);
+        return sb.ToString();
+    }
+
+    private static void EncodeArrayElementNameInto(System.Text.StringBuilder sb, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        switch (sig)
         {
-            string ns = string.Empty;
-            if (elementType is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
-            {
-                ns = td.Type?.Namespace?.Value ?? string.Empty;
-            }
-            if (string.IsNullOrEmpty(ns))
-            {
-                return "ABI.System.<" + encodedElement + ">ArrayMarshaller, WinRT.Interop";
-            }
-            return "ABI." + ns + ".<" + encodedElement + ">ArrayMarshaller, WinRT.Interop";
+            case AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib:
+                EncodeFundamental(sb, corlib, TypedefNameType.Projected);
+                return;
+            case AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td:
+                EncodeArrayElementForTypeDef(sb, td.Type, generic_args: null);
+                return;
+            case AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi:
+                EncodeArrayElementForTypeDef(sb, gi.GenericType, generic_args: gi.TypeArguments);
+                return;
+            default:
+                sb.Append(sig.FullName);
+                return;
         }
-        return "ABI.System.<" + encodedElement + ">ArrayMarshaller, WinRT.Interop";
+    }
+
+    private static void EncodeArrayElementForTypeDef(System.Text.StringBuilder sb, AsmResolver.DotNet.ITypeDefOrRef type, System.Collections.Generic.IList<AsmResolver.DotNet.Signatures.TypeSignature>? generic_args)
+    {
+        string typeNs = type.Namespace?.Value ?? string.Empty;
+        string typeName = type.Name?.Value ?? string.Empty;
+        // Apply mapped-type remapping (e.g. Windows.Foundation.IReference -> System.Nullable).
+        MappedType? mapped = MappedTypes.Get(typeNs, typeName);
+        if (mapped is not null)
+        {
+            typeNs = mapped.MappedNamespace;
+            typeName = mapped.MappedName;
+        }
+        // Replace generic arity backtick with apostrophe.
+        typeName = typeName.Replace('`', '\'');
+
+        // Assembly marker prefix.
+        sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped));
+        // Top-level: just the type name (no namespace).
+        sb.Append(typeName);
+
+        // Generic arguments use the standard EncodeInteropTypeNameInto (depth > 0).
+        if (generic_args is { Count: > 0 })
+        {
+            sb.Append('<');
+            for (int i = 0; i < generic_args.Count; i++)
+            {
+                if (i > 0) { sb.Append('|'); }
+                EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
+            }
+            sb.Append('>');
+        }
     }
 
     /// <summary>Mirrors C++ <c>write_delegate_vtbl</c>.</summary>
