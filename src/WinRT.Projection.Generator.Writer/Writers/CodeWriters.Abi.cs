@@ -2499,9 +2499,11 @@ internal static partial class CodeWriters
             && (IsBlittablePrimitive(retSz0.BaseType) || IsAnyStruct(retSz0.BaseType)
                 || IsString(retSz0.BaseType) || IsRuntimeClassOrInterface(retSz0.BaseType) || IsObject(retSz0.BaseType));
         bool returnIsHResultException = rt is not null && IsHResultException(rt);
+        bool returnIsComplexStructLocal = rt is not null && IsComplexStruct(rt);
         bool returnSimple = rt is null
             || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
             || (IsAnyStruct(rt) && !IsHResultException(rt))
+            || returnIsComplexStructLocal
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
             || IsObject(rt)
@@ -2518,6 +2520,7 @@ internal static partial class CodeWriters
         bool returnIsString = rt is not null && IsString(rt);
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
         bool returnIsAnyStruct = rt is not null && IsAnyStruct(rt);
+        bool returnIsComplexStruct = rt is not null && IsComplexStruct(rt);
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
         System.Text.StringBuilder fp = new();
@@ -2590,6 +2593,7 @@ internal static partial class CodeWriters
                 fp.Append(", ");
                 if (returnIsString || returnIsRefType) { fp.Append("void**"); }
                 else if (returnIsAnyStruct) { fp.Append(GetBlittableStructAbiType(w, rt)); fp.Append('*'); }
+                else if (returnIsComplexStruct) { fp.Append(GetAbiStructTypeName(w, rt)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(rt)); fp.Append('*'); }
             }
         }
@@ -2714,6 +2718,12 @@ internal static partial class CodeWriters
             w.Write(GetBlittableStructAbiType(w, rt!));
             w.Write(" __retval = default;\n");
         }
+        else if (returnIsComplexStruct)
+        {
+            w.Write("        ");
+            w.Write(GetAbiStructTypeName(w, rt!));
+            w.Write(" __retval = default;\n");
+        }
         else if (rt is not null)
         {
             w.Write("        ");
@@ -2738,7 +2748,7 @@ internal static partial class CodeWriters
         {
             if (ParamHelpers.GetParamCategory(sig.Params[i]) == ParamCategory.ReceiveArray) { hasReceiveArray = true; break; }
         }
-        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray;
+        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
 
         string indent = needsTryFinally ? "            " : "        ";
@@ -3053,6 +3063,13 @@ internal static partial class CodeWriters
                 w.Write(callIndent);
                 w.Write("return __retval;\n");
             }
+            else if (returnIsComplexStruct)
+            {
+                w.Write(callIndent);
+                w.Write("return ");
+                w.Write(GetMarshallerFullName(w, rt));
+                w.Write(".ConvertToManaged(__retval);\n");
+            }
             else
             {
                 w.Write(callIndent);
@@ -3122,6 +3139,13 @@ internal static partial class CodeWriters
             if (returnIsRefType)
             {
                 w.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
+            }
+            // Dispose complex struct return via Marshaller.Dispose.
+            if (returnIsComplexStruct)
+            {
+                w.Write("            ");
+                w.Write(GetMarshallerFullName(w, rt!));
+                w.Write(".Dispose(__retval);\n");
             }
             // Free receive-array return via UnsafeAccessor.
             if (returnIsReceiveArray)
@@ -3445,6 +3469,36 @@ internal static partial class CodeWriters
     /// (no per-field marshalling required). This includes blittable structs and "almost-blittable"
     /// structs that have only primitive fields like bool/char (whose C# layout matches the WinRT ABI).
     /// Excludes structs with reference type fields (string/object/runtime classes/etc.).</summary>
+    /// <summary>True for structs that have at least one reference type field (string, generic
+    /// instance Nullable&lt;T&gt;, etc.). These need per-field marshalling via the *Marshaller class
+    /// (ConvertToUnmanaged/ConvertToManaged/Dispose).</summary>
+    private static bool IsComplexStruct(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
+        TypeDefinition? def = td.Type as TypeDefinition;
+        if (def is null && _cacheRef is not null && td.Type is TypeReference tr)
+        {
+            string ns = tr.Namespace?.Value ?? string.Empty;
+            string name = tr.Name?.Value ?? string.Empty;
+            if (ns == "System" && name == "Guid") { return false; }
+            def = _cacheRef.Find(ns + "." + name);
+        }
+        if (def is null) { return false; }
+        TypeCategory cat = TypeCategorization.GetCategory(def);
+        if (cat != TypeCategory.Struct) { return false; }
+        // A struct is "complex" if it has any field that is not a blittable primitive nor an
+        // almost-blittable struct (i.e. has a string/object/Nullable<T>/etc. field).
+        foreach (FieldDefinition field in def.Fields)
+        {
+            if (field.IsStatic || field.Signature is null) { continue; }
+            AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+            if (IsBlittablePrimitive(ft)) { continue; }
+            if (IsAnyStruct(ft)) { continue; }
+            return true;
+        }
+        return false;
+    }
+
     private static bool IsAnyStruct(AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
@@ -3484,6 +3538,18 @@ internal static partial class CodeWriters
     private static string GetBlittableStructAbiType(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         return w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, sig, false)));
+    }
+
+    /// <summary>Returns the ABI struct type name for a complex struct (e.g. global::ABI.Windows.Web.Http.HttpProgress).</summary>
+    private static string GetAbiStructTypeName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+        {
+            string ns = td.Type?.Namespace?.Value ?? string.Empty;
+            string name = td.Type?.Name?.Value ?? string.Empty;
+            return "global::ABI." + ns + "." + Helpers.StripBackticks(name);
+        }
+        return "global::ABI.Object";
     }
 
     private static string GetAbiPrimitiveType(AsmResolver.DotNet.Signatures.TypeSignature sig)
