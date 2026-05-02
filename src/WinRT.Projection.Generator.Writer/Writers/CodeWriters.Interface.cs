@@ -256,7 +256,7 @@ internal static partial class CodeWriters
         if (ifaceRef is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
         {
             ITypeDefOrRef? gen = gi.GenericType;
-            return ResolveInterfaceTypeDefForExclusiveCheck(gen!);
+            return gen is null ? null : ResolveInterfaceTypeDefForExclusiveCheck(gen);
         }
         return null;
     }
