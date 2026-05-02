@@ -188,7 +188,7 @@ internal static partial class CodeWriters
                 if (IsString(p.Type)) { continue; }
                 if (IsRuntimeClassOrInterface(p.Type)) { continue; }
                 if (IsObject(p.Type)) { continue; }
-                // Generic instance marshaller resolution isn't supported here yet.
+                if (IsGenericInstance(p.Type)) { continue; }
                 simple = false; break;
             }
         }
@@ -205,6 +205,24 @@ internal static partial class CodeWriters
         bool hasReturn = rt is not null;
         bool returnIsString = hasReturn && IsString(rt!);
         bool returnIsRefType = hasReturn && (IsRuntimeClassOrInterface(rt!) || IsObject(rt!));
+
+        // Emit UnsafeAccessor static extern for each generic instance param.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (!IsGenericInstance(p.Type)) { continue; }
+            string raw = p.Parameter.Name ?? ("p" + i);
+            string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
+            string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
+            w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+            w.Write("        static extern ");
+            w.Write(projectedTypeName);
+            w.Write(" ConvertToManaged_");
+            w.Write(raw);
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(interopTypeName);
+            w.Write("\")] object _, void* value);\n");
+        }
 
         if (hasReturn)
         {
@@ -260,6 +278,15 @@ internal static partial class CodeWriters
             else if (IsBlittablePrimitive(p.Type) || IsAnyStruct(p.Type))
             {
                 w.Write(callName);
+            }
+            // Generic instance: call ConvertToManaged_<name>
+            else if (IsGenericInstance(p.Type))
+            {
+                w.Write("ConvertToManaged_");
+                w.Write(raw);
+                w.Write("(null, ");
+                w.Write(callName);
+                w.Write(")");
             }
             else
             {
