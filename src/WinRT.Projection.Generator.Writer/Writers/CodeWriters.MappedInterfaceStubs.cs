@@ -151,9 +151,11 @@ internal static partial class CodeWriters
         if (args.Count != 2) { return; }
         string k = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
         string v = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[1], TypedefNameType.Projected, true)));
-        string kv = $"KeyValuePair<{k}, {v}>";
-        // Long form used only for objref field-name computation (matches the form WriteClassObjRefDefinitions emits).
-        string kvLong = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
+        // Truth uses the fully-qualified 'global::System.Collections.Generic.KeyValuePair<K,V>' form for KeyValuePair
+        // generic args (the C++ generator emits via the IKeyValuePair mapped type which forces the global:: prefix).
+        string kv = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
+        // Long form (same as kv now) used for objref field-name computation.
+        string kvLong = kv;
         string keyId = EncodeArgIdentifier(w, args[0]);
         string valId = EncodeArgIdentifier(w, args[1]);
         string keyInteropArg = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
@@ -207,9 +209,9 @@ internal static partial class CodeWriters
         if (args.Count != 2) { return; }
         string k = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
         string v = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[1], TypedefNameType.Projected, true)));
-        string kv = $"KeyValuePair<{k}, {v}>";
-        // Long form used only for objref field-name computation (matches the form WriteClassObjRefDefinitions emits).
-        string kvLong = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
+        // Truth uses fully-qualified KeyValuePair (mirrors C++ IKeyValuePair mapped projection).
+        string kv = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
+        string kvLong = kv;
         string keyId = EncodeArgIdentifier(w, args[0]);
         string valId = EncodeArgIdentifier(w, args[1]);
         string keyInteropArg = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
