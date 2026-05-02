@@ -79,9 +79,8 @@
     <File Path="../nuget/LICENSE" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" />
+    <File Path="../nuget/Microsoft.Windows.CsWinRT.Authoring.WinMD.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.CsWinRTGen.targets" />
-    <File Path="../nuget/Microsoft.Windows.CsWinRT.Embedded.targets" />
-    <File Path="../nuget/Microsoft.Windows.CsWinRT.IIDOptimizer.targets" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.nuspec" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.props" />
     <File Path="../nuget/Microsoft.Windows.CsWinRT.targets" />
