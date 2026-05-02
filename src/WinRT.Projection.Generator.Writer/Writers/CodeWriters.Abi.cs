@@ -43,6 +43,12 @@ internal static partial class CodeWriters
         // For TypeRef/TypeDef, resolve and check blittability.
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature todr)
         {
+            string fNs = todr.Type?.Namespace?.Value ?? string.Empty;
+            string fName = todr.Type?.Name?.Value ?? string.Empty;
+            // Mapped struct types: blittable iff the mapping does NOT require marshalling
+            // (mirrors C++ is_type_blittable for mapped struct_type case).
+            MappedType? mapped = MappedTypes.Get(fNs, fName);
+            if (mapped is not null && mapped.RequiresMarshaling) { return false; }
             if (todr.Type is TypeDefinition td)
             {
                 return IsTypeBlittable(td);
@@ -91,12 +97,16 @@ internal static partial class CodeWriters
                 if (field.IsStatic || field.Signature is null) { continue; }
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
                 w.Write("public ");
-                // Truth uses void* for string and Nullable<T> fields, but keeps the projected type
-                // for everything else (including enums and bool — their C# layout matches the WinRT
-                // ABI directly).
+                // Truth uses void* for string and Nullable<T> fields, the ABI struct for
+                // mapped value types (DateTime/TimeSpan), and the projected type for everything
+                // else (including enums and bool — their C# layout matches the WinRT ABI directly).
                 if (IsString(ft) || TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
                     w.Write("void*");
+                }
+                else if (IsMappedAbiValueType(ft))
+                {
+                    w.Write(GetMappedAbiTypeName(ft));
                 }
                 else
                 {
@@ -2276,6 +2286,7 @@ internal static partial class CodeWriters
                 if (IsBlittablePrimitive(ft)) { continue; }
                 if (IsAnyStruct(ft)) { continue; }
                 if (IsString(ft)) { hasReferenceFields = true; continue; }
+                if (IsMappedAbiValueType(ft)) { continue; }
                 if (TryGetNullablePrimitiveMarshallerName(ft, out _)) { hasReferenceFields = true; continue; }
                 allFieldsSupported = false;
                 break;
@@ -2316,6 +2327,13 @@ internal static partial class CodeWriters
                     if (IsString(ft))
                     {
                         w.Write("HStringMarshaller.ConvertToUnmanaged(value.");
+                        w.Write(fname);
+                        w.Write(")");
+                    }
+                    else if (IsMappedAbiValueType(ft))
+                    {
+                        w.Write(GetMappedMarshallerName(ft));
+                        w.Write(".ConvertToUnmanaged(value.");
                         w.Write(fname);
                         w.Write(")");
                     }
@@ -2362,6 +2380,13 @@ internal static partial class CodeWriters
                     if (IsString(ft))
                     {
                         w.Write("HStringMarshaller.ConvertToManaged(value.");
+                        w.Write(fname);
+                        w.Write(")");
+                    }
+                    else if (IsMappedAbiValueType(ft))
+                    {
+                        w.Write(GetMappedMarshallerName(ft));
+                        w.Write(".ConvertToManaged(value.");
                         w.Write(fname);
                         w.Write(")");
                     }
@@ -4488,6 +4513,15 @@ internal static partial class CodeWriters
     {
         if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
         TypeDefinition? def = td.Type as TypeDefinition;
+        // Special case: mapped value types that require marshalling (DateTime/TimeSpan)
+        // are NOT pass-through (they have different projected vs ABI layouts and need
+        // the marshaller). Mirrors C++ is_type_blittable for mapped struct_type case.
+        {
+            string sNs = td.Type?.Namespace?.Value ?? string.Empty;
+            string sName = td.Type?.Name?.Value ?? string.Empty;
+            MappedType? sMapped = MappedTypes.Get(sNs, sName);
+            if (sMapped is not null && sMapped.RequiresMarshaling) { return false; }
+        }
         if (def is null && _cacheRef is not null && td.Type is TypeReference tr)
         {
             string ns = tr.Namespace?.Value ?? string.Empty;
