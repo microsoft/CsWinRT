@@ -105,10 +105,439 @@ internal static partial class CodeWriters
     /// <summary>Mirrors C++ <c>write_abi_delegate</c>.</summary>
     public static void WriteAbiDelegate(TypeWriter w, TypeDefinition type)
     {
-        // Minimal: emit the marshaller class (full implementation requires full method-signature
-        // marshalling support).
+        // Mirrors C++: emit the marshaller, vftbl, native delegate, ComWrappers callback,
+        // InterfaceEntriesImpl, and ComWrappers marshaller attribute. Reference impl is also
+        // emitted (for IReference<delegate>).
         WriteDelegateMarshallerStub(w, type);
+        WriteDelegateVftbl(w, type);
+        WriteNativeDelegate(w, type);
+        WriteDelegateInterfaceEntriesImpl(w, type);
+        WriteDelegateImpl(w, type);
         WriteReferenceImpl(w, type);
+    }
+
+    /// <summary>Emits the <c>&lt;DelegateName&gt;Impl</c> static class providing the CCW vtable for a delegate.</summary>
+    private static void WriteDelegateImpl(TypeWriter w, TypeDefinition type)
+    {
+        if (type.GenericParameters.Count > 0) { return; }
+        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        if (invoke is null) { return; }
+        MethodSig sig = new(invoke);
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+        string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
+
+        w.Write("\ninternal static unsafe class ");
+        w.Write(nameStripped);
+        w.Write("Impl\n{\n");
+        w.Write("    [FixedAddressValueType]\n");
+        w.Write("    private static readonly ");
+        w.Write(nameStripped);
+        w.Write("Vftbl Vftbl;\n\n");
+        w.Write("    static ");
+        w.Write(nameStripped);
+        w.Write("Impl()\n    {\n");
+        w.Write("        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;\n");
+        w.Write("        Vftbl.Invoke = &Invoke;\n");
+        w.Write("    }\n\n");
+        w.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
+
+        w.Write("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
+        w.Write("    private static int Invoke(");
+        WriteAbiParameterTypesPointer(w, sig, includeParamNames: true);
+        w.Write(")\n    {\n");
+        EmitDelegateInvokeBody(w, type, sig);
+        w.Write("    }\n\n");
+
+        w.Write("    public static ref readonly Guid IID\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => ref ");
+        w.Write(iidExpr);
+        w.Write(";\n    }\n}\n");
+    }
+
+    /// <summary>Emits the body of the delegate Impl Invoke method (CCW dispatch).</summary>
+    private static void EmitDelegateInvokeBody(TypeWriter w, TypeDefinition type, MethodSig sig)
+    {
+        // Check if we can emit a body for this signature: only In params (no Out/Ref/Array), no return value.
+        bool simple = sig.ReturnType is null;
+        if (simple)
+        {
+            foreach (ParamInfo p in sig.Params)
+            {
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.In) { simple = false; break; }
+                if (IsHResultException(p.Type)) { simple = false; break; }
+                if (IsBlittablePrimitive(p.Type)) { continue; }
+                if (IsBlittableStruct(p.Type)) { continue; }
+                if (IsString(p.Type)) { continue; }
+                if (IsRuntimeClassOrInterface(p.Type)) { continue; }
+                if (IsObject(p.Type)) { continue; }
+                // Generic instance marshaller resolution isn't supported here yet.
+                simple = false; break;
+            }
+        }
+
+        if (!simple)
+        {
+            w.Write("        throw null!;\n");
+            return;
+        }
+
+        string projectedName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
+        if (!projectedName.StartsWith("global::", System.StringComparison.Ordinal)) { projectedName = "global::" + projectedName; }
+
+        w.Write("        try\n        {\n");
+        w.Write("            ComInterfaceDispatch.GetInstance<");
+        w.Write(projectedName);
+        w.Write(">((ComInterfaceDispatch*)thisPtr).Invoke(");
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            if (i > 0) { w.Write(", "); }
+            ParamInfo p = sig.Params[i];
+            string raw = p.Parameter.Name ?? ("p" + i);
+            string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            // bool: native byte -> managed bool
+            if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibB &&
+                corlibB.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+            {
+                w.Write(callName);
+                w.Write(" != 0");
+            }
+            // char: native ushort -> managed char (cast)
+            else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibC &&
+                     corlibC.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+            {
+                w.Write("(char)");
+                w.Write(callName);
+            }
+            // String: HStringMarshaller.ConvertToManaged
+            else if (IsString(p.Type))
+            {
+                w.Write("HStringMarshaller.ConvertToManaged(");
+                w.Write(callName);
+                w.Write(")");
+            }
+            // Enum: native underlying -> managed enum (cast through projected name).
+            else if (IsEnumType(p.Type))
+            {
+                w.Write("(");
+                EmitProjectedTypeName(w, p.Type);
+                w.Write(")");
+                w.Write(callName);
+            }
+            else if (IsBlittablePrimitive(p.Type) || IsBlittableStruct(p.Type))
+            {
+                w.Write(callName);
+            }
+            else
+            {
+                EmitMarshallerConvertToManaged(w, p.Type, callName);
+            }
+        }
+        w.Write(");\n");
+        w.Write("            return 0;\n        }\n");
+        w.Write("        catch (Exception __exception__)\n        {\n");
+        w.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n        }\n");
+    }
+
+    /// <summary>Emit the projected type name for a TypeSignature (used for casts).</summary>
+    private static void EmitProjectedTypeName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+        {
+            string ns = td.Type?.Namespace?.Value ?? string.Empty;
+            string name = td.Type?.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null) { ns = mapped.MappedNamespace; name = mapped.MappedName; }
+            w.Write("global::");
+            if (!string.IsNullOrEmpty(ns)) { w.Write(ns); w.Write("."); }
+            w.Write(Helpers.StripBackticks(name));
+        }
+        else
+        {
+            w.Write("object");
+        }
+    }
+
+    /// <summary>Mirrors C++ <c>write_delegate_vtbl</c>.</summary>
+    private static void WriteDelegateVftbl(TypeWriter w, TypeDefinition type)
+    {
+        if (type.GenericParameters.Count > 0) { return; }
+        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        if (invoke is null) { return; }
+        MethodSig sig = new(invoke);
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+
+        w.Write("\n[StructLayout(LayoutKind.Sequential)]\n");
+        w.Write("internal unsafe struct ");
+        w.Write(nameStripped);
+        w.Write("Vftbl\n{\n");
+        w.Write("    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;\n");
+        w.Write("    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;\n");
+        w.Write("    public delegate* unmanaged[MemberFunction]<void*, uint> Release;\n");
+        w.Write("    public delegate* unmanaged[MemberFunction]<");
+        WriteAbiParameterTypesPointer(w, sig);
+        w.Write(", int> Invoke;\n");
+        w.Write("}\n");
+    }
+
+    /// <summary>Mirrors C++ <c>write_native_delegate</c>.</summary>
+    private static void WriteNativeDelegate(TypeWriter w, TypeDefinition type)
+    {
+        if (type.GenericParameters.Count > 0) { return; }
+        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        if (invoke is null) { return; }
+        MethodSig sig = new(invoke);
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+
+        w.Write("\npublic static unsafe class ");
+        w.Write(nameStripped);
+        w.Write("NativeDelegate\n{\n");
+        w.Write("    public static ");
+        WriteProjectionReturnType(w, sig);
+        w.Write(" ");
+        w.Write(nameStripped);
+        w.Write("Invoke(this WindowsRuntimeObjectReference objectReference");
+        if (sig.Params.Count > 0) { w.Write(", "); }
+        WriteParameterList(w, sig);
+        w.Write(")");
+
+        // Use the same body emitter as ABI Methods, but with vtable slot 3 and using
+        // 'objectReference' instead of 'thisReference'. Tweak by using slot=3.
+        EmitNativeDelegateBody(w, sig);
+
+        w.Write("}\n");
+    }
+
+    /// <summary>Emits the body of the native delegate's Invoke extension method.</summary>
+    private static void EmitNativeDelegateBody(TypeWriter w, MethodSig sig)
+    {
+        // For now, defer to throw null body if signature is not supported by EmitAbiMethodBodyIfSimple.
+        // Actually, we want the body to use 'objectReference' as the parameter name. EmitAbiMethodBodyIfSimple
+        // expects 'thisReference'. We can wrap the call with a local: var thisReference = objectReference;
+        // Or just inline the code to use objectReference. To avoid duplication, emit a small wrapper
+        // body that does the same pattern but with objectReference.
+        AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
+
+        // We support the same set of param/return types as EmitAbiMethodBodyIfSimple does for the
+        // primary case (no Out/Ref/Array for now in delegates). Let's just emit a simple body for
+        // simple cases (blittable primitive/string/runtime class/object/generic instance In params, no return).
+        bool simpleParamsAndReturn = true;
+        foreach (ParamInfo p in sig.Params)
+        {
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.In) { simpleParamsAndReturn = false; break; }
+            if (IsHResultException(p.Type)) { simpleParamsAndReturn = false; break; }
+            if (IsBlittablePrimitive(p.Type)) { continue; }
+            if (IsBlittableStruct(p.Type)) { continue; }
+            if (IsString(p.Type)) { continue; }
+            if (IsRuntimeClassOrInterface(p.Type)) { continue; }
+            if (IsObject(p.Type)) { continue; }
+            if (IsGenericInstance(p.Type)) { continue; }
+            simpleParamsAndReturn = false; break;
+        }
+        if (rt is not null) { simpleParamsAndReturn = false; }
+
+        if (!simpleParamsAndReturn)
+        {
+            w.Write(" => throw null!;\n");
+            return;
+        }
+
+        w.Write("\n    {\n");
+        w.Write("        using WindowsRuntimeObjectReferenceValue objectValue = objectReference.AsValue();\n");
+        w.Write("        void* ThisPtr = objectValue.GetThisPtrUnsafe();\n");
+
+        // Marshal ref-type input params.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type))
+            {
+                string raw = p.Parameter.Name ?? "param";
+                string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+                w.Write("        using WindowsRuntimeObjectReferenceValue __");
+                w.Write(raw);
+                w.Write(" = ");
+                EmitMarshallerConvertToUnmanaged(w, p.Type, callName);
+                w.Write(";\n");
+            }
+            else if (IsGenericInstance(p.Type))
+            {
+                string raw = p.Parameter.Name ?? "param";
+                string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+                string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
+                string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
+                w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+                w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
+                w.Write(raw);
+                w.Write("([UnsafeAccessorType(\"");
+                w.Write(interopTypeName);
+                w.Write("\")] object _, ");
+                w.Write(projectedTypeName);
+                w.Write(" value);\n");
+                w.Write("        using WindowsRuntimeObjectReferenceValue __");
+                w.Write(raw);
+                w.Write(" = ConvertToUnmanaged_");
+                w.Write(raw);
+                w.Write("(null, ");
+                w.Write(callName);
+                w.Write(");\n");
+            }
+        }
+        // String params: declare void* locals (initialized later inside try).
+        bool hasStringParams = false;
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            if (IsString(sig.Params[i].Type))
+            {
+                string raw = sig.Params[i].Parameter.Name ?? "param";
+                w.Write("        void* __");
+                w.Write(raw);
+                w.Write(" = default;\n");
+                hasStringParams = true;
+            }
+        }
+
+        bool needsTryFinally = hasStringParams;
+        if (needsTryFinally) { w.Write("        try\n        {\n"); }
+        string indent = needsTryFinally ? "            " : "        ";
+
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            if (IsString(sig.Params[i].Type))
+            {
+                string raw = sig.Params[i].Parameter.Name ?? "param";
+                string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+                w.Write(indent);
+                w.Write("__");
+                w.Write(raw);
+                w.Write(" = HStringMarshaller.ConvertToUnmanaged(");
+                w.Write(callName);
+                w.Write(");\n");
+            }
+        }
+
+        // Function pointer call.
+        w.Write(indent);
+        w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*");
+        foreach (ParamInfo p in sig.Params)
+        {
+            w.Write(", ");
+            if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { w.Write("void*"); }
+            else if (IsBlittableStruct(p.Type)) { w.Write(GetBlittableStructAbiType(w, p.Type)); }
+            else { w.Write(GetAbiPrimitiveType(p.Type)); }
+        }
+        w.Write(", int>**)ThisPtr)[3](ThisPtr");
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            string raw = p.Parameter.Name ?? "param";
+            string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            w.Write(", ");
+            if (IsString(p.Type))
+            {
+                w.Write("__");
+                w.Write(raw);
+            }
+            else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type))
+            {
+                w.Write("__");
+                w.Write(raw);
+                w.Write(".GetThisPtrUnsafe()");
+            }
+            else if (IsBlittableStruct(p.Type))
+            {
+                w.Write(callName);
+            }
+            else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool && corlibBool.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+            {
+                w.Write("(byte)(");
+                w.Write(callName);
+                w.Write(" ? 1 : 0)");
+            }
+            else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar && corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+            {
+                w.Write("(ushort)");
+                w.Write(callName);
+            }
+            else if (IsEnumType(p.Type))
+            {
+                w.Write("(");
+                w.Write(GetAbiPrimitiveType(p.Type));
+                w.Write(")");
+                w.Write(callName);
+            }
+            else
+            {
+                w.Write(callName);
+            }
+        }
+        w.Write("));\n");
+
+        if (needsTryFinally)
+        {
+            w.Write("        }\n        finally\n        {\n");
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                if (IsString(sig.Params[i].Type))
+                {
+                    string raw = sig.Params[i].Parameter.Name ?? "param";
+                    w.Write("            HStringMarshaller.Free(__");
+                    w.Write(raw);
+                    w.Write(");\n");
+                }
+            }
+            w.Write("        }\n");
+        }
+        w.Write("    }\n");
+    }
+
+    /// <summary>Mirrors C++ <c>write_delegates_interface_entries_impl</c>.</summary>
+    private static void WriteDelegateInterfaceEntriesImpl(TypeWriter w, TypeDefinition type)
+    {
+        if (type.GenericParameters.Count > 0) { return; }
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+        string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
+        string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
+
+        w.Write("\nfile static class ");
+        w.Write(nameStripped);
+        w.Write("InterfaceEntriesImpl\n{\n");
+        w.Write("    [FixedAddressValueType]\n");
+        w.Write("    public static readonly DelegateReferenceInterfaceEntries Entries;\n\n");
+        w.Write("    static ");
+        w.Write(nameStripped);
+        w.Write("InterfaceEntriesImpl()\n    {\n");
+        w.Write("        Entries.Delegate.IID = ");
+        w.Write(iidExpr);
+        w.Write(";\n");
+        w.Write("        Entries.Delegate.Vtable = ");
+        w.Write(nameStripped);
+        w.Write("Impl.Vtable;\n");
+        w.Write("        Entries.DelegateReference.IID = ");
+        w.Write(iidRefExpr);
+        w.Write(";\n");
+        w.Write("        Entries.DelegateReference.Vtable = ");
+        w.Write(nameStripped);
+        w.Write("ReferenceImpl.Vtable;\n");
+        w.Write("        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;\n");
+        w.Write("        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;\n");
+        w.Write("        Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;\n");
+        w.Write("        Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;\n");
+        w.Write("        Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;\n");
+        w.Write("        Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;\n");
+        w.Write("        Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;\n");
+        w.Write("        Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;\n");
+        w.Write("        Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;\n");
+        w.Write("        Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;\n");
+        w.Write("        Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;\n");
+        w.Write("        Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;\n");
+        w.Write("        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;\n");
+        w.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
+        w.Write("    }\n}\n");
     }
 
     /// <summary>Mirrors C++ <c>write_temp_delegate_event_source_subclass</c>.</summary>
