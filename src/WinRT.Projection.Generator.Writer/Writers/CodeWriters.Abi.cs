@@ -2967,16 +2967,15 @@ internal static partial class CodeWriters
             }
             else
             {
-                // Non-generic delegate handler: ABI.<DelegateNamespace>.<DelegateName>EventSource
-                string delegateNs = string.Empty;
+                // Non-generic delegate handler: the EventSource lives in the same ABI namespace
+                // as this Methods class, so we use just the short name (matches truth output).
                 string delegateName = string.Empty;
                 if (evtSig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
                 {
-                    delegateNs = td.Type?.Namespace?.Value ?? string.Empty;
                     delegateName = td.Type?.Name?.Value ?? string.Empty;
                     delegateName = Helpers.StripBackticks(delegateName);
                 }
-                eventSourceProjectedFull = "global::ABI." + delegateNs + "." + delegateName + "EventSource";
+                eventSourceProjectedFull = delegateName + "EventSource";
             }
             string eventSourceInteropType = isGenericEvent
                 ? EncodeInteropTypeName(evtSig, TypedefNameType.EventSource) + ", WinRT.Interop"
