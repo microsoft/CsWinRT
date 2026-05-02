@@ -687,13 +687,15 @@ internal static partial class CodeWriters
             allParamsSimple = false;
             break;
         }
+        bool returnIsReceiveArrayDoAbi = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzAbi && IsBlittablePrimitive(retSzAbi.BaseType);
         bool returnSimple = rt is null
             || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
             || (IsBlittableStruct(rt) && !IsHResultException(rt))
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
             || IsObject(rt)
-            || IsGenericInstance(rt);
+            || IsGenericInstance(rt)
+            || returnIsReceiveArrayDoAbi;
         bool returnIsString = rt is not null && IsString(rt);
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
         bool returnIsGenericInstance = rt is not null && IsGenericInstance(rt);
@@ -713,7 +715,15 @@ internal static partial class CodeWriters
         w.Write("\n{\n");
         if (rt is not null)
         {
-            w.Write("    *__retval = default;\n");
+            if (returnIsReceiveArrayDoAbi)
+            {
+                w.Write("    *__retval = default;\n");
+                w.Write("    *__retvalLength = default;\n");
+            }
+            else
+            {
+                w.Write("    *__retval = default;\n");
+            }
         }
         // For each out parameter, clear the destination and declare a local.
         for (int i = 0; i < sig.Params.Count; i++)
@@ -802,6 +812,14 @@ internal static partial class CodeWriters
         }
         else if (returnIsRefType)
         {
+            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+            w.Write("        ");
+            w.Write(projected);
+            w.Write(" __result = ");
+        }
+        else if (returnIsReceiveArrayDoAbi)
+        {
+            // For T[] return: declare the projected array local.
             string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
             w.Write("        ");
             w.Write(projected);
@@ -946,6 +964,22 @@ internal static partial class CodeWriters
                     EmitMarshallerConvertToUnmanaged(w, rt!, "__result");
                     w.Write(".DetachThisPtrUnsafe();\n");
                 }
+            }
+            else if (returnIsReceiveArrayDoAbi)
+            {
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
+                string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSz.BaseType))));
+                string elementAbi = GetAbiPrimitiveType(retSz.BaseType);
+                string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
+                w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+                w.Write("        static extern void ConvertToUnmanaged_result([UnsafeAccessorType(\"ABI.System.<");
+                w.Write(elementInteropArg);
+                w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, global::System.ReadOnlySpan<");
+                w.Write(elementProjected);
+                w.Write("> span, out uint length, out ");
+                w.Write(elementAbi);
+                w.Write("* data);\n");
+                w.Write("        ConvertToUnmanaged_result(null, __result, out *__retvalLength, out *__retval);\n");
             }
             else if (returnIsBlittableStruct)
             {
