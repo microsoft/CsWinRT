@@ -2635,8 +2635,34 @@ internal static partial class CodeWriters
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = Helpers.StripBackticks(name);
-        // Skip emission for empty interfaces (no non-special methods, no properties, no events).
-        // The C++ generator has the same behaviour: 'if (members.empty()) { return; }'.
+        // Mirrors C++ write_static_abi_classes: visibility is internal if the interface is
+        // exclusive to a class (and not opted into PublicExclusiveTo) or if it's marked
+        // [ProjectionInternal]; public otherwise.
+        bool useInternal = (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
+            || TypeCategorization.IsProjectionInternal(type);
+
+        // Mirrors C++ skip_exclusive_events: events on exclusive interfaces (used by the class)
+        // are inlined in the RCW class, so we skip emitting them in the Methods type.
+        bool skipExclusiveEvents = false;
+        if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
+        {
+            TypeDefinition? classType = GetExclusiveToType(type);
+            if (classType is not null)
+            {
+                foreach (InterfaceImplementation impl in classType.Interfaces)
+                {
+                    TypeDefinition? implDef = ResolveInterfaceTypeDef(impl.Interface!);
+                    if (implDef is not null && implDef == type)
+                    {
+                        skipExclusiveEvents = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Skip emission for empty interfaces (no non-special methods, no properties, no events
+        // — except events skipped due to skipExclusiveEvents). Mirrors C++ 'if (members.empty()) { return; }'.
         bool hasMembers = false;
         foreach (MethodDefinition m in type.Methods)
         {
@@ -2646,17 +2672,12 @@ internal static partial class CodeWriters
         {
             foreach (PropertyDefinition _ in type.Properties) { hasMembers = true; break; }
         }
-        if (!hasMembers)
+        if (!hasMembers && !skipExclusiveEvents)
         {
             foreach (EventDefinition _ in type.Events) { hasMembers = true; break; }
         }
         if (!hasMembers) { return; }
 
-        // Mirrors C++ write_static_abi_classes: visibility is internal if the interface is
-        // exclusive to a class (and not opted into PublicExclusiveTo) or if it's marked
-        // [ProjectionInternal]; public otherwise.
-        bool useInternal = (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
-            || TypeCategorization.IsProjectionInternal(type);
         w.Write(useInternal ? "internal static unsafe class " : "public static unsafe class ");
         w.Write(nameStripped);
         w.Write("Methods\n{\n");
