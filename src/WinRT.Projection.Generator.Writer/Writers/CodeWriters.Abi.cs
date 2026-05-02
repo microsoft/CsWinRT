@@ -2137,7 +2137,7 @@ internal static partial class CodeWriters
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat == ParamCategory.PassArray)
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
                 // Allow blittable primitive arrays and blittable struct arrays.
                 if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
@@ -2218,7 +2218,7 @@ internal static partial class CodeWriters
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat == ParamCategory.PassArray)
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
                 fp.Append(", uint, void*");
                 continue;
@@ -2451,7 +2451,7 @@ internal static partial class CodeWriters
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat == ParamCategory.PassArray)
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
                 string callName = GetParamName(p, paramNameOverride);
                 string localName = GetParamLocalName(p, paramNameOverride);
@@ -2500,7 +2500,7 @@ internal static partial class CodeWriters
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat == ParamCategory.PassArray)
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
                 string callName = GetParamName(p, paramNameOverride);
                 string localName = GetParamLocalName(p, paramNameOverride);
