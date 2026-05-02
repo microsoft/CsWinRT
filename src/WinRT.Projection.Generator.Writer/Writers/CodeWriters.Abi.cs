@@ -392,25 +392,6 @@ internal static partial class CodeWriters
         return "ABI.System.<" + encodedElement + ">ArrayMarshaller, WinRT.Interop";
     }
 
-    /// <summary>Emit the projected type name for a TypeSignature (used for casts).</summary>
-    private static void EmitProjectedTypeName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
-    {
-        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
-        {
-            string ns = td.Type?.Namespace?.Value ?? string.Empty;
-            string name = td.Type?.Name?.Value ?? string.Empty;
-            MappedType? mapped = MappedTypes.Get(ns, name);
-            if (mapped is not null) { ns = mapped.MappedNamespace; name = mapped.MappedName; }
-            w.Write("global::");
-            if (!string.IsNullOrEmpty(ns)) { w.Write(ns); w.Write("."); }
-            w.Write(Helpers.StripBackticks(name));
-        }
-        else
-        {
-            w.Write("object");
-        }
-    }
-
     /// <summary>Mirrors C++ <c>write_delegate_vtbl</c>.</summary>
     private static void WriteDelegateVftbl(TypeWriter w, TypeDefinition type)
     {
