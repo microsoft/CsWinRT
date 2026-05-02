@@ -244,6 +244,7 @@ internal static partial class CodeWriters
                 if (pt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szP)
                 {
                     if (IsBlittablePrimitive(szP.BaseType) || IsAnyStruct(szP.BaseType)) { continue; }
+                    if (IsString(szP.BaseType) || IsRuntimeClassOrInterface(szP.BaseType) || IsObject(szP.BaseType)) { continue; }
                 }
                 canEmit = false; break;
             }
@@ -340,7 +341,86 @@ internal static partial class CodeWriters
             w.Write(";\n");
         }
 
+        // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
+        // (runtime classes, objects, strings).
+        bool hasNonBlittableArray = false;
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+            if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
+            hasNonBlittableArray = true;
+            string raw = p.Parameter.Name ?? "param";
+            string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            w.Write("\n        Unsafe.SkipInit(out InlineArray16<nint> __");
+            w.Write(raw);
+            w.Write("_inlineArray);\n");
+            w.Write("        nint[] __");
+            w.Write(raw);
+            w.Write("_arrayFromPool = null;\n");
+            w.Write("        Span<nint> __");
+            w.Write(raw);
+            w.Write("_span = ");
+            w.Write(callName);
+            w.Write(".Length <= 16\n            ? __");
+            w.Write(raw);
+            w.Write("_inlineArray[..");
+            w.Write(callName);
+            w.Write(".Length]\n            : (__");
+            w.Write(raw);
+            w.Write("_arrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent(");
+            w.Write(callName);
+            w.Write(".Length));\n");
+
+            if (IsString(szArr.BaseType))
+            {
+                w.Write("\n        Unsafe.SkipInit(out InlineArray16<HStringHeader> __");
+                w.Write(raw);
+                w.Write("_inlineHeaderArray);\n");
+                w.Write("        HStringHeader[] __");
+                w.Write(raw);
+                w.Write("_headerArrayFromPool = null;\n");
+                w.Write("        Span<HStringHeader> __");
+                w.Write(raw);
+                w.Write("_headerSpan = ");
+                w.Write(callName);
+                w.Write(".Length <= 16\n            ? __");
+                w.Write(raw);
+                w.Write("_inlineHeaderArray[..");
+                w.Write(callName);
+                w.Write(".Length]\n            : (__");
+                w.Write(raw);
+                w.Write("_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent(");
+                w.Write(callName);
+                w.Write(".Length));\n");
+
+                w.Write("\n        Unsafe.SkipInit(out InlineArray16<nint> __");
+                w.Write(raw);
+                w.Write("_inlinePinnedHandleArray);\n");
+                w.Write("        nint[] __");
+                w.Write(raw);
+                w.Write("_pinnedHandleArrayFromPool = null;\n");
+                w.Write("        Span<nint> __");
+                w.Write(raw);
+                w.Write("_pinnedHandleSpan = ");
+                w.Write(callName);
+                w.Write(".Length <= 16\n            ? __");
+                w.Write(raw);
+                w.Write("_inlinePinnedHandleArray[..");
+                w.Write(callName);
+                w.Write(".Length]\n            : (__");
+                w.Write(raw);
+                w.Write("_pinnedHandleArrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent(");
+                w.Write(callName);
+                w.Write(".Length));\n");
+            }
+        }
+
         w.Write("        void* __retval = default;\n");
+        if (hasNonBlittableArray) { w.Write("        try\n        {\n"); }
+        string baseIndent = hasNonBlittableArray ? "            " : "        ";
 
         // For string and array params, open a `fixed(void* _<name> = <name>)` block. Each adds nesting.
         int fixedNesting = 0;
@@ -350,7 +430,7 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             string raw = p.Parameter.Name ?? "param";
             string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
-            string indent = new(' ', 8 + (fixedNesting * 4));
+            string indent = baseIndent + new string(' ', fixedNesting * 4);
             if (IsString(p.Type))
             {
                 w.Write(indent);
@@ -362,7 +442,7 @@ internal static partial class CodeWriters
                 w.Write(indent);
                 w.Write("{\n");
                 fixedNesting++;
-                string innerIndent = new(' ', 8 + (fixedNesting * 4));
+                string innerIndent = baseIndent + new string(' ', fixedNesting * 4);
                 w.Write(innerIndent);
                 w.Write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
                 w.Write(raw);
@@ -374,11 +454,23 @@ internal static partial class CodeWriters
             }
             else if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
+                AsmResolver.DotNet.Signatures.TypeSignature elemT = ((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType;
+                bool isBlittableElem = IsBlittablePrimitive(elemT) || IsAnyStruct(elemT);
+                bool isStringElem = IsString(elemT);
                 w.Write(indent);
                 w.Write("fixed(void* _");
                 w.Write(raw);
                 w.Write(" = ");
-                w.Write(pname);
+                if (isBlittableElem) { w.Write(pname); }
+                else { w.Write("__"); w.Write(raw); w.Write("_span"); }
+                if (isStringElem)
+                {
+                    w.Write(", _");
+                    w.Write(raw);
+                    w.Write("_inlineHeaderArray = __");
+                    w.Write(raw);
+                    w.Write("_headerSpan");
+                }
                 w.Write(")\n");
                 w.Write(indent);
                 w.Write("{\n");
@@ -386,7 +478,66 @@ internal static partial class CodeWriters
             }
         }
 
-        string callIndent = new(' ', 8 + (fixedNesting * 4));
+        string callIndent = baseIndent + new string(' ', fixedNesting * 4);
+
+        // Emit CopyToUnmanaged for non-blittable PassArray params.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+            if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            if (IsString(szArr.BaseType))
+            {
+                w.Write(callIndent);
+                w.Write("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(\n");
+                w.Write(callIndent);
+                w.Write("    source: ");
+                w.Write(pname);
+                w.Write(",\n");
+                w.Write(callIndent);
+                w.Write("    hstringHeaders: (HStringHeader*) _");
+                w.Write(raw);
+                w.Write("_inlineHeaderArray,\n");
+                w.Write(callIndent);
+                w.Write("    hstrings: __");
+                w.Write(raw);
+                w.Write("_span,\n");
+                w.Write(callIndent);
+                w.Write("    pinnedGCHandles: __");
+                w.Write(raw);
+                w.Write("_pinnedHandleSpan);\n");
+            }
+            else
+            {
+                string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
+                string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+                w.Write(callIndent);
+                w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
+                w.Write(callIndent);
+                w.Write("static extern void CopyToUnmanaged_");
+                w.Write(raw);
+                w.Write("([UnsafeAccessorType(\"");
+                w.Write(GetArrayMarshallerInteropPath(w, szArr.BaseType, elementInteropArg));
+                w.Write("\")] object _, ReadOnlySpan<");
+                w.Write(elementProjected);
+                w.Write("> span, uint length, void** data);\n");
+                w.Write(callIndent);
+                w.Write("CopyToUnmanaged_");
+                w.Write(raw);
+                w.Write("(null, ");
+                w.Write(pname);
+                w.Write(", (uint)");
+                w.Write(pname);
+                w.Write(".Length, (void**)_");
+                w.Write(raw);
+                w.Write(");\n");
+            }
+        }
+
         w.Write(callIndent);
         // delegate* signature: void*, then each ABI param type, then void**, then int.
         w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
@@ -467,9 +618,71 @@ internal static partial class CodeWriters
         // Close fixed blocks (innermost first).
         for (int i = fixedNesting - 1; i >= 0; i--)
         {
-            string indent = new(' ', 8 + (i * 4));
+            string indent = baseIndent + new string(' ', i * 4);
             w.Write(indent);
             w.Write("}\n");
+        }
+
+        // Close try and emit finally with cleanup for non-blittable PassArray params.
+        if (hasNonBlittableArray)
+        {
+            w.Write("        }\n        finally\n        {\n");
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+                if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+                if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                if (IsString(szArr.BaseType))
+                {
+                    w.Write("\n            HStringArrayMarshaller.Dispose(__");
+                    w.Write(raw);
+                    w.Write("_pinnedHandleSpan);\n\n");
+                    w.Write("            if (__");
+                    w.Write(raw);
+                    w.Write("_pinnedHandleArrayFromPool is not null)\n            {\n");
+                    w.Write("                global::System.Buffers.ArrayPool<nint>.Shared.Return(__");
+                    w.Write(raw);
+                    w.Write("_pinnedHandleArrayFromPool);\n            }\n\n");
+                    w.Write("            if (__");
+                    w.Write(raw);
+                    w.Write("_headerArrayFromPool is not null)\n            {\n");
+                    w.Write("                global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__");
+                    w.Write(raw);
+                    w.Write("_headerArrayFromPool);\n            }\n");
+                }
+                else
+                {
+                    string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+                    w.Write("\n            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]\n");
+                    w.Write("            static extern void Dispose_");
+                    w.Write(raw);
+                    w.Write("([UnsafeAccessorType(\"");
+                    w.Write(GetArrayMarshallerInteropPath(w, szArr.BaseType, elementInteropArg));
+                    w.Write("\")] object _, uint length, void** data);\n\n");
+                    w.Write("            fixed(void* _");
+                    w.Write(raw);
+                    w.Write(" = __");
+                    w.Write(raw);
+                    w.Write("_span)\n            {\n");
+                    w.Write("                Dispose_");
+                    w.Write(raw);
+                    w.Write("(null, (uint) __");
+                    w.Write(raw);
+                    w.Write("_span.Length, (void**)_");
+                    w.Write(raw);
+                    w.Write(");\n            }\n");
+                }
+                w.Write("\n            if (__");
+                w.Write(raw);
+                w.Write("_arrayFromPool is not null)\n            {\n");
+                w.Write("                global::System.Buffers.ArrayPool<nint>.Shared.Return(__");
+                w.Write(raw);
+                w.Write("_arrayFromPool);\n            }\n");
+            }
+            w.Write("        }\n");
         }
 
         w.Write("    }\n}\n");
