@@ -2450,6 +2450,7 @@ internal static partial class CodeWriters
                 {
                     if (IsBlittablePrimitive(sz.BaseType)) { continue; }
                     if (IsAnyStruct(sz.BaseType)) { continue; }
+                    if (IsString(sz.BaseType)) { continue; }
                     if (IsRuntimeClassOrInterface(sz.BaseType)) { continue; }
                     if (IsObject(sz.BaseType)) { continue; }
                 }
@@ -2873,6 +2874,7 @@ internal static partial class CodeWriters
                 string localName = GetParamLocalName(p, paramNameOverride);
                 AsmResolver.DotNet.Signatures.TypeSignature elemT = ((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType;
                 bool isBlittableElem = IsBlittablePrimitive(elemT) || IsAnyStruct(elemT);
+                bool isStringElem = IsString(elemT);
                 w.Write(indent);
                 w.Write(new string(' ', fixedNesting * 4));
                 w.Write("fixed(void* _");
@@ -2887,6 +2889,14 @@ internal static partial class CodeWriters
                     w.Write("__");
                     w.Write(localName);
                     w.Write("_span");
+                }
+                if (isStringElem)
+                {
+                    w.Write(", _");
+                    w.Write(localName);
+                    w.Write("_inlineHeaderArray = __");
+                    w.Write(localName);
+                    w.Write("_headerSpan");
                 }
                 w.Write(")\n");
                 w.Write(indent);
