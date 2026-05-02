@@ -109,6 +109,7 @@ internal static partial class CodeWriters
         WriteValueTypeWinRTClassNameAttribute(w, type);
         WriteTypeCustomAttributes(w, type, true);
         WriteComWrapperMarshallerAttribute(w, type);
+        WriteWinRTReferenceTypeAttribute(w, type);
 
         w.Write(accessibility);
         w.Write(" enum ");
