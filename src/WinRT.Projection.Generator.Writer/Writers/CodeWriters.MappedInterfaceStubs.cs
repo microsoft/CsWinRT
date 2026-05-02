@@ -191,7 +191,7 @@ internal static partial class CodeWriters
         w.Write($"public bool Remove({kv} item) => {prefix}RemovePair(null, {objRefName}, item);\n");
         // GetEnumerator: still throw null - requires IEnumerable<T> objref
         w.Write($"public global::System.Collections.Generic.IEnumerator<{kv}> GetEnumerator() => throw null!;\n");
-        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
+        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
 
     private static void EmitReadOnlyDictionary(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -223,7 +223,7 @@ internal static partial class CodeWriters
         w.Write($"public bool TryGetValue({k} key, out {v} value) => {prefix}TryGetValue(null, {objRefName}, key, out value);\n");
         // GetEnumerator: still throw null - requires IEnumerable<KVP> objref
         w.Write($"public global::System.Collections.Generic.IEnumerator<{kv}> GetEnumerator() => throw null!;\n");
-        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
+        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
 
     private static void EmitReadOnlyList(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -244,7 +244,7 @@ internal static partial class CodeWriters
         w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
         // GetEnumerator: still throw null - requires IEnumerable<T> objref
         w.Write($"public global::System.Collections.Generic.IEnumerator<{t}> GetEnumerator() => throw null!;\n");
-        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
+        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
 
     /// <summary>
@@ -294,7 +294,7 @@ internal static partial class CodeWriters
         w.Write($"public void RemoveAt(int index) => {prefix}RemoveAt(null, {objRefName}, index);\n");
         // GetEnumerator: still throw null - requires IEnumerable<T> objref
         w.Write($"public global::System.Collections.Generic.IEnumerator<{t}> GetEnumerator() => throw null!;\n");
-        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
+        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
 
     /// <summary>

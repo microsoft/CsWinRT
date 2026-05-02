@@ -364,9 +364,28 @@ internal static partial class CodeWriters
         if (sig.ReturnType is not null)
         {
             w.Write(", ");
-            WriteAbiType(w, TypeSemanticsFactory.Get(sig.ReturnType));
-            w.Write("*");
-            if (includeParamNames) { w.Write(" __retval"); }
+            // Special handling for SzArray return types: WinRT projects them as a (uint*, T**) pair.
+            if (sig.ReturnType is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz)
+            {
+                if (includeParamNames)
+                {
+                    w.Write("uint* __retvalLength, ");
+                    WriteAbiType(w, TypeSemanticsFactory.Get(retSz.BaseType));
+                    w.Write("** __retval");
+                }
+                else
+                {
+                    w.Write("uint*, ");
+                    WriteAbiType(w, TypeSemanticsFactory.Get(retSz.BaseType));
+                    w.Write("**");
+                }
+            }
+            else
+            {
+                WriteAbiType(w, TypeSemanticsFactory.Get(sig.ReturnType));
+                w.Write("*");
+                if (includeParamNames) { w.Write(" __retval"); }
+            }
         }
     }
 
