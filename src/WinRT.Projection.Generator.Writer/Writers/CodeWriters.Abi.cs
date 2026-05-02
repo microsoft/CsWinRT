@@ -4584,7 +4584,7 @@ internal static partial class CodeWriters
                 w.Write("void*");
                 break;
             case TypeSemantics.Guid_:
-                w.Write("global::System.Guid");
+                w.Write("Guid");
                 break;
             case TypeSemantics.Type_:
                 w.Write("global::WindowsRuntime.InteropServices.WindowsRuntimeTypeName");

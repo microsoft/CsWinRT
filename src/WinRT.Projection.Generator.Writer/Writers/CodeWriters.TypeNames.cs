@@ -129,10 +129,10 @@ internal static partial class CodeWriters
                 w.Write("object");
                 break;
             case TypeSemantics.Guid_:
-                w.Write("global::System.Guid");
+                w.Write("Guid");
                 break;
             case TypeSemantics.Type_:
-                w.Write("global::System.Type");
+                w.Write("Type");
                 break;
             case TypeSemantics.Definition d:
                 WriteTypedefName(w, d.Type, nameType, forceWriteNamespace);
