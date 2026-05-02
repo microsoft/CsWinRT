@@ -1529,6 +1529,17 @@ internal static partial class CodeWriters
                 if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz && IsBlittablePrimitive(sz.BaseType)) { continue; }
                 allParamsSimple = false; break;
             }
+            if (cat == ParamCategory.Out)
+            {
+                AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
+                if (IsHResultException(underlying)) { allParamsSimple = false; break; }
+                if (IsBlittablePrimitive(underlying)) { continue; }
+                if (IsBlittableStruct(underlying)) { continue; }
+                if (IsString(underlying)) { continue; }
+                if (IsRuntimeClassOrInterface(underlying)) { continue; }
+                if (IsObject(underlying)) { continue; }
+                allParamsSimple = false; break;
+            }
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
             if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
@@ -1570,6 +1581,15 @@ internal static partial class CodeWriters
             if (cat == ParamCategory.PassArray)
             {
                 fp.Append(", uint, void*");
+                continue;
+            }
+            if (cat == ParamCategory.Out)
+            {
+                AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
+                fp.Append(", ");
+                if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { fp.Append("void**"); }
+                else if (IsBlittableStruct(uOut)) { fp.Append(GetBlittableStructAbiType(w, uOut)); fp.Append('*'); }
+                else { fp.Append(GetAbiPrimitiveType(uOut)); fp.Append('*'); }
                 continue;
             }
             fp.Append(", ");
@@ -1648,6 +1668,22 @@ internal static partial class CodeWriters
                 w.Write(" = default;\n");
             }
         }
+        // Declare locals for Out parameters (need to be passed as &__<name> to the call).
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.Out) { continue; }
+            string localName = GetParamLocalName(p, paramNameOverride);
+            AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
+            w.Write("        ");
+            if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { w.Write("void*"); }
+            else if (IsBlittableStruct(uOut)) { w.Write(GetBlittableStructAbiType(w, uOut)); }
+            else { w.Write(GetAbiPrimitiveType(uOut)); }
+            w.Write(" __");
+            w.Write(localName);
+            w.Write(" = default;\n");
+        }
         if (returnIsReceiveArray)
         {
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
@@ -1673,10 +1709,19 @@ internal static partial class CodeWriters
             w.Write(" __retval = default;\n");
         }
 
-        // Determine if we need a try/finally (for cleanup of string params or string/refType return or receive array return).
+        // Determine if we need a try/finally (for cleanup of string params or string/refType return or receive array return or Out runtime class params).
         bool hasStringParams = false;
         for (int i = 0; i < sig.Params.Count; i++) { if (IsString(sig.Params[i].Type)) { hasStringParams = true; break; } }
-        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsReceiveArray;
+        bool hasOutNeedsCleanup = false;
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.Out) { continue; }
+            AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
+            if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { hasOutNeedsCleanup = true; break; }
+        }
+        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
 
         string indent = needsTryFinally ? "            " : "        ";
@@ -1740,6 +1785,13 @@ internal static partial class CodeWriters
                 w.Write(localName);
                 continue;
             }
+            if (cat == ParamCategory.Out)
+            {
+                string localName = GetParamLocalName(p, paramNameOverride);
+                w.Write(", &__");
+                w.Write(localName);
+                continue;
+            }
             w.Write(", ");
             if (IsString(p.Type))
             {
@@ -1770,6 +1822,69 @@ internal static partial class CodeWriters
             w.Write(", &__retval");
         }
         w.Write("));\n");
+
+        // After call: write back Out params to caller's 'out' var.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.Out) { continue; }
+            string callName = GetParamName(p, paramNameOverride);
+            string localName = GetParamLocalName(p, paramNameOverride);
+            AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
+            w.Write(callIndent);
+            w.Write(callName);
+            w.Write(" = ");
+            if (IsString(uOut))
+            {
+                w.Write("HStringMarshaller.ConvertToManaged(__");
+                w.Write(localName);
+                w.Write(")");
+            }
+            else if (IsObject(uOut))
+            {
+                w.Write("WindowsRuntimeObjectMarshaller.ConvertToManaged(__");
+                w.Write(localName);
+                w.Write(")");
+            }
+            else if (IsRuntimeClassOrInterface(uOut))
+            {
+                w.Write(GetMarshallerFullName(w, uOut));
+                w.Write(".ConvertToManaged(__");
+                w.Write(localName);
+                w.Write(")");
+            }
+            else if (IsBlittableStruct(uOut))
+            {
+                w.Write("__");
+                w.Write(localName);
+            }
+            else if (uOut is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool && corlibBool.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+            {
+                w.Write("__");
+                w.Write(localName);
+                w.Write(" != 0");
+            }
+            else if (uOut is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar && corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+            {
+                w.Write("(char)__");
+                w.Write(localName);
+            }
+            else if (IsEnumType(uOut))
+            {
+                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, uOut, false)));
+                w.Write("(");
+                w.Write(projected);
+                w.Write(")__");
+                w.Write(localName);
+            }
+            else
+            {
+                w.Write("__");
+                w.Write(localName);
+            }
+            w.Write(";\n");
+        }
 
         // Return value conversion (inside the innermost fixed block if any).
         if (rt is not null)
@@ -1863,6 +1978,27 @@ internal static partial class CodeWriters
                 {
                     string localName = GetParamLocalName(sig.Params[i], paramNameOverride);
                     w.Write("            HStringMarshaller.Free(__");
+                    w.Write(localName);
+                    w.Write(");\n");
+                }
+            }
+            // Free Out string/object/runtime-class params.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.Out) { continue; }
+                AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
+                string localName = GetParamLocalName(p, paramNameOverride);
+                if (IsString(uOut))
+                {
+                    w.Write("            HStringMarshaller.Free(__");
+                    w.Write(localName);
+                    w.Write(");\n");
+                }
+                else if (IsObject(uOut) || IsRuntimeClassOrInterface(uOut))
+                {
+                    w.Write("            WindowsRuntimeUnknownMarshaller.Free(__");
                     w.Write(localName);
                     w.Write(");\n");
                 }
