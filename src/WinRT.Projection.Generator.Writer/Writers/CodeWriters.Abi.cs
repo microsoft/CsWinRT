@@ -1484,12 +1484,17 @@ internal static partial class CodeWriters
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
-        // Check that all parameters are types we can marshal (blittable primitives, blittable struct, string, runtime class, object, or generic instance).
+        // Check that all parameters are types we can marshal.
         bool allParamsSimple = true;
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            // Only support 'In' parameters
+            if (cat == ParamCategory.PassArray)
+            {
+                // Allow blittable primitive arrays only.
+                if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz && IsBlittablePrimitive(sz.BaseType)) { continue; }
+                allParamsSimple = false; break;
+            }
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
             if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
@@ -1501,13 +1506,16 @@ internal static partial class CodeWriters
             allParamsSimple = false;
             break;
         }
+        // Determine return-type kind: scalar, ref-type (string/object/runtime class/generic instance), blittable struct, or receive-array.
+        bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz0 && IsBlittablePrimitive(retSz0.BaseType);
         bool returnSimple = rt is null
             || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
             || (IsBlittableStruct(rt) && !IsHResultException(rt))
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
             || IsObject(rt)
-            || IsGenericInstance(rt);
+            || IsGenericInstance(rt)
+            || returnIsReceiveArray;
 
         if (!allParamsSimple || !returnSimple)
         {
@@ -1524,6 +1532,12 @@ internal static partial class CodeWriters
         fp.Append("void*");
         foreach (ParamInfo p in sig.Params)
         {
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat == ParamCategory.PassArray)
+            {
+                fp.Append(", uint, void*");
+                continue;
+            }
             fp.Append(", ");
             if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { fp.Append("void*"); }
             else if (IsBlittableStruct(p.Type)) { fp.Append(GetBlittableStructAbiType(w, p.Type)); }
@@ -1531,10 +1545,20 @@ internal static partial class CodeWriters
         }
         if (rt is not null)
         {
-            fp.Append(", ");
-            if (returnIsString || returnIsRefType) { fp.Append("void**"); }
-            else if (returnIsBlittableStruct) { fp.Append(GetBlittableStructAbiType(w, rt)); fp.Append('*'); }
-            else { fp.Append(GetAbiPrimitiveType(rt)); fp.Append('*'); }
+            if (returnIsReceiveArray)
+            {
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
+                fp.Append(", uint*, ");
+                fp.Append(GetAbiPrimitiveType(retSz.BaseType));
+                fp.Append("**");
+            }
+            else
+            {
+                fp.Append(", ");
+                if (returnIsString || returnIsRefType) { fp.Append("void**"); }
+                else if (returnIsBlittableStruct) { fp.Append(GetBlittableStructAbiType(w, rt)); fp.Append('*'); }
+                else { fp.Append(GetAbiPrimitiveType(rt)); fp.Append('*'); }
+            }
         }
         fp.Append(", int");
 
@@ -1590,7 +1614,15 @@ internal static partial class CodeWriters
                 w.Write(" = default;\n");
             }
         }
-        if (returnIsString || returnIsRefType)
+        if (returnIsReceiveArray)
+        {
+            AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
+            w.Write("        uint __retval_length = default;\n");
+            w.Write("        ");
+            w.Write(GetAbiPrimitiveType(retSz.BaseType));
+            w.Write("* __retval_data = default;\n");
+        }
+        else if (returnIsString || returnIsRefType)
         {
             w.Write("        void* __retval = default;\n");
         }
@@ -1607,10 +1639,10 @@ internal static partial class CodeWriters
             w.Write(" __retval = default;\n");
         }
 
-        // Determine if we need a try/finally (for cleanup of string params or string/refType return).
+        // Determine if we need a try/finally (for cleanup of string params or string/refType return or receive array return).
         bool hasStringParams = false;
         for (int i = 0; i < sig.Params.Count; i++) { if (IsString(sig.Params[i].Type)) { hasStringParams = true; break; } }
-        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType;
+        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsReceiveArray;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
 
         string indent = needsTryFinally ? "            " : "        ";
@@ -1630,7 +1662,31 @@ internal static partial class CodeWriters
             }
         }
 
-        w.Write(indent);
+        // For PassArray params, open a fixed block (one per param). The function pointer call
+        // happens inside the innermost fixed block. Track nesting for indentation.
+        int fixedNesting = 0;
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.PassArray) { continue; }
+            string callName = GetParamName(p, paramNameOverride);
+            string localName = GetParamLocalName(p, paramNameOverride);
+            w.Write(indent);
+            w.Write(new string(' ', fixedNesting * 4));
+            w.Write("fixed(void* _");
+            w.Write(localName);
+            w.Write(" = ");
+            w.Write(callName);
+            w.Write(")\n");
+            w.Write(indent);
+            w.Write(new string(' ', fixedNesting * 4));
+            w.Write("{\n");
+            fixedNesting++;
+        }
+
+        string callIndent = indent + new string(' ', fixedNesting * 4);
+        w.Write(callIndent);
         w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
         w.Write(fp.ToString());
         w.Write(">**)ThisPtr)[");
@@ -1638,8 +1694,19 @@ internal static partial class CodeWriters
         w.Write("](ThisPtr");
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            w.Write(", ");
             ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat == ParamCategory.PassArray)
+            {
+                string callName = GetParamName(p, paramNameOverride);
+                string localName = GetParamLocalName(p, paramNameOverride);
+                w.Write(", (uint)");
+                w.Write(callName);
+                w.Write(".Length, _");
+                w.Write(localName);
+                continue;
+            }
+            w.Write(", ");
             if (IsString(p.Type))
             {
                 w.Write("__");
@@ -1653,7 +1720,6 @@ internal static partial class CodeWriters
             }
             else if (IsBlittableStruct(p.Type))
             {
-                // Blittable struct: pass directly (projected type == ABI type)
                 w.Write(GetParamName(p, paramNameOverride));
             }
             else
@@ -1661,41 +1727,63 @@ internal static partial class CodeWriters
                 EmitParamArgConversion(w, p, paramNameOverride);
             }
         }
-        if (rt is not null)
+        if (returnIsReceiveArray)
+        {
+            w.Write(", &__retval_length, &__retval_data");
+        }
+        else if (rt is not null)
         {
             w.Write(", &__retval");
         }
         w.Write("));\n");
 
-        // Return value
+        // Return value conversion (inside the innermost fixed block if any).
         if (rt is not null)
         {
-            if (returnIsString)
+            if (returnIsReceiveArray)
             {
-                w.Write(indent);
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
+                string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSz.BaseType))));
+                string elementAbi = GetAbiPrimitiveType(retSz.BaseType);
+                string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
+                w.Write(callIndent);
+                w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                w.Write(callIndent);
+                w.Write("static extern ");
+                w.Write(elementProjected);
+                w.Write("[] ConvertToManaged_retval([UnsafeAccessorType(\"ABI.System.<");
+                w.Write(elementInteropArg);
+                w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, uint length, ");
+                w.Write(elementAbi);
+                w.Write("* data);\n");
+                w.Write(callIndent);
+                w.Write("return ConvertToManaged_retval(null, __retval_length, __retval_data);\n");
+            }
+            else if (returnIsString)
+            {
+                w.Write(callIndent);
                 w.Write("return HStringMarshaller.ConvertToManaged(__retval);\n");
             }
             else if (returnIsRefType)
             {
                 if (IsGenericInstance(rt))
                 {
-                    // Generic instance return: use a local UnsafeAccessor delegate.
                     string interopTypeName = EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
                     string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
-                    w.Write(indent);
+                    w.Write(callIndent);
                     w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
-                    w.Write(indent);
+                    w.Write(callIndent);
                     w.Write("static extern ");
                     w.Write(projectedTypeName);
                     w.Write(" ConvertToManaged_retval([UnsafeAccessorType(\"");
                     w.Write(interopTypeName);
                     w.Write("\")] object _, void* value);\n");
-                    w.Write(indent);
+                    w.Write(callIndent);
                     w.Write("return ConvertToManaged_retval(null, __retval);\n");
                 }
                 else
                 {
-                    w.Write(indent);
+                    w.Write(callIndent);
                     w.Write("return ");
                     EmitMarshallerConvertToManaged(w, rt, "__retval");
                     w.Write(";\n");
@@ -1703,12 +1791,12 @@ internal static partial class CodeWriters
             }
             else if (returnIsBlittableStruct)
             {
-                w.Write(indent);
+                w.Write(callIndent);
                 w.Write("return __retval;\n");
             }
             else
             {
-                w.Write(indent);
+                w.Write(callIndent);
                 w.Write("return ");
                 string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
                 string abiType = GetAbiPrimitiveType(rt);
@@ -1721,6 +1809,14 @@ internal static partial class CodeWriters
                     w.Write(")__retval;\n");
                 }
             }
+        }
+
+        // Close fixed blocks (innermost first).
+        for (int i = fixedNesting - 1; i >= 0; i--)
+        {
+            w.Write(indent);
+            w.Write(new string(' ', i * 4));
+            w.Write("}\n");
         }
 
         if (needsTryFinally)
@@ -1746,6 +1842,20 @@ internal static partial class CodeWriters
             if (returnIsRefType)
             {
                 w.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
+            }
+            // Free receive-array return via UnsafeAccessor.
+            if (returnIsReceiveArray)
+            {
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
+                string elementAbi = GetAbiPrimitiveType(retSz.BaseType);
+                string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
+                w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
+                w.Write("            static extern void Free_retval([UnsafeAccessorType(\"ABI.System.<");
+                w.Write(elementInteropArg);
+                w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, uint length, ");
+                w.Write(elementAbi);
+                w.Write("* data);\n");
+                w.Write("            Free_retval(null, __retval_length, __retval_data);\n");
             }
             w.Write("        }\n");
         }
