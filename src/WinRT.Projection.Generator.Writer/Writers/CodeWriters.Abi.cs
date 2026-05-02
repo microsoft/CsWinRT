@@ -157,8 +157,15 @@ internal static partial class CodeWriters
     /// <summary>Emits the body of the delegate Impl Invoke method (CCW dispatch).</summary>
     private static void EmitDelegateInvokeBody(TypeWriter w, TypeDefinition type, MethodSig sig)
     {
-        // Check if we can emit a body for this signature: only In params (no Out/Ref/Array), no return value.
-        bool simple = sig.ReturnType is null;
+        // Check if we can emit a body for this signature.
+        AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
+        bool simple = rt is null
+            || IsBlittablePrimitive(rt)
+            || IsAnyStruct(rt)
+            || IsString(rt)
+            || IsRuntimeClassOrInterface(rt)
+            || IsObject(rt);
+        if (rt is not null && IsHResultException(rt)) { simple = false; }
         if (simple)
         {
             foreach (ParamInfo p in sig.Params)
@@ -167,7 +174,7 @@ internal static partial class CodeWriters
                 if (cat != ParamCategory.In) { simple = false; break; }
                 if (IsHResultException(p.Type)) { simple = false; break; }
                 if (IsBlittablePrimitive(p.Type)) { continue; }
-                if (IsBlittableStruct(p.Type)) { continue; }
+                if (IsAnyStruct(p.Type)) { continue; }
                 if (IsString(p.Type)) { continue; }
                 if (IsRuntimeClassOrInterface(p.Type)) { continue; }
                 if (IsObject(p.Type)) { continue; }
@@ -185,8 +192,24 @@ internal static partial class CodeWriters
         string projectedName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
         if (!projectedName.StartsWith("global::", System.StringComparison.Ordinal)) { projectedName = "global::" + projectedName; }
 
+        bool hasReturn = rt is not null;
+        bool returnIsString = hasReturn && IsString(rt!);
+        bool returnIsRefType = hasReturn && (IsRuntimeClassOrInterface(rt!) || IsObject(rt!));
+
+        if (hasReturn)
+        {
+            // Declare local for the managed result value.
+            w.Write("        ");
+            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+            w.Write(projected);
+            w.Write(" __result = default;\n");
+            w.Write("        *__retval = default;\n\n");
+        }
+
         w.Write("        try\n        {\n");
-        w.Write("            ComInterfaceDispatch.GetInstance<");
+        if (hasReturn) { w.Write("            __result = "); }
+        else { w.Write("            "); }
+        w.Write("ComInterfaceDispatch.GetInstance<");
         w.Write(projectedName);
         w.Write(">((ComInterfaceDispatch*)thisPtr).Invoke(");
         for (int i = 0; i < sig.Params.Count; i++)
@@ -224,7 +247,7 @@ internal static partial class CodeWriters
                 w.Write(")");
                 w.Write(callName);
             }
-            else if (IsBlittablePrimitive(p.Type) || IsBlittableStruct(p.Type))
+            else if (IsBlittablePrimitive(p.Type) || IsAnyStruct(p.Type))
             {
                 w.Write(callName);
             }
@@ -234,6 +257,42 @@ internal static partial class CodeWriters
             }
         }
         w.Write(");\n");
+
+        if (hasReturn)
+        {
+            // Marshal the managed result back to the native *__retval pointer.
+            if (returnIsString)
+            {
+                w.Write("            *__retval = HStringMarshaller.ConvertToUnmanaged(__result);\n");
+            }
+            else if (returnIsRefType)
+            {
+                w.Write("            *__retval = ");
+                EmitMarshallerConvertToUnmanaged(w, rt!, "__result");
+                w.Write(".DetachThisPtrUnsafe();\n");
+            }
+            else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBoolRet &&
+                     corlibBoolRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+            {
+                w.Write("            *__retval = (byte)(__result ? 1 : 0);\n");
+            }
+            else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibCharRet &&
+                     corlibCharRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+            {
+                w.Write("            *__retval = (ushort)__result;\n");
+            }
+            else if (IsEnumType(rt!))
+            {
+                w.Write("            *__retval = (");
+                w.Write(GetAbiPrimitiveType(rt!));
+                w.Write(")__result;\n");
+            }
+            else
+            {
+                w.Write("            *__retval = __result;\n");
+            }
+        }
+
         w.Write("            return 0;\n        }\n");
         w.Write("        catch (Exception __exception__)\n        {\n");
         w.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n        }\n");
