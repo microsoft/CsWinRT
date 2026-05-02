@@ -2648,7 +2648,7 @@ internal static partial class CodeWriters
                 allParamsSimple = false; break;
             }
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
-            if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
+            if (IsHResultException(p.Type)) { continue; } // Handled via global::ABI.System.ExceptionMarshaller
             if (IsBlittablePrimitive(p.Type)) { continue; }
             if (IsAnyStruct(p.Type)) { continue; }
             if (IsString(p.Type)) { continue; }
@@ -2724,7 +2724,8 @@ internal static partial class CodeWriters
                 continue;
             }
             fp.Append(", ");
-            if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { fp.Append("void*"); }
+            if (IsHResultException(p.Type)) { fp.Append("global::ABI.System.Exception"); }
+            else if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { fp.Append("void*"); }
             else if (IsAnyStruct(p.Type)) { fp.Append(GetBlittableStructAbiType(w, p.Type)); }
             else { fp.Append(GetAbiPrimitiveType(p.Type)); }
         }
@@ -2814,6 +2815,20 @@ internal static partial class CodeWriters
                 w.Write(GetParamLocalName(sig.Params[i], paramNameOverride));
                 w.Write(" = default;\n");
             }
+        }
+        // Declare locals for HResult/Exception input parameters (converted up-front).
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
+            if (!IsHResultException(p.Type)) { continue; }
+            string localName = GetParamLocalName(p, paramNameOverride);
+            string callName = GetParamName(p, paramNameOverride);
+            w.Write("        global::ABI.System.Exception __");
+            w.Write(localName);
+            w.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(");
+            w.Write(callName);
+            w.Write(");\n");
         }
         // Declare locals for Out parameters (need to be passed as &__<name> to the call).
         for (int i = 0; i < sig.Params.Count; i++)
@@ -3195,7 +3210,12 @@ internal static partial class CodeWriters
                 continue;
             }
             w.Write(", ");
-            if (IsString(p.Type))
+            if (IsHResultException(p.Type))
+            {
+                w.Write("__");
+                w.Write(GetParamLocalName(p, paramNameOverride));
+            }
+            else if (IsString(p.Type))
             {
                 w.Write("__");
                 w.Write(GetParamLocalName(p, paramNameOverride));
