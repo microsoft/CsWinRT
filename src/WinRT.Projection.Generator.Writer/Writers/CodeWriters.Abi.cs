@@ -114,7 +114,68 @@ internal static partial class CodeWriters
     /// <summary>Mirrors C++ <c>write_temp_delegate_event_source_subclass</c>.</summary>
     public static void WriteTempDelegateEventSourceSubclass(TypeWriter w, TypeDefinition type)
     {
-        // Minimal stub
+        // Skip generic delegates: only non-generic delegates get a per-delegate EventSource subclass.
+        // Generic delegates (e.g. EventHandler<T>) use the generic EventHandlerEventSource<T> directly.
+        if (type.GenericParameters.Count > 0) { return; }
+
+        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        if (invoke is null) { return; }
+        MethodSig sig = new(invoke);
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+
+        // Compute the projected type name (with global::) used as the generic argument.
+        string projectedName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
+        if (!projectedName.StartsWith("global::", System.StringComparison.Ordinal))
+        {
+            projectedName = "global::" + projectedName;
+        }
+
+        w.Write("\npublic sealed unsafe class ");
+        w.Write(nameStripped);
+        w.Write("EventSource : EventSource<");
+        w.Write(projectedName);
+        w.Write(">\n{\n");
+        w.Write("    /// <inheritdoc cref=\"EventSource{T}.EventSource\"/>\n");
+        w.Write("    public ");
+        w.Write(nameStripped);
+        w.Write("EventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)\n        : base(nativeObjectReference, index)\n    {\n    }\n\n");
+        w.Write("    /// <inheritdoc/>\n");
+        w.Write("    protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
+        w.Write(projectedName);
+        w.Write(" value)\n    {\n        return ");
+        w.Write(nameStripped);
+        w.Write("Marshaller.ConvertToUnmanaged(value);\n    }\n\n");
+        w.Write("    /// <inheritdoc/>\n");
+        w.Write("    protected override EventSourceState<");
+        w.Write(projectedName);
+        w.Write("> CreateEventSourceState()\n    {\n        return new EventState(GetNativeObjectReferenceThisPtrUnsafe(), Index);\n    }\n\n");
+        w.Write("    private sealed class EventState : EventSourceState<");
+        w.Write(projectedName);
+        w.Write(">\n    {\n");
+        w.Write("        /// <inheritdoc cref=\"EventSourceState{T}.EventSourceState\"/>\n");
+        w.Write("        public EventState(void* thisPtr, int index)\n            : base(thisPtr, index)\n        {\n        }\n\n");
+        w.Write("        /// <inheritdoc/>\n");
+        w.Write("        protected override ");
+        w.Write(projectedName);
+        w.Write(" GetEventInvoke()\n        {\n");
+        // Build parameter name list for the lambda.
+        w.Write("            return (");
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            if (i > 0) { w.Write(", "); }
+            string raw = sig.Params[i].Parameter.Name ?? "p";
+            w.Write(Helpers.IsKeyword(raw) ? "@" + raw : raw);
+        }
+        w.Write(") => TargetDelegate.Invoke(");
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            if (i > 0) { w.Write(", "); }
+            string raw = sig.Params[i].Parameter.Name ?? "p";
+            w.Write(Helpers.IsKeyword(raw) ? "@" + raw : raw);
+        }
+        w.Write(");\n");
+        w.Write("        }\n    }\n}\n");
     }
 
     /// <summary>Mirrors C++ <c>write_abi_class</c>.</summary>
@@ -500,7 +561,7 @@ internal static partial class CodeWriters
 
         if (isGeneric)
         {
-            string interopTypeName = EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+            string interopTypeName = EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + ", WinRT.Interop";
             string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, evtTypeSig, false)));
             w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
             w.Write("        static extern ");
@@ -625,7 +686,7 @@ internal static partial class CodeWriters
             {
                 string rawName = p.Parameter.Name ?? "param";
                 string callName = Helpers.IsKeyword(rawName) ? "@" + rawName : rawName;
-                string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+                string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
                 string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
                 w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
                 w.Write("        static extern ");
@@ -713,7 +774,7 @@ internal static partial class CodeWriters
                 if (returnIsGenericInstance)
                 {
                     // Generic instance return: emit local UnsafeAccessor delegate to ConvertToUnmanaged + .DetachThisPtrUnsafe()
-                    string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+                    string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
                     string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
                     w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
                     w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_result([UnsafeAccessorType(\"");
@@ -1247,7 +1308,7 @@ internal static partial class CodeWriters
                 // Generic instance param: emit a local UnsafeAccessor delegate to get the marshaller method.
                 string localName = GetParamLocalName(p, paramNameOverride);
                 string callName = GetParamName(p, paramNameOverride);
-                string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+                string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
                 string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
                 w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
                 w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
@@ -1366,7 +1427,7 @@ internal static partial class CodeWriters
                 if (IsGenericInstance(rt))
                 {
                     // Generic instance return: use a local UnsafeAccessor delegate.
-                    string interopTypeName = EncodeInteropTypeName(rt, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+                    string interopTypeName = EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
                     string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
                     w.Write(indent);
                     w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");

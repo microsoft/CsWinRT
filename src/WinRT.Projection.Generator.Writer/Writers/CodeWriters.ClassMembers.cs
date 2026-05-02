@@ -68,6 +68,36 @@ internal static partial class CodeWriters
         foreach (KeyValuePair<string, PropertyAccessorState> kvp in propertyState)
         {
             PropertyAccessorState s = kvp.Value;
+            // For generic-interface properties, emit the UnsafeAccessor static externs above the
+            // property declaration. Note: getter and setter use the same accessor name (because
+            // C# allows method overloading on parameter list for the static externs).
+            if (s.HasGetter && s.GetterIsGeneric && !string.IsNullOrEmpty(s.GetterGenericInteropType))
+            {
+                w.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
+                w.Write(kvp.Key);
+                w.Write("\")]\n");
+                w.Write("static extern ");
+                w.Write(s.GetterPropTypeText);
+                w.Write(" ");
+                w.Write(s.GetterGenericAccessorName);
+                w.Write("([UnsafeAccessorType(\"");
+                w.Write(s.GetterGenericInteropType);
+                w.Write("\")] object _, WindowsRuntimeObjectReference thisReference);\n");
+            }
+            if (s.HasSetter && s.SetterIsGeneric && !string.IsNullOrEmpty(s.SetterGenericInteropType))
+            {
+                w.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
+                w.Write(kvp.Key);
+                w.Write("\")]\n");
+                w.Write("static extern void ");
+                w.Write(s.SetterGenericAccessorName);
+                w.Write("([UnsafeAccessorType(\"");
+                w.Write(s.SetterGenericInteropType);
+                w.Write("\")] object _, WindowsRuntimeObjectReference thisReference, ");
+                w.Write(s.SetterPropTypeText);
+                w.Write(" value);\n");
+            }
+
             w.Write("\n");
             w.Write(s.Access);
             w.Write(s.MethodSpec);
@@ -79,7 +109,18 @@ internal static partial class CodeWriters
             {
                 if (s.GetterIsGeneric)
                 {
-                    w.Write("get => throw null!; ");
+                    if (!string.IsNullOrEmpty(s.GetterGenericInteropType))
+                    {
+                        w.Write("get => ");
+                        w.Write(s.GetterGenericAccessorName);
+                        w.Write("(null, ");
+                        w.Write(s.GetterObjRef);
+                        w.Write("); ");
+                    }
+                    else
+                    {
+                        w.Write("get => throw null!; ");
+                    }
                 }
                 else
                 {
@@ -96,7 +137,18 @@ internal static partial class CodeWriters
             {
                 if (s.SetterIsGeneric)
                 {
-                    w.Write("set => throw null!; ");
+                    if (!string.IsNullOrEmpty(s.SetterGenericInteropType))
+                    {
+                        w.Write("set => ");
+                        w.Write(s.SetterGenericAccessorName);
+                        w.Write("(null, ");
+                        w.Write(s.SetterObjRef);
+                        w.Write(", value); ");
+                    }
+                    else
+                    {
+                        w.Write("set => throw null!; ");
+                    }
                 }
                 else
                 {
@@ -183,6 +235,12 @@ internal static partial class CodeWriters
         public string Name = string.Empty;
         public bool GetterIsGeneric;
         public bool SetterIsGeneric;
+        public string GetterGenericInteropType = string.Empty;
+        public string GetterGenericAccessorName = string.Empty;
+        public string GetterPropTypeText = string.Empty;
+        public string SetterGenericInteropType = string.Empty;
+        public string SetterGenericAccessorName = string.Empty;
+        public string SetterPropTypeText = string.Empty;
     }
 
     /// <summary>
@@ -351,8 +409,7 @@ internal static partial class CodeWriters
             : null;
 
         // Generic interfaces require UnsafeAccessor-based dispatch (real ABI lives in the
-        // post-build interop assembly). For now we keep the throw-null stubs for them — they
-        // will be ported as part of the dedicated UnsafeAccessor work item.
+        // post-build interop assembly).
         bool isGenericInterface = ifaceType.GenericParameters.Count > 0;
 
         // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.Foundation.IDeferralMethods")
@@ -369,6 +426,18 @@ internal static partial class CodeWriters
         }
         string objRef = GetObjRefName(w, originalInterface);
 
+        // For generic interfaces, also compute the encoded parent type name (used in UnsafeAccessor
+        // function names) and the WinRT.Interop accessor type string (passed to UnsafeAccessorType).
+        string genericParentEncoded = string.Empty;
+        string genericInteropType = string.Empty;
+        if (isGenericInterface && currentInstance is not null)
+        {
+            string projectedParent = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
+                WriteTypeName(w, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true)));
+            genericParentEncoded = EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
+            genericInteropType = EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
+        }
+
         // Methods
         foreach (MethodDefinition method in ifaceType.Methods)
         {
@@ -380,20 +449,55 @@ internal static partial class CodeWriters
             string key = BuildMethodSignatureKey(name, sig);
             if (!writtenMethods.Add(key)) { continue; }
 
-            w.Write("\n");
-            w.Write(access);
-            w.Write(methodSpec);
-            WriteProjectionReturnType(w, sig);
-            w.Write(" ");
-            w.Write(name);
-            w.Write("(");
-            WriteParameterList(w, sig);
-            if (isGenericInterface)
+            if (isGenericInterface && !string.IsNullOrEmpty(genericInteropType))
             {
-                w.Write(") => throw null!;\n");
+                // Emit UnsafeAccessor static extern + body that dispatches through it.
+                string accessorName = genericParentEncoded + "_" + name;
+                w.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
+                w.Write(name);
+                w.Write("\")]\n");
+                w.Write("static extern ");
+                WriteProjectionReturnType(w, sig);
+                w.Write(" ");
+                w.Write(accessorName);
+                w.Write("([UnsafeAccessorType(\"");
+                w.Write(genericInteropType);
+                w.Write("\")] object _, WindowsRuntimeObjectReference thisReference");
+                for (int i = 0; i < sig.Params.Count; i++)
+                {
+                    w.Write(", ");
+                    WriteProjectionParameter(w, sig.Params[i]);
+                }
+                w.Write(");\n");
+
+                w.Write(access);
+                w.Write(methodSpec);
+                WriteProjectionReturnType(w, sig);
+                w.Write(" ");
+                w.Write(name);
+                w.Write("(");
+                WriteParameterList(w, sig);
+                w.Write(") => ");
+                w.Write(accessorName);
+                w.Write("(null, ");
+                w.Write(objRef);
+                for (int i = 0; i < sig.Params.Count; i++)
+                {
+                    w.Write(", ");
+                    WriteParameterNameWithModifier(w, sig.Params[i]);
+                }
+                w.Write(");\n");
             }
             else
             {
+                w.Write("\n");
+                w.Write(access);
+                w.Write(methodSpec);
+                WriteProjectionReturnType(w, sig);
+                w.Write(" ");
+                w.Write(name);
+                w.Write("(");
+                WriteParameterList(w, sig);
                 w.Write(") => ");
                 w.Write(abiClass);
                 w.Write(".");
@@ -432,6 +536,9 @@ internal static partial class CodeWriters
                 state.GetterAbiClass = abiClass;
                 state.GetterObjRef = objRef;
                 state.GetterIsGeneric = isGenericInterface;
+                state.GetterGenericInteropType = genericInteropType;
+                state.GetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
+                state.GetterPropTypeText = WritePropType(w, prop, genCtx);
             }
             if (setter is not null && !state.HasSetter)
             {
@@ -439,16 +546,97 @@ internal static partial class CodeWriters
                 state.SetterAbiClass = abiClass;
                 state.SetterObjRef = objRef;
                 state.SetterIsGeneric = isGenericInterface;
+                state.SetterGenericInteropType = genericInteropType;
+                state.SetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
+                state.SetterPropTypeText = WritePropType(w, prop, genCtx);
             }
         }
 
-        // Events (deferred port: real implementation requires lazy event source field generation;
-        // the throw-null stub remains compatible since events resolve at runtime via the adapter).
+        // Events: emit the event with Subscribe/Unsubscribe through a per-event _eventSource_
+        // backing property field that lazily constructs an EventHandlerEventSource for the event
+        // handler type. Mirrors C++ write_class_events_using_static_abi_methods + write_event.
         foreach (EventDefinition evt in ifaceType.Events)
         {
             string name = evt.Name?.Value ?? string.Empty;
             if (!writtenEvents.Add(name)) { continue; }
 
+            // Compute event handler type and event source type strings.
+            AsmResolver.DotNet.Signatures.TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
+            if (currentInstance is not null)
+            {
+                evtSig = evtSig.InstantiateGenericTypes(new AsmResolver.DotNet.Signatures.GenericContext(currentInstance, null));
+            }
+            bool isGenericEvent = evtSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
+
+            string eventSourceType = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
+                WriteTypeName(w, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false)));
+            string eventSourceTypeFull = eventSourceType;
+            if (!eventSourceTypeFull.StartsWith("global::", System.StringComparison.Ordinal))
+            {
+                eventSourceTypeFull = "global::" + eventSourceTypeFull;
+            }
+            // The "interop" type name string for the EventSource UnsafeAccessor (only needed for generic events).
+            string eventSourceInteropType = isGenericEvent
+                ? EncodeInteropTypeName(evtSig, TypedefNameType.EventSource) + ", WinRT.Interop"
+                : string.Empty;
+
+            // Compute vtable index = method index in the interface vtable + 6 (for IInspectable methods).
+            // The add method is the first method of the event in the interface.
+            int methodIndex = 0;
+            foreach (MethodDefinition m in ifaceType.Methods)
+            {
+                if (m == evt.AddMethod) { break; }
+                methodIndex++;
+            }
+            int vtableIndex = 6 + methodIndex;
+
+            // Emit the _eventSource_<name> property field.
+            w.Write("\nprivate ");
+            w.Write(eventSourceTypeFull);
+            w.Write(" _eventSource_");
+            w.Write(name);
+            w.Write("\n{\n    get\n    {\n");
+            if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
+            {
+                w.Write("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]\n");
+                w.Write("        [return: UnsafeAccessorType(\"");
+                w.Write(eventSourceInteropType);
+                w.Write("\")]\n");
+                w.Write("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);\n\n");
+            }
+            w.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
+            w.Write("        ");
+            w.Write(eventSourceTypeFull);
+            w.Write(" MakeEventSource()\n        {\n");
+            w.Write("            _ = global::System.Threading.Interlocked.CompareExchange(\n");
+            w.Write("                location1: ref field,\n");
+            w.Write("                value: ");
+            if (isGenericEvent)
+            {
+                w.Write("Unsafe.As<");
+                w.Write(eventSourceTypeFull);
+                w.Write(">(ctor(");
+                w.Write(objRef);
+                w.Write(", ");
+                w.Write(vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                w.Write("))");
+            }
+            else
+            {
+                w.Write("new ");
+                w.Write(eventSourceTypeFull);
+                w.Write("(");
+                w.Write(objRef);
+                w.Write(", ");
+                w.Write(vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                w.Write(")");
+            }
+            w.Write(",\n");
+            w.Write("                comparand: null);\n\n");
+            w.Write("            return field;\n        }\n\n");
+            w.Write("        return field ?? MakeEventSource();\n    }\n}\n");
+
+            // Emit the public/protected event with Subscribe/Unsubscribe.
             w.Write("\n");
             w.Write(access);
             w.Write(methodSpec);
@@ -456,7 +644,14 @@ internal static partial class CodeWriters
             WriteEventType(w, evt, currentInstance);
             w.Write(" ");
             w.Write(name);
-            w.Write(" { add => throw null!; remove => throw null!; }\n");
+            w.Write("\n{\n");
+            w.Write("    add => _eventSource_");
+            w.Write(name);
+            w.Write(".Subscribe(value);\n");
+            w.Write("    remove => _eventSource_");
+            w.Write(name);
+            w.Write(".Unsubscribe(value);\n");
+            w.Write("}\n");
         }
     }
 

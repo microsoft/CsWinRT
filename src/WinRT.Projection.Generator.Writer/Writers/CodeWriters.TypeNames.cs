@@ -144,7 +144,12 @@ internal static partial class CodeWriters
                 for (int i = 0; i < gi.GenericArgs.Count; i++)
                 {
                     if (i > 0) { w.Write(", "); }
-                    WriteTypeName(w, gi.GenericArgs[i], nameType, forceWriteNamespace);
+                    // For generic args of EventSource/StaticAbiClass parents, the args themselves
+                    // should be Projected (mirrors C++ which always passes Projected for nested args).
+                    TypedefNameType argNameType = nameType is TypedefNameType.EventSource or TypedefNameType.StaticAbiClass
+                        ? TypedefNameType.Projected
+                        : nameType;
+                    WriteTypeName(w, gi.GenericArgs[i], argNameType, forceWriteNamespace);
                 }
                 w.Write(">");
                 break;
@@ -161,15 +166,35 @@ internal static partial class CodeWriters
                         ns = mapped.MappedNamespace;
                         name = mapped.MappedName;
                     }
-                    w.Write("global::");
-                    w.Write(ns);
-                    w.Write(".");
+                    // Handle EventSource for Windows.Foundation event handlers (TypedEventHandler ->
+                    // EventHandlerEventSource in WindowsRuntime.InteropServices).
+                    if (nameType == TypedefNameType.EventSource && ns == "System")
+                    {
+                        w.Write("global::WindowsRuntime.InteropServices.");
+                    }
+                    else if (!string.IsNullOrEmpty(ns))
+                    {
+                        w.Write("global::");
+                        if (nameType is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource)
+                        {
+                            w.Write("ABI.");
+                        }
+                        w.Write(ns);
+                        w.Write(".");
+                    }
                     w.WriteCode(name);
+                    if (nameType == TypedefNameType.StaticAbiClass) { w.Write("Methods"); }
+                    else if (nameType == TypedefNameType.EventSource) { w.Write("EventSource"); }
+
                     w.Write("<");
                     for (int i = 0; i < gir.GenericArgs.Count; i++)
                     {
                         if (i > 0) { w.Write(", "); }
-                        WriteTypeName(w, gir.GenericArgs[i], nameType, forceWriteNamespace);
+                        // Generic args of EventSource/StaticAbiClass/ABI parents are themselves Projected.
+                        TypedefNameType argNameType = nameType is TypedefNameType.EventSource or TypedefNameType.StaticAbiClass or TypedefNameType.ABI
+                            ? TypedefNameType.Projected
+                            : nameType;
+                        WriteTypeName(w, gir.GenericArgs[i], argNameType, forceWriteNamespace);
                     }
                     w.Write(">");
                 }
@@ -202,6 +227,8 @@ internal static partial class CodeWriters
                         w.Write(".");
                     }
                     w.WriteCode(name);
+                    if (nameType == TypedefNameType.StaticAbiClass) { w.Write("Methods"); }
+                    else if (nameType == TypedefNameType.EventSource) { w.Write("EventSource"); }
                 }
                 break;
             case TypeSemantics.GenericTypeIndex gti:

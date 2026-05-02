@@ -144,7 +144,19 @@ internal static partial class CodeWriters
             sb.Append('>');
         }
 
-        // Marshaller suffix is appended by callers when needed (we don't add it here).
+        // Append the type-kind suffix (matches C++ write_interop_dll_type_name_for_typedef).
+        if (nameType == TypedefNameType.StaticAbiClass)
+        {
+            sb.Append("Methods");
+        }
+        else if (nameType == TypedefNameType.ABI)
+        {
+            sb.Append("Marshaller");
+        }
+        else if (nameType == TypedefNameType.EventSource)
+        {
+            sb.Append("EventSource");
+        }
     }
 
     /// <summary>

@@ -278,7 +278,7 @@ internal static partial class CodeWriters
             if (!IsGenericInstance(p.Type)) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
-            string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + "Marshaller, WinRT.Interop";
+            string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
             string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
             w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
             w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
