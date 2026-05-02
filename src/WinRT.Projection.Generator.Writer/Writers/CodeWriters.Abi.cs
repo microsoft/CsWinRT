@@ -2001,16 +2001,38 @@ internal static partial class CodeWriters
             w.Write("}\n");
         }
 
-        // Events: leave as abstract event declarations (no DIM body). The corresponding ABI helper
-        // method on the static abi class is currently not generated; revisit when class events on
-        // generic interfaces are fully ported.
+        // Events: emit explicit interface event implementations on the IDIC interface that
+        // dispatch through the static ABI Methods class's event accessor (returns an EventSource).
+        // Mirrors C++ write_interface_members event handling (calls EventName(thisRef, _obj).Subscribe/Unsubscribe).
         foreach (EventDefinition evt in type.Events)
         {
+            string evtName = evt.Name?.Value ?? string.Empty;
             w.Write("\nevent ");
             WriteEventType(w, evt);
             w.Write(" ");
-            w.Write(evt.Name?.Value ?? string.Empty);
-            w.Write(";\n");
+            w.Write(ccwIfaceName);
+            w.Write(".");
+            w.Write(evtName);
+            w.Write("\n{\n");
+            // add accessor
+            w.Write("    add\n    {\n");
+            w.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+            w.Write(ccwIfaceName);
+            w.Write(").TypeHandle);\n        ");
+            w.Write(abiClass);
+            w.Write(".");
+            w.Write(evtName);
+            w.Write("((WindowsRuntimeObject)this, _obj).Subscribe(value);\n    }\n");
+            // remove accessor
+            w.Write("    remove\n    {\n");
+            w.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+            w.Write(ccwIfaceName);
+            w.Write(").TypeHandle);\n        ");
+            w.Write(abiClass);
+            w.Write(".");
+            w.Write(evtName);
+            w.Write("((WindowsRuntimeObject)this, _obj).Unsubscribe(value);\n    }\n");
+            w.Write("}\n");
         }
     }
 
