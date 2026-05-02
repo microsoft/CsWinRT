@@ -236,7 +236,18 @@ internal static partial class CodeWriters
         bool canEmit = true;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            AsmResolver.DotNet.Signatures.TypeSignature pt = sig.Params[i].Type;
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            AsmResolver.DotNet.Signatures.TypeSignature pt = p.Type;
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            {
+                if (pt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szP)
+                {
+                    if (IsBlittablePrimitive(szP.BaseType) || IsAnyStruct(szP.BaseType)) { continue; }
+                }
+                canEmit = false; break;
+            }
+            if (cat != ParamCategory.In) { canEmit = false; break; }
             if (IsHResultException(pt)) { canEmit = false; break; }
             if (IsBlittablePrimitive(pt) || IsBlittableStruct(pt) || IsEnumType(pt) || IsString(pt))
             {
@@ -262,8 +273,25 @@ internal static partial class CodeWriters
             ParamInfo p = sig.Params[i];
             string raw = p.Parameter.Name ?? "param";
             string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
             w.Write("        ");
-            WriteProjectedSignature(w, p.Type, true);
+            // For array params, the bind type is ReadOnlySpan<T> / Span<T> (not the SzArray).
+            if (cat == ParamCategory.PassArray)
+            {
+                w.Write("ReadOnlySpan<");
+                WriteProjectionType(w, TypeSemanticsFactory.Get(((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType));
+                w.Write(">");
+            }
+            else if (cat == ParamCategory.FillArray)
+            {
+                w.Write("Span<");
+                WriteProjectionType(w, TypeSemanticsFactory.Get(((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType));
+                w.Write(">");
+            }
+            else
+            {
+                WriteProjectedSignature(w, p.Type, true);
+            }
             w.Write(" ");
             w.Write(pname);
             w.Write(" = args.");
@@ -314,43 +342,64 @@ internal static partial class CodeWriters
 
         w.Write("        void* __retval = default;\n");
 
-        // For string params, open a `fixed(void* _<name> = <name>)` block and an HStringMarshaller
-        // call before the function pointer call. Each string param adds nesting.
-        int stringParamCount = 0;
+        // For string and array params, open a `fixed(void* _<name> = <name>)` block. Each adds nesting.
+        int fixedNesting = 0;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (!IsString(sig.Params[i].Type)) { continue; }
             ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
             string raw = p.Parameter.Name ?? "param";
             string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
-            string indent = new(' ', 8 + (stringParamCount * 4));
-            w.Write(indent);
-            w.Write("fixed(void* _");
-            w.Write(raw);
-            w.Write(" = ");
-            w.Write(pname);
-            w.Write(")\n");
-            w.Write(indent);
-            w.Write("{\n");
-            stringParamCount++;
-            string innerIndent = new(' ', 8 + (stringParamCount * 4));
-            w.Write(innerIndent);
-            w.Write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
-            w.Write(raw);
-            w.Write(", ");
-            w.Write(pname);
-            w.Write("?.Length, out HStringReference __");
-            w.Write(raw);
-            w.Write(");\n");
+            string indent = new(' ', 8 + (fixedNesting * 4));
+            if (IsString(p.Type))
+            {
+                w.Write(indent);
+                w.Write("fixed(void* _");
+                w.Write(raw);
+                w.Write(" = ");
+                w.Write(pname);
+                w.Write(")\n");
+                w.Write(indent);
+                w.Write("{\n");
+                fixedNesting++;
+                string innerIndent = new(' ', 8 + (fixedNesting * 4));
+                w.Write(innerIndent);
+                w.Write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
+                w.Write(raw);
+                w.Write(", ");
+                w.Write(pname);
+                w.Write("?.Length, out HStringReference __");
+                w.Write(raw);
+                w.Write(");\n");
+            }
+            else if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            {
+                w.Write(indent);
+                w.Write("fixed(void* _");
+                w.Write(raw);
+                w.Write(" = ");
+                w.Write(pname);
+                w.Write(")\n");
+                w.Write(indent);
+                w.Write("{\n");
+                fixedNesting++;
+            }
         }
 
-        string callIndent = new(' ', 8 + (stringParamCount * 4));
+        string callIndent = new(' ', 8 + (fixedNesting * 4));
         w.Write(callIndent);
         // delegate* signature: void*, then each ABI param type, then void**, then int.
         w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            WriteAbiType(w, TypeSemanticsFactory.Get(sig.Params[i].Type));
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            {
+                w.Write("uint, void*, ");
+                continue;
+            }
+            WriteAbiType(w, TypeSemanticsFactory.Get(p.Type));
             w.Write(", ");
         }
         w.Write("void**, int>**)ThisPtr)[");
@@ -359,9 +408,18 @@ internal static partial class CodeWriters
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
             string raw = p.Parameter.Name ?? "param";
             string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
             w.Write(", ");
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            {
+                w.Write("(uint)");
+                w.Write(pname);
+                w.Write(".Length, _");
+                w.Write(raw);
+                continue;
+            }
             // For enums, cast to underlying type. For bool, cast to byte. For char, cast to ushort.
             // For string params, use the marshalled HString from the fixed block.
             // For runtime class / object / generic instance params, use __<name>.GetThisPtrUnsafe().
@@ -407,7 +465,7 @@ internal static partial class CodeWriters
         w.Write("retval = __retval;\n");
 
         // Close fixed blocks (innermost first).
-        for (int i = stringParamCount - 1; i >= 0; i--)
+        for (int i = fixedNesting - 1; i >= 0; i--)
         {
             string indent = new(' ', 8 + (i * 4));
             w.Write(indent);
