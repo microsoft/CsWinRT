@@ -1748,7 +1748,7 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Writes a minimal marshaller stub for a delegate.
+    /// Writes a marshaller stub for a delegate.
     /// </summary>
     private static void WriteDelegateMarshallerStub(TypeWriter w, TypeDefinition type)
     {
@@ -1756,9 +1756,11 @@ internal static partial class CodeWriters
         string nameStripped = Helpers.StripBackticks(name);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
+        bool isGeneric = type.GenericParameters.Count > 0;
 
         // Compute the IID expression for this delegate (uses the DelegateMarshaller's IID convention).
         string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
+        string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
 
         // Public *Marshaller class
         w.Write("\npublic static unsafe class ");
@@ -1779,20 +1781,99 @@ internal static partial class CodeWriters
         w.Write(nameStripped);
         w.Write("ComWrappersCallback>(value);\n    }\n}\n\n");
 
-        // The *ComWrappersMarshallerAttribute class — referenced via [ABI.NS.NameComWrappersMarshaller]
-        // on the delegate definition. For now keep an empty attribute that derives from the base.
+        // ComWrappersMarshallerAttribute - full body for non-generic delegates.
         w.Write("internal sealed unsafe class ");
         w.Write(nameStripped);
         w.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
-        w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags) => throw null!;\n");
+        if (isGeneric)
+        {
+            w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags) => throw null!;\n");
+        }
+        else
+        {
+            w.Write("    /// <inheritdoc/>\n");
+            w.Write("    public override void* GetOrCreateComInterfaceForObject(object value)\n    {\n");
+            w.Write("        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);\n");
+            w.Write("    }\n\n");
+            w.Write("    /// <inheritdoc/>\n");
+            w.Write("    public override ComInterfaceEntry* ComputeVtables(out int count)\n    {\n");
+            w.Write("        count = sizeof(DelegateReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);\n\n");
+            w.Write("        return (ComInterfaceEntry*)Unsafe.AsPointer(in ");
+            w.Write(nameStripped);
+            w.Write("InterfaceEntriesImpl.Entries);\n    }\n\n");
+            w.Write("    /// <inheritdoc/>\n");
+            w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+            w.Write("        wrapperFlags = CreatedWrapperFlags.NonWrapping;\n");
+            w.Write("        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<");
+            w.Write(nameStripped);
+            w.Write("ComWrappersCallback>(value, in ");
+            w.Write(iidRefExpr);
+            w.Write(")!;\n    }\n");
+        }
         w.Write("}\n\n");
 
-        // file-scoped *ComWrappersCallback for delegate
-        w.Write("file sealed unsafe class ");
-        w.Write(nameStripped);
-        w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
-        w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags) => throw null!;\n");
-        w.Write("}\n");
+        // file-scoped *ComWrappersCallback for delegate.
+        // Truth uses 'file abstract' (not 'file sealed') because it's a marker type only.
+        if (isGeneric)
+        {
+            w.Write("file sealed unsafe class ");
+            w.Write(nameStripped);
+            w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
+            w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags) => throw null!;\n");
+            w.Write("}\n");
+        }
+        else
+        {
+            // Determine if NativeDelegate Invoke extension is supported (no return + simple params)
+            // by reusing the same checks as EmitNativeDelegateBody.
+            MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+            bool nativeSupported = invoke is not null && IsDelegateInvokeNativeSupported(new MethodSig(invoke));
+
+            w.Write("file abstract unsafe class ");
+            w.Write(nameStripped);
+            w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
+            w.Write("    /// <inheritdoc/>\n");
+            w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+            w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
+            w.Write("            externalComObject: value,\n");
+            w.Write("            iid: in ");
+            w.Write(iidExpr);
+            w.Write(",\n            wrapperFlags: out wrapperFlags);\n\n");
+            if (nativeSupported)
+            {
+                w.Write("        return new ");
+                w.Write(fullProjected);
+                w.Write("(valueReference.");
+                w.Write(nameStripped);
+                w.Write("Invoke);\n");
+            }
+            else
+            {
+                w.Write("        throw null!;\n");
+            }
+            w.Write("    }\n");
+            w.Write("}\n");
+        }
+    }
+
+    /// <summary>True if EmitNativeDelegateBody can emit a real (non-throw) body for this signature.</summary>
+    private static bool IsDelegateInvokeNativeSupported(MethodSig sig)
+    {
+        if (sig.ReturnType is not null) { return false; }
+        foreach (ParamInfo p in sig.Params)
+        {
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.In) { return false; }
+            if (IsHResultException(p.Type)) { return false; }
+            if (IsBlittablePrimitive(p.Type)) { continue; }
+            if (IsBlittableStruct(p.Type)) { continue; }
+            if (IsString(p.Type)) { continue; }
+            if (IsRuntimeClassOrInterface(p.Type)) { continue; }
+            if (IsObject(p.Type)) { continue; }
+            if (IsGenericInstance(p.Type)) { continue; }
+            return false;
+        }
+        return true;
     }
 
     /// <summary>
