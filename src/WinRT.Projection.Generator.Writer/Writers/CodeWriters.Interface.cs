@@ -27,7 +27,37 @@ internal static partial class CodeWriters
     {
         string delimiter = " : ";
 
-        if (includeWindowsRuntimeObject)
+        // Check the base type. If the class extends another runtime class (not System.Object,
+        // not WindowsRuntime.WindowsRuntimeObject), emit the projected base type name.
+        bool hasNonObjectBase = false;
+        if (type.BaseType is not null)
+        {
+            string? baseNs = type.BaseType.Namespace?.Value;
+            string? baseName = type.BaseType.Name?.Value;
+            bool isObject = (baseNs == "System" && baseName == "Object")
+                || (baseNs == "WindowsRuntime" && baseName == "WindowsRuntimeObject");
+            hasNonObjectBase = !isObject;
+        }
+
+        if (hasNonObjectBase)
+        {
+            w.Write(delimiter);
+            // Write the projected base type name (e.g., 'global::Windows.UI.Composition.CompositionObject').
+            ITypeDefOrRef baseType = type.BaseType!;
+            string ns = baseType.Namespace?.Value ?? string.Empty;
+            string name = baseType.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
+            w.Write("global::");
+            if (!string.IsNullOrEmpty(ns)) { w.Write(ns); w.Write("."); }
+            w.Write(Helpers.StripBackticks(name));
+            delimiter = ", ";
+        }
+        else if (includeWindowsRuntimeObject)
         {
             w.Write(delimiter);
             w.Write("WindowsRuntimeObject");
