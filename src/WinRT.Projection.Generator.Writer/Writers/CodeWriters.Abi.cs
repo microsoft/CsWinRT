@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using AsmResolver.DotNet;
 
 namespace WindowsRuntime.ProjectionGenerator.Writer;
@@ -2088,6 +2089,39 @@ internal static partial class CodeWriters
     /// file interface. Mirrors C++ <c>write_interface_members</c>.
     /// </summary>
     private static void WriteInterfaceIdicImplMembers(TypeWriter w, TypeDefinition type)
+    {
+        HashSet<TypeDefinition> visited = new();
+        WriteInterfaceIdicImplMembersForInterface(w, type, visited);
+
+        // Also walk required (inherited) interfaces and emit members for each one.
+        // Mirrors C++ write_required_interface_members_for_abi_type.
+        WriteInterfaceIdicImplMembersForRequiredInterfaces(w, type, visited);
+    }
+
+    private static void WriteInterfaceIdicImplMembersForRequiredInterfaces(
+        TypeWriter w, TypeDefinition type, HashSet<TypeDefinition> visited)
+    {
+        foreach (InterfaceImplementation impl in type.Interfaces)
+        {
+            if (impl.Interface is null) { continue; }
+            TypeDefinition? required = ResolveInterfaceTypeDef(impl.Interface);
+            if (required is null) { continue; }
+            if (!visited.Add(required)) { continue; }
+            // Skip mapped interfaces (IIterable, IMap, etc.) — they're handled by the
+            // mapped-interface stubs path with custom C# member names.
+            string rNs = required.Namespace?.Value ?? string.Empty;
+            string rName = required.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(rNs, rName);
+            if (mapped is not null && mapped.HasCustomMembersOutput) { continue; }
+            // Skip generic interfaces with unbound params (we can't substitute T at this layer).
+            if (required.GenericParameters.Count > 0) { continue; }
+            // Recurse first so deepest-base is emitted before nearer-base (matches deduplication).
+            WriteInterfaceIdicImplMembersForRequiredInterfaces(w, required, visited);
+            WriteInterfaceIdicImplMembersForInterface(w, required, visited);
+        }
+    }
+
+    private static void WriteInterfaceIdicImplMembersForInterface(TypeWriter w, TypeDefinition type, HashSet<TypeDefinition> visited)
     {
         // The CCW interface name (the projected interface name with global:: prefix).
         string ccwIfaceName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
