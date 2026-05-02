@@ -390,9 +390,11 @@ internal static partial class CodeWriters
         return "ABI." + ns + ".<" + topLevelElement + ">ArrayMarshaller, WinRT.Interop";
     }
 
-    /// <summary>Returns the (possibly mapped) namespace of a type signature, or empty for fundamentals.</summary>
+    /// <summary>Returns the (possibly mapped) namespace of a type signature, or 'System' for fundamentals.</summary>
     private static string GetMappedNamespace(AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
+        // Fundamentals (string, bool, int, etc.) live in 'System' for ArrayMarshaller path purposes.
+        if (sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature) { return "System"; }
         AsmResolver.DotNet.ITypeDefOrRef? td = null;
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tds) { td = tds.Type; }
         else if (sig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi) { td = gi.GenericType; }
