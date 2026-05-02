@@ -696,22 +696,47 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Mirrors C++ <c>write_composable_constructors</c>.
+    /// Emits:
+    /// 1. Public/protected constructors for each composable factory method (with proper body).
+    /// 2. Static factory callback class (per ctor) for parameterized composable activation.
+    /// 3. Four protected base-chaining constructors used by derived projected types.
     /// </summary>
     public static void WriteComposableConstructors(TypeWriter w, TypeDefinition? composableType, TypeDefinition classType, string visibility)
     {
         if (composableType is null) { return; }
         string typeName = classType.Name?.Value ?? string.Empty;
+
+        // Emit the factory objref + IIDs at the top so the parameterized ctors can reference it.
+        if (composableType.Methods.Count > 0)
+        {
+            string runtimeClassFullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
+            string factoryObjRefName = GetObjRefName(w, composableType);
+            WriteStaticFactoryObjRef(w, composableType, runtimeClassFullName, factoryObjRefName);
+        }
+
+        string defaultIfaceIid = GetDefaultInterfaceIid(w, classType);
+        string marshalingType = GetMarshalingTypeName(classType);
+        string defaultIfaceObjRef;
+        ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(classType);
+        defaultIfaceObjRef = defaultIface is not null ? GetObjRefName(w, defaultIface) : string.Empty;
+        int gcPressure = GetGcPressureAmount(classType);
+
+        int methodIndex = 0;
         foreach (MethodDefinition method in composableType.Methods)
         {
-            if (Helpers.IsSpecial(method)) { continue; }
+            if (Helpers.IsSpecial(method)) { methodIndex++; continue; }
             // Composable factory methods have signature like:
             //   T CreateInstance(args, object baseInterface, out object innerInterface)
             // For the constructor on the projected class, we exclude the trailing two params.
             MethodSig sig = new(method);
             int userParamCount = sig.Params.Count >= 2 ? sig.Params.Count - 2 : sig.Params.Count;
+            string callbackName = (method.Name?.Value ?? "Create") + "_" + userParamCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string argsName = callbackName + "Args";
+            bool isParameterless = userParamCount == 0;
+
             w.Write("\n");
             w.Write(visibility);
-            w.Write(" unsafe ");
+            if (!isParameterless) { w.Write(" unsafe "); } else { w.Write(" "); }
             w.Write(typeName);
             w.Write("(");
             for (int i = 0; i < userParamCount; i++)
@@ -719,7 +744,106 @@ internal static partial class CodeWriters
                 if (i > 0) { w.Write(", "); }
                 WriteProjectionParameter(w, sig.Params[i]);
             }
-            w.Write(") : base(default(WindowsRuntimeObjectReference)) => throw null!;\n");
+            w.Write(")\n  : base(");
+            if (isParameterless)
+            {
+                // base(default(WindowsRuntimeActivationTypes.DerivedComposed), <factoryObjRef>, <iid>, <marshalingType>)
+                string factoryObjRef = GetObjRefName(w, composableType);
+                w.Write("default(WindowsRuntimeActivationTypes.DerivedComposed), ");
+                w.Write(factoryObjRef);
+                w.Write(", ");
+                w.Write(defaultIfaceIid);
+                w.Write(", ");
+                w.Write(marshalingType);
+            }
+            else
+            {
+                w.Write(callbackName);
+                w.Write(".Instance, ");
+                w.Write(defaultIfaceIid);
+                w.Write(", ");
+                w.Write(marshalingType);
+                w.Write(", WindowsRuntimeActivationArgsReference.CreateUnsafe(new ");
+                w.Write(argsName);
+                w.Write("(");
+                for (int i = 0; i < userParamCount; i++)
+                {
+                    if (i > 0) { w.Write(", "); }
+                    string raw = sig.Params[i].Parameter.Name ?? "param";
+                    w.Write(Helpers.IsKeyword(raw) ? "@" + raw : raw);
+                }
+                w.Write("))");
+            }
+            w.Write(")\n{\n");
+            w.Write("if (GetType() == typeof(");
+            w.Write(typeName);
+            w.Write("))\n{\n");
+            if (!string.IsNullOrEmpty(defaultIfaceObjRef))
+            {
+                w.Write(defaultIfaceObjRef);
+                w.Write(" = NativeObjectReference;\n");
+            }
+            w.Write("}\n");
+            if (gcPressure > 0)
+            {
+                w.Write("GC.AddMemoryPressure(");
+                w.Write(gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                w.Write(");\n");
+            }
+            w.Write("}\n");
+
+            // Emit args struct + callback class for parameterized composable factories.
+            if (!isParameterless)
+            {
+                EmitFactoryArgsStruct(w, sig, argsName);
+                string factoryObjRefName = GetObjRefName(w, composableType);
+                EmitFactoryCallbackClass(w, sig, callbackName, argsName, factoryObjRefName, methodIndex);
+            }
+
+            methodIndex++;
         }
+
+        if (w.Settings.ReferenceProjection) { return; }
+
+        // Emit the four base-chaining constructors used by derived projected types.
+        string gcPressureBody = gcPressure > 0
+            ? "GC.AddMemoryPressure(" + gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture) + ");\n"
+            : string.Empty;
+
+        // 1. WindowsRuntimeActivationTypes.DerivedComposed
+        w.Write("\nprotected ");
+        w.Write(typeName);
+        w.Write("(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)\n");
+        w.Write("  :base(_, activationFactoryObjectReference, in iid, marshalingType)\n");
+        w.Write("{\n");
+        if (!string.IsNullOrEmpty(gcPressureBody)) { w.Write(gcPressureBody); }
+        w.Write("}\n");
+
+        // 2. WindowsRuntimeActivationTypes.DerivedSealed
+        w.Write("\nprotected ");
+        w.Write(typeName);
+        w.Write("(WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)\n");
+        w.Write("  :base(_, activationFactoryObjectReference, in iid, marshalingType)\n");
+        w.Write("{\n");
+        if (!string.IsNullOrEmpty(gcPressureBody)) { w.Write(gcPressureBody); }
+        w.Write("}\n");
+
+        // 3. WindowsRuntimeActivationFactoryCallback.DerivedComposed
+        w.Write("\nprotected ");
+        w.Write(typeName);
+        w.Write("(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)\n");
+        w.Write("  :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)\n");
+        w.Write("{\n");
+        if (!string.IsNullOrEmpty(gcPressureBody)) { w.Write(gcPressureBody); }
+        w.Write("}\n");
+
+        // 4. WindowsRuntimeActivationFactoryCallback.DerivedSealed
+        w.Write("\nprotected ");
+        w.Write(typeName);
+        w.Write("(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)\n");
+        w.Write("  :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)\n");
+        w.Write("{\n");
+        if (!string.IsNullOrEmpty(gcPressureBody)) { w.Write(gcPressureBody); }
+        w.Write("}\n");
     }
 }
