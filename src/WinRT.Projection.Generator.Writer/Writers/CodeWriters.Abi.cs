@@ -1663,6 +1663,7 @@ internal static partial class CodeWriters
         }
         // Determine return-type kind: scalar, ref-type (string/object/runtime class/generic instance), blittable struct, or receive-array.
         bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz0 && IsBlittablePrimitive(retSz0.BaseType);
+        bool returnIsHResultException = rt is not null && IsHResultException(rt);
         bool returnSimple = rt is null
             || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
             || (IsBlittableStruct(rt) && !IsHResultException(rt))
@@ -1670,7 +1671,8 @@ internal static partial class CodeWriters
             || IsRuntimeClassOrInterface(rt)
             || IsObject(rt)
             || IsGenericInstance(rt)
-            || returnIsReceiveArray;
+            || returnIsReceiveArray
+            || returnIsHResultException;
 
         if (!allParamsSimple || !returnSimple)
         {
@@ -1723,6 +1725,10 @@ internal static partial class CodeWriters
                 fp.Append(", uint*, ");
                 fp.Append(GetAbiPrimitiveType(retSz.BaseType));
                 fp.Append("**");
+            }
+            else if (returnIsHResultException)
+            {
+                fp.Append(", global::ABI.System.Exception*");
             }
             else
             {
@@ -1809,6 +1815,10 @@ internal static partial class CodeWriters
             w.Write("        ");
             w.Write(GetAbiPrimitiveType(retSz.BaseType));
             w.Write("* __retval_data = default;\n");
+        }
+        else if (returnIsHResultException)
+        {
+            w.Write("        global::ABI.System.Exception __retval = default;\n");
         }
         else if (returnIsString || returnIsRefType)
         {
@@ -2057,6 +2067,11 @@ internal static partial class CodeWriters
                 w.Write(callIndent);
                 w.Write("return ConvertToManaged_retval(null, __retval_length, __retval_data);\n");
             }
+            else if (returnIsHResultException)
+            {
+                w.Write(callIndent);
+                w.Write("return global::ABI.System.ExceptionMarshaller.ConvertToManaged(__retval);\n");
+            }
             else if (returnIsString)
             {
                 w.Write(callIndent);
@@ -2190,7 +2205,8 @@ internal static partial class CodeWriters
     }
 
     /// <summary>True if the type signature represents Windows.Foundation.HResult / System.Exception
-    /// (special-cased: ABI is int but projected is Exception, requires custom marshalling).</summary>
+    /// (special-cased: ABI is global::ABI.System.Exception (an HResult struct), projected is Exception,
+    /// requires custom marshalling via ABI.System.ExceptionMarshaller).</summary>
     private static bool IsHResultException(AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
