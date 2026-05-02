@@ -1368,12 +1368,15 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat == ParamCategory.Out || cat == ParamCategory.Ref)
             {
-                // Allow Out/Ref for blittable primitive/enum/blittable-struct types only.
-                // Peel ByRef and CustomModifier wrappers to get the underlying type.
+                // Allow Out/Ref for blittable primitive/enum/blittable-struct types,
+                // strings, runtime classes, and objects.
                 AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
                 if (IsHResultException(underlying)) { allParamsSimple = false; break; }
                 if (IsBlittablePrimitive(underlying)) { continue; }
                 if (IsAnyStruct(underlying)) { continue; }
+                if (IsString(underlying)) { continue; }
+                if (IsRuntimeClassOrInterface(underlying)) { continue; }
+                if (IsObject(underlying)) { continue; }
                 allParamsSimple = false;
                 break;
             }
@@ -1619,9 +1622,30 @@ internal static partial class CodeWriters
             w.Write("        *");
             w.Write(ptr);
             w.Write(" = ");
+            // String: HStringMarshaller.ConvertToUnmanaged
+            if (IsString(underlying))
+            {
+                w.Write("HStringMarshaller.ConvertToUnmanaged(__");
+                w.Write(raw);
+                w.Write(")");
+            }
+            // Object/runtime class: <Marshaller>.ConvertToUnmanaged(...).DetachThisPtrUnsafe()
+            else if (IsObject(underlying))
+            {
+                w.Write("WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(__");
+                w.Write(raw);
+                w.Write(").DetachThisPtrUnsafe()");
+            }
+            else if (IsRuntimeClassOrInterface(underlying))
+            {
+                w.Write(GetMarshallerFullName(w, underlying));
+                w.Write(".ConvertToUnmanaged(__");
+                w.Write(raw);
+                w.Write(").DetachThisPtrUnsafe()");
+            }
             // For enums, cast to the underlying ABI primitive type.
             // For bool, cast to byte. For char, cast to ushort.
-            if (IsEnumType(underlying))
+            else if (IsEnumType(underlying))
             {
                 w.Write("(");
                 w.Write(GetAbiPrimitiveType(underlying));
