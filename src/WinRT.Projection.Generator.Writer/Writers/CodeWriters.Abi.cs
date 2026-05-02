@@ -430,37 +430,45 @@ internal static partial class CodeWriters
     /// <summary>Emits the body of the native delegate's Invoke extension method.</summary>
     private static void EmitNativeDelegateBody(TypeWriter w, MethodSig sig)
     {
-        // For now, defer to throw null body if signature is not supported by EmitAbiMethodBodyIfSimple.
-        // Actually, we want the body to use 'objectReference' as the parameter name. EmitAbiMethodBodyIfSimple
-        // expects 'thisReference'. We can wrap the call with a local: var thisReference = objectReference;
-        // Or just inline the code to use objectReference. To avoid duplication, emit a small wrapper
-        // body that does the same pattern but with objectReference.
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
         // We support the same set of param/return types as EmitAbiMethodBodyIfSimple does for the
-        // primary case (no Out/Ref/Array for now in delegates). Let's just emit a simple body for
-        // simple cases (blittable primitive/string/runtime class/object/generic instance In params, no return).
-        bool simpleParamsAndReturn = true;
-        foreach (ParamInfo p in sig.Params)
+        // primary case (no Out/Ref/Array for now in delegates). Allow blittable/string/runtime class /
+        // object/generic instance In params and these return types.
+        bool simpleParamsAndReturn = rt is null
+            || IsBlittablePrimitive(rt)
+            || IsAnyStruct(rt)
+            || IsString(rt)
+            || IsRuntimeClassOrInterface(rt)
+            || IsObject(rt);
+        if (rt is not null && IsHResultException(rt)) { simpleParamsAndReturn = false; }
+        if (simpleParamsAndReturn)
         {
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.In) { simpleParamsAndReturn = false; break; }
-            if (IsHResultException(p.Type)) { simpleParamsAndReturn = false; break; }
-            if (IsBlittablePrimitive(p.Type)) { continue; }
-            if (IsBlittableStruct(p.Type)) { continue; }
-            if (IsString(p.Type)) { continue; }
-            if (IsRuntimeClassOrInterface(p.Type)) { continue; }
-            if (IsObject(p.Type)) { continue; }
-            if (IsGenericInstance(p.Type)) { continue; }
-            simpleParamsAndReturn = false; break;
+            foreach (ParamInfo p in sig.Params)
+            {
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.In) { simpleParamsAndReturn = false; break; }
+                if (IsHResultException(p.Type)) { simpleParamsAndReturn = false; break; }
+                if (IsBlittablePrimitive(p.Type)) { continue; }
+                if (IsAnyStruct(p.Type)) { continue; }
+                if (IsString(p.Type)) { continue; }
+                if (IsRuntimeClassOrInterface(p.Type)) { continue; }
+                if (IsObject(p.Type)) { continue; }
+                if (IsGenericInstance(p.Type)) { continue; }
+                simpleParamsAndReturn = false; break;
+            }
         }
-        if (rt is not null) { simpleParamsAndReturn = false; }
 
         if (!simpleParamsAndReturn)
         {
             w.Write(" => throw null!;\n");
             return;
         }
+
+        bool hasReturn = rt is not null;
+        bool returnIsString = hasReturn && IsString(rt!);
+        bool returnIsRefType = hasReturn && (IsRuntimeClassOrInterface(rt!) || IsObject(rt!));
+        bool returnIsAnyStruct = hasReturn && IsAnyStruct(rt!);
 
         w.Write("\n    {\n");
         w.Write("        using WindowsRuntimeObjectReferenceValue objectValue = objectReference.AsValue();\n");
@@ -517,7 +525,17 @@ internal static partial class CodeWriters
             }
         }
 
-        bool needsTryFinally = hasStringParams;
+        // Declare return value local.
+        if (hasReturn)
+        {
+            w.Write("        ");
+            if (returnIsString || returnIsRefType) { w.Write("void*"); }
+            else if (returnIsAnyStruct) { w.Write(GetBlittableStructAbiType(w, rt!)); }
+            else { w.Write(GetAbiPrimitiveType(rt!)); }
+            w.Write(" __retval = default;\n");
+        }
+
+        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
         string indent = needsTryFinally ? "            " : "        ";
 
@@ -543,8 +561,15 @@ internal static partial class CodeWriters
         {
             w.Write(", ");
             if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { w.Write("void*"); }
-            else if (IsBlittableStruct(p.Type)) { w.Write(GetBlittableStructAbiType(w, p.Type)); }
+            else if (IsAnyStruct(p.Type)) { w.Write(GetBlittableStructAbiType(w, p.Type)); }
             else { w.Write(GetAbiPrimitiveType(p.Type)); }
+        }
+        if (hasReturn)
+        {
+            w.Write(", ");
+            if (returnIsString || returnIsRefType) { w.Write("void**"); }
+            else if (returnIsAnyStruct) { w.Write(GetBlittableStructAbiType(w, rt!)); w.Write('*'); }
+            else { w.Write(GetAbiPrimitiveType(rt!)); w.Write('*'); }
         }
         w.Write(", int>**)ThisPtr)[3](ThisPtr");
         for (int i = 0; i < sig.Params.Count; i++)
@@ -564,7 +589,7 @@ internal static partial class CodeWriters
                 w.Write(raw);
                 w.Write(".GetThisPtrUnsafe()");
             }
-            else if (IsBlittableStruct(p.Type))
+            else if (IsAnyStruct(p.Type))
             {
                 w.Write(callName);
             }
@@ -591,7 +616,46 @@ internal static partial class CodeWriters
                 w.Write(callName);
             }
         }
+        if (hasReturn) { w.Write(", &__retval"); }
         w.Write("));\n");
+
+        // Return value conversion.
+        if (hasReturn)
+        {
+            w.Write(indent);
+            if (returnIsString)
+            {
+                w.Write("return HStringMarshaller.ConvertToManaged(__retval);\n");
+            }
+            else if (returnIsRefType)
+            {
+                w.Write("return ");
+                EmitMarshallerConvertToManaged(w, rt!, "__retval");
+                w.Write(";\n");
+            }
+            else if (returnIsAnyStruct)
+            {
+                w.Write("return __retval;\n");
+            }
+            else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBoolRet && corlibBoolRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+            {
+                w.Write("return __retval != 0;\n");
+            }
+            else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibCharRet && corlibCharRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+            {
+                w.Write("return (char)__retval;\n");
+            }
+            else if (IsEnumType(rt!))
+            {
+                w.Write("return (");
+                EmitProjectedTypeName(w, rt!);
+                w.Write(")__retval;\n");
+            }
+            else
+            {
+                w.Write("return __retval;\n");
+            }
+        }
 
         if (needsTryFinally)
         {
@@ -605,6 +669,14 @@ internal static partial class CodeWriters
                     w.Write(raw);
                     w.Write(");\n");
                 }
+            }
+            if (returnIsString)
+            {
+                w.Write("            HStringMarshaller.Free(__retval);\n");
+            }
+            else if (returnIsRefType)
+            {
+                w.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
             }
             w.Write("        }\n");
         }
@@ -2094,14 +2166,19 @@ internal static partial class CodeWriters
     /// <summary>True if EmitNativeDelegateBody can emit a real (non-throw) body for this signature.</summary>
     private static bool IsDelegateInvokeNativeSupported(MethodSig sig)
     {
-        if (sig.ReturnType is not null) { return false; }
+        AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
+        if (rt is not null)
+        {
+            if (IsHResultException(rt)) { return false; }
+            if (!(IsBlittablePrimitive(rt) || IsAnyStruct(rt) || IsString(rt) || IsRuntimeClassOrInterface(rt) || IsObject(rt))) { return false; }
+        }
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.In) { return false; }
             if (IsHResultException(p.Type)) { return false; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
-            if (IsBlittableStruct(p.Type)) { continue; }
+            if (IsAnyStruct(p.Type)) { continue; }
             if (IsString(p.Type)) { continue; }
             if (IsRuntimeClassOrInterface(p.Type)) { continue; }
             if (IsObject(p.Type)) { continue; }
