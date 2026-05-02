@@ -1907,6 +1907,15 @@ internal static partial class CodeWriters
                 w.Write(retParamName);
                 w.Write(");\n");
             }
+            else if (IsMappedAbiValueType(rt!))
+            {
+                // Mapped value type return (DateTime/TimeSpan): convert via marshaller.
+                w.Write("        *");
+                w.Write(retParamName);
+                w.Write(" = ");
+                w.Write(GetMappedMarshallerName(rt!));
+                w.Write(".ConvertToUnmanaged(__result);\n");
+            }
             else if (returnIsBlittableStruct)
             {
                 w.Write("        *");
@@ -2016,6 +2025,15 @@ internal static partial class CodeWriters
         else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type))
         {
             EmitMarshallerConvertToManaged(w, p.Type, pname);
+        }
+        else if (IsMappedAbiValueType(p.Type))
+        {
+            // Mapped value type input (DateTime/TimeSpan): the parameter is the ABI type;
+            // convert to the projected managed type via the marshaller.
+            w.Write(GetMappedMarshallerName(p.Type));
+            w.Write(".ConvertToManaged(");
+            w.Write(pname);
+            w.Write(")");
         }
         else if (IsAnyStruct(p.Type))
         {
@@ -4115,6 +4133,63 @@ internal static partial class CodeWriters
             || (ns == "Windows.Foundation" && name == "HResult");
     }
 
+    /// <summary>
+    /// True if the type is a mapped value type that requires marshalling between projected and ABI
+    /// representations (e.g. Windows.Foundation.DateTime &lt;-&gt; System.DateTimeOffset,
+    /// Windows.Foundation.TimeSpan &lt;-&gt; System.TimeSpan, Windows.Foundation.HResult &lt;-&gt; System.Exception).
+    /// These types use 'global::ABI.&lt;MappedNamespace&gt;.&lt;MappedName&gt;' as their ABI representation
+    /// and need an explicit marshaller call ('global::ABI.&lt;MappedNamespace&gt;.&lt;MappedName&gt;Marshaller.ConvertToUnmanaged'/
+    /// 'ConvertToManaged') to convert values across the boundary.
+    /// </summary>
+    private static bool IsMappedMarshalingValueType(AsmResolver.DotNet.Signatures.TypeSignature sig, out string mappedNs, out string mappedName)
+    {
+        mappedNs = string.Empty;
+        mappedName = string.Empty;
+        AsmResolver.DotNet.ITypeDefOrRef? td = null;
+        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tds) { td = tds.Type; }
+        if (td is null) { return false; }
+        string ns = td.Namespace?.Value ?? string.Empty;
+        string name = td.Name?.Value ?? string.Empty;
+        // The set of mapped types that use the 'value-type marshaller' pattern (DateTime, TimeSpan, HResult).
+        // Uri is also a mapped marshalling type but it's a reference type (handled via UriMarshaller separately).
+        if (ns == "Windows.Foundation")
+        {
+            if (name == "DateTime") { mappedNs = "System"; mappedName = "DateTimeOffset"; return true; }
+            if (name == "TimeSpan") { mappedNs = "System"; mappedName = "TimeSpan"; return true; }
+            if (name == "HResult") { mappedNs = "System"; mappedName = "Exception"; return true; }
+        }
+        return false;
+    }
+
+    /// <summary>True if the type is a mapped value type that needs ABI marshalling (excluding HResult, handled separately).</summary>
+    private static bool IsMappedAbiValueType(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (!IsMappedMarshalingValueType(sig, out _, out string mappedName)) { return false; }
+        // HResult/Exception is treated specially in many places; this helper is for DateTime/TimeSpan only.
+        return mappedName != "Exception";
+    }
+
+    /// <summary>Returns the projected type name for a mapped value type (e.g. 'global::System.TimeSpan').</summary>
+    private static string GetMappedProjectedTypeName(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
+        return "global::" + ns + "." + name;
+    }
+
+    /// <summary>Returns the ABI type name for a mapped value type (e.g. 'global::ABI.System.TimeSpan').</summary>
+    private static string GetMappedAbiTypeName(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
+        return "global::ABI." + ns + "." + name;
+    }
+
+    /// <summary>Returns the marshaller class name for a mapped value type (e.g. 'global::ABI.System.TimeSpanMarshaller').</summary>
+    private static string GetMappedMarshallerName(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
+        return "global::ABI." + ns + "." + name + "Marshaller";
+    }
+
     /// <summary>True if the type signature represents an enum (resolves cross-module typerefs).</summary>
     private static bool IsEnumType(AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
@@ -4597,6 +4672,25 @@ internal static partial class CodeWriters
                 }
                 else if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Struct)
                 {
+                    string dNs = d.Type.Namespace?.Value ?? string.Empty;
+                    string dName = d.Type.Name?.Value ?? string.Empty;
+                    // Special case: mapped value types that require ABI marshalling
+                    // (DateTime/TimeSpan -> ABI.System.DateTimeOffset/TimeSpan).
+                    if (dNs == "Windows.Foundation" && dName == "DateTime")
+                    {
+                        w.Write("global::ABI.System.DateTimeOffset");
+                        break;
+                    }
+                    if (dNs == "Windows.Foundation" && dName == "TimeSpan")
+                    {
+                        w.Write("global::ABI.System.TimeSpan");
+                        break;
+                    }
+                    if (dNs == "Windows.Foundation" && dName == "HResult")
+                    {
+                        w.Write("global::ABI.System.Exception");
+                        break;
+                    }
                     AsmResolver.DotNet.Signatures.TypeSignature dts = d.Type.ToTypeSignature();
                     // "Almost-blittable" structs (with bool/char fields but no reference-type
                     // fields) can pass through using the projected type since the C# layout
@@ -4623,6 +4717,22 @@ internal static partial class CodeWriters
                 {
                     string rns = r.Reference_.Namespace?.Value ?? string.Empty;
                     string rname = r.Reference_.Name?.Value ?? string.Empty;
+                    // Special case: mapped value types that require ABI marshalling.
+                    if (rns == "Windows.Foundation" && rname == "DateTime")
+                    {
+                        w.Write("global::ABI.System.DateTimeOffset");
+                        break;
+                    }
+                    if (rns == "Windows.Foundation" && rname == "TimeSpan")
+                    {
+                        w.Write("global::ABI.System.TimeSpan");
+                        break;
+                    }
+                    if (rns == "Windows.Foundation" && rname == "HResult")
+                    {
+                        w.Write("global::ABI.System.Exception");
+                        break;
+                    }
                     // Look up the type by its ORIGINAL (unmapped) name in the cache.
                     TypeDefinition? rd = _cacheRef.Find(rns + "." + rname);
                     // If not found, try the mapped name (for cases where the mapping target is in the cache).

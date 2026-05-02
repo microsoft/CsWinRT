@@ -258,6 +258,10 @@ internal static partial class CodeWriters
             {
                 continue;
             }
+            if (IsMappedAbiValueType(pt))
+            {
+                continue;
+            }
             canEmit = false;
             break;
         }
@@ -339,6 +343,26 @@ internal static partial class CodeWriters
             w.Write(" = ");
             EmitMarshallerConvertToUnmanaged(w, p.Type, pname);
             w.Write(";\n");
+        }
+
+        // For mapped value-type params (DateTime, TimeSpan), emit ABI local + marshaller conversion.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (!IsMappedAbiValueType(p.Type)) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string abiType = GetMappedAbiTypeName(p.Type);
+            string marshaller = GetMappedMarshallerName(p.Type);
+            w.Write("        ");
+            w.Write(abiType);
+            w.Write(" __");
+            w.Write(raw);
+            w.Write(" = ");
+            w.Write(marshaller);
+            w.Write(".ConvertToUnmanaged(");
+            w.Write(pname);
+            w.Write(");\n");
         }
 
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
@@ -600,6 +624,11 @@ internal static partial class CodeWriters
                 w.Write("__");
                 w.Write(raw);
                 w.Write(".GetThisPtrUnsafe()");
+            }
+            else if (IsMappedAbiValueType(p.Type))
+            {
+                w.Write("__");
+                w.Write(raw);
             }
             else
             {
