@@ -636,6 +636,17 @@ internal static partial class CodeWriters
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat == ParamCategory.Out || cat == ParamCategory.Ref)
+            {
+                // Allow Out/Ref for blittable primitive/enum/blittable-struct types only.
+                // Peel ByRef and CustomModifier wrappers to get the underlying type.
+                AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
+                if (IsHResultException(underlying)) { allParamsSimple = false; break; }
+                if (IsBlittablePrimitive(underlying)) { continue; }
+                if (IsBlittableStruct(underlying)) { continue; }
+                allParamsSimple = false;
+                break;
+            }
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
             if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
@@ -674,6 +685,34 @@ internal static partial class CodeWriters
         if (rt is not null)
         {
             w.Write("    *__retval = default;\n");
+        }
+        // For each out parameter, clear the destination and declare a local.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.Out && cat != ParamCategory.Ref) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            w.Write("    *");
+            w.Write(ptr);
+            w.Write(" = default;\n");
+        }
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.Out && cat != ParamCategory.Ref) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            // Use the projected (non-ABI) type for the local variable.
+            // Strip ByRef and CustomModifier wrappers to get the underlying base type.
+            AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
+            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, underlying, false)));
+            w.Write("    ");
+            w.Write(projected);
+            w.Write(" __");
+            w.Write(raw);
+            w.Write(" = default;\n");
         }
         w.Write("    try\n    {\n");
 
@@ -759,9 +798,69 @@ internal static partial class CodeWriters
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 if (i > 0) { w.Write(", "); }
-                EmitDoAbiParamArgConversion(w, sig.Params[i]);
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat == ParamCategory.Out)
+                {
+                    string raw = p.Parameter.Name ?? "param";
+                    w.Write("out __");
+                    w.Write(raw);
+                }
+                else if (cat == ParamCategory.Ref)
+                {
+                    string raw = p.Parameter.Name ?? "param";
+                    w.Write("ref __");
+                    w.Write(raw);
+                }
+                else
+                {
+                    EmitDoAbiParamArgConversion(w, p);
+                }
             }
             w.Write(");\n");
+        }
+        // After call: write back out/ref params.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.Out && cat != ParamCategory.Ref) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
+            w.Write("        *");
+            w.Write(ptr);
+            w.Write(" = ");
+            // For enums, cast to the underlying ABI primitive type.
+            // For bool, cast to byte. For char, cast to ushort.
+            if (IsEnumType(underlying))
+            {
+                w.Write("(");
+                w.Write(GetAbiPrimitiveType(underlying));
+                w.Write(")");
+                w.Write("__");
+                w.Write(raw);
+            }
+            else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool &&
+                     corlibBool.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+            {
+                w.Write("(byte)(");
+                w.Write("__");
+                w.Write(raw);
+                w.Write(" ? 1 : 0)");
+            }
+            else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar &&
+                     corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+            {
+                w.Write("(ushort)__");
+                w.Write(raw);
+            }
+            else
+            {
+                w.Write("__");
+                w.Write(raw);
+            }
+            w.Write(";\n");
         }
         if (rt is not null)
         {
@@ -1637,6 +1736,19 @@ internal static partial class CodeWriters
     private static bool IsGenericInstance(AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         return sig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
+    }
+
+    /// <summary>Strips <c>ByReferenceTypeSignature</c> and <c>CustomModifierTypeSignature</c> wrappers
+    /// to get the underlying type signature.</summary>
+    private static AsmResolver.DotNet.Signatures.TypeSignature StripByRefAndCustomModifiers(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        AsmResolver.DotNet.Signatures.TypeSignature current = sig;
+        while (true)
+        {
+            if (current is AsmResolver.DotNet.Signatures.ByReferenceTypeSignature br) { current = br.BaseType; continue; }
+            if (current is AsmResolver.DotNet.Signatures.CustomModifierTypeSignature cm) { current = cm.BaseType; continue; }
+            return current;
+        }
     }
 
     /// <summary>True if the type signature represents a WinRT runtime class, interface, or delegate (reference type marshallable via *Marshaller).</summary>
