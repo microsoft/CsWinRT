@@ -898,9 +898,106 @@ internal static partial class CodeWriters
         WriteTypedefName(w, type, TypedefNameType.Projected, false);
         WriteTypeParams(w, type);
         w.Write("\n{\n");
-        // Emit interface members (stub bodies)
-        WriteInterfaceMemberSignatures(w, type);
+        // Emit DIM bodies that dispatch through the static ABI Methods class.
+        WriteInterfaceIdicImplMembers(w, type);
         w.Write("\n}\n");
+    }
+
+    /// <summary>
+    /// Emits explicit-interface DIM (default interface method) implementations for the IDIC
+    /// file interface. Mirrors C++ <c>write_interface_members</c>.
+    /// </summary>
+    private static void WriteInterfaceIdicImplMembers(TypeWriter w, TypeDefinition type)
+    {
+        // The CCW interface name (the projected interface name with global:: prefix).
+        string ccwIfaceName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
+        if (!ccwIfaceName.StartsWith("global::", System.StringComparison.Ordinal)) { ccwIfaceName = "global::" + ccwIfaceName; }
+        // The static ABI Methods class name.
+        string abiClass = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.StaticAbiClass, true)));
+        if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal)) { abiClass = "global::" + abiClass; }
+
+        foreach (MethodDefinition method in type.Methods)
+        {
+            if (Helpers.IsSpecial(method)) { continue; }
+            MethodSig sig = new(method);
+            string mname = method.Name?.Value ?? string.Empty;
+
+            w.Write("\nunsafe ");
+            WriteProjectionReturnType(w, sig);
+            w.Write(" ");
+            w.Write(ccwIfaceName);
+            w.Write(".");
+            w.Write(mname);
+            w.Write("(");
+            WriteParameterList(w, sig);
+            w.Write(")\n{\n");
+            w.Write("    var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+            w.Write(ccwIfaceName);
+            w.Write(").TypeHandle);\n    ");
+            if (sig.ReturnType is not null) { w.Write("return "); }
+            w.Write(abiClass);
+            w.Write(".");
+            w.Write(mname);
+            w.Write("(_obj");
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                w.Write(", ");
+                WriteParameterNameWithModifier(w, sig.Params[i]);
+            }
+            w.Write(");\n}\n");
+        }
+
+        foreach (PropertyDefinition prop in type.Properties)
+        {
+            (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+            string pname = prop.Name?.Value ?? string.Empty;
+            string propType = WritePropType(w, prop);
+
+            w.Write("\nunsafe ");
+            w.Write(propType);
+            w.Write(" ");
+            w.Write(ccwIfaceName);
+            w.Write(".");
+            w.Write(pname);
+            w.Write("\n{\n");
+            if (getter is not null)
+            {
+                w.Write("    get\n    {\n");
+                w.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+                w.Write(ccwIfaceName);
+                w.Write(").TypeHandle);\n");
+                w.Write("        return ");
+                w.Write(abiClass);
+                w.Write(".");
+                w.Write(pname);
+                w.Write("(_obj);\n    }\n");
+            }
+            if (setter is not null)
+            {
+                w.Write("    set\n    {\n");
+                w.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+                w.Write(ccwIfaceName);
+                w.Write(").TypeHandle);\n");
+                w.Write("        ");
+                w.Write(abiClass);
+                w.Write(".");
+                w.Write(pname);
+                w.Write("(_obj, value);\n    }\n");
+            }
+            w.Write("}\n");
+        }
+
+        // Events: leave as abstract event declarations (no DIM body). The corresponding ABI helper
+        // method on the static abi class is currently not generated; revisit when class events on
+        // generic interfaces are fully ported.
+        foreach (EventDefinition evt in type.Events)
+        {
+            w.Write("\nevent ");
+            WriteEventType(w, evt);
+            w.Write(" ");
+            w.Write(evt.Name?.Value ?? string.Empty);
+            w.Write(";\n");
+        }
     }
 
     /// <summary>Mirrors C++ <c>write_interface_marshaller</c>.</summary>
