@@ -2166,6 +2166,17 @@ internal static partial class CodeWriters
                 if (IsAnyStruct(underlying)) { continue; }
                 allParamsSimple = false; break;
             }
+            if (cat == ParamCategory.ReceiveArray)
+            {
+                // Allow blittable primitive arrays and almost-blittable struct arrays.
+                AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
+                if (underlying is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza)
+                {
+                    if (IsBlittablePrimitive(sza.BaseType)) { continue; }
+                    if (IsAnyStruct(sza.BaseType)) { continue; }
+                }
+                allParamsSimple = false; break;
+            }
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
             if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
@@ -2227,6 +2238,15 @@ internal static partial class CodeWriters
                 fp.Append(", ");
                 if (IsAnyStruct(uRef)) { fp.Append(GetBlittableStructAbiType(w, uRef)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(uRef)); fp.Append('*'); }
+                continue;
+            }
+            if (cat == ParamCategory.ReceiveArray)
+            {
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
+                fp.Append(", uint*, ");
+                if (IsAnyStruct(sza.BaseType)) { fp.Append(GetBlittableStructAbiType(w, sza.BaseType)); }
+                else { fp.Append(GetAbiPrimitiveType(sza.BaseType)); }
+                fp.Append("**");
                 continue;
             }
             fp.Append(", ");
@@ -2332,6 +2352,24 @@ internal static partial class CodeWriters
             w.Write(localName);
             w.Write(" = default;\n");
         }
+        // Declare locals for ReceiveArray params (uint length + element pointer).
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.ReceiveArray) { continue; }
+            string localName = GetParamLocalName(p, paramNameOverride);
+            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
+            w.Write("        uint __");
+            w.Write(localName);
+            w.Write("_length = default;\n");
+            w.Write("        ");
+            if (IsAnyStruct(sza.BaseType)) { w.Write(GetBlittableStructAbiType(w, sza.BaseType)); }
+            else { w.Write(GetAbiPrimitiveType(sza.BaseType)); }
+            w.Write("* __");
+            w.Write(localName);
+            w.Write("_data = default;\n");
+        }
         if (returnIsReceiveArray)
         {
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
@@ -2380,7 +2418,12 @@ internal static partial class CodeWriters
             AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
             if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { hasOutNeedsCleanup = true; break; }
         }
-        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup;
+        bool hasReceiveArray = false;
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            if (ParamHelpers.GetParamCategory(sig.Params[i]) == ParamCategory.ReceiveArray) { hasReceiveArray = true; break; }
+        }
+        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
 
         string indent = needsTryFinally ? "            " : "        ";
@@ -2472,6 +2515,16 @@ internal static partial class CodeWriters
                 string localName = GetParamLocalName(p, paramNameOverride);
                 w.Write(", &__");
                 w.Write(localName);
+                continue;
+            }
+            if (cat == ParamCategory.ReceiveArray)
+            {
+                string localName = GetParamLocalName(p, paramNameOverride);
+                w.Write(", &__");
+                w.Write(localName);
+                w.Write("_length, &__");
+                w.Write(localName);
+                w.Write("_data");
                 continue;
             }
             if (cat == ParamCategory.Ref)
@@ -2576,7 +2629,42 @@ internal static partial class CodeWriters
             w.Write(";\n");
         }
 
-        // Return value conversion (inside the innermost fixed block if any).
+        // Writeback for ReceiveArray params: emit a UnsafeAccessor + assign to the out param.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.ReceiveArray) { continue; }
+            string callName = GetParamName(p, paramNameOverride);
+            string localName = GetParamLocalName(p, paramNameOverride);
+            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
+            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sza.BaseType))));
+            string elementAbi = IsAnyStruct(sza.BaseType)
+                ? GetBlittableStructAbiType(w, sza.BaseType)
+                : GetAbiPrimitiveType(sza.BaseType);
+            string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+            w.Write(callIndent);
+            w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+            w.Write(callIndent);
+            w.Write("static extern ");
+            w.Write(elementProjected);
+            w.Write("[] ConvertToManaged_");
+            w.Write(localName);
+            w.Write("([UnsafeAccessorType(\"ABI.System.<");
+            w.Write(elementInteropArg);
+            w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, uint length, ");
+            w.Write(elementAbi);
+            w.Write("* data);\n");
+            w.Write(callIndent);
+            w.Write(callName);
+            w.Write(" = ConvertToManaged_");
+            w.Write(localName);
+            w.Write("(null, __");
+            w.Write(localName);
+            w.Write("_length, __");
+            w.Write(localName);
+            w.Write("_data);\n");
+        }
         if (rt is not null)
         {
             if (returnIsReceiveArray)
@@ -2725,6 +2813,34 @@ internal static partial class CodeWriters
                 w.Write(elementAbi);
                 w.Write("* data);\n");
                 w.Write("            Free_retval(null, __retval_length, __retval_data);\n");
+            }
+            // Free ReceiveArray params via UnsafeAccessor.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.ReceiveArray) { continue; }
+                string localName = GetParamLocalName(p, paramNameOverride);
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
+                string elementAbi = IsAnyStruct(sza.BaseType)
+                    ? GetBlittableStructAbiType(w, sza.BaseType)
+                    : GetAbiPrimitiveType(sza.BaseType);
+                string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+                w.Write("\n            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
+                w.Write("            static extern void Free_");
+                w.Write(localName);
+                w.Write("([UnsafeAccessorType(\"ABI.System.<");
+                w.Write(elementInteropArg);
+                w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, uint length, ");
+                w.Write(elementAbi);
+                w.Write("* data);\n\n");
+                w.Write("            Free_");
+                w.Write(localName);
+                w.Write("(null, __");
+                w.Write(localName);
+                w.Write("_length, __");
+                w.Write(localName);
+                w.Write("_data);\n");
             }
             w.Write("        }\n");
         }
