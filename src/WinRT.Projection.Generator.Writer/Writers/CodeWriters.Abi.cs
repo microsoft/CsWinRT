@@ -89,8 +89,18 @@ internal static partial class CodeWriters
             foreach (FieldDefinition field in type.Fields)
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
+                AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
                 w.Write("public ");
-                WriteAbiType(w, TypeSemanticsFactory.Get(field.Signature.FieldType));
+                // Truth uses void* for string fields, but keeps the projected type for everything else
+                // (including enums and bool — their C# layout matches the WinRT ABI directly).
+                if (IsString(ft))
+                {
+                    w.Write("void*");
+                }
+                else
+                {
+                    WriteProjectedSignature(w, ft, false);
+                }
                 w.Write(" ");
                 w.Write(field.Name?.Value ?? string.Empty);
                 w.Write(";\n");
@@ -1767,38 +1777,140 @@ internal static partial class CodeWriters
         AsmResolver.DotNet.Signatures.TypeDefOrRefSignature sig = type.ToTypeSignature(false) is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td2 ? td2 : null!;
         bool almostBlittable = cat == TypeCategory.Struct && (sig is null || IsAnyStruct(sig));
         bool isEnum = cat == TypeCategory.Enum;
+        // Complex structs are non-almost-blittable structs with reference fields (string, object, etc.).
+        bool isComplexStruct = cat == TypeCategory.Struct && !almostBlittable;
+        // For complex structs, check if all reference fields are strings (the only kind we support today).
+        bool allReferenceFieldsAreStrings = true;
+        if (isComplexStruct)
+        {
+            foreach (FieldDefinition field in type.Fields)
+            {
+                if (field.IsStatic || field.Signature is null) { continue; }
+                AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                // Allow primitive fields (incl. bool/char) and string fields. Reject other reference types.
+                if (IsBlittablePrimitive(ft)) { continue; }
+                if (IsString(ft)) { continue; }
+                if (IsAnyStruct(ft)) { continue; }
+                allReferenceFieldsAreStrings = false;
+                break;
+            }
+        }
+        bool emitComplexBodies = isComplexStruct && allReferenceFieldsAreStrings;
 
         w.Write("public static unsafe class ");
         w.Write(nameStripped);
         w.Write("Marshaller\n{\n");
 
-        // For complex (non-almost-blittable) structs, emit ConvertToUnmanaged/ConvertToManaged/Dispose
-        // stubs (full per-field implementations are a future enhancement).
-        if (!isEnum && !almostBlittable)
+        if (isComplexStruct)
         {
+            // ConvertToUnmanaged: build ABI struct from projected struct via per-field marshalling.
             w.Write("    public static ");
             WriteTypedefName(w, type, TypedefNameType.ABI, true);
             w.Write(" ConvertToUnmanaged(");
             WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write(" value) => throw null!;\n");
+            if (!emitComplexBodies)
+            {
+                w.Write(" value) => throw null!;\n");
+            }
+            else
+            {
+                w.Write(" value)\n    {\n");
+                w.Write("        return new() {\n");
+                bool first = true;
+                foreach (FieldDefinition field in type.Fields)
+                {
+                    if (field.IsStatic || field.Signature is null) { continue; }
+                    string fname = field.Name?.Value ?? "";
+                    AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                    if (!first) { w.Write(",\n"); }
+                    first = false;
+                    w.Write("            ");
+                    w.Write(fname);
+                    w.Write(" = ");
+                    if (IsString(ft))
+                    {
+                        w.Write("HStringMarshaller.ConvertToUnmanaged(value.");
+                        w.Write(fname);
+                        w.Write(")");
+                    }
+                    else
+                    {
+                        w.Write("value.");
+                        w.Write(fname);
+                    }
+                }
+                w.Write("\n        };\n    }\n");
+            }
 
+            // ConvertToManaged: construct projected struct via constructor accepting the marshalled fields.
             w.Write("    public static ");
             WriteTypedefName(w, type, TypedefNameType.Projected, true);
             w.Write(" ConvertToManaged(");
             WriteTypedefName(w, type, TypedefNameType.ABI, true);
-            w.Write(" value) => throw null!;\n");
+            if (!emitComplexBodies)
+            {
+                w.Write(" value) => throw null!;\n");
+            }
+            else
+            {
+                w.Write(" value)\n    {\n");
+                w.Write("        return new ");
+                WriteTypedefName(w, type, TypedefNameType.Projected, true);
+                w.Write("(\n");
+                bool first = true;
+                foreach (FieldDefinition field in type.Fields)
+                {
+                    if (field.IsStatic || field.Signature is null) { continue; }
+                    string fname = field.Name?.Value ?? "";
+                    AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                    if (!first) { w.Write(",\n"); }
+                    first = false;
+                    w.Write("            ");
+                    if (IsString(ft))
+                    {
+                        w.Write("HStringMarshaller.ConvertToManaged(value.");
+                        w.Write(fname);
+                        w.Write(")");
+                    }
+                    else
+                    {
+                        w.Write("value.");
+                        w.Write(fname);
+                    }
+                }
+                w.Write("\n        );\n    }\n");
+            }
 
+            // Dispose: free non-blittable fields.
             w.Write("    public static void Dispose(");
             WriteTypedefName(w, type, TypedefNameType.ABI, true);
-            w.Write(" value) => throw null!;\n");
+            if (!emitComplexBodies)
+            {
+                w.Write(" value) => throw null!;\n");
+            }
+            else
+            {
+                w.Write(" value)\n    {\n");
+                foreach (FieldDefinition field in type.Fields)
+                {
+                    if (field.IsStatic || field.Signature is null) { continue; }
+                    string fname = field.Name?.Value ?? "";
+                    AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                    if (IsString(ft))
+                    {
+                        w.Write("        HStringMarshaller.Free(value.");
+                        w.Write(fname);
+                        w.Write(");\n");
+                    }
+                }
+                w.Write("    }\n");
+            }
         }
 
-        // BoxToUnmanaged - wraps the value as an IReference<T>.
-        // For enums and almost-blittable structs, the simple pattern works directly.
-        // For complex structs, we'd need to convert to ABI struct first then box (TODO).
+        // BoxToUnmanaged: same pattern for all (enum, almost-blittable, complex).
         w.Write("    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(");
         WriteTypedefName(w, type, TypedefNameType.Projected, true);
-        if (isEnum || almostBlittable)
+        if (isEnum || almostBlittable || emitComplexBodies)
         {
             w.Write("? value)\n    {\n");
             w.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in ");
@@ -1810,7 +1922,7 @@ internal static partial class CodeWriters
             w.Write("? value) => throw null!;\n");
         }
 
-        // UnboxToManaged - unwraps an IReference<T> back to the value.
+        // UnboxToManaged: simple for almost-blittable; for complex, unbox to ABI struct then ConvertToManaged.
         w.Write("    public static ");
         WriteTypedefName(w, type, TypedefNameType.Projected, true);
         if (isEnum || almostBlittable)
@@ -1819,6 +1931,16 @@ internal static partial class CodeWriters
             w.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
             WriteTypedefName(w, type, TypedefNameType.Projected, true);
             w.Write(">(value);\n    }\n");
+        }
+        else if (emitComplexBodies)
+        {
+            w.Write("? UnboxToManaged(void* value)\n    {\n");
+            w.Write("        ");
+            WriteTypedefName(w, type, TypedefNameType.ABI, true);
+            w.Write("? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
+            WriteTypedefName(w, type, TypedefNameType.ABI, true);
+            w.Write(">(value);\n");
+            w.Write("        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;\n    }\n");
         }
         else
         {
