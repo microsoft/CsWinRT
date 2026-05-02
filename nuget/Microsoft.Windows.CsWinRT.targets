@@ -128,19 +128,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
-  <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
+  <!-- Remove WinRT.Host.dll references (the shim DLL lives under hosting\ and is not auto-resolved) -->
   <Target Name="CsWinRTRemoveHostingDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
     <PropertyGroup>
-      <CsWinRTPkg-Net8Dir>$(CsWinRTPath)lib\net10.0</CsWinRTPkg-Net8Dir>
       <CsWinRTPkg-NativeDir>$(CsWinRTPath)runtimes\**\native</CsWinRTPkg-NativeDir>
     </PropertyGroup>
     <ItemGroup>
      <ReferenceCopyLocalPaths        Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
      <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
      <RuntimeTargetsCopyLocalItems   Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
-     <Reference                      Remove="$(CsWinRTPkg-Net8Dir)\WinRT.Host.Shim.dll"/>
-     <ResolvedCompileFileDefinitions Remove="$(CsWinRTPkg-Net8Dir)\WinRT.Host.Shim.dll"/>
-     <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-Net8Dir)\WinRT.Host.Shim.dll"/>
     </ItemGroup>
   </Target>
 
