@@ -1525,8 +1525,12 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat == ParamCategory.PassArray)
             {
-                // Allow blittable primitive arrays only.
-                if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz && IsBlittablePrimitive(sz.BaseType)) { continue; }
+                // Allow blittable primitive arrays and blittable struct arrays.
+                if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
+                {
+                    if (IsBlittablePrimitive(sz.BaseType)) { continue; }
+                    if (IsBlittableStruct(sz.BaseType)) { continue; }
+                }
                 allParamsSimple = false; break;
             }
             if (cat == ParamCategory.Out)
