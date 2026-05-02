@@ -138,6 +138,8 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Formats a metadata Constant value as a C# literal.
+    /// Mirrors C++ <c>write_constant</c>: I4/U4 are formatted as hex (e.g. <c>0x1</c>) to match
+    /// the truth output. Other types fall back to decimal.
     /// </summary>
     private static string FormatConstant(AsmResolver.DotNet.Constant constant)
     {
@@ -150,8 +152,8 @@ internal static partial class CodeWriters
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1 => data[0].ToString(System.Globalization.CultureInfo.InvariantCulture),
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2 => System.BitConverter.ToInt16(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2 => System.BitConverter.ToUInt16(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 => System.BitConverter.ToInt32(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 => System.BitConverter.ToUInt32(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 => "0x" + System.BitConverter.ToInt32(data, 0).ToString("x", System.Globalization.CultureInfo.InvariantCulture),
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 => "0x" + System.BitConverter.ToUInt32(data, 0).ToString("x", System.Globalization.CultureInfo.InvariantCulture),
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8 => System.BitConverter.ToInt64(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8 => System.BitConverter.ToUInt64(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
             _ => "0"
