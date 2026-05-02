@@ -371,8 +371,8 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Returns the interop assembly path for an array marshaller of a given element type.
-    /// The interop generator names array marshallers <c>ABI.&lt;&lt;assembly&gt;ElementName&gt;ArrayMarshaller</c>
-    /// (no namespace prefix outside the brackets, and the element inside the brackets uses just the
+    /// The interop generator names array marshallers <c>ABI.&lt;typeNamespace&gt;.&lt;&lt;assembly&gt;ElementName&gt;ArrayMarshaller</c>
+    /// (typeNamespace prefix outside the brackets, and the element inside the brackets uses just the
     /// type name without its namespace because depth=0 in the interop generator's AppendRawTypeName).
     /// </summary>
     private static string GetArrayMarshallerInteropPath(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature elementType, string encodedElement)
@@ -381,7 +381,26 @@ internal static partial class CodeWriters
         // but inside the array brackets the interop generator uses the depth=0 form (assembly + just name).
         // Re-encode the element with the top-level form for accurate matching.
         string topLevelElement = EncodeArrayElementName(elementType);
-        return "ABI.<" + topLevelElement + ">ArrayMarshaller, WinRT.Interop";
+        // Resolve the element's namespace to determine the path prefix.
+        string ns = GetMappedNamespace(elementType);
+        if (string.IsNullOrEmpty(ns))
+        {
+            return "ABI.<" + topLevelElement + ">ArrayMarshaller, WinRT.Interop";
+        }
+        return "ABI." + ns + ".<" + topLevelElement + ">ArrayMarshaller, WinRT.Interop";
+    }
+
+    /// <summary>Returns the (possibly mapped) namespace of a type signature, or empty for fundamentals.</summary>
+    private static string GetMappedNamespace(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        AsmResolver.DotNet.ITypeDefOrRef? td = null;
+        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tds) { td = tds.Type; }
+        else if (sig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi) { td = gi.GenericType; }
+        if (td is null) { return string.Empty; }
+        string typeNs = td.Namespace?.Value ?? string.Empty;
+        string typeName = td.Name?.Value ?? string.Empty;
+        MappedType? mapped = MappedTypes.Get(typeNs, typeName);
+        return mapped is not null ? mapped.MappedNamespace : typeNs;
     }
 
     /// <summary>
