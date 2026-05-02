@@ -202,7 +202,7 @@ internal static partial class CodeWriters
                 }
                 w.Write(");\n");
             }
-            // Events (deferred — keep stub bodies)
+            // Events: dispatch via static ABI class which returns an event source.
             foreach (EventDefinition evt in staticIface.Events)
             {
                 string evtName = evt.Name?.Value ?? string.Empty;
@@ -210,7 +210,26 @@ internal static partial class CodeWriters
                 WriteEventType(w, evt);
                 w.Write(" ");
                 w.Write(evtName);
-                w.Write(" { add => throw null!; remove => throw null!; }\n");
+                w.Write("\n{\n");
+                w.Write("    add => ");
+                w.Write(abiClass);
+                w.Write(".");
+                w.Write(evtName);
+                w.Write("(");
+                w.Write(objRef);
+                w.Write(", ");
+                w.Write(objRef);
+                w.Write(").Subscribe(value);\n");
+                w.Write("    remove => ");
+                w.Write(abiClass);
+                w.Write(".");
+                w.Write(evtName);
+                w.Write("(");
+                w.Write(objRef);
+                w.Write(", ");
+                w.Write(objRef);
+                w.Write(").Unsubscribe(value);\n");
+                w.Write("}\n");
             }
             // Properties (merge getter/setter across interfaces, tracking origin per accessor)
             foreach (PropertyDefinition prop in staticIface.Properties)

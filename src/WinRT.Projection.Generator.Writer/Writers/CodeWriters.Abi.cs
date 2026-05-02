@@ -1507,6 +1507,104 @@ internal static partial class CodeWriters
             }
         }
 
+        // Emit event member methods (returns an event source, takes thisObject + thisReference).
+        foreach (EventDefinition evt in type.Events)
+        {
+            string evtName = evt.Name?.Value ?? string.Empty;
+            AsmResolver.DotNet.Signatures.TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
+            bool isGenericEvent = evtSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
+
+            // Build the projected event source type name. For non-generic delegate handlers, the
+            // EventSource subclass lives in the ABI namespace alongside this Methods class, so
+            // we need to use the ABI-qualified name. For generic handlers (Windows.Foundation.*EventHandler),
+            // it's mapped to global::WindowsRuntime.InteropServices.EventHandlerEventSource<...>.
+            string eventSourceProjectedFull;
+            if (isGenericEvent)
+            {
+                eventSourceProjectedFull = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
+                    WriteTypeName(w, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true)));
+                if (!eventSourceProjectedFull.StartsWith("global::", System.StringComparison.Ordinal))
+                {
+                    eventSourceProjectedFull = "global::" + eventSourceProjectedFull;
+                }
+            }
+            else
+            {
+                // Non-generic delegate handler: ABI.<DelegateNamespace>.<DelegateName>EventSource
+                string delegateNs = string.Empty;
+                string delegateName = string.Empty;
+                if (evtSig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+                {
+                    delegateNs = td.Type?.Namespace?.Value ?? string.Empty;
+                    delegateName = td.Type?.Name?.Value ?? string.Empty;
+                    delegateName = Helpers.StripBackticks(delegateName);
+                }
+                eventSourceProjectedFull = "global::ABI." + delegateNs + "." + delegateName + "EventSource";
+            }
+            string eventSourceInteropType = isGenericEvent
+                ? EncodeInteropTypeName(evtSig, TypedefNameType.EventSource) + ", WinRT.Interop"
+                : string.Empty;
+
+            // Emit the per-event ConditionalWeakTable static field.
+            w.Write("\n    private static ConditionalWeakTable<object, ");
+            w.Write(eventSourceProjectedFull);
+            w.Write("> _");
+            w.Write(evtName);
+            w.Write("\n    {\n");
+            w.Write("        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
+            w.Write("        get\n        {\n");
+            w.Write("            [MethodImpl(MethodImplOptions.NoInlining)]\n");
+            w.Write("            static ConditionalWeakTable<object, ");
+            w.Write(eventSourceProjectedFull);
+            w.Write("> MakeTable()\n            {\n");
+            w.Write("                _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);\n\n");
+            w.Write("                return global::System.Threading.Volatile.Read(in field);\n");
+            w.Write("            }\n\n");
+            w.Write("            return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n        }\n    }\n");
+
+            // Emit the static method that returns the per-instance event source.
+            w.Write("\n    public static ");
+            w.Write(eventSourceProjectedFull);
+            w.Write(" ");
+            w.Write(evtName);
+            w.Write("(object thisObject, WindowsRuntimeObjectReference thisReference)\n    {\n");
+            if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
+            {
+                w.Write("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]\n");
+                w.Write("        [return: UnsafeAccessorType(\"");
+                w.Write(eventSourceInteropType);
+                w.Write("\")]\n");
+                w.Write("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);\n\n");
+                w.Write("        return _");
+                w.Write(evtName);
+                w.Write(".GetOrAdd(\n");
+                w.Write("            key: thisObject,\n");
+                w.Write("            valueFactory: static (_, thisReference) => Unsafe.As<");
+                w.Write(eventSourceProjectedFull);
+                w.Write(">(ctor(thisReference, ");
+                w.Write(slot.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                w.Write(")),\n");
+                w.Write("            factoryArgument: thisReference);\n");
+            }
+            else
+            {
+                // Non-generic delegate: directly construct.
+                w.Write("        return _");
+                w.Write(evtName);
+                w.Write(".GetOrAdd(\n");
+                w.Write("            key: thisObject,\n");
+                w.Write("            valueFactory: static (_, thisReference) => new ");
+                w.Write(eventSourceProjectedFull);
+                w.Write("(thisReference, ");
+                w.Write(slot.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                w.Write("),\n");
+                w.Write("            factoryArgument: thisReference);\n");
+            }
+            w.Write("    }\n");
+            // Each event consumes 2 vtable slots (add + remove).
+            slot += 2;
+        }
+
         w.Write("}\n");
     }
 
