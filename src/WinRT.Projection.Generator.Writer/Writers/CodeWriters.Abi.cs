@@ -1680,16 +1680,22 @@ internal static partial class CodeWriters
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = Helpers.StripBackticks(name);
+        TypeCategory cat = TypeCategorization.GetCategory(type);
         bool blittable = IsTypeBlittable(type);
+        // "Almost-blittable" includes blittable + bool/char fields. Excludes string/object fields.
+        // Use the same predicate as IsAnyStruct (which is now scoped to almost-blittable).
+        AsmResolver.DotNet.Signatures.TypeDefOrRefSignature sig = type.ToTypeSignature(false) is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td2 ? td2 : null!;
+        bool almostBlittable = cat == TypeCategory.Struct && (sig is null || IsAnyStruct(sig));
+        bool isEnum = cat == TypeCategory.Enum;
 
         w.Write("public static unsafe class ");
         w.Write(nameStripped);
         w.Write("Marshaller\n{\n");
 
-        if (!blittable)
+        // For complex (non-almost-blittable) structs, emit ConvertToUnmanaged/ConvertToManaged/Dispose
+        // stubs (full per-field implementations are a future enhancement).
+        if (!isEnum && !almostBlittable)
         {
-            // ConvertToUnmanaged/ConvertToManaged/Dispose stubs (full implementations would emit
-            // per-field marshalling logic - we emit throw null! placeholders for now)
             w.Write("    public static ");
             WriteTypedefName(w, type, TypedefNameType.ABI, true);
             w.Write(" ConvertToUnmanaged(");
@@ -1707,12 +1713,12 @@ internal static partial class CodeWriters
             w.Write(" value) => throw null!;\n");
         }
 
-        // BoxToUnmanaged - wraps the value as an IReference<T>
-        // (Real implementation only for blittable types — non-blittable structs need
-        // per-field marshalling via *Marshaller.ConvertToUnmanaged before boxing.)
+        // BoxToUnmanaged - wraps the value as an IReference<T>.
+        // For enums and almost-blittable structs, the simple pattern works directly.
+        // For complex structs, we'd need to convert to ABI struct first then box (TODO).
         w.Write("    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(");
         WriteTypedefName(w, type, TypedefNameType.Projected, true);
-        if (blittable)
+        if (isEnum || almostBlittable)
         {
             w.Write("? value)\n    {\n");
             w.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in ");
@@ -1724,10 +1730,10 @@ internal static partial class CodeWriters
             w.Write("? value) => throw null!;\n");
         }
 
-        // UnboxToManaged - unwraps an IReference<T> back to the value
+        // UnboxToManaged - unwraps an IReference<T> back to the value.
         w.Write("    public static ");
         WriteTypedefName(w, type, TypedefNameType.Projected, true);
-        if (blittable)
+        if (isEnum || almostBlittable)
         {
             w.Write("? UnboxToManaged(void* value)\n    {\n");
             w.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
@@ -2137,7 +2143,7 @@ internal static partial class CodeWriters
                 if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
                 {
                     if (IsBlittablePrimitive(sz.BaseType)) { continue; }
-                    if (IsBlittableStruct(sz.BaseType)) { continue; }
+                    if (IsAnyStruct(sz.BaseType)) { continue; }
                 }
                 allParamsSimple = false; break;
             }
@@ -2146,7 +2152,7 @@ internal static partial class CodeWriters
                 AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
                 if (IsHResultException(underlying)) { allParamsSimple = false; break; }
                 if (IsBlittablePrimitive(underlying)) { continue; }
-                if (IsBlittableStruct(underlying)) { continue; }
+                if (IsAnyStruct(underlying)) { continue; }
                 if (IsString(underlying)) { continue; }
                 if (IsRuntimeClassOrInterface(underlying)) { continue; }
                 if (IsObject(underlying)) { continue; }
@@ -2157,13 +2163,13 @@ internal static partial class CodeWriters
                 AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
                 if (IsHResultException(underlying)) { allParamsSimple = false; break; }
                 if (IsBlittablePrimitive(underlying)) { continue; }
-                if (IsBlittableStruct(underlying)) { continue; }
+                if (IsAnyStruct(underlying)) { continue; }
                 allParamsSimple = false; break;
             }
             if (cat != ParamCategory.In) { allParamsSimple = false; break; }
             if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
-            if (IsBlittableStruct(p.Type)) { continue; }
+            if (IsAnyStruct(p.Type)) { continue; }
             if (IsString(p.Type)) { continue; }
             if (IsRuntimeClassOrInterface(p.Type)) { continue; }
             if (IsObject(p.Type)) { continue; }
@@ -2173,11 +2179,11 @@ internal static partial class CodeWriters
         }
         // Determine return-type kind: scalar, ref-type (string/object/runtime class/generic instance), blittable struct, or receive-array.
         bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz0
-            && (IsBlittablePrimitive(retSz0.BaseType) || IsBlittableStruct(retSz0.BaseType));
+            && (IsBlittablePrimitive(retSz0.BaseType) || IsAnyStruct(retSz0.BaseType));
         bool returnIsHResultException = rt is not null && IsHResultException(rt);
         bool returnSimple = rt is null
             || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
-            || (IsBlittableStruct(rt) && !IsHResultException(rt))
+            || (IsAnyStruct(rt) && !IsHResultException(rt))
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
             || IsObject(rt)
@@ -2193,7 +2199,7 @@ internal static partial class CodeWriters
 
         bool returnIsString = rt is not null && IsString(rt);
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
-        bool returnIsBlittableStruct = rt is not null && IsBlittableStruct(rt);
+        bool returnIsAnyStruct = rt is not null && IsAnyStruct(rt);
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
         System.Text.StringBuilder fp = new();
@@ -2211,7 +2217,7 @@ internal static partial class CodeWriters
                 AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", ");
                 if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { fp.Append("void**"); }
-                else if (IsBlittableStruct(uOut)) { fp.Append(GetBlittableStructAbiType(w, uOut)); fp.Append('*'); }
+                else if (IsAnyStruct(uOut)) { fp.Append(GetBlittableStructAbiType(w, uOut)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(uOut)); fp.Append('*'); }
                 continue;
             }
@@ -2219,13 +2225,13 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", ");
-                if (IsBlittableStruct(uRef)) { fp.Append(GetBlittableStructAbiType(w, uRef)); fp.Append('*'); }
+                if (IsAnyStruct(uRef)) { fp.Append(GetBlittableStructAbiType(w, uRef)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(uRef)); fp.Append('*'); }
                 continue;
             }
             fp.Append(", ");
             if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { fp.Append("void*"); }
-            else if (IsBlittableStruct(p.Type)) { fp.Append(GetBlittableStructAbiType(w, p.Type)); }
+            else if (IsAnyStruct(p.Type)) { fp.Append(GetBlittableStructAbiType(w, p.Type)); }
             else { fp.Append(GetAbiPrimitiveType(p.Type)); }
         }
         if (rt is not null)
@@ -2234,7 +2240,7 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
                 fp.Append(", uint*, ");
-                if (IsBlittableStruct(retSz.BaseType))
+                if (IsAnyStruct(retSz.BaseType))
                 {
                     fp.Append(GetBlittableStructAbiType(w, retSz.BaseType));
                 }
@@ -2252,7 +2258,7 @@ internal static partial class CodeWriters
             {
                 fp.Append(", ");
                 if (returnIsString || returnIsRefType) { fp.Append("void**"); }
-                else if (returnIsBlittableStruct) { fp.Append(GetBlittableStructAbiType(w, rt)); fp.Append('*'); }
+                else if (returnIsAnyStruct) { fp.Append(GetBlittableStructAbiType(w, rt)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(rt)); fp.Append('*'); }
             }
         }
@@ -2320,7 +2326,7 @@ internal static partial class CodeWriters
             AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
             w.Write("        ");
             if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { w.Write("void*"); }
-            else if (IsBlittableStruct(uOut)) { w.Write(GetBlittableStructAbiType(w, uOut)); }
+            else if (IsAnyStruct(uOut)) { w.Write(GetBlittableStructAbiType(w, uOut)); }
             else { w.Write(GetAbiPrimitiveType(uOut)); }
             w.Write(" __");
             w.Write(localName);
@@ -2331,7 +2337,7 @@ internal static partial class CodeWriters
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
             w.Write("        uint __retval_length = default;\n");
             w.Write("        ");
-            if (IsBlittableStruct(retSz.BaseType))
+            if (IsAnyStruct(retSz.BaseType))
             {
                 w.Write(GetBlittableStructAbiType(w, retSz.BaseType));
             }
@@ -2349,7 +2355,7 @@ internal static partial class CodeWriters
         {
             w.Write("        void* __retval = default;\n");
         }
-        else if (returnIsBlittableStruct)
+        else if (returnIsAnyStruct)
         {
             w.Write("        ");
             w.Write(GetBlittableStructAbiType(w, rt!));
@@ -2423,7 +2429,7 @@ internal static partial class CodeWriters
                 string callName = GetParamName(p, paramNameOverride);
                 string localName = GetParamLocalName(p, paramNameOverride);
                 AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
-                string abiType = IsBlittableStruct(uRef) ? GetBlittableStructAbiType(w, uRef) : GetAbiPrimitiveType(uRef);
+                string abiType = IsAnyStruct(uRef) ? GetBlittableStructAbiType(w, uRef) : GetAbiPrimitiveType(uRef);
                 w.Write(indent);
                 w.Write(new string(' ', fixedNesting * 4));
                 w.Write("fixed(");
@@ -2488,7 +2494,7 @@ internal static partial class CodeWriters
                 w.Write(GetParamLocalName(p, paramNameOverride));
                 w.Write(".GetThisPtrUnsafe()");
             }
-            else if (IsBlittableStruct(p.Type))
+            else if (IsAnyStruct(p.Type))
             {
                 w.Write(GetParamName(p, paramNameOverride));
             }
@@ -2538,7 +2544,7 @@ internal static partial class CodeWriters
                 w.Write(localName);
                 w.Write(")");
             }
-            else if (IsBlittableStruct(uOut))
+            else if (IsAnyStruct(uOut))
             {
                 w.Write("__");
                 w.Write(localName);
@@ -2577,7 +2583,7 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
                 string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSz.BaseType))));
-                string elementAbi = IsBlittableStruct(retSz.BaseType)
+                string elementAbi = IsAnyStruct(retSz.BaseType)
                     ? GetBlittableStructAbiType(w, retSz.BaseType)
                     : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
@@ -2629,7 +2635,7 @@ internal static partial class CodeWriters
                     w.Write(";\n");
                 }
             }
-            else if (returnIsBlittableStruct)
+            else if (returnIsAnyStruct)
             {
                 w.Write(callIndent);
                 w.Write("return __retval;\n");
@@ -2708,7 +2714,7 @@ internal static partial class CodeWriters
             if (returnIsReceiveArray)
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
-                string elementAbi = IsBlittableStruct(retSz.BaseType)
+                string elementAbi = IsAnyStruct(retSz.BaseType)
                     ? GetBlittableStructAbiType(w, retSz.BaseType)
                     : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
@@ -2982,6 +2988,45 @@ internal static partial class CodeWriters
         if (cat == TypeCategory.Enum) { return false; }  // handled by IsBlittablePrimitive
         if (cat != TypeCategory.Struct) { return false; }
         return IsTypeBlittable(def);
+    }
+
+    /// <summary>True for any struct type that can be passed directly across the WinRT ABI
+    /// (no per-field marshalling required). This includes blittable structs and "almost-blittable"
+    /// structs that have only primitive fields like bool/char (whose C# layout matches the WinRT ABI).
+    /// Excludes structs with reference type fields (string/object/runtime classes/etc.).</summary>
+    private static bool IsAnyStruct(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
+        TypeDefinition? def = td.Type as TypeDefinition;
+        if (def is null && _cacheRef is not null && td.Type is TypeReference tr)
+        {
+            string ns = tr.Namespace?.Value ?? string.Empty;
+            string name = tr.Name?.Value ?? string.Empty;
+            if (ns == "System" && name == "Guid") { return true; }
+            def = _cacheRef.Find(ns + "." + name);
+        }
+        if (def is null) { return false; }
+        TypeCategory cat = TypeCategorization.GetCategory(def);
+        if (cat != TypeCategory.Struct) { return false; }
+        // Reject if any instance field is a reference type (string/object/runtime class/etc.).
+        foreach (FieldDefinition field in def.Fields)
+        {
+            if (field.IsStatic || field.Signature is null) { continue; }
+            AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+            if (ft is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibField)
+            {
+                if (corlibField.ElementType is
+                    AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String or
+                    AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object)
+                { return false; }
+                continue;
+            }
+            // Recurse: nested struct must also pass IsAnyStruct, otherwise reject.
+            if (IsBlittablePrimitive(ft)) { continue; }
+            if (IsAnyStruct(ft)) { continue; }
+            return false;
+        }
+        return true;
     }
 
     /// <summary>Returns the ABI type name for a blittable struct (the projected type name).</summary>
