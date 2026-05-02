@@ -308,12 +308,9 @@ internal static partial class CodeWriters
                 w.Write(callName);
                 w.Write(")");
             }
-            // Enum: native underlying -> managed enum (cast through projected name).
+            // Enum: native is the projected enum type, pass directly.
             else if (IsEnumType(p.Type))
             {
-                w.Write("(");
-                EmitProjectedTypeName(w, p.Type);
-                w.Write(")");
                 w.Write(callName);
             }
             else if (IsBlittablePrimitive(p.Type) || IsAnyStruct(p.Type))
@@ -361,9 +358,7 @@ internal static partial class CodeWriters
             }
             else if (IsEnumType(rt!))
             {
-                w.Write("            *__retval = (");
-                w.Write(GetAbiPrimitiveType(rt!));
-                w.Write(")__result;\n");
+                w.Write("            *__retval = __result;\n");
             }
             else
             {
@@ -691,9 +686,7 @@ internal static partial class CodeWriters
             }
             else if (IsEnumType(p.Type))
             {
-                w.Write("(");
-                w.Write(GetAbiPrimitiveType(p.Type));
-                w.Write(")");
+                // Enum: function pointer signature uses the projected enum type, so pass directly.
                 w.Write(callName);
             }
             else
@@ -732,9 +725,8 @@ internal static partial class CodeWriters
             }
             else if (IsEnumType(rt!))
             {
-                w.Write("return (");
-                EmitProjectedTypeName(w, rt!);
-                w.Write(")__retval;\n");
+                // Enum: __retval is already the projected enum type, no cast needed.
+                w.Write("return __retval;\n");
             }
             else
             {
@@ -1731,13 +1723,10 @@ internal static partial class CodeWriters
                 w.Write(raw);
                 w.Write(").DetachThisPtrUnsafe()");
             }
-            // For enums, cast to the underlying ABI primitive type.
+            // For enums, function pointer signature uses the projected enum type, no cast needed.
             // For bool, cast to byte. For char, cast to ushort.
             else if (IsEnumType(underlying))
             {
-                w.Write("(");
-                w.Write(GetAbiPrimitiveType(underlying));
-                w.Write(")");
                 w.Write("__");
                 w.Write(raw);
             }
@@ -1830,9 +1819,8 @@ internal static partial class CodeWriters
                 }
                 else if (IsEnumType(rt))
                 {
-                    w.Write("(");
-                    w.Write(abiType);
-                    w.Write(")__result;\n");
+                    // Enum: function pointer signature uses the projected enum type, no cast needed.
+                    w.Write("__result;\n");
                 }
                 else
                 {
@@ -1926,10 +1914,7 @@ internal static partial class CodeWriters
         }
         else if (IsEnumType(p.Type))
         {
-            w.Write("(");
-            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
-            w.Write(projected);
-            w.Write(")");
+            // Enum: param signature is already the projected enum type, no cast needed.
             w.Write(pname);
         }
         else
@@ -3543,10 +3528,9 @@ internal static partial class CodeWriters
             }
             else if (IsEnumType(uOut))
             {
-                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, uOut, false)));
-                w.Write("(");
-                w.Write(projected);
-                w.Write(")__");
+                // Enum out param: __<name> local is already the projected enum type (since the
+                // function pointer signature uses the projected type). No cast needed.
+                w.Write("__");
                 w.Write(localName);
             }
             else
@@ -4076,12 +4060,9 @@ internal static partial class CodeWriters
             w.Write("(ushort)");
             w.Write(pname);
         }
-        // Enums -> their underlying numeric type (cast). Handles both same-module and cross-module enums.
+        // Enums: function pointer signature uses the projected enum type, so pass directly.
         else if (IsEnumType(p.Type))
         {
-            w.Write("(");
-            w.Write(GetAbiPrimitiveType(p.Type));
-            w.Write(")");
             w.Write(pname);
         }
         else
@@ -4251,7 +4232,7 @@ internal static partial class CodeWriters
                 _ => GetAbiFundamentalTypeFromCorLib(corlib.ElementType),
             };
         }
-        // Enum: use its underlying numeric type
+        // Enum: use the projected enum type as the ABI signature (truth pattern).
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
         {
             TypeDefinition? def = td.Type as TypeDefinition;
@@ -4261,19 +4242,19 @@ internal static partial class CodeWriters
                 string name = tr.Name?.Value ?? string.Empty;
                 def = _cacheRef.Find(ns + "." + name);
             }
-            if (def is not null)
+            if (def is not null && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
             {
-                // Find the enum's value__ field for the underlying type
-                foreach (FieldDefinition f in def.Fields)
-                {
-                    if (!f.IsStatic && f.Signature?.FieldType is AsmResolver.DotNet.Signatures.CorLibTypeSignature ut)
-                    {
-                        return GetAbiFundamentalTypeFromCorLib(ut.ElementType);
-                    }
-                }
+                return _cacheRef is null ? "int" : GetProjectedEnumName(def);
             }
         }
         return "int";
+    }
+
+    private static string GetProjectedEnumName(TypeDefinition def)
+    {
+        string ns = def.Namespace?.Value ?? string.Empty;
+        string name = def.Name?.Value ?? string.Empty;
+        return string.IsNullOrEmpty(ns) ? "global::" + name : "global::" + ns + "." + name;
     }
 
     private static string GetAbiFundamentalTypeFromCorLib(AsmResolver.PE.DotNet.Metadata.Tables.ElementType et)
@@ -4389,8 +4370,9 @@ internal static partial class CodeWriters
             case TypeSemantics.Definition d:
                 if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Enum)
                 {
-                    // For enums, use the underlying primitive type at the ABI (matches truth output).
-                    w.Write(GetAbiPrimitiveType(d.Type.ToTypeSignature()));
+                    // Enums in WinRT ABI use the projected enum type directly (since their C#
+                    // layout matches their underlying integer ABI representation 1:1).
+                    WriteTypedefName(w, d.Type, TypedefNameType.Projected, true);
                 }
                 else if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Struct)
                 {
@@ -4436,8 +4418,8 @@ internal static partial class CodeWriters
                         TypeCategory cat = TypeCategorization.GetCategory(rd);
                         if (cat == TypeCategory.Enum)
                         {
-                            // Use the underlying primitive type for enums.
-                            w.Write(GetAbiPrimitiveType(rd.ToTypeSignature()));
+                            // Enums use the projected enum type directly (C# layout == ABI layout).
+                            WriteTypedefName(w, rd, TypedefNameType.Projected, true);
                             break;
                         }
                         if (cat == TypeCategory.Struct)

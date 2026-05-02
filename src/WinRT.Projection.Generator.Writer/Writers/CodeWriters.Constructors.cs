@@ -576,9 +576,7 @@ internal static partial class CodeWriters
             // For runtime class / object / generic instance params, use __<name>.GetThisPtrUnsafe().
             if (IsEnumType(p.Type))
             {
-                w.Write("(");
-                w.Write(GetAbiPrimitiveType(p.Type));
-                w.Write(")");
+                // No cast needed: function pointer signature uses the projected enum type.
                 w.Write(pname);
             }
             else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool &&
