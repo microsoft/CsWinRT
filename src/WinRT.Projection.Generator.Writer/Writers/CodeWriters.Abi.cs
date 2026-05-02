@@ -1404,6 +1404,7 @@ internal static partial class CodeWriters
         }
         bool returnIsReceiveArrayDoAbi = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzAbi
             && (IsBlittablePrimitive(retSzAbi.BaseType) || IsAnyStruct(retSzAbi.BaseType));
+        bool returnIsHResultExceptionDoAbi = rt is not null && IsHResultException(rt);
         bool returnSimple = rt is null
             || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
             || (IsAnyStruct(rt) && !IsHResultException(rt))
@@ -1411,7 +1412,8 @@ internal static partial class CodeWriters
             || IsRuntimeClassOrInterface(rt)
             || IsObject(rt)
             || IsGenericInstance(rt)
-            || returnIsReceiveArrayDoAbi;
+            || returnIsReceiveArrayDoAbi
+            || returnIsHResultExceptionDoAbi;
         bool returnIsString = rt is not null && IsString(rt);
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
         bool returnIsGenericInstance = rt is not null && IsGenericInstance(rt);
@@ -1676,7 +1678,11 @@ internal static partial class CodeWriters
         }
         if (rt is not null)
         {
-            if (returnIsString)
+            if (returnIsHResultExceptionDoAbi)
+            {
+                w.Write("        *__retval = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(__result);\n");
+            }
+            else if (returnIsString)
             {
                 w.Write("        *__retval = HStringMarshaller.ConvertToUnmanaged(__result);\n");
             }
@@ -4168,12 +4174,13 @@ internal static partial class CodeWriters
                         if (cat == TypeCategory.Struct)
                         {
                             // Special case: HResult is mapped to System.Exception (a reference type)
-                            // but its ABI representation is int (the underlying value).
+                            // but its ABI representation is the global::ABI.System.Exception struct
+                            // (which wraps the underlying HRESULT int).
                             string rdNs = rd.Namespace?.Value ?? string.Empty;
                             string rdName = rd.Name?.Value ?? string.Empty;
                             if (rdNs == "Windows.Foundation" && rdName == "HResult")
                             {
-                                w.Write("int");
+                                w.Write("global::ABI.System.Exception");
                                 break;
                             }
                             if (IsAnyStruct(rd.ToTypeSignature()))
