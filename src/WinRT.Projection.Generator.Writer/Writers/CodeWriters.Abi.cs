@@ -1662,7 +1662,8 @@ internal static partial class CodeWriters
             break;
         }
         // Determine return-type kind: scalar, ref-type (string/object/runtime class/generic instance), blittable struct, or receive-array.
-        bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz0 && IsBlittablePrimitive(retSz0.BaseType);
+        bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz0
+            && (IsBlittablePrimitive(retSz0.BaseType) || IsBlittableStruct(retSz0.BaseType));
         bool returnIsHResultException = rt is not null && IsHResultException(rt);
         bool returnSimple = rt is null
             || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
@@ -1723,7 +1724,14 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
                 fp.Append(", uint*, ");
-                fp.Append(GetAbiPrimitiveType(retSz.BaseType));
+                if (IsBlittableStruct(retSz.BaseType))
+                {
+                    fp.Append(GetBlittableStructAbiType(w, retSz.BaseType));
+                }
+                else
+                {
+                    fp.Append(GetAbiPrimitiveType(retSz.BaseType));
+                }
                 fp.Append("**");
             }
             else if (returnIsHResultException)
@@ -1813,7 +1821,14 @@ internal static partial class CodeWriters
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
             w.Write("        uint __retval_length = default;\n");
             w.Write("        ");
-            w.Write(GetAbiPrimitiveType(retSz.BaseType));
+            if (IsBlittableStruct(retSz.BaseType))
+            {
+                w.Write(GetBlittableStructAbiType(w, retSz.BaseType));
+            }
+            else
+            {
+                w.Write(GetAbiPrimitiveType(retSz.BaseType));
+            }
             w.Write("* __retval_data = default;\n");
         }
         else if (returnIsHResultException)
@@ -2052,7 +2067,9 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
                 string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSz.BaseType))));
-                string elementAbi = GetAbiPrimitiveType(retSz.BaseType);
+                string elementAbi = IsBlittableStruct(retSz.BaseType)
+                    ? GetBlittableStructAbiType(w, retSz.BaseType)
+                    : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
                 w.Write(callIndent);
                 w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
@@ -2181,7 +2198,9 @@ internal static partial class CodeWriters
             if (returnIsReceiveArray)
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
-                string elementAbi = GetAbiPrimitiveType(retSz.BaseType);
+                string elementAbi = IsBlittableStruct(retSz.BaseType)
+                    ? GetBlittableStructAbiType(w, retSz.BaseType)
+                    : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
                 w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
                 w.Write("            static extern void Free_retval([UnsafeAccessorType(\"ABI.System.<");
