@@ -488,6 +488,15 @@ internal static partial class CodeWriters
             foreach (ParamInfo p in sig.Params)
             {
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+                {
+                    if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szP)
+                    {
+                        if (IsBlittablePrimitive(szP.BaseType)) { continue; }
+                        if (IsAnyStruct(szP.BaseType)) { continue; }
+                    }
+                    simpleParamsAndReturn = false; break;
+                }
                 if (cat != ParamCategory.In) { simpleParamsAndReturn = false; break; }
                 if (IsHResultException(p.Type)) { simpleParamsAndReturn = false; break; }
                 if (IsBlittablePrimitive(p.Type)) { continue; }
@@ -595,11 +604,37 @@ internal static partial class CodeWriters
             }
         }
 
+        // Open fixed blocks for PassArray/FillArray params (blittable element only).
+        int fixedNesting = 0;
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            w.Write(indent);
+            w.Write(new string(' ', fixedNesting * 4));
+            w.Write("fixed(void* _");
+            w.Write(raw);
+            w.Write(" = ");
+            w.Write(callName);
+            w.Write(")\n");
+            w.Write(indent);
+            w.Write(new string(' ', fixedNesting * 4));
+            w.Write("{\n");
+            fixedNesting++;
+        }
+
+        string callIndent = indent + new string(' ', fixedNesting * 4);
+
         // Function pointer call.
-        w.Write(indent);
+        w.Write(callIndent);
         w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*");
         foreach (ParamInfo p in sig.Params)
         {
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray) { w.Write(", uint, void*"); continue; }
             w.Write(", ");
             if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { w.Write("void*"); }
             else if (IsAnyStruct(p.Type)) { w.Write(GetBlittableStructAbiType(w, p.Type)); }
@@ -618,6 +653,15 @@ internal static partial class CodeWriters
             ParamInfo p = sig.Params[i];
             string raw = p.Parameter.Name ?? "param";
             string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            {
+                w.Write(", (uint)");
+                w.Write(callName);
+                w.Write(".Length, _");
+                w.Write(raw);
+                continue;
+            }
             w.Write(", ");
             if (IsString(p.Type))
             {
@@ -663,7 +707,7 @@ internal static partial class CodeWriters
         // Return value conversion.
         if (hasReturn)
         {
-            w.Write(indent);
+            w.Write(callIndent);
             if (returnIsString)
             {
                 w.Write("return HStringMarshaller.ConvertToManaged(__retval);\n");
@@ -696,6 +740,14 @@ internal static partial class CodeWriters
             {
                 w.Write("return __retval;\n");
             }
+        }
+
+        // Close fixed blocks (innermost first).
+        for (int i = fixedNesting - 1; i >= 0; i--)
+        {
+            w.Write(indent);
+            w.Write(new string(' ', i * 4));
+            w.Write("}\n");
         }
 
         if (needsTryFinally)
@@ -2243,6 +2295,15 @@ internal static partial class CodeWriters
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            {
+                if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szP)
+                {
+                    if (IsBlittablePrimitive(szP.BaseType)) { continue; }
+                    if (IsAnyStruct(szP.BaseType)) { continue; }
+                }
+                return false;
+            }
             if (cat != ParamCategory.In) { return false; }
             if (IsHResultException(p.Type)) { return false; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
