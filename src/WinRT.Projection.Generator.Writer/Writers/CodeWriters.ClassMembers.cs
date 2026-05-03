@@ -104,80 +104,115 @@ internal static partial class CodeWriters
             w.Write(s.PropTypeText);
             w.Write(" ");
             w.Write(kvp.Key);
-            w.Write(" { ");
-            if (s.HasGetter)
+            // For getter-only properties, emit expression body: 'public T Prop => Expr;'
+            // For getter+setter or setter-only, use accessor block: 'public T Prop { get => ...; set => ...; }'
+            // (mirrors C++ which uses '%' template substitution where get-only collapses to '=> %').
+            bool getterOnly = s.HasGetter && !s.HasSetter;
+            if (getterOnly)
             {
+                w.Write(" => ");
                 if (s.GetterIsGeneric)
                 {
                     if (!string.IsNullOrEmpty(s.GetterGenericInteropType))
                     {
-                        w.Write("get => ");
                         w.Write(s.GetterGenericAccessorName);
                         w.Write("(null, ");
                         w.Write(s.GetterObjRef);
-                        w.Write("); ");
+                        w.Write(");");
                     }
                     else
                     {
-                        w.Write("get => throw null!; ");
+                        w.Write("throw null!;");
                     }
                 }
                 else
                 {
-                    w.Write("get => ");
                     w.Write(s.GetterAbiClass);
                     w.Write(".");
                     w.Write(kvp.Key);
                     w.Write("(");
                     w.Write(s.GetterObjRef);
-                    w.Write("); ");
+                    w.Write(");");
                 }
+                w.Write("\n");
             }
-            if (s.HasSetter)
+            else
             {
-                if (s.SetterIsGeneric)
+                w.Write(" { ");
+                if (s.HasGetter)
                 {
-                    if (!string.IsNullOrEmpty(s.SetterGenericInteropType))
+                    if (s.GetterIsGeneric)
                     {
-                        w.Write("set => ");
-                        w.Write(s.SetterGenericAccessorName);
-                        w.Write("(null, ");
-                        w.Write(s.SetterObjRef);
-                        w.Write(", value); ");
+                        if (!string.IsNullOrEmpty(s.GetterGenericInteropType))
+                        {
+                            w.Write("get => ");
+                            w.Write(s.GetterGenericAccessorName);
+                            w.Write("(null, ");
+                            w.Write(s.GetterObjRef);
+                            w.Write("); ");
+                        }
+                        else
+                        {
+                            w.Write("get => throw null!; ");
+                        }
                     }
                     else
                     {
-                        w.Write("set => throw null!; ");
+                        w.Write("get => ");
+                        w.Write(s.GetterAbiClass);
+                        w.Write(".");
+                        w.Write(kvp.Key);
+                        w.Write("(");
+                        w.Write(s.GetterObjRef);
+                        w.Write("); ");
                     }
                 }
-                else
+                if (s.HasSetter)
                 {
-                    w.Write("set => ");
-                    w.Write(s.SetterAbiClass);
-                    w.Write(".");
-                    w.Write(kvp.Key);
-                    w.Write("(");
-                    w.Write(s.SetterObjRef);
-                    w.Write(", value); ");
+                    if (s.SetterIsGeneric)
+                    {
+                        if (!string.IsNullOrEmpty(s.SetterGenericInteropType))
+                        {
+                            w.Write("set => ");
+                            w.Write(s.SetterGenericAccessorName);
+                            w.Write("(null, ");
+                            w.Write(s.SetterObjRef);
+                            w.Write(", value); ");
+                        }
+                        else
+                        {
+                            w.Write("set => throw null!; ");
+                        }
+                    }
+                    else
+                    {
+                        w.Write("set => ");
+                        w.Write(s.SetterAbiClass);
+                        w.Write(".");
+                        w.Write(kvp.Key);
+                        w.Write("(");
+                        w.Write(s.SetterObjRef);
+                        w.Write(", value); ");
+                    }
                 }
+                w.Write("}\n");
             }
-            w.Write("}\n");
         }
 
         // Emit explicit IWindowsRuntimeInterface<T>.GetInterface() implementations once at the end,
         // matching the inheritance list emitted by WriteTypeInheritance. We must skip interfaces
         // that were filtered out of the inheritance list (e.g. ExclusiveTo non-overridable interfaces).
+        // Mirrors C++ block-body form: 'WindowsRuntimeObjectReferenceValue ...GetInterface() {\n  return ....AsValue();\n}\n'
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
             if (!IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false)) { continue; }
             string objRefName = GetObjRefName(w, impl.Interface);
-            w.Write("\n");
-            w.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
+            w.Write("\nWindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
             WriteInterfaceTypeNameForCcw(w, impl.Interface);
-            w.Write(">.GetInterface() => ");
+            w.Write(">.GetInterface()\n{\nreturn ");
             w.Write(objRefName);
-            w.Write(".AsValue();\n");
+            w.Write(".AsValue();\n}\n");
         }
 
         // For unsealed classes with an exclusive default interface, the C++ generator emits
@@ -203,9 +238,9 @@ internal static partial class CodeWriters
                     }
                     w.Write("\ninternal ");
                     if (hasBaseType) { w.Write("new "); }
-                    w.Write("WindowsRuntimeObjectReferenceValue GetDefaultInterface() => ");
+                    w.Write("WindowsRuntimeObjectReferenceValue GetDefaultInterface()\n{\nreturn ");
                     w.Write(objRefName);
-                    w.Write(".AsValue();\n");
+                    w.Write(".AsValue();\n}\n");
                 }
             }
         }

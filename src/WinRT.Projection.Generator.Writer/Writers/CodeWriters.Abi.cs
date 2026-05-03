@@ -1608,7 +1608,7 @@ internal static partial class CodeWriters
             if (isBlittableElem)
             {
                 w.Write("    ");
-                w.Write(cat == ParamCategory.PassArray ? "global::System.ReadOnlySpan<" : "global::System.Span<");
+                w.Write(cat == ParamCategory.PassArray ? "ReadOnlySpan<" : "Span<");
                 w.Write(elementProjected);
                 w.Write("> __");
                 w.Write(raw);
@@ -1908,7 +1908,7 @@ internal static partial class CodeWriters
                 w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
                 w.Write("        static extern void ConvertToUnmanaged_result([UnsafeAccessorType(\"ABI.System.<");
                 w.Write(elementInteropArg);
-                w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, global::System.ReadOnlySpan<");
+                w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, ReadOnlySpan<");
                 w.Write(elementProjected);
                 w.Write("> span, out uint length, out ");
                 w.Write(elementAbi);
