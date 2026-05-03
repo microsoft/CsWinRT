@@ -111,10 +111,11 @@ internal sealed class ProjectionGenerator
                     string nm2 = type.Name?.Value ?? string.Empty;
                     MappedType? m = MappedTypes.Get(ns2, nm2);
                     if (m is not null && !m.EmitAbi) { continue; }
-                    // Also skip an interface whose owning class (via [ExclusiveTo]) is mapped
-                    // with EmitAbi=false (e.g. INotifyCollectionChangedEventArgs +
+                    // Skip an interface whose owning class (via [ExclusiveTo]) is mapped with
+                    // SuppressExclusiveInterfaces=true (e.g. INotifyCollectionChangedEventArgs +
                     // INotifyCollectionChangedEventArgsFactory both belong to the mapped class
-                    // NotifyCollectionChangedEventArgs).
+                    // NotifyCollectionChangedEventArgs whose runtime IIDs come from
+                    // WellKnownXamlInterfaceIIDs.IID_INotifyCollectionChangedEventArgsFactory).
                     if (TypeCategorization.GetCategory(type) == TypeCategory.Interface)
                     {
                         TypeDefinition? owner = CodeWriters.GetExclusiveToType(type);
@@ -123,7 +124,7 @@ internal sealed class ProjectionGenerator
                             string ownerNs = owner.Namespace?.Value ?? string.Empty;
                             string ownerNm = owner.Name?.Value ?? string.Empty;
                             MappedType? ownerMapped = MappedTypes.Get(ownerNs, ownerNm);
-                            if (ownerMapped is not null && !ownerMapped.EmitAbi) { continue; }
+                            if (ownerMapped is not null && ownerMapped.SuppressExclusiveInterfaces) { continue; }
                         }
                     }
                     iidWritten = true;

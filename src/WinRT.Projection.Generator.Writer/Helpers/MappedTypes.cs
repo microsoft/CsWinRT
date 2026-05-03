@@ -15,7 +15,8 @@ internal sealed record MappedType(
     string MappedName,
     bool RequiresMarshaling = false,
     bool HasCustomMembersOutput = false,
-    bool EmitAbi = false);
+    bool EmitAbi = false,
+    bool SuppressExclusiveInterfaces = false);
 
 /// <summary>
 /// Static lookup table for Windows Runtime → .NET type mappings (from <c>helpers.h</c>).
@@ -75,7 +76,7 @@ internal static class MappedTypes
         Add("Microsoft.UI.Xaml.Controls.Primitives", new("IGeneratorPositionHelperStatics", "", ""));
 
         // Microsoft.UI.Xaml.Data
-        Add("Microsoft.UI.Xaml.Data", new("DataErrorsChangedEventArgs", "System.ComponentModel", "DataErrorsChangedEventArgs"));
+        Add("Microsoft.UI.Xaml.Data", new("DataErrorsChangedEventArgs", "System.ComponentModel", "DataErrorsChangedEventArgs", SuppressExclusiveInterfaces: true));
         Add("Microsoft.UI.Xaml.Data", new("INotifyDataErrorInfo", "System.ComponentModel", "INotifyDataErrorInfo", true, true));
         Add("Microsoft.UI.Xaml.Data", new("INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged"));
         Add("Microsoft.UI.Xaml.Data", new("PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs"));
@@ -90,7 +91,7 @@ internal static class MappedTypes
         Add("Microsoft.UI.Xaml.Interop", new("IBindableVector", "System.Collections", "IList", true, true));
         Add("Microsoft.UI.Xaml.Interop", new("INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true));
         Add("Microsoft.UI.Xaml.Interop", new("NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction"));
-        Add("Microsoft.UI.Xaml.Interop", new("NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true));
+        Add("Microsoft.UI.Xaml.Interop", new("NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true, SuppressExclusiveInterfaces: true));
         Add("Microsoft.UI.Xaml.Interop", new("NotifyCollectionChangedEventHandler", "System.Collections.Specialized", "NotifyCollectionChangedEventHandler", true));
 
         // Microsoft.UI.Xaml.Media
@@ -209,7 +210,7 @@ internal static class MappedTypes
         Add("Windows.UI.Xaml.Controls.Primitives", new("IGeneratorPositionHelperStatics", "", ""));
 
         // Windows.UI.Xaml.Data
-        Add("Windows.UI.Xaml.Data", new("DataErrorsChangedEventArgs", "System.ComponentModel", "DataErrorsChangedEventArgs"));
+        Add("Windows.UI.Xaml.Data", new("DataErrorsChangedEventArgs", "System.ComponentModel", "DataErrorsChangedEventArgs", SuppressExclusiveInterfaces: true));
         Add("Windows.UI.Xaml.Data", new("INotifyDataErrorInfo", "System.ComponentModel", "INotifyDataErrorInfo", true, true));
         Add("Windows.UI.Xaml.Data", new("INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged"));
         Add("Windows.UI.Xaml.Data", new("PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs"));
@@ -224,7 +225,7 @@ internal static class MappedTypes
         Add("Windows.UI.Xaml.Interop", new("IBindableVector", "System.Collections", "IList", true, true));
         Add("Windows.UI.Xaml.Interop", new("INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true));
         Add("Windows.UI.Xaml.Interop", new("NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction"));
-        Add("Windows.UI.Xaml.Interop", new("NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true));
+        Add("Windows.UI.Xaml.Interop", new("NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true, SuppressExclusiveInterfaces: true));
         Add("Windows.UI.Xaml.Interop", new("NotifyCollectionChangedEventHandler", "System.Collections.Specialized", "NotifyCollectionChangedEventHandler", true));
         Add("Windows.UI.Xaml.Interop", new("TypeKind", "Windows.UI.Xaml.Interop", "TypeKind", true));
         Add("Windows.UI.Xaml.Interop", new("TypeName", "System", "Type", true));

@@ -1325,8 +1325,7 @@ internal static partial class CodeWriters
         // Generic interfaces are handled by interopgen
         if (type.GenericParameters.Count > 0) { return; }
 
-        // Skip interfaces whose owning class is mapped with EmitAbi=false (manually projected
-        // in WinRT.Runtime). Mirrors the same skip in WriteInterface (CodeWriters.Interface.cs).
+        // Skip interfaces whose owning class is mapped with SuppressExclusiveInterfaces=true.
         if (TypeCategorization.IsExclusiveTo(type))
         {
             TypeDefinition? owner = GetExclusiveToType(type);
@@ -1335,7 +1334,7 @@ internal static partial class CodeWriters
                 string ownerNs = owner.Namespace?.Value ?? string.Empty;
                 string ownerNm = owner.Name?.Value ?? string.Empty;
                 MappedType? ownerMapped = MappedTypes.Get(ownerNs, ownerNm);
-                if (ownerMapped is not null && !ownerMapped.EmitAbi) { return; }
+                if (ownerMapped is not null && ownerMapped.SuppressExclusiveInterfaces) { return; }
             }
         }
 
