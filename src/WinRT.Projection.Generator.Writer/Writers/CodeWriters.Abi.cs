@@ -5677,9 +5677,9 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Returns the full marshaller name (e.g. <c>global::ABI.Windows.Foundation.UriMarshaller</c>).
-    /// When the marshaller would land in the writer's current ABI namespace, returns just the
-    /// short marshaller class name (e.g. <c>BasicStructMarshaller</c>) to mirror C++ which uses
-    /// the unqualified name in same-namespace contexts.</summary>
+    /// Mirrors the C++ tool which always qualifies marshaller call sites with the full
+    /// <c>global::ABI.&lt;Ns&gt;.&lt;Name&gt;Marshaller</c> form (even when the writer is currently
+    /// in the matching ABI namespace).</summary>
     private static string GetMarshallerFullName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
@@ -5694,11 +5694,6 @@ internal static partial class CodeWriters
                 name = mapped.MappedName;
             }
             string nameStripped = Helpers.StripBackticks(name);
-            // If the writer is currently in the matching ABI namespace, drop the qualifier.
-            if (w.InAbiNamespace && string.Equals(w.CurrentNamespace, ns, System.StringComparison.Ordinal))
-            {
-                return nameStripped + "Marshaller";
-            }
             return "global::ABI." + ns + "." + nameStripped + "Marshaller";
         }
         return "global::ABI.Object.Marshaller";
@@ -5923,7 +5918,10 @@ internal static partial class CodeWriters
         return w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, sig, false)));
     }
 
-    /// <summary>Returns the ABI struct type name for a complex struct (e.g. global::ABI.Windows.Web.Http.HttpProgress).</summary>
+    /// <summary>Returns the ABI struct type name for a complex struct (e.g. global::ABI.Windows.Web.Http.HttpProgress).
+    /// When the writer is currently in the matching ABI namespace, returns just the
+    /// short type name (e.g. <c>HttpProgress</c>) to mirror the C++ tool which uses the
+    /// unqualified name in same-namespace contexts.</summary>
     private static string GetAbiStructTypeName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
@@ -5939,7 +5937,13 @@ internal static partial class CodeWriters
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            return "global::ABI." + ns + "." + Helpers.StripBackticks(name);
+            string nameStripped = Helpers.StripBackticks(name);
+            // If the writer is currently in the matching ABI namespace, drop the qualifier.
+            if (w.InAbiNamespace && string.Equals(w.CurrentNamespace, ns, System.StringComparison.Ordinal))
+            {
+                return nameStripped;
+            }
+            return "global::ABI." + ns + "." + nameStripped;
         }
         return "global::ABI.Object";
     }
