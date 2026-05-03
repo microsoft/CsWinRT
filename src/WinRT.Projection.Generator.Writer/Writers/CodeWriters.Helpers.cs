@@ -236,46 +236,15 @@ internal static partial class CodeWriters
         string typeName = type.Name?.Value ?? string.Empty;
         string className = $"global::{typeNs}.{Helpers.StripBackticks(typeName)}";
 
-        // Resolve the interface to write its CCW name. For TypeRefs, fall back to plain namespace.name.
-        string interfaceName;
-        TypeDefinition? ifaceDef = defaultIface as TypeDefinition;
-        if (ifaceDef is null && defaultIface is TypeReference ifaceRef)
+        // Build the interface display name via TypeSemantics so generic instantiations
+        // (e.g. IDictionary<string, BasicStruct>), TypeRefs and TypeDefs are all handled correctly.
+        // Mirrors C++ 'add_default_interface_entry' which uses 'for_typedef' + 'write_type_name'.
+        ITypeDefOrRef capturedIface = defaultIface;
+        string interfaceName = w.WriteTemp("%", new Action<TextWriter>(tw =>
         {
-            string ins = ifaceRef.Namespace?.Value ?? string.Empty;
-            string inm = ifaceRef.Name?.Value ?? string.Empty;
-            // Apply mapped-type remapping (e.g. IClosable -> System.IDisposable)
-            MappedType? mapped = MappedTypes.Get(ins, inm);
-            if (mapped is not null)
-            {
-                ins = mapped.MappedNamespace;
-                inm = mapped.MappedName;
-            }
-            interfaceName = $"global::{ins}.{Helpers.StripBackticks(inm)}";
-        }
-        else if (ifaceDef is not null)
-        {
-            // Apply mapped-type remapping
-            string ins = ifaceDef.Namespace?.Value ?? string.Empty;
-            string inm = ifaceDef.Name?.Value ?? string.Empty;
-            MappedType? mappedDef = MappedTypes.Get(ins, inm);
-            if (mappedDef is not null)
-            {
-                interfaceName = $"global::{mappedDef.MappedNamespace}.{Helpers.StripBackticks(mappedDef.MappedName)}";
-            }
-            else
-            {
-                TypeDefinition capturedIface = ifaceDef;
-                interfaceName = w.WriteTemp("%", new Action<TextWriter>(tw =>
-                {
-                    WriteTypedefName(w, capturedIface, TypedefNameType.CCW, true);
-                    WriteTypeParams(w, capturedIface);
-                }));
-            }
-        }
-        else
-        {
-            return;
-        }
+            TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
+            WriteTypeName(w, semantics, TypedefNameType.CCW, true);
+        }));
 
         _ = entries.TryAdd(className, interfaceName);
     }
@@ -294,14 +263,34 @@ internal static partial class CodeWriters
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
+
+            // Resolve the interface to a TypeDefinition for the [ExclusiveTo] check.
+            // Mirrors C++ 'for_typedef(get_type_semantics(iface.Interface()))'.
             TypeDefinition? ifaceDef = impl.Interface as TypeDefinition;
+            if (ifaceDef is null && _cacheRef is not null)
+            {
+                try { ifaceDef = impl.Interface.Resolve(_cacheRef.RuntimeContext); }
+                catch { ifaceDef = null; }
+            }
+            if (ifaceDef is null && impl.Interface is TypeSpecification spec
+                && spec.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+            {
+                ifaceDef = gi.GenericType as TypeDefinition;
+                if (ifaceDef is null && _cacheRef is not null)
+                {
+                    try { ifaceDef = gi.GenericType.Resolve(_cacheRef.RuntimeContext); }
+                    catch { ifaceDef = null; }
+                }
+            }
             if (ifaceDef is null) { continue; }
+
             if (TypeCategorization.IsExclusiveTo(ifaceDef))
             {
+                ITypeDefOrRef capturedIface = impl.Interface;
                 string interfaceName = w.WriteTemp("%", new Action<TextWriter>(tw =>
                 {
-                    WriteTypedefName(w, ifaceDef, TypedefNameType.CCW, true);
-                    WriteTypeParams(w, ifaceDef);
+                    TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
+                    WriteTypeName(w, semantics, TypedefNameType.CCW, true);
                 }));
                 entries.Add(new KeyValuePair<string, string>(className, interfaceName));
             }

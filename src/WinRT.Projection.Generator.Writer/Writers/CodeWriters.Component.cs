@@ -92,8 +92,9 @@ internal static partial class CodeWriters
                 w.Write(".");
                 w.Write(name);
                 w.Write("\":\n    return ");
-                // ABI.<ns>.<name>ServerActivationFactory
-                w.Write("global::ABI.");
+                // Mirror C++ 'write_type_name(type, CCW, true)' which for an authored type
+                // emits 'global::ABI.Impl.<ns>.<name>'.
+                w.Write("global::ABI.Impl.");
                 w.Write(ns);
                 w.Write(".");
                 w.Write(Helpers.StripBackticks(name));
