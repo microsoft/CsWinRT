@@ -4048,91 +4048,14 @@ internal static partial class CodeWriters
         if (needsTryFinally)
         {
             w.Write("        }\n        finally\n        {\n");
-            // Free Out string/object/runtime-class params.
-            for (int i = 0; i < sig.Params.Count; i++)
-            {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.Out) { continue; }
-                AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
-                string localName = GetParamLocalName(p, paramNameOverride);
-                if (IsString(uOut))
-                {
-                    w.Write("            HStringMarshaller.Free(__");
-                    w.Write(localName);
-                    w.Write(");\n");
-                }
-                else if (IsObject(uOut) || IsRuntimeClassOrInterface(uOut))
-                {
-                    w.Write("            WindowsRuntimeUnknownMarshaller.Free(__");
-                    w.Write(localName);
-                    w.Write(");\n");
-                }
-            }
-            // Free string return
-            if (returnIsString)
-            {
-                w.Write("            HStringMarshaller.Free(__retval);\n");
-            }
-            // Free runtime class / object return
-            if (returnIsRefType)
-            {
-                w.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
-            }
-            // Dispose complex struct return via Marshaller.Dispose.
-            if (returnIsComplexStruct)
-            {
-                w.Write("            ");
-                w.Write(GetMarshallerFullName(w, rt!));
-                w.Write(".Dispose(__retval);\n");
-            }
-            // Free receive-array return via UnsafeAccessor.
-            if (returnIsReceiveArray)
-            {
-                AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
-                string elementAbi = IsString(retSz.BaseType) || IsRuntimeClassOrInterface(retSz.BaseType) || IsObject(retSz.BaseType)
-                    ? "void*"
-                    : IsAnyStruct(retSz.BaseType)
-                        ? GetBlittableStructAbiType(w, retSz.BaseType)
-                        : GetAbiPrimitiveType(retSz.BaseType);
-                string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
-                w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
-                w.Write("            static extern void Free_retval([UnsafeAccessorType(\"");
-                w.Write(GetArrayMarshallerInteropPath(w, retSz.BaseType, elementInteropArg));
-                w.Write("\")] object _, uint length, ");
-                w.Write(elementAbi);
-                w.Write("* data);\n");
-                w.Write("            Free_retval(null, __retval_length, __retval_data);\n");
-            }
-            // Free ReceiveArray params via UnsafeAccessor.
-            for (int i = 0; i < sig.Params.Count; i++)
-            {
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.ReceiveArray) { continue; }
-                string localName = GetParamLocalName(p, paramNameOverride);
-                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
-                string elementAbi = IsAnyStruct(sza.BaseType)
-                    ? GetBlittableStructAbiType(w, sza.BaseType)
-                    : GetAbiPrimitiveType(sza.BaseType);
-                string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
-                w.Write("\n            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
-                w.Write("            static extern void Free_");
-                w.Write(localName);
-                w.Write("([UnsafeAccessorType(\"ABI.System.<");
-                w.Write(elementInteropArg);
-                w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, uint length, ");
-                w.Write(elementAbi);
-                w.Write("* data);\n\n");
-                w.Write("            Free_");
-                w.Write(localName);
-                w.Write("(null, __");
-                w.Write(localName);
-                w.Write("_length, __");
-                w.Write(localName);
-                w.Write("_data);\n");
-            }
-            // Cleanup non-blittable PassArray/FillArray params:
+
+            // Order matches truth (mirrors C++ disposer iteration order):
+            // 1. Non-blittable PassArray/FillArray cleanup (Dispose + ArrayPools)
+            // 2. Out param frees (HString / object / runtime class)
+            // 3. ReceiveArray param frees (Free_<name> via UnsafeAccessor)
+            // 4. Return free (__retval) — last
+
+            // 1. Cleanup non-blittable PassArray/FillArray params:
             // For strings: HStringArrayMarshaller.Dispose + return ArrayPools (3 of them).
             // For runtime classes/objects: Dispose_<name> (UnsafeAccessor) + return ArrayPool.
             for (int i = 0; i < sig.Params.Count; i++)
@@ -4145,7 +4068,7 @@ internal static partial class CodeWriters
                 string localName = GetParamLocalName(p, paramNameOverride);
                 if (IsString(szArr.BaseType))
                 {
-                    w.Write("\n            HStringArrayMarshaller.Dispose(__");
+                    w.Write("            HStringArrayMarshaller.Dispose(__");
                     w.Write(localName);
                     w.Write("_pinnedHandleSpan);\n\n");
                     w.Write("            if (__");
@@ -4164,7 +4087,7 @@ internal static partial class CodeWriters
                 else
                 {
                     string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-                    w.Write("\n            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]\n");
+                    w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]\n");
                     w.Write("            static extern void Dispose_");
                     w.Write(localName);
                     w.Write("([UnsafeAccessorType(\"");
@@ -4190,6 +4113,91 @@ internal static partial class CodeWriters
                 w.Write(localName);
                 w.Write("_arrayFromPool);\n            }\n");
             }
+
+            // 2. Free Out string/object/runtime-class params.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.Out) { continue; }
+                AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
+                string localName = GetParamLocalName(p, paramNameOverride);
+                if (IsString(uOut))
+                {
+                    w.Write("            HStringMarshaller.Free(__");
+                    w.Write(localName);
+                    w.Write(");\n");
+                }
+                else if (IsObject(uOut) || IsRuntimeClassOrInterface(uOut))
+                {
+                    w.Write("            WindowsRuntimeUnknownMarshaller.Free(__");
+                    w.Write(localName);
+                    w.Write(");\n");
+                }
+            }
+
+            // 3. Free ReceiveArray params via UnsafeAccessor.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.ReceiveArray) { continue; }
+                string localName = GetParamLocalName(p, paramNameOverride);
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
+                string elementAbi = IsAnyStruct(sza.BaseType)
+                    ? GetBlittableStructAbiType(w, sza.BaseType)
+                    : GetAbiPrimitiveType(sza.BaseType);
+                string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+                w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
+                w.Write("            static extern void Free_");
+                w.Write(localName);
+                w.Write("([UnsafeAccessorType(\"ABI.System.<");
+                w.Write(elementInteropArg);
+                w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, uint length, ");
+                w.Write(elementAbi);
+                w.Write("* data);\n\n");
+                w.Write("            Free_");
+                w.Write(localName);
+                w.Write("(null, __");
+                w.Write(localName);
+                w.Write("_length, __");
+                w.Write(localName);
+                w.Write("_data);\n");
+            }
+
+            // 4. Free return value (__retval) — emitted last to match truth ordering.
+            if (returnIsString)
+            {
+                w.Write("            HStringMarshaller.Free(__retval);\n");
+            }
+            else if (returnIsRefType)
+            {
+                w.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
+            }
+            else if (returnIsComplexStruct)
+            {
+                w.Write("            ");
+                w.Write(GetMarshallerFullName(w, rt!));
+                w.Write(".Dispose(__retval);\n");
+            }
+            else if (returnIsReceiveArray)
+            {
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
+                string elementAbi = IsString(retSz.BaseType) || IsRuntimeClassOrInterface(retSz.BaseType) || IsObject(retSz.BaseType)
+                    ? "void*"
+                    : IsAnyStruct(retSz.BaseType)
+                        ? GetBlittableStructAbiType(w, retSz.BaseType)
+                        : GetAbiPrimitiveType(retSz.BaseType);
+                string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
+                w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
+                w.Write("            static extern void Free_retval([UnsafeAccessorType(\"");
+                w.Write(GetArrayMarshallerInteropPath(w, retSz.BaseType, elementInteropArg));
+                w.Write("\")] object _, uint length, ");
+                w.Write(elementAbi);
+                w.Write("* data);\n");
+                w.Write("            Free_retval(null, __retval_length, __retval_data);\n");
+            }
+
             w.Write("        }\n");
         }
 
