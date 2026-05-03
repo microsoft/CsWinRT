@@ -153,12 +153,20 @@ internal static partial class CodeWriters
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1 => data[0].ToString(System.Globalization.CultureInfo.InvariantCulture),
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2 => System.BitConverter.ToInt16(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2 => System.BitConverter.ToUInt16(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 => "0x" + System.BitConverter.ToInt32(data, 0).ToString("x", System.Globalization.CultureInfo.InvariantCulture),
-            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 => "0x" + System.BitConverter.ToUInt32(data, 0).ToString("x", System.Globalization.CultureInfo.InvariantCulture),
+            // I4/U4 use printf "%#0x" semantics: 0 -> "0", non-zero -> "0x<hex>" (alternate hex form omits prefix when value is zero).
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 => FormatHexAlternate((uint)System.BitConverter.ToInt32(data, 0)),
+            AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 => FormatHexAlternate(System.BitConverter.ToUInt32(data, 0)),
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8 => System.BitConverter.ToInt64(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8 => System.BitConverter.ToUInt64(data, 0).ToString(System.Globalization.CultureInfo.InvariantCulture),
             _ => "0"
         };
+    }
+
+    private static string FormatHexAlternate(uint v)
+    {
+        // C++ printf "%#0x": for 0, outputs "0"; for non-zero, outputs "0x<hex>" with no padding.
+        if (v == 0) { return "0"; }
+        return "0x" + v.ToString("x", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     /// <summary>
