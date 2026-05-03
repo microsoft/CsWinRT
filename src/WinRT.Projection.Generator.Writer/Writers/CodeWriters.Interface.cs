@@ -42,7 +42,9 @@ internal static partial class CodeWriters
         if (hasNonObjectBase)
         {
             w.Write(delimiter);
-            // Write the projected base type name (e.g., 'global::Windows.UI.Composition.CompositionObject').
+            // Write the projected base type name. Same-namespace types stay unqualified (e.g.
+            // 'AppointmentActionEntity : ActionEntity') — only emit 'global::' when the base
+            // class lives in a different namespace (mirrors C++ write_typedef_name behavior).
             ITypeDefOrRef baseType = type.BaseType!;
             string ns = baseType.Namespace?.Value ?? string.Empty;
             string name = baseType.Name?.Value ?? string.Empty;
@@ -52,8 +54,12 @@ internal static partial class CodeWriters
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            w.Write("global::");
-            if (!string.IsNullOrEmpty(ns)) { w.Write(ns); w.Write("."); }
+            if (!string.IsNullOrEmpty(ns) && ns != w.CurrentNamespace)
+            {
+                w.Write("global::");
+                w.Write(ns);
+                w.Write(".");
+            }
             w.Write(Helpers.StripBackticks(name));
             delimiter = ", ";
         }
