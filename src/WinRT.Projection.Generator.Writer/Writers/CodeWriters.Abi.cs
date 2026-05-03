@@ -2040,7 +2040,9 @@ internal static partial class CodeWriters
         // at the TOP of the method body (before local declarations and the try block). The
         // actual call sites later in the body just reference the already-declared accessor.
         // For a generic-instance return type, the accessor is named ConvertToUnmanaged_<retParamName>.
-        if (returnIsGenericInstance)
+        // Skip Nullable<T> returns: those use <T>Marshaller.BoxToUnmanaged at the call site
+        // instead of the generic-instance UnsafeAccessor (V3-M7).
+        if (returnIsGenericInstance && !(rt is not null && IsNullableT(rt)))
         {
             string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
             string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
