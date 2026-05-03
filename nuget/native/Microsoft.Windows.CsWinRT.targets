@@ -75,12 +75,16 @@ Properties:
       <!-- Extract just 'net10.0-windows10.0.XXXXX.Y' portion for intermediate path (no platform suffix) -->
       <_CsWinRTTempProjectTFMDir>$(_CsWinRTComponentTargetFramework)</_CsWinRTTempProjectTFMDir>
       <!--
-        Intermediate output paths for the aggregator. Pinning these here lets the post-build
-        Copy step read merged DLLs from a path this targets file owns, independent of any
-        $(Platform)-aware logic the SDK applies to its default IntermediateOutputPath.
+        Intermediate output paths for the aggregator. We pin BaseIntermediateOutputPath and the
+        config-level IntermediateOutputPath so the post-build Copy step can read merged DLLs
+        from a path this targets file owns, independent of any $(Platform)-aware logic the SDK
+        applies to its default. We deliberately stop one segment short of the TargetFramework
+        because the SDK appends $(TargetFramework)\ to IntermediateOutputPath in its
+        post-evaluation pass; the final on-disk path is _CsWinRTTempProjectIntermediateDir.
       -->
       <_CsWinRTTempProjectBaseIntermediateDir>$(_CsWinRTTempProjectDir)obj\</_CsWinRTTempProjectBaseIntermediateDir>
-      <_CsWinRTTempProjectIntermediateDir>$(_CsWinRTTempProjectBaseIntermediateDir)$(Configuration)\$(_CsWinRTTempProjectTFMDir)\</_CsWinRTTempProjectIntermediateDir>
+      <_CsWinRTTempProjectIntermediateConfigDir>$(_CsWinRTTempProjectBaseIntermediateDir)$(Configuration)\</_CsWinRTTempProjectIntermediateConfigDir>
+      <_CsWinRTTempProjectIntermediateDir>$(_CsWinRTTempProjectIntermediateConfigDir)$(_CsWinRTTempProjectTFMDir)\</_CsWinRTTempProjectIntermediateDir>
       <!--
         Absolute paths to the cswinrt props/targets that the aggregator must <Import>
         directly. The aggregator has no PackageReference to cswinrt, so cswinrt's build
@@ -110,7 +114,7 @@ Properties:
         the C++ cswinrt.vcxproj, whose legacy packages.config NuGet resolver breaks if they do.
       -->
       <_CsWinRTTempProjectLines Include="    &lt;BaseIntermediateOutputPath&gt;$(_CsWinRTTempProjectBaseIntermediateDir)&lt;/BaseIntermediateOutputPath&gt;" />
-      <_CsWinRTTempProjectLines Include="    &lt;IntermediateOutputPath&gt;$(_CsWinRTTempProjectIntermediateDir)&lt;/IntermediateOutputPath&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;IntermediateOutputPath&gt;$(_CsWinRTTempProjectIntermediateConfigDir)&lt;/IntermediateOutputPath&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTBuildForNativeConsumer&gt;true&lt;/CsWinRTBuildForNativeConsumer&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateInteropAssembly&gt;true&lt;/CsWinRTGenerateInteropAssembly&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateProjection&gt;false&lt;/CsWinRTGenerateProjection&gt;" />
