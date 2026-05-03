@@ -144,12 +144,10 @@ internal static partial class CodeWriters
                 for (int i = 0; i < gi.GenericArgs.Count; i++)
                 {
                     if (i > 0) { w.Write(", "); }
-                    // For generic args of EventSource/StaticAbiClass parents, the args themselves
-                    // should be Projected (mirrors C++ which always passes Projected for nested args).
-                    TypedefNameType argNameType = nameType is TypedefNameType.EventSource or TypedefNameType.StaticAbiClass
-                        ? TypedefNameType.Projected
-                        : nameType;
-                    WriteTypeName(w, gi.GenericArgs[i], argNameType, forceWriteNamespace);
+                    // Generic args ALWAYS use Projected, regardless of parent's nameType.
+                    // Mirrors C++ write_type_params -> write_generic_type_name_base -> write_projection_type
+                    // (which is hard-coded to typedef_name_type::Projected).
+                    WriteTypeName(w, gi.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace);
                 }
                 w.Write(">");
                 break;
@@ -190,11 +188,9 @@ internal static partial class CodeWriters
                     for (int i = 0; i < gir.GenericArgs.Count; i++)
                     {
                         if (i > 0) { w.Write(", "); }
-                        // Generic args of EventSource/StaticAbiClass/ABI parents are themselves Projected.
-                        TypedefNameType argNameType = nameType is TypedefNameType.EventSource or TypedefNameType.StaticAbiClass or TypedefNameType.ABI
-                            ? TypedefNameType.Projected
-                            : nameType;
-                        WriteTypeName(w, gir.GenericArgs[i], argNameType, forceWriteNamespace);
+                        // Generic args ALWAYS use Projected, regardless of parent's nameType.
+                        // Mirrors C++ write_type_params -> write_generic_type_name_base -> write_projection_type.
+                        WriteTypeName(w, gir.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace);
                     }
                     w.Write(">");
                 }

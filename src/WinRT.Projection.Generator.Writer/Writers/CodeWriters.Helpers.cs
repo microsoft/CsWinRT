@@ -236,10 +236,22 @@ internal static partial class CodeWriters
         string typeName = type.Name?.Value ?? string.Empty;
         string className = $"global::{typeNs}.{Helpers.StripBackticks(typeName)}";
 
+        // Resolve TypeReference → TypeDefinition so WriteTypeName goes through the Definition
+        // branch which knows about authored-type CCW namespacing (ABI.Impl. prefix).
+        ITypeDefOrRef capturedIface = defaultIface;
+        if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && _cacheRef is not null)
+        {
+            try
+            {
+                TypeDefinition? resolved = capturedIface.Resolve(_cacheRef.RuntimeContext);
+                if (resolved is not null) { capturedIface = resolved; }
+            }
+            catch { /* leave as TypeReference */ }
+        }
+
         // Build the interface display name via TypeSemantics so generic instantiations
         // (e.g. IDictionary<string, BasicStruct>), TypeRefs and TypeDefs are all handled correctly.
         // Mirrors C++ 'add_default_interface_entry' which uses 'for_typedef' + 'write_type_name'.
-        ITypeDefOrRef capturedIface = defaultIface;
         string interfaceName = w.WriteTemp("%", new Action<TextWriter>(tw =>
         {
             TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
@@ -286,7 +298,19 @@ internal static partial class CodeWriters
 
             if (TypeCategorization.IsExclusiveTo(ifaceDef))
             {
+                // Resolve TypeReference → TypeDefinition (or TypeSpecification with resolved generic
+                // type) so WriteTypeName goes through the Definition branch which knows about
+                // authored-type CCW namespacing (ABI.Impl. prefix).
                 ITypeDefOrRef capturedIface = impl.Interface;
+                if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && _cacheRef is not null)
+                {
+                    try
+                    {
+                        TypeDefinition? resolved = capturedIface.Resolve(_cacheRef.RuntimeContext);
+                        if (resolved is not null) { capturedIface = resolved; }
+                    }
+                    catch { /* leave as TypeReference */ }
+                }
                 string interfaceName = w.WriteTemp("%", new Action<TextWriter>(tw =>
                 {
                     TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
