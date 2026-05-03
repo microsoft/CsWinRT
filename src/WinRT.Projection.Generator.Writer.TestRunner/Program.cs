@@ -85,11 +85,21 @@ internal static class Program
         }
         _ = Directory.CreateDirectory(output);
 
+        // Truth uses per-contract WinMD files (one .winmd per ApiContract). When the caller passes
+        // the unified UnionMetadata\Windows.winmd, redirect to the per-contract folder so the
+        // [WindowsRuntimeMetadata(...)] attribute argument matches truth (= contract file stem).
+        string resolvedWinmd = winmdFolder;
+        const string PerContractFolder = @"C:\Users\sergiopedri\.nuget\packages\microsoft.windows.sdk.net.ref\10.0.26100.85-preview\winmd\windows";
+        if (winmdFolder.EndsWith(@"\Windows.winmd", StringComparison.OrdinalIgnoreCase) && Directory.Exists(PerContractFolder))
+        {
+            resolvedWinmd = PerContractFolder;
+        }
+
         try
         {
             ProjectionWriter.Run(new ProjectionWriterOptions
             {
-                InputPaths = new[] { winmdFolder, internalWinmd },
+                InputPaths = new[] { resolvedWinmd, internalWinmd },
                 OutputFolder = output,
                 Include = new[]
                 {
@@ -136,11 +146,21 @@ internal static class Program
         }
         _ = Directory.CreateDirectory(output);
 
+        // Same as compare: prefer per-contract .winmd folder so [WindowsRuntimeMetadata(...)] matches truth.
+        // The XAML scenario uses the 'xaml' subfolder which contains a larger Windows.Foundation.UniversalApiContract.winmd
+        // that holds the Windows.UI.Xaml.* types as well.
+        string resolvedWinmd = xamlWinmdFolder;
+        const string PerContractFolder = @"C:\Users\sergiopedri\.nuget\packages\microsoft.windows.sdk.net.ref\10.0.26100.85-preview\winmd\xaml";
+        if (xamlWinmdFolder.EndsWith(@"\Windows.winmd", StringComparison.OrdinalIgnoreCase) && Directory.Exists(PerContractFolder))
+        {
+            resolvedWinmd = PerContractFolder;
+        }
+
         try
         {
             ProjectionWriter.Run(new ProjectionWriterOptions
             {
-                InputPaths = new[] { xamlWinmdFolder, internalWinmd },
+                InputPaths = new[] { resolvedWinmd, internalWinmd },
                 OutputFolder = output,
                 // Mirrors the XAML projection generation .rsp:
                 // -exclude Windows, then -include for the specific XAML namespaces and helpers.
