@@ -135,6 +135,14 @@ internal static partial class CodeWriters
                 {
                     w.Write(GetMappedAbiTypeName(ft));
                 }
+                else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr
+                         && tdr.Type is TypeDefinition fieldTd
+                         && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
+                         && !IsTypeBlittable(fieldTd))
+                {
+                    // Mirror C++ write_abi_type: non-blittable struct field uses ABI typedef name.
+                    WriteTypedefName(w, fieldTd, TypedefNameType.ABI, false);
+                }
                 else
                 {
                     WriteProjectedSignature(w, ft, false);
@@ -213,7 +221,7 @@ internal static partial class CodeWriters
         w.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
 
         w.Write("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
-        w.Write("    private static unsafe int Invoke(");
+        w.Write("    private static int Invoke(");
         WriteAbiParameterTypesPointer(w, sig, includeParamNames: true);
         w.Write(")\n    {\n");
         EmitDelegateInvokeBody(w, type, sig);
@@ -2562,6 +2570,13 @@ internal static partial class CodeWriters
                 // Mirror C++ use_tracker_object_support which returns false for plain strings.
                 if (IsString(ft)) { continue; }
                 if (IsMappedAbiValueType(ft)) { continue; }
+                // Nested non-blittable struct fields: marshal via the nested struct's marshaller.
+                if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr
+                    && tdr.Type is TypeDefinition fieldTd
+                    && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct)
+                {
+                    continue;
+                }
                 // Nullable<T> fields project to IReference<T> on the ABI side and DO require
                 // CreateComInterfaceFlags.TrackerSupport (mirrors C++ use_tracker_object_support
                 // which returns true for IReference`1 generic instances).
@@ -2625,6 +2640,17 @@ internal static partial class CodeWriters
                         w.Write(fname);
                         w.Write(")");
                     }
+                    else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd
+                             && ftd.Type is TypeDefinition fieldStructTd
+                             && TypeCategorization.GetCategory(fieldStructTd) == TypeCategory.Struct
+                             && !IsTypeBlittable(fieldStructTd))
+                    {
+                        // Nested non-blittable struct: marshal via its <Name>Marshaller.
+                        w.Write(Helpers.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty));
+                        w.Write("Marshaller.ConvertToUnmanaged(value.");
+                        w.Write(fname);
+                        w.Write(")");
+                    }
                     else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                     {
                         w.Write(nullableMarshaller!);
@@ -2680,6 +2706,17 @@ internal static partial class CodeWriters
                         w.Write(fname);
                         w.Write(")");
                     }
+                    else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd2
+                             && ftd2.Type is TypeDefinition fieldStructTd2
+                             && TypeCategorization.GetCategory(fieldStructTd2) == TypeCategory.Struct
+                             && !IsTypeBlittable(fieldStructTd2))
+                    {
+                        // Nested non-blittable struct: convert via its <Name>Marshaller.
+                        w.Write(Helpers.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty));
+                        w.Write("Marshaller.ConvertToManaged(value.");
+                        w.Write(fname);
+                        w.Write(")");
+                    }
                     else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                     {
                         w.Write(nullableMarshaller!);
@@ -2714,6 +2751,18 @@ internal static partial class CodeWriters
                     if (IsString(ft))
                     {
                         w.Write("        HStringMarshaller.Free(value.");
+                        w.Write(fname);
+                        w.Write(");\n");
+                    }
+                    else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd3
+                             && ftd3.Type is TypeDefinition fieldStructTd3
+                             && TypeCategorization.GetCategory(fieldStructTd3) == TypeCategory.Struct
+                             && !IsTypeBlittable(fieldStructTd3))
+                    {
+                        // Nested non-blittable struct: dispose via its <Name>Marshaller.
+                        w.Write("        ");
+                        w.Write(Helpers.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty));
+                        w.Write("Marshaller.Dispose(value.");
                         w.Write(fname);
                         w.Write(");\n");
                     }
@@ -2815,9 +2864,10 @@ internal static partial class CodeWriters
             w.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
             w.Write("    }\n}\n\n");
 
-            // Mirror C++ write_abi_struct: in component mode, the ComWrappers marshaller
-            // attribute is not emitted (the InterfaceEntriesImpl above is still emitted).
-            if (w.Settings.Component) { return; }
+            // Mirror C++ write_abi_struct: in component mode the ComWrappers marshaller attribute
+            // is NOT emitted for STRUCTS (the attribute is supplied by cswinrtgen instead). Enums
+            // and other types still emit it from write_abi_enum/etc.
+            if (w.Settings.Component && cat == TypeCategory.Struct) { return; }
 
             // ComWrappersMarshallerAttribute (full body)
             w.Write("internal sealed unsafe class ");
