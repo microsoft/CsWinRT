@@ -190,6 +190,28 @@ internal static partial class CodeWriters
             case TypeSemantics.Definition d:
                 WriteGuidSignatureForType(w, d.Type);
                 break;
+            case TypeSemantics.Reference r:
+                {
+                    // Resolve the reference to a TypeDefinition (cross-module struct field, etc.).
+                    // Mirrors C++ for_typedef which always succeeds in resolving here.
+                    string ns = r.Reference_.Namespace?.Value ?? string.Empty;
+                    string name = r.Reference_.Name?.Value ?? string.Empty;
+                    TypeDefinition? resolved = null;
+                    if (_cacheRef is not null)
+                    {
+                        try { resolved = r.Reference_.Resolve(_cacheRef.RuntimeContext); }
+                        catch { resolved = null; }
+                        if (resolved is null)
+                        {
+                            resolved = _cacheRef.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
+                        }
+                    }
+                    if (resolved is not null)
+                    {
+                        WriteGuidSignatureForType(w, resolved);
+                    }
+                }
+                break;
             case TypeSemantics.GenericInstance gi:
                 w.Write("pinterface({");
                 WriteGuid(w, gi.GenericType, true);
@@ -200,6 +222,37 @@ internal static partial class CodeWriters
                     WriteGuidSignature(w, gi.GenericArgs[i]);
                 }
                 w.Write(")");
+                break;
+            case TypeSemantics.GenericInstanceRef gir:
+                {
+                    // Cross-module generic instance (e.g. Windows.Foundation.IReference<UInt64>
+                    // appearing as a struct field). Resolve the generic type to a TypeDefinition
+                    // so we can extract its [Guid]; recurse on each type argument.
+                    string ns = gir.GenericType.Namespace?.Value ?? string.Empty;
+                    string name = gir.GenericType.Name?.Value ?? string.Empty;
+                    TypeDefinition? resolved = null;
+                    if (_cacheRef is not null)
+                    {
+                        try { resolved = gir.GenericType.Resolve(_cacheRef.RuntimeContext); }
+                        catch { resolved = null; }
+                        if (resolved is null)
+                        {
+                            resolved = _cacheRef.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
+                        }
+                    }
+                    if (resolved is not null)
+                    {
+                        w.Write("pinterface({");
+                        WriteGuid(w, resolved, true);
+                        w.Write("};");
+                        for (int i = 0; i < gir.GenericArgs.Count; i++)
+                        {
+                            if (i > 0) { w.Write(";"); }
+                            WriteGuidSignature(w, gir.GenericArgs[i]);
+                        }
+                        w.Write(")");
+                    }
+                }
                 break;
         }
     }
