@@ -135,6 +135,23 @@ Copyright (C) Microsoft Corporation. All rights reserved.
    </ItemGroup>
   </Target>
 
+  <!--
+    For CsWinRT 3.0 / Windows-targeted TFMs, the .NET SDK's RemoveManagedWinRTComponentWinMDReferences
+    target (in Microsoft.NET.Windows.targets, AfterTargets="ResolveProjectReferences") runs early and
+    scrubs CsWinRT-component winmds out of _ResolvedProjectReferencePaths before our CsWinRTRemoveWinMDReferences
+    target below would have a chance to capture them. Capture them up-front from _ResolvedProjectReferencePaths
+    so they still feed into CsWinRTInputs / _WinMDPathsList for cswinrtprojectiongen and cswinrtinteropgen.
+  -->
+  <Target Name="CsWinRTCaptureProjectReferenceWinMDs"
+          AfterTargets="ResolveProjectReferences"
+          BeforeTargets="RemoveManagedWinRTComponentWinMDReferences;CsWinRTRemoveWinMDReferences">
+    <ItemGroup>
+      <CsWinRTInputs Include="@(_ResolvedProjectReferencePaths)"
+                     Condition="('%(_ResolvedProjectReferencePaths.Extension)' == '.winmd')
+                                And ('%(_ResolvedProjectReferencePaths.Implementation)' == 'WinRT.Host.dll')" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="CsWinRTRemoveWinMDReferences" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences">
     <ItemGroup>
 
