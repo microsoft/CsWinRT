@@ -1766,7 +1766,8 @@ internal static partial class CodeWriters
             break;
         }
         bool returnIsReceiveArrayDoAbi = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzAbi
-            && (IsBlittablePrimitive(retSzAbi.BaseType) || IsAnyStruct(retSzAbi.BaseType));
+            && (IsBlittablePrimitive(retSzAbi.BaseType) || IsAnyStruct(retSzAbi.BaseType)
+                || IsString(retSzAbi.BaseType) || IsRuntimeClassOrInterface(retSzAbi.BaseType) || IsObject(retSzAbi.BaseType));
         bool returnIsHResultExceptionDoAbi = rt is not null && IsHResultException(rt);
         bool returnSimple = rt is null
             || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
@@ -2236,14 +2237,20 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
                 string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSz.BaseType))));
-                string elementAbi = GetAbiPrimitiveType(retSz.BaseType);
+                // Element ABI type: void* for ref types (string/runtime class/object), blittable struct ABI for structs, primitive ABI otherwise.
+                string elementAbi = IsString(retSz.BaseType) || IsRuntimeClassOrInterface(retSz.BaseType) || IsObject(retSz.BaseType)
+                    ? "void*"
+                    : IsAnyStruct(retSz.BaseType)
+                        ? GetBlittableStructAbiType(w, retSz.BaseType)
+                        : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
+                string marshallerPath = GetArrayMarshallerInteropPath(w, retSz.BaseType, elementInteropArg);
                 w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
                 w.Write("        static extern void ConvertToUnmanaged_");
                 w.Write(retParamName);
-                w.Write("([UnsafeAccessorType(\"ABI.System.<");
-                w.Write(elementInteropArg);
-                w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, ReadOnlySpan<");
+                w.Write("([UnsafeAccessorType(\"");
+                w.Write(marshallerPath);
+                w.Write("\")] object _, ReadOnlySpan<");
                 w.Write(elementProjected);
                 w.Write("> span, out uint length, out ");
                 w.Write(elementAbi);
