@@ -115,21 +115,30 @@ Properties:
                       Lines="@(_CsWinRTTempProjectLines)"
                       Overwrite="true" />
 
-    <!-- Restore and build the temporary project -->
+    <!-- Compute the path the aggregator's intermediate outputs (incl. cswinrtinteropgen results) will land at. -->
+    <PropertyGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
+      <_CsWinRTTempProjectIntermediateDir>$(_CsWinRTTempProjectDir)obj\$(Configuration)\$(_CsWinRTTempProjectTFMDir)\</_CsWinRTTempProjectIntermediateDir>
+      <_CsWinRTTempProjectBaseIntermediateDir>$(_CsWinRTTempProjectDir)obj\</_CsWinRTTempProjectBaseIntermediateDir>
+    </PropertyGroup>
+
+    <!--
+      Restore and build the temporary project. We pass IntermediateOutputPath / BaseIntermediateOutputPath
+      explicitly so the aggregator's outputs land at a path Native.targets can read back from. Without
+      this, the .NET SDK's default IntermediateOutputPath includes $(PlatformName) for non-AnyCPU builds
+      (e.g. obj\x86\Release\<TFM>\), and the post-build Copy below — which uses a fixed path without
+      $(PlatformName) — silently misses the merged DLLs.
+    -->
     <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
              Projects="$(_CsWinRTTempProjectPath)"
              Targets="Restore"
-             Properties="Configuration=$(Configuration);Platform=$(Platform)" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform);IntermediateOutputPath=$(_CsWinRTTempProjectIntermediateDir);BaseIntermediateOutputPath=$(_CsWinRTTempProjectBaseIntermediateDir)" />
 
     <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
              Projects="$(_CsWinRTTempProjectPath)"
              Targets="Build"
-             Properties="Configuration=$(Configuration);Platform=$(Platform)" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform);IntermediateOutputPath=$(_CsWinRTTempProjectIntermediateDir);BaseIntermediateOutputPath=$(_CsWinRTTempProjectBaseIntermediateDir)" />
 
     <!-- Copy generated DLLs to the output directory -->
-    <PropertyGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
-      <_CsWinRTTempProjectIntermediateDir>$(_CsWinRTTempProjectDir)obj\$(Configuration)\$(_CsWinRTTempProjectTFMDir)\</_CsWinRTTempProjectIntermediateDir>
-    </PropertyGroup>
 
     <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
       <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll')" />
