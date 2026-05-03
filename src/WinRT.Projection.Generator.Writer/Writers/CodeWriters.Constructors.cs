@@ -862,7 +862,12 @@ internal static partial class CodeWriters
             // For the constructor on the projected class, we exclude the trailing two params.
             MethodSig sig = new(method);
             int userParamCount = sig.Params.Count >= 2 ? sig.Params.Count - 2 : sig.Params.Count;
-            string callbackName = (method.Name?.Value ?? "Create") + "_" + userParamCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            // Mirror C++ write_constructor_callback_method_name (code_writers.h:2635-2643):
+            // the callback / args type name suffix is the TOTAL ABI param count
+            // (size(method.Signature().Params())), NOT the user-visible param count. Using the
+            // total count guarantees uniqueness against other composable factory overloads that
+            // might share the same user-param count but differ in trailing baseInterface shape.
+            string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Params.Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
             string argsName = callbackName + "Args";
             bool isParameterless = userParamCount == 0;
 
