@@ -2760,8 +2760,13 @@ internal static partial class CodeWriters
                              && !IsTypeBlittable(fieldStructTd3))
                     {
                         // Nested non-blittable struct: dispose via its <Name>Marshaller.
-                        w.Write("        ");
-                        w.Write(Helpers.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty));
+                        // Mirror C++: this site always uses the fully-qualified marshaller name.
+                        string nestedNs = fieldStructTd3.Namespace?.Value ?? string.Empty;
+                        string nestedNm = Helpers.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty);
+                        w.Write("        global::ABI.");
+                        w.Write(nestedNs);
+                        w.Write(".");
+                        w.Write(nestedNm);
                         w.Write("Marshaller.Dispose(value.");
                         w.Write(fname);
                         w.Write(");\n");
@@ -4874,7 +4879,10 @@ internal static partial class CodeWriters
         w.Write(")");
     }
 
-    /// <summary>Returns the full marshaller name (e.g. <c>global::ABI.Windows.Foundation.UriMarshaller</c>).</summary>
+    /// <summary>Returns the full marshaller name (e.g. <c>global::ABI.Windows.Foundation.UriMarshaller</c>).
+    /// When the marshaller would land in the writer's current ABI namespace, returns just the
+    /// short marshaller class name (e.g. <c>BasicStructMarshaller</c>) to mirror C++ which uses
+    /// the unqualified name in same-namespace contexts.</summary>
     private static string GetMarshallerFullName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
@@ -4888,7 +4896,13 @@ internal static partial class CodeWriters
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            return "global::ABI." + ns + "." + Helpers.StripBackticks(name) + "Marshaller";
+            string nameStripped = Helpers.StripBackticks(name);
+            // If the writer is currently in the matching ABI namespace, drop the qualifier.
+            if (w.InAbiNamespace && string.Equals(w.CurrentNamespace, ns, System.StringComparison.Ordinal))
+            {
+                return nameStripped + "Marshaller";
+            }
+            return "global::ABI." + ns + "." + nameStripped + "Marshaller";
         }
         return "global::ABI.Object.Marshaller";
     }
@@ -5198,11 +5212,14 @@ internal static partial class CodeWriters
         w.Write("    }\n\n");
         w.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
         w.Write("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
-        if (blittable || TypeCategorization.GetCategory(type) == TypeCategory.Struct)
+        bool isBlittableStructType = blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
+        bool isNonBlittableStructType = !blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
+        if ((blittable && TypeCategorization.GetCategory(type) != TypeCategory.Struct)
+            || isBlittableStructType)
         {
-            // For both blittable and non-blittable structs, the body uses direct memcpy via
-            // C# struct assignment. Even bool/char fields work because their managed layout
-            // (1 byte / 2 bytes) matches the WinRT ABI.
+            // For blittable types and blittable structs: direct memcpy via C# struct assignment.
+            // Even bool/char fields work because their managed layout (1 byte / 2 bytes) matches
+            // the WinRT ABI.
             w.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
             w.Write("        if (result is null)\n        {\n");
             w.Write("            return unchecked((int)0x80004003);\n        }\n\n");
@@ -5212,6 +5229,34 @@ internal static partial class CodeWriters
             w.Write(")(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));\n");
             w.Write("            *(");
             WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write("*)result = value;\n");
+            w.Write("            return 0;\n        }\n");
+            w.Write("        catch (Exception e)\n        {\n");
+            w.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
+            w.Write("    }\n");
+        }
+        else if (isNonBlittableStructType)
+        {
+            // Non-blittable struct: marshal via <Name>Marshaller.ConvertToUnmanaged then write the
+            // (ABI) struct value into the result pointer. Mirrors C++ write_reference_impl which
+            // emits 'unboxedValue = (T)...; value = TMarshaller.ConvertToUnmanaged(unboxedValue);
+            // *(ABIT*)result = value;'.
+            w.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
+            w.Write("        if (result is null)\n        {\n");
+            w.Write("            return unchecked((int)0x80004003);\n        }\n\n");
+            w.Write("        try\n        {\n");
+            w.Write("            ");
+            WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write(" unboxedValue = (");
+            WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);\n");
+            w.Write("            ");
+            WriteTypedefName(w, type, TypedefNameType.ABI, false);
+            w.Write(" value = ");
+            w.Write(nameStripped);
+            w.Write("Marshaller.ConvertToUnmanaged(unboxedValue);\n");
+            w.Write("            *(");
+            WriteTypedefName(w, type, TypedefNameType.ABI, false);
             w.Write("*)result = value;\n");
             w.Write("            return 0;\n        }\n");
             w.Write("        catch (Exception e)\n        {\n");
