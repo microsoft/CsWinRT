@@ -2786,7 +2786,116 @@ internal static partial class CodeWriters
             if (required.GenericParameters.Count > 0) { continue; }
             // Recurse first so deepest-base is emitted before nearer-base (matches deduplication).
             WriteInterfaceIdicImplMembersForRequiredInterfaces(w, required, visited);
-            WriteInterfaceIdicImplMembersForInterface(w, required, visited);
+            WriteInterfaceIdicImplMembersForInheritedInterface(w, required);
+        }
+    }
+
+    /// <summary>
+    /// Emits explicit-interface DIM thunks for an *inherited* (required) interface on a DIC
+    /// <c>file interface</c> shim. Each member becomes a thin
+    /// <c>=&gt; ((IParent)(WindowsRuntimeObject)this).Member</c> delegating thunk so that DIC
+    /// re-dispatches through the parent's own DIC shim. Mirrors the C++ tool's emission for
+    /// inherited-interface members in DIC shims.
+    /// </summary>
+    private static void WriteInterfaceIdicImplMembersForInheritedInterface(TypeWriter w, TypeDefinition type)
+    {
+        // The CCW interface name (the projected interface name with global:: prefix). For the
+        // delegating thunks we cast through this same projected interface type.
+        string ccwIfaceName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
+        if (!ccwIfaceName.StartsWith("global::", System.StringComparison.Ordinal)) { ccwIfaceName = "global::" + ccwIfaceName; }
+
+        foreach (MethodDefinition method in type.Methods)
+        {
+            if (Helpers.IsSpecial(method)) { continue; }
+            MethodSig sig = new(method);
+            string mname = method.Name?.Value ?? string.Empty;
+
+            w.Write("\n");
+            WriteProjectionReturnType(w, sig);
+            w.Write(" ");
+            w.Write(ccwIfaceName);
+            w.Write(".");
+            w.Write(mname);
+            w.Write("(");
+            WriteParameterList(w, sig);
+            w.Write(") => ((");
+            w.Write(ccwIfaceName);
+            w.Write(")(WindowsRuntimeObject)this).");
+            w.Write(mname);
+            w.Write("(");
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                if (i > 0) { w.Write(", "); }
+                WriteParameterNameWithModifier(w, sig.Params[i]);
+            }
+            w.Write(");\n");
+        }
+
+        foreach (PropertyDefinition prop in type.Properties)
+        {
+            (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+            string pname = prop.Name?.Value ?? string.Empty;
+            string propType = WritePropType(w, prop);
+
+            w.Write("\n");
+            w.Write(propType);
+            w.Write(" ");
+            w.Write(ccwIfaceName);
+            w.Write(".");
+            w.Write(pname);
+            if (getter is not null && setter is null)
+            {
+                // Read-only: single-line expression body.
+                w.Write(" => ((");
+                w.Write(ccwIfaceName);
+                w.Write(")(WindowsRuntimeObject)this).");
+                w.Write(pname);
+                w.Write(";\n");
+            }
+            else
+            {
+                w.Write("\n{\n");
+                if (getter is not null)
+                {
+                    w.Write("    get => ((");
+                    w.Write(ccwIfaceName);
+                    w.Write(")(WindowsRuntimeObject)this).");
+                    w.Write(pname);
+                    w.Write(";\n");
+                }
+                if (setter is not null)
+                {
+                    w.Write("    set => ((");
+                    w.Write(ccwIfaceName);
+                    w.Write(")(WindowsRuntimeObject)this).");
+                    w.Write(pname);
+                    w.Write(" = value;\n");
+                }
+                w.Write("}\n");
+            }
+        }
+
+        foreach (EventDefinition evt in type.Events)
+        {
+            string evtName = evt.Name?.Value ?? string.Empty;
+            w.Write("\nevent ");
+            WriteEventType(w, evt);
+            w.Write(" ");
+            w.Write(ccwIfaceName);
+            w.Write(".");
+            w.Write(evtName);
+            w.Write("\n{\n");
+            w.Write("    add => ((");
+            w.Write(ccwIfaceName);
+            w.Write(")(WindowsRuntimeObject)this).");
+            w.Write(evtName);
+            w.Write(" += value;\n");
+            w.Write("    remove => ((");
+            w.Write(ccwIfaceName);
+            w.Write(")(WindowsRuntimeObject)this).");
+            w.Write(evtName);
+            w.Write(" -= value;\n");
+            w.Write("}\n");
         }
     }
 
