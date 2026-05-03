@@ -3215,6 +3215,7 @@ internal static partial class CodeWriters
             if (IsObject(p.Type)) { continue; }
             if (IsGenericInstance(p.Type)) { continue; }
             if (IsMappedAbiValueType(p.Type)) { continue; }
+            if (IsComplexStruct(p.Type)) { continue; }
             return false;
         }
 
@@ -3303,6 +3304,7 @@ internal static partial class CodeWriters
             else if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { fp.Append("void*"); }
             else if (IsAnyStruct(p.Type)) { fp.Append(GetBlittableStructAbiType(w, p.Type)); }
             else if (IsMappedAbiValueType(p.Type)) { fp.Append(GetMappedAbiTypeName(p.Type)); }
+            else if (IsComplexStruct(p.Type)) { fp.Append(GetAbiStructTypeName(w, p.Type)); }
             else { fp.Append(GetAbiPrimitiveType(p.Type)); }
         }
         if (rt is not null)
@@ -3416,6 +3418,21 @@ internal static partial class CodeWriters
             w.Write(".ConvertToUnmanaged(");
             w.Write(callName);
             w.Write(");\n");
+        }
+        // Declare locals for complex-struct input parameters (e.g. ProfileUsage with nested
+        // string/Nullable fields): default-initialize OUTSIDE try, assign inside try via marshaller,
+        // dispose in finally. Mirrors C++ behavior for non-blittable struct input params.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
+            if (!IsComplexStruct(p.Type)) { continue; }
+            string localName = GetParamLocalName(p, paramNameOverride);
+            w.Write("        ");
+            w.Write(GetAbiStructTypeName(w, p.Type));
+            w.Write(" __");
+            w.Write(localName);
+            w.Write(" = default;\n");
         }
         // Declare locals for Out parameters (need to be passed as &__<name> to the call).
         for (int i = 0; i < sig.Params.Count; i++)
@@ -3610,10 +3627,35 @@ internal static partial class CodeWriters
                 hasNonBlittablePassArray = true; break;
             }
         }
-        bool needsTryFinally = returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct || hasNonBlittablePassArray;
+        bool hasComplexStructInput = false;
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (ParamHelpers.GetParamCategory(p) == ParamCategory.In && IsComplexStruct(p.Type)) { hasComplexStructInput = true; break; }
+        }
+        bool needsTryFinally = returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct || hasNonBlittablePassArray || hasComplexStructInput;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
 
         string indent = needsTryFinally ? "            " : "        ";
+
+        // Inside try (if applicable): assign complex-struct input locals via marshaller.
+        // Mirrors truth pattern: '__value = ProfileUsageMarshaller.ConvertToUnmanaged(value);'
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
+            if (!IsComplexStruct(p.Type)) { continue; }
+            string localName = GetParamLocalName(p, paramNameOverride);
+            string callName = GetParamName(p, paramNameOverride);
+            w.Write(indent);
+            w.Write("__");
+            w.Write(localName);
+            w.Write(" = ");
+            w.Write(GetMarshallerFullName(w, p.Type));
+            w.Write(".ConvertToUnmanaged(");
+            w.Write(callName);
+            w.Write(");\n");
+        }
         // Open a SINGLE fixed-block for ALL input string params (HString fast-path), then
         // emit the HStringMarshaller.ConvertToUnmanagedUnsafe calls inside.
         // Mirrors C++ which emits 'fixed(void* _a = a, _b = b, ...) { Convert(_a,...); Convert(_b,...); ... }'.
@@ -3858,6 +3900,12 @@ internal static partial class CodeWriters
                 w.Write("__");
                 w.Write(GetParamLocalName(p, paramNameOverride));
             }
+            else if (IsComplexStruct(p.Type))
+            {
+                // Complex struct input: pass the pre-converted ABI struct local.
+                w.Write("__");
+                w.Write(GetParamLocalName(p, paramNameOverride));
+            }
             else if (IsAnyStruct(p.Type))
             {
                 w.Write(GetParamName(p, paramNameOverride));
@@ -4093,11 +4141,25 @@ internal static partial class CodeWriters
             w.Write("        }\n        finally\n        {\n");
 
             // Order matches truth (mirrors C++ disposer iteration order):
+            // 0. Complex-struct input param Dispose (e.g. ProfileUsageMarshaller.Dispose(__value))
             // 1. Non-blittable PassArray/FillArray cleanup (Dispose + ArrayPools)
             // 2. Out param frees (HString / object / runtime class)
             // 3. ReceiveArray param frees (Free_<name> via UnsafeAccessor)
             // 4. Return free (__retval) — last
 
+            // 0. Dispose complex-struct input params via marshaller.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
+                if (!IsComplexStruct(p.Type)) { continue; }
+                string localName = GetParamLocalName(p, paramNameOverride);
+                w.Write("            ");
+                w.Write(GetMarshallerFullName(w, p.Type));
+                w.Write(".Dispose(__");
+                w.Write(localName);
+                w.Write(");\n");
+            }
             // 1. Cleanup non-blittable PassArray/FillArray params:
             // For strings: HStringArrayMarshaller.Dispose + return ArrayPools (3 of them).
             // For runtime classes/objects: Dispose_<name> (UnsafeAccessor) + return ArrayPool.
