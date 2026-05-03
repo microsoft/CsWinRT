@@ -3891,6 +3891,7 @@ internal static partial class CodeWriters
                     if (IsRuntimeClassOrInterface(sz.BaseType)) { continue; }
                     if (IsObject(sz.BaseType)) { continue; }
                     if (IsMappedAbiValueType(sz.BaseType)) { continue; }
+                    if (IsComplexStruct(sz.BaseType)) { continue; }
                 }
                 return false;
             }
