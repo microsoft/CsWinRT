@@ -3687,6 +3687,8 @@ internal static partial class CodeWriters
                 if (IsString(underlying)) { continue; }
                 if (IsRuntimeClassOrInterface(underlying)) { continue; }
                 if (IsObject(underlying)) { continue; }
+                if (IsSystemType(underlying)) { continue; }
+                if (IsComplexStruct(underlying)) { continue; }
                 return false;
             }
             if (cat == ParamCategory.Ref)
@@ -3695,6 +3697,7 @@ internal static partial class CodeWriters
                 if (IsHResultException(underlying)) { return false; }
                 if (IsBlittablePrimitive(underlying)) { continue; }
                 if (IsAnyStruct(underlying)) { continue; }
+                if (IsComplexStruct(underlying)) { continue; }
                 return false;
             }
             if (cat == ParamCategory.ReceiveArray)
@@ -3704,6 +3707,7 @@ internal static partial class CodeWriters
                 {
                     if (IsBlittablePrimitive(sza.BaseType)) { continue; }
                     if (IsAnyStruct(sza.BaseType)) { continue; }
+                    if (IsComplexStruct(sza.BaseType)) { continue; }
                 }
                 return false;
             }
@@ -3781,6 +3785,8 @@ internal static partial class CodeWriters
                 AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", ");
                 if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { fp.Append("void**"); }
+                else if (IsSystemType(uOut)) { fp.Append("global::ABI.System.Type*"); }
+                else if (IsComplexStruct(uOut)) { fp.Append(GetAbiStructTypeName(w, uOut)); fp.Append('*'); }
                 else if (IsAnyStruct(uOut)) { fp.Append(GetBlittableStructAbiType(w, uOut)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(uOut)); fp.Append('*'); }
                 continue;
@@ -3789,7 +3795,8 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", ");
-                if (IsAnyStruct(uRef)) { fp.Append(GetBlittableStructAbiType(w, uRef)); fp.Append('*'); }
+                if (IsComplexStruct(uRef)) { fp.Append(GetAbiStructTypeName(w, uRef)); fp.Append('*'); }
+                else if (IsAnyStruct(uRef)) { fp.Append(GetBlittableStructAbiType(w, uRef)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(uRef)); fp.Append('*'); }
                 continue;
             }
@@ -3797,7 +3804,8 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", uint*, ");
-                if (IsAnyStruct(sza.BaseType)) { fp.Append(GetBlittableStructAbiType(w, sza.BaseType)); }
+                if (IsComplexStruct(sza.BaseType)) { fp.Append(GetAbiStructTypeName(w, sza.BaseType)); }
+                else if (IsAnyStruct(sza.BaseType)) { fp.Append(GetBlittableStructAbiType(w, sza.BaseType)); }
                 else { fp.Append(GetAbiPrimitiveType(sza.BaseType)); }
                 fp.Append("**");
                 continue;
@@ -3964,6 +3972,8 @@ internal static partial class CodeWriters
             AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
             w.Write("        ");
             if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { w.Write("void*"); }
+            else if (IsSystemType(uOut)) { w.Write("global::ABI.System.Type"); }
+            else if (IsComplexStruct(uOut)) { w.Write(GetAbiStructTypeName(w, uOut)); }
             else if (IsAnyStruct(uOut)) { w.Write(GetBlittableStructAbiType(w, uOut)); }
             else { w.Write(GetAbiPrimitiveType(uOut)); }
             w.Write(" __");
@@ -4146,7 +4156,7 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.Out) { continue; }
             AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
-            if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { hasOutNeedsCleanup = true; break; }
+            if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut) || IsSystemType(uOut) || IsComplexStruct(uOut)) { hasOutNeedsCleanup = true; break; }
         }
         bool hasReceiveArray = false;
         for (int i = 0; i < sig.Params.Count; i++)
@@ -4539,6 +4549,19 @@ internal static partial class CodeWriters
                 w.Write(localName);
                 w.Write(")");
             }
+            else if (IsSystemType(uOut))
+            {
+                w.Write("global::ABI.System.TypeMarshaller.ConvertToManaged(__");
+                w.Write(localName);
+                w.Write(")");
+            }
+            else if (IsComplexStruct(uOut))
+            {
+                w.Write(GetMarshallerFullName(w, uOut));
+                w.Write(".ConvertToManaged(__");
+                w.Write(localName);
+                w.Write(")");
+            }
             else if (IsAnyStruct(uOut))
             {
                 w.Write("__");
@@ -4839,6 +4862,20 @@ internal static partial class CodeWriters
                 else if (IsObject(uOut) || IsRuntimeClassOrInterface(uOut))
                 {
                     w.Write("            WindowsRuntimeUnknownMarshaller.Free(__");
+                    w.Write(localName);
+                    w.Write(");\n");
+                }
+                else if (IsSystemType(uOut))
+                {
+                    w.Write("            global::ABI.System.TypeMarshaller.Dispose(__");
+                    w.Write(localName);
+                    w.Write(");\n");
+                }
+                else if (IsComplexStruct(uOut))
+                {
+                    w.Write("            ");
+                    w.Write(GetMarshallerFullName(w, uOut));
+                    w.Write(".Dispose(__");
                     w.Write(localName);
                     w.Write(");\n");
                 }
