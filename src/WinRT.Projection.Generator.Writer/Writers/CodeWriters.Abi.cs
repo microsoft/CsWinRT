@@ -1728,7 +1728,7 @@ internal static partial class CodeWriters
             if (cat == ParamCategory.Out || cat == ParamCategory.Ref)
             {
                 // Allow Out/Ref for blittable primitive/enum/blittable-struct types,
-                // strings, runtime classes, and objects.
+                // strings, runtime classes, objects, complex structs, and System.Type.
                 AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
                 if (IsHResultException(underlying)) { allParamsSimple = false; break; }
                 if (IsBlittablePrimitive(underlying)) { continue; }
@@ -1737,6 +1737,7 @@ internal static partial class CodeWriters
                 if (IsRuntimeClassOrInterface(underlying)) { continue; }
                 if (IsObject(underlying)) { continue; }
                 if (IsSystemType(underlying)) { continue; }
+                if (IsComplexStruct(underlying)) { continue; }
                 allParamsSimple = false;
                 break;
             }
@@ -1764,6 +1765,7 @@ internal static partial class CodeWriters
             if (IsGenericInstance(p.Type)) { continue; }
             if (IsMappedAbiValueType(p.Type)) { continue; }
             if (IsSystemType(p.Type)) { continue; }
+            if (IsComplexStruct(p.Type)) { continue; }
             allParamsSimple = false;
             break;
         }
@@ -1781,7 +1783,8 @@ internal static partial class CodeWriters
             || returnIsReceiveArrayDoAbi
             || returnIsHResultExceptionDoAbi
             || (rt is not null && IsMappedAbiValueType(rt))
-            || (rt is not null && IsSystemType(rt));
+            || (rt is not null && IsSystemType(rt))
+            || (rt is not null && IsComplexStruct(rt));
         bool returnIsString = rt is not null && IsString(rt);
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
         bool returnIsGenericInstance = rt is not null && IsGenericInstance(rt);
@@ -2288,6 +2291,17 @@ internal static partial class CodeWriters
                 w.Write(retLocalName);
                 w.Write(");\n");
             }
+            else if (IsComplexStruct(rt))
+            {
+                // Complex struct return (server-side): convert managed struct to ABI struct via marshaller.
+                w.Write("        *");
+                w.Write(retParamName);
+                w.Write(" = ");
+                w.Write(GetMarshallerFullName(w, rt));
+                w.Write(".ConvertToUnmanaged(");
+                w.Write(retLocalName);
+                w.Write(");\n");
+            }
             else if (returnIsBlittableStruct)
             {
                 w.Write("        *");
@@ -2417,6 +2431,14 @@ internal static partial class CodeWriters
         {
             // System.Type input (server-side): convert ABI Type struct to System.Type.
             w.Write("global::ABI.System.TypeMarshaller.ConvertToManaged(");
+            w.Write(pname);
+            w.Write(")");
+        }
+        else if (IsComplexStruct(p.Type))
+        {
+            // Complex struct input (server-side): convert ABI struct to managed via marshaller.
+            w.Write(GetMarshallerFullName(w, p.Type));
+            w.Write(".ConvertToManaged(");
             w.Write(pname);
             w.Write(")");
         }
