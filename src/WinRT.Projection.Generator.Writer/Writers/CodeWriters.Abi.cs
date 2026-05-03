@@ -2990,8 +2990,10 @@ internal static partial class CodeWriters
             if (Helpers.IsSpecial(method)) { continue; }
             string mname = method.Name?.Value ?? string.Empty;
             MethodSig sig = new(method);
+            bool canEmit = CanEmitAbiMethodBody(sig);
 
-            w.Write("    public static ");
+            if (canEmit) { w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n"); }
+            w.Write(canEmit ? "    public static unsafe " : "    public static ");
             WriteProjectionReturnType(w, sig);
             w.Write(" ");
             w.Write(mname);
@@ -3014,19 +3016,23 @@ internal static partial class CodeWriters
             (MethodDefinition? gMethod, MethodDefinition? sMethod) = (getter, setter);
             if (gMethod is not null)
             {
-                w.Write("    public static ");
+                MethodSig getSig = new(gMethod);
+                bool canEmit = CanEmitAbiMethodBody(getSig);
+                if (canEmit) { w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n"); }
+                w.Write(canEmit ? "    public static unsafe " : "    public static ");
                 w.Write(propType);
                 w.Write(" ");
                 w.Write(pname);
                 w.Write("(WindowsRuntimeObjectReference thisReference)");
-                MethodSig getSig = new(gMethod);
                 EmitAbiMethodBodyIfSimple(w, getSig, slot);
                 slot++;
             }
             if (sMethod is not null)
             {
                 MethodSig setSig = new(sMethod);
-                w.Write("    public static void ");
+                bool canEmit = CanEmitAbiMethodBody(setSig);
+                if (canEmit) { w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n"); }
+                w.Write(canEmit ? "    public static unsafe void " : "    public static void ");
                 w.Write(pname);
                 w.Write("(WindowsRuntimeObjectReference thisReference, ");
                 w.Write(propType);
@@ -3140,21 +3146,20 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Emits a real method body for the cases we can fully marshal, otherwise emits
-    /// the 'throw null!' stub. Trailing newline is included.
+    /// Returns true if <see cref="EmitAbiMethodBodyIfSimple"/> would emit a real method body
+    /// (vs the <c>=> throw null!;</c> stub) for this signature. Used by callers to pre-decorate
+    /// the method header with <c>[MethodImpl(MethodImplOptions.NoInlining)] ... unsafe</c>.
     /// </summary>
-    private static void EmitAbiMethodBodyIfSimple(TypeWriter w, MethodSig sig, int slot, string? paramNameOverride = null)
+    private static bool CanEmitAbiMethodBody(MethodSig sig)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
-        // Check that all parameters are types we can marshal.
-        bool allParamsSimple = true;
+        // Mirror the parameter checks from EmitAbiMethodBodyIfSimple.
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
-                // Allow blittable primitive arrays and blittable struct arrays.
                 if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
                 {
                     if (IsBlittablePrimitive(sz.BaseType)) { continue; }
@@ -3163,50 +3168,49 @@ internal static partial class CodeWriters
                     if (IsRuntimeClassOrInterface(sz.BaseType)) { continue; }
                     if (IsObject(sz.BaseType)) { continue; }
                 }
-                allParamsSimple = false; break;
+                return false;
             }
             if (cat == ParamCategory.Out)
             {
                 AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
-                if (IsHResultException(underlying)) { allParamsSimple = false; break; }
+                if (IsHResultException(underlying)) { return false; }
                 if (IsBlittablePrimitive(underlying)) { continue; }
                 if (IsAnyStruct(underlying)) { continue; }
                 if (IsString(underlying)) { continue; }
                 if (IsRuntimeClassOrInterface(underlying)) { continue; }
                 if (IsObject(underlying)) { continue; }
-                allParamsSimple = false; break;
+                return false;
             }
             if (cat == ParamCategory.Ref)
             {
                 AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
-                if (IsHResultException(underlying)) { allParamsSimple = false; break; }
+                if (IsHResultException(underlying)) { return false; }
                 if (IsBlittablePrimitive(underlying)) { continue; }
                 if (IsAnyStruct(underlying)) { continue; }
-                allParamsSimple = false; break;
+                return false;
             }
             if (cat == ParamCategory.ReceiveArray)
             {
-                // Allow blittable primitive arrays and almost-blittable struct arrays.
                 AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
                 if (underlying is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza)
                 {
                     if (IsBlittablePrimitive(sza.BaseType)) { continue; }
                     if (IsAnyStruct(sza.BaseType)) { continue; }
                 }
-                allParamsSimple = false; break;
+                return false;
             }
-            if (cat != ParamCategory.In) { allParamsSimple = false; break; }
-            if (IsHResultException(p.Type)) { continue; } // Handled via global::ABI.System.ExceptionMarshaller
+            if (cat != ParamCategory.In) { return false; }
+            if (IsHResultException(p.Type)) { continue; }
             if (IsBlittablePrimitive(p.Type)) { continue; }
             if (IsAnyStruct(p.Type)) { continue; }
             if (IsString(p.Type)) { continue; }
             if (IsRuntimeClassOrInterface(p.Type)) { continue; }
             if (IsObject(p.Type)) { continue; }
             if (IsGenericInstance(p.Type)) { continue; }
-            allParamsSimple = false;
-            break;
+            return false;
         }
-        // Determine return-type kind: scalar, ref-type (string/object/runtime class/generic instance), blittable struct, or receive-array.
+
+        // Mirror return-type check from EmitAbiMethodBodyIfSimple.
         bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz0
             && (IsBlittablePrimitive(retSz0.BaseType) || IsAnyStruct(retSz0.BaseType)
                 || IsString(retSz0.BaseType) || IsRuntimeClassOrInterface(retSz0.BaseType) || IsObject(retSz0.BaseType));
@@ -3222,8 +3226,18 @@ internal static partial class CodeWriters
             || IsGenericInstance(rt)
             || returnIsReceiveArray
             || returnIsHResultException;
+        return returnSimple;
+    }
 
-        if (!allParamsSimple || !returnSimple)
+    /// <summary>
+    /// Emits a real method body for the cases we can fully marshal, otherwise emits
+    /// the 'throw null!' stub. Trailing newline is included.
+    /// </summary>
+    private static void EmitAbiMethodBodyIfSimple(TypeWriter w, MethodSig sig, int slot, string? paramNameOverride = null)
+    {
+        AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
+
+        if (!CanEmitAbiMethodBody(sig))
         {
             w.Write(" => throw null!;\n");
             return;
@@ -3233,6 +3247,10 @@ internal static partial class CodeWriters
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
         bool returnIsAnyStruct = rt is not null && IsAnyStruct(rt);
         bool returnIsComplexStruct = rt is not null && IsComplexStruct(rt);
+        bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzCheck
+            && (IsBlittablePrimitive(retSzCheck.BaseType) || IsAnyStruct(retSzCheck.BaseType)
+                || IsString(retSzCheck.BaseType) || IsRuntimeClassOrInterface(retSzCheck.BaseType) || IsObject(retSzCheck.BaseType));
+        bool returnIsHResultException = rt is not null && IsHResultException(rt);
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
         System.Text.StringBuilder fp = new();
@@ -3354,16 +3372,8 @@ internal static partial class CodeWriters
                 w.Write(");\n");
             }
         }
-        // Declare locals for string parameters (input HSTRINGs to be freed)
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            if (IsString(sig.Params[i].Type))
-            {
-                w.Write("        void* __");
-                w.Write(GetParamLocalName(sig.Params[i], paramNameOverride));
-                w.Write(" = default;\n");
-            }
-        }
+        // (String input params are now stack-allocated via the fast-path pinning pattern below;
+        //  no separate void* local declaration or up-front allocation is needed.)
         // Declare locals for HResult/Exception input parameters (converted up-front).
         for (int i = 0; i < sig.Params.Count; i++)
         {
@@ -3553,9 +3563,9 @@ internal static partial class CodeWriters
             w.Write(" __retval = default;\n");
         }
 
-        // Determine if we need a try/finally (for cleanup of string params or string/refType return or receive array return or Out runtime class params).
-        bool hasStringParams = false;
-        for (int i = 0; i < sig.Params.Count; i++) { if (IsString(sig.Params[i].Type)) { hasStringParams = true; break; } }
+        // Determine if we need a try/finally (for cleanup of string/refType return or receive array
+        // return or Out runtime class params). Input string params no longer need try/finally —
+        // they use the HString fast-path (stack-allocated HStringReference, no free needed).
         bool hasOutNeedsCleanup = false;
         for (int i = 0; i < sig.Params.Count; i++)
         {
@@ -3582,30 +3592,44 @@ internal static partial class CodeWriters
                 hasNonBlittablePassArray = true; break;
             }
         }
-        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct || hasNonBlittablePassArray;
+        bool needsTryFinally = returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct || hasNonBlittablePassArray;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
 
         string indent = needsTryFinally ? "            " : "        ";
-        // First, marshal string params to local void* vars.
+        // Open fixed-block + HStringMarshaller.ConvertToUnmanagedUnsafe for each input string param
+        // (HString fast-path: stack-allocated HStringReference, no allocation/free required).
+        // Track nesting for indentation; the call site goes inside the innermost fixed block.
+        int fixedNesting = 0;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (IsString(sig.Params[i].Type))
-            {
-                string callName = GetParamName(sig.Params[i], paramNameOverride);
-                string localName = GetParamLocalName(sig.Params[i], paramNameOverride);
-                w.Write(indent);
-                w.Write("__");
-                w.Write(localName);
-                w.Write(" = HStringMarshaller.ConvertToUnmanaged(");
-                w.Write(callName);
-                w.Write(");\n");
-            }
+            if (!IsString(sig.Params[i].Type)) { continue; }
+            string callName = GetParamName(sig.Params[i], paramNameOverride);
+            string localName = GetParamLocalName(sig.Params[i], paramNameOverride);
+            w.Write(indent);
+            w.Write(new string(' ', fixedNesting * 4));
+            w.Write("fixed(void* _");
+            w.Write(localName);
+            w.Write(" = ");
+            w.Write(callName);
+            w.Write(")\n");
+            w.Write(indent);
+            w.Write(new string(' ', fixedNesting * 4));
+            w.Write("{\n");
+            fixedNesting++;
+            w.Write(indent);
+            w.Write(new string(' ', fixedNesting * 4));
+            w.Write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
+            w.Write(localName);
+            w.Write(", ");
+            w.Write(callName);
+            w.Write("?.Length, out HStringReference __");
+            w.Write(localName);
+            w.Write(");\n");
         }
 
         // For PassArray params, open a fixed block (one per param). The function pointer call
         // happens inside the innermost fixed block. Track nesting for indentation.
         // Also for Ref (in T) params, we need a fixed block to pin and pass the pointer.
-        int fixedNesting = 0;
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
@@ -3785,6 +3809,7 @@ internal static partial class CodeWriters
             {
                 w.Write("__");
                 w.Write(GetParamLocalName(p, paramNameOverride));
+                w.Write(".HString");
             }
             else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type))
             {
@@ -4023,17 +4048,6 @@ internal static partial class CodeWriters
         if (needsTryFinally)
         {
             w.Write("        }\n        finally\n        {\n");
-            // Free string params (input)
-            for (int i = 0; i < sig.Params.Count; i++)
-            {
-                if (IsString(sig.Params[i].Type))
-                {
-                    string localName = GetParamLocalName(sig.Params[i], paramNameOverride);
-                    w.Write("            HStringMarshaller.Free(__");
-                    w.Write(localName);
-                    w.Write(");\n");
-                }
-            }
             // Free Out string/object/runtime-class params.
             for (int i = 0; i < sig.Params.Count; i++)
             {
