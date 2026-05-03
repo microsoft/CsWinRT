@@ -242,7 +242,9 @@ internal static partial class CodeWriters
             || IsAnyStruct(rt)
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
-            || IsObject(rt);
+            || IsObject(rt)
+            || IsComplexStruct(rt)
+            || IsGenericInstance(rt);
         if (rt is not null && IsHResultException(rt)) { simple = false; }
         if (simple)
         {
@@ -267,6 +269,7 @@ internal static partial class CodeWriters
                 if (IsRuntimeClassOrInterface(p.Type)) { continue; }
                 if (IsObject(p.Type)) { continue; }
                 if (IsGenericInstance(p.Type)) { continue; }
+                if (IsComplexStruct(p.Type)) { continue; }
                 simple = false; break;
             }
         }
@@ -283,6 +286,8 @@ internal static partial class CodeWriters
         bool hasReturn = rt is not null;
         bool returnIsString = hasReturn && IsString(rt!);
         bool returnIsRefType = hasReturn && (IsRuntimeClassOrInterface(rt!) || IsObject(rt!));
+        bool returnIsGenericInstance = hasReturn && IsGenericInstance(rt!);
+        bool returnIsComplexStruct = hasReturn && IsComplexStruct(rt!);
 
         // Emit UnsafeAccessor static extern for each generic instance param.
         for (int i = 0; i < sig.Params.Count; i++)
@@ -300,6 +305,22 @@ internal static partial class CodeWriters
             w.Write("([UnsafeAccessorType(\"");
             w.Write(interopTypeName);
             w.Write("\")] object _, void* value);\n");
+        }
+
+        // Emit UnsafeAccessor static extern for a generic-instance return type.
+        if (returnIsGenericInstance)
+        {
+            string retName = GetReturnParamName(sig);
+            string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
+            string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+            w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
+            w.Write(retName);
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(interopTypeName);
+            w.Write("\")] object _, ");
+            w.Write(projectedTypeName);
+            w.Write(" value);\n");
         }
 
         if (hasReturn)
@@ -420,6 +441,17 @@ internal static partial class CodeWriters
                 w.Write(retLocal);
                 w.Write(");\n");
             }
+            else if (returnIsGenericInstance)
+            {
+                // Use the UnsafeAccessor emitted above to marshal the generic-instance return.
+                w.Write("            *");
+                w.Write(retName);
+                w.Write(" = ConvertToUnmanaged_");
+                w.Write(retName);
+                w.Write("(null, ");
+                w.Write(retLocal);
+                w.Write(").DetachThisPtrUnsafe();\n");
+            }
             else if (returnIsRefType)
             {
                 w.Write("            *");
@@ -427,6 +459,14 @@ internal static partial class CodeWriters
                 w.Write(" = ");
                 EmitMarshallerConvertToUnmanaged(w, rt!, retLocal);
                 w.Write(".DetachThisPtrUnsafe();\n");
+            }
+            else if (returnIsComplexStruct)
+            {
+                w.Write("            *");
+                w.Write(retName);
+                w.Write(" = ");
+                EmitMarshallerConvertToUnmanaged(w, rt!, retLocal);
+                w.Write(";\n");
             }
             else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBoolRet &&
                      corlibBoolRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)

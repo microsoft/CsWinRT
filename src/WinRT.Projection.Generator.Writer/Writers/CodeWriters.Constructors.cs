@@ -290,6 +290,10 @@ internal static partial class CodeWriters
             {
                 continue;
             }
+            if (IsSystemType(pt))
+            {
+                continue;
+            }
             canEmit = false;
             break;
         }
@@ -496,6 +500,22 @@ internal static partial class CodeWriters
         if (hasNonBlittableArray) { w.Write("        try\n        {\n"); }
         string baseIndent = hasNonBlittableArray ? "            " : "        ";
 
+        // For System.Type params, pre-marshal to TypeReference (must be declared OUTSIDE the
+        // fixed() block since the fixed block pins the resulting reference).
+        for (int i = 0; i < paramCount; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (!IsSystemType(p.Type)) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            w.Write(baseIndent);
+            w.Write("global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(");
+            w.Write(pname);
+            w.Write(", out TypeReference __");
+            w.Write(raw);
+            w.Write(");\n");
+        }
+
         // For string and array params, open a `fixed(void* _<name> = <name>)` block. Each adds nesting.
         int fixedNesting = 0;
         for (int i = 0; i < paramCount; i++)
@@ -525,6 +545,20 @@ internal static partial class CodeWriters
                 w.Write("?.Length, out HStringReference __");
                 w.Write(raw);
                 w.Write(");\n");
+            }
+            else if (IsSystemType(p.Type))
+            {
+                // Open fixed() block pinning the TypeReference local declared above. The actual
+                // ABI argument is __<raw>.ConvertToUnmanagedUnsafe() in the call site below.
+                w.Write(indent);
+                w.Write("fixed(void* _");
+                w.Write(raw);
+                w.Write(" = __");
+                w.Write(raw);
+                w.Write(")\n");
+                w.Write(indent);
+                w.Write("{\n");
+                fixedNesting++;
             }
             else if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
@@ -674,6 +708,12 @@ internal static partial class CodeWriters
                 w.Write("__");
                 w.Write(raw);
                 w.Write(".HString");
+            }
+            else if (IsSystemType(p.Type))
+            {
+                w.Write("__");
+                w.Write(raw);
+                w.Write(".ConvertToUnmanagedUnsafe()");
             }
             else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type))
             {
