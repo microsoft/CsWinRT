@@ -89,7 +89,8 @@ Properties:
     <MakeDir Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" Directories="$(_CsWinRTTempProjectDir)" />
 
     <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
-      <_CsWinRTTempProjectLines Include="&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;" />
+      <_CsWinRTTempProjectLines Include="&lt;Project&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;Sdk.props&quot; Sdk=&quot;Microsoft.NET.Sdk&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;$(_CsWinRTPropsForAggregator)&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;TargetFramework&gt;$(_CsWinRTComponentTargetFramework)&lt;/TargetFramework&gt;" />
@@ -104,6 +105,7 @@ Properties:
       <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;/ItemGroup&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;Sdk.targets&quot; Sdk=&quot;Microsoft.NET.Sdk&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;$(_CsWinRTTargetsForAggregator)&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="&lt;/Project&gt;" />
     </ItemGroup>
