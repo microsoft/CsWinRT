@@ -2376,7 +2376,7 @@ internal static partial class CodeWriters
             w.Write("(");
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                if (i > 0) { w.Write(", "); }
+                if (i > 0) { w.Write(",\n  "); }
                 ParamInfo p = sig.Params[i];
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
                 if (cat == ParamCategory.Out)
@@ -4534,10 +4534,11 @@ internal static partial class CodeWriters
             // struct type. For everything else (runtime classes, objects, strings), use nint.
             string localName = GetParamLocalName(p, paramNameOverride);
             string callName = GetParamName(p, paramNameOverride);
-            string storageT;
-            if (IsMappedAbiValueType(szArr.BaseType)) { storageT = GetMappedAbiTypeName(szArr.BaseType); }
-            else if (IsComplexStruct(szArr.BaseType)) { storageT = GetAbiStructTypeName(w, szArr.BaseType); }
-            else { storageT = "nint"; }
+            string storageT = IsMappedAbiValueType(szArr.BaseType)
+                ? GetMappedAbiTypeName(szArr.BaseType)
+                : IsComplexStruct(szArr.BaseType)
+                    ? GetAbiStructTypeName(w, szArr.BaseType)
+                    : "nint";
             w.Write("\n        Unsafe.SkipInit(out InlineArray16<");
             w.Write(storageT);
             w.Write("> __");
@@ -5426,10 +5427,11 @@ internal static partial class CodeWriters
                 }
                 // ArrayPool storage type matches the InlineArray storage (mapped ABI value type
                 // for DateTime/TimeSpan; ABI struct for complex structs; nint otherwise).
-                string poolStorageT;
-                if (IsMappedAbiValueType(szArr.BaseType)) { poolStorageT = GetMappedAbiTypeName(szArr.BaseType); }
-                else if (IsComplexStruct(szArr.BaseType)) { poolStorageT = GetAbiStructTypeName(w, szArr.BaseType); }
-                else { poolStorageT = "nint"; }
+                string poolStorageT = IsMappedAbiValueType(szArr.BaseType)
+                    ? GetMappedAbiTypeName(szArr.BaseType)
+                    : IsComplexStruct(szArr.BaseType)
+                        ? GetAbiStructTypeName(w, szArr.BaseType)
+                        : "nint";
                 w.Write("\n            if (__");
                 w.Write(localName);
                 w.Write("_arrayFromPool is not null)\n            {\n");
