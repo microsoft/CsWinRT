@@ -3944,7 +3944,8 @@ internal static partial class CodeWriters
         // Mirror return-type check from EmitAbiMethodBodyIfSimple.
         bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz0
             && (IsBlittablePrimitive(retSz0.BaseType) || IsAnyStruct(retSz0.BaseType)
-                || IsString(retSz0.BaseType) || IsRuntimeClassOrInterface(retSz0.BaseType) || IsObject(retSz0.BaseType));
+                || IsString(retSz0.BaseType) || IsRuntimeClassOrInterface(retSz0.BaseType) || IsObject(retSz0.BaseType)
+                || IsComplexStruct(retSz0.BaseType));
         bool returnIsHResultException = rt is not null && IsHResultException(rt);
         bool returnIsComplexStructLocal = rt is not null && IsComplexStruct(rt);
         bool returnSimple = rt is null
@@ -3982,7 +3983,8 @@ internal static partial class CodeWriters
         bool returnIsComplexStruct = rt is not null && IsComplexStruct(rt);
         bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzCheck
             && (IsBlittablePrimitive(retSzCheck.BaseType) || IsAnyStruct(retSzCheck.BaseType)
-                || IsString(retSzCheck.BaseType) || IsRuntimeClassOrInterface(retSzCheck.BaseType) || IsObject(retSzCheck.BaseType));
+                || IsString(retSzCheck.BaseType) || IsRuntimeClassOrInterface(retSzCheck.BaseType) || IsObject(retSzCheck.BaseType)
+                || IsComplexStruct(retSzCheck.BaseType));
         bool returnIsHResultException = rt is not null && IsHResultException(rt);
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
@@ -4044,6 +4046,10 @@ internal static partial class CodeWriters
                 if (IsString(retSz.BaseType) || IsRuntimeClassOrInterface(retSz.BaseType) || IsObject(retSz.BaseType))
                 {
                     fp.Append("void*");
+                }
+                else if (IsComplexStruct(retSz.BaseType))
+                {
+                    fp.Append(GetAbiStructTypeName(w, retSz.BaseType));
                 }
                 else if (IsAnyStruct(retSz.BaseType))
                 {
@@ -4312,6 +4318,10 @@ internal static partial class CodeWriters
             if (IsString(retSz.BaseType) || IsRuntimeClassOrInterface(retSz.BaseType) || IsObject(retSz.BaseType))
             {
                 w.Write("void*");
+            }
+            else if (IsComplexStruct(retSz.BaseType))
+            {
+                w.Write(GetAbiStructTypeName(w, retSz.BaseType));
             }
             else if (IsAnyStruct(retSz.BaseType))
             {
@@ -4852,9 +4862,11 @@ internal static partial class CodeWriters
                 string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSz.BaseType))));
                 string elementAbi = IsString(retSz.BaseType) || IsRuntimeClassOrInterface(retSz.BaseType) || IsObject(retSz.BaseType)
                     ? "void*"
-                    : IsAnyStruct(retSz.BaseType)
-                        ? GetBlittableStructAbiType(w, retSz.BaseType)
-                        : GetAbiPrimitiveType(retSz.BaseType);
+                    : IsComplexStruct(retSz.BaseType)
+                        ? GetAbiStructTypeName(w, retSz.BaseType)
+                        : IsAnyStruct(retSz.BaseType)
+                            ? GetBlittableStructAbiType(w, retSz.BaseType)
+                            : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
                 w.Write(callIndent);
                 w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
@@ -5146,9 +5158,11 @@ internal static partial class CodeWriters
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
                 string elementAbi = IsString(retSz.BaseType) || IsRuntimeClassOrInterface(retSz.BaseType) || IsObject(retSz.BaseType)
                     ? "void*"
-                    : IsAnyStruct(retSz.BaseType)
-                        ? GetBlittableStructAbiType(w, retSz.BaseType)
-                        : GetAbiPrimitiveType(retSz.BaseType);
+                    : IsComplexStruct(retSz.BaseType)
+                        ? GetAbiStructTypeName(w, retSz.BaseType)
+                        : IsAnyStruct(retSz.BaseType)
+                            ? GetBlittableStructAbiType(w, retSz.BaseType)
+                            : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
                 w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
                 w.Write("            static extern void Free_retval([UnsafeAccessorType(\"");
