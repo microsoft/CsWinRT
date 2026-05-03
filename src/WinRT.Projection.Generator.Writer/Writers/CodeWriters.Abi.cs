@@ -86,9 +86,15 @@ internal static partial class CodeWriters
     {
         string name = type.Name?.Value ?? string.Empty;
 
-        // Emit the underlying ABI struct only when not blittable
+        // Emit the underlying ABI struct only when not blittable AND not a mapped struct
+        // (mapped structs like Duration/KeyTime/RepeatBehavior have addition files that
+        // replace the public struct's field layout, so a per-field ABI struct can't be
+        // built directly from the projected type).
         bool blittable = IsTypeBlittable(type);
-        if (!blittable && !w.Settings.Component)
+        string typeNs = type.Namespace?.Value ?? string.Empty;
+        string typeNm = type.Name?.Value ?? string.Empty;
+        bool isMappedStruct = MappedTypes.Get(typeNs, typeNm) is not null;
+        if (!blittable && !w.Settings.Component && !isMappedStruct)
         {
             WriteComWrapperMarshallerAttribute(w, type);
             WriteValueTypeWinRTClassNameAttribute(w, type);
@@ -2335,6 +2341,16 @@ internal static partial class CodeWriters
             }
         }
         bool emitComplexBodies = isComplexStruct && allFieldsSupported;
+
+        // For structs that are mapped (e.g. Duration, KeyTime, RepeatBehavior — they have
+        // EmitAbi=true and an addition file that completely replaces the public struct), skip
+        // the per-field ConvertToUnmanaged/ConvertToManaged because the projected struct's
+        // public fields don't match the WinMD field layout. The truth marshaller for these
+        // contains only BoxToUnmanaged/UnboxToManaged.
+        string typeNs = type.Namespace?.Value ?? string.Empty;
+        string typeNm = type.Name?.Value ?? string.Empty;
+        bool isMappedStruct = isComplexStruct && MappedTypes.Get(typeNs, typeNm) is not null;
+        if (isMappedStruct) { emitComplexBodies = false; isComplexStruct = false; }
 
         w.Write("public static unsafe class ");
         w.Write(nameStripped);
@@ -4702,6 +4718,15 @@ internal static partial class CodeWriters
         if (def is null) { return false; }
         TypeCategory cat = TypeCategorization.GetCategory(def);
         if (cat != TypeCategory.Struct) { return false; }
+        // Mirror C++ is_type_blittable: mapped struct types short-circuit based on
+        // RequiresMarshaling, regardless of inner field layout. So for mapped types like
+        // Duration, KeyTime, RepeatBehavior (RequiresMarshaling=false), they're never "complex".
+        {
+            string sNs = td.Type?.Namespace?.Value ?? string.Empty;
+            string sName = td.Type?.Name?.Value ?? string.Empty;
+            MappedType? sMapped = MappedTypes.Get(sNs, sName);
+            if (sMapped is not null) { return false; }
+        }
         // A struct is "complex" if it has any field that is not a blittable primitive nor an
         // almost-blittable struct (i.e. has a string/object/Nullable<T>/etc. field).
         foreach (FieldDefinition field in def.Fields)
@@ -4719,23 +4744,24 @@ internal static partial class CodeWriters
     {
         if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
         TypeDefinition? def = td.Type as TypeDefinition;
-        // Special case: mapped value types that require marshalling (DateTime/TimeSpan)
-        // are NOT pass-through (they have different projected vs ABI layouts and need
-        // the marshaller). Mirrors C++ is_type_blittable for mapped struct_type case.
+        if (def is null && _cacheRef is not null && td.Type is TypeReference trEarly)
         {
-            string sNs = td.Type?.Namespace?.Value ?? string.Empty;
-            string sName = td.Type?.Name?.Value ?? string.Empty;
-            MappedType? sMapped = MappedTypes.Get(sNs, sName);
-            if (sMapped is not null && sMapped.RequiresMarshaling) { return false; }
-        }
-        if (def is null && _cacheRef is not null && td.Type is TypeReference tr)
-        {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string name = tr.Name?.Value ?? string.Empty;
+            string ns = trEarly.Namespace?.Value ?? string.Empty;
+            string name = trEarly.Name?.Value ?? string.Empty;
             if (ns == "System" && name == "Guid") { return true; }
             def = _cacheRef.Find(ns + "." + name);
         }
         if (def is null) { return false; }
+        // Special case: mapped struct types short-circuit based on RequiresMarshaling, mirroring
+        // C++ is_type_blittable: 'auto mapping = get_mapped_type(...); return !mapping->requires_marshaling'.
+        // Only applies to actual structs (not mapped interfaces like IAsyncAction).
+        if (TypeCategorization.GetCategory(def) == TypeCategory.Struct)
+        {
+            string sNs = td.Type?.Namespace?.Value ?? string.Empty;
+            string sName = td.Type?.Name?.Value ?? string.Empty;
+            MappedType? sMapped = MappedTypes.Get(sNs, sName);
+            if (sMapped is not null) { return !sMapped.RequiresMarshaling; }
+        }
         TypeCategory cat = TypeCategorization.GetCategory(def);
         if (cat != TypeCategory.Struct) { return false; }
         // Reject if any instance field is a reference type (string/object/runtime class/etc.).

@@ -701,8 +701,24 @@ internal static partial class CodeWriters
             }
             bool isGenericEvent = evtSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
 
-            string eventSourceType = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
-                WriteTypeName(w, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false)));
+            // Special case for ICommand.CanExecuteChanged: the WinRT event handler is
+            // EventHandler<object> but C# expects non-generic EventHandler. Use the non-generic
+            // EventHandlerEventSource backing field. Mirrors C++ write_event hard-coded fix.
+            bool isICommandCanExecuteChanged = name == "CanExecuteChanged"
+                && (ifaceType.FullName == "Microsoft.UI.Xaml.Input.ICommand"
+                    || ifaceType.FullName == "Windows.UI.Xaml.Input.ICommand");
+
+            string eventSourceType;
+            if (isICommandCanExecuteChanged)
+            {
+                eventSourceType = "global::WindowsRuntime.InteropServices.EventHandlerEventSource";
+                isGenericEvent = false;
+            }
+            else
+            {
+                eventSourceType = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
+                    WriteTypeName(w, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false)));
+            }
             string eventSourceTypeFull = eventSourceType;
             if (!eventSourceTypeFull.StartsWith("global::", System.StringComparison.Ordinal))
             {
