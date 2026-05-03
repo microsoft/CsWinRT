@@ -25,7 +25,7 @@ internal static partial class CodeWriters
         // For properties: track per-name accessor presence so we can merge get/set across interfaces.
         // Use a SortedDictionary so the per-class property emission order is alphabetical
         // by name (matches C++ std::map iteration order).
-        SortedIDictionary<string, PropertyAccessorState> propertyState = new(System.StringComparer.Ordinal);
+        SortedDictionary<string, PropertyAccessorState> propertyState = new(System.StringComparer.Ordinal);
         HashSet<string> writtenEvents = new(System.StringComparer.Ordinal);
         HashSet<TypeDefinition> writtenInterfaces = new();
 

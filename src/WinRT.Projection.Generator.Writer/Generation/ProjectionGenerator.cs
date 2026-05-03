@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using AsmResolver.DotNet;
@@ -100,7 +101,12 @@ internal sealed class ProjectionGenerator
             HashSet<TypeDefinition> interfacesFromClassesEmitted = new();
             TypeWriter guidWriter = new(_settings, "ABI");
             CodeWriters.WriteInterfaceIidsBegin(guidWriter);
-            foreach ((string ns, NamespaceMembers members) in _cache.Namespaces)
+            // Iterate namespaces in sorted order (mirrors C++ std::map<std::string, namespace_members>
+            // iteration). Within each namespace, types are already sorted by SortMembersByName.
+            // The sorted-by-namespace order produces the parent-before-child grouping in the
+            // GeneratedInterfaceIIDs.cs output (e.g. Windows.ApplicationModel.* types before
+            // Windows.ApplicationModel.Activation.* types).
+            foreach ((string ns, NamespaceMembers members) in _cache.Namespaces.OrderBy(kvp => kvp.Key, System.StringComparer.Ordinal))
             {
                 foreach (TypeDefinition type in members.Types)
                 {
