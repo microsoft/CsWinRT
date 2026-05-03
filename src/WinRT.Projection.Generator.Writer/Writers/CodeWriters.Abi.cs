@@ -3374,6 +3374,20 @@ internal static partial class CodeWriters
         bool useInternal = (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
             || TypeCategorization.IsProjectionInternal(type);
 
+        // If the interface is exclusive-to a class that's been excluded from the projection,
+        // skip emitting the entire *Methods class — it would be dead code (the owning class
+        // is manually projected in WinRT.Runtime, e.g. IColorHelperStatics for ColorHelper,
+        // IColorsStatics for Colors, IFontWeightsStatics for FontWeights). The C++ tool also
+        // omits these because their owning class is not projected.
+        if (TypeCategorization.IsExclusiveTo(type))
+        {
+            TypeDefinition? owningClass = GetExclusiveToType(type);
+            if (owningClass is not null && !w.Settings.Filter.Includes(owningClass))
+            {
+                return;
+            }
+        }
+
         // Mirrors C++ skip_exclusive_events: events on exclusive interfaces (used by the class)
         // are inlined in the RCW class, so we skip emitting them in the Methods type.
         bool skipExclusiveEvents = false;
