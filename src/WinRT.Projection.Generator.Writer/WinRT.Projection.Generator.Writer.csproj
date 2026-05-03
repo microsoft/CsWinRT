@@ -12,6 +12,13 @@
       
     <!-- Set the root namespace to match the other projects -->
     <RootNamespace>WindowsRuntime.ProjectionGenerator.Writer</RootNamespace>
+
+    <!--
+      Mirror the C++ 'cswinrt.exe' VERSION_STRING define (set from $(VersionString)
+      in src/Directory.Build.props) so the generated banner reads the same version.
+      Read at runtime via AssemblyInformationalVersionAttribute on this assembly.
+    -->
+    <InformationalVersion>$(VersionString)</InformationalVersion>
       
     <!-- Same settings as 'WinRT.Runtime' -->
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
