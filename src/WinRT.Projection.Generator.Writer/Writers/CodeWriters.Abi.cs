@@ -3655,6 +3655,7 @@ internal static partial class CodeWriters
             if (IsGenericInstance(p.Type)) { continue; }
             if (IsMappedAbiValueType(p.Type)) { continue; }
             if (IsComplexStruct(p.Type)) { continue; }
+            if (IsSystemType(p.Type)) { continue; }
             return false;
         }
 
@@ -3674,7 +3675,8 @@ internal static partial class CodeWriters
             || IsGenericInstance(rt)
             || returnIsReceiveArray
             || returnIsHResultException
-            || (rt is not null && IsMappedAbiValueType(rt));
+            || (rt is not null && IsMappedAbiValueType(rt))
+            || (rt is not null && IsSystemType(rt));
         return returnSimple;
     }
 
@@ -3741,6 +3743,7 @@ internal static partial class CodeWriters
             fp.Append(", ");
             if (IsHResultException(p.Type)) { fp.Append("global::ABI.System.Exception"); }
             else if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { fp.Append("void*"); }
+            else if (IsSystemType(p.Type)) { fp.Append("global::ABI.System.Type"); }
             else if (IsAnyStruct(p.Type)) { fp.Append(GetBlittableStructAbiType(w, p.Type)); }
             else if (IsMappedAbiValueType(p.Type)) { fp.Append(GetMappedAbiTypeName(p.Type)); }
             else if (IsComplexStruct(p.Type)) { fp.Append(GetAbiStructTypeName(w, p.Type)); }
@@ -3774,6 +3777,7 @@ internal static partial class CodeWriters
             {
                 fp.Append(", ");
                 if (returnIsString || returnIsRefType) { fp.Append("void**"); }
+                else if (rt is not null && IsSystemType(rt)) { fp.Append("global::ABI.System.Type*"); }
                 else if (returnIsAnyStruct) { fp.Append(GetBlittableStructAbiType(w, rt!)); fp.Append('*'); }
                 else if (returnIsComplexStruct) { fp.Append(GetAbiStructTypeName(w, rt!)); fp.Append('*'); }
                 else if (rt is not null && IsMappedAbiValueType(rt)) { fp.Append(GetMappedAbiTypeName(rt)); fp.Append('*'); }
@@ -4058,6 +4062,11 @@ internal static partial class CodeWriters
             w.Write(GetMappedAbiTypeName(rt));
             w.Write(" __retval = default;\n");
         }
+        else if (rt is not null && IsSystemType(rt))
+        {
+            // System.Type return: use ABI Type struct as __retval.
+            w.Write("        global::ABI.System.Type __retval = default;\n");
+        }
         else if (rt is not null)
         {
             w.Write("        ");
@@ -4124,32 +4133,60 @@ internal static partial class CodeWriters
             w.Write(callName);
             w.Write(");\n");
         }
+        // Type input params: set up TypeReference locals before the fixed block. Mirrors truth:
+        //   global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(forType, out TypeReference __forType);
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
+            if (!IsSystemType(p.Type)) { continue; }
+            string localName = GetParamLocalName(p, paramNameOverride);
+            string callName = GetParamName(p, paramNameOverride);
+            w.Write(indent);
+            w.Write("global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(");
+            w.Write(callName);
+            w.Write(", out TypeReference __");
+            w.Write(localName);
+            w.Write(");\n");
+        }
         // Open a SINGLE fixed-block for ALL input string params (HString fast-path), then
         // emit the HStringMarshaller.ConvertToUnmanagedUnsafe calls inside.
         // Mirrors C++ which emits 'fixed(void* _a = a, _b = b, ...) { Convert(_a,...); Convert(_b,...); ... }'.
         // PassArray/Ref fixed blocks below still nest individually (matches reference).
+        // Type input params are also pinned in the same fixed block (truth pattern).
         int fixedNesting = 0;
         bool hasInputStrings = false;
+        bool hasInputTypes = false;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (IsString(sig.Params[i].Type)) { hasInputStrings = true; break; }
+            if (IsString(sig.Params[i].Type)) { hasInputStrings = true; }
+            if (IsSystemType(sig.Params[i].Type)) { hasInputTypes = true; }
         }
-        if (hasInputStrings)
+        if (hasInputStrings || hasInputTypes)
         {
             w.Write(indent);
             w.Write("fixed(void* ");
             bool first = true;
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                if (!IsString(sig.Params[i].Type)) { continue; }
-                string callName = GetParamName(sig.Params[i], paramNameOverride);
-                string localName = GetParamLocalName(sig.Params[i], paramNameOverride);
+                ParamInfo p = sig.Params[i];
+                if (!IsString(p.Type) && !IsSystemType(p.Type)) { continue; }
+                string callName = GetParamName(p, paramNameOverride);
+                string localName = GetParamLocalName(p, paramNameOverride);
                 if (!first) { w.Write(", "); }
                 first = false;
                 w.Write("_");
                 w.Write(localName);
                 w.Write(" = ");
-                w.Write(callName);
+                if (IsSystemType(p.Type))
+                {
+                    w.Write("__");
+                    w.Write(localName);
+                }
+                else
+                {
+                    w.Write(callName);
+                }
             }
             w.Write(")\n");
             w.Write(indent);
@@ -4371,6 +4408,13 @@ internal static partial class CodeWriters
                 w.Write(GetParamLocalName(p, paramNameOverride));
                 w.Write(".GetThisPtrUnsafe()");
             }
+            else if (IsSystemType(p.Type))
+            {
+                // System.Type input: pass the pre-converted ABI Type struct (via the local set up before the call).
+                w.Write("__");
+                w.Write(GetParamLocalName(p, paramNameOverride));
+                w.Write(".ConvertToUnmanagedUnsafe()");
+            }
             else if (IsMappedAbiValueType(p.Type))
             {
                 // Mapped value-type input: pass the pre-converted ABI local.
@@ -4577,6 +4621,12 @@ internal static partial class CodeWriters
                 w.Write("return ");
                 w.Write(GetMappedMarshallerName(rt));
                 w.Write(".ConvertToManaged(__retval);\n");
+            }
+            else if (rt is not null && IsSystemType(rt))
+            {
+                // System.Type return: convert ABI Type struct back to System.Type via TypeMarshaller.
+                w.Write(callIndent);
+                w.Write("return global::ABI.System.TypeMarshaller.ConvertToManaged(__retval);\n");
             }
             else if (returnIsAnyStruct)
             {
@@ -5116,6 +5166,21 @@ internal static partial class CodeWriters
     {
         return sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
                corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String;
+    }
+
+    /// <summary>True if the type signature is <c>System.Type</c> (or a TypeRef/TypeSpec resolving to it,
+    /// or the WinRT <c>Windows.UI.Xaml.Interop.TypeName</c> struct that's mapped to it).</summary>
+    private static bool IsSystemType(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
+        {
+            string ns = td.Type?.Namespace?.Value ?? string.Empty;
+            string name = td.Type?.Name?.Value ?? string.Empty;
+            if (ns == "System" && name == "Type") { return true; }
+            // The WinMD source type for System.Type is Windows.UI.Xaml.Interop.TypeName.
+            if (ns == "Windows.UI.Xaml.Interop" && name == "TypeName") { return true; }
+        }
+        return false;
     }
 
     /// <summary>Emits the conversion of a parameter from its projected (managed) form to the ABI argument form.</summary>
