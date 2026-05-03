@@ -270,6 +270,9 @@ internal static partial class CodeWriters
         {
             sig = sig.InstantiateGenericTypes(new AsmResolver.DotNet.Signatures.GenericContext(currentInstance, null));
         }
-        WriteTypeName(w, TypeSemanticsFactory.Get(sig), TypedefNameType.Projected, true);
+        // Mirrors C++ write_event: typedef_name_type::Projected, forceWriteNamespace=false.
+        // The outer EventHandler still gets 'global::System.' from being in a different namespace,
+        // but type args in the same namespace stay unqualified.
+        WriteTypeName(w, TypeSemanticsFactory.Get(sig), TypedefNameType.Projected, false);
     }
 }

@@ -265,28 +265,43 @@ internal static partial class CodeWriters
             w.Write(s.PropTypeText);
             w.Write(" ");
             w.Write(kv.Key);
-            w.Write(" { ");
-            if (s.HasGetter)
+            // Getter-only -> expression body; otherwise -> accessor block (matches truth).
+            bool getterOnly = s.HasGetter && !s.HasSetter;
+            if (getterOnly)
             {
-                w.Write("get => ");
+                w.Write(" => ");
                 w.Write(s.GetterAbiClass);
                 w.Write(".");
                 w.Write(kv.Key);
                 w.Write("(");
                 w.Write(s.GetterObjRef);
-                w.Write("); ");
+                w.Write(");\n");
             }
-            if (s.HasSetter)
+            else
             {
-                w.Write("set => ");
-                w.Write(s.SetterAbiClass);
-                w.Write(".");
-                w.Write(kv.Key);
-                w.Write("(");
-                w.Write(s.SetterObjRef);
-                w.Write(", value); ");
+                w.Write(" { ");
+                if (s.HasGetter)
+                {
+                    w.Write("get => ");
+                    w.Write(s.GetterAbiClass);
+                    w.Write(".");
+                    w.Write(kv.Key);
+                    w.Write("(");
+                    w.Write(s.GetterObjRef);
+                    w.Write("); ");
+                }
+                if (s.HasSetter)
+                {
+                    w.Write("set => ");
+                    w.Write(s.SetterAbiClass);
+                    w.Write(".");
+                    w.Write(kv.Key);
+                    w.Write("(");
+                    w.Write(s.SetterObjRef);
+                    w.Write(", value); ");
+                }
+                w.Write("}\n");
             }
-            w.Write("}\n");
         }
     }
 
