@@ -3372,9 +3372,22 @@ internal static partial class CodeWriters
         w.Write(nameStripped);
         w.Write("Methods\n{\n");
 
-        // Compute the index of each non-special method in the interface (for vtable slot calculation).
-        // The first non-special method gets slot 6 (after the 6 IUnknown+IInspectable slots).
-        int slot = 6;
+        // Build a map from each MethodDefinition to its WinMD vtable slot.
+        // Mirrors C++ get_vmethod_index: slot = (method.index() - vtable_base) + INSPECTABLE_METHOD_COUNT.
+        // In AsmResolver, type.Methods is iterated in MethodDef row order, so the position of each
+        // method in type.Methods (relative to the first method of the type) gives us the same value.
+        // INSPECTABLE_METHOD_COUNT = 6 (3 IUnknown + 3 IInspectable).
+        Dictionary<MethodDefinition, int> methodSlot = new();
+        {
+            int idx = 0;
+            foreach (MethodDefinition m in type.Methods)
+            {
+                methodSlot[m] = idx + 6;
+                idx++;
+            }
+        }
+
+        // Emit non-special methods first (output order is unchanged from before; only the slot lookup changes).
         foreach (MethodDefinition method in type.Methods)
         {
             if (Helpers.IsSpecial(method)) { continue; }
@@ -3392,12 +3405,11 @@ internal static partial class CodeWriters
             WriteParameterList(w, sig);
             w.Write(")");
 
-            // Emit the body if we can handle this case
-            EmitAbiMethodBodyIfSimple(w, sig, slot);
-            slot++;
+            // Emit the body if we can handle this case. Slot comes from the method's WinMD index.
+            EmitAbiMethodBodyIfSimple(w, sig, methodSlot[method]);
         }
 
-        // Emit property accessors. Each getter / setter consumes one vtable slot.
+        // Emit property accessors. Each getter / setter consumes one vtable slot — looked up from the underlying method.
         foreach (PropertyDefinition prop in type.Properties)
         {
             string pname = prop.Name?.Value ?? string.Empty;
@@ -3414,8 +3426,7 @@ internal static partial class CodeWriters
                 w.Write(" ");
                 w.Write(pname);
                 w.Write("(WindowsRuntimeObjectReference thisReference)");
-                EmitAbiMethodBodyIfSimple(w, getSig, slot);
-                slot++;
+                EmitAbiMethodBodyIfSimple(w, getSig, methodSlot[gMethod]);
             }
             if (sMethod is not null)
             {
@@ -3427,8 +3438,7 @@ internal static partial class CodeWriters
                 w.Write("(WindowsRuntimeObjectReference thisReference, ");
                 w.Write(propType);
                 w.Write(" value)");
-                EmitAbiMethodBodyIfSimple(w, setSig, slot, paramNameOverride: "value");
-                slot++;
+                EmitAbiMethodBodyIfSimple(w, setSig, methodSlot[sMethod], paramNameOverride: "value");
             }
         }
 
@@ -3441,6 +3451,10 @@ internal static partial class CodeWriters
             string evtName = evt.Name?.Value ?? string.Empty;
             AsmResolver.DotNet.Signatures.TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
             bool isGenericEvent = evtSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
+
+            // Use the add method's WinMD slot. Mirrors C++: events use the add_X method's vmethod_index.
+            (MethodDefinition? addMethod, MethodDefinition? _) = Helpers.GetEventMethods(evt);
+            int eventSlot = addMethod is not null && methodSlot.TryGetValue(addMethod, out int es) ? es : 0;
 
             // Build the projected event source type name. For non-generic delegate handlers, the
             // EventSource subclass lives in the ABI namespace alongside this Methods class, so
@@ -3509,7 +3523,7 @@ internal static partial class CodeWriters
                 w.Write("            valueFactory: static (_, thisReference) => Unsafe.As<");
                 w.Write(eventSourceProjectedFull);
                 w.Write(">(ctor(thisReference, ");
-                w.Write(slot.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                w.Write(eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 w.Write(")),\n");
                 w.Write("            factoryArgument: thisReference);\n");
             }
@@ -3523,13 +3537,11 @@ internal static partial class CodeWriters
                 w.Write("            valueFactory: static (_, thisReference) => new ");
                 w.Write(eventSourceProjectedFull);
                 w.Write("(thisReference, ");
-                w.Write(slot.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                w.Write(eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 w.Write("),\n");
                 w.Write("            factoryArgument: thisReference);\n");
             }
             w.Write("    }\n");
-            // Each event consumes 2 vtable slots (add + remove).
-            slot += 2;
         }
 
         w.Write("}\n");
