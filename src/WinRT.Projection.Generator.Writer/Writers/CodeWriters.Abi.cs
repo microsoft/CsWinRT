@@ -2758,17 +2758,75 @@ internal static partial class CodeWriters
             TypeDefinition? required = ResolveInterfaceTypeDef(impl.Interface);
             if (required is null) { continue; }
             if (!visited.Add(required)) { continue; }
-            // Skip mapped interfaces (IIterable, IMap, etc.) — they're handled by the
-            // mapped-interface stubs path with custom C# member names.
             string rNs = required.Namespace?.Value ?? string.Empty;
             string rName = required.Name?.Value ?? string.Empty;
             MappedType? mapped = MappedTypes.Get(rNs, rName);
-            if (mapped is not null && mapped.HasCustomMembersOutput) { continue; }
+            if (mapped is not null && mapped.HasCustomMembersOutput)
+            {
+                // Mapped to a BCL interface (IBindableVector -> IList, IBindableIterable -> IEnumerable, etc.).
+                // Emit explicit-interface DIM forwarders for the BCL members so the DIC shim
+                // satisfies them when queried via casts like '((IList)(WindowsRuntimeObject)this)'.
+                EmitDicShimMappedBclForwarders(w, rName);
+                // IBindableVector's IList forwarders already include the IEnumerable.GetEnumerator
+                // forwarder (since IList : IEnumerable). Pre-add IBindableIterable to the visited
+                // set so we don't emit a second GetEnumerator forwarder for it. We also walk the
+                // required interfaces so any other (deeper) inherited mapped interface is covered.
+                if (rName == "IBindableVector")
+                {
+                    foreach (InterfaceImplementation impl2 in required.Interfaces)
+                    {
+                        if (impl2.Interface is null) { continue; }
+                        TypeDefinition? r2 = ResolveInterfaceTypeDef(impl2.Interface);
+                        if (r2 is not null) { visited.Add(r2); }
+                    }
+                }
+                continue;
+            }
             // Skip generic interfaces with unbound params (we can't substitute T at this layer).
             if (required.GenericParameters.Count > 0) { continue; }
             // Recurse first so deepest-base is emitted before nearer-base (matches deduplication).
             WriteInterfaceIdicImplMembersForRequiredInterfaces(w, required, visited);
             WriteInterfaceIdicImplMembersForInterface(w, required, visited);
+        }
+    }
+
+    /// <summary>
+    /// Emits explicit-interface DIM forwarders on a DIC <c>file interface</c> shim for the BCL
+    /// members that come from a system-collection-mapped required WinRT interface
+    /// (e.g. <c>IBindableVector</c> maps to <c>IList</c>, so we must satisfy <c>IList</c>,
+    /// <c>ICollection</c>, and <c>IEnumerable</c> members on the shim). The forwarders all
+    /// re-cast through <c>(WindowsRuntimeObject)this</c> so the DIC machinery can re-dispatch
+    /// to the real BCL adapter shim.
+    /// </summary>
+    private static void EmitDicShimMappedBclForwarders(TypeWriter w, string mappedWinRTInterfaceName)
+    {
+        switch (mappedWinRTInterfaceName)
+        {
+            case "IBindableVector":
+                // IList covers IList, ICollection, and IEnumerable members.
+                w.Write("\n");
+                w.Write("int global::System.Collections.ICollection.Count => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Count;\n");
+                w.Write("bool global::System.Collections.ICollection.IsSynchronized => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsSynchronized;\n");
+                w.Write("object global::System.Collections.ICollection.SyncRoot => ((global::System.Collections.IList)(WindowsRuntimeObject)this).SyncRoot;\n");
+                w.Write("void global::System.Collections.ICollection.CopyTo(Array array, int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).CopyTo(array, index);\n\n");
+                w.Write("object global::System.Collections.IList.this[int index]\n{\n");
+                w.Write("get => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index];\n");
+                w.Write("set => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index] = value;\n}\n");
+                w.Write("bool global::System.Collections.IList.IsFixedSize => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsFixedSize;\n");
+                w.Write("bool global::System.Collections.IList.IsReadOnly => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsReadOnly;\n");
+                w.Write("int global::System.Collections.IList.Add(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Add(value);\n");
+                w.Write("void global::System.Collections.IList.Clear() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Clear();\n");
+                w.Write("bool global::System.Collections.IList.Contains(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Contains(value);\n");
+                w.Write("int global::System.Collections.IList.IndexOf(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IndexOf(value);\n");
+                w.Write("void global::System.Collections.IList.Insert(int index, object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Insert(index, value);\n");
+                w.Write("void global::System.Collections.IList.Remove(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Remove(value);\n");
+                w.Write("void global::System.Collections.IList.RemoveAt(int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).RemoveAt(index);\n\n");
+                w.Write("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).GetEnumerator();\n");
+                break;
+            case "IBindableIterable":
+                w.Write("\n");
+                w.Write("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IEnumerable)(WindowsRuntimeObject)this).GetEnumerator();\n");
+                break;
         }
     }
 
