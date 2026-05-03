@@ -967,8 +967,11 @@ internal static partial class CodeWriters
     {
         // Static classes don't get a *Marshaller (no instances).
         if (TypeCategorization.IsStatic(type)) { return; }
+        // Mirror C++ write_abi_class: wrap class marshaller emission in #nullable enable/disable.
+        w.Write("#nullable enable\n");
         // Emit a ComWrappers marshaller class so the attribute reference resolves
         WriteClassMarshallerStub(w, type);
+        w.Write("#nullable disable\n");
     }
 
     /// <summary>Mirrors C++ <c>write_abi_interface</c>.</summary>
@@ -2978,7 +2981,7 @@ internal static partial class CodeWriters
         }
         if (!hasMembers) { return; }
 
-        w.Write(useInternal ? "internal static unsafe class " : "public static unsafe class ");
+        w.Write(useInternal ? "internal static class " : "public static class ");
         w.Write(nameStripped);
         w.Write("Methods\n{\n");
 
