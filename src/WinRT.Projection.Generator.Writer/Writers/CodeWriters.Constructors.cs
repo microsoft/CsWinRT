@@ -676,7 +676,7 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             string raw = p.Parameter.Name ?? "param";
             string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
-            w.Write(", ");
+            w.Write(",\n  ");
             if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
                 w.Write("(uint)");
@@ -734,9 +734,9 @@ internal static partial class CodeWriters
         if (isComposable)
         {
             // Pass __baseInterface.GetThisPtrUnsafe() and &__innerInterface.
-            w.Write(", __baseInterface.GetThisPtrUnsafe(), &__innerInterface");
+            w.Write(",\n  __baseInterface.GetThisPtrUnsafe(),\n  &__innerInterface");
         }
-        w.Write(", &__retval));\n");
+        w.Write(",\n  &__retval));\n");
         if (isComposable)
         {
             w.Write(callIndent);

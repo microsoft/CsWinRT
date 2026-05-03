@@ -4882,7 +4882,7 @@ internal static partial class CodeWriters
             {
                 string callName = GetParamName(p, paramNameOverride);
                 string localName = GetParamLocalName(p, paramNameOverride);
-                w.Write(", (uint)");
+                w.Write(",\n  (uint)");
                 w.Write(callName);
                 w.Write(".Length, _");
                 w.Write(localName);
@@ -4891,14 +4891,14 @@ internal static partial class CodeWriters
             if (cat == ParamCategory.Out)
             {
                 string localName = GetParamLocalName(p, paramNameOverride);
-                w.Write(", &__");
+                w.Write(",\n  &__");
                 w.Write(localName);
                 continue;
             }
             if (cat == ParamCategory.ReceiveArray)
             {
                 string localName = GetParamLocalName(p, paramNameOverride);
-                w.Write(", &__");
+                w.Write(",\n  &__");
                 w.Write(localName);
                 w.Write("_length, &__");
                 w.Write(localName);
@@ -4909,11 +4909,11 @@ internal static partial class CodeWriters
             {
                 // 'in T' projected param: pass the pinned pointer.
                 string localName = GetParamLocalName(p, paramNameOverride);
-                w.Write(", _");
+                w.Write(",\n  _");
                 w.Write(localName);
                 continue;
             }
-            w.Write(", ");
+            w.Write(",\n  ");
             if (IsHResultException(p.Type))
             {
                 w.Write("__");
@@ -4961,11 +4961,11 @@ internal static partial class CodeWriters
         }
         if (returnIsReceiveArray)
         {
-            w.Write(", &__retval_length, &__retval_data");
+            w.Write(",\n  &__retval_length, &__retval_data");
         }
         else if (rt is not null)
         {
-            w.Write(", &__retval");
+            w.Write(",\n  &__retval");
         }
         w.Write("));\n");
 
