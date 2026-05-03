@@ -213,7 +213,7 @@ internal static partial class CodeWriters
         w.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
 
         w.Write("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
-        w.Write("    private static int Invoke(");
+        w.Write("    private static unsafe int Invoke(");
         WriteAbiParameterTypesPointer(w, sig, includeParamNames: true);
         w.Write(")\n    {\n");
         EmitDelegateInvokeBody(w, type, sig);
@@ -300,7 +300,9 @@ internal static partial class CodeWriters
             w.Write("        ");
             string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
             w.Write(projected);
-            w.Write(" __result = default;\n");
+            w.Write(" ");
+            w.Write(GetReturnLocalName(sig));
+            w.Write(" = default;\n");
             w.Write("        *");
             w.Write(GetReturnParamName(sig));
             w.Write(" = default;\n");
@@ -330,7 +332,12 @@ internal static partial class CodeWriters
         w.Write("\n");
 
         w.Write("        try\n        {\n");
-        if (hasReturn) { w.Write("            __result = "); }
+        if (hasReturn)
+        {
+            w.Write("            ");
+            w.Write(GetReturnLocalName(sig));
+            w.Write(" = ");
+        }
         else { w.Write("            "); }
         w.Write("ComInterfaceDispatch.GetInstance<");
         w.Write(projectedName);
@@ -395,19 +402,22 @@ internal static partial class CodeWriters
         if (hasReturn)
         {
             string retName = GetReturnParamName(sig);
+            string retLocal = GetReturnLocalName(sig);
             // Marshal the managed result back to the native pointer.
             if (returnIsString)
             {
                 w.Write("            *");
                 w.Write(retName);
-                w.Write(" = HStringMarshaller.ConvertToUnmanaged(__result);\n");
+                w.Write(" = HStringMarshaller.ConvertToUnmanaged(");
+                w.Write(retLocal);
+                w.Write(");\n");
             }
             else if (returnIsRefType)
             {
                 w.Write("            *");
                 w.Write(retName);
                 w.Write(" = ");
-                EmitMarshallerConvertToUnmanaged(w, rt!, "__result");
+                EmitMarshallerConvertToUnmanaged(w, rt!, retLocal);
                 w.Write(".DetachThisPtrUnsafe();\n");
             }
             else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBoolRet &&
@@ -415,26 +425,34 @@ internal static partial class CodeWriters
             {
                 w.Write("            *");
                 w.Write(retName);
-                w.Write(" = __result;\n");
+                w.Write(" = ");
+                w.Write(retLocal);
+                w.Write(";\n");
             }
             else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibCharRet &&
                      corlibCharRet.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
             {
                 w.Write("            *");
                 w.Write(retName);
-                w.Write(" = __result;\n");
+                w.Write(" = ");
+                w.Write(retLocal);
+                w.Write(";\n");
             }
             else if (IsEnumType(rt!))
             {
                 w.Write("            *");
                 w.Write(retName);
-                w.Write(" = __result;\n");
+                w.Write(" = ");
+                w.Write(retLocal);
+                w.Write(";\n");
             }
             else
             {
                 w.Write("            *");
                 w.Write(retName);
-                w.Write(" = __result;\n");
+                w.Write(" = ");
+                w.Write(retLocal);
+                w.Write(";\n");
             }
         }
 
@@ -1338,20 +1356,31 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>Returns the metadata-derived name for the return parameter (or '__retval' fallback).</summary>
+    /// <summary>
+    /// Returns the metadata-derived name for the return parameter, or the C++ default <c>__return_value__</c>.
+    /// Mirrors <c>method_signature::return_param_name()</c> in <c>helpers.h</c>.
+    /// </summary>
     internal static string GetReturnParamName(MethodSig sig)
     {
         string? n = sig.ReturnParam?.Name?.Value;
-        if (string.IsNullOrEmpty(n)) { return "__retval"; }
+        if (string.IsNullOrEmpty(n)) { return "__return_value__"; }
         return Helpers.IsKeyword(n) ? "@" + n : n;
     }
 
-    /// <summary>Returns '__&lt;returnName&gt;Size' (matches C++ '__%Size' convention) or '__retvalLength' fallback.</summary>
+    /// <summary>
+    /// Returns the local-variable name for the return parameter on the server side. Mirrors C++
+    /// <c>abi_marshaler::get_marshaler_local()</c> which prefixes <c>__</c> to the param name.
+    /// </summary>
+    internal static string GetReturnLocalName(MethodSig sig)
+    {
+        return "__" + GetReturnParamName(sig);
+    }
+
+    /// <summary>Returns '__&lt;returnName&gt;Size' (matches C++ '__%Size' convention) — by default '____return_value__Size' for the standard '__return_value__' return param.</summary>
     internal static string GetReturnSizeParamName(MethodSig sig)
     {
-        string? n = sig.ReturnParam?.Name?.Value;
-        if (string.IsNullOrEmpty(n)) { return "__retvalLength"; }
-        return "__" + n + "Size";
+        // Mirrors C++ 'write_abi_parameter_types_pointer' which writes '__%Size' over the return param name.
+        return "__" + GetReturnParamName(sig) + "Size";
     }
 
     /// <summary>Mirrors C++ <c>write_interface_vftbl</c>.</summary>
@@ -1446,7 +1475,7 @@ internal static partial class CodeWriters
             }
 
             w.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
-            w.Write("private static int Do_Abi_");
+            w.Write("private static unsafe int Do_Abi_");
             w.Write(vm);
             w.Write("(");
             WriteAbiParameterTypesPointer(w, sig, includeParamNames: true);
@@ -1692,6 +1721,10 @@ internal static partial class CodeWriters
         w.Write("\n{\n");
         string retParamName = GetReturnParamName(sig);
         string retSizeParamName = GetReturnSizeParamName(sig);
+        // The local name for the unmarshalled return value mirrors C++
+        // 'abi_marshaler::get_marshaler_local()' which prefixes '__' to the param name.
+        // For the default '__return_value__' param this becomes '____return_value__'.
+        string retLocalName = "__" + retParamName;
         if (rt is not null)
         {
             if (returnIsReceiveArrayDoAbi)
@@ -1861,14 +1894,18 @@ internal static partial class CodeWriters
 
         if (returnIsString)
         {
-            w.Write("        string __result = ");
+            w.Write("        string ");
+            w.Write(retLocalName);
+            w.Write(" = ");
         }
         else if (returnIsRefType)
         {
             string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
             w.Write("        ");
             w.Write(projected);
-            w.Write(" __result = ");
+            w.Write(" ");
+            w.Write(retLocalName);
+            w.Write(" = ");
         }
         else if (returnIsReceiveArrayDoAbi)
         {
@@ -1876,14 +1913,18 @@ internal static partial class CodeWriters
             string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
             w.Write("        ");
             w.Write(projected);
-            w.Write(" __result = ");
+            w.Write(" ");
+            w.Write(retLocalName);
+            w.Write(" = ");
         }
         else if (rt is not null)
         {
             string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
             w.Write("        ");
             w.Write(projected);
-            w.Write(" __result = ");
+            w.Write(" ");
+            w.Write(retLocalName);
+            w.Write(" = ");
         }
         else
         {
@@ -2012,13 +2053,17 @@ internal static partial class CodeWriters
             {
                 w.Write("        *");
                 w.Write(retParamName);
-                w.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(__result);\n");
+                w.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(");
+                w.Write(retLocalName);
+                w.Write(");\n");
             }
             else if (returnIsString)
             {
                 w.Write("        *");
                 w.Write(retParamName);
-                w.Write(" = HStringMarshaller.ConvertToUnmanaged(__result);\n");
+                w.Write(" = HStringMarshaller.ConvertToUnmanaged(");
+                w.Write(retLocalName);
+                w.Write(");\n");
             }
             else if (returnIsRefType)
             {
@@ -2028,21 +2073,27 @@ internal static partial class CodeWriters
                     string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
                     string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
                     w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
-                    w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_result([UnsafeAccessorType(\"");
+                    w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
+                    w.Write(retParamName);
+                    w.Write("([UnsafeAccessorType(\"");
                     w.Write(interopTypeName);
                     w.Write("\")] object _, ");
                     w.Write(projectedTypeName);
                     w.Write(" value);\n");
                     w.Write("        *");
                     w.Write(retParamName);
-                    w.Write(" = ConvertToUnmanaged_result(null, __result).DetachThisPtrUnsafe();\n");
+                    w.Write(" = ConvertToUnmanaged_");
+                    w.Write(retParamName);
+                    w.Write("(null, ");
+                    w.Write(retLocalName);
+                    w.Write(").DetachThisPtrUnsafe();\n");
                 }
                 else
                 {
                     w.Write("        *");
                     w.Write(retParamName);
                     w.Write(" = ");
-                    EmitMarshallerConvertToUnmanaged(w, rt!, "__result");
+                    EmitMarshallerConvertToUnmanaged(w, rt!, retLocalName);
                     w.Write(".DetachThisPtrUnsafe();\n");
                 }
             }
@@ -2053,14 +2104,20 @@ internal static partial class CodeWriters
                 string elementAbi = GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
                 w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
-                w.Write("        static extern void ConvertToUnmanaged_result([UnsafeAccessorType(\"ABI.System.<");
+                w.Write("        static extern void ConvertToUnmanaged_");
+                w.Write(retParamName);
+                w.Write("([UnsafeAccessorType(\"ABI.System.<");
                 w.Write(elementInteropArg);
                 w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, ReadOnlySpan<");
                 w.Write(elementProjected);
                 w.Write("> span, out uint length, out ");
                 w.Write(elementAbi);
                 w.Write("* data);\n");
-                w.Write("        ConvertToUnmanaged_result(null, __result, out *");
+                w.Write("        ConvertToUnmanaged_");
+                w.Write(retParamName);
+                w.Write("(null, ");
+                w.Write(retLocalName);
+                w.Write(", out *");
                 w.Write(retSizeParamName);
                 w.Write(", out *");
                 w.Write(retParamName);
@@ -2073,13 +2130,17 @@ internal static partial class CodeWriters
                 w.Write(retParamName);
                 w.Write(" = ");
                 w.Write(GetMappedMarshallerName(rt!));
-                w.Write(".ConvertToUnmanaged(__result);\n");
+                w.Write(".ConvertToUnmanaged(");
+                w.Write(retLocalName);
+                w.Write(");\n");
             }
             else if (returnIsBlittableStruct)
             {
                 w.Write("        *");
                 w.Write(retParamName);
-                w.Write(" = __result;\n");
+                w.Write(" = ");
+                w.Write(retLocalName);
+                w.Write(";\n");
             }
             else
             {
@@ -2090,21 +2151,25 @@ internal static partial class CodeWriters
                 if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
                     corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
                 {
-                    w.Write("__result;\n");
+                    w.Write(retLocalName);
+                    w.Write(";\n");
                 }
                 else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
                          corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
                 {
-                    w.Write("__result;\n");
+                    w.Write(retLocalName);
+                    w.Write(";\n");
                 }
                 else if (IsEnumType(rt))
                 {
                     // Enum: function pointer signature uses the projected enum type, no cast needed.
-                    w.Write("__result;\n");
+                    w.Write(retLocalName);
+                    w.Write(";\n");
                 }
                 else
                 {
-                    w.Write("__result;\n");
+                    w.Write(retLocalName);
+                    w.Write(";\n");
                 }
             }
         }
