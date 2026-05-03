@@ -79,7 +79,31 @@ internal sealed class MetadataCache
         {
             cache.LoadFile(winmd);
         }
+        cache.SortMembersByName();
         return cache;
+    }
+
+    /// <summary>
+    /// Sorts each namespace's <see cref="NamespaceMembers.Types"/> list alphabetically by type name.
+    /// Mirrors the C++ tool which uses <c>std::map&lt;std::string_view, TypeDef&gt;</c> for the
+    /// per-namespace types map, which iterates in sorted order. The C# port stores members in
+    /// insertion order; we explicitly sort here so all downstream iteration produces deterministic
+    /// output that matches the C++ tool exactly.
+    /// </summary>
+    private void SortMembersByName()
+    {
+        foreach (NamespaceMembers members in _namespaces.Values)
+        {
+            static int Compare(TypeDefinition a, TypeDefinition b) => System.StringComparer.Ordinal.Compare(a.Name?.Value ?? string.Empty, b.Name?.Value ?? string.Empty);
+            members.Types.Sort(Compare);
+            members.Interfaces.Sort(Compare);
+            members.Classes.Sort(Compare);
+            members.Enums.Sort(Compare);
+            members.Structs.Sort(Compare);
+            members.Delegates.Sort(Compare);
+            members.Attributes.Sort(Compare);
+            members.Contracts.Sort(Compare);
+        }
     }
 
     private void LoadFile(string path)

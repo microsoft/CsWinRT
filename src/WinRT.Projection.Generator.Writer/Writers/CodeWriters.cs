@@ -422,6 +422,9 @@ internal static partial class CodeWriters
         _cacheRef = cache;
     }
 
+    /// <summary>Gets the metadata cache previously set via <see cref="SetMetadataCache"/>.</summary>
+    internal static MetadataCache? GetMetadataCache() => _cacheRef;
+
     /// <summary>Mirrors C++ <c>to_camel_case</c>.</summary>
     public static string ToCamelCase(string name)
     {
