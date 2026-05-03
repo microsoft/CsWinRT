@@ -144,33 +144,33 @@ internal static partial class CodeWriters
             }
             else
             {
-                w.Write(" { ");
+                w.Write("\n{\n");
                 if (s.HasGetter)
                 {
                     if (s.GetterIsGeneric)
                     {
                         if (!string.IsNullOrEmpty(s.GetterGenericInteropType))
                         {
-                            w.Write("get => ");
+                            w.Write("    get => ");
                             w.Write(s.GetterGenericAccessorName);
                             w.Write("(null, ");
                             w.Write(s.GetterObjRef);
-                            w.Write("); ");
+                            w.Write(");\n");
                         }
                         else
                         {
-                            w.Write("get => throw null!; ");
+                            w.Write("    get => throw null!;\n");
                         }
                     }
                     else
                     {
-                        w.Write("get => ");
+                        w.Write("    get => ");
                         w.Write(s.GetterAbiClass);
                         w.Write(".");
                         w.Write(kvp.Key);
                         w.Write("(");
                         w.Write(s.GetterObjRef);
-                        w.Write("); ");
+                        w.Write(");\n");
                     }
                 }
                 if (s.HasSetter)
@@ -179,26 +179,26 @@ internal static partial class CodeWriters
                     {
                         if (!string.IsNullOrEmpty(s.SetterGenericInteropType))
                         {
-                            w.Write("set => ");
+                            w.Write("    set => ");
                             w.Write(s.SetterGenericAccessorName);
                             w.Write("(null, ");
                             w.Write(s.SetterObjRef);
-                            w.Write(", value); ");
+                            w.Write(", value);\n");
                         }
                         else
                         {
-                            w.Write("set => throw null!; ");
+                            w.Write("    set => throw null!;\n");
                         }
                     }
                     else
                     {
-                        w.Write("set => ");
+                        w.Write("    set => ");
                         w.Write(s.SetterAbiClass);
                         w.Write(".");
                         w.Write(kvp.Key);
                         w.Write("(");
                         w.Write(s.SetterObjRef);
-                        w.Write(", value); ");
+                        w.Write(", value);\n");
                     }
                 }
                 w.Write("}\n");
