@@ -152,14 +152,14 @@ internal static partial class CodeWriters
 
         if (nameType == TypedefNameType.InteropIID)
         {
-            sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped));
+            sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
             sb.Append(typeName);
         }
         else if (nameType == TypedefNameType.Projected)
         {
             // Replace namespace separator with - within the generic.
             string nsHyphenated = typeNs.Replace('.', '-');
-            sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped));
+            sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
             sb.Append(nsHyphenated);
             sb.Append('-');
             sb.Append(typeName);
@@ -168,7 +168,7 @@ internal static partial class CodeWriters
         {
             sb.Append(typeNs);
             sb.Append('.');
-            sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped));
+            sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
             sb.Append(typeName);
         }
 
@@ -202,7 +202,7 @@ internal static partial class CodeWriters
     /// Returns the assembly marker (e.g. <c>&lt;#corlib&gt;</c>) for a (possibly remapped)
     /// type/namespace. Mirrors C++ <c>write_interop_assembly_name</c>.
     /// </summary>
-    private static string GetInteropAssemblyMarker(string typeNs, string typeName, MappedType? mapped)
+    private static string GetInteropAssemblyMarker(string typeNs, string typeName, MappedType? mapped, ITypeDefOrRef? type = null)
     {
         if (mapped is not null)
         {
@@ -232,8 +232,27 @@ internal static partial class CodeWriters
         {
             return "<#CsWinRT>";
         }
-        // Default: use the type's assembly name. We don't have a stable handle on this from the
-        // type alone, so fall back to <#Windows> to match the most common case.
+        // For any other type (e.g. user-authored components in third-party .winmd assemblies),
+        // use the actual assembly name from the type's resolution scope. Mirrors C++ which
+        // uses the .winmd file stem (e.g. "AuthoringTest" for AuthoringTest.winmd).
+        if (type is not null)
+        {
+            string? asmName = GetTypeAssemblyName(type);
+            if (!string.IsNullOrEmpty(asmName))
+            {
+                // Replace '.' with '-' (matches C++ which does std::replace('.', '-')).
+                string hyphenated = asmName.Replace('.', '-');
+                return "<" + hyphenated + ">";
+            }
+        }
         return "<#Windows>";
+    }
+
+    /// <summary>
+    /// Resolves the assembly name (without extension) that defines a given type.
+    /// </summary>
+    private static string? GetTypeAssemblyName(ITypeDefOrRef type)
+    {
+        return type.Scope?.GetAssembly()?.Name?.Value;
     }
 }

@@ -211,7 +211,9 @@ internal static partial class CodeWriters
     /// Emits the [UnsafeAccessor] extern method declaration that exposes the IID for a generic
     /// interface instantiation. Mirrors C++ <c>write_unsafe_accessor_for_iid</c>.
     /// </summary>
-    private static void EmitUnsafeAccessorForIid(TypeWriter w, GenericInstanceTypeSignature gi)
+    /// <param name="isInNullableContext">When <c>true</c>, the accessor's parameter type is
+    /// <c>object?</c> (used inside <c>#nullable enable</c> regions); otherwise <c>object</c>.</param>
+    private static void EmitUnsafeAccessorForIid(TypeWriter w, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
     {
         string propName = BuildIidPropertyNameForGenericInterface(w, gi);
         string interopName = EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
@@ -220,7 +222,9 @@ internal static partial class CodeWriters
         w.Write("\")]\n");
         w.Write("static extern ref readonly Guid ");
         w.Write(propName);
-        w.Write("([UnsafeAccessorType(\"ABI.InterfaceIIDs, WinRT.Interop\")] object _);\n");
+        w.Write("([UnsafeAccessorType(\"ABI.InterfaceIIDs, WinRT.Interop\")] object");
+        if (isInNullableContext) { w.Write("?"); }
+        w.Write(" _);\n");
     }
 
     private static string EscapeIdentifier(string s)

@@ -1057,9 +1057,32 @@ internal static partial class CodeWriters
         string projectedType = $"global::{typeNs}.{nameStripped}";
 
         ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
-        string defaultIfaceIid = defaultIface is not null
-            ? w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, defaultIface)))
-            : "default(global::System.Guid)";
+
+        // Mirror C++ write_component_class_marshaller: if the default interface is a generic
+        // instantiation (e.g. IDictionary<K,V>), emit an UnsafeAccessor extern declaration
+        // inside ConvertToUnmanaged that fetches the IID via WinRT.Interop's InterfaceIIDs class
+        // (since the IID for a generic instantiation is computed at runtime). The IID expression
+        // in the call then becomes '<accessor>(null)' instead of a static InterfaceIIDs reference.
+        AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? defaultGenericInst = null;
+        if (defaultIface is AsmResolver.DotNet.TypeSpecification spec
+            && spec.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+        {
+            defaultGenericInst = gi;
+        }
+
+        string defaultIfaceIid;
+        if (defaultGenericInst is not null)
+        {
+            // Call the accessor: '<IID_<EscapedName>>(null)'.
+            string accessorName = BuildIidPropertyNameForGenericInterface(w, defaultGenericInst);
+            defaultIfaceIid = accessorName + "(null)";
+        }
+        else
+        {
+            defaultIfaceIid = defaultIface is not null
+                ? w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, defaultIface)))
+                : "default(global::System.Guid)";
+        }
 
         w.Write("\npublic static unsafe class ");
         w.Write(nameStripped);
@@ -1067,6 +1090,20 @@ internal static partial class CodeWriters
         w.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
         w.Write(projectedType);
         w.Write(" value)\n    {\n");
+        if (defaultGenericInst is not null)
+        {
+            // Emit the UnsafeAccessor declaration (uses 'object?' since component-mode
+            // marshallers run inside #nullable enable).
+            string accessorBlock = w.WriteTemp("%", new System.Action<TextWriter>(_ => EmitUnsafeAccessorForIid(w, defaultGenericInst, isInNullableContext: true)));
+            // Re-emit each line indented by 8 spaces.
+            string[] accessorLines = accessorBlock.TrimEnd('\n').Split('\n');
+            foreach (string accessorLine in accessorLines)
+            {
+                w.Write("        ");
+                w.Write(accessorLine);
+                w.Write("\n");
+            }
+        }
         w.Write("        return WindowsRuntimeInterfaceMarshaller<");
         w.Write(projectedType);
         w.Write(">.ConvertToUnmanaged(value, ");
@@ -1762,7 +1799,7 @@ internal static partial class CodeWriters
             }
             else if (returnIsRefType)
             {
-                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
                 w.Write("    ");
                 w.Write(projected);
                 w.Write(" ");
@@ -1771,7 +1808,7 @@ internal static partial class CodeWriters
             }
             else if (returnIsReceiveArrayDoAbi)
             {
-                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
                 w.Write("    ");
                 w.Write(projected);
                 w.Write(" ");
@@ -2125,8 +2162,8 @@ internal static partial class CodeWriters
                 if (returnIsGenericInstance)
                 {
                     // Generic instance return: emit local UnsafeAccessor delegate to ConvertToUnmanaged + .DetachThisPtrUnsafe()
-                    string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
-                    string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+                    string interopTypeName = EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
+                    string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
                     w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
                     w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
                     w.Write(retParamName);
@@ -2148,13 +2185,13 @@ internal static partial class CodeWriters
                     w.Write("        *");
                     w.Write(retParamName);
                     w.Write(" = ");
-                    EmitMarshallerConvertToUnmanaged(w, rt!, retLocalName);
+                    EmitMarshallerConvertToUnmanaged(w, rt, retLocalName);
                     w.Write(".DetachThisPtrUnsafe();\n");
                 }
             }
             else if (returnIsReceiveArrayDoAbi)
             {
-                AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
                 string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSz.BaseType))));
                 string elementAbi = GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
@@ -2178,13 +2215,13 @@ internal static partial class CodeWriters
                 w.Write(retParamName);
                 w.Write(");\n");
             }
-            else if (IsMappedAbiValueType(rt!))
+            else if (IsMappedAbiValueType(rt))
             {
                 // Mapped value type return (DateTime/TimeSpan): convert via marshaller.
                 w.Write("        *");
                 w.Write(retParamName);
                 w.Write(" = ");
-                w.Write(GetMappedMarshallerName(rt!));
+                w.Write(GetMappedMarshallerName(rt));
                 w.Write(".ConvertToUnmanaged(");
                 w.Write(retLocalName);
                 w.Write(");\n");
