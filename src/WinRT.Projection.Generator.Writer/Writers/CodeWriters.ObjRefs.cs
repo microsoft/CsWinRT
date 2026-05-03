@@ -270,6 +270,11 @@ internal static partial class CodeWriters
         HashSet<string> emitted = new(System.StringComparer.Ordinal);
         bool isSealed = type.IsSealed;
 
+        // Pass 1: emit objrefs for ALL directly-declared interfaces first (in InterfaceImpl
+        // declaration order). Pass 2 then walks transitive parents to cover any not yet emitted.
+        // This mirrors C++ which emits all direct impls first before recursing — so for a class
+        // that declares 'IFoo, IBar' where IFoo : IBaz, the order is IFoo, IBar, IBaz, NOT
+        // IFoo, IBaz, IBar.
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
@@ -281,10 +286,15 @@ internal static partial class CodeWriters
 
             bool isDefault = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute");
             EmitObjRefForInterface(w, impl.Interface, emitted, isDefault: isDefault, useSimplePattern: isSealed && isDefault);
-
-            // Walk transitively-inherited interfaces and emit objrefs for them too. This is needed
-            // because mapped collection stubs (IList<T>, IDictionary<K,V>) need the _objRef field
-            // for IEnumerable<T>/IEnumerable<KeyValuePair<K,V>> to dispatch GetEnumerator through.
+        }
+        foreach (InterfaceImplementation impl in type.Interfaces)
+        {
+            if (impl.Interface is null) { continue; }
+            if (!IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false)
+                && !IsInterfaceForObjRef(impl))
+            {
+                continue;
+            }
             EmitTransitiveInterfaceObjRefs(w, impl.Interface, emitted);
         }
     }
