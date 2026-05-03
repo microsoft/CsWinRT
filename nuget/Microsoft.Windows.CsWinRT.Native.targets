@@ -94,6 +94,21 @@ Properties:
       <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;/ItemGroup&gt;" />
+      <!--
+        Scrub .winmd files out of the resolved reference set. Project-referencing a
+        CsWinRT component flows its .winmd in via TargetPathWithTargetPlatformMoniker;
+        the .NET SDK then rejects it with NETSDK1130 since direct .winmd references
+        aren't supported on .NET 5+. The aggregator project doesn't import
+        CsWinRT.targets (no PackageReference), so the standard CsWinRTRemoveWinMDReferences
+        target isn't available here — inline the scrub.
+      -->
+      <_CsWinRTTempProjectLines Include="  &lt;Target Name=&quot;_CsWinRTAggregatorRemoveWinMDReferences&quot; AfterTargets=&quot;ResolveProjectReferences&quot; BeforeTargets=&quot;ResolveAssemblyReferences&quot;&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;ItemGroup&gt;" />
+      <_CsWinRTTempProjectLines Include="      &lt;_ResolvedProjectReferencePaths Remove=&quot;@(_ResolvedProjectReferencePaths)&quot; Condition=&quot;'%(_ResolvedProjectReferencePaths.Extension)' == '.winmd'&quot; /&gt;" />
+      <_CsWinRTTempProjectLines Include="      &lt;Reference Remove=&quot;@(Reference)&quot; Condition=&quot;'%(Reference.Extension)' == '.winmd'&quot; /&gt;" />
+      <_CsWinRTTempProjectLines Include="      &lt;ReferencePath Remove=&quot;@(ReferencePath)&quot; Condition=&quot;'%(ReferencePath.Extension)' == '.winmd'&quot; /&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;/ItemGroup&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;/Target&gt;" />
       <_CsWinRTTempProjectLines Include="&lt;/Project&gt;" />
     </ItemGroup>
 
