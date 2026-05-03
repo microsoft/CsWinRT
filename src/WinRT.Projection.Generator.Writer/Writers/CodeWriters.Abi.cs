@@ -100,9 +100,20 @@ internal static partial class CodeWriters
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string typeNm = type.Name?.Value ?? string.Empty;
         bool isMappedStruct = MappedTypes.Get(typeNs, typeNm) is not null;
-        if (!blittable && !w.Settings.Component && !isMappedStruct)
+        if (!blittable && !isMappedStruct)
         {
-            WriteComWrapperMarshallerAttribute(w, type);
+            // Mirror C++ write_abi_struct: in component mode emit metadata typename + mapped
+            // type attribute; otherwise emit the ComWrappers attribute. Both branches then
+            // emit [WindowsRuntimeClassName] + the struct definition with public ABI fields.
+            if (w.Settings.Component)
+            {
+                WriteWinRTMetadataTypeNameAttribute(w, type);
+                WriteWinRTMappedTypeAttribute(w, type);
+            }
+            else
+            {
+                WriteComWrapperMarshallerAttribute(w, type);
+            }
             WriteValueTypeWinRTClassNameAttribute(w, type);
             w.Write(Helpers.InternalAccessibility(w.Settings));
             w.Write(" unsafe struct ");
@@ -133,6 +144,13 @@ internal static partial class CodeWriters
                 w.Write(";\n");
             }
             w.Write("}\n\n");
+        }
+        else if (blittable && w.Settings.Component)
+        {
+            // For blittable component structs, the C++ tool emits the authoring metadata wrapper
+            // (a 'file static class T {}' with [WindowsRuntimeMetadataTypeName]/[WindowsRuntimeMappedType]/
+            // [WindowsRuntimeReferenceType]/[ComWrappersMarshaller]/[WindowsRuntimeClassName]).
+            WriteAuthoringMetadataType(w, type);
         }
 
         WriteStructEnumMarshallerClass(w, type);
