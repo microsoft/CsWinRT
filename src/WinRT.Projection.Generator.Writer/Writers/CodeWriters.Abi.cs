@@ -633,7 +633,8 @@ internal static partial class CodeWriters
             || IsAnyStruct(rt)
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
-            || IsObject(rt);
+            || IsObject(rt)
+            || IsGenericInstance(rt);
         if (rt is not null && IsHResultException(rt)) { simpleParamsAndReturn = false; }
         if (simpleParamsAndReturn)
         {
@@ -671,6 +672,7 @@ internal static partial class CodeWriters
         bool returnIsString = hasReturn && IsString(rt!);
         bool returnIsRefType = hasReturn && (IsRuntimeClassOrInterface(rt!) || IsObject(rt!));
         bool returnIsAnyStruct = hasReturn && IsAnyStruct(rt!);
+        bool returnIsGenericInstance = hasReturn && IsGenericInstance(rt!);
 
         w.Write("\n    {\n");
         w.Write("        using WindowsRuntimeObjectReferenceValue objectValue = objectReference.AsValue();\n");
@@ -751,13 +753,13 @@ internal static partial class CodeWriters
         if (hasReturn)
         {
             w.Write("        ");
-            if (returnIsString || returnIsRefType) { w.Write("void*"); }
+            if (returnIsString || returnIsRefType || returnIsGenericInstance) { w.Write("void*"); }
             else if (returnIsAnyStruct) { w.Write(GetBlittableStructAbiType(w, rt!)); }
             else { w.Write(GetAbiPrimitiveType(rt!)); }
             w.Write(" __retval = default;\n");
         }
 
-        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType;
+        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsGenericInstance;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
         string indent = needsTryFinally ? "            " : "        ";
 
@@ -870,6 +872,22 @@ internal static partial class CodeWriters
                 EmitMarshallerConvertToManaged(w, rt!, "__retval");
                 w.Write(";\n");
             }
+            else if (returnIsGenericInstance)
+            {
+                // Generic instance return (e.g. IAsyncOperation<T>): emit local UnsafeAccessor
+                // to ConvertToManaged and call it. Mirrors truth pattern.
+                string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
+                string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+                w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                w.Write(callIndent);
+                w.Write("static extern ");
+                w.Write(projectedTypeName);
+                w.Write(" ConvertToManaged_retval([UnsafeAccessorType(\"");
+                w.Write(interopTypeName);
+                w.Write("\")] object _, void* value);\n");
+                w.Write(callIndent);
+                w.Write("return ConvertToManaged_retval(null, __retval);\n");
+            }
             else if (returnIsAnyStruct)
             {
                 w.Write("return __retval;\n");
@@ -919,6 +937,10 @@ internal static partial class CodeWriters
                 w.Write("            HStringMarshaller.Free(__retval);\n");
             }
             else if (returnIsRefType)
+            {
+                w.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
+            }
+            else if (returnIsGenericInstance)
             {
                 w.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
             }
@@ -3323,7 +3345,7 @@ internal static partial class CodeWriters
         if (rt is not null)
         {
             if (IsHResultException(rt)) { return false; }
-            if (!(IsBlittablePrimitive(rt) || IsAnyStruct(rt) || IsString(rt) || IsRuntimeClassOrInterface(rt) || IsObject(rt))) { return false; }
+            if (!(IsBlittablePrimitive(rt) || IsAnyStruct(rt) || IsString(rt) || IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt))) { return false; }
         }
         foreach (ParamInfo p in sig.Params)
         {
