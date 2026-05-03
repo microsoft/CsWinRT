@@ -1454,8 +1454,34 @@ internal static partial class CodeWriters
 
         // Do_Abi_* implementations: emit real bodies for simple primitive cases,
         // throw null! for everything else (deferred — needs full per-parameter marshalling).
-        string ifaceFullName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
-        if (!ifaceFullName.StartsWith("global::", System.StringComparison.Ordinal)) { ifaceFullName = "global::" + ifaceFullName; }
+        // Mirror C++: in component mode, exclusive-to interfaces dispatch to the OWNING class
+        // type (not the interface) since the authored class IS the implementation. This is what
+        // 'write_method_abi_invoke' produces because 'method.Parent()' is treated through
+        // 'does_abi_interface_implement_ccw_interface' for authoring scenarios.
+        TypeDefinition? exclusiveToOwner = null;
+        if (w.Settings.Component)
+        {
+            MetadataCache? cache = GetMetadataCache();
+            if (cache is not null)
+            {
+                exclusiveToOwner = Helpers.GetExclusiveToType(type, cache);
+            }
+        }
+
+        string ifaceFullName;
+        if (exclusiveToOwner is not null)
+        {
+            string ownerNs = exclusiveToOwner.Namespace?.Value ?? string.Empty;
+            string ownerNm = Helpers.StripBackticks(exclusiveToOwner.Name?.Value ?? string.Empty);
+            ifaceFullName = string.IsNullOrEmpty(ownerNs)
+                ? "global::" + ownerNm
+                : "global::" + ownerNs + "." + ownerNm;
+        }
+        else
+        {
+            ifaceFullName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
+            if (!ifaceFullName.StartsWith("global::", System.StringComparison.Ordinal)) { ifaceFullName = "global::" + ifaceFullName; }
+        }
 
         // Build a map of event add/remove methods to their event so we can emit the table field
         // and the proper Do_Abi_add_*/Do_Abi_remove_* bodies (mirrors C++ write_event_abi_invoke).
