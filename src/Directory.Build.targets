@@ -103,7 +103,7 @@
 
   <Target Name="CopyEmbeddedSymbols" 
           AfterTargets="Build" 
-          Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(TargetFramework)' != '' and '$(ProduceOnlyReferenceAssembly)' != 'true'"
+          Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(TargetFramework)' != '' and '$(ProduceOnlyReferenceAssembly)' != 'true' and '$(PkgMicrosoft_DiaSymReader_Pdb2Pdb)' != ''"
           Inputs="$(TargetPath)"
           Outputs="$(OutputPath)$(AssemblyName).pdb">
     <PropertyGroup>
