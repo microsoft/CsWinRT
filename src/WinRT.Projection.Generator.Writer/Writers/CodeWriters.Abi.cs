@@ -3527,6 +3527,7 @@ internal static partial class CodeWriters
         w.Write("        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in ");
         w.Write(iidExpr);
         w.Write(");\n    }\n\n");
+        w.Write("#nullable enable\n");
         w.Write("    public static ");
         w.Write(fullProjected);
         w.Write("? ConvertToManaged(void* value)\n    {\n");
@@ -3534,7 +3535,9 @@ internal static partial class CodeWriters
         w.Write(fullProjected);
         w.Write("?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<");
         w.Write(nameStripped);
-        w.Write("ComWrappersCallback>(value);\n    }\n}\n");
+        w.Write("ComWrappersCallback>(value);\n    }\n");
+        w.Write("#nullable disable\n");
+        w.Write("}\n");
     }
 
     /// <summary>
