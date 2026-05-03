@@ -23,7 +23,9 @@ internal static partial class CodeWriters
 
         HashSet<string> writtenMethods = new(System.StringComparer.Ordinal);
         // For properties: track per-name accessor presence so we can merge get/set across interfaces.
-        Dictionary<string, PropertyAccessorState> propertyState = new(System.StringComparer.Ordinal);
+        // Use a SortedDictionary so the per-class property emission order is alphabetical
+        // by name (matches C++ std::map iteration order).
+        SortedIDictionary<string, PropertyAccessorState> propertyState = new(System.StringComparer.Ordinal);
         HashSet<string> writtenEvents = new(System.StringComparer.Ordinal);
         HashSet<TypeDefinition> writtenInterfaces = new();
 
@@ -365,7 +367,7 @@ internal static partial class CodeWriters
 
     private static void WriteInterfaceMembersRecursive(TypeWriter w, TypeDefinition classType, TypeDefinition declaringType,
         AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance,
-        HashSet<string> writtenMethods, Dictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents, HashSet<TypeDefinition> writtenInterfaces)
+        HashSet<string> writtenMethods, IDictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents, HashSet<TypeDefinition> writtenInterfaces)
     {
         AsmResolver.DotNet.Signatures.GenericContext genCtx = new(currentInstance, null);
 
@@ -498,7 +500,7 @@ internal static partial class CodeWriters
     private static void WriteInterfaceMembers(TypeWriter w, TypeDefinition classType, TypeDefinition ifaceType,
         ITypeDefOrRef originalInterface,
         bool isOverridable, bool isProtected, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance,
-        HashSet<string> writtenMethods, Dictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents)
+        HashSet<string> writtenMethods, IDictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents)
     {
         bool sealed_ = classType.IsSealed;
         // Determine accessibility and method modifier.
