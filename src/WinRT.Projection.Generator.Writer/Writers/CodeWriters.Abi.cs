@@ -142,13 +142,22 @@ internal static partial class CodeWriters
     /// <summary>Mirrors C++ <c>write_abi_delegate</c>.</summary>
     public static void WriteAbiDelegate(TypeWriter w, TypeDefinition type)
     {
-        // Mirrors C++: emit the marshaller, vftbl, native delegate, ComWrappers callback,
-        // InterfaceEntriesImpl, and ComWrappers marshaller attribute. Reference impl is also
-        // emitted (for IReference<delegate>).
-        WriteDelegateMarshallerStub(w, type);
+        // Mirror the C++ tool's ordering exactly:
+        //   write_delegate_marshaller
+        //   write_delegate_vtbl
+        //   write_native_delegate
+        //   write_delegate_comwrappers_callback
+        //   write_delegates_interface_entries_impl
+        //   write_delegate_com_wrappers_marshaller_attribute_impl
+        //   write_delegate_impl
+        //   write_reference_impl
+        //   (component) write_authoring_metadata_type
+        WriteDelegateMarshallerOnly(w, type);
         WriteDelegateVftbl(w, type);
         WriteNativeDelegate(w, type);
+        WriteDelegateComWrappersCallback(w, type);
         WriteDelegateInterfaceEntriesImpl(w, type);
+        WriteDelegateComWrappersMarshallerAttribute(w, type);
         WriteDelegateImpl(w, type);
         WriteReferenceImpl(w, type);
 
@@ -2737,19 +2746,18 @@ internal static partial class CodeWriters
     /// <summary>
     /// Writes a marshaller stub for a delegate.
     /// </summary>
-    private static void WriteDelegateMarshallerStub(TypeWriter w, TypeDefinition type)
+    /// <summary>
+    /// Emits just the <c>&lt;Name&gt;Marshaller</c> class for a delegate. Mirrors C++
+    /// <c>write_delegate_marshaller</c>.
+    /// </summary>
+    private static void WriteDelegateMarshallerOnly(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = Helpers.StripBackticks(name);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
-        bool isGeneric = type.GenericParameters.Count > 0;
-
-        // Compute the IID expression for this delegate (uses the DelegateMarshaller's IID convention).
         string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
-        string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
 
-        // Public *Marshaller class
         w.Write("\npublic static unsafe class ");
         w.Write(nameStripped);
         w.Write("Marshaller\n{\n");
@@ -2766,10 +2774,72 @@ internal static partial class CodeWriters
         w.Write(fullProjected);
         w.Write("?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<");
         w.Write(nameStripped);
-        w.Write("ComWrappersCallback>(value);\n    }\n}\n\n");
+        w.Write("ComWrappersCallback>(value);\n    }\n}\n");
+    }
 
-        // ComWrappersMarshallerAttribute - full body for non-generic delegates.
-        w.Write("internal sealed unsafe class ");
+    /// <summary>
+    /// Emits the <c>&lt;Name&gt;ComWrappersCallback</c> file-scoped class for a delegate.
+    /// Mirrors C++ <c>write_delegate_comwrappers_callback</c>.
+    /// </summary>
+    private static void WriteDelegateComWrappersCallback(TypeWriter w, TypeDefinition type)
+    {
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+        string typeNs = type.Namespace?.Value ?? string.Empty;
+        string fullProjected = $"global::{typeNs}.{nameStripped}";
+        bool isGeneric = type.GenericParameters.Count > 0;
+        string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
+
+        if (isGeneric)
+        {
+            w.Write("\nfile sealed unsafe class ");
+            w.Write(nameStripped);
+            w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
+            w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags) => throw null!;\n");
+            w.Write("}\n");
+            return;
+        }
+
+        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        bool nativeSupported = invoke is not null && IsDelegateInvokeNativeSupported(new MethodSig(invoke));
+
+        w.Write("\nfile abstract unsafe class ");
+        w.Write(nameStripped);
+        w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
+        w.Write("    /// <inheritdoc/>\n");
+        w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+        w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
+        w.Write("            externalComObject: value,\n");
+        w.Write("            iid: in ");
+        w.Write(iidExpr);
+        w.Write(",\n            wrapperFlags: out wrapperFlags);\n\n");
+        if (nativeSupported)
+        {
+            w.Write("        return new ");
+            w.Write(fullProjected);
+            w.Write("(valueReference.");
+            w.Write(nameStripped);
+            w.Write("Invoke);\n");
+        }
+        else
+        {
+            w.Write("        throw null!;\n");
+        }
+        w.Write("    }\n}\n");
+    }
+
+    /// <summary>
+    /// Emits the <c>&lt;Name&gt;ComWrappersMarshallerAttribute</c> class. Mirrors C++
+    /// <c>write_delegate_com_wrappers_marshaller_attribute_impl</c>.
+    /// </summary>
+    private static void WriteDelegateComWrappersMarshallerAttribute(TypeWriter w, TypeDefinition type)
+    {
+        string name = type.Name?.Value ?? string.Empty;
+        string nameStripped = Helpers.StripBackticks(name);
+        bool isGeneric = type.GenericParameters.Count > 0;
+        string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
+
+        w.Write("\ninternal sealed unsafe class ");
         w.Write(nameStripped);
         w.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
         if (isGeneric)
@@ -2797,50 +2867,7 @@ internal static partial class CodeWriters
             w.Write(iidRefExpr);
             w.Write(")!;\n    }\n");
         }
-        w.Write("}\n\n");
-
-        // file-scoped *ComWrappersCallback for delegate.
-        // Truth uses 'file abstract' (not 'file sealed') because it's a marker type only.
-        if (isGeneric)
-        {
-            w.Write("file sealed unsafe class ");
-            w.Write(nameStripped);
-            w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
-            w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags) => throw null!;\n");
-            w.Write("}\n");
-        }
-        else
-        {
-            // Determine if NativeDelegate Invoke extension is supported (no return + simple params)
-            // by reusing the same checks as EmitNativeDelegateBody.
-            MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
-            bool nativeSupported = invoke is not null && IsDelegateInvokeNativeSupported(new MethodSig(invoke));
-
-            w.Write("file abstract unsafe class ");
-            w.Write(nameStripped);
-            w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
-            w.Write("    /// <inheritdoc/>\n");
-            w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
-            w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
-            w.Write("            externalComObject: value,\n");
-            w.Write("            iid: in ");
-            w.Write(iidExpr);
-            w.Write(",\n            wrapperFlags: out wrapperFlags);\n\n");
-            if (nativeSupported)
-            {
-                w.Write("        return new ");
-                w.Write(fullProjected);
-                w.Write("(valueReference.");
-                w.Write(nameStripped);
-                w.Write("Invoke);\n");
-            }
-            else
-            {
-                w.Write("        throw null!;\n");
-            }
-            w.Write("    }\n");
-            w.Write("}\n");
-        }
+        w.Write("}\n");
     }
 
     /// <summary>True if EmitNativeDelegateBody can emit a real (non-throw) body for this signature.</summary>
