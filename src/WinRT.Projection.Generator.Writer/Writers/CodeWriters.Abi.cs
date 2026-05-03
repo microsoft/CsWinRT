@@ -2205,8 +2205,8 @@ internal static partial class CodeWriters
                 else if (returnIsGenericInstance)
                 {
                     // Generic instance return: emit local UnsafeAccessor delegate to ConvertToUnmanaged + .DetachThisPtrUnsafe()
-                    string interopTypeName = EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
-                    string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
+                    string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
+                    string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
                     w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
                     w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
                     w.Write(retParamName);
@@ -2228,13 +2228,13 @@ internal static partial class CodeWriters
                     w.Write("        *");
                     w.Write(retParamName);
                     w.Write(" = ");
-                    EmitMarshallerConvertToUnmanaged(w, rt, retLocalName);
+                    EmitMarshallerConvertToUnmanaged(w, rt!, retLocalName);
                     w.Write(".DetachThisPtrUnsafe();\n");
                 }
             }
             else if (returnIsReceiveArrayDoAbi)
             {
-                AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
                 string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSz.BaseType))));
                 string elementAbi = GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);

@@ -201,10 +201,7 @@ internal static partial class CodeWriters
                     {
                         try { resolved = r.Reference_.Resolve(_cacheRef.RuntimeContext); }
                         catch { resolved = null; }
-                        if (resolved is null)
-                        {
-                            resolved = _cacheRef.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
-                        }
+                        resolved ??= _cacheRef.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
                     }
                     if (resolved is not null)
                     {
@@ -235,10 +232,7 @@ internal static partial class CodeWriters
                     {
                         try { resolved = gir.GenericType.Resolve(_cacheRef.RuntimeContext); }
                         catch { resolved = null; }
-                        if (resolved is null)
-                        {
-                            resolved = _cacheRef.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
-                        }
+                        resolved ??= _cacheRef.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
                     }
                     if (resolved is not null)
                     {
