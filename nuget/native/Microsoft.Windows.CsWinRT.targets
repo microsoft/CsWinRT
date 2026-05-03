@@ -9,12 +9,12 @@ When a vcxproj imports this file (typically via the Microsoft.Windows.CsWinRT Nu
 ProjectReference set, picks references whose CsWinRTComponent metadata is 'true', and:
 
   1. Synthesizes a temporary aggregator csproj in the consumer's intermediate directory
-     that ProjectReferences every detected component and explicitly References each
-     component's managed implementation .dll. The explicit Reference is necessary
-     because Authoring.targets reports each component's primary output as the .winmd
-     (with the .dll attached only as ManagedImplementation metadata); the aggregator
-     needs the .dll in its ReferencePath so cswinrt's component projection generator
-     can detect [WindowsRuntimeComponentAssembly]-marked types from the references.
+     that ProjectReferences every detected component. The aggregator's TargetFramework
+     is taken from the components themselves (which are required to use a Windows-
+     targeted TFM such as net10.0-windows10.0.X.Y), so Microsoft.NET.Windows.targets'
+     RemoveManagedWinRTComponentWinMDReferences / AddWinRTComponentImplementationReference
+     pair fires automatically and re-injects each component's managed implementation .dll
+     into the aggregator's Reference set.
 
   2. Builds the aggregator with CsWinRTBuildForNativeConsumer=true so cswinrt's full
      component / interop / projection generator pipeline runs once across the union
@@ -40,9 +40,7 @@ Properties:
     ============================================================
                     _DetectCsWinRTNativeComponentReferences
 
-    Collects component project reference paths and the managed implementation .dll path
-    for each (extracted from ManagedImplementation metadata that Authoring.targets attaches
-    to each component's TargetPathWithTargetPlatformMoniker output).
+    Collects component project reference paths.
     ============================================================
   -->
   <Target Name="_DetectCsWinRTNativeComponentReferences"
@@ -51,8 +49,6 @@ Properties:
     <ItemGroup>
       <_CsWinRTComponentProjectPaths Include="%(_ResolvedProjectReferencePaths.MSBuildSourceProjectFile)"
                                      Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true'" />
-      <_CsWinRTComponentManagedImplementationPaths Include="%(_ResolvedProjectReferencePaths.ManagedImplementation)"
-                                                   Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.ManagedImplementation)' != ''" />
     </ItemGroup>
 
     <!-- Use the TFM from the first component reference. All referenced components must agree on a TFM for the aggregator's single-TFM build. -->
@@ -138,14 +134,6 @@ Properties:
       <_CsWinRTTempProjectLines Include="  &lt;/PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
-      <!--
-        Each component's TargetPathWithTargetPlatformMoniker reports the .winmd as primary,
-        so the standard ProjectReference resolution leaves the component's .dll out of the
-        aggregator's ReferencePath. Add an explicit Reference per component pointing at the
-        managed implementation path Authoring.targets exposes via metadata, so cswinrt's
-        component projection generator can see [WindowsRuntimeComponentAssembly] on it.
-      -->
-      <_CsWinRTTempProjectLines Include="    &lt;Reference Include=&quot;%(_CsWinRTComponentManagedImplementationPaths.Identity)&quot;&gt;&lt;Private&gt;false&lt;/Private&gt;&lt;/Reference&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;/ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;Sdk.targets&quot; Sdk=&quot;Microsoft.NET.Sdk&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;$(_CsWinRTTargetsForAggregator)&quot; /&gt;" />
