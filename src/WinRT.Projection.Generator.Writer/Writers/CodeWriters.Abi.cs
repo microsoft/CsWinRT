@@ -1752,7 +1752,7 @@ internal static partial class CodeWriters
             // before the Do_Abi method (mirrors C++ ordering).
             if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt) && evt.AddMethod == method)
             {
-                EmitEventTableField(w, evt, type);
+                EmitEventTableField(w, evt, type, ifaceFullName);
             }
 
             w.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
@@ -1797,16 +1797,17 @@ internal static partial class CodeWriters
     /// <summary>
     /// Emits the per-event <c>ConditionalWeakTable&lt;TInterface, EventRegistrationTokenTable&lt;THandler&gt;&gt;</c>
     /// backing field property. Mirrors the table emission in C++ <c>write_event_abi_invoke</c>.
+    /// The <paramref name="ifaceFullName"/> is the dispatch target type for the CCW (computed by
+    /// the caller in EmitDoAbiBodyIfSimple) — for instance events on authored classes this is
+    /// the runtime class type, NOT the ABI.Impl interface.
     /// </summary>
-    private static void EmitEventTableField(TypeWriter w, EventDefinition evt, TypeDefinition iface)
+    private static void EmitEventTableField(TypeWriter w, EventDefinition evt, TypeDefinition iface, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
-        string ifaceProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, iface, TypedefNameType.Projected, true)));
-        if (!ifaceProjected.StartsWith("global::", System.StringComparison.Ordinal)) { ifaceProjected = "global::" + ifaceProjected; }
         string evtType = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteEventType(w, evt)));
 
         w.Write("\nprivate static ConditionalWeakTable<");
-        w.Write(ifaceProjected);
+        w.Write(ifaceFullName);
         w.Write(", EventRegistrationTokenTable<");
         w.Write(evtType);
         w.Write(">> _");
@@ -1816,7 +1817,7 @@ internal static partial class CodeWriters
         w.Write("    get\n    {\n");
         w.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
         w.Write("        static ConditionalWeakTable<");
-        w.Write(ifaceProjected);
+        w.Write(ifaceFullName);
         w.Write(", EventRegistrationTokenTable<");
         w.Write(evtType);
         w.Write(">> MakeTable()\n        {\n");
