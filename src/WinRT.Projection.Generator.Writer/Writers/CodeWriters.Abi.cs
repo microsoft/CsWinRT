@@ -33,10 +33,12 @@ internal static partial class CodeWriters
     {
         if (sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
         {
+            // Mirror C++ is_type_blittable for fundamental_type:
+            //   return (type != fundamental_type::String);
+            // i.e. ALL fundamentals (including Boolean, Char) are considered blittable here;
+            // only String is non-blittable. Object isn't a fundamental in C++; handled below.
             return corlib.ElementType switch
             {
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean => false,
-                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char => false,
                 AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String => false,
                 AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object => false,
                 _ => true
