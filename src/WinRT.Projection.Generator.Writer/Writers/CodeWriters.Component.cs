@@ -310,7 +310,16 @@ internal static partial class CodeWriters
             w.Write("\nnamespace ABI.");
             w.Write(kv.Key);
             w.Write("\n{\npublic static class ManagedExports\n{\npublic static unsafe void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)\n{\nswitch (activatableClassId)\n{\n");
-            foreach (TypeDefinition type in kv.Value)
+            // Sort by the type's metadata token / row index so cases appear in WinMD declaration
+            // order. Mirrors C++ which uses std::set<TypeDef> (sorted by metadata RID).
+            List<TypeDefinition> orderedTypes = new(kv.Value);
+            orderedTypes.Sort((a, b) =>
+            {
+                uint ra = a.MetadataToken.Rid;
+                uint rb = b.MetadataToken.Rid;
+                return ra.CompareTo(rb);
+            });
+            foreach (TypeDefinition type in orderedTypes)
             {
                 string ns = type.Namespace?.Value ?? string.Empty;
                 string name = type.Name?.Value ?? string.Empty;
