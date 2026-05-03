@@ -429,7 +429,14 @@ internal static partial class CodeWriters
             w.Write(");\n}\n");
         }
 
-        // HasUnwrappableNativeObjectReference override
+        // Class members from interfaces (instance methods, properties, events)
+        WriteClassMembers(w, type);
+
+        // Static members from [Static] factory interfaces (e.g. GetForCurrentView).
+        WriteStaticClassMembers(w, type);
+
+        // HasUnwrappableNativeObjectReference and IsOverridableInterface overrides — emitted
+        // AFTER the static and instance members to match the C++ tool's class body ordering.
         if (!w.Settings.ReferenceProjection)
         {
             w.Write("\nprotected override bool HasUnwrappableNativeObjectReference => ");
@@ -473,12 +480,6 @@ internal static partial class CodeWriters
             if (firstClause) { w.Write("false"); }
             w.Write(";\n");
         }
-
-        // Class members from interfaces (instance methods, properties, events)
-        WriteClassMembers(w, type);
-
-        // Static members from [Static] factory interfaces (e.g. GetForCurrentView).
-        WriteStaticClassMembers(w, type);
 
         w.Write("}\n");
     }
