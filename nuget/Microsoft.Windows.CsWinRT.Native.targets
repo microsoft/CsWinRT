@@ -74,12 +74,23 @@ Properties:
       <_CsWinRTTempProjectPath>$(_CsWinRTTempProjectDir)CsWinRT.NativeConsumer.csproj</_CsWinRTTempProjectPath>
       <!-- Extract just 'net10.0-windows10.0.XXXXX.Y' portion for intermediate path (no platform suffix) -->
       <_CsWinRTTempProjectTFMDir>$(_CsWinRTComponentTargetFramework)</_CsWinRTTempProjectTFMDir>
+      <!--
+        Absolute paths to the cswinrt props/targets that the aggregator must <Import>
+        directly. The aggregator has no PackageReference to cswinrt, so cswinrt's build
+        logic (CsWinRTGen.targets, CsWinRTRemoveWinMDReferences, etc.) is not auto-imported
+        through the package convention. Without these explicit imports, the aggregator's
+        CsWinRTBuildForNativeConsumer / CsWinRTGenerateInteropAssembly properties have no
+        consumer in scope and cswinrtinteropgen never runs.
+      -->
+      <_CsWinRTPropsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.props'))</_CsWinRTPropsForAggregator>
+      <_CsWinRTTargetsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.targets'))</_CsWinRTTargetsForAggregator>
     </PropertyGroup>
 
     <MakeDir Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" Directories="$(_CsWinRTTempProjectDir)" />
 
     <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
       <_CsWinRTTempProjectLines Include="&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;$(_CsWinRTPropsForAggregator)&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;TargetFramework&gt;$(_CsWinRTComponentTargetFramework)&lt;/TargetFramework&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;Platforms&gt;x64%3Bx86%3BARM64&lt;/Platforms&gt;" />
@@ -89,26 +100,11 @@ Properties:
       <_CsWinRTTempProjectLines Include="    &lt;EnableDefaultItems&gt;false&lt;/EnableDefaultItems&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;GenerateAssemblyInfo&gt;false&lt;/GenerateAssemblyInfo&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProduceReferenceAssembly&gt;false&lt;/ProduceReferenceAssembly&gt;" />
-      <_CsWinRTTempProjectLines Include="    &lt;NoWarn&gt;$(NoWarn)%3BNETSDK1130&lt;/NoWarn&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;/PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;/ItemGroup&gt;" />
-      <!--
-        Scrub .winmd files out of the resolved reference set. Project-referencing a
-        CsWinRT component flows its .winmd in via TargetPathWithTargetPlatformMoniker;
-        the .NET SDK then rejects it with NETSDK1130 since direct .winmd references
-        aren't supported on .NET 5+. The aggregator project doesn't import
-        CsWinRT.targets (no PackageReference), so the standard CsWinRTRemoveWinMDReferences
-        target isn't available here — inline the scrub.
-      -->
-      <_CsWinRTTempProjectLines Include="  &lt;Target Name=&quot;_CsWinRTAggregatorRemoveWinMDReferences&quot; AfterTargets=&quot;ResolveProjectReferences&quot; BeforeTargets=&quot;ResolveAssemblyReferences&quot;&gt;" />
-      <_CsWinRTTempProjectLines Include="    &lt;ItemGroup&gt;" />
-      <_CsWinRTTempProjectLines Include="      &lt;_ResolvedProjectReferencePaths Remove=&quot;@(_ResolvedProjectReferencePaths)&quot; Condition=&quot;'%(_ResolvedProjectReferencePaths.Extension)' == '.winmd'&quot; /&gt;" />
-      <_CsWinRTTempProjectLines Include="      &lt;Reference Remove=&quot;@(Reference)&quot; Condition=&quot;'%(Reference.Extension)' == '.winmd'&quot; /&gt;" />
-      <_CsWinRTTempProjectLines Include="      &lt;ReferencePath Remove=&quot;@(ReferencePath)&quot; Condition=&quot;'%(ReferencePath.Extension)' == '.winmd'&quot; /&gt;" />
-      <_CsWinRTTempProjectLines Include="    &lt;/ItemGroup&gt;" />
-      <_CsWinRTTempProjectLines Include="  &lt;/Target&gt;" />
+      <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;$(_CsWinRTTargetsForAggregator)&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="&lt;/Project&gt;" />
     </ItemGroup>
 
