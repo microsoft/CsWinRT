@@ -2006,6 +2006,24 @@ internal static partial class CodeWriters
         // For the default '__return_value__' param this becomes '____return_value__'.
         string retLocalName = "__" + retParamName;
 
+        // Mirror C++ ordering: emit any [UnsafeAccessor] static local function declarations
+        // at the TOP of the method body (before local declarations and the try block). The
+        // actual call sites later in the body just reference the already-declared accessor.
+        // For a generic-instance return type, the accessor is named ConvertToUnmanaged_<retParamName>.
+        if (returnIsGenericInstance)
+        {
+            string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
+            string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+            w.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            w.Write("    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
+            w.Write(retParamName);
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(interopTypeName);
+            w.Write("\")] object _, ");
+            w.Write(projectedTypeName);
+            w.Write(" value);\n\n");
+        }
+
         // Mirror C++ ordering: declare the return local first with default value, then zero
         // the OUT pointer(s). The actual assignment happens inside the try block.
         if (rt is not null)
@@ -2478,17 +2496,8 @@ internal static partial class CodeWriters
                 }
                 else if (returnIsGenericInstance)
                 {
-                    // Generic instance return: emit local UnsafeAccessor delegate to ConvertToUnmanaged + .DetachThisPtrUnsafe()
-                    string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
-                    string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
-                    w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
-                    w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
-                    w.Write(retParamName);
-                    w.Write("([UnsafeAccessorType(\"");
-                    w.Write(interopTypeName);
-                    w.Write("\")] object _, ");
-                    w.Write(projectedTypeName);
-                    w.Write(" value);\n");
+                    // Generic instance return: use the UnsafeAccessor static local function declared at
+                    // the top of the method body via the M12 hoisting pass; just emit the call here.
                     w.Write("        *");
                     w.Write(retParamName);
                     w.Write(" = ConvertToUnmanaged_");
