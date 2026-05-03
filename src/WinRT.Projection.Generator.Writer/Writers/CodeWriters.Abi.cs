@@ -3212,6 +3212,7 @@ internal static partial class CodeWriters
             if (IsRuntimeClassOrInterface(p.Type)) { continue; }
             if (IsObject(p.Type)) { continue; }
             if (IsGenericInstance(p.Type)) { continue; }
+            if (IsMappedAbiValueType(p.Type)) { continue; }
             return false;
         }
 
@@ -3230,7 +3231,8 @@ internal static partial class CodeWriters
             || IsObject(rt)
             || IsGenericInstance(rt)
             || returnIsReceiveArray
-            || returnIsHResultException;
+            || returnIsHResultException
+            || (rt is not null && IsMappedAbiValueType(rt));
         return returnSimple;
     }
 
@@ -3298,6 +3300,7 @@ internal static partial class CodeWriters
             if (IsHResultException(p.Type)) { fp.Append("global::ABI.System.Exception"); }
             else if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { fp.Append("void*"); }
             else if (IsAnyStruct(p.Type)) { fp.Append(GetBlittableStructAbiType(w, p.Type)); }
+            else if (IsMappedAbiValueType(p.Type)) { fp.Append(GetMappedAbiTypeName(p.Type)); }
             else { fp.Append(GetAbiPrimitiveType(p.Type)); }
         }
         if (rt is not null)
@@ -3330,6 +3333,7 @@ internal static partial class CodeWriters
                 if (returnIsString || returnIsRefType) { fp.Append("void**"); }
                 else if (returnIsAnyStruct) { fp.Append(GetBlittableStructAbiType(w, rt)); fp.Append('*'); }
                 else if (returnIsComplexStruct) { fp.Append(GetAbiStructTypeName(w, rt)); fp.Append('*'); }
+                else if (rt is not null && IsMappedAbiValueType(rt)) { fp.Append(GetMappedAbiTypeName(rt)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(rt)); fp.Append('*'); }
             }
         }
@@ -3559,6 +3563,13 @@ internal static partial class CodeWriters
         {
             w.Write("        ");
             w.Write(GetAbiStructTypeName(w, rt!));
+            w.Write(" __retval = default;\n");
+        }
+        else if (rt is not null && IsMappedAbiValueType(rt))
+        {
+            // Mapped value type return (e.g. DateTime/TimeSpan): use the ABI struct as __retval.
+            w.Write("        ");
+            w.Write(GetMappedAbiTypeName(rt));
             w.Write(" __retval = default;\n");
         }
         else if (rt is not null)
@@ -4020,6 +4031,14 @@ internal static partial class CodeWriters
                     EmitMarshallerConvertToManaged(w, rt, "__retval");
                     w.Write(";\n");
                 }
+            }
+            else if (rt is not null && IsMappedAbiValueType(rt))
+            {
+                // Mapped value type return (e.g. DateTime/TimeSpan): convert ABI struct back via marshaller.
+                w.Write(callIndent);
+                w.Write("return ");
+                w.Write(GetMappedMarshallerName(rt));
+                w.Write(".ConvertToManaged(__retval);\n");
             }
             else if (returnIsAnyStruct)
             {
