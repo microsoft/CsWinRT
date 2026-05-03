@@ -634,7 +634,8 @@ internal static partial class CodeWriters
             || IsString(rt)
             || IsRuntimeClassOrInterface(rt)
             || IsObject(rt)
-            || IsGenericInstance(rt);
+            || IsGenericInstance(rt)
+            || IsComplexStruct(rt);
         if (rt is not null && IsHResultException(rt)) { simpleParamsAndReturn = false; }
         if (simpleParamsAndReturn)
         {
@@ -658,6 +659,7 @@ internal static partial class CodeWriters
                 if (IsRuntimeClassOrInterface(p.Type)) { continue; }
                 if (IsObject(p.Type)) { continue; }
                 if (IsGenericInstance(p.Type)) { continue; }
+                if (IsComplexStruct(p.Type)) { continue; }
                 simpleParamsAndReturn = false; break;
             }
         }
@@ -673,6 +675,7 @@ internal static partial class CodeWriters
         bool returnIsRefType = hasReturn && (IsRuntimeClassOrInterface(rt!) || IsObject(rt!));
         bool returnIsAnyStruct = hasReturn && IsAnyStruct(rt!);
         bool returnIsGenericInstance = hasReturn && IsGenericInstance(rt!);
+        bool returnIsComplexStruct = hasReturn && IsComplexStruct(rt!);
 
         w.Write("\n    {\n");
         w.Write("        using WindowsRuntimeObjectReferenceValue objectValue = objectReference.AsValue();\n");
@@ -734,6 +737,17 @@ internal static partial class CodeWriters
                 w.Write(callName);
                 w.Write(");\n");
             }
+            else if (IsComplexStruct(p.Type))
+            {
+                // Complex struct param (delegate Invoke): declare ABI struct local before try.
+                // The try block will populate it via the marshaller; finally will Dispose.
+                string raw = p.Parameter.Name ?? "param";
+                w.Write("        ");
+                w.Write(GetAbiStructTypeName(w, p.Type));
+                w.Write(" __");
+                w.Write(raw);
+                w.Write(" = default;\n");
+            }
         }
         // String params: declare void* locals (initialized later inside try).
         bool hasStringParams = false;
@@ -754,12 +768,18 @@ internal static partial class CodeWriters
         {
             w.Write("        ");
             if (returnIsString || returnIsRefType || returnIsGenericInstance) { w.Write("void*"); }
+            else if (returnIsComplexStruct) { w.Write(GetAbiStructTypeName(w, rt!)); }
             else if (returnIsAnyStruct) { w.Write(GetBlittableStructAbiType(w, rt!)); }
             else { w.Write(GetAbiPrimitiveType(rt!)); }
             w.Write(" __retval = default;\n");
         }
 
-        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsGenericInstance;
+        bool hasComplexStructInputs = false;
+        for (int ci = 0; ci < sig.Params.Count; ci++)
+        {
+            if (IsComplexStruct(sig.Params[ci].Type)) { hasComplexStructInputs = true; break; }
+        }
+        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsGenericInstance || returnIsComplexStruct || hasComplexStructInputs;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
         string indent = needsTryFinally ? "            " : "        ";
 
@@ -776,6 +796,25 @@ internal static partial class CodeWriters
                 w.Write(callName);
                 w.Write(");\n");
             }
+        }
+
+        // Inside try (if applicable): assign __<name> for complex-struct In params via marshaller.
+        // Mirrors truth: '__<name> = <Marshaller>.ConvertToUnmanaged(<name>);'
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
+            if (!IsComplexStruct(p.Type)) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            w.Write(indent);
+            w.Write("__");
+            w.Write(raw);
+            w.Write(" = ");
+            w.Write(GetMarshallerFullName(w, p.Type));
+            w.Write(".ConvertToUnmanaged(");
+            w.Write(callName);
+            w.Write(");\n");
         }
 
         // Open fixed blocks for PassArray/FillArray params (blittable element only).
@@ -833,6 +872,12 @@ internal static partial class CodeWriters
                 w.Write(raw);
                 w.Write(".GetThisPtrUnsafe()");
             }
+            else if (IsComplexStruct(p.Type))
+            {
+                // Complex struct: pass the pre-marshalled ABI struct local.
+                w.Write("__");
+                w.Write(raw);
+            }
             else if (IsAnyStruct(p.Type))
             {
                 w.Write(callName);
@@ -887,6 +932,13 @@ internal static partial class CodeWriters
                 w.Write("\")] object _, void* value);\n");
                 w.Write(callIndent);
                 w.Write("return ConvertToManaged_retval(null, __retval);\n");
+            }
+            else if (returnIsComplexStruct)
+            {
+                // Complex struct return: convert ABI struct to projected via marshaller. Finally Disposes __retval.
+                w.Write("return ");
+                w.Write(GetMarshallerFullName(w, rt!));
+                w.Write(".ConvertToManaged(__retval);\n");
             }
             else if (returnIsAnyStruct)
             {
@@ -943,6 +995,25 @@ internal static partial class CodeWriters
             else if (returnIsGenericInstance)
             {
                 w.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
+            }
+            else if (returnIsComplexStruct)
+            {
+                w.Write("            ");
+                w.Write(GetMarshallerFullName(w, rt!));
+                w.Write(".Dispose(__retval);\n");
+            }
+            // Dispose complex-struct In param locals.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
+                if (!IsComplexStruct(p.Type)) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                w.Write("            ");
+                w.Write(GetMarshallerFullName(w, p.Type));
+                w.Write(".Dispose(__");
+                w.Write(raw);
+                w.Write(");\n");
             }
             w.Write("        }\n");
         }
@@ -3345,7 +3416,7 @@ internal static partial class CodeWriters
         if (rt is not null)
         {
             if (IsHResultException(rt)) { return false; }
-            if (!(IsBlittablePrimitive(rt) || IsAnyStruct(rt) || IsString(rt) || IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt))) { return false; }
+            if (!(IsBlittablePrimitive(rt) || IsAnyStruct(rt) || IsString(rt) || IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt) || IsComplexStruct(rt))) { return false; }
         }
         foreach (ParamInfo p in sig.Params)
         {
@@ -3367,6 +3438,7 @@ internal static partial class CodeWriters
             if (IsRuntimeClassOrInterface(p.Type)) { continue; }
             if (IsObject(p.Type)) { continue; }
             if (IsGenericInstance(p.Type)) { continue; }
+            if (IsComplexStruct(p.Type)) { continue; }
             return false;
         }
         return true;
