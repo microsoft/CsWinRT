@@ -195,6 +195,9 @@ internal static partial class CodeWriters
             if (Helpers.IsSpecial(method)) { continue; }
             MethodSig sig = new(method);
             w.Write("\n");
+            // Mirror C++ write_interface_required which calls write_custom_attributes for method.CustomAttribute().
+            // Only emit Windows.Foundation.Metadata attributes that have a projected form (Overload, DefaultOverload, AttributeUsage, Experimental).
+            WriteMethodCustomAttributes(w, method);
             WriteProjectionReturnType(w, sig);
             w.Write(" ");
             w.Write(method.Name?.Value ?? string.Empty);
@@ -227,6 +230,58 @@ internal static partial class CodeWriters
             w.Write(" ");
             w.Write(evt.Name?.Value ?? string.Empty);
             w.Write(";");
+        }
+    }
+
+    /// <summary>
+    /// Emits the projected custom attributes for an interface method. Mirrors C++
+    /// <c>write_custom_attributes</c> filtered for the projected attributes.
+    /// </summary>
+    private static void WriteMethodCustomAttributes(TypeWriter w, MethodDefinition method)
+    {
+        foreach (CustomAttribute attr in method.CustomAttributes)
+        {
+            ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
+            if (attrType is null) { continue; }
+            string ns = attrType.Namespace?.Value ?? string.Empty;
+            string nm = attrType.Name?.Value ?? string.Empty;
+            if (ns != "Windows.Foundation.Metadata") { continue; }
+            string baseName = nm.EndsWith("Attribute", System.StringComparison.Ordinal) ? nm[..^"Attribute".Length] : nm;
+            // Only the attributes the C++ tool considers projected (see code_writers.h).
+            if (baseName is not ("Overload" or "DefaultOverload" or "Experimental"))
+            {
+                continue;
+            }
+            w.Write("[global::Windows.Foundation.Metadata.");
+            w.Write(baseName);
+            // Args: only handle string args (sufficient for [Overload(@"X")]). [DefaultOverload] has none.
+            if (attr.Signature is not null && attr.Signature.FixedArguments.Count > 0)
+            {
+                w.Write("(");
+                for (int i = 0; i < attr.Signature.FixedArguments.Count; i++)
+                {
+                    if (i > 0) { w.Write(", "); }
+                    object? val = attr.Signature.FixedArguments[i].Element;
+                    if (val is AsmResolver.Utf8String s)
+                    {
+                        w.Write("@\"");
+                        w.Write(s.Value);
+                        w.Write("\"");
+                    }
+                    else if (val is string ss)
+                    {
+                        w.Write("@\"");
+                        w.Write(ss);
+                        w.Write("\"");
+                    }
+                    else
+                    {
+                        w.Write(val?.ToString() ?? string.Empty);
+                    }
+                }
+                w.Write(")");
+            }
+            w.Write("]\n");
         }
     }
 

@@ -187,40 +187,51 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Writes a static-factory forwarding property: <c>public Ret PropName { get =&gt; global::Ns.Type.PropName; set =&gt; ... = value; }</c>.
-    /// Mirrors C++ <c>write_static_factory_property</c>.
+    /// Writes a static-factory forwarding property: a multi-line block matching C++
+    /// <c>write_property</c> + <c>write_static_factory_property</c>.
     /// </summary>
     private static void WriteStaticFactoryProperty(TypeWriter w, PropertyDefinition prop, string projectedTypeName)
     {
         string propName = prop.Name?.Value ?? string.Empty;
         (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+        // Single-line form when no setter is present (mirrors C++ early-return path).
+        if (setter is null)
+        {
+            w.Write("\npublic ");
+            WriteFactoryPropertyType(w, prop);
+            w.Write(" ");
+            w.Write(propName);
+            w.Write(" => ");
+            w.Write(projectedTypeName);
+            w.Write(".");
+            w.Write(propName);
+            w.Write(";\n");
+            return;
+        }
         w.Write("\npublic ");
         WriteFactoryPropertyType(w, prop);
         w.Write(" ");
         w.Write(propName);
-        w.Write(" { ");
+        w.Write("\n{\n");
         if (getter is not null)
         {
             w.Write("get => ");
             w.Write(projectedTypeName);
             w.Write(".");
             w.Write(propName);
-            w.Write("; ");
+            w.Write(";\n");
         }
-        if (setter is not null)
-        {
-            w.Write("set => ");
-            w.Write(projectedTypeName);
-            w.Write(".");
-            w.Write(propName);
-            w.Write(" = value; ");
-        }
+        w.Write("set => ");
+        w.Write(projectedTypeName);
+        w.Write(".");
+        w.Write(propName);
+        w.Write(" = value;\n");
         w.Write("}\n");
     }
 
     /// <summary>
-    /// Writes a static-factory forwarding event: <c>public event Handler EvtName { add =&gt; ... ; remove =&gt; ... ; }</c>.
-    /// Mirrors C++ <c>write_static_factory_event</c>.
+    /// Writes a static-factory forwarding event as a multi-line block matching C++
+    /// <c>write_event</c> + <c>write_static_factory_event</c>.
     /// </summary>
     private static void WriteStaticFactoryEvent(TypeWriter w, EventDefinition evt, string projectedTypeName)
     {
@@ -229,19 +240,22 @@ internal static partial class CodeWriters
         if (evt.EventType is not null)
         {
             TypeSemantics evtSemantics = TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType);
-            WriteTypeName(w, evtSemantics, TypedefNameType.Projected, true);
+            WriteTypeName(w, evtSemantics, TypedefNameType.Projected, false);
         }
         w.Write(" ");
         w.Write(evtName);
-        w.Write(" { add => ");
+        w.Write("\n{\n");
+        w.Write("add => ");
         w.Write(projectedTypeName);
         w.Write(".");
         w.Write(evtName);
-        w.Write(" += value; remove => ");
+        w.Write(" += value;\n");
+        w.Write("remove => ");
         w.Write(projectedTypeName);
         w.Write(".");
         w.Write(evtName);
-        w.Write(" -= value; }\n");
+        w.Write(" -= value;\n");
+        w.Write("}\n");
     }
 
     private static void WriteFactoryReturnType(TypeWriter w, MethodDefinition method)
