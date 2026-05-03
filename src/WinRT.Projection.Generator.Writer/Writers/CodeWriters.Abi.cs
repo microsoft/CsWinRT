@@ -590,8 +590,10 @@ internal static partial class CodeWriters
         // Replace generic arity backtick with apostrophe.
         typeName = typeName.Replace('`', '\'');
 
-        // Assembly marker prefix.
-        sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped));
+        // Assembly marker prefix. Pass the type so that third-party (e.g. component-authored)
+        // types resolve to their actual assembly name (e.g. <AuthoringTest>) instead of
+        // defaulting to <#Windows>.
+        sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
         // Top-level: just the type name (no namespace).
         sb.Append(typeName);
 
@@ -2234,20 +2236,37 @@ internal static partial class CodeWriters
             string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
             string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
             string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+            // For complex structs, the data param and the call-site cast use the ABI struct
+            // pointer type instead of void**.
+            string dataParamType;
+            string dataCastExpr;
+            if (IsComplexStruct(szArr.BaseType))
+            {
+                string abiStructName = GetAbiStructTypeName(w, szArr.BaseType);
+                dataParamType = abiStructName + "* data";
+                dataCastExpr = ptr;
+            }
+            else
+            {
+                dataParamType = "void** data";
+                dataCastExpr = "(void**)" + ptr;
+            }
             w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]\n");
             w.Write("        static extern void CopyToManaged_");
             w.Write(raw);
             w.Write("([UnsafeAccessorType(\"");
             w.Write(GetArrayMarshallerInteropPath(w, szArr.BaseType, elementInteropArg));
-            w.Write("\")] object _, uint length, void** data, Span<");
+            w.Write("\")] object _, uint length, ");
+            w.Write(dataParamType);
+            w.Write(", Span<");
             w.Write(elementProjected);
             w.Write("> span);\n");
             w.Write("        CopyToManaged_");
             w.Write(raw);
             w.Write("(null, __");
             w.Write(raw);
-            w.Write("Length, (void**)");
-            w.Write(ptr);
+            w.Write("Length, ");
+            w.Write(dataCastExpr);
             w.Write(", __");
             w.Write(raw);
             w.Write(");\n");
@@ -4476,8 +4495,24 @@ internal static partial class CodeWriters
             w.Write(localName);
             w.Write("_length = default;\n");
             w.Write("        ");
-            if (IsAnyStruct(sza.BaseType)) { w.Write(GetBlittableStructAbiType(w, sza.BaseType)); }
-            else { w.Write(GetAbiPrimitiveType(sza.BaseType)); }
+            // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
+            // primitive ABI otherwise.
+            if (IsString(sza.BaseType) || IsRuntimeClassOrInterface(sza.BaseType) || IsObject(sza.BaseType))
+            {
+                w.Write("void*");
+            }
+            else if (IsComplexStruct(sza.BaseType))
+            {
+                w.Write(GetAbiStructTypeName(w, sza.BaseType));
+            }
+            else if (IsAnyStruct(sza.BaseType))
+            {
+                w.Write(GetBlittableStructAbiType(w, sza.BaseType));
+            }
+            else
+            {
+                w.Write(GetAbiPrimitiveType(sza.BaseType));
+            }
             w.Write("* __");
             w.Write(localName);
             w.Write("_data = default;\n");
@@ -4494,12 +4529,14 @@ internal static partial class CodeWriters
             if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
             // Non-blittable element type: emit InlineArray16<storageT> + ArrayPool<storageT>.
             // For mapped value types (DateTime/TimeSpan), use the ABI struct type.
-            // For everything else (runtime classes, objects, strings), use nint.
+            // For complex structs (e.g. authored BasicStruct with reference fields), use the ABI
+            // struct type. For everything else (runtime classes, objects, strings), use nint.
             string localName = GetParamLocalName(p, paramNameOverride);
             string callName = GetParamName(p, paramNameOverride);
-            string storageT = IsMappedAbiValueType(szArr.BaseType)
-                ? GetMappedAbiTypeName(szArr.BaseType)
-                : "nint";
+            string storageT;
+            if (IsMappedAbiValueType(szArr.BaseType)) { storageT = GetMappedAbiTypeName(szArr.BaseType); }
+            else if (IsComplexStruct(szArr.BaseType)) { storageT = GetAbiStructTypeName(w, szArr.BaseType); }
+            else { storageT = "nint"; }
             w.Write("\n        Unsafe.SkipInit(out InlineArray16<");
             w.Write(storageT);
             w.Write("> __");
@@ -4783,9 +4820,15 @@ internal static partial class CodeWriters
                 AsmResolver.DotNet.Signatures.TypeSignature elemT = ((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType;
                 bool isBlittableElem = IsBlittablePrimitive(elemT) || IsAnyStruct(elemT);
                 bool isStringElem = IsString(elemT);
+                // For complex structs (e.g. authored BasicStruct), the storage element is the
+                // ABI struct type and the fixed() pointer must be typed accordingly so that the
+                // CopyToUnmanaged accessor receives a typed pointer instead of void*.
+                string fixedPtrType = IsComplexStruct(elemT) ? GetAbiStructTypeName(w, elemT) + "*" : "void*";
                 w.Write(indent);
                 w.Write(new string(' ', fixedNesting * 4));
-                w.Write("fixed(void* _");
+                w.Write("fixed(");
+                w.Write(fixedPtrType);
+                w.Write(" _");
                 w.Write(localName);
                 w.Write(" = ");
                 if (isBlittableElem)
@@ -4873,11 +4916,29 @@ internal static partial class CodeWriters
             {
                 string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
                 string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-                // For mapped value types (DateTime/TimeSpan), the storage element is the ABI struct type;
-                // the data pointer parameter and cast use that type. For runtime classes/objects, use void*.
-                bool isMappedElem = IsMappedAbiValueType(szArr.BaseType);
-                string dataParamType = isMappedElem ? GetMappedAbiTypeName(szArr.BaseType) + "*" : "void**";
-                string dataCastType = isMappedElem ? "(" + GetMappedAbiTypeName(szArr.BaseType) + "*)" : "(void**)";
+                // For mapped value types (DateTime/TimeSpan) and complex structs, the storage
+                // element is the ABI struct type; the data pointer parameter type uses that
+                // ABI struct. Mapped value types still need a cast (the fixed() opens with
+                // void*); complex structs don't (the fixed() now opens with the typed pointer
+                // via the M2 fix). For runtime classes/objects, use void**.
+                string dataParamType;
+                string dataCastType;
+                if (IsMappedAbiValueType(szArr.BaseType))
+                {
+                    dataParamType = GetMappedAbiTypeName(szArr.BaseType) + "*";
+                    dataCastType = "(" + GetMappedAbiTypeName(szArr.BaseType) + "*)";
+                }
+                else if (IsComplexStruct(szArr.BaseType))
+                {
+                    string abiStructName = GetAbiStructTypeName(w, szArr.BaseType);
+                    dataParamType = abiStructName + "*";
+                    dataCastType = string.Empty;
+                }
+                else
+                {
+                    dataParamType = "void**";
+                    dataCastType = "(void**)";
+                }
                 w.Write(callIndent);
                 w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
                 w.Write(callIndent);
@@ -5090,10 +5151,18 @@ internal static partial class CodeWriters
             string localName = GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
             string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sza.BaseType))));
-            string elementAbi = IsAnyStruct(sza.BaseType)
-                ? GetBlittableStructAbiType(w, sza.BaseType)
-                : GetAbiPrimitiveType(sza.BaseType);
+            // Element ABI type: void* for ref types (string/runtime class/object); ABI struct
+            // type for complex structs (e.g. authored BasicStruct); blittable struct ABI for
+            // blittable structs; primitive ABI otherwise.
+            string elementAbi = IsString(sza.BaseType) || IsRuntimeClassOrInterface(sza.BaseType) || IsObject(sza.BaseType)
+                ? "void*"
+                : IsComplexStruct(sza.BaseType)
+                    ? GetAbiStructTypeName(w, sza.BaseType)
+                    : IsAnyStruct(sza.BaseType)
+                        ? GetBlittableStructAbiType(w, sza.BaseType)
+                        : GetAbiPrimitiveType(sza.BaseType);
             string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+            string marshallerPath = GetArrayMarshallerInteropPath(w, sza.BaseType, elementInteropArg);
             w.Write(callIndent);
             w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
             w.Write(callIndent);
@@ -5101,9 +5170,9 @@ internal static partial class CodeWriters
             w.Write(elementProjected);
             w.Write("[] ConvertToManaged_");
             w.Write(localName);
-            w.Write("([UnsafeAccessorType(\"ABI.System.<");
-            w.Write(elementInteropArg);
-            w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, uint length, ");
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(marshallerPath);
+            w.Write("\")] object _, uint length, ");
             w.Write(elementAbi);
             w.Write("* data);\n");
             w.Write(callIndent);
@@ -5307,14 +5376,39 @@ internal static partial class CodeWriters
                 }
                 else
                 {
+                    // For complex structs, both the Dispose_<name> data param and the fixed()
+                    // pointer must be typed as <ABI struct>*; the cast can be omitted. For
+                    // runtime classes / objects / strings the data is void** and the fixed()
+                    // remains void* with a (void**) cast.
+                    string disposeDataParamType;
+                    string fixedPtrType;
+                    string disposeCastType;
+                    if (IsComplexStruct(szArr.BaseType))
+                    {
+                        string abiStructName = GetAbiStructTypeName(w, szArr.BaseType);
+                        disposeDataParamType = abiStructName + "*";
+                        fixedPtrType = abiStructName + "*";
+                        disposeCastType = string.Empty;
+                    }
+                    else
+                    {
+                        disposeDataParamType = "void** data";
+                        fixedPtrType = "void*";
+                        disposeCastType = "(void**)";
+                    }
                     string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                     w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]\n");
                     w.Write("            static extern void Dispose_");
                     w.Write(localName);
                     w.Write("([UnsafeAccessorType(\"");
                     w.Write(GetArrayMarshallerInteropPath(w, szArr.BaseType, elementInteropArg));
-                    w.Write("\")] object _, uint length, void** data);\n\n");
-                    w.Write("            fixed(void* _");
+                    w.Write("\")] object _, uint length, ");
+                    w.Write(disposeDataParamType);
+                    if (!disposeDataParamType.EndsWith("data", System.StringComparison.Ordinal)) { w.Write(" data"); }
+                    w.Write(");\n\n");
+                    w.Write("            fixed(");
+                    w.Write(fixedPtrType);
+                    w.Write(" _");
                     w.Write(localName);
                     w.Write(" = __");
                     w.Write(localName);
@@ -5323,14 +5417,24 @@ internal static partial class CodeWriters
                     w.Write(localName);
                     w.Write("(null, (uint) __");
                     w.Write(localName);
-                    w.Write("_span.Length, (void**)_");
+                    w.Write("_span.Length, ");
+                    w.Write(disposeCastType);
+                    w.Write("_");
                     w.Write(localName);
                     w.Write(");\n            }\n");
                 }
+                // ArrayPool storage type matches the InlineArray storage (mapped ABI value type
+                // for DateTime/TimeSpan; ABI struct for complex structs; nint otherwise).
+                string poolStorageT;
+                if (IsMappedAbiValueType(szArr.BaseType)) { poolStorageT = GetMappedAbiTypeName(szArr.BaseType); }
+                else if (IsComplexStruct(szArr.BaseType)) { poolStorageT = GetAbiStructTypeName(w, szArr.BaseType); }
+                else { poolStorageT = "nint"; }
                 w.Write("\n            if (__");
                 w.Write(localName);
                 w.Write("_arrayFromPool is not null)\n            {\n");
-                w.Write("                global::System.Buffers.ArrayPool<nint>.Shared.Return(__");
+                w.Write("                global::System.Buffers.ArrayPool<");
+                w.Write(poolStorageT);
+                w.Write(">.Shared.Return(__");
                 w.Write(localName);
                 w.Write("_arrayFromPool);\n            }\n");
             }
@@ -5379,16 +5483,23 @@ internal static partial class CodeWriters
                 if (cat != ParamCategory.ReceiveArray) { continue; }
                 string localName = GetParamLocalName(p, paramNameOverride);
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
-                string elementAbi = IsAnyStruct(sza.BaseType)
-                    ? GetBlittableStructAbiType(w, sza.BaseType)
-                    : GetAbiPrimitiveType(sza.BaseType);
+                // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
+                // primitive ABI otherwise. (Same categorization as the ConvertToManaged_<name> path.)
+                string elementAbi = IsString(sza.BaseType) || IsRuntimeClassOrInterface(sza.BaseType) || IsObject(sza.BaseType)
+                    ? "void*"
+                    : IsComplexStruct(sza.BaseType)
+                        ? GetAbiStructTypeName(w, sza.BaseType)
+                        : IsAnyStruct(sza.BaseType)
+                            ? GetBlittableStructAbiType(w, sza.BaseType)
+                            : GetAbiPrimitiveType(sza.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+                string marshallerPath = GetArrayMarshallerInteropPath(w, sza.BaseType, elementInteropArg);
                 w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
                 w.Write("            static extern void Free_");
                 w.Write(localName);
-                w.Write("([UnsafeAccessorType(\"ABI.System.<");
-                w.Write(elementInteropArg);
-                w.Write(">ArrayMarshaller, WinRT.Interop\")] object _, uint length, ");
+                w.Write("([UnsafeAccessorType(\"");
+                w.Write(marshallerPath);
+                w.Write("\")] object _, uint length, ");
                 w.Write(elementAbi);
                 w.Write("* data);\n\n");
                 w.Write("            Free_");
