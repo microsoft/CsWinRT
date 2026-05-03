@@ -270,6 +270,27 @@ internal static partial class CodeWriters
         {
             sig = sig.InstantiateGenericTypes(new AsmResolver.DotNet.Signatures.GenericContext(currentInstance, null));
         }
+        // Special case for Microsoft.UI.Xaml.Input.ICommand.CanExecuteChanged: the WinRT event
+        // handler is EventHandler<object> but C# expects non-generic EventHandler. Mirrors C++:
+        //   if (event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
+        //       check parent_type_name == ICommand and override event_type
+        if (evt.Name?.Value == "CanExecuteChanged"
+            && evt.DeclaringType is { } declaringType
+            && (declaringType.FullName == "Microsoft.UI.Xaml.Input.ICommand"
+                || declaringType.FullName == "Windows.UI.Xaml.Input.ICommand"))
+        {
+            // Verify the event type matches EventHandler<object> before applying override.
+            if (sig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi
+                && gi.GenericType.Namespace?.Value == "Windows.Foundation"
+                && gi.GenericType.Name?.Value == "EventHandler`1"
+                && gi.TypeArguments.Count == 1
+                && gi.TypeArguments[0] is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib
+                && corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object)
+            {
+                w.Write("global::System.EventHandler");
+                return;
+            }
+        }
         // Mirrors C++ write_event: typedef_name_type::Projected, forceWriteNamespace=false.
         // The outer EventHandler still gets 'global::System.' from being in a different namespace,
         // but type args in the same namespace stay unqualified.

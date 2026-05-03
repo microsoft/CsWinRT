@@ -293,7 +293,15 @@ internal static partial class CodeWriters
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
+            // Resolve TypeRef → TypeDefinition via metadata cache (so we pick up cross-module
+            // inherited interfaces, e.g. Windows.UI.Composition.IAnimationObject from a XAML class).
             TypeDefinition? ifaceType = impl.Interface as TypeDefinition;
+            if (ifaceType is null && impl.Interface is TypeReference tr)
+            {
+                string trNs = tr.Namespace?.Value ?? string.Empty;
+                string trNm = tr.Name?.Value ?? string.Empty;
+                ifaceType = ResolveCrossModuleType(trNs, trNm);
+            }
             if (ifaceType is null) { continue; }
 
             string ns = ifaceType.Namespace?.Value ?? string.Empty;
@@ -311,6 +319,12 @@ internal static partial class CodeWriters
                 _ = interfacesEmitted.Add(ifaceType);
             }
         }
+    }
+
+    private static TypeDefinition? ResolveCrossModuleType(string ns, string name)
+    {
+        if (_cacheRef is null) { return null; }
+        return _cacheRef.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
     }
 
     /// <summary>Writes the InterfaceIIDs file header (mirrors C++ <c>write_begin_interface_iids</c> in type_writers.h).</summary>

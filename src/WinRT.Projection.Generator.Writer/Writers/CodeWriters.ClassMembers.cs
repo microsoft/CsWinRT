@@ -197,6 +197,33 @@ internal static partial class CodeWriters
                 }
                 w.Write("}\n");
             }
+
+            // For overridable properties, emit an explicit interface implementation that
+            // delegates to the protected property. Mirrors truth pattern:
+            //   T InterfaceName.PropName { get => PropName; }
+            //   T InterfaceName.PropName { set => PropName = value; }
+            if (s.IsOverridable && s.OverridableInterface is not null)
+            {
+                w.Write(s.PropTypeText);
+                w.Write(" ");
+                WriteInterfaceTypeNameForCcw(w, s.OverridableInterface);
+                w.Write(".");
+                w.Write(kvp.Key);
+                w.Write(" {");
+                if (s.HasGetter)
+                {
+                    w.Write("get => ");
+                    w.Write(kvp.Key);
+                    w.Write("; ");
+                }
+                if (s.HasSetter)
+                {
+                    w.Write("set => ");
+                    w.Write(kvp.Key);
+                    w.Write(" = value; ");
+                }
+                w.Write("}\n");
+            }
         }
 
         // Emit explicit IWindowsRuntimeInterface<T>.GetInterface() implementations once at the end,
@@ -306,6 +333,10 @@ internal static partial class CodeWriters
         public string SetterGenericInteropType = string.Empty;
         public string SetterGenericAccessorName = string.Empty;
         public string SetterPropTypeText = string.Empty;
+        // True if this property comes from an Overridable interface (needs explicit interface impl).
+        public bool IsOverridable;
+        // The originating interface (used to qualify the explicit interface impl).
+        public ITypeDefOrRef? OverridableInterface;
     }
 
     /// <summary>
@@ -460,12 +491,13 @@ internal static partial class CodeWriters
         HashSet<string> writtenMethods, Dictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents)
     {
         bool sealed_ = classType.IsSealed;
-        // Determine accessibility and method modifier
+        // Determine accessibility and method modifier.
+        // Overridable interfaces are emitted with 'protected' visibility, plus 'virtual' on
+        // non-sealed classes. Sealed classes still get 'protected' (without virtual).
         string access = (isOverridable || isProtected) ? "protected " : "public ";
         string methodSpec = string.Empty;
         if (isOverridable && !sealed_)
         {
-            access = "protected ";
             methodSpec = "virtual ";
         }
 
@@ -586,6 +618,30 @@ internal static partial class CodeWriters
                 }
                 w.Write(");\n");
             }
+
+            // For overridable interface methods, emit an explicit interface implementation
+            // that delegates to the protected (and virtual on non-sealed) method. Mirrors C++
+            // overridable interface pattern:
+            //   T InterfaceName.MethodName(args) => MethodName(args);
+            if (isOverridable)
+            {
+                WriteProjectionReturnType(w, sig);
+                w.Write(" ");
+                WriteInterfaceTypeNameForCcw(w, originalInterface);
+                w.Write(".");
+                w.Write(name);
+                w.Write("(");
+                WriteParameterList(w, sig);
+                w.Write(") => ");
+                w.Write(name);
+                w.Write("(");
+                for (int i = 0; i < sig.Params.Count; i++)
+                {
+                    if (i > 0) { w.Write(", "); }
+                    WriteParameterNameWithModifier(w, sig.Params[i]);
+                }
+                w.Write(");\n");
+            }
         }
 
         // Properties: collect into propertyState (merging accessors from multiple interfaces).
@@ -602,6 +658,8 @@ internal static partial class CodeWriters
                     PropTypeText = WritePropType(w, prop, genCtx),
                     Access = access,
                     MethodSpec = methodSpec,
+                    IsOverridable = isOverridable,
+                    OverridableInterface = isOverridable ? originalInterface : null,
                 };
                 propertyState[name] = state;
             }

@@ -4774,6 +4774,15 @@ internal static partial class CodeWriters
         {
             string ns = td.Type?.Namespace?.Value ?? string.Empty;
             string name = td.Type?.Name?.Value ?? string.Empty;
+            // If this struct is mapped, use the mapped namespace+name (e.g.
+            // 'Windows.UI.Xaml.Interop.TypeName' is mapped to 'System.Type', so the ABI struct
+            // is 'global::ABI.System.Type', not 'global::ABI.Windows.UI.Xaml.Interop.TypeName').
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
             return "global::ABI." + ns + "." + Helpers.StripBackticks(name);
         }
         return "global::ABI.Object";

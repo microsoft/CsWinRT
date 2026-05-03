@@ -72,6 +72,23 @@ internal sealed class ProjectionGenerator
         bool iidWritten = false;
         if (!_settings.ReferenceProjection)
         {
+            // Collect factory interfaces (Static/Activatable/Composable) referenced by included
+            // classes globally. Their IIDs must be present in GeneratedInterfaceIIDs.cs even if
+            // the filter excludes them, because static class members reference them.
+            HashSet<TypeDefinition> factoryInterfacesGlobal = new();
+            foreach ((_, NamespaceMembers nsMembers) in _cache.Namespaces)
+            {
+                foreach (TypeDefinition type in nsMembers.Classes)
+                {
+                    if (!_settings.Filter.Includes(type)) { continue; }
+                    foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cache))
+                    {
+                        TypeDefinition? facType = kv.Value.Type;
+                        if (facType is not null) { _ = factoryInterfacesGlobal.Add(facType); }
+                    }
+                }
+            }
+
             HashSet<TypeDefinition> interfacesFromClassesEmitted = new();
             TypeWriter guidWriter = new(_settings, "ABI");
             CodeWriters.WriteInterfaceIidsBegin(guidWriter);
@@ -79,7 +96,8 @@ internal sealed class ProjectionGenerator
             {
                 foreach (TypeDefinition type in members.Types)
                 {
-                    if (!_settings.Filter.Includes(type)) { continue; }
+                    bool isFactoryInterface = factoryInterfacesGlobal.Contains(type);
+                    if (!_settings.Filter.Includes(type) && !isFactoryInterface) { continue; }
                     if (TypeCategorization.IsGeneric(type)) { continue; }
                     string ns2 = type.Namespace?.Value ?? string.Empty;
                     string nm2 = type.Name?.Value ?? string.Empty;
@@ -280,10 +298,33 @@ internal sealed class ProjectionGenerator
         // Phase 3: ABI types (when not reference projection)
         if (!_settings.ReferenceProjection)
         {
-            w.WriteBeginAbiNamespace();
+            // Collect factory interfaces (Static/Activatable/Composable) referenced by classes
+            // included in this namespace. These must have their ABI Methods classes emitted even
+            // when the filter excludes them, because the projected static class members dispatch
+            // through them. Mirrors C++ behavior of always emitting factory interface ABI for
+            // included classes.
+            HashSet<TypeDefinition> factoryInterfacesInThisNs = new();
             foreach (TypeDefinition type in members.Types)
             {
                 if (!_settings.Filter.Includes(type)) { continue; }
+                if (TypeCategorization.GetCategory(type) != TypeCategory.Class) { continue; }
+                foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cache))
+                {
+                    AttributedType info = kv.Value;
+                    TypeDefinition? facType = info.Type;
+                    if (facType is null) { continue; }
+                    // Only consider factory interfaces in the same namespace as we're processing.
+                    string facNs = facType.Namespace?.Value ?? string.Empty;
+                    if (facNs != ns) { continue; }
+                    _ = factoryInterfacesInThisNs.Add(facType);
+                }
+            }
+
+            w.WriteBeginAbiNamespace();
+            foreach (TypeDefinition type in members.Types)
+            {
+                bool isFactoryInterface = factoryInterfacesInThisNs.Contains(type);
+                if (!_settings.Filter.Includes(type) && !isFactoryInterface) { continue; }
                 if (TypeCategorization.IsGeneric(type)) { continue; }
                 string ns2 = type.Namespace?.Value ?? string.Empty;
                 string nm2 = type.Name?.Value ?? string.Empty;

@@ -183,14 +183,22 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Emits the <c>private readonly ref struct &lt;Name&gt;Args(args...) {...}</c>.</summary>
-    private static void EmitFactoryArgsStruct(TypeWriter w, MethodSig sig, string argsName)
+    /// <param name="userParamCount">If &gt;= 0, only emit the first <paramref name="userParamCount"/>
+    /// params (used for composable factories where the trailing baseInterface/innerInterface params
+    /// are consumed by the callback Invoke signature directly, not stored in args).</param>
+    private static void EmitFactoryArgsStruct(TypeWriter w, MethodSig sig, string argsName, int userParamCount = -1)
     {
+        int count = userParamCount >= 0 ? userParamCount : sig.Params.Count;
         w.Write("\nprivate readonly ref struct ");
         w.Write(argsName);
         w.Write("(");
-        WriteParameterList(w, sig);
+        for (int i = 0; i < count; i++)
+        {
+            if (i > 0) { w.Write(", "); }
+            WriteProjectionParameter(w, sig.Params[i]);
+        }
         w.Write(")\n{\n");
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < count; i++)
         {
             ParamInfo p = sig.Params[i];
             string raw = p.Parameter.Name ?? "param";
@@ -209,16 +217,36 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Emits the <c>private sealed class &lt;Name&gt; : WindowsRuntimeActivationFactoryCallback.DerivedSealed</c>.</summary>
-    private static void EmitFactoryCallbackClass(TypeWriter w, MethodSig sig, string callbackName, string argsName, string factoryObjRefName, int factoryMethodIndex)
+    /// <param name="isComposable">When true, emit the DerivedComposed callback variant whose
+    /// Invoke signature includes the additional <c>WindowsRuntimeObject baseInterface</c> +
+    /// <c>out void* innerInterface</c> params. Iteration over user params is bounded by
+    /// <paramref name="userParamCount"/> (defaults to all params).</param>
+    private static void EmitFactoryCallbackClass(TypeWriter w, MethodSig sig, string callbackName, string argsName, string factoryObjRefName, int factoryMethodIndex, bool isComposable = false, int userParamCount = -1)
     {
+        int paramCount = userParamCount >= 0 ? userParamCount : sig.Params.Count;
         w.Write("\nprivate sealed class ");
         w.Write(callbackName);
-        w.Write(" : WindowsRuntimeActivationFactoryCallback.DerivedSealed\n{\n");
+        w.Write(isComposable
+            ? " : WindowsRuntimeActivationFactoryCallback.DerivedComposed\n{\n"
+            : " : WindowsRuntimeActivationFactoryCallback.DerivedSealed\n{\n");
         w.Write("    public static readonly ");
         w.Write(callbackName);
         w.Write(" Instance = new();\n\n");
         w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
-        w.Write("    public override unsafe void Invoke(WindowsRuntimeActivationArgsReference additionalParameters, out void* retval)\n    {\n");
+        if (isComposable)
+        {
+            // Composable Invoke signature is multi-line and includes baseInterface (in) +
+            // innerInterface (out). Mirrors truth output exactly.
+            w.Write("    public override unsafe void Invoke(\n");
+            w.Write("      WindowsRuntimeActivationArgsReference additionalParameters,\n");
+            w.Write("      WindowsRuntimeObject baseInterface,\n");
+            w.Write("      out void* innerInterface,\n");
+            w.Write("      out void* retval)\n    {\n");
+        }
+        else
+        {
+            w.Write("    public override unsafe void Invoke(WindowsRuntimeActivationArgsReference additionalParameters, out void* retval)\n    {\n");
+        }
         w.Write("        using WindowsRuntimeObjectReferenceValue activationFactoryValue = ");
         w.Write(factoryObjRefName);
         w.Write(".AsValue();\n");
@@ -234,7 +262,7 @@ internal static partial class CodeWriters
         // string params we marshal via HStringMarshaller. For runtime classes we marshal via
         // the appropriate marshaller. For unsupported parameter kinds we emit throw null!.
         bool canEmit = true;
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
@@ -273,7 +301,7 @@ internal static partial class CodeWriters
         }
 
         // Bind arg locals.
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             string raw = p.Parameter.Name ?? "param";
@@ -305,7 +333,7 @@ internal static partial class CodeWriters
         }
 
         // For generic instance params, emit local UnsafeAccessor delegates.
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             if (!IsGenericInstance(p.Type)) { continue; }
@@ -331,7 +359,7 @@ internal static partial class CodeWriters
         }
 
         // For runtime class / object params, emit `using WindowsRuntimeObjectReferenceValue __<name> = ...ConvertToUnmanaged(<name>);`
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             if (IsGenericInstance(p.Type)) { continue; } // already handled above
@@ -345,8 +373,17 @@ internal static partial class CodeWriters
             w.Write(";\n");
         }
 
+        // For composable factories, marshal the additional `baseInterface` (which is a
+        // WindowsRuntimeObject parameter on Invoke, not an args field). Truth pattern:
+        //   using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
+        if (isComposable)
+        {
+            w.Write("        using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);\n");
+            w.Write("        void* __innerInterface = default;\n");
+        }
+
         // For mapped value-type params (DateTime, TimeSpan), emit ABI local + marshaller conversion.
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             if (!IsMappedAbiValueType(p.Type)) { continue; }
@@ -368,7 +405,7 @@ internal static partial class CodeWriters
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
         // (runtime classes, objects, strings).
         bool hasNonBlittableArray = false;
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
@@ -448,7 +485,7 @@ internal static partial class CodeWriters
 
         // For string and array params, open a `fixed(void* _<name> = <name>)` block. Each adds nesting.
         int fixedNesting = 0;
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
@@ -505,7 +542,7 @@ internal static partial class CodeWriters
         string callIndent = baseIndent + new string(' ', fixedNesting * 4);
 
         // Emit CopyToUnmanaged for non-blittable PassArray params.
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
@@ -563,9 +600,10 @@ internal static partial class CodeWriters
         }
 
         w.Write(callIndent);
-        // delegate* signature: void*, then each ABI param type, then void**, then int.
+        // delegate* signature: void*, then each ABI param type, then [void*, void**] (composable),
+        // then void**, then int.
         w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*, ");
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
@@ -577,10 +615,15 @@ internal static partial class CodeWriters
             WriteAbiType(w, TypeSemanticsFactory.Get(p.Type));
             w.Write(", ");
         }
+        if (isComposable)
+        {
+            // Composable extras: baseInterface (void*), out innerInterface (void**)
+            w.Write("void*, void**, ");
+        }
         w.Write("void**, int>**)ThisPtr)[");
         w.Write((6 + factoryMethodIndex).ToString(System.Globalization.CultureInfo.InvariantCulture));
         w.Write("](ThisPtr");
-        for (int i = 0; i < sig.Params.Count; i++)
+        for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
@@ -635,7 +678,17 @@ internal static partial class CodeWriters
                 w.Write(pname);
             }
         }
+        if (isComposable)
+        {
+            // Pass __baseInterface.GetThisPtrUnsafe() and &__innerInterface.
+            w.Write(", __baseInterface.GetThisPtrUnsafe(), &__innerInterface");
+        }
         w.Write(", &__retval));\n");
+        if (isComposable)
+        {
+            w.Write(callIndent);
+            w.Write("innerInterface = __innerInterface;\n");
+        }
         w.Write(callIndent);
         w.Write("retval = __retval;\n");
 
@@ -651,7 +704,7 @@ internal static partial class CodeWriters
         if (hasNonBlittableArray)
         {
             w.Write("        }\n        finally\n        {\n");
-            for (int i = 0; i < sig.Params.Count; i++)
+            for (int i = 0; i < paramCount; i++)
             {
                 ParamInfo p = sig.Params[i];
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
@@ -821,9 +874,9 @@ internal static partial class CodeWriters
             // Emit args struct + callback class for parameterized composable factories.
             if (!isParameterless)
             {
-                EmitFactoryArgsStruct(w, sig, argsName);
+                EmitFactoryArgsStruct(w, sig, argsName, userParamCount);
                 string factoryObjRefName = GetObjRefName(w, composableType);
-                EmitFactoryCallbackClass(w, sig, callbackName, argsName, factoryObjRefName, methodIndex);
+                EmitFactoryCallbackClass(w, sig, callbackName, argsName, factoryObjRefName, methodIndex, isComposable: true, userParamCount: userParamCount);
             }
 
             methodIndex++;
