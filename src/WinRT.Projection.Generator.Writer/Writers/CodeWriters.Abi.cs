@@ -615,13 +615,13 @@ internal static partial class CodeWriters
 
         // Use the same body emitter as ABI Methods, but with vtable slot 3 and using
         // 'objectReference' instead of 'thisReference'. Tweak by using slot=3.
-        EmitNativeDelegateBody(w, sig);
+        EmitNativeDelegateBody(w, sig, nameStripped);
 
         w.Write("}\n");
     }
 
     /// <summary>Emits the body of the native delegate's Invoke extension method.</summary>
-    private static void EmitNativeDelegateBody(TypeWriter w, MethodSig sig)
+    private static void EmitNativeDelegateBody(TypeWriter w, MethodSig sig, string delegateNameStripped)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
@@ -675,6 +675,11 @@ internal static partial class CodeWriters
         w.Write("\n    {\n");
         w.Write("        using WindowsRuntimeObjectReferenceValue objectValue = objectReference.AsValue();\n");
         w.Write("        void* ThisPtr = objectValue.GetThisPtrUnsafe();\n");
+        // Capture the function pointer up front via the typed Vftbl. Mirrors C++
+        // 'var abiInvoke = ((<Name>Vftbl*)*(void***)ThisPtr)->Invoke;'.
+        w.Write("        var abiInvoke = ((");
+        w.Write(delegateNameStripped);
+        w.Write("Vftbl*)*(void***)ThisPtr)->Invoke;\n");
 
         // Marshal ref-type input params.
         for (int i = 0; i < sig.Params.Count; i++)
@@ -782,24 +787,7 @@ internal static partial class CodeWriters
 
         // Function pointer call.
         w.Write(callIndent);
-        w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<void*");
-        foreach (ParamInfo p in sig.Params)
-        {
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray) { w.Write(", uint, void*"); continue; }
-            w.Write(", ");
-            if (IsString(p.Type) || IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type)) { w.Write("void*"); }
-            else if (IsAnyStruct(p.Type)) { w.Write(GetBlittableStructAbiType(w, p.Type)); }
-            else { w.Write(GetAbiPrimitiveType(p.Type)); }
-        }
-        if (hasReturn)
-        {
-            w.Write(", ");
-            if (returnIsString || returnIsRefType) { w.Write("void**"); }
-            else if (returnIsAnyStruct) { w.Write(GetBlittableStructAbiType(w, rt!)); w.Write('*'); }
-            else { w.Write(GetAbiPrimitiveType(rt!)); w.Write('*'); }
-        }
-        w.Write(", int>**)ThisPtr)[3](ThisPtr");
+        w.Write("RestrictedErrorInfo.ThrowExceptionForHR(abiInvoke(ThisPtr");
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
