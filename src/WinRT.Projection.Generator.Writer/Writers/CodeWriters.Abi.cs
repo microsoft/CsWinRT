@@ -2532,8 +2532,13 @@ internal static partial class CodeWriters
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
                 if (IsBlittablePrimitive(ft)) { continue; }
                 if (IsAnyStruct(ft)) { continue; }
-                if (IsString(ft)) { hasReferenceFields = true; continue; }
+                // Plain strings are reference-like in C# but not "tracker support" in WinRT terms.
+                // Mirror C++ use_tracker_object_support which returns false for plain strings.
+                if (IsString(ft)) { continue; }
                 if (IsMappedAbiValueType(ft)) { continue; }
+                // Nullable<T> fields project to IReference<T> on the ABI side and DO require
+                // CreateComInterfaceFlags.TrackerSupport (mirrors C++ use_tracker_object_support
+                // which returns true for IReference`1 generic instances).
                 if (TryGetNullablePrimitiveMarshallerName(ft, out _)) { hasReferenceFields = true; continue; }
                 allFieldsSupported = false;
                 break;
@@ -2559,7 +2564,7 @@ internal static partial class CodeWriters
         {
             // ConvertToUnmanaged: build ABI struct from projected struct via per-field marshalling.
             w.Write("    public static ");
-            WriteTypedefName(w, type, TypedefNameType.ABI, true);
+            WriteTypedefName(w, type, TypedefNameType.ABI, false);
             w.Write(" ConvertToUnmanaged(");
             WriteTypedefName(w, type, TypedefNameType.Projected, true);
             if (!emitComplexBodies)
@@ -2614,7 +2619,7 @@ internal static partial class CodeWriters
             w.Write("    public static ");
             WriteTypedefName(w, type, TypedefNameType.Projected, true);
             w.Write(" ConvertToManaged(");
-            WriteTypedefName(w, type, TypedefNameType.ABI, true);
+            WriteTypedefName(w, type, TypedefNameType.ABI, false);
             if (!emitComplexBodies)
             {
                 w.Write(" value) => throw null!;\n");
@@ -2624,7 +2629,7 @@ internal static partial class CodeWriters
                 w.Write(" value)\n    {\n");
                 w.Write("        return new ");
                 WriteTypedefName(w, type, TypedefNameType.Projected, true);
-                w.Write("(\n");
+                w.Write("(){\n");
                 bool first = true;
                 foreach (FieldDefinition field in type.Fields)
                 {
@@ -2634,6 +2639,8 @@ internal static partial class CodeWriters
                     if (!first) { w.Write(",\n"); }
                     first = false;
                     w.Write("            ");
+                    w.Write(fname);
+                    w.Write(" = ");
                     if (IsString(ft))
                     {
                         w.Write("HStringMarshaller.ConvertToManaged(value.");
@@ -2660,12 +2667,12 @@ internal static partial class CodeWriters
                         w.Write(fname);
                     }
                 }
-                w.Write("\n        );\n    }\n");
+                w.Write("\n        };\n    }\n");
             }
 
             // Dispose: free non-blittable fields.
             w.Write("    public static void Dispose(");
-            WriteTypedefName(w, type, TypedefNameType.ABI, true);
+            WriteTypedefName(w, type, TypedefNameType.ABI, false);
             if (!emitComplexBodies)
             {
                 w.Write(" value) => throw null!;\n");
@@ -2728,9 +2735,9 @@ internal static partial class CodeWriters
         {
             w.Write("? UnboxToManaged(void* value)\n    {\n");
             w.Write("        ");
-            WriteTypedefName(w, type, TypedefNameType.ABI, true);
+            WriteTypedefName(w, type, TypedefNameType.ABI, false);
             w.Write("? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
-            WriteTypedefName(w, type, TypedefNameType.ABI, true);
+            WriteTypedefName(w, type, TypedefNameType.ABI, false);
             w.Write(">(value);\n");
             w.Write("        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;\n    }\n");
         }
@@ -2781,6 +2788,10 @@ internal static partial class CodeWriters
             w.Write("        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;\n");
             w.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
             w.Write("    }\n}\n\n");
+
+            // Mirror C++ write_abi_struct: in component mode, the ComWrappers marshaller
+            // attribute is not emitted (the InterfaceEntriesImpl above is still emitted).
+            if (w.Settings.Component) { return; }
 
             // ComWrappersMarshallerAttribute (full body)
             w.Write("internal sealed unsafe class ");
