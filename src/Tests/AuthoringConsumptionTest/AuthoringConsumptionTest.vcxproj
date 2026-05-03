@@ -140,7 +140,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!-- CsWinRT JIT-host targets. Shipped as build\native\Microsoft.Windows.CsWinRT.targets in the package. -->
   <Import Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')"
-          Project="..\..\..\nuget\Microsoft.Windows.CsWinRT.Native.targets" />
+          Project="..\..\..\nuget\native\Microsoft.Windows.CsWinRT.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets" Condition="Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.6\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" />
     <Import Project="..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets" Condition="Exists('..\..\packages\Microsoft.VCRTForwarders.140.1.1.0\build\native\Microsoft.VCRTForwarders.140.targets')" />
