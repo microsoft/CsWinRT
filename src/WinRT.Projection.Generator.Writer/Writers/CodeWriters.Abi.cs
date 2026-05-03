@@ -79,6 +79,12 @@ internal static partial class CodeWriters
         string name = type.Name?.Value ?? string.Empty;
         WriteStructEnumMarshallerClass(w, type);
         WriteReferenceImpl(w, type);
+
+        // In component mode, the C++ tool also emits the authoring metadata wrapper for enums.
+        if (w.Settings.Component)
+        {
+            WriteAuthoringMetadataType(w, type);
+        }
     }
 
     /// <summary>Mirrors C++ <c>write_abi_struct</c>.</summary>
@@ -145,6 +151,12 @@ internal static partial class CodeWriters
         WriteDelegateInterfaceEntriesImpl(w, type);
         WriteDelegateImpl(w, type);
         WriteReferenceImpl(w, type);
+
+        // In component mode, the C++ tool also emits the authoring metadata wrapper for delegates.
+        if (w.Settings.Component)
+        {
+            WriteAuthoringMetadataType(w, type);
+        }
     }
 
     /// <summary>Emits the <c>&lt;DelegateName&gt;Impl</c> static class providing the CCW vtable for a delegate.</summary>
@@ -1026,16 +1038,45 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Emits the metadata wrapper type <c>file static class &lt;Name&gt; {}</c> with
-    /// [WindowsRuntimeMetadataTypeName] and [WindowsRuntimeMappedType] attributes.
-    /// Mirrors C++ <c>write_authoring_metadata_type</c>.
+    /// Emits the metadata wrapper type <c>file static class &lt;Name&gt; {}</c> with the conditional
+    /// set of attributes required for the type's category. Mirrors C++
+    /// <c>write_authoring_metadata_type</c>.
     /// </summary>
     private static void WriteAuthoringMetadataType(TypeWriter w, TypeDefinition type)
     {
         string nameStripped = Helpers.StripBackticks(type.Name?.Value ?? string.Empty);
         string typeNs = type.Namespace?.Value ?? string.Empty;
-        string projectedType = $"global::{typeNs}.{nameStripped}";
+        string projectedType = string.IsNullOrEmpty(typeNs) ? $"global::{nameStripped}" : $"global::{typeNs}.{nameStripped}";
         string fullName = string.IsNullOrEmpty(typeNs) ? nameStripped : $"{typeNs}.{nameStripped}";
+        TypeCategory category = TypeCategorization.GetCategory(type);
+
+        // [WindowsRuntimeReferenceType(typeof(<projected>?))] for non-delegate, non-class types
+        // (i.e. enums, structs, interfaces).
+        if (category != TypeCategory.Delegate && category != TypeCategory.Class)
+        {
+            w.Write("[WindowsRuntimeReferenceType(typeof(");
+            w.Write(projectedType);
+            w.Write("?))]\n");
+        }
+
+        // [ABI.<ns>.<name>ComWrappersMarshaller] for non-struct, non-class types
+        // (delegates, enums, interfaces).
+        if (category != TypeCategory.Struct && category != TypeCategory.Class)
+        {
+            w.Write("[ABI.");
+            w.Write(typeNs);
+            w.Write(".");
+            w.Write(nameStripped);
+            w.Write("ComWrappersMarshaller]\n");
+        }
+
+        // [WindowsRuntimeClassName("Windows.Foundation.IReference`1<<ns>.<name>>")] for non-class types.
+        if (category != TypeCategory.Class)
+        {
+            w.Write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<");
+            w.Write(fullName);
+            w.Write(">\")]\n");
+        }
 
         w.Write("[WindowsRuntimeMetadataTypeName(\"");
         w.Write(fullName);
