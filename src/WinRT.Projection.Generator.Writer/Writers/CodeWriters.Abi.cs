@@ -1759,6 +1759,46 @@ internal static partial class CodeWriters
         // 'abi_marshaler::get_marshaler_local()' which prefixes '__' to the param name.
         // For the default '__return_value__' param this becomes '____return_value__'.
         string retLocalName = "__" + retParamName;
+
+        // Mirror C++ ordering: declare the return local first with default value, then zero
+        // the OUT pointer(s). The actual assignment happens inside the try block.
+        if (rt is not null)
+        {
+            if (returnIsString)
+            {
+                w.Write("    string ");
+                w.Write(retLocalName);
+                w.Write(" = default;\n");
+            }
+            else if (returnIsRefType)
+            {
+                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+                w.Write("    ");
+                w.Write(projected);
+                w.Write(" ");
+                w.Write(retLocalName);
+                w.Write(" = default;\n");
+            }
+            else if (returnIsReceiveArrayDoAbi)
+            {
+                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+                w.Write("    ");
+                w.Write(projected);
+                w.Write(" ");
+                w.Write(retLocalName);
+                w.Write(" = default;\n");
+            }
+            else
+            {
+                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
+                w.Write("    ");
+                w.Write(projected);
+                w.Write(" ");
+                w.Write(retLocalName);
+                w.Write(" = default;\n");
+            }
+        }
+
         if (rt is not null)
         {
             if (returnIsReceiveArrayDoAbi)
@@ -1928,35 +1968,26 @@ internal static partial class CodeWriters
 
         if (returnIsString)
         {
-            w.Write("        string ");
+            w.Write("        ");
             w.Write(retLocalName);
             w.Write(" = ");
         }
         else if (returnIsRefType)
         {
-            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
             w.Write("        ");
-            w.Write(projected);
-            w.Write(" ");
             w.Write(retLocalName);
             w.Write(" = ");
         }
         else if (returnIsReceiveArrayDoAbi)
         {
-            // For T[] return: declare the projected array local.
-            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+            // For T[] return: assign to existing local.
             w.Write("        ");
-            w.Write(projected);
-            w.Write(" ");
             w.Write(retLocalName);
             w.Write(" = ");
         }
         else if (rt is not null)
         {
-            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
             w.Write("        ");
-            w.Write(projected);
-            w.Write(" ");
             w.Write(retLocalName);
             w.Write(" = ");
         }
