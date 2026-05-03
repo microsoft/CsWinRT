@@ -75,6 +75,13 @@ Properties:
       <!-- Extract just 'net10.0-windows10.0.XXXXX.Y' portion for intermediate path (no platform suffix) -->
       <_CsWinRTTempProjectTFMDir>$(_CsWinRTComponentTargetFramework)</_CsWinRTTempProjectTFMDir>
       <!--
+        Intermediate output paths for the aggregator. Pinning these here lets the post-build
+        Copy step read merged DLLs from a path this targets file owns, independent of any
+        $(Platform)-aware logic the SDK applies to its default IntermediateOutputPath.
+      -->
+      <_CsWinRTTempProjectBaseIntermediateDir>$(_CsWinRTTempProjectDir)obj\</_CsWinRTTempProjectBaseIntermediateDir>
+      <_CsWinRTTempProjectIntermediateDir>$(_CsWinRTTempProjectBaseIntermediateDir)$(Configuration)\$(_CsWinRTTempProjectTFMDir)\</_CsWinRTTempProjectIntermediateDir>
+      <!--
         Absolute paths to the cswinrt props/targets that the aggregator must <Import>
         directly. The aggregator has no PackageReference to cswinrt, so cswinrt's build
         logic (CsWinRTGen.targets, CsWinRTRemoveWinMDReferences, etc.) is not auto-imported
@@ -95,6 +102,15 @@ Properties:
       <_CsWinRTTempProjectLines Include="  &lt;PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;TargetFramework&gt;$(_CsWinRTComponentTargetFramework)&lt;/TargetFramework&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;Platforms&gt;x64%3Bx86%3BARM64&lt;/Platforms&gt;" />
+      <!--
+        Pin IntermediateOutputPath / BaseIntermediateOutputPath as project-local properties so
+        the aggregator writes outputs to a path Native.targets can read back from. Setting them
+        here (rather than as global properties on the parent <MSBuild> call) keeps them scoped
+        to the aggregator and stops them from flowing into transitive ProjectReferences such as
+        the C++ cswinrt.vcxproj, whose legacy packages.config NuGet resolver breaks if they do.
+      -->
+      <_CsWinRTTempProjectLines Include="    &lt;BaseIntermediateOutputPath&gt;$(_CsWinRTTempProjectBaseIntermediateDir)&lt;/BaseIntermediateOutputPath&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;IntermediateOutputPath&gt;$(_CsWinRTTempProjectIntermediateDir)&lt;/IntermediateOutputPath&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTBuildForNativeConsumer&gt;true&lt;/CsWinRTBuildForNativeConsumer&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateInteropAssembly&gt;true&lt;/CsWinRTGenerateInteropAssembly&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateProjection&gt;false&lt;/CsWinRTGenerateProjection&gt;" />
@@ -115,29 +131,16 @@ Properties:
                       Lines="@(_CsWinRTTempProjectLines)"
                       Overwrite="true" />
 
-    <!-- Compute the path the aggregator's intermediate outputs (incl. cswinrtinteropgen results) will land at. -->
-    <PropertyGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
-      <_CsWinRTTempProjectIntermediateDir>$(_CsWinRTTempProjectDir)obj\$(Configuration)\$(_CsWinRTTempProjectTFMDir)\</_CsWinRTTempProjectIntermediateDir>
-      <_CsWinRTTempProjectBaseIntermediateDir>$(_CsWinRTTempProjectDir)obj\</_CsWinRTTempProjectBaseIntermediateDir>
-    </PropertyGroup>
-
-    <!--
-      Restore and build the temporary project. IntermediateOutputPath and BaseIntermediateOutputPath
-      are passed as global properties to pin the aggregator's intermediate output location to a path
-      this targets file owns. The post-build Copy step below reads merged DLLs from this exact path,
-      so the producer (cswinrtinteropgen running inside the aggregator) and the consumer (Native.targets'
-      Copy) agree by construction, independent of any $(Platform)-aware logic the SDK applies to its
-      default IntermediateOutputPath.
-    -->
+    <!-- Restore and build the temporary project. -->
     <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
              Projects="$(_CsWinRTTempProjectPath)"
              Targets="Restore"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);IntermediateOutputPath=$(_CsWinRTTempProjectIntermediateDir);BaseIntermediateOutputPath=$(_CsWinRTTempProjectBaseIntermediateDir)" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform)" />
 
     <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
              Projects="$(_CsWinRTTempProjectPath)"
              Targets="Build"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);IntermediateOutputPath=$(_CsWinRTTempProjectIntermediateDir);BaseIntermediateOutputPath=$(_CsWinRTTempProjectBaseIntermediateDir)" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform)" />
 
     <!-- Copy generated DLLs to the output directory -->
 
