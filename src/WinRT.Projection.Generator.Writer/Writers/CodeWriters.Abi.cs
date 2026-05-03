@@ -1686,24 +1686,51 @@ internal static partial class CodeWriters
         // type (not the interface) since the authored class IS the implementation. This is what
         // 'write_method_abi_invoke' produces because 'method.Parent()' is treated through
         // 'does_abi_interface_implement_ccw_interface' for authoring scenarios.
+        //
+        // EXCEPTION: static factory interfaces ([Static] attr on the class) and activation
+        // factory interfaces ([Activatable(typeof(IFooFactory))]) are implemented by the
+        // generated 'ABI.Impl.<NS>.<IFooStatic>'/<IFooFactory>' types, NOT by the user runtime
+        // class. For those, the dispatch target must be 'global::ABI.Impl.<NS>.<InterfaceName>'.
         TypeDefinition? exclusiveToOwner = null;
+        bool exclusiveIsFactoryOrStatic = false;
         if (w.Settings.Component)
         {
             MetadataCache? cache = GetMetadataCache();
             if (cache is not null)
             {
                 exclusiveToOwner = Helpers.GetExclusiveToType(type, cache);
+                if (exclusiveToOwner is not null)
+                {
+                    foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(exclusiveToOwner, cache))
+                    {
+                        if (kv.Value.Type == type && (kv.Value.Statics || kv.Value.Activatable))
+                        {
+                            exclusiveIsFactoryOrStatic = true;
+                            break;
+                        }
+                    }
+                }
             }
         }
 
         string ifaceFullName;
-        if (exclusiveToOwner is not null)
+        if (exclusiveToOwner is not null && !exclusiveIsFactoryOrStatic)
         {
             string ownerNs = exclusiveToOwner.Namespace?.Value ?? string.Empty;
             string ownerNm = Helpers.StripBackticks(exclusiveToOwner.Name?.Value ?? string.Empty);
             ifaceFullName = string.IsNullOrEmpty(ownerNs)
                 ? "global::" + ownerNm
                 : "global::" + ownerNs + "." + ownerNm;
+        }
+        else if (exclusiveToOwner is not null && exclusiveIsFactoryOrStatic)
+        {
+            // Factory/static interfaces in authoring mode are implemented by the generated
+            // 'global::ABI.Impl.<NS>.<InterfaceName>' type that the activation factory CCW exposes.
+            string ifaceNs = type.Namespace?.Value ?? string.Empty;
+            string ifaceNm = Helpers.StripBackticks(type.Name?.Value ?? string.Empty);
+            ifaceFullName = string.IsNullOrEmpty(ifaceNs)
+                ? "global::ABI.Impl." + ifaceNm
+                : "global::ABI.Impl." + ifaceNs + "." + ifaceNm;
         }
         else
         {
