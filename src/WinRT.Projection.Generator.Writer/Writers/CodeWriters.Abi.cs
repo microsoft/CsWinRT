@@ -3601,35 +3601,52 @@ internal static partial class CodeWriters
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
 
         string indent = needsTryFinally ? "            " : "        ";
-        // Open fixed-block + HStringMarshaller.ConvertToUnmanagedUnsafe for each input string param
-        // (HString fast-path: stack-allocated HStringReference, no allocation/free required).
-        // Track nesting for indentation; the call site goes inside the innermost fixed block.
+        // Open a SINGLE fixed-block for ALL input string params (HString fast-path), then
+        // emit the HStringMarshaller.ConvertToUnmanagedUnsafe calls inside.
+        // Mirrors C++ which emits 'fixed(void* _a = a, _b = b, ...) { Convert(_a,...); Convert(_b,...); ... }'.
+        // PassArray/Ref fixed blocks below still nest individually (matches reference).
         int fixedNesting = 0;
+        bool hasInputStrings = false;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (!IsString(sig.Params[i].Type)) { continue; }
-            string callName = GetParamName(sig.Params[i], paramNameOverride);
-            string localName = GetParamLocalName(sig.Params[i], paramNameOverride);
+            if (IsString(sig.Params[i].Type)) { hasInputStrings = true; break; }
+        }
+        if (hasInputStrings)
+        {
             w.Write(indent);
-            w.Write(new string(' ', fixedNesting * 4));
-            w.Write("fixed(void* _");
-            w.Write(localName);
-            w.Write(" = ");
-            w.Write(callName);
+            w.Write("fixed(void* ");
+            bool first = true;
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                if (!IsString(sig.Params[i].Type)) { continue; }
+                string callName = GetParamName(sig.Params[i], paramNameOverride);
+                string localName = GetParamLocalName(sig.Params[i], paramNameOverride);
+                if (!first) { w.Write(", "); }
+                first = false;
+                w.Write("_");
+                w.Write(localName);
+                w.Write(" = ");
+                w.Write(callName);
+            }
             w.Write(")\n");
             w.Write(indent);
-            w.Write(new string(' ', fixedNesting * 4));
             w.Write("{\n");
             fixedNesting++;
-            w.Write(indent);
-            w.Write(new string(' ', fixedNesting * 4));
-            w.Write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
-            w.Write(localName);
-            w.Write(", ");
-            w.Write(callName);
-            w.Write("?.Length, out HStringReference __");
-            w.Write(localName);
-            w.Write(");\n");
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                if (!IsString(sig.Params[i].Type)) { continue; }
+                string callName = GetParamName(sig.Params[i], paramNameOverride);
+                string localName = GetParamLocalName(sig.Params[i], paramNameOverride);
+                w.Write(indent);
+                w.Write(new string(' ', fixedNesting * 4));
+                w.Write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
+                w.Write(localName);
+                w.Write(", ");
+                w.Write(callName);
+                w.Write("?.Length, out HStringReference __");
+                w.Write(localName);
+                w.Write(");\n");
+            }
         }
 
         // For PassArray params, open a fixed block (one per param). The function pointer call
