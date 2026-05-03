@@ -1323,6 +1323,20 @@ internal static partial class CodeWriters
         // Generic interfaces are handled by interopgen
         if (type.GenericParameters.Count > 0) { return; }
 
+        // Skip interfaces whose owning class is mapped with EmitAbi=false (manually projected
+        // in WinRT.Runtime). Mirrors the same skip in WriteInterface (CodeWriters.Interface.cs).
+        if (TypeCategorization.IsExclusiveTo(type))
+        {
+            TypeDefinition? owner = GetExclusiveToType(type);
+            if (owner is not null)
+            {
+                string ownerNs = owner.Namespace?.Value ?? string.Empty;
+                string ownerNm = owner.Name?.Value ?? string.Empty;
+                MappedType? ownerMapped = MappedTypes.Get(ownerNs, ownerNm);
+                if (ownerMapped is not null && !ownerMapped.EmitAbi) { return; }
+            }
+        }
+
         // The C++ also emits write_static_abi_classes here - we emit a basic stub for now
         WriteInterfaceMarshallerStub(w, type);
 

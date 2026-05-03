@@ -81,6 +81,14 @@ internal sealed class ProjectionGenerator
                 foreach (TypeDefinition type in nsMembers.Classes)
                 {
                     if (!_settings.Filter.Includes(type)) { continue; }
+                    // Skip mapped classes whose ABI surface is suppressed (e.g.
+                    // 'Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs' maps to
+                    // 'System.Collections.Specialized.NotifyCollectionChangedEventArgs' with
+                    // EmitAbi=false). Their factory/statics interfaces should also be skipped.
+                    string clsNs = type.Namespace?.Value ?? string.Empty;
+                    string clsNm = type.Name?.Value ?? string.Empty;
+                    MappedType? clsMapped = MappedTypes.Get(clsNs, clsNm);
+                    if (clsMapped is not null && !clsMapped.EmitAbi) { continue; }
                     foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cache))
                     {
                         TypeDefinition? facType = kv.Value.Type;
@@ -103,6 +111,21 @@ internal sealed class ProjectionGenerator
                     string nm2 = type.Name?.Value ?? string.Empty;
                     MappedType? m = MappedTypes.Get(ns2, nm2);
                     if (m is not null && !m.EmitAbi) { continue; }
+                    // Also skip an interface whose owning class (via [ExclusiveTo]) is mapped
+                    // with EmitAbi=false (e.g. INotifyCollectionChangedEventArgs +
+                    // INotifyCollectionChangedEventArgsFactory both belong to the mapped class
+                    // NotifyCollectionChangedEventArgs).
+                    if (TypeCategorization.GetCategory(type) == TypeCategory.Interface)
+                    {
+                        TypeDefinition? owner = CodeWriters.GetExclusiveToType(type);
+                        if (owner is not null)
+                        {
+                            string ownerNs = owner.Namespace?.Value ?? string.Empty;
+                            string ownerNm = owner.Name?.Value ?? string.Empty;
+                            MappedType? ownerMapped = MappedTypes.Get(ownerNs, ownerNm);
+                            if (ownerMapped is not null && !ownerMapped.EmitAbi) { continue; }
+                        }
+                    }
                     iidWritten = true;
                     TypeCategory cat = TypeCategorization.GetCategory(type);
                     switch (cat)

@@ -34,76 +34,96 @@ internal readonly struct TypeFilter
 
     /// <summary>
     /// Returns whether the given type name passes the include/exclude filter.
+    /// Mirrors the C++ <c>winmd::reader::filter</c> algorithm: rules are sorted by descending
+    /// prefix length (with includes winning ties over excludes); the first matching rule wins.
+    /// Match semantics split the full type name into <c>namespace.typeName</c> parts and treat
+    /// the rule prefix as either a namespace-prefix or a namespace + typename-prefix.
     /// </summary>
     public bool Includes(string fullName)
     {
-        if (_include == null && _exclude == null)
+        if ((_include == null || _include.Count == 0) && (_exclude == null || _exclude.Count == 0))
         {
             return true;
         }
 
-        // Find longest matching include prefix
-        int includeLen = -1;
-        if (_include != null)
+        // Split into namespace + typename at the LAST '.'. Mirrors C++:
+        //   auto position = type.find_last_of('.');
+        //   includes(type.substr(0, position), type.substr(position + 1));
+        // When there's no '.', position = npos, and both substrings collapse to the full string.
+        int dot = fullName.LastIndexOf('.');
+        string ns;
+        string name;
+        if (dot < 0)
         {
-            foreach (string p in _include)
+            ns = fullName;
+            name = fullName;
+        }
+        else
+        {
+            ns = fullName.Substring(0, dot);
+            name = fullName.Substring(dot + 1);
+        }
+
+        // Walk both lists in descending length order; on tie, includes win over excludes.
+        // (Both _include and _exclude are pre-sorted by descending length in the constructor.)
+        int incIdx = 0;
+        int excIdx = 0;
+        while (true)
+        {
+            string? incRule = (_include != null && incIdx < _include.Count) ? _include[incIdx] : null;
+            string? excRule = (_exclude != null && excIdx < _exclude.Count) ? _exclude[excIdx] : null;
+            if (incRule == null && excRule == null) { break; }
+
+            bool pickInclude;
+            if (incRule == null)
             {
-                if (IsPrefixMatch(fullName, p))
-                {
-                    includeLen = p.Length;
-                    break;
-                }
+                pickInclude = false;
             }
-        }
-
-        // Find longest matching exclude prefix
-        int excludeLen = -1;
-        if (_exclude != null)
-        {
-            foreach (string p in _exclude)
+            else if (excRule == null)
             {
-                if (IsPrefixMatch(fullName, p))
-                {
-                    excludeLen = p.Length;
-                    break;
-                }
+                pickInclude = true;
             }
+            else
+            {
+                // Equal length: include wins (matches C++ sort key 'pair{size, !isInclude}' descending).
+                pickInclude = incRule.Length >= excRule.Length;
+            }
+
+            string rule = pickInclude ? incRule! : excRule!;
+            if (Match(ns, name, rule))
+            {
+                return pickInclude;
+            }
+            if (pickInclude) { incIdx++; } else { excIdx++; }
         }
 
-        // No include rules => default include unless matched by exclude
-        if (_include == null || _include.Count == 0)
+        // No rule matched. If we have any include rules, default-exclude; else default-include.
+        return _include == null || _include.Count == 0;
+    }
+
+    /// <summary>Mirrors C++ <c>filter::match</c>.</summary>
+    private static bool Match(string typeNamespace, string typeName, string rule)
+    {
+        if (rule.Length <= typeNamespace.Length)
         {
-            return excludeLen < 0;
+            return typeNamespace.StartsWith(rule, StringComparison.Ordinal);
         }
-
-        // No matching include
-        if (includeLen < 0)
+        if (!rule.StartsWith(typeNamespace, StringComparison.Ordinal))
         {
             return false;
         }
-
-        // Include match wins unless exclude is longer-prefix
-        return excludeLen <= includeLen;
+        if (rule[typeNamespace.Length] != '.')
+        {
+            return false;
+        }
+        // The rest of the rule (after 'namespace.') is matched as a prefix against typeName.
+        string rest = rule.Substring(typeNamespace.Length + 1);
+        return typeName.StartsWith(rest, StringComparison.Ordinal);
     }
 
     public bool Includes(TypeDefinition type)
     {
         return Includes(GetFullName(type));
-    }
-
-    private static bool IsPrefixMatch(string name, string prefix)
-    {
-        if (!name.StartsWith(prefix, StringComparison.Ordinal))
-        {
-            return false;
-        }
-        if (name.Length == prefix.Length)
-        {
-            return true;
-        }
-        // 'prefix' could match either at namespace boundary "."
-        // or at exact match
-        return name[prefix.Length] == '.';
     }
 
     public static string GetFullName(TypeDefinition type)

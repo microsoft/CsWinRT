@@ -302,6 +302,23 @@ internal static partial class CodeWriters
             return;
         }
 
+        // Skip interfaces whose owning class (via [ExclusiveTo]) is mapped with EmitAbi=false.
+        // The class is fully manually projected in WinRT.Runtime, so its statics/factory/default
+        // interfaces should not appear in the projection (e.g. INotifyCollectionChangedEventArgs
+        // and INotifyCollectionChangedEventArgsFactory belong to the mapped class
+        // NotifyCollectionChangedEventArgs).
+        if (TypeCategorization.IsExclusiveTo(type))
+        {
+            TypeDefinition? owner = GetExclusiveToType(type);
+            if (owner is not null)
+            {
+                string ownerNs = owner.Namespace?.Value ?? string.Empty;
+                string ownerNm = owner.Name?.Value ?? string.Empty;
+                MappedType? ownerMapped = MappedTypes.Get(ownerNs, ownerNm);
+                if (ownerMapped is not null && !ownerMapped.EmitAbi) { return; }
+            }
+        }
+
         if (w.Settings.Component && !TypeCategorization.IsExclusiveTo(type))
         {
             return;
