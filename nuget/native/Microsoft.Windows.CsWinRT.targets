@@ -122,11 +122,12 @@ Properties:
     </PropertyGroup>
 
     <!--
-      Restore and build the temporary project. We pass IntermediateOutputPath / BaseIntermediateOutputPath
-      explicitly so the aggregator's outputs land at a path Native.targets can read back from. Without
-      this, the .NET SDK's default IntermediateOutputPath includes $(PlatformName) for non-AnyCPU builds
-      (e.g. obj\x86\Release\<TFM>\), and the post-build Copy below — which uses a fixed path without
-      $(PlatformName) — silently misses the merged DLLs.
+      Restore and build the temporary project. IntermediateOutputPath and BaseIntermediateOutputPath
+      are passed as global properties to pin the aggregator's intermediate output location to a path
+      this targets file owns. The post-build Copy step below reads merged DLLs from this exact path,
+      so the producer (cswinrtinteropgen running inside the aggregator) and the consumer (Native.targets'
+      Copy) agree by construction, independent of any $(Platform)-aware logic the SDK applies to its
+      default IntermediateOutputPath.
     -->
     <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
              Projects="$(_CsWinRTTempProjectPath)"
