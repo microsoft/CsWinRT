@@ -977,9 +977,75 @@ internal static partial class CodeWriters
         if (TypeCategorization.IsStatic(type)) { return; }
         // Mirror C++ write_abi_class: wrap class marshaller emission in #nullable enable/disable.
         w.Write("#nullable enable\n");
-        // Emit a ComWrappers marshaller class so the attribute reference resolves
-        WriteClassMarshallerStub(w, type);
+        if (w.Settings.Component)
+        {
+            // Mirror C++ write_component_class_marshaller + write_authoring_metadata_type.
+            WriteComponentClassMarshaller(w, type);
+            WriteAuthoringMetadataType(w, type);
+        }
+        else
+        {
+            // Emit a ComWrappers marshaller class so the attribute reference resolves
+            WriteClassMarshallerStub(w, type);
+        }
         w.Write("#nullable disable\n");
+    }
+
+    /// <summary>
+    /// Emits the simpler component-mode class marshaller. Mirrors C++
+    /// <c>write_component_class_marshaller</c>.
+    /// </summary>
+    private static void WriteComponentClassMarshaller(TypeWriter w, TypeDefinition type)
+    {
+        string nameStripped = Helpers.StripBackticks(type.Name?.Value ?? string.Empty);
+        string typeNs = type.Namespace?.Value ?? string.Empty;
+        string projectedType = $"global::{typeNs}.{nameStripped}";
+
+        ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
+        string defaultIfaceIid = defaultIface is not null
+            ? w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, defaultIface)))
+            : "default(global::System.Guid)";
+
+        w.Write("\npublic static unsafe class ");
+        w.Write(nameStripped);
+        w.Write("Marshaller\n{\n");
+        w.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
+        w.Write(projectedType);
+        w.Write(" value)\n    {\n");
+        w.Write("        return WindowsRuntimeInterfaceMarshaller<");
+        w.Write(projectedType);
+        w.Write(">.ConvertToUnmanaged(value, ");
+        w.Write(defaultIfaceIid);
+        w.Write(");\n    }\n\n");
+        w.Write("    public static ");
+        w.Write(projectedType);
+        w.Write("? ConvertToManaged(void* value)\n    {\n");
+        w.Write("        return (");
+        w.Write(projectedType);
+        w.Write("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n");
+    }
+
+    /// <summary>
+    /// Emits the metadata wrapper type <c>file static class &lt;Name&gt; {}</c> with
+    /// [WindowsRuntimeMetadataTypeName] and [WindowsRuntimeMappedType] attributes.
+    /// Mirrors C++ <c>write_authoring_metadata_type</c>.
+    /// </summary>
+    private static void WriteAuthoringMetadataType(TypeWriter w, TypeDefinition type)
+    {
+        string nameStripped = Helpers.StripBackticks(type.Name?.Value ?? string.Empty);
+        string typeNs = type.Namespace?.Value ?? string.Empty;
+        string projectedType = $"global::{typeNs}.{nameStripped}";
+        string fullName = string.IsNullOrEmpty(typeNs) ? nameStripped : $"{typeNs}.{nameStripped}";
+
+        w.Write("[WindowsRuntimeMetadataTypeName(\"");
+        w.Write(fullName);
+        w.Write("\")]\n");
+        w.Write("[WindowsRuntimeMappedType(typeof(");
+        w.Write(projectedType);
+        w.Write("))]\n");
+        w.Write("file static class ");
+        w.Write(nameStripped);
+        w.Write(" {}\n");
     }
 
     /// <summary>Mirrors C++ <c>write_abi_interface</c>.</summary>
