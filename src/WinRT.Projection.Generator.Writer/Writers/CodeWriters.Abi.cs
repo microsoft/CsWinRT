@@ -785,7 +785,8 @@ internal static partial class CodeWriters
 
         string callIndent = indent + new string(' ', fixedNesting * 4);
 
-        // Function pointer call.
+        // Function pointer call. Mirrors C++ template which emits each subsequent argument
+        // on its own line with `,\n  ` (2-space indent) between them.
         w.Write(callIndent);
         w.Write("RestrictedErrorInfo.ThrowExceptionForHR(abiInvoke(ThisPtr");
         for (int i = 0; i < sig.Params.Count; i++)
@@ -796,13 +797,14 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
-                w.Write(", (uint)");
+                w.Write(",\n  ");
+                w.Write("(uint)");
                 w.Write(callName);
                 w.Write(".Length, _");
                 w.Write(raw);
                 continue;
             }
-            w.Write(", ");
+            w.Write(",\n  ");
             if (IsString(p.Type))
             {
                 w.Write("__");
@@ -836,7 +838,7 @@ internal static partial class CodeWriters
                 w.Write(callName);
             }
         }
-        if (hasReturn) { w.Write(", &__retval"); }
+        if (hasReturn) { w.Write(",\n  &__retval"); }
         w.Write("));\n");
 
         // Return value conversion.
