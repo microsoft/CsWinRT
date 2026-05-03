@@ -81,9 +81,16 @@ Properties:
         through the package convention. Without these explicit imports, the aggregator's
         CsWinRTBuildForNativeConsumer / CsWinRTGenerateInteropAssembly properties have no
         consumer in scope and cswinrtinteropgen never runs.
+
+        Layout differs between the shipped package and the in-repo source tree:
+          Package: Native.targets at build\native\, props/targets at build\        (..\)
+          Source : Native.targets at nuget\, props/targets at nuget\               (.\)
+        Probe both, prefer the package layout.
       -->
-      <_CsWinRTPropsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.props'))</_CsWinRTPropsForAggregator>
-      <_CsWinRTTargetsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.targets'))</_CsWinRTTargetsForAggregator>
+      <_CsWinRTPropsForAggregator Condition="'$(_CsWinRTPropsForAggregator)' == '' and Exists('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.props')">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.props'))</_CsWinRTPropsForAggregator>
+      <_CsWinRTPropsForAggregator Condition="'$(_CsWinRTPropsForAggregator)' == '' and Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.props')">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.props'))</_CsWinRTPropsForAggregator>
+      <_CsWinRTTargetsForAggregator Condition="'$(_CsWinRTTargetsForAggregator)' == '' and Exists('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.targets')">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.targets'))</_CsWinRTTargetsForAggregator>
+      <_CsWinRTTargetsForAggregator Condition="'$(_CsWinRTTargetsForAggregator)' == '' and Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.targets')">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.targets'))</_CsWinRTTargetsForAggregator>
     </PropertyGroup>
 
     <MakeDir Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" Directories="$(_CsWinRTTempProjectDir)" />
