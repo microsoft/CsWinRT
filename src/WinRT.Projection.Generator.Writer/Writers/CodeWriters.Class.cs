@@ -132,7 +132,7 @@ internal static partial class CodeWriters
         WriteWinRTMetadataAttribute(w, type, _cacheRef!);
         WriteTypeCustomAttributes(w, type, true);
         w.Write(Helpers.InternalAccessibility(w.Settings));
-        w.Write(" static partial class ");
+        w.Write(" static class ");
         WriteTypedefName(w, type, TypedefNameType.Projected, false);
         WriteTypeParams(w, type);
         w.Write("\n{\n");
@@ -353,8 +353,9 @@ internal static partial class CodeWriters
         w.Write(w.Settings.Internal ? "internal" : "public");
         w.Write(" ");
         WriteClassModifiers(w, type);
-        // Mark as partial so user-provided implementations can complete the interface methods.
-        w.Write("partial class ");
+        // Mirrors C++ write_class which uses '%class' (no partial) — runtime classes
+        // are emitted as plain (non-partial) classes.
+        w.Write("class ");
         WriteTypedefName(w, type, TypedefNameType.Projected, false);
         WriteTypeParams(w, type);
         WriteTypeInheritance(w, type, false, true);
