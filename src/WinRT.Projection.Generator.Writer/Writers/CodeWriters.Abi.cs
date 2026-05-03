@@ -1736,6 +1736,7 @@ internal static partial class CodeWriters
                 if (IsString(underlying)) { continue; }
                 if (IsRuntimeClassOrInterface(underlying)) { continue; }
                 if (IsObject(underlying)) { continue; }
+                if (IsSystemType(underlying)) { continue; }
                 allParamsSimple = false;
                 break;
             }
@@ -1762,6 +1763,7 @@ internal static partial class CodeWriters
             if (IsObject(p.Type)) { continue; }
             if (IsGenericInstance(p.Type)) { continue; }
             if (IsMappedAbiValueType(p.Type)) { continue; }
+            if (IsSystemType(p.Type)) { continue; }
             allParamsSimple = false;
             break;
         }
@@ -1778,7 +1780,8 @@ internal static partial class CodeWriters
             || IsGenericInstance(rt)
             || returnIsReceiveArrayDoAbi
             || returnIsHResultExceptionDoAbi
-            || (rt is not null && IsMappedAbiValueType(rt));
+            || (rt is not null && IsMappedAbiValueType(rt))
+            || (rt is not null && IsSystemType(rt));
         bool returnIsString = rt is not null && IsString(rt);
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
         bool returnIsGenericInstance = rt is not null && IsGenericInstance(rt);
@@ -2276,6 +2279,15 @@ internal static partial class CodeWriters
                 w.Write(retLocalName);
                 w.Write(");\n");
             }
+            else if (IsSystemType(rt))
+            {
+                // System.Type return (server-side): convert managed System.Type to ABI Type struct.
+                w.Write("        *");
+                w.Write(retParamName);
+                w.Write(" = global::ABI.System.TypeMarshaller.ConvertToUnmanaged(");
+                w.Write(retLocalName);
+                w.Write(");\n");
+            }
             else if (returnIsBlittableStruct)
             {
                 w.Write("        *");
@@ -2398,6 +2410,13 @@ internal static partial class CodeWriters
             // convert to the projected managed type via the marshaller.
             w.Write(GetMappedMarshallerName(p.Type));
             w.Write(".ConvertToManaged(");
+            w.Write(pname);
+            w.Write(")");
+        }
+        else if (IsSystemType(p.Type))
+        {
+            // System.Type input (server-side): convert ABI Type struct to System.Type.
+            w.Write("global::ABI.System.TypeMarshaller.ConvertToManaged(");
             w.Write(pname);
             w.Write(")");
         }
@@ -5621,6 +5640,13 @@ internal static partial class CodeWriters
                     if (dNs == "Windows.Foundation" && dName == "HResult")
                     {
                         w.Write("global::ABI.System.Exception");
+                        break;
+                    }
+                    if (dNs == "Windows.UI.Xaml.Interop" && dName == "TypeName")
+                    {
+                        // System.Type ABI struct: maps to global::ABI.System.Type, not the
+                        // ABI.Windows.UI.Xaml.Interop.TypeName form.
+                        w.Write("global::ABI.System.Type");
                         break;
                     }
                     AsmResolver.DotNet.Signatures.TypeSignature dts = d.Type.ToTypeSignature();
