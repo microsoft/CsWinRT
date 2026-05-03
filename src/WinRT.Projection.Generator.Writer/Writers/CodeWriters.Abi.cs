@@ -3174,6 +3174,7 @@ internal static partial class CodeWriters
                     if (IsString(sz.BaseType)) { continue; }
                     if (IsRuntimeClassOrInterface(sz.BaseType)) { continue; }
                     if (IsObject(sz.BaseType)) { continue; }
+                    if (IsMappedAbiValueType(sz.BaseType)) { continue; }
                 }
                 return false;
             }
@@ -3478,16 +3479,27 @@ internal static partial class CodeWriters
             if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
             if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
-            // Non-blittable element type: emit InlineArray16<nint> + ArrayPool<nint>.
+            // Non-blittable element type: emit InlineArray16<storageT> + ArrayPool<storageT>.
+            // For mapped value types (DateTime/TimeSpan), use the ABI struct type.
+            // For everything else (runtime classes, objects, strings), use nint.
             string localName = GetParamLocalName(p, paramNameOverride);
             string callName = GetParamName(p, paramNameOverride);
-            w.Write("\n        Unsafe.SkipInit(out InlineArray16<nint> __");
+            string storageT = IsMappedAbiValueType(szArr.BaseType)
+                ? GetMappedAbiTypeName(szArr.BaseType)
+                : "nint";
+            w.Write("\n        Unsafe.SkipInit(out InlineArray16<");
+            w.Write(storageT);
+            w.Write("> __");
             w.Write(localName);
             w.Write("_inlineArray);\n");
-            w.Write("        nint[] __");
+            w.Write("        ");
+            w.Write(storageT);
+            w.Write("[] __");
             w.Write(localName);
             w.Write("_arrayFromPool = null;\n");
-            w.Write("        Span<nint> __");
+            w.Write("        Span<");
+            w.Write(storageT);
+            w.Write("> __");
             w.Write(localName);
             w.Write("_span = ");
             w.Write(callName);
@@ -3497,7 +3509,9 @@ internal static partial class CodeWriters
             w.Write(callName);
             w.Write(".Length]\n            : (__");
             w.Write(localName);
-            w.Write("_arrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent(");
+            w.Write("_arrayFromPool = global::System.Buffers.ArrayPool<");
+            w.Write(storageT);
+            w.Write(">.Shared.Rent(");
             w.Write(callName);
             w.Write(".Length));\n");
 
@@ -3622,7 +3636,8 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if ((cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
                 && p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArrCheck
-                && !IsBlittablePrimitive(szArrCheck.BaseType) && !IsAnyStruct(szArrCheck.BaseType))
+                && !IsBlittablePrimitive(szArrCheck.BaseType) && !IsAnyStruct(szArrCheck.BaseType)
+                && !IsMappedAbiValueType(szArrCheck.BaseType))
             {
                 hasNonBlittablePassArray = true; break;
             }
@@ -3808,6 +3823,11 @@ internal static partial class CodeWriters
             {
                 string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
                 string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+                // For mapped value types (DateTime/TimeSpan), the storage element is the ABI struct type;
+                // the data pointer parameter and cast use that type. For runtime classes/objects, use void*.
+                bool isMappedElem = IsMappedAbiValueType(szArr.BaseType);
+                string dataParamType = isMappedElem ? GetMappedAbiTypeName(szArr.BaseType) + "*" : "void**";
+                string dataCastType = isMappedElem ? "(" + GetMappedAbiTypeName(szArr.BaseType) + "*)" : "(void**)";
                 w.Write(callIndent);
                 w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
                 w.Write(callIndent);
@@ -3817,7 +3837,9 @@ internal static partial class CodeWriters
                 w.Write(GetArrayMarshallerInteropPath(w, szArr.BaseType, elementInteropArg));
                 w.Write("\")] object _, ReadOnlySpan<");
                 w.Write(elementProjected);
-                w.Write("> span, uint length, void** data);\n");
+                w.Write("> span, uint length, ");
+                w.Write(dataParamType);
+                w.Write(" data);\n");
                 w.Write(callIndent);
                 w.Write("CopyToUnmanaged_");
                 w.Write(localName);
@@ -3825,7 +3847,9 @@ internal static partial class CodeWriters
                 w.Write(callName);
                 w.Write(", (uint)");
                 w.Write(callName);
-                w.Write(".Length, (void**)_");
+                w.Write(".Length, ");
+                w.Write(dataCastType);
+                w.Write("_");
                 w.Write(localName);
                 w.Write(");\n");
             }
@@ -4163,6 +4187,8 @@ internal static partial class CodeWriters
             // 1. Cleanup non-blittable PassArray/FillArray params:
             // For strings: HStringArrayMarshaller.Dispose + return ArrayPools (3 of them).
             // For runtime classes/objects: Dispose_<name> (UnsafeAccessor) + return ArrayPool.
+            // For mapped value types (DateTime/TimeSpan): no per-element disposal needed and truth
+            // doesn't return the ArrayPool either, so skip entirely.
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 ParamInfo p = sig.Params[i];
@@ -4170,6 +4196,7 @@ internal static partial class CodeWriters
                 if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
                 if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
+                if (IsMappedAbiValueType(szArr.BaseType)) { continue; }
                 string localName = GetParamLocalName(p, paramNameOverride);
                 if (IsString(szArr.BaseType))
                 {
