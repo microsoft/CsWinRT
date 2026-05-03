@@ -146,7 +146,9 @@ internal static partial class CodeWriters
             w.Write(objRefName);
             w.Write(", ");
             w.Write(defaultIfaceIid);
-            w.Write(", CreateObjectReferenceMarshalingType.Agile)\n{\n}\n");
+            w.Write(", ");
+            w.Write(GetMarshalingTypeName(classType));
+            w.Write(")\n{\n}\n");
         }
     }
 
