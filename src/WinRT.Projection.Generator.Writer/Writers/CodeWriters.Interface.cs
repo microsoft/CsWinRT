@@ -128,10 +128,15 @@ internal static partial class CodeWriters
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            w.Write("global::");
-            w.Write(ns);
-            w.Write(".");
-            w.WriteCode(name);
+            // Only emit the global:: prefix if the namespace doesn't match the current emit namespace
+            // (mirrors WriteTypedefName behavior — same-namespace types stay unqualified).
+            if (!string.IsNullOrEmpty(ns) && ns != w.CurrentNamespace)
+            {
+                w.Write("global::");
+                w.Write(ns);
+                w.Write(".");
+            }
+            w.WriteCode(Helpers.StripBackticks(name));
         }
         else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
@@ -144,15 +149,19 @@ internal static partial class CodeWriters
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            w.Write("global::");
-            w.Write(ns);
-            w.Write(".");
-            w.WriteCode(name);
+            if (!string.IsNullOrEmpty(ns) && ns != w.CurrentNamespace)
+            {
+                w.Write("global::");
+                w.Write(ns);
+                w.Write(".");
+            }
+            w.WriteCode(Helpers.StripBackticks(name));
             w.Write("<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
                 if (i > 0) { w.Write(", "); }
-                WriteTypeName(w, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
+                // Pass forceWriteNamespace=false so type args also respect the current namespace.
+                WriteTypeName(w, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, false);
             }
             w.Write(">");
         }

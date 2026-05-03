@@ -50,20 +50,83 @@ internal static partial class CodeWriters
         }
         else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
-            // Generic instantiation: full qualified name with type args (matches C++ projected name).
+            // Generic instantiation: always use fully qualified name (with global::) for the objref
+            // name computation, so the resulting field name is unique across namespaces. This
+            // matches truth output: e.g. _objRef_System_Collections_Generic_IReadOnlyList_global__Windows_Web_Http_HttpCookie_
+            // (with 'global__' coming from escaping the global:: prefix).
             projected = w.WriteTemp("%", new Action<TextWriter>(_ =>
             {
-                WriteInterfaceTypeName(w, ifaceType);
+                WriteFullyQualifiedInterfaceName(w, ifaceType);
             }));
         }
         else
         {
             projected = w.WriteTemp("%", new Action<TextWriter>(_ =>
             {
-                WriteInterfaceTypeName(w, ifaceType);
+                WriteFullyQualifiedInterfaceName(w, ifaceType);
             }));
         }
         return "_objRef_" + EscapeTypeNameForIdentifier(projected, stripGlobal: true);
+    }
+
+    /// <summary>
+    /// Like <see cref="WriteInterfaceTypeName"/> but always emits a fully qualified name with
+    /// <c>global::</c> prefix on every type (even same-namespace ones). Used for objref name
+    /// computation where uniqueness across namespaces matters.
+    /// </summary>
+    private static void WriteFullyQualifiedInterfaceName(TypeWriter w, ITypeDefOrRef ifaceType)
+    {
+        if (ifaceType is TypeDefinition td)
+        {
+            string ns = td.Namespace?.Value ?? string.Empty;
+            string name = td.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
+            w.Write("global::");
+            if (!string.IsNullOrEmpty(ns)) { w.Write(ns); w.Write("."); }
+            w.WriteCode(Helpers.StripBackticks(name));
+        }
+        else if (ifaceType is TypeReference tr)
+        {
+            string ns = tr.Namespace?.Value ?? string.Empty;
+            string name = tr.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
+            w.Write("global::");
+            if (!string.IsNullOrEmpty(ns)) { w.Write(ns); w.Write("."); }
+            w.WriteCode(Helpers.StripBackticks(name));
+        }
+        else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
+        {
+            ITypeDefOrRef gt = gi.GenericType;
+            string ns = gt.Namespace?.Value ?? string.Empty;
+            string name = gt.Name?.Value ?? string.Empty;
+            MappedType? mapped = MappedTypes.Get(ns, name);
+            if (mapped is not null)
+            {
+                ns = mapped.MappedNamespace;
+                name = mapped.MappedName;
+            }
+            w.Write("global::");
+            if (!string.IsNullOrEmpty(ns)) { w.Write(ns); w.Write("."); }
+            w.WriteCode(Helpers.StripBackticks(name));
+            w.Write("<");
+            for (int i = 0; i < gi.TypeArguments.Count; i++)
+            {
+                if (i > 0) { w.Write(", "); }
+                // forceWriteNamespace=true so generic args also get global:: prefix.
+                WriteTypeName(w, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
+            }
+            w.Write(">");
+        }
     }
 
     /// <summary>
