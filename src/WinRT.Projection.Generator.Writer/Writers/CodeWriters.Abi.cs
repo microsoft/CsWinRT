@@ -695,6 +695,21 @@ internal static partial class CodeWriters
                 EmitMarshallerConvertToUnmanaged(w, p.Type, callName);
                 w.Write(";\n");
             }
+            else if (IsNullableT(p.Type))
+            {
+                // Nullable<T> param: use <T>Marshaller.BoxToUnmanaged. Mirrors truth pattern.
+                string raw = p.Parameter.Name ?? "param";
+                string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+                AsmResolver.DotNet.Signatures.TypeSignature inner = GetNullableInnerType(p.Type)!;
+                string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
+                w.Write("        using WindowsRuntimeObjectReferenceValue __");
+                w.Write(raw);
+                w.Write(" = ");
+                w.Write(innerMarshaller);
+                w.Write(".BoxToUnmanaged(");
+                w.Write(callName);
+                w.Write(");\n");
+            }
             else if (IsGenericInstance(p.Type))
             {
                 string raw = p.Parameter.Name ?? "param";
@@ -1969,7 +1984,22 @@ internal static partial class CodeWriters
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
-            if (IsGenericInstance(p.Type))
+            if (IsNullableT(p.Type))
+            {
+                // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged. Mirrors truth pattern.
+                string rawName = p.Parameter.Name ?? "param";
+                string callName = Helpers.IsKeyword(rawName) ? "@" + rawName : rawName;
+                AsmResolver.DotNet.Signatures.TypeSignature inner = GetNullableInnerType(p.Type)!;
+                string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
+                w.Write("        var __arg_");
+                w.Write(rawName);
+                w.Write(" = ");
+                w.Write(innerMarshaller);
+                w.Write(".UnboxToManaged(");
+                w.Write(callName);
+                w.Write(");\n");
+            }
+            else if (IsGenericInstance(p.Type))
             {
                 string rawName = p.Parameter.Name ?? "param";
                 string callName = Helpers.IsKeyword(rawName) ? "@" + rawName : rawName;
@@ -2159,7 +2189,20 @@ internal static partial class CodeWriters
             }
             else if (returnIsRefType)
             {
-                if (returnIsGenericInstance)
+                if (rt is not null && IsNullableT(rt))
+                {
+                    // Nullable<T> return (server-side): use <T>Marshaller.BoxToUnmanaged.
+                    AsmResolver.DotNet.Signatures.TypeSignature inner = GetNullableInnerType(rt)!;
+                    string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
+                    w.Write("        *");
+                    w.Write(retParamName);
+                    w.Write(" = ");
+                    w.Write(innerMarshaller);
+                    w.Write(".BoxToUnmanaged(");
+                    w.Write(retLocalName);
+                    w.Write(").DetachThisPtrUnsafe();\n");
+                }
+                else if (returnIsGenericInstance)
                 {
                     // Generic instance return: emit local UnsafeAccessor delegate to ConvertToUnmanaged + .DetachThisPtrUnsafe()
                     string interopTypeName = EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
@@ -3757,6 +3800,21 @@ internal static partial class CodeWriters
                 EmitMarshallerConvertToUnmanaged(w, p.Type, callName);
                 w.Write(";\n");
             }
+            else if (IsNullableT(p.Type))
+            {
+                // Nullable<T> param: use <T>Marshaller.BoxToUnmanaged. Mirrors truth pattern.
+                string localName = GetParamLocalName(p, paramNameOverride);
+                string callName = GetParamName(p, paramNameOverride);
+                AsmResolver.DotNet.Signatures.TypeSignature inner = GetNullableInnerType(p.Type)!;
+                string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
+                w.Write("        using WindowsRuntimeObjectReferenceValue __");
+                w.Write(localName);
+                w.Write(" = ");
+                w.Write(innerMarshaller);
+                w.Write(".BoxToUnmanaged(");
+                w.Write(callName);
+                w.Write(");\n");
+            }
             else if (IsGenericInstance(p.Type))
             {
                 // Generic instance param: emit a local UnsafeAccessor delegate to get the marshaller method.
@@ -4478,7 +4536,18 @@ internal static partial class CodeWriters
             }
             else if (returnIsRefType)
             {
-                if (IsGenericInstance(rt))
+                if (IsNullableT(rt))
+                {
+                    // Nullable<T> return: use <T>Marshaller.UnboxToManaged. Mirrors truth pattern;
+                    // there is no Nullable<T>Marshaller, the inner-T marshaller has UnboxToManaged.
+                    AsmResolver.DotNet.Signatures.TypeSignature inner = GetNullableInnerType(rt)!;
+                    string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
+                    w.Write(callIndent);
+                    w.Write("return ");
+                    w.Write(innerMarshaller);
+                    w.Write(".UnboxToManaged(__retval);\n");
+                }
+                else if (IsGenericInstance(rt))
                 {
                     string interopTypeName = EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
                     string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
@@ -4865,6 +4934,60 @@ internal static partial class CodeWriters
     private static bool IsGenericInstance(AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         return sig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
+    }
+
+    /// <summary>True if the signature is a WinRT <c>IReference&lt;T&gt;</c> (which projects to <c>Nullable&lt;T&gt;</c>).</summary>
+    private static bool IsNullableT(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is not AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi) { return false; }
+        string ns = gi.GenericType?.Namespace?.Value ?? string.Empty;
+        string name = gi.GenericType?.Name?.Value ?? string.Empty;
+        return (ns == "Windows.Foundation" && name == "IReference`1")
+            || (ns == "System" && name == "Nullable`1");
+    }
+
+    /// <summary>Returns the inner type argument of a <c>Nullable&lt;T&gt;</c> signature (or the IReference variant).</summary>
+    private static AsmResolver.DotNet.Signatures.TypeSignature? GetNullableInnerType(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    {
+        if (sig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi && gi.TypeArguments.Count == 1)
+        {
+            return gi.TypeArguments[0];
+        }
+        return null;
+    }
+
+    /// <summary>Returns the marshaller name for the inner type T of <c>Nullable&lt;T&gt;</c>.
+    /// Mirrors the truth pattern: e.g. for <c>Nullable&lt;DateTimeOffset&gt;</c> returns
+    /// <c>global::ABI.System.DateTimeOffsetMarshaller</c>; for primitives like <c>Nullable&lt;int&gt;</c>
+    /// returns <c>global::ABI.System.Int32Marshaller</c>.</summary>
+    private static string GetNullableInnerMarshallerName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature innerType)
+    {
+        // Primitives (Int32, Int64, Boolean, etc.) live in ABI.System with the canonical .NET name.
+        if (innerType is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
+        {
+            string typeName = corlib.ElementType switch
+            {
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean => "Boolean",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char => "Char",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1 => "SByte",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1 => "Byte",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2 => "Int16",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2 => "UInt16",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4 => "Int32",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4 => "UInt32",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8 => "Int64",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8 => "UInt64",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R4 => "Single",
+                AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8 => "Double",
+                _ => "",
+            };
+            if (!string.IsNullOrEmpty(typeName))
+            {
+                return "global::ABI.System." + typeName + "Marshaller";
+            }
+        }
+        // For non-primitive types (DateTimeOffset, TimeSpan, struct/enum types), use GetMarshallerFullName.
+        return GetMarshallerFullName(w, innerType);
     }
 
     /// <summary>Strips <c>ByReferenceTypeSignature</c> and <c>CustomModifierTypeSignature</c> wrappers

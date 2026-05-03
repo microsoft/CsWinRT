@@ -332,13 +332,26 @@ internal static partial class CodeWriters
             w.Write(";\n");
         }
 
-        // For generic instance params, emit local UnsafeAccessor delegates.
+        // For generic instance params, emit local UnsafeAccessor delegates (or Nullable<T> -> BoxToUnmanaged).
         for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             if (!IsGenericInstance(p.Type)) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            if (IsNullableT(p.Type))
+            {
+                AsmResolver.DotNet.Signatures.TypeSignature inner = GetNullableInnerType(p.Type)!;
+                string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
+                w.Write("        using WindowsRuntimeObjectReferenceValue __");
+                w.Write(raw);
+                w.Write(" = ");
+                w.Write(innerMarshaller);
+                w.Write(".BoxToUnmanaged(");
+                w.Write(pname);
+                w.Write(");\n");
+                continue;
+            }
             string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
             string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
             w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
