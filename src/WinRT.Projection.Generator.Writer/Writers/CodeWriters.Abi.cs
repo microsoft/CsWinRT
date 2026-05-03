@@ -1820,7 +1820,8 @@ internal static partial class CodeWriters
         }
         bool returnIsReceiveArrayDoAbi = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzAbi
             && (IsBlittablePrimitive(retSzAbi.BaseType) || IsAnyStruct(retSzAbi.BaseType)
-                || IsString(retSzAbi.BaseType) || IsRuntimeClassOrInterface(retSzAbi.BaseType) || IsObject(retSzAbi.BaseType));
+                || IsString(retSzAbi.BaseType) || IsRuntimeClassOrInterface(retSzAbi.BaseType) || IsObject(retSzAbi.BaseType)
+                || IsComplexStruct(retSzAbi.BaseType));
         bool returnIsHResultExceptionDoAbi = rt is not null && IsHResultException(rt);
         bool returnSimple = rt is null
             || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
@@ -2362,12 +2363,14 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
                 string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSz.BaseType))));
-                // Element ABI type: void* for ref types (string/runtime class/object), blittable struct ABI for structs, primitive ABI otherwise.
+                // Element ABI type: void* for ref types (string/runtime class/object), complex struct ABI for non-blittable structs, blittable struct ABI for blittable, primitive ABI otherwise.
                 string elementAbi = IsString(retSz.BaseType) || IsRuntimeClassOrInterface(retSz.BaseType) || IsObject(retSz.BaseType)
                     ? "void*"
-                    : IsAnyStruct(retSz.BaseType)
-                        ? GetBlittableStructAbiType(w, retSz.BaseType)
-                        : GetAbiPrimitiveType(retSz.BaseType);
+                    : IsComplexStruct(retSz.BaseType)
+                        ? GetAbiStructTypeName(w, retSz.BaseType)
+                        : IsAnyStruct(retSz.BaseType)
+                            ? GetBlittableStructAbiType(w, retSz.BaseType)
+                            : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
                 string marshallerPath = GetArrayMarshallerInteropPath(w, retSz.BaseType, elementInteropArg);
                 w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
