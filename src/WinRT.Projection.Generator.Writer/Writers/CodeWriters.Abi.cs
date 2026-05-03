@@ -1353,12 +1353,43 @@ internal static partial class CodeWriters
             }
             else if (p.Type is AsmResolver.DotNet.Signatures.ByReferenceTypeSignature br)
             {
-                WriteAbiType(w, TypeSemanticsFactory.Get(br.BaseType));
-                w.Write("*");
-                if (includeParamNames)
+                // Special case: 'out T[]' is a ReceiveArray ABI signature: (uint* size, T** data).
+                if (br.BaseType is AsmResolver.DotNet.Signatures.SzArrayTypeSignature brSz && cat == ParamCategory.ReceiveArray)
                 {
-                    w.Write(" ");
-                    Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                    bool isRefElemBr = IsString(brSz.BaseType) || IsRuntimeClassOrInterface(brSz.BaseType) || IsObject(brSz.BaseType) || IsGenericInstance(brSz.BaseType);
+                    if (includeParamNames)
+                    {
+                        w.Write("uint* __");
+                        w.Write(p.Parameter.Name ?? "param");
+                        w.Write("Size, ");
+                        if (isRefElemBr) { w.Write("void** "); }
+                        else
+                        {
+                            WriteAbiType(w, TypeSemanticsFactory.Get(brSz.BaseType));
+                            w.Write("** ");
+                        }
+                        Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                    }
+                    else
+                    {
+                        w.Write("uint*, ");
+                        if (isRefElemBr) { w.Write("void**"); }
+                        else
+                        {
+                            WriteAbiType(w, TypeSemanticsFactory.Get(brSz.BaseType));
+                            w.Write("**");
+                        }
+                    }
+                }
+                else
+                {
+                    WriteAbiType(w, TypeSemanticsFactory.Get(br.BaseType));
+                    w.Write("*");
+                    if (includeParamNames)
+                    {
+                        w.Write(" ");
+                        Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                    }
                 }
             }
             else
@@ -1751,6 +1782,24 @@ internal static partial class CodeWriters
                     if (IsString(sz.BaseType)) { continue; }
                     if (IsRuntimeClassOrInterface(sz.BaseType)) { continue; }
                     if (IsObject(sz.BaseType)) { continue; }
+                    if (IsComplexStruct(sz.BaseType)) { continue; }
+                }
+                allParamsSimple = false;
+                break;
+            }
+            if (cat == ParamCategory.ReceiveArray)
+            {
+                // 'out T[]' as a parameter (FillArray ABI form (uint*, T**)). Allow blittable
+                // primitives, blittable structs, strings, runtime classes, objects, complex structs.
+                AsmResolver.DotNet.Signatures.TypeSignature underlyingArr = StripByRefAndCustomModifiers(p.Type);
+                if (underlyingArr is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza)
+                {
+                    if (IsBlittablePrimitive(sza.BaseType)) { continue; }
+                    if (IsAnyStruct(sza.BaseType)) { continue; }
+                    if (IsString(sza.BaseType)) { continue; }
+                    if (IsRuntimeClassOrInterface(sza.BaseType)) { continue; }
+                    if (IsObject(sza.BaseType)) { continue; }
+                    if (IsComplexStruct(sza.BaseType)) { continue; }
                 }
                 allParamsSimple = false;
                 break;
@@ -1891,6 +1940,30 @@ internal static partial class CodeWriters
             w.Write("    ");
             w.Write(projected);
             w.Write(" __");
+            w.Write(raw);
+            w.Write(" = default;\n");
+        }
+        // For each ReceiveArray parameter (out T[]), zero the destination + size out pointers
+        // and declare a managed array local. The managed call passes 'out __<name>' and after
+        // the call we copy to the ABI buffer via UnsafeAccessor.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.ReceiveArray) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
+            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sza.BaseType))));
+            w.Write("    *");
+            w.Write(ptr);
+            w.Write(" = default;\n");
+            w.Write("    *__");
+            w.Write(raw);
+            w.Write("Size = default;\n");
+            w.Write("    ");
+            w.Write(elementProjected);
+            w.Write("[] __");
             w.Write(raw);
             w.Write(" = default;\n");
         }
@@ -2110,6 +2183,12 @@ internal static partial class CodeWriters
                     w.Write("__");
                     w.Write(raw);
                 }
+                else if (cat == ParamCategory.ReceiveArray)
+                {
+                    string raw = p.Parameter.Name ?? "param";
+                    w.Write("out __");
+                    w.Write(raw);
+                }
                 else
                 {
                     EmitDoAbiParamArgConversion(w, p);
@@ -2175,6 +2254,46 @@ internal static partial class CodeWriters
                 w.Write(raw);
             }
             w.Write(";\n");
+        }
+        // After call: for ReceiveArray params, emit UnsafeAccessor + ConvertToUnmanaged_<name>
+        // call to copy the managed array into the ABI buffer.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.ReceiveArray) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
+            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sza.BaseType))));
+            string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+            string marshallerPath = GetArrayMarshallerInteropPath(w, sza.BaseType, elementInteropArg);
+            string elementAbi = IsString(sza.BaseType) || IsRuntimeClassOrInterface(sza.BaseType) || IsObject(sza.BaseType)
+                ? "void*"
+                : IsComplexStruct(sza.BaseType)
+                    ? GetAbiStructTypeName(w, sza.BaseType)
+                    : IsAnyStruct(sza.BaseType)
+                        ? GetBlittableStructAbiType(w, sza.BaseType)
+                        : GetAbiPrimitiveType(sza.BaseType);
+            w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            w.Write("        static extern void ConvertToUnmanaged_");
+            w.Write(raw);
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(marshallerPath);
+            w.Write("\")] object _, ReadOnlySpan<");
+            w.Write(elementProjected);
+            w.Write("> span, out uint length, out ");
+            w.Write(elementAbi);
+            w.Write("* data);\n");
+            w.Write("        ConvertToUnmanaged_");
+            w.Write(raw);
+            w.Write("(null, __");
+            w.Write(raw);
+            w.Write(", out *__");
+            w.Write(raw);
+            w.Write("Size, out *");
+            w.Write(ptr);
+            w.Write(");\n");
         }
         if (rt is not null)
         {
