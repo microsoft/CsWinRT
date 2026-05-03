@@ -5826,9 +5826,9 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Returns the full marshaller name (e.g. <c>global::ABI.Windows.Foundation.UriMarshaller</c>).
-    /// Mirrors the C++ tool which always qualifies marshaller call sites with the full
-    /// <c>global::ABI.&lt;Ns&gt;.&lt;Name&gt;Marshaller</c> form (even when the writer is currently
-    /// in the matching ABI namespace).</summary>
+    /// When the marshaller would land in the writer's current ABI namespace, returns just the
+    /// short marshaller class name (e.g. <c>BasicStructMarshaller</c>) — mirrors C++ which
+    /// elides the qualifier in same-namespace contexts.</summary>
     private static string GetMarshallerFullName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
@@ -5843,6 +5843,11 @@ internal static partial class CodeWriters
                 name = mapped.MappedName;
             }
             string nameStripped = Helpers.StripBackticks(name);
+            // If the writer is currently in the matching ABI namespace, drop the qualifier.
+            if (w.InAbiNamespace && string.Equals(w.CurrentNamespace, ns, System.StringComparison.Ordinal))
+            {
+                return nameStripped + "Marshaller";
+            }
             return "global::ABI." + ns + "." + nameStripped + "Marshaller";
         }
         return "global::ABI.Object.Marshaller";
