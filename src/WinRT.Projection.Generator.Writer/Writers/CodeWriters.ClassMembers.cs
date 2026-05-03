@@ -831,6 +831,18 @@ internal static partial class CodeWriters
     /// </summary>
     private static void WriteInterfaceTypeNameForCcw(TypeWriter w, ITypeDefOrRef ifaceType)
     {
+        // If the reference is to a type in the same module, resolve to TypeDefinition so
+        // WriteTypedefName can drop the 'global::<NS>.' prefix when the namespace matches.
+        // Mirrors the C++ tool's behavior of emitting the bare interface name when in scope.
+        if (ifaceType is not TypeDefinition && ifaceType is not TypeSpecification && _cacheRef is not null)
+        {
+            try
+            {
+                TypeDefinition? resolved = ifaceType.Resolve(_cacheRef.RuntimeContext);
+                if (resolved is not null) { ifaceType = resolved; }
+            }
+            catch { /* leave as TypeReference */ }
+        }
         if (ifaceType is TypeDefinition td)
         {
             WriteTypedefName(w, td, TypedefNameType.CCW, false);
