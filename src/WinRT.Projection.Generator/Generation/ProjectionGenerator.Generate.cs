@@ -45,11 +45,22 @@ internal partial class ProjectionGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
-        GenerateRspFile(args, out string outputFolder, out string rspFile, out HashSet<string> projectionReferenceAssemblies, out bool hasTypesToProject);
+        GenerateRspFile(
+            args,
+            out string outputFolder,
+            out string rspFile,
+            out HashSet<string> projectionReferenceAssemblies,
+            out bool hasTypesToProject,
+            out List<string> componentAssemblyNames);
 
         string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
 
-        return new ProjectionGeneratorProcessingState(outputFolder, rspFile, referencesWithoutProjections, hasTypesToProject);
+        return new ProjectionGeneratorProcessingState(
+            outputFolder,
+            rspFile,
+            referencesWithoutProjections,
+            hasTypesToProject,
+            componentAssemblyNames);
     }
 
     /// <summary>
@@ -111,12 +122,14 @@ internal partial class ProjectionGenerator
     /// <param name="rspFile">The generated response file for running <c>cswinrt.exe</c>.</param>
     /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used to generate the response file.</param>
     /// <param name="hasTypesToProject">Whether any types were found to include in the projection.</param>
+    /// <param name="componentAssemblyNames">Sorted simple names of input <c>[WindowsRuntimeComponentAssembly]</c> references (populated only in component mode).</param>
     private static void GenerateRspFile(
         ProjectionGeneratorArgs args,
         out string outputFolder,
         out string rspFile,
         out HashSet<string> projectionReferenceAssemblies,
-        out bool hasTypesToProject)
+        out bool hasTypesToProject,
+        out List<string> componentAssemblyNames)
     {
         args.Token.ThrowIfCancellationRequested();
 
@@ -124,6 +137,7 @@ internal partial class ProjectionGenerator
         rspFile = Path.Combine(outputFolder, "ProjectionGenerator.rsp");
         projectionReferenceAssemblies = [];
         hasTypesToProject = false;
+        componentAssemblyNames = [];
 
         using StreamWriter fileStream = new(rspFile);
 
@@ -144,7 +158,7 @@ internal partial class ProjectionGenerator
         if (isComponentMode)
         {
             // Collect the names of all component assemblies from the references
-            HashSet<string> componentAssemblyNames = [];
+            HashSet<string> componentAssemblyNameSet = [];
 
             foreach (string refPath in args.ReferenceAssemblyPaths)
             {
@@ -157,16 +171,20 @@ internal partial class ProjectionGenerator
 
                 if (IsComponentAssembly(refModule) && refModule.Assembly?.Name is Utf8String name)
                 {
-                    _ = componentAssemblyNames.Add(name.Value);
+                    _ = componentAssemblyNameSet.Add(name.Value);
                 }
             }
+
+            // Sort for stable codegen output
+            componentAssemblyNames = [.. componentAssemblyNameSet];
+            componentAssemblyNames.Sort(StringComparer.Ordinal);
 
             // Scan WinMD files matching component assembly names (e.g. 'MyComponent.winmd')
             foreach (string winmdPath in args.WinMDPaths)
             {
                 string winmdFileName = Path.GetFileNameWithoutExtension(winmdPath);
 
-                if (!componentAssemblyNames.Contains(winmdFileName))
+                if (!componentAssemblyNameSet.Contains(winmdFileName))
                 {
                     continue;
                 }

@@ -33,5 +33,14 @@ public sealed partial class AuthoringExportTypesGenerator : IIncrementalGenerato
 
         // Generate the native exports type
         context.RegisterImplementationSourceOutput(nativeExportsInfo, Execute.EmitNativeExports);
+
+        // Generate an idempotent SetEntryAssembly module initializer. This ensures that when a
+        // component dll is consumed in a hosted scenario where there's no natural entry assembly
+        // (e.g. via WinRT.Host.dll), the dll designates itself as the entry assembly so the
+        // .NET runtime's TypeMap discovery rooted at the entry assembly works. The check is
+        // idempotent so that, in the multi-component aggregator scenario where 'WinRT.Component.dll'
+        // loads first and sets itself as the entry assembly, this per-component initializer does
+        // not override that.
+        context.RegisterImplementationSourceOutput(nativeExportsInfo, Execute.EmitProjectionTypesInitializer);
     }
 }

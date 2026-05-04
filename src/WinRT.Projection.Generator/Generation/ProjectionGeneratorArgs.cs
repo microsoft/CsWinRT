@@ -54,6 +54,16 @@ internal sealed partial class ProjectionGeneratorArgs
     [CommandLineArgumentName("--windows-ui-xaml-projection")]
     public bool WindowsUIXamlProjection { get; init; }
 
+    /// <summary>
+    /// Gets whether the consuming build is publishing with Native AOT. When <c>true</c> in
+    /// component mode (i.e. producing <c>WinRT.Component.dll</c>), an
+    /// <c>[UnmanagedCallersOnly]</c> <c>DllGetActivationFactory</c> wrapper is emitted
+    /// alongside the merged managed activation logic. JIT consumers do not need this
+    /// (the host reaches the merged factory through a managed delegation chain).
+    /// </summary>
+    [CommandLineArgumentName("--publish-aot")]
+    public bool PublishAot { get; init; }
+
     /// <summary>Gets the token for the operation.</summary>
     public required CancellationToken Token { get; init; }
 }

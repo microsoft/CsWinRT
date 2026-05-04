@@ -407,6 +407,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       WindowsMetadata="$(CsWinRTWindowsMetadata)"
       CsWinRTExePath="$(CsWinRTExe)"
       AssemblyName="WinRT.Component"
+      PublishAot="$(PublishAot)"
       CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
       CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
