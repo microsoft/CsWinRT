@@ -559,6 +559,16 @@ internal static partial class CodeWriters
 
     private static void EncodeArrayElementNameInto(System.Text.StringBuilder sb, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
+        // Special case for System.Guid: matches C++ guid_type handler in write_interop_dll_type_name.
+        // The depth=0 (top-level array element) form drops the namespace prefix and uses just the
+        // assembly marker + type name, so for Guid this becomes "<#corlib>Guid".
+        if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature gtd
+            && gtd.Type?.Namespace?.Value == "System"
+            && gtd.Type?.Name?.Value == "Guid")
+        {
+            sb.Append("<#corlib>Guid");
+            return;
+        }
         switch (sig)
         {
             case AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib:
