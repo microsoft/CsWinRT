@@ -521,27 +521,75 @@ internal static partial class CodeWriters
             w.Write(");\n");
         }
 
-        // For string and array params, open a `fixed(void* _<name> = <name>)` block. Each adds nesting.
+        // Open ONE combined "fixed(void* _a = ..., _b = ..., ...)" block for ALL pinnable
+        // params (string, Type, PassArray). Mirrors C++ write_abi_method_call_marshalers
+        // which emits a single combined fixed-block for all is_pinnable marshalers.
         int fixedNesting = 0;
+        int pinnableCount = 0;
         for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            string raw = p.Parameter.Name ?? "param";
-            string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
-            string indent = baseIndent + new string(' ', fixedNesting * 4);
-            if (IsString(p.Type))
+            if (IsString(p.Type) || IsSystemType(p.Type)) { pinnableCount++; }
+            else if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray) { pinnableCount++; }
+        }
+        if (pinnableCount > 0)
+        {
+            string indent = baseIndent;
+            w.Write(indent);
+            w.Write("fixed(void* ");
+            bool firstPin = true;
+            for (int i = 0; i < paramCount; i++)
             {
-                w.Write(indent);
-                w.Write("fixed(void* _");
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                bool isStr = IsString(p.Type);
+                bool isType = IsSystemType(p.Type);
+                bool isArr = cat == ParamCategory.PassArray || cat == ParamCategory.FillArray;
+                if (!isStr && !isType && !isArr) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+                if (!firstPin) { w.Write(", "); }
+                firstPin = false;
+                w.Write("_");
                 w.Write(raw);
                 w.Write(" = ");
-                w.Write(pname);
-                w.Write(")\n");
-                w.Write(indent);
-                w.Write("{\n");
-                fixedNesting++;
-                string innerIndent = baseIndent + new string(' ', fixedNesting * 4);
+                if (isType) { w.Write("__"); w.Write(raw); }
+                else if (isArr)
+                {
+                    AsmResolver.DotNet.Signatures.TypeSignature elemT = ((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType;
+                    bool isBlittableElem = IsBlittablePrimitive(elemT) || IsAnyStruct(elemT);
+                    bool isStringElem = IsString(elemT);
+                    if (isBlittableElem) { w.Write(pname); }
+                    else { w.Write("__"); w.Write(raw); w.Write("_span"); }
+                    if (isStringElem)
+                    {
+                        w.Write(", _");
+                        w.Write(raw);
+                        w.Write("_inlineHeaderArray = __");
+                        w.Write(raw);
+                        w.Write("_headerSpan");
+                    }
+                }
+                else
+                {
+                    // string param: pin the input string itself.
+                    w.Write(pname);
+                }
+            }
+            w.Write(")\n");
+            w.Write(indent);
+            w.Write("{\n");
+            fixedNesting = 1;
+            // Inside the block: emit HStringMarshaller.ConvertToUnmanagedUnsafe for each
+            // string input. The HStringReference local lives stack-only.
+            string innerIndent = baseIndent + new string(' ', fixedNesting * 4);
+            for (int i = 0; i < paramCount; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                if (!IsString(p.Type)) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
                 w.Write(innerIndent);
                 w.Write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
                 w.Write(raw);
@@ -550,44 +598,6 @@ internal static partial class CodeWriters
                 w.Write("?.Length, out HStringReference __");
                 w.Write(raw);
                 w.Write(");\n");
-            }
-            else if (IsSystemType(p.Type))
-            {
-                // Open fixed() block pinning the TypeReference local declared above. The actual
-                // ABI argument is __<raw>.ConvertToUnmanagedUnsafe() in the call site below.
-                w.Write(indent);
-                w.Write("fixed(void* _");
-                w.Write(raw);
-                w.Write(" = __");
-                w.Write(raw);
-                w.Write(")\n");
-                w.Write(indent);
-                w.Write("{\n");
-                fixedNesting++;
-            }
-            else if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
-            {
-                AsmResolver.DotNet.Signatures.TypeSignature elemT = ((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType;
-                bool isBlittableElem = IsBlittablePrimitive(elemT) || IsAnyStruct(elemT);
-                bool isStringElem = IsString(elemT);
-                w.Write(indent);
-                w.Write("fixed(void* _");
-                w.Write(raw);
-                w.Write(" = ");
-                if (isBlittableElem) { w.Write(pname); }
-                else { w.Write("__"); w.Write(raw); w.Write("_span"); }
-                if (isStringElem)
-                {
-                    w.Write(", _");
-                    w.Write(raw);
-                    w.Write("_inlineHeaderArray = __");
-                    w.Write(raw);
-                    w.Write("_headerSpan");
-                }
-                w.Write(")\n");
-                w.Write(indent);
-                w.Write("{\n");
-                fixedNesting++;
             }
         }
 
