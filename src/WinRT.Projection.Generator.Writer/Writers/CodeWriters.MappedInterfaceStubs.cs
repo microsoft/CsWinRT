@@ -346,7 +346,7 @@ internal static partial class CodeWriters
         w.Write(interopType);
         w.Write("\")] object _, WindowsRuntimeObjectReference objRef");
         w.Write(extraParams);
-        w.Write(");\n");
+        w.Write(");\n\n");
     }
 
     private static void EmitNonGenericList(TypeWriter w)
