@@ -64,12 +64,10 @@ internal static partial class CodeWriters
             }
         }
 
-        // Mirror C++ class member ordering: emit IWindowsRuntimeInterface<T>.GetInterface()
-        // and (for unsealed classes with an exclusive default interface) GetDefaultInterface()
-        // BEFORE the public interface members (Dispose, properties, etc.).
-        WriteIWindowsRuntimeInterfaceGetInterfaceImpls(w, type);
-        WriteUnsealedGetDefaultInterface(w, type);
-
+        // Mirror C++ class member ordering: emit GetInterface()/GetDefaultInterface() per
+        // interface inside WriteInterfaceMembersRecursive (right before that interface's
+        // members), instead of one upfront block. This interleaves the GetInterface() impls
+        // with their corresponding interface body, matching truth's per-interface layout.
         WriteInterfaceMembersRecursive(w, type, type, null, writtenMethods, propertyState, writtenEvents, writtenInterfaces);
 
         // After collecting all properties (with merged accessors), emit them.
@@ -234,55 +232,8 @@ internal static partial class CodeWriters
             }
         }
 
-        // Emit explicit IWindowsRuntimeInterface<T>.GetInterface() implementations once at the end,
-        // matching the inheritance list emitted by WriteTypeInheritance. We must skip interfaces
-        // that were filtered out of the inheritance list (e.g. ExclusiveTo non-overridable interfaces).
-        // Mirrors C++ block-body form: 'WindowsRuntimeObjectReferenceValue ...GetInterface() {\n  return ....AsValue();\n}\n'
-        // (No-op here: emitted at the top of WriteClassMembers via WriteIWindowsRuntimeInterfaceGetInterfaceImpls.)
-
-        // For unsealed classes with an exclusive default interface, the C++ generator emits
-        // an additional 'internal WindowsRuntimeObjectReferenceValue GetDefaultInterface()'
-        // method (see write_class_member). This is needed because the default interface's
-        // 'IWindowsRuntimeInterface<>.GetInterface' isn't emitted (since it's exclusive).
-        // (No-op here: emitted at the top of WriteClassMembers via WriteUnsealedGetDefaultInterface.)
-    }
-
-    private static void WriteIWindowsRuntimeInterfaceGetInterfaceImpls(TypeWriter w, TypeDefinition type)
-    {
-        foreach (InterfaceImplementation impl in type.Interfaces)
-        {
-            if (impl.Interface is null) { continue; }
-            if (!IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false)) { continue; }
-            string objRefName = GetObjRefName(w, impl.Interface);
-            w.Write("\nWindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
-            WriteInterfaceTypeNameForCcw(w, impl.Interface);
-            w.Write(">.GetInterface()\n{\nreturn ");
-            w.Write(objRefName);
-            w.Write(".AsValue();\n}\n");
-        }
-    }
-
-    private static void WriteUnsealedGetDefaultInterface(TypeWriter w, TypeDefinition type)
-    {
-        if (type.IsSealed) { return; }
-        ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
-        if (defaultIface is null) { return; }
-        TypeDefinition? defaultIfaceTd = ResolveInterface(defaultIface);
-        if (defaultIfaceTd is null || !TypeCategorization.IsExclusiveTo(defaultIfaceTd)) { return; }
-        string objRefName = GetObjRefName(w, defaultIface);
-        bool hasBaseType = false;
-        if (type.BaseType is not null)
-        {
-            string? baseNs = type.BaseType.Namespace?.Value;
-            string? baseName = type.BaseType.Name?.Value;
-            // Object base = no real base class; everything else (i.e. another runtime class) is.
-            hasBaseType = !(baseNs == "System" && baseName == "Object");
-        }
-        w.Write("\ninternal ");
-        if (hasBaseType) { w.Write("new "); }
-        w.Write("WindowsRuntimeObjectReferenceValue GetDefaultInterface()\n{\nreturn ");
-        w.Write(objRefName);
-        w.Write(".AsValue();\n}\n");
+        // GetInterface() / GetDefaultInterface() impls are emitted per-interface inside
+        // WriteInterfaceMembersRecursive (matches the C++ tool's per-interface ordering).
     }
 
     private static string BuildMethodSignatureKey(string name, MethodSig sig)
@@ -384,6 +335,37 @@ internal static partial class CodeWriters
 
             bool isOverridable = Helpers.IsOverridable(impl);
             bool isProtected = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "ProtectedAttribute");
+
+            // Emit GetInterface() / GetDefaultInterface() impl for this interface BEFORE its
+            // members (mirrors C++ write_class_interface at code_writers.h:4257-4280). For
+            // overridable interfaces or non-exclusive direct interfaces, emit
+            // IWindowsRuntimeInterface<T>.GetInterface(). For the default interface on an
+            // unsealed class with an exclusive default, emit "internal new GetDefaultInterface()".
+            if (IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false))
+            {
+                string giObjRefName = GetObjRefName(w, impl.Interface);
+                w.Write("\nWindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
+                WriteInterfaceTypeNameForCcw(w, impl.Interface);
+                w.Write(">.GetInterface()\n{\nreturn ");
+                w.Write(giObjRefName);
+                w.Write(".AsValue();\n}\n");
+            }
+            else if (Helpers.IsDefaultInterface(impl) && !classType.IsSealed && TypeCategorization.IsExclusiveTo(ifaceType))
+            {
+                string giObjRefName = GetObjRefName(w, impl.Interface);
+                bool hasBaseType = false;
+                if (classType.BaseType is not null)
+                {
+                    string? baseNs = classType.BaseType.Namespace?.Value;
+                    string? baseName = classType.BaseType.Name?.Value;
+                    hasBaseType = !(baseNs == "System" && baseName == "Object");
+                }
+                w.Write("\ninternal ");
+                if (hasBaseType) { w.Write("new "); }
+                w.Write("WindowsRuntimeObjectReferenceValue GetDefaultInterface()\n{\nreturn ");
+                w.Write(giObjRefName);
+                w.Write(".AsValue();\n}\n");
+            }
 
             // Determine the (possibly substituted) interface signature for the recursion.
             AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? nextInstance = null;
