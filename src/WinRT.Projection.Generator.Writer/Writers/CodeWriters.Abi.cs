@@ -380,7 +380,7 @@ internal static partial class CodeWriters
         w.Write(">((ComInterfaceDispatch*)thisPtr).Invoke(");
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (i > 0) { w.Write(", "); }
+            if (i > 0) { w.Write(",\n  "); }
             ParamInfo p = sig.Params[i];
             string raw = p.Parameter.Name ?? ("p" + i);
             string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
