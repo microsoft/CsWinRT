@@ -4780,28 +4780,77 @@ internal static partial class CodeWriters
             w.Write(localName);
             w.Write(");\n");
         }
-        // Open a SINGLE fixed-block for ALL input string params (HString fast-path), then
-        // emit the HStringMarshaller.ConvertToUnmanagedUnsafe calls inside.
-        // Mirrors C++ which emits 'fixed(void* _a = a, _b = b, ...) { Convert(_a,...); Convert(_b,...); ... }'.
-        // PassArray/Ref fixed blocks below still nest individually (matches reference).
-        // Type input params are also pinned in the same fixed block (truth pattern).
+        // Open a SINGLE fixed-block for ALL pinnable inputs (mirrors C++ write_abi_invoke):
+        //   1. Ref params (typed ptr, separate "fixed(T* _x = &x)\n" lines, no braces)
+        //   2. Complex-struct PassArrays (typed ptr, separate fixed line)
+        //   3. All other "void*"-style pinnables (strings, Type[], blittable PassArrays,
+        //      reference-type PassArrays via inline-pool span) merged into ONE
+        //      "fixed(void* _a = ..., _b = ..., ...) {\n" block.
+        //
+        // C# allows multiple chained "fixed(...)" without braces to share the next braced
+        // body, which is what the C++ tool emits. This avoids the deep nesting mine had
+        // when emitting a separate fixed block per PassArray.
         int fixedNesting = 0;
-        bool hasInputStrings = false;
-        bool hasInputTypes = false;
+
+        // Step 1: Emit typed-pointer fixed lines for Ref params and complex-struct PassArrays
+        // (no braces - they share the body of the upcoming combined fixed-void* block, OR
+        // each other if no void* block is needed).
+        bool hasAnyVoidStarPinnable = false;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (IsString(sig.Params[i].Type)) { hasInputStrings = true; }
-            if (IsSystemType(sig.Params[i].Type)) { hasInputTypes = true; }
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (IsString(p.Type) || IsSystemType(p.Type)) { hasAnyVoidStarPinnable = true; continue; }
+            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            {
+                // All PassArrays (including complex structs) go in the void* combined block,
+                // matching truth's pattern. Complex structs use a (T*) cast at the call site.
+                hasAnyVoidStarPinnable = true;
+            }
         }
-        if (hasInputStrings || hasInputTypes)
+        // Emit typed fixed lines for Ref params.
+        int typedFixedCount = 0;
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat == ParamCategory.Ref)
+            {
+                string callName = GetParamName(p, paramNameOverride);
+                string localName = GetParamLocalName(p, paramNameOverride);
+                AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
+                string abiType = IsAnyStruct(uRef) ? GetBlittableStructAbiType(w, uRef) : GetAbiPrimitiveType(uRef);
+                w.Write(indent);
+                w.Write(new string(' ', fixedNesting * 4));
+                w.Write("fixed(");
+                w.Write(abiType);
+                w.Write("* _");
+                w.Write(localName);
+                w.Write(" = &");
+                w.Write(callName);
+                w.Write(")\n");
+                typedFixedCount++;
+            }
+        }
+
+        // Step 2: Emit ONE combined fixed-void* block for all pinnables that share the
+        // same scope. Each variable is "_localName = rhsExpr". Strings get an extra
+        // "_localName_inlineHeaderArray = __localName_headerSpan" entry.
+        bool stringPinnablesEmitted = false;
+        if (hasAnyVoidStarPinnable)
         {
             w.Write(indent);
+            w.Write(new string(' ', fixedNesting * 4));
             w.Write("fixed(void* ");
             bool first = true;
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 ParamInfo p = sig.Params[i];
-                if (!IsString(p.Type) && !IsSystemType(p.Type)) { continue; }
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                bool isString = IsString(p.Type);
+                bool isType = IsSystemType(p.Type);
+                bool isPassArray = cat == ParamCategory.PassArray || cat == ParamCategory.FillArray;
+                if (!isString && !isType && !isPassArray) { continue; }
                 string callName = GetParamName(p, paramNameOverride);
                 string localName = GetParamLocalName(p, paramNameOverride);
                 if (!first) { w.Write(", "); }
@@ -4809,20 +4858,47 @@ internal static partial class CodeWriters
                 w.Write("_");
                 w.Write(localName);
                 w.Write(" = ");
-                if (IsSystemType(p.Type))
+                if (isType)
                 {
                     w.Write("__");
                     w.Write(localName);
                 }
+                else if (isPassArray)
+                {
+                    AsmResolver.DotNet.Signatures.TypeSignature elemT = ((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType;
+                    bool isBlittableElem = IsBlittablePrimitive(elemT) || IsAnyStruct(elemT);
+                    bool isStringElem = IsString(elemT);
+                    if (isBlittableElem)
+                    {
+                        w.Write(callName);
+                    }
+                    else
+                    {
+                        w.Write("__");
+                        w.Write(localName);
+                        w.Write("_span");
+                    }
+                    if (isStringElem)
+                    {
+                        w.Write(", _");
+                        w.Write(localName);
+                        w.Write("_inlineHeaderArray = __");
+                        w.Write(localName);
+                        w.Write("_headerSpan");
+                    }
+                }
                 else
                 {
+                    // string param
                     w.Write(callName);
                 }
             }
             w.Write(")\n");
             w.Write(indent);
+            w.Write(new string(' ', fixedNesting * 4));
             w.Write("{\n");
             fixedNesting++;
+            // Inside the body: emit HStringMarshaller calls for input string params.
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 if (!IsString(sig.Params[i].Type)) { continue; }
@@ -4838,78 +4914,19 @@ internal static partial class CodeWriters
                 w.Write(localName);
                 w.Write(");\n");
             }
+            stringPinnablesEmitted = true;
         }
-
-        // For PassArray params, open a fixed block (one per param). The function pointer call
-        // happens inside the innermost fixed block. Track nesting for indentation.
-        // Also for Ref (in T) params, we need a fixed block to pin and pass the pointer.
-        for (int i = 0; i < sig.Params.Count; i++)
+        else if (typedFixedCount > 0)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
-            {
-                string callName = GetParamName(p, paramNameOverride);
-                string localName = GetParamLocalName(p, paramNameOverride);
-                AsmResolver.DotNet.Signatures.TypeSignature elemT = ((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType;
-                bool isBlittableElem = IsBlittablePrimitive(elemT) || IsAnyStruct(elemT);
-                bool isStringElem = IsString(elemT);
-                // For complex structs (e.g. authored BasicStruct), the storage element is the
-                // ABI struct type and the fixed() pointer must be typed accordingly so that the
-                // CopyToUnmanaged accessor receives a typed pointer instead of void*.
-                string fixedPtrType = IsComplexStruct(elemT) ? GetAbiStructTypeName(w, elemT) + "*" : "void*";
-                w.Write(indent);
-                w.Write(new string(' ', fixedNesting * 4));
-                w.Write("fixed(");
-                w.Write(fixedPtrType);
-                w.Write(" _");
-                w.Write(localName);
-                w.Write(" = ");
-                if (isBlittableElem)
-                {
-                    w.Write(callName);
-                }
-                else
-                {
-                    w.Write("__");
-                    w.Write(localName);
-                    w.Write("_span");
-                }
-                if (isStringElem)
-                {
-                    w.Write(", _");
-                    w.Write(localName);
-                    w.Write("_inlineHeaderArray = __");
-                    w.Write(localName);
-                    w.Write("_headerSpan");
-                }
-                w.Write(")\n");
-                w.Write(indent);
-                w.Write(new string(' ', fixedNesting * 4));
-                w.Write("{\n");
-                fixedNesting++;
-            }
-            else if (cat == ParamCategory.Ref)
-            {
-                string callName = GetParamName(p, paramNameOverride);
-                string localName = GetParamLocalName(p, paramNameOverride);
-                AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
-                string abiType = IsAnyStruct(uRef) ? GetBlittableStructAbiType(w, uRef) : GetAbiPrimitiveType(uRef);
-                w.Write(indent);
-                w.Write(new string(' ', fixedNesting * 4));
-                w.Write("fixed(");
-                w.Write(abiType);
-                w.Write("* _");
-                w.Write(localName);
-                w.Write(" = &");
-                w.Write(callName);
-                w.Write(")\n");
-                w.Write(indent);
-                w.Write(new string(' ', fixedNesting * 4));
-                w.Write("{\n");
-                fixedNesting++;
-            }
+            // Typed fixed lines exist but no void* combined block - we need a body block
+            // to host them. Open a brace block after the last typed fixed line.
+            w.Write(indent);
+            w.Write(new string(' ', fixedNesting * 4));
+            w.Write("{\n");
+            fixedNesting++;
         }
+        // Suppress unused variable warning when block above doesn't fire.
+        _ = stringPinnablesEmitted;
 
         string callIndent = indent + new string(' ', fixedNesting * 4);
 
@@ -4952,9 +4969,8 @@ internal static partial class CodeWriters
                 string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                 // For mapped value types (DateTime/TimeSpan) and complex structs, the storage
                 // element is the ABI struct type; the data pointer parameter type uses that
-                // ABI struct. Mapped value types still need a cast (the fixed() opens with
-                // void*); complex structs don't (the fixed() now opens with the typed pointer
-                // via the M2 fix). For runtime classes/objects, use void**.
+                // ABI struct. The fixed() opens with void* (per truth's pattern), so a cast
+                // is required at the call site. For runtime classes/objects, use void**.
                 string dataParamType;
                 string dataCastType;
                 if (IsMappedAbiValueType(szArr.BaseType))
@@ -4966,7 +4982,7 @@ internal static partial class CodeWriters
                 {
                     string abiStructName = GetAbiStructTypeName(w, szArr.BaseType);
                     dataParamType = abiStructName + "*";
-                    dataCastType = string.Empty;
+                    dataCastType = "(" + abiStructName + "*)";
                 }
                 else
                 {
