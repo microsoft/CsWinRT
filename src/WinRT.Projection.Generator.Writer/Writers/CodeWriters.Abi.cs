@@ -2917,12 +2917,135 @@ internal static partial class CodeWriters
                 }
                 continue;
             }
+            // Special case: IObservableMap`2 and IObservableVector`1 are NOT mapped to BCL
+            // interfaces (they retain WinRT names) but they DO need to forward their inherited
+            // IDictionary/IList members for cast-based dispatch. Mirrors C++ which uses
+            // write_dictionary_members_using_idic / write_list_members_using_idic when walking
+            // these interfaces in write_required_interface_members_for_abi_type.
+            if (rNs == "Windows.Foundation.Collections" && rName == "IObservableMap`2")
+            {
+                if (impl.Interface is TypeSpecification tsMap && tsMap.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature giMap && giMap.TypeArguments.Count == 2)
+                {
+                    string keyText = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true)));
+                    string valueText = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true)));
+                    EmitDicShimIObservableMapForwarders(w, keyText, valueText);
+                    // Mark the inherited IMap`2 / IIterable`1 as visited so they aren't re-emitted.
+                    foreach (InterfaceImplementation impl2 in required.Interfaces)
+                    {
+                        if (impl2.Interface is null) { continue; }
+                        TypeDefinition? r2 = ResolveInterfaceTypeDef(impl2.Interface);
+                        if (r2 is not null) { visited.Add(r2); }
+                    }
+                }
+                continue;
+            }
+            if (rNs == "Windows.Foundation.Collections" && rName == "IObservableVector`1")
+            {
+                if (impl.Interface is TypeSpecification tsVec && tsVec.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature giVec && giVec.TypeArguments.Count == 1)
+                {
+                    string elementText = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true)));
+                    EmitDicShimIObservableVectorForwarders(w, elementText);
+                    foreach (InterfaceImplementation impl2 in required.Interfaces)
+                    {
+                        if (impl2.Interface is null) { continue; }
+                        TypeDefinition? r2 = ResolveInterfaceTypeDef(impl2.Interface);
+                        if (r2 is not null) { visited.Add(r2); }
+                    }
+                }
+                continue;
+            }
             // Skip generic interfaces with unbound params (we can't substitute T at this layer).
             if (required.GenericParameters.Count > 0) { continue; }
             // Recurse first so deepest-base is emitted before nearer-base (matches deduplication).
             WriteInterfaceIdicImplMembersForRequiredInterfaces(w, required, visited);
             WriteInterfaceIdicImplMembersForInheritedInterface(w, required);
         }
+    }
+
+    /// <summary>
+    /// Emits IDictionary&lt;K,V&gt; / ICollection&lt;KVP&gt; / IEnumerable&lt;KVP&gt; +
+    /// IObservableMap&lt;K,V&gt;.MapChanged forwarders for a DIC file interface that inherits
+    /// from <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c>. Mirrors C++
+    /// <c>write_dictionary_members_using_idic(true)</c> + the IObservableMap event forwarder.
+    /// </summary>
+    private static void EmitDicShimIObservableMapForwarders(TypeWriter w, string keyText, string valueText)
+    {
+        string target = $"((global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
+        string self = $"global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>.";
+        string icoll = $"global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<{keyText}, {valueText}>>.";
+        w.Write("\n");
+        w.Write($"ICollection<{keyText}> {self}Keys => {target}.Keys;\n");
+        w.Write($"ICollection<{valueText}> {self}Values => {target}.Values;\n");
+        w.Write($"int {icoll}Count => {target}.Count;\n");
+        w.Write($"bool {icoll}IsReadOnly => {target}.IsReadOnly;\n");
+        w.Write($"{valueText} {self}this[{keyText} key] \n");
+        w.Write("{\n");
+        w.Write($"get => {target}[key];\n");
+        w.Write($"set => {target}[key] = value;\n");
+        w.Write("}\n");
+        w.Write($"void {self}Add({keyText} key, {valueText} value) => {target}.Add(key, value);\n");
+        w.Write($"bool {self}ContainsKey({keyText} key) => {target}.ContainsKey(key);\n");
+        w.Write($"bool {self}Remove({keyText} key) => {target}.Remove(key);\n");
+        w.Write($"bool {self}TryGetValue({keyText} key, out {valueText} value) => {target}.TryGetValue(key, out value);\n");
+        w.Write($"void {icoll}Add(KeyValuePair<{keyText}, {valueText}> item) => {target}.Add(item);\n");
+        w.Write($"void {icoll}Clear() => {target}.Clear();\n");
+        w.Write($"bool {icoll}Contains(KeyValuePair<{keyText}, {valueText}> item) => {target}.Contains(item);\n");
+        w.Write($"void {icoll}CopyTo(KeyValuePair<{keyText}, {valueText}>[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n");
+        w.Write($"bool ICollection<KeyValuePair<{keyText}, {valueText}>>.Remove(KeyValuePair<{keyText}, {valueText}> item) => {target}.Remove(item);\n");
+        // Enumerable forwarders.
+        w.Write("\n");
+        w.Write($"IEnumerator<KeyValuePair<{keyText}, {valueText}>> IEnumerable<KeyValuePair<{keyText}, {valueText}>>.GetEnumerator() => {target}.GetEnumerator();\n");
+        w.Write("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();\n");
+        // IObservableMap.MapChanged event forwarder.
+        string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
+        string obsSelf = $"global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>.";
+        w.Write("\n");
+        w.Write($"event global::Windows.Foundation.Collections.MapChangedEventHandler<{keyText}, {valueText}> {obsSelf}MapChanged\n");
+        w.Write("{\n");
+        w.Write($"add => {obsTarget}.MapChanged += value;\n");
+        w.Write($"remove => {obsTarget}.MapChanged -= value;\n");
+        w.Write("}\n");
+    }
+
+    /// <summary>
+    /// Emits IList&lt;T&gt; / ICollection&lt;T&gt; / IEnumerable&lt;T&gt; +
+    /// IObservableVector&lt;T&gt;.VectorChanged forwarders for a DIC file interface that inherits
+    /// from <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c>. Mirrors C++
+    /// <c>write_list_members_using_idic(true)</c> + the IObservableVector event forwarder.
+    /// </summary>
+    private static void EmitDicShimIObservableVectorForwarders(TypeWriter w, string elementText)
+    {
+        string target = $"((global::System.Collections.Generic.IList<{elementText}>)(WindowsRuntimeObject)this)";
+        string self = $"global::System.Collections.Generic.IList<{elementText}>.";
+        string icoll = $"global::System.Collections.Generic.ICollection<{elementText}>.";
+        w.Write("\n");
+        w.Write($"int {icoll}Count => {target}.Count;\n");
+        w.Write($"bool {icoll}IsReadOnly => {target}.IsReadOnly;\n");
+        w.Write($"{elementText} {self}this[int index]\n");
+        w.Write("{\n");
+        w.Write($"get => {target}[index];\n");
+        w.Write($"set => {target}[index] = value;\n");
+        w.Write("}\n");
+        w.Write($"int {self}IndexOf({elementText} item) => {target}.IndexOf(item);\n");
+        w.Write($"void {self}Insert(int index, {elementText} item) => {target}.Insert(index, item);\n");
+        w.Write($"void {self}RemoveAt(int index) => {target}.RemoveAt(index);\n");
+        w.Write($"void {icoll}Add({elementText} item) => {target}.Add(item);\n");
+        w.Write($"void {icoll}Clear() => {target}.Clear();\n");
+        w.Write($"bool {icoll}Contains({elementText} item) => {target}.Contains(item);\n");
+        w.Write($"void {icoll}CopyTo({elementText}[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n");
+        w.Write($"bool {icoll}Remove({elementText} item) => {target}.Remove(item);\n");
+        w.Write("\n");
+        w.Write($"IEnumerator<{elementText}> IEnumerable<{elementText}>.GetEnumerator() => {target}.GetEnumerator();\n");
+        w.Write("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();\n");
+        // IObservableVector.VectorChanged event forwarder.
+        string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
+        string obsSelf = $"global::Windows.Foundation.Collections.IObservableVector<{elementText}>.";
+        w.Write("\n");
+        w.Write($"event global::Windows.Foundation.Collections.VectorChangedEventHandler<{elementText}> {obsSelf}VectorChanged\n");
+        w.Write("{\n");
+        w.Write($"add => {obsTarget}.VectorChanged += value;\n");
+        w.Write($"remove => {obsTarget}.VectorChanged -= value;\n");
+        w.Write("}\n");
     }
 
     /// <summary>
