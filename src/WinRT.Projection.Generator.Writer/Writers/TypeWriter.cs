@@ -17,6 +17,13 @@ internal sealed class TypeWriter : TextWriter
     public bool InAbiNamespace { get; private set; }
     public bool InAbiImplNamespace { get; private set; }
 
+    /// <summary>
+    /// Mirrors C++ writer::_check_platform/_platform: when active inside a class scope,
+    /// platform-attribute computation suppresses platforms &lt;= the previously seen platform.
+    /// </summary>
+    public bool CheckPlatform { get; set; }
+    public string Platform { get; set; } = string.Empty;
+
     /// <summary>Stack of generic argument lists currently in scope.</summary>
     public List<object[]> GenericArgsStack { get; } = new();
 

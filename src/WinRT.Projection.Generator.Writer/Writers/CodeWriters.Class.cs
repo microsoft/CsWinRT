@@ -129,15 +129,27 @@ internal static partial class CodeWriters
     /// </summary>
     public static void WriteStaticClass(TypeWriter w, TypeDefinition type)
     {
-        WriteWinRTMetadataAttribute(w, type, _cacheRef!);
-        WriteTypeCustomAttributes(w, type, true);
-        w.Write(Helpers.InternalAccessibility(w.Settings));
-        w.Write(" static class ");
-        WriteTypedefName(w, type, TypedefNameType.Projected, false);
-        WriteTypeParams(w, type);
-        w.Write("\n{\n");
-        WriteStaticClassMembers(w, type);
-        w.Write("}\n");
+        bool prevCheckPlatform = w.CheckPlatform;
+        string prevPlatform = w.Platform;
+        w.CheckPlatform = true;
+        w.Platform = string.Empty;
+        try
+        {
+            WriteWinRTMetadataAttribute(w, type, _cacheRef!);
+            WriteTypeCustomAttributes(w, type, true);
+            w.Write(Helpers.InternalAccessibility(w.Settings));
+            w.Write(" static class ");
+            WriteTypedefName(w, type, TypedefNameType.Projected, false);
+            WriteTypeParams(w, type);
+            w.Write("\n{\n");
+            WriteStaticClassMembers(w, type);
+            w.Write("}\n");
+        }
+        finally
+        {
+            w.CheckPlatform = prevCheckPlatform;
+            w.Platform = prevPlatform;
+        }
     }
 
     /// <summary>
@@ -177,13 +189,21 @@ internal static partial class CodeWriters
                 WriteStaticFactoryObjRef(w, staticIface, runtimeClassFullName, objRef);
             }
 
+            // Compute the platform attribute string from the static factory interface's
+            // [ContractVersion] attribute. Mirrors C++ code_writers.h:3315
+            // 'auto platform_attribute = write_platform_attribute_temp(w, factory.type);'
+            // and the per-static-method/event/property emission at lines 3316-3349.
+            string platformAttribute = w.WriteTemp("%", new System.Action<TextWriter>(_ => WritePlatformAttribute(w, staticIface)));
+
             // Methods
             foreach (MethodDefinition method in staticIface.Methods)
             {
                 if (Helpers.IsSpecial(method)) { continue; }
                 MethodSig sig = new(method);
                 string mname = method.Name?.Value ?? string.Empty;
-                w.Write("\npublic static ");
+                w.Write("\n");
+                if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
+                w.Write("public static ");
                 WriteProjectionReturnType(w, sig);
                 w.Write(" ");
                 w.Write(mname);
@@ -215,7 +235,9 @@ internal static partial class CodeWriters
             foreach (EventDefinition evt in staticIface.Events)
             {
                 string evtName = evt.Name?.Value ?? string.Empty;
-                w.Write("\npublic static event ");
+                w.Write("\n");
+                if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
+                w.Write("public static event ");
                 WriteEventType(w, evt);
                 w.Write(" ");
                 w.Write(evtName);
@@ -258,7 +280,10 @@ internal static partial class CodeWriters
                 string propType = WritePropType(w, prop);
                 if (!properties.TryGetValue(propName, out StaticPropertyAccessorState? state))
                 {
-                    state = new StaticPropertyAccessorState { PropTypeText = propType };
+                    state = new StaticPropertyAccessorState
+                    {
+                        PropTypeText = propType,
+                    };
                     properties[propName] = state;
                 }
                 if (getter is not null && !state.HasGetter)
@@ -266,12 +291,16 @@ internal static partial class CodeWriters
                     state.HasGetter = true;
                     state.GetterAbiClass = abiClass;
                     state.GetterObjRef = objRef;
+                    // Mirror C++ getter_platform tracking (code_writers.h:3328, 3342).
+                    state.GetterPlatformAttribute = platformAttribute;
                 }
                 if (setter is not null && !state.HasSetter)
                 {
                     state.HasSetter = true;
                     state.SetterAbiClass = abiClass;
                     state.SetterObjRef = objRef;
+                    // Mirror C++ setter_platform tracking (code_writers.h:3330, 3349).
+                    state.SetterPlatformAttribute = platformAttribute;
                 }
             }
         }
@@ -280,7 +309,21 @@ internal static partial class CodeWriters
         foreach (KeyValuePair<string, StaticPropertyAccessorState> kv in properties)
         {
             StaticPropertyAccessorState s = kv.Value;
-            w.Write("\npublic static ");
+            w.Write("\n");
+            // Mirrors C++ code_writers.h:2041-2046: collapse to property-level platform attribute
+            // when getter and setter platforms match; otherwise emit per-accessor.
+            string getterPlat = s.GetterPlatformAttribute;
+            string setterPlat = s.SetterPlatformAttribute;
+            string propertyPlat = string.Empty;
+            bool bothSidesPresent = s.HasGetter && s.HasSetter;
+            if (!bothSidesPresent || getterPlat == setterPlat)
+            {
+                propertyPlat = !string.IsNullOrEmpty(getterPlat) ? getterPlat : setterPlat;
+                getterPlat = string.Empty;
+                setterPlat = string.Empty;
+            }
+            if (!string.IsNullOrEmpty(propertyPlat)) { w.Write(propertyPlat); }
+            w.Write("public static ");
             w.Write(s.PropTypeText);
             w.Write(" ");
             w.Write(kv.Key);
@@ -310,6 +353,7 @@ internal static partial class CodeWriters
                 w.Write(" { ");
                 if (s.HasGetter)
                 {
+                    if (!string.IsNullOrEmpty(getterPlat)) { w.Write(getterPlat); }
                     if (w.Settings.ReferenceProjection)
                     {
                         w.Write("get => throw null; ");
@@ -327,6 +371,7 @@ internal static partial class CodeWriters
                 }
                 if (s.HasSetter)
                 {
+                    if (!string.IsNullOrEmpty(setterPlat)) { w.Write(setterPlat); }
                     if (w.Settings.ReferenceProjection)
                     {
                         w.Write("set => throw null; ");
@@ -356,6 +401,10 @@ internal static partial class CodeWriters
         public string GetterObjRef = string.Empty;
         public string SetterAbiClass = string.Empty;
         public string SetterObjRef = string.Empty;
+        // Per-accessor platform attribute strings. Mirrors C++ getter_platform/setter_platform
+        // tracking in code_writers.h:3328-3349.
+        public string GetterPlatformAttribute = string.Empty;
+        public string SetterPlatformAttribute = string.Empty;
     }
 
     /// <summary>
@@ -406,6 +455,26 @@ internal static partial class CodeWriters
             return;
         }
 
+        // Mirror C++ writer::write_platform_guard set at the start of write_class.
+        // Tracks the highest platform seen within this class to suppress redundant
+        // [SupportedOSPlatform(...)] emissions across interface boundaries.
+        bool prevCheckPlatform = w.CheckPlatform;
+        string prevPlatform = w.Platform;
+        w.CheckPlatform = true;
+        w.Platform = string.Empty;
+        try
+        {
+            WriteClassCore(w, type);
+        }
+        finally
+        {
+            w.CheckPlatform = prevCheckPlatform;
+            w.Platform = prevPlatform;
+        }
+    }
+
+    private static void WriteClassCore(TypeWriter w, TypeDefinition type)
+    {
         string typeName = type.Name?.Value ?? string.Empty;
         int gcPressure = GetGcPressureAmount(type);
 

@@ -70,6 +70,23 @@ internal static partial class CodeWriters
             }
 
             w.Write("\n");
+            // Mirrors C++ code_writers.h:2041-2046: collapse to property-level platform attribute
+            // when getter and setter platforms match; otherwise emit per-accessor.
+            string getterPlat = s.GetterPlatformAttribute;
+            string setterPlat = s.SetterPlatformAttribute;
+            string propertyPlat = string.Empty;
+            // C++: if (getter_platform == setter_platform) { property_platform = getter_platform; getter_platform = ""; setter_platform = ""; }
+            // For getter-only or setter-only properties, only one side is set; compare the relevant side.
+            bool bothSidesPresent = s.HasGetter && s.HasSetter;
+            if (!bothSidesPresent || getterPlat == setterPlat)
+            {
+                // Collapse: prefer the populated side (matches C++ which compares string_view equality
+                // including both being empty).
+                propertyPlat = !string.IsNullOrEmpty(getterPlat) ? getterPlat : setterPlat;
+                getterPlat = string.Empty;
+                setterPlat = string.Empty;
+            }
+            if (!string.IsNullOrEmpty(propertyPlat)) { w.Write(propertyPlat); }
             w.Write(s.Access);
             w.Write(s.MethodSpec);
             w.Write(s.PropTypeText);
@@ -120,6 +137,11 @@ internal static partial class CodeWriters
                 w.Write("\n{\n");
                 if (s.HasGetter)
                 {
+                    if (!string.IsNullOrEmpty(getterPlat))
+                    {
+                        w.Write("    ");
+                        w.Write(getterPlat);
+                    }
                     if (w.Settings.ReferenceProjection)
                     {
                         w.Write("    get => throw null;\n");
@@ -152,6 +174,11 @@ internal static partial class CodeWriters
                 }
                 if (s.HasSetter)
                 {
+                    if (!string.IsNullOrEmpty(setterPlat))
+                    {
+                        w.Write("    ");
+                        w.Write(setterPlat);
+                    }
                     if (w.Settings.ReferenceProjection)
                     {
                         w.Write("    set => throw null;\n");
@@ -255,6 +282,13 @@ internal static partial class CodeWriters
         public bool IsOverridable;
         // The originating interface (used to qualify the explicit interface impl).
         public ITypeDefOrRef? OverridableInterface;
+        // Per-accessor platform attribute strings from the originating interface's [ContractVersion],
+        // emitted before the property in ref mode. Mirrors C++ getter_platform/setter_platform
+        // tracking in code_writers.h:4306-4308 / 4323/4330. When both match, emit at the property
+        // level only; when they differ (getter and setter come from different interfaces with
+        // different platforms), emit per-accessor.
+        public string GetterPlatformAttribute = string.Empty;
+        public string SetterPlatformAttribute = string.Empty;
     }
 
     /// <summary>
@@ -463,6 +497,14 @@ internal static partial class CodeWriters
             genericInteropType = EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
         }
 
+        // Compute the platform attribute string from the interface type's [ContractVersion]
+        // attribute. In ref mode, this is prepended to each member emission so the projected
+        // class members carry [SupportedOSPlatform("WindowsX.Y.Z.0")] mirroring the interface's
+        // contract version. Only emitted in ref mode (WritePlatformAttribute internally returns
+        // immediately if not ref). Mirrors C++ code_writers.h:4290
+        // 'auto platform_attribute = write_platform_attribute_temp(w, interface_type);'.
+        string platformAttribute = w.WriteTemp("%", new System.Action<TextWriter>(_ => WritePlatformAttribute(w, ifaceType)));
+
         // Methods
         foreach (MethodDefinition method in ifaceType.Methods)
         {
@@ -505,6 +547,10 @@ internal static partial class CodeWriters
                 }
                 w.Write(");\n");
 
+                // Mirrors C++ code_writers.h:4292 — prepend the per-interface platform attribute
+                // string to each public method emission. In ref mode this produces e.g.
+                // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
+                if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
                 w.Write(access);
                 w.Write(methodSpecForThis);
                 WriteProjectionReturnType(w, sig);
@@ -535,6 +581,7 @@ internal static partial class CodeWriters
             else
             {
                 w.Write("\n");
+                if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
                 w.Write(access);
                 w.Write(methodSpecForThis);
                 WriteProjectionReturnType(w, sig);
@@ -571,6 +618,9 @@ internal static partial class CodeWriters
             //   T InterfaceName.MethodName(args) => MethodName(args);
             if (isOverridable)
             {
+                // Mirror C++ which carries the platform attribute on the explicit interface
+                // impl as well (since it shares the same originating interface).
+                if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
                 WriteProjectionReturnType(w, sig);
                 w.Write(" ");
                 WriteInterfaceTypeNameForCcw(w, originalInterface);
@@ -618,6 +668,8 @@ internal static partial class CodeWriters
                 state.GetterGenericInteropType = genericInteropType;
                 state.GetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
                 state.GetterPropTypeText = WritePropType(w, prop, genCtx);
+                // Mirror C++ getter_platform tracking (code_writers.h:4306, 4323).
+                state.GetterPlatformAttribute = platformAttribute;
             }
             if (setter is not null && !state.HasSetter)
             {
@@ -628,6 +680,8 @@ internal static partial class CodeWriters
                 state.SetterGenericInteropType = genericInteropType;
                 state.SetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
                 state.SetterPropTypeText = WritePropType(w, prop, genCtx);
+                // Mirror C++ setter_platform tracking (code_writers.h:4308, 4330).
+                state.SetterPlatformAttribute = platformAttribute;
             }
         }
 
@@ -739,6 +793,10 @@ internal static partial class CodeWriters
 
             // Emit the public/protected event with Subscribe/Unsubscribe.
             w.Write("\n");
+            // Mirrors C++ code_writers.h:4293 — prepend the per-interface platform attribute
+            // string to each event emission. In ref mode this produces e.g.
+            // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
+            if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
             w.Write(access);
             w.Write(methodSpec);
             w.Write("event ");

@@ -92,6 +92,11 @@ internal static partial class CodeWriters
 
             string defaultIfaceIid = GetDefaultInterfaceIid(w, classType);
             string marshalingType = GetMarshalingTypeName(classType);
+            // Compute the platform attribute string from the activation factory interface's
+            // [ContractVersion] attribute. Mirrors C++ code_writers.h:2861
+            // 'auto platform_attribute = write_platform_attribute_temp(w, factory_type);'
+            // emitted at line 2872 before the public ctor.
+            string platformAttribute = w.WriteTemp("%", new System.Action<TextWriter>(_ => WritePlatformAttribute(w, factoryType)));
             int methodIndex = 0;
             foreach (MethodDefinition method in factoryType.Methods)
             {
@@ -101,7 +106,9 @@ internal static partial class CodeWriters
                 string argsName = callbackName + "Args";
 
                 // Emit the public constructor.
-                w.Write("\npublic unsafe ");
+                w.Write("\n");
+                if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
+                w.Write("public unsafe ");
                 w.Write(typeName);
                 w.Write("(");
                 WriteParameterList(w, sig);
@@ -901,6 +908,11 @@ internal static partial class CodeWriters
         ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(classType);
         defaultIfaceObjRef = defaultIface is not null ? GetObjRefName(w, defaultIface) : string.Empty;
         int gcPressure = GetGcPressureAmount(classType);
+        // Compute the platform attribute string from the composable factory interface's
+        // [ContractVersion] attribute. Mirrors C++ code_writers.h:3167
+        // 'auto platform_attribute = write_platform_attribute_temp(w, composable_type);'
+        // emitted at line 3179 before the public ctor.
+        string platformAttribute = w.WriteTemp("%", new System.Action<TextWriter>(_ => WritePlatformAttribute(w, composableType)));
 
         int methodIndex = 0;
         foreach (MethodDefinition method in composableType.Methods)
@@ -921,6 +933,7 @@ internal static partial class CodeWriters
             bool isParameterless = userParamCount == 0;
 
             w.Write("\n");
+            if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
             w.Write(visibility);
             if (!isParameterless) { w.Write(" unsafe "); } else { w.Write(" "); }
             w.Write(typeName);

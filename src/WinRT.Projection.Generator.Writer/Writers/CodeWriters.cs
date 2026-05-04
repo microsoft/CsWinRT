@@ -127,6 +127,9 @@ internal static partial class CodeWriters
             string fieldName = field.Name?.Value ?? string.Empty;
             string constantValue = FormatConstant(field.Constant);
 
+            // Mirror C++ code_writers.h:10106 write_platform_attribute(field.CustomAttribute()):
+            // emits per-enum-field [SupportedOSPlatform] when the field has a [ContractVersion].
+            WritePlatformAttribute(w, field);
             w.Write(fieldName);
             w.Write(" = unchecked((");
             w.Write(enumUnderlyingType);

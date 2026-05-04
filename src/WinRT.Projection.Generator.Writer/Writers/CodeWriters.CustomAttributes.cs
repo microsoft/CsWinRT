@@ -133,10 +133,13 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Computes the platform string from the [ContractVersion] attribute pair, if any.
-    /// Mirrors C++ <c>get_platform</c>.
+    /// Mirrors C++ <c>get_platform(writer&amp;, CustomAttribute)</c>: returns the formatted
+    /// SupportedOSPlatform string ("WindowsX.Y.Z.0") for a [ContractVersion] attribute,
+    /// or empty if no platform mapping exists. Honors writer's <see cref="TypeWriter.CheckPlatform"/>
+    /// state to deduplicate platforms within a single class scope (mirrors C++
+    /// _check_platform / _platform behavior in code_writers.h:2515-2525).
     /// </summary>
-    public static string GetPlatform(CustomAttribute attribute)
+    private static string GetPlatform(TypeWriter w, CustomAttribute attribute)
     {
         if (attribute.Signature is null || attribute.Signature.FixedArguments.Count < 2)
         {
@@ -151,6 +154,12 @@ internal static partial class CodeWriters
         else if (arg0.Element is string s)
         {
             contractName = s;
+        }
+        else if (arg0.Element is not null)
+        {
+            // AsmResolver returns Utf8String for string custom-attribute args.
+            contractName = arg0.Element.ToString() ?? string.Empty;
+            if (contractName.Length == 0) { return string.Empty; }
         }
         else
         {
@@ -169,6 +178,20 @@ internal static partial class CodeWriters
 
         string platform = ContractPlatforms.GetPlatform(contractName, contractVersion);
         if (string.IsNullOrEmpty(platform)) { return string.Empty; }
+        if (w.CheckPlatform)
+        {
+            // Suppress when this platform is <= the previously seen platform for the class.
+            if (string.CompareOrdinal(platform, w.Platform) <= 0)
+            {
+                return string.Empty;
+            }
+            // Only seed _platform on first non-empty observation (matches C++ behavior:
+            // higher platforms emit but don't update _platform).
+            if (w.Platform.Length == 0)
+            {
+                w.Platform = platform;
+            }
+        }
         return "\"Windows" + platform + "\"";
     }
 
@@ -192,7 +215,7 @@ internal static partial class CodeWriters
             }
             if (name == "ContractVersion" && attr.Signature?.FixedArguments.Count == 2)
             {
-                string platform = GetPlatform(attr);
+                string platform = GetPlatform(w, attr);
                 if (!string.IsNullOrEmpty(platform))
                 {
                     w.Write("[global::System.Runtime.Versioning.SupportedOSPlatform(");
@@ -236,7 +259,7 @@ internal static partial class CodeWriters
 
             if (w.Settings.ReferenceProjection && enablePlatformAttrib && strippedName == "ContractVersion" && attr.Signature?.FixedArguments.Count == 2)
             {
-                string platform = GetPlatform(attr);
+                string platform = GetPlatform(w, attr);
                 if (!string.IsNullOrEmpty(platform))
                 {
                     if (!attributes.TryGetValue("System.Runtime.Versioning.SupportedOSPlatform", out List<string>? list))
