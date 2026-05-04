@@ -2072,6 +2072,62 @@ internal static partial class CodeWriters
             w.Write(" value);\n\n");
         }
 
+        // Mirror C++ ordering: hoist [UnsafeAccessor] declarations for ReceiveArray (out T[])
+        // ConvertToUnmanaged_<param> and the return-array ConvertToUnmanaged_<retParam> to the
+        // top of the method body, before locals and the try block. The actual call sites later
+        // in the body reference these already-declared accessors.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.ReceiveArray) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
+            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sza.BaseType))));
+            string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+            string marshallerPath = GetArrayMarshallerInteropPath(w, sza.BaseType, elementInteropArg);
+            string elementAbi = IsString(sza.BaseType) || IsRuntimeClassOrInterface(sza.BaseType) || IsObject(sza.BaseType)
+                ? "void*"
+                : IsComplexStruct(sza.BaseType)
+                    ? GetAbiStructTypeName(w, sza.BaseType)
+                    : IsAnyStruct(sza.BaseType)
+                        ? GetBlittableStructAbiType(w, sza.BaseType)
+                        : GetAbiPrimitiveType(sza.BaseType);
+            w.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            w.Write("    static extern void ConvertToUnmanaged_");
+            w.Write(raw);
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(marshallerPath);
+            w.Write("\")] object _, ReadOnlySpan<");
+            w.Write(elementProjected);
+            w.Write("> span, out uint length, out ");
+            w.Write(elementAbi);
+            w.Write("* data);\n\n");
+        }
+        if (returnIsReceiveArrayDoAbi && rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzHoist)
+        {
+            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSzHoist.BaseType))));
+            string elementAbi = IsString(retSzHoist.BaseType) || IsRuntimeClassOrInterface(retSzHoist.BaseType) || IsObject(retSzHoist.BaseType)
+                ? "void*"
+                : IsComplexStruct(retSzHoist.BaseType)
+                    ? GetAbiStructTypeName(w, retSzHoist.BaseType)
+                    : IsAnyStruct(retSzHoist.BaseType)
+                        ? GetBlittableStructAbiType(w, retSzHoist.BaseType)
+                        : GetAbiPrimitiveType(retSzHoist.BaseType);
+            string elementInteropArg = EncodeInteropTypeName(retSzHoist.BaseType, TypedefNameType.Projected);
+            string marshallerPath = GetArrayMarshallerInteropPath(w, retSzHoist.BaseType, elementInteropArg);
+            w.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            w.Write("    static extern void ConvertToUnmanaged_");
+            w.Write(retParamName);
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(marshallerPath);
+            w.Write("\")] object _, ReadOnlySpan<");
+            w.Write(elementProjected);
+            w.Write("> span, out uint length, out ");
+            w.Write(elementAbi);
+            w.Write("* data);\n\n");
+        }
+
         // Mirror C++ ordering: declare the return local first with default value, then zero
         // the OUT pointer(s). The actual assignment happens inside the try block.
         if (rt is not null)
@@ -2486,8 +2542,8 @@ internal static partial class CodeWriters
             }
             w.Write(";\n");
         }
-        // After call: for ReceiveArray params, emit UnsafeAccessor + ConvertToUnmanaged_<name>
-        // call to copy the managed array into the ABI buffer.
+        // After call: for ReceiveArray params, emit ConvertToUnmanaged_<name> call (the
+        // [UnsafeAccessor] declaration was hoisted to the top of the method body).
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
@@ -2495,27 +2551,6 @@ internal static partial class CodeWriters
             if (cat != ParamCategory.ReceiveArray) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
-            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
-            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sza.BaseType))));
-            string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
-            string marshallerPath = GetArrayMarshallerInteropPath(w, sza.BaseType, elementInteropArg);
-            string elementAbi = IsString(sza.BaseType) || IsRuntimeClassOrInterface(sza.BaseType) || IsObject(sza.BaseType)
-                ? "void*"
-                : IsComplexStruct(sza.BaseType)
-                    ? GetAbiStructTypeName(w, sza.BaseType)
-                    : IsAnyStruct(sza.BaseType)
-                        ? GetBlittableStructAbiType(w, sza.BaseType)
-                        : GetAbiPrimitiveType(sza.BaseType);
-            w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
-            w.Write("        static extern void ConvertToUnmanaged_");
-            w.Write(raw);
-            w.Write("([UnsafeAccessorType(\"");
-            w.Write(marshallerPath);
-            w.Write("\")] object _, ReadOnlySpan<");
-            w.Write(elementProjected);
-            w.Write("> span, out uint length, out ");
-            w.Write(elementAbi);
-            w.Write("* data);\n");
             w.Write("        ConvertToUnmanaged_");
             w.Write(raw);
             w.Write("(null, __");
@@ -2582,28 +2617,8 @@ internal static partial class CodeWriters
             }
             else if (returnIsReceiveArrayDoAbi)
             {
-                AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
-                string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSz.BaseType))));
-                // Element ABI type: void* for ref types (string/runtime class/object), complex struct ABI for non-blittable structs, blittable struct ABI for blittable, primitive ABI otherwise.
-                string elementAbi = IsString(retSz.BaseType) || IsRuntimeClassOrInterface(retSz.BaseType) || IsObject(retSz.BaseType)
-                    ? "void*"
-                    : IsComplexStruct(retSz.BaseType)
-                        ? GetAbiStructTypeName(w, retSz.BaseType)
-                        : IsAnyStruct(retSz.BaseType)
-                            ? GetBlittableStructAbiType(w, retSz.BaseType)
-                            : GetAbiPrimitiveType(retSz.BaseType);
-                string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
-                string marshallerPath = GetArrayMarshallerInteropPath(w, retSz.BaseType, elementInteropArg);
-                w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
-                w.Write("        static extern void ConvertToUnmanaged_");
-                w.Write(retParamName);
-                w.Write("([UnsafeAccessorType(\"");
-                w.Write(marshallerPath);
-                w.Write("\")] object _, ReadOnlySpan<");
-                w.Write(elementProjected);
-                w.Write("> span, out uint length, out ");
-                w.Write(elementAbi);
-                w.Write("* data);\n");
+                // Return-receive-array: emit ConvertToUnmanaged_<retParam> call (declaration
+                // was hoisted to the top of the method body).
                 w.Write("        ConvertToUnmanaged_");
                 w.Write(retParamName);
                 w.Write("(null, ");
