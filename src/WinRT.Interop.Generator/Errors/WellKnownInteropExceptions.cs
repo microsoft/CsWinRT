@@ -351,14 +351,6 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// The Windows SDK projection module was not found.
-    /// </summary>
-    public static WellKnownInteropException WindowsSdkProjectionModuleNotFound()
-    {
-        return Exception(40, "The Windows SDK projection module (i.e. 'Microsoft.Windows.SDK.NET.dll') was not found (this might mean that its path was not valid, or that it failed to load).");
-    }
-
-    /// <summary>
     /// Failed to generate marshalling code for an <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> type.
     /// </summary>
     public static WellKnownInteropException IMapChangedEventArgs1TypeCodeGenerationError(TypeSignature argsType, Exception exception)

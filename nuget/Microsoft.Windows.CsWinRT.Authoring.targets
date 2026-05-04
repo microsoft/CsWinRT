@@ -172,6 +172,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <CsWinRTComponent>true</CsWinRTComponent>
         <!-- Expose TFM so native consumers can generate a compatible temp project -->
         <CsWinRTComponentTargetFramework>$(TargetFramework)</CsWinRTComponentTargetFramework>
+        <!-- Expose WindowsSdkPackageVersion so native consumers' synthesized aggregator
+             csproj resolves the same Microsoft.Windows.SDK.NET.Ref pack version. -->
+        <CsWinRTComponentWindowsSdkPackageVersion>$(WindowsSdkPackageVersion)</CsWinRTComponentWindowsSdkPackageVersion>
       </TargetPathWithTargetPlatformMoniker>
     </ItemGroup>
     

@@ -38,8 +38,7 @@ internal partial class InteropGenerator
         ModuleDefinition module = DefineInteropModule(
             args: args,
             discoveryState: discoveryState,
-            windowsRuntimeModule: out ModuleDefinition windowsRuntimeModule,
-            windowsRuntimeSdkProjectionModule: out _);
+            windowsRuntimeModule: out ModuleDefinition windowsRuntimeModule);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -202,13 +201,11 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
-    /// <param name="windowsRuntimeSdkProjectionModule">The <see cref="ModuleDefinition"/> for the Windows SDK projection assembly.</param>
     /// <returns>The interop module to populate and emit.</returns>
     private static ModuleDefinition DefineInteropModule(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
-        out ModuleDefinition windowsRuntimeModule,
-        out ModuleDefinition windowsRuntimeSdkProjectionModule)
+        out ModuleDefinition windowsRuntimeModule)
     {
         // Get the loaded module for the application .dll (this should always be available here)
         if (!discoveryState.Modules.TryGetValue(args.OutputAssemblyPath, out ModuleDefinition? assemblyModule))
@@ -223,12 +220,10 @@ internal partial class InteropGenerator
             throw WellKnownInteropExceptions.WinRTRuntimeModuleNotFound();
         }
 
-        // Get the loaded module for the Windows SDK projection .dll (same as above)
-        if ((windowsRuntimeSdkProjectionModule = discoveryState.Modules.FirstOrDefault(
-            predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
-        {
-            throw WellKnownInteropExceptions.WindowsSdkProjectionModuleNotFound();
-        }
+        // The Windows SDK projection module is loaded explicitly during discovery from
+        // 'args.WinRTSdkProjectionAssemblyPath' and tracked on the discovery state, so
+        // there's no need to re-look it up here. Downstream code reads the tracked field
+        // ('discoveryState.WindowsRuntimeSdkProjectionModule') directly.
 
         // If assembly version validation is required, ensure that the 'cswinrtinteropgen' version matches that of 'WinRT.Runtime.dll'.
         // We only compare major and minor versions, as it's fine to ship small forward compatible fixes in revision updates.

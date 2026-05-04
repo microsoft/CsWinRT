@@ -55,6 +55,17 @@ Properties:
     <PropertyGroup>
       <_CsWinRTComponentTargetFramework>%(_ResolvedProjectReferencePaths.CsWinRTComponentTargetFramework)</_CsWinRTComponentTargetFramework>
       <_CsWinRTComponentTargetFramework Condition="'$(_CsWinRTComponentTargetFramework)' == ''">net10.0-windows10.0.26100.1</_CsWinRTComponentTargetFramework>
+      <!--
+        Pick a WindowsSdkPackageVersion for the synthesized aggregator csproj so the SDK-injected
+        Microsoft.Windows.SDK.NET.Ref FrameworkReference resolves a known ref-pack version (and
+        thus 'Microsoft.Windows.SDK.NET.dll'). Sources, in precedence order:
+          1. The consumer's vcxproj (set 'CsWinRTNativeConsumerWindowsSdkPackageVersion').
+          2. The first component reference (exposed via the 'CsWinRTComponentWindowsSdkPackageVersion'
+             metadata on TargetPathWithTargetPlatformMoniker).
+        If neither is set, the property is omitted from the aggregator and the SDK default applies.
+      -->
+      <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(CsWinRTNativeConsumerWindowsSdkPackageVersion)' != ''">$(CsWinRTNativeConsumerWindowsSdkPackageVersion)</_CsWinRTAggregatorWindowsSdkPackageVersion>
+      <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' == ''">%(_ResolvedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)</_CsWinRTAggregatorWindowsSdkPackageVersion>
     </PropertyGroup>
 
   </Target>
@@ -116,6 +127,11 @@ Properties:
       <_CsWinRTTempProjectLines Include="  &lt;PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;TargetFramework&gt;$(_CsWinRTComponentTargetFramework)&lt;/TargetFramework&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;Platforms&gt;x64%3Bx86%3BARM64&lt;/Platforms&gt;" />
+      <!-- Match the consumer- or component-specified WindowsSdkPackageVersion so the SDK-injected
+           Microsoft.Windows.SDK.NET.Ref FrameworkReference resolves a known ref-pack version (and
+           thus the same Microsoft.Windows.SDK.NET.dll). -->
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' != ''"
+                                Include="    &lt;WindowsSdkPackageVersion&gt;$(_CsWinRTAggregatorWindowsSdkPackageVersion)&lt;/WindowsSdkPackageVersion&gt;" />
       <!--
         Pin IntermediateOutputPath / BaseIntermediateOutputPath as project-local properties so
         the aggregator writes outputs to a path Native.targets can read back from. Setting them
