@@ -20,6 +20,18 @@ internal static partial class CodeWriters
         TypeCategory cat = TypeCategorization.GetCategory(type);
         if (cat == TypeCategory.Enum) { return true; }
         if (cat != TypeCategory.Struct) { return false; }
+        // Mirrors C++ is_type_blittable (code_writers.h:81-124, struct_type branch): if the
+        // struct itself has a mapped-type entry, return based on its RequiresMarshaling flag
+        // BEFORE walking fields. This is critical for XAML structs like Duration / KeyTime /
+        // RepeatBehavior which are self-mapped with RequiresMarshaling=false but have a
+        // TimeSpan field (Windows.Foundation.TimeSpan -> System.TimeSpan with RequiresMarshaling=true).
+        // Without this check, the field walk would incorrectly classify them as non-blittable.
+        string ns = type.Namespace?.Value ?? string.Empty;
+        string name = type.Name?.Value ?? string.Empty;
+        if (MappedTypes.Get(ns, name) is { } mapping)
+        {
+            return !mapping.RequiresMarshaling;
+        }
         // Walk fields - all must be blittable
         foreach (FieldDefinition field in type.Fields)
         {
