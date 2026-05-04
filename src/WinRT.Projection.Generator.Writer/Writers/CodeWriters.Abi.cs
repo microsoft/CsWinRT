@@ -4245,7 +4245,10 @@ internal static partial class CodeWriters
                 w.Write(canEmit ? "    public static unsafe void " : "    public static void ");
                 w.Write(pname);
                 w.Write("(WindowsRuntimeObjectReference thisReference, ");
-                w.Write(propType);
+                // Mirrors C++ code_writers.h:7193 — setter parameter uses the is_set_property=true
+                // form of write_prop_type, which for SZ array types emits ReadOnlySpan<T> instead
+                // of T[] (the getter's return-type form).
+                w.Write(WritePropType(w, prop, isSetProperty: true));
                 w.Write(" value)");
                 EmitAbiMethodBodyIfSimple(w, setSig, methodSlot[sMethod], paramNameOverride: "value");
             }

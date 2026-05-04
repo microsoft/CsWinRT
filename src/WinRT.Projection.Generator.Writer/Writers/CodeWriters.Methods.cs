@@ -17,8 +17,20 @@ internal static partial class CodeWriters
         // Detect SZ-array
         if (typeSig is SzArrayTypeSignature sz)
         {
-            WriteProjectionType(w, TypeSemanticsFactory.Get(sz.BaseType));
-            w.Write(isParameter ? "[]" : "[]");
+            // Mirrors C++ write_projected_signature (code_writers.h:822-834): for parameters,
+            // SZ arrays project as ReadOnlySpan<T> (matches the property setter parameter
+            // convention; pass_array semantics).
+            if (isParameter)
+            {
+                w.Write("ReadOnlySpan<");
+                WriteProjectionType(w, TypeSemanticsFactory.Get(sz.BaseType));
+                w.Write(">");
+            }
+            else
+            {
+                WriteProjectionType(w, TypeSemanticsFactory.Get(sz.BaseType));
+                w.Write("[]");
+            }
             return;
         }
         if (typeSig is ByReferenceTypeSignature br)
