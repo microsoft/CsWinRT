@@ -4773,7 +4773,11 @@ internal static partial class CodeWriters
             ParamInfo p = sig.Params[i];
             if (ParamHelpers.GetParamCategory(p) == ParamCategory.In && IsComplexStruct(p.Type)) { hasComplexStructInput = true; break; }
         }
-        bool needsTryFinally = returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct || hasNonBlittablePassArray || hasComplexStructInput;
+        // System.Type return: ABI.System.Type contains an HSTRING that must be disposed
+        // after marshalling to managed System.Type, otherwise the HSTRING leaks. Mirrors
+        // C++ abi_marshaler::write_dispose path for is_out + non-empty marshaler_type.
+        bool returnIsSystemTypeForCleanup = rt is not null && IsSystemType(rt);
+        bool needsTryFinally = returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct || hasNonBlittablePassArray || hasComplexStructInput || returnIsSystemTypeForCleanup;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
 
         string indent = needsTryFinally ? "            " : "        ";
@@ -5608,6 +5612,11 @@ internal static partial class CodeWriters
                 w.Write("            ");
                 w.Write(GetMarshallerFullName(w, rt!));
                 w.Write(".Dispose(__retval);\n");
+            }
+            else if (returnIsSystemTypeForCleanup)
+            {
+                // System.Type return: dispose the ABI.System.Type's HSTRING fields.
+                w.Write("            global::ABI.System.TypeMarshaller.Dispose(__retval);\n");
             }
             else if (returnIsReceiveArray)
             {
