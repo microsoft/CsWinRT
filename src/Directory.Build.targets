@@ -21,12 +21,11 @@
   </ItemGroup>
     
   <ItemGroup>
+    <!-- This repo builds the SDK projection assemblies from source, so remove
+         any SDK-injected ref packages. -->
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Windows" />
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Xaml" />
-    <!-- The .1-revision Windows TFM causes the .NET SDK to inject these CsWinRT3 ref packages.
-         This repo builds the SDK projection assemblies from source, so scrub the prebuilt
-         ones to avoid duplicate references / picking the wrong copy. -->
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.CsWinRT3.Windows" />
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.CsWinRT3.Xaml" />
   </ItemGroup>

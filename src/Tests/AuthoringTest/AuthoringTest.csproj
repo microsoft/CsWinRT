@@ -34,8 +34,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI">
-      <!-- Exclude compile/runtime assets to avoid the Microsoft.WinUI 3.0.0.0 vs locally-built 1.0.0.0 conflict,
-           but keep build assets so the WinAppSDK MakePri targets still import (needed for AuthoringTest.pri). -->
+      <!-- Keep build assets imported. -->
       <ExcludeAssets>compile;runtime</ExcludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Web.WebView2">
