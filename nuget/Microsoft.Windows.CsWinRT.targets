@@ -36,8 +36,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <!--
       Default path to the internal interop WinMD shipped with the package. This is referenced
-      by both the legacy CsWinRTGenerateProjection target and the CsWinRT 3.0 SDK projection
-      generator, so it must be set unconditionally rather than only inside a single target.
+      by both the CsWinRTGenerateProjection target (which invokes cswinrt.exe to emit C#
+      projection sources) and the CsWinRT 3.0 SDK projection generator (cswinrtprojectiongen.exe,
+      which produces precompiled projection DLLs), so it must be set unconditionally rather
+      than only inside a single target.
     -->
     <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WindowsRuntime.Internal.winmd'))</CsWinRTInteropMetadata>
 
