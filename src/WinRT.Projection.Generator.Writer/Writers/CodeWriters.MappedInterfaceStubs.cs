@@ -136,14 +136,12 @@ internal static partial class CodeWriters
         w.Write("\n");
         EmitUnsafeAccessor(w, "Current", t, $"{prefix}Current", interopType, "");
         EmitUnsafeAccessor(w, "MoveNext", "bool", $"{prefix}MoveNext", interopType, "");
-        EmitUnsafeAccessor(w, "Reset", "void", $"{prefix}Reset", interopType, "");
-        EmitUnsafeAccessor(w, "Dispose", "void", $"{prefix}Dispose", interopType, "");
 
         w.Write($"\npublic bool MoveNext() => {prefix}MoveNext(null, {objRefName});\n");
-        w.Write($"public void Reset() => {prefix}Reset(null, {objRefName});\n");
+        w.Write("public void Reset() => throw new NotSupportedException();\n");
+        w.Write("public void Dispose() {}\n");
         w.Write($"public {t} Current => {prefix}Current(null, {objRefName});\n");
         w.Write("object global::System.Collections.IEnumerator.Current => Current!;\n");
-        w.Write($"public void Dispose() => {prefix}Dispose(null, {objRefName});\n");
     }
 
     private static void EmitDictionary(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
