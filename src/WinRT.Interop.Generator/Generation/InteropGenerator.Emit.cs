@@ -220,10 +220,15 @@ internal partial class InteropGenerator
             throw WellKnownInteropExceptions.WinRTRuntimeModuleNotFound();
         }
 
-        // The Windows SDK projection module is loaded explicitly during discovery from
-        // 'args.WinRTSdkProjectionAssemblyPath' and tracked on the discovery state, so
-        // there's no need to re-look it up here. Downstream code reads the tracked field
-        // ('discoveryState.WindowsRuntimeSdkProjectionModule') directly.
+        // Validate that the Windows SDK ref/forwarder ('Microsoft.Windows.SDK.NET.dll') reached the
+        // reference set. The SDK projection itself ('WinRT.Sdk.Projection.dll') is loaded explicitly
+        // in discovery from 'args.WinRTSdkProjectionAssemblyPath' and read downstream via
+        // 'discoveryState.WindowsRuntimeSdkProjectionModule', so this check is purely a sanity
+        // check that the consumer's build has the expected CsWinRT 3.0 reference layout.
+        if (!discoveryState.Modules.Any(static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("Microsoft.Windows.SDK.NET.dll")))
+        {
+            throw WellKnownInteropExceptions.WindowsSdkProjectionModuleNotFound();
+        }
 
         // If assembly version validation is required, ensure that the 'cswinrtinteropgen' version matches that of 'WinRT.Runtime.dll'.
         // We only compare major and minor versions, as it's fine to ship small forward compatible fixes in revision updates.
