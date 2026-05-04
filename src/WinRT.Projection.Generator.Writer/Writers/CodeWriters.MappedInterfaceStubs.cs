@@ -186,7 +186,7 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {kv} item");
         EmitUnsafeAccessor(w, "GetEnumerator", $"IEnumerator<{kvNested}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
 
-        w.Write($"\npublic {v} this[{k} key] {{ get => {prefix}Item(null, {objRefName}, key); set => {prefix}Item(null, {objRefName}, key, value); }}\n");
+        w.Write($"\npublic {v} this[{k} key]\n{{\n    get => {prefix}Item(null, {objRefName}, key);\n    set => {prefix}Item(null, {objRefName}, key, value);\n}}\n");
         w.Write($"public ICollection<{k}> Keys => {prefix}Keys(null, {objRefName});\n");
         w.Write($"public ICollection<{v}> Values => {prefix}Values(null, {objRefName});\n");
         w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
