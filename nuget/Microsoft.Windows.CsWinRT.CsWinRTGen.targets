@@ -350,8 +350,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
       LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
 
-    <!-- Set the metadata for the interop .dll item and add it to the required output groups -->
-    <ItemGroup Condition="'$(_HasMergedProjectionWinMDInputs)' == 'true'">
+    <!-- Only wire up the merged projection DLL if it was actually produced
+         (i.e. the generator found types to project). -->
+    <ItemGroup Condition="Exists('$(_CsWinRTGeneratorMergedProjectionAssemblyPath)')">
       <CsWinRTGeneratorMergedProjectionPath Include="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)">
         <AssemblyName>WinRT.Projection</AssemblyName>
         <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
