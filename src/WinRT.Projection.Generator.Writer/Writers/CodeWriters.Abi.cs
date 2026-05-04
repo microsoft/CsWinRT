@@ -3046,6 +3046,11 @@ internal static partial class CodeWriters
     {
         switch (mappedWinRTInterfaceName)
         {
+            case "IClosable":
+                // IClosable maps to IDisposable. Forward Dispose() to the
+                // WindowsRuntimeObject base which has the actual implementation.
+                w.Write("\nvoid global::System.IDisposable.Dispose() => ((global::System.IDisposable)(WindowsRuntimeObject)this).Dispose();\n");
+                break;
             case "IBindableVector":
                 // IList covers IList, ICollection, and IEnumerable members.
                 w.Write("\n");
