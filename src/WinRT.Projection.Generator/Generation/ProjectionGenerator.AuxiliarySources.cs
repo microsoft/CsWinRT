@@ -245,35 +245,35 @@ internal partial class ProjectionGenerator
     /// </remarks>
     private static void WriteMergedManagedExports(ProjectionGeneratorProcessingState processingState)
     {
-        // Build first-segment -> components map. A first segment that maps to exactly one
-        // component is a candidate for the prefix-dispatch fast path; segments shared by
-        // multiple components require the linear-walk fallback (to allow each candidate to
-        // claim the class).
-        System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> segmentOwners =
+        // Group components by the first segment of their assembly name. By WinRT convention,
+        // the winmd/assembly name is itself the unique namespace prefix and every type in
+        // that component is under that prefix (e.g. 'Alpha.Beta.winmd' owns 'Alpha.Beta.*').
+        // We exploit that to dispatch directly:
+        //   - Single owner of a first segment -> direct return.
+        //   - Multiple owners (e.g. 'Alpha.Beta' and 'Alpha.Gamma' both starting with 'Alpha')
+        //     -> nested StartsWith checks ordered longest-prefix-first.
+        // The linear-walk fallback handles atypical components whose types live under a
+        // namespace that doesn't match the component name.
+        System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> firstSegmentOwners =
             new(System.StringComparer.Ordinal);
 
         foreach (string componentName in processingState.ComponentAssemblyNames)
         {
-            if (!processingState.ComponentNamespacePrefixes.TryGetValue(componentName, out System.Collections.Generic.IReadOnlyList<string>? prefixes))
+            int firstDot = componentName.IndexOf('.');
+            string firstSegment = firstDot < 0 ? componentName : componentName[..firstDot];
+
+            if (!firstSegmentOwners.TryGetValue(firstSegment, out System.Collections.Generic.List<string>? owners))
             {
-                continue;
+                owners = [];
+                firstSegmentOwners[firstSegment] = owners;
             }
 
-            foreach (string prefix in prefixes)
-            {
-                if (!segmentOwners.TryGetValue(prefix, out System.Collections.Generic.List<string>? owners))
-                {
-                    owners = [];
-                    segmentOwners[prefix] = owners;
-                }
-
-                owners.Add(componentName);
-            }
+            owners.Add(componentName);
         }
 
-        // Sort segments for stable codegen output.
-        System.Collections.Generic.List<string> sortedSegments = [.. segmentOwners.Keys];
-        sortedSegments.Sort(System.StringComparer.Ordinal);
+        // Sort for stable codegen output.
+        System.Collections.Generic.List<string> sortedFirstSegments = [.. firstSegmentOwners.Keys];
+        sortedFirstSegments.Sort(System.StringComparer.Ordinal);
 
         StringBuilder sb = new();
 
@@ -284,9 +284,10 @@ internal partial class ProjectionGenerator
         _ = sb.AppendLine();
         _ = sb.AppendLine("/// <summary>");
         _ = sb.AppendLine("/// Merged managed activation entry point for <c>WinRT.Component.dll</c>. Reflectively");
-        _ = sb.AppendLine("/// invoked by <c>WinRT.Host.Shim.GetActivationFactory</c>; routes by first-segment");
-        _ = sb.AppendLine("/// namespace to the owning component's <c>ManagedExports</c>, with a linear-walk");
-        _ = sb.AppendLine("/// fallback for unknown segments or segments shared across multiple components.");
+        _ = sb.AppendLine("/// invoked by <c>WinRT.Host.Shim.GetActivationFactory</c>; routes by component-name");
+        _ = sb.AppendLine("/// prefix (the winmd name, which is the unique namespace prefix per WinRT convention)");
+        _ = sb.AppendLine("/// to the owning component's <c>ManagedExports</c>, with a linear-walk fallback for");
+        _ = sb.AppendLine("/// atypical components whose namespaces don't match their assembly name.");
         _ = sb.AppendLine("/// </summary>");
         _ = sb.AppendLine("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");
         _ = sb.AppendLine("public static unsafe class ManagedExports");
@@ -294,40 +295,93 @@ internal partial class ProjectionGenerator
         _ = sb.AppendLine("    public static void* GetActivationFactory(global::System.ReadOnlySpan<char> activatableClassId)");
         _ = sb.AppendLine("    {");
 
-        // Try first-segment dispatch when the segment uniquely identifies a single component.
-        bool hasFastPath = false;
-
-        foreach (string segment in sortedSegments)
-        {
-            System.Collections.Generic.List<string> owners = segmentOwners[segment];
-
-            if (owners.Count != 1)
-            {
-                continue;
-            }
-
-            if (!hasFastPath)
-            {
-                _ = sb.AppendLine("        // Fast path: when the runtime class name's first segment uniquely identifies");
-                _ = sb.AppendLine("        // one component, dispatch directly to that component's ManagedExports.");
-                _ = sb.AppendLine("        int dotIndex = global::System.MemoryExtensions.IndexOf(activatableClassId, '.');");
-                _ = sb.AppendLine("        global::System.ReadOnlySpan<char> firstSegment = dotIndex < 0 ? activatableClassId : activatableClassId.Slice(0, dotIndex);");
-                _ = sb.AppendLine();
-                _ = sb.Append("        switch (firstSegment)");
-                _ = sb.AppendLine();
-                _ = sb.AppendLine("        {");
-                hasFastPath = true;
-            }
-
-            _ = sb.Append("            case \"")
-                   .Append(segment)
-                   .Append("\": return global::ABI.")
-                   .Append(owners[0])
-                   .AppendLine(".ManagedExports.GetActivationFactory(activatableClassId);");
-        }
+        bool hasFastPath = processingState.ComponentAssemblyNames.Count > 0;
 
         if (hasFastPath)
         {
+            _ = sb.AppendLine("        // Fast path: dispatch by first segment of the runtime class id, then (when");
+            _ = sb.AppendLine("        // multiple components share that segment) by longest-matching component prefix.");
+            _ = sb.AppendLine("        int dotIndex = global::System.MemoryExtensions.IndexOf(activatableClassId, '.');");
+            _ = sb.AppendLine("        global::System.ReadOnlySpan<char> firstSegment = dotIndex < 0 ? activatableClassId : activatableClassId.Slice(0, dotIndex);");
+            _ = sb.AppendLine();
+            _ = sb.AppendLine("        switch (firstSegment)");
+            _ = sb.AppendLine("        {");
+
+            foreach (string segment in sortedFirstSegments)
+            {
+                System.Collections.Generic.List<string> owners = firstSegmentOwners[segment];
+
+                if (owners.Count == 1)
+                {
+                    string componentName = owners[0];
+
+                    if (componentName == segment)
+                    {
+                        // Single-segment component name (e.g. "ClassLibrary1"): the first-segment
+                        // match alone uniquely identifies the component.
+                        _ = sb.Append("            case \"")
+                               .Append(segment)
+                               .Append("\": return global::ABI.")
+                               .Append(componentName)
+                               .AppendLine(".ManagedExports.GetActivationFactory(activatableClassId);");
+                    }
+                    else
+                    {
+                        // Multi-segment component name (e.g. "Alpha.Beta"): verify the full
+                        // dotted prefix to avoid claiming activations under sibling namespaces
+                        // that happen to share only the first segment.
+                        _ = sb.Append("            case \"").Append(segment).AppendLine("\":");
+                        _ = sb.Append("                if (global::System.MemoryExtensions.StartsWith(activatableClassId, \"")
+                               .Append(componentName)
+                               .AppendLine(".\")) return global::ABI." + componentName + ".ManagedExports.GetActivationFactory(activatableClassId);");
+                        _ = sb.AppendLine("                break;");
+                    }
+                }
+                else
+                {
+                    // Multiple components share the first segment (e.g. "Alpha.Beta" and
+                    // "Alpha.Gamma"). Order by descending name length so longer (more specific)
+                    // prefixes are tested first; covers the case where one of the components has
+                    // exactly the shared first segment as its full name.
+                    System.Collections.Generic.List<string> ordered = [.. owners];
+                    ordered.Sort((a, b) =>
+                    {
+                        int byLen = b.Length.CompareTo(a.Length);
+                        return byLen != 0 ? byLen : string.CompareOrdinal(a, b);
+                    });
+
+                    _ = sb.Append("            case \"").Append(segment).AppendLine("\":");
+                    foreach (string componentName in ordered)
+                    {
+                        if (componentName == segment)
+                        {
+                            // Single-segment component sharing a prefix with a multi-segment one:
+                            // emit as the trailing default for this case (any class id with this
+                            // first segment that didn't match a longer prefix above is owned here).
+                            _ = sb.Append("                return global::ABI.")
+                                   .Append(componentName)
+                                   .AppendLine(".ManagedExports.GetActivationFactory(activatableClassId);");
+                        }
+                        else
+                        {
+                            _ = sb.Append("                if (global::System.MemoryExtensions.StartsWith(activatableClassId, \"")
+                                   .Append(componentName)
+                                   .Append(".\")) return global::ABI.")
+                                   .Append(componentName)
+                                   .AppendLine(".ManagedExports.GetActivationFactory(activatableClassId);");
+                        }
+                    }
+
+                    // If the loop above didn't end with an unconditional return, fall through to
+                    // the linear-walk fallback (handles atypical types whose namespace doesn't
+                    // match any component name).
+                    if (ordered[^1] != segment)
+                    {
+                        _ = sb.AppendLine("                break;");
+                    }
+                }
+            }
+
             _ = sb.AppendLine("        }");
             _ = sb.AppendLine();
         }
