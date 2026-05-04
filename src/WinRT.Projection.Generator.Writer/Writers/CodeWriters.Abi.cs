@@ -1483,38 +1483,22 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
             {
-                // length pointer + value pointer
-                bool isRefElem = IsString(sz.BaseType) || IsRuntimeClassOrInterface(sz.BaseType) || IsObject(sz.BaseType) || IsGenericInstance(sz.BaseType);
+                // length pointer + value pointer. Mirrors C++ write_abi_signature for SzArray
+                // input params (code_writers.h:1305) which always emits "uint __%Size, void* %"
+                // regardless of element type.
                 if (includeParamNames)
                 {
                     w.Write("uint ");
                     w.Write("__");
                     w.Write(p.Parameter.Name ?? "param");
-                    w.Write("Size, ");
-                    if (isRefElem)
-                    {
-                        w.Write("void* ");
-                    }
-                    else
-                    {
-                        WriteAbiType(w, TypeSemanticsFactory.Get(sz.BaseType));
-                        w.Write("* ");
-                    }
+                    w.Write("Size, void* ");
                     Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
                 }
                 else
                 {
-                    w.Write("uint, ");
-                    if (isRefElem)
-                    {
-                        w.Write("void*");
-                    }
-                    else
-                    {
-                        WriteAbiType(w, TypeSemanticsFactory.Get(sz.BaseType));
-                        w.Write("*");
-                    }
+                    w.Write("uint, void*");
                 }
+                _ = sz;
             }
             else if (p.Type is AsmResolver.DotNet.Signatures.ByReferenceTypeSignature br)
             {
