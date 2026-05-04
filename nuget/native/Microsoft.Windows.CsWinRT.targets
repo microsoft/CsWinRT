@@ -33,7 +33,7 @@ Properties:
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <_CsWinRTNativeConsumerIntermediateDir>$(IntDir)cswinrt\</_CsWinRTNativeConsumerIntermediateDir>
+    <_CsWinRTNativeConsumerIntermediateDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntDir)', 'cswinrt'))</_CsWinRTNativeConsumerIntermediateDir>
   </PropertyGroup>
 
   <!--
