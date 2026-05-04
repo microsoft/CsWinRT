@@ -13,18 +13,24 @@ internal static class Program
     {
         // Modes:
         //   1) Single .winmd path → simple test (legacy)
-        //   2) "compare" <winmd-folder> <internal-winmd> <output-folder> → SDK projection mode
-        //   3) "compare-xaml" <xaml-winmd-folder> <internal-winmd> <output-folder> → XAML projection mode
+        //   2) "compare" <winmd-folder> <internal-winmd> <output-folder> [--ref] → SDK projection mode
+        //   3) "compare-xaml" <xaml-winmd-folder> <internal-winmd> <output-folder> [--ref] → XAML projection mode
         //   4) "compare-authoring" <output-folder> → component projection mode (uses fixed paths
         //      that mirror the .rsp file in 'authoring-projection\generated-sources\ProjectionGenerator.rsp'
         //      shipped in the test inputs folder).
+        //
+        // The optional [--ref] flag enables reference-projection mode (mirrors the C++
+        // tool's -reference_projection flag and the CsWinRTGenerateReferenceProjection
+        // MSBuild property): emits a public-API-only projection without
+        // IWindowsRuntimeInterface<T> markers, ABI helpers, vtables, etc.
+        bool refMode = Array.IndexOf(args, "--ref") >= 0;
         if (args.Length >= 4 && args[0] == "compare")
         {
-            return RunCompare(args[1], args[2], args[3]);
+            return RunCompare(args[1], args[2], args[3], refMode);
         }
         if (args.Length >= 4 && args[0] == "compare-xaml")
         {
-            return RunCompareXaml(args[1], args[2], args[3]);
+            return RunCompareXaml(args[1], args[2], args[3], refMode);
         }
         if (args.Length >= 2 && args[0] == "compare-authoring")
         {
@@ -77,7 +83,7 @@ internal static class Program
     /// Runs the projection writer with the same options the build pipeline uses for the SDK
     /// projection (the truth output to compare against).
     /// </summary>
-    private static int RunCompare(string winmdFolder, string internalWinmd, string output)
+    private static int RunCompare(string winmdFolder, string internalWinmd, string output, bool referenceProjection = false)
     {
         if (Directory.Exists(output))
         {
@@ -101,6 +107,7 @@ internal static class Program
             {
                 InputPaths = new[] { resolvedWinmd, internalWinmd },
                 OutputFolder = output,
+                ReferenceProjection = referenceProjection,
                 Include = new[]
                 {
                     "Windows",
@@ -138,7 +145,7 @@ internal static class Program
     /// Runs the projection writer with the same options the build pipeline uses for the XAML
     /// projection (the truth output to compare against). Mirrors the .rsp file in the XAML truth folder.
     /// </summary>
-    private static int RunCompareXaml(string xamlWinmdFolder, string internalWinmd, string output)
+    private static int RunCompareXaml(string xamlWinmdFolder, string internalWinmd, string output, bool referenceProjection = false)
     {
         if (Directory.Exists(output))
         {
@@ -162,6 +169,7 @@ internal static class Program
             {
                 InputPaths = new[] { resolvedWinmd, internalWinmd },
                 OutputFolder = output,
+                ReferenceProjection = referenceProjection,
                 // Mirrors the XAML projection generation .rsp:
                 // -exclude Windows, then -include for the specific XAML namespaces and helpers.
                 Include = new[]
