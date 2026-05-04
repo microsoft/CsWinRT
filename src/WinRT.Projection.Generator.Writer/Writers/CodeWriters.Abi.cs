@@ -2329,15 +2329,17 @@ internal static partial class CodeWriters
             string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
             string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
             string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-            // For complex structs, the data param and the call-site cast use the ABI struct
-            // pointer type instead of void**.
+            // For complex structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
+            // The Do_Abi parameter we receive is void* (per V3R3-M8), so the call-site needs an
+            // explicit (T*) cast to bridge the type. For ref-types (string/runtime-class/object),
+            // the data param is void** and the cast is (void**).
             string dataParamType;
             string dataCastExpr;
             if (IsComplexStruct(szArr.BaseType))
             {
                 string abiStructName = GetAbiStructTypeName(w, szArr.BaseType);
                 dataParamType = abiStructName + "* data";
-                dataCastExpr = ptr;
+                dataCastExpr = "(" + abiStructName + "*)" + ptr;
             }
             else
             {
