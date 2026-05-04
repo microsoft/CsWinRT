@@ -73,6 +73,7 @@ internal static partial class CodeWriters
     public static void WriteFactoryConstructors(TypeWriter w, TypeDefinition? factoryType, TypeDefinition classType)
     {
         string typeName = classType.Name?.Value ?? string.Empty;
+        int gcPressure = GetGcPressureAmount(classType);
         if (factoryType is not null)
         {
             // Emit the factory objref property (lazy-initialized).
@@ -118,7 +119,14 @@ internal static partial class CodeWriters
                     }
                     w.Write("))");
                 }
-                w.Write(")\n{\n}\n");
+                w.Write(")\n{\n");
+                if (gcPressure > 0)
+                {
+                    w.Write("GC.AddMemoryPressure(");
+                    w.Write(gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    w.Write(");\n");
+                }
+                w.Write("}\n");
 
                 if (sig.Params.Count > 0)
                 {
@@ -148,7 +156,14 @@ internal static partial class CodeWriters
             w.Write(defaultIfaceIid);
             w.Write(", ");
             w.Write(GetMarshalingTypeName(classType));
-            w.Write(")\n{\n}\n");
+            w.Write(")\n{\n");
+            if (gcPressure > 0)
+            {
+                w.Write("GC.AddMemoryPressure(");
+                w.Write(gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                w.Write(");\n");
+            }
+            w.Write("}\n");
         }
     }
 
