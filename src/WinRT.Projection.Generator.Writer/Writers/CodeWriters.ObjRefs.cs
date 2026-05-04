@@ -263,7 +263,12 @@ internal static partial class CodeWriters
     /// </summary>
     public static void WriteClassObjRefDefinitions(TypeWriter w, TypeDefinition type)
     {
-        if (w.Settings.ReferenceProjection) { return; }
+        // Per-interface _objRef_* getters are emitted in BOTH impl and ref modes with full
+        // bodies. C++ write_class_objrefs_definition has no settings.reference_projection
+        // gate. Truth ref-mode output keeps the full Interlocked.CompareExchange +
+        // NativeObjectReference.As(IID_X(null)) lazy-init bodies. (Only the static factory
+        // _objRef_* getters become `throw null;` in ref mode — see WriteStaticFactoryObjRef
+        // and WriteAttributedTypes.)
 
         // Track names emitted so we don't emit duplicates (e.g. when both IFoo and IFoo2
         // produce the same _objRef_<name>).

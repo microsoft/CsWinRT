@@ -189,18 +189,27 @@ internal static partial class CodeWriters
                 w.Write(mname);
                 w.Write("(");
                 WriteParameterList(w, sig);
-                w.Write(") => ");
-                w.Write(abiClass);
-                w.Write(".");
-                w.Write(mname);
-                w.Write("(");
-                w.Write(objRef);
-                for (int i = 0; i < sig.Params.Count; i++)
+                if (w.Settings.ReferenceProjection)
                 {
-                    w.Write(", ");
-                    WriteParameterNameWithModifier(w, sig.Params[i]);
+                    // Mirrors C++ write_abi_static_method_call (code_writers.h:1637): static
+                    // method bodies become 'throw null' in reference projection mode.
+                    w.Write(") => throw null;\n");
                 }
-                w.Write(");\n");
+                else
+                {
+                    w.Write(") => ");
+                    w.Write(abiClass);
+                    w.Write(".");
+                    w.Write(mname);
+                    w.Write("(");
+                    w.Write(objRef);
+                    for (int i = 0; i < sig.Params.Count; i++)
+                    {
+                        w.Write(", ");
+                        WriteParameterNameWithModifier(w, sig.Params[i]);
+                    }
+                    w.Write(");\n");
+                }
             }
             // Events: dispatch via static ABI class which returns an event source.
             foreach (EventDefinition evt in staticIface.Events)
@@ -211,24 +220,34 @@ internal static partial class CodeWriters
                 w.Write(" ");
                 w.Write(evtName);
                 w.Write("\n{\n");
-                w.Write("    add => ");
-                w.Write(abiClass);
-                w.Write(".");
-                w.Write(evtName);
-                w.Write("(");
-                w.Write(objRef);
-                w.Write(", ");
-                w.Write(objRef);
-                w.Write(").Subscribe(value);\n");
-                w.Write("    remove => ");
-                w.Write(abiClass);
-                w.Write(".");
-                w.Write(evtName);
-                w.Write("(");
-                w.Write(objRef);
-                w.Write(", ");
-                w.Write(objRef);
-                w.Write(").Unsubscribe(value);\n");
+                if (w.Settings.ReferenceProjection)
+                {
+                    // Mirrors C++ write_abi_event_source_static_method_call (code_writers.h:1711):
+                    // event accessor bodies become 'throw null' in reference projection mode.
+                    w.Write("    add => throw null;\n");
+                    w.Write("    remove => throw null;\n");
+                }
+                else
+                {
+                    w.Write("    add => ");
+                    w.Write(abiClass);
+                    w.Write(".");
+                    w.Write(evtName);
+                    w.Write("(");
+                    w.Write(objRef);
+                    w.Write(", ");
+                    w.Write(objRef);
+                    w.Write(").Subscribe(value);\n");
+                    w.Write("    remove => ");
+                    w.Write(abiClass);
+                    w.Write(".");
+                    w.Write(evtName);
+                    w.Write("(");
+                    w.Write(objRef);
+                    w.Write(", ");
+                    w.Write(objRef);
+                    w.Write(").Unsubscribe(value);\n");
+                }
                 w.Write("}\n");
             }
             // Properties (merge getter/setter across interfaces, tracking origin per accessor)
@@ -266,39 +285,62 @@ internal static partial class CodeWriters
             w.Write(" ");
             w.Write(kv.Key);
             // Getter-only -> expression body; otherwise -> accessor block (matches truth).
+            // In ref mode, all accessor bodies emit '=> throw null;' (mirrors C++
+            // write_abi_get/set_property_static_method_call, code_writers.h:1669, 1683).
             bool getterOnly = s.HasGetter && !s.HasSetter;
             if (getterOnly)
             {
-                w.Write(" => ");
-                w.Write(s.GetterAbiClass);
-                w.Write(".");
-                w.Write(kv.Key);
-                w.Write("(");
-                w.Write(s.GetterObjRef);
-                w.Write(");\n");
+                if (w.Settings.ReferenceProjection)
+                {
+                    w.Write(" => throw null;\n");
+                }
+                else
+                {
+                    w.Write(" => ");
+                    w.Write(s.GetterAbiClass);
+                    w.Write(".");
+                    w.Write(kv.Key);
+                    w.Write("(");
+                    w.Write(s.GetterObjRef);
+                    w.Write(");\n");
+                }
             }
             else
             {
                 w.Write(" { ");
                 if (s.HasGetter)
                 {
-                    w.Write("get => ");
-                    w.Write(s.GetterAbiClass);
-                    w.Write(".");
-                    w.Write(kv.Key);
-                    w.Write("(");
-                    w.Write(s.GetterObjRef);
-                    w.Write("); ");
+                    if (w.Settings.ReferenceProjection)
+                    {
+                        w.Write("get => throw null; ");
+                    }
+                    else
+                    {
+                        w.Write("get => ");
+                        w.Write(s.GetterAbiClass);
+                        w.Write(".");
+                        w.Write(kv.Key);
+                        w.Write("(");
+                        w.Write(s.GetterObjRef);
+                        w.Write("); ");
+                    }
                 }
                 if (s.HasSetter)
                 {
-                    w.Write("set => ");
-                    w.Write(s.SetterAbiClass);
-                    w.Write(".");
-                    w.Write(kv.Key);
-                    w.Write("(");
-                    w.Write(s.SetterObjRef);
-                    w.Write(", value); ");
+                    if (w.Settings.ReferenceProjection)
+                    {
+                        w.Write("set => throw null; ");
+                    }
+                    else
+                    {
+                        w.Write("set => ");
+                        w.Write(s.SetterAbiClass);
+                        w.Write(".");
+                        w.Write(kv.Key);
+                        w.Write("(");
+                        w.Write(s.SetterObjRef);
+                        w.Write(", value); ");
+                    }
                 }
                 w.Write("}\n");
             }
@@ -325,6 +367,13 @@ internal static partial class CodeWriters
         w.Write("\nprivate static WindowsRuntimeObjectReference ");
         w.Write(objRefName);
         w.Write("\n{\n");
+        if (w.Settings.ReferenceProjection)
+        {
+            // Mirrors C++ write_static_objref_definition (code_writers.h:2789): in ref mode
+            // the static factory objref getter body is just 'throw null;'.
+            w.Write("    get\n    {\n        throw null;\n    }\n}\n");
+            return;
+        }
         w.Write("    get\n    {\n");
         w.Write("        var __");
         w.Write(objRefName);
@@ -414,6 +463,39 @@ internal static partial class CodeWriters
                 w.Write(");\n");
             }
             w.Write("}\n");
+        }
+        else if (_cacheRef is not null)
+        {
+            // In ref mode, if WriteAttributedTypes will not emit any public constructors,
+            // we need a 'private TypeName() { throw null; }' to suppress the C# compiler's
+            // implicit public default constructor (which would expose an unintended API).
+            // Mirrors C++ code_writers.h:9519-9538 exactly: a type has constructors when
+            // either:
+            //  - factory.activatable is true (parameterless or parameterized — Activatable
+            //    always emits at least one ctor), OR
+            //  - factory.composable && factory.type && factory.type.MethodList().size() > 0
+            //    (composable factories with NO methods don't emit any ctors).
+            bool hasRefModeCtors = false;
+            foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cacheRef))
+            {
+                AttributedType factory = kv.Value;
+                if (factory.Activatable)
+                {
+                    hasRefModeCtors = true;
+                    break;
+                }
+                if (factory.Composable && factory.Type is not null && factory.Type.Methods.Count > 0)
+                {
+                    hasRefModeCtors = true;
+                    break;
+                }
+            }
+            if (!hasRefModeCtors)
+            {
+                w.Write("\nprivate ");
+                w.Write(typeName);
+                w.Write("() { throw null; }\n");
+            }
         }
 
         // Activator/composer constructors from [Activatable]/[Composable] factory interfaces

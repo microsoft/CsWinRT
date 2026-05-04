@@ -40,17 +40,26 @@ internal static partial class CodeWriters
             string objRefName = "_objRef_" + EscapeTypeNameForIdentifier("global::" + fullName, stripGlobal: true);
             w.Write("\nprivate static WindowsRuntimeObjectReference ");
             w.Write(objRefName);
-            w.Write("\n{\n    get\n    {\n        var __");
-            w.Write(objRefName);
-            w.Write(" = field;\n        if (__");
-            w.Write(objRefName);
-            w.Write(" != null && __");
-            w.Write(objRefName);
-            w.Write(".IsInCurrentContext)\n        {\n            return __");
-            w.Write(objRefName);
-            w.Write(";\n        }\n        return field = WindowsRuntimeObjectReference.GetActivationFactory(\"");
-            w.Write(fullName);
-            w.Write("\");\n    }\n}\n");
+            if (w.Settings.ReferenceProjection)
+            {
+                // Mirrors C++ write_activation_factory_objref_definition (code_writers.h:2748):
+                // in ref mode the activation factory objref getter body is just 'throw null;'.
+                w.Write("\n{\n    get\n    {\n        throw null;\n    }\n}\n");
+            }
+            else
+            {
+                w.Write("\n{\n    get\n    {\n        var __");
+                w.Write(objRefName);
+                w.Write(" = field;\n        if (__");
+                w.Write(objRefName);
+                w.Write(" != null && __");
+                w.Write(objRefName);
+                w.Write(".IsInCurrentContext)\n        {\n            return __");
+                w.Write(objRefName);
+                w.Write(";\n        }\n        return field = WindowsRuntimeObjectReference.GetActivationFactory(\"");
+                w.Write(fullName);
+                w.Write("\");\n    }\n}\n");
+            }
         }
 
         foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, _cacheRef))
@@ -267,6 +276,16 @@ internal static partial class CodeWriters
             w.Write("      WindowsRuntimeActivationArgsReference additionalParameters,\n");
             w.Write("      out void* retval)\n    {\n");
         }
+
+        // Mirrors C++ at code_writers.h:6849: in reference projection mode, the entire
+        // Invoke body is just 'throw null;' (no factory dispatch, no marshalling).
+        if (w.Settings.ReferenceProjection)
+        {
+            w.Write("        throw null;\n");
+            w.Write("    }\n}\n");
+            return;
+        }
+
         w.Write("        using WindowsRuntimeObjectReferenceValue activationFactoryValue = ");
         w.Write(factoryObjRefName);
         w.Write(".AsValue();\n");
@@ -960,7 +979,11 @@ internal static partial class CodeWriters
             w.Write("}\n");
 
             // Emit args struct + callback class for parameterized composable factories.
-            if (!isParameterless)
+            // Mirrors C++ write_static_composing_factory_method (code_writers.h:6886) which
+            // skips both the args struct AND the callback class entirely in ref mode. The
+            // public ctor above still references these types, but reference assemblies don't
+            // need their bodies' references to resolve (only the public API surface matters).
+            if (!isParameterless && !w.Settings.ReferenceProjection)
             {
                 EmitFactoryArgsStruct(w, sig, argsName, userParamCount);
                 string factoryObjRefName = GetObjRefName(w, composableType);

@@ -15,12 +15,12 @@ internal static partial class CodeWriters
 {
     /// <summary>
     /// Emits all instance members (methods, properties, events) inherited from implemented interfaces.
-    /// Mirrors C++ <c>write_class_members</c> (simplified: emits stub bodies for now).
+    /// Mirrors C++ <c>write_class_members</c>. In ref-projection mode, this is still called: type
+    /// declarations and per-interface objref getters are emitted, but non-mapped instance
+    /// method/property/event bodies are emitted as <c>=> throw null;</c> stubs.
     /// </summary>
     public static void WriteClassMembers(TypeWriter w, TypeDefinition type)
     {
-        if (w.Settings.ReferenceProjection) { return; }
-
         HashSet<string> writtenMethods = new(System.StringComparer.Ordinal);
         // For properties: track per-name accessor presence so we can merge get/set across interfaces.
         // Use insertion-order Dictionary so the per-class property emission order matches the
@@ -78,11 +78,19 @@ internal static partial class CodeWriters
             // For getter-only properties, emit expression body: 'public T Prop => Expr;'
             // For getter+setter or setter-only, use accessor block: 'public T Prop { get => ...; set => ...; }'
             // (mirrors C++ which uses '%' template substitution where get-only collapses to '=> %').
+            //
+            // In ref mode, all property bodies emit '=> throw null;' (mirrors C++
+            // write_abi_get/set_property_static_method_call + write_unsafe_accessor_property_static_method_call,
+            // code_writers.h:1669, 1683, 1697).
             bool getterOnly = s.HasGetter && !s.HasSetter;
             if (getterOnly)
             {
                 w.Write(" => ");
-                if (s.GetterIsGeneric)
+                if (w.Settings.ReferenceProjection)
+                {
+                    w.Write("throw null;");
+                }
+                else if (s.GetterIsGeneric)
                 {
                     if (!string.IsNullOrEmpty(s.GetterGenericInteropType))
                     {
@@ -112,7 +120,11 @@ internal static partial class CodeWriters
                 w.Write("\n{\n");
                 if (s.HasGetter)
                 {
-                    if (s.GetterIsGeneric)
+                    if (w.Settings.ReferenceProjection)
+                    {
+                        w.Write("    get => throw null;\n");
+                    }
+                    else if (s.GetterIsGeneric)
                     {
                         if (!string.IsNullOrEmpty(s.GetterGenericInteropType))
                         {
@@ -140,7 +152,11 @@ internal static partial class CodeWriters
                 }
                 if (s.HasSetter)
                 {
-                    if (s.SetterIsGeneric)
+                    if (w.Settings.ReferenceProjection)
+                    {
+                        w.Write("    set => throw null;\n");
+                    }
+                    else if (s.SetterIsGeneric)
                     {
                         if (!string.IsNullOrEmpty(s.SetterGenericInteropType))
                         {
@@ -310,7 +326,13 @@ internal static partial class CodeWriters
             // overridable interfaces or non-exclusive direct interfaces, emit
             // IWindowsRuntimeInterface<T>.GetInterface(). For the default interface on an
             // unsealed class with an exclusive default, emit "internal new GetDefaultInterface()".
-            if (IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false))
+            //
+            // The IWindowsRuntimeInterface<T> markers are NOT emitted in ref mode (gated by
+            // !w.Settings.ReferenceProjection here, mirrors C++ code_writers.h:4257
+            // '&& !settings.reference_projection' in the corresponding condition). The
+            // 'internal new GetDefaultInterface()' helper IS emitted in both modes since
+            // it's referenced by overrides on derived classes.
+            if (IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false) && !w.Settings.ReferenceProjection)
             {
                 string giObjRefName = GetObjRefName(w, substitutedInterface);
                 w.Write("\nWindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
@@ -490,16 +512,25 @@ internal static partial class CodeWriters
                 w.Write(name);
                 w.Write("(");
                 WriteParameterList(w, sig);
-                w.Write(") => ");
-                w.Write(accessorName);
-                w.Write("(null, ");
-                w.Write(objRef);
-                for (int i = 0; i < sig.Params.Count; i++)
+                if (w.Settings.ReferenceProjection)
                 {
-                    w.Write(", ");
-                    WriteParameterNameWithModifier(w, sig.Params[i]);
+                    // Mirrors C++ write_unsafe_accessor_static_method_call (code_writers.h:1653)
+                    // which emits 'throw null' in reference projection mode.
+                    w.Write(") => throw null;\n");
                 }
-                w.Write(");\n");
+                else
+                {
+                    w.Write(") => ");
+                    w.Write(accessorName);
+                    w.Write("(null, ");
+                    w.Write(objRef);
+                    for (int i = 0; i < sig.Params.Count; i++)
+                    {
+                        w.Write(", ");
+                        WriteParameterNameWithModifier(w, sig.Params[i]);
+                    }
+                    w.Write(");\n");
+                }
             }
             else
             {
@@ -511,18 +542,27 @@ internal static partial class CodeWriters
                 w.Write(name);
                 w.Write("(");
                 WriteParameterList(w, sig);
-                w.Write(") => ");
-                w.Write(abiClass);
-                w.Write(".");
-                w.Write(name);
-                w.Write("(");
-                w.Write(objRef);
-                for (int i = 0; i < sig.Params.Count; i++)
+                if (w.Settings.ReferenceProjection)
                 {
-                    w.Write(", ");
-                    WriteParameterNameWithModifier(w, sig.Params[i]);
+                    // Mirrors C++ write_abi_static_method_call (code_writers.h:1637)
+                    // which emits 'throw null' in reference projection mode.
+                    w.Write(") => throw null;\n");
                 }
-                w.Write(");\n");
+                else
+                {
+                    w.Write(") => ");
+                    w.Write(abiClass);
+                    w.Write(".");
+                    w.Write(name);
+                    w.Write("(");
+                    w.Write(objRef);
+                    for (int i = 0; i < sig.Params.Count; i++)
+                    {
+                        w.Write(", ");
+                        WriteParameterNameWithModifier(w, sig.Params[i]);
+                    }
+                    w.Write(");\n");
+                }
             }
 
             // For overridable interface methods, emit an explicit interface implementation
@@ -645,51 +685,57 @@ internal static partial class CodeWriters
             }
             int vtableIndex = 6 + methodIndex;
 
-            // Emit the _eventSource_<name> property field.
-            w.Write("\nprivate ");
-            w.Write(eventSourceTypeFull);
-            w.Write(" _eventSource_");
-            w.Write(name);
-            w.Write("\n{\n    get\n    {\n");
-            if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
+            // Emit the _eventSource_<name> property field — skipped in ref mode (the event
+            // accessors below become 'add => throw null;' / 'remove => throw null;' which
+            // don't reference the field, mirrors C++ where the inline_event_source_field
+            // path emits 'throw null' at code_writers.h:2215, 2238).
+            if (!w.Settings.ReferenceProjection)
             {
-                w.Write("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]\n");
-                w.Write("        [return: UnsafeAccessorType(\"");
-                w.Write(eventSourceInteropType);
-                w.Write("\")]\n");
-                w.Write("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);\n\n");
-            }
-            w.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
-            w.Write("        ");
-            w.Write(eventSourceTypeFull);
-            w.Write(" MakeEventSource()\n        {\n");
-            w.Write("            _ = global::System.Threading.Interlocked.CompareExchange(\n");
-            w.Write("                location1: ref field,\n");
-            w.Write("                value: ");
-            if (isGenericEvent)
-            {
-                w.Write("Unsafe.As<");
+                w.Write("\nprivate ");
                 w.Write(eventSourceTypeFull);
-                w.Write(">(ctor(");
-                w.Write(objRef);
-                w.Write(", ");
-                w.Write(vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                w.Write("))");
-            }
-            else
-            {
-                w.Write("new ");
+                w.Write(" _eventSource_");
+                w.Write(name);
+                w.Write("\n{\n    get\n    {\n");
+                if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
+                {
+                    w.Write("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]\n");
+                    w.Write("        [return: UnsafeAccessorType(\"");
+                    w.Write(eventSourceInteropType);
+                    w.Write("\")]\n");
+                    w.Write("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);\n\n");
+                }
+                w.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
+                w.Write("        ");
                 w.Write(eventSourceTypeFull);
-                w.Write("(");
-                w.Write(objRef);
-                w.Write(", ");
-                w.Write(vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                w.Write(")");
+                w.Write(" MakeEventSource()\n        {\n");
+                w.Write("            _ = global::System.Threading.Interlocked.CompareExchange(\n");
+                w.Write("                location1: ref field,\n");
+                w.Write("                value: ");
+                if (isGenericEvent)
+                {
+                    w.Write("Unsafe.As<");
+                    w.Write(eventSourceTypeFull);
+                    w.Write(">(ctor(");
+                    w.Write(objRef);
+                    w.Write(", ");
+                    w.Write(vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    w.Write("))");
+                }
+                else
+                {
+                    w.Write("new ");
+                    w.Write(eventSourceTypeFull);
+                    w.Write("(");
+                    w.Write(objRef);
+                    w.Write(", ");
+                    w.Write(vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    w.Write(")");
+                }
+                w.Write(",\n");
+                w.Write("                comparand: null);\n\n");
+                w.Write("            return field;\n        }\n\n");
+                w.Write("        return field ?? MakeEventSource();\n    }\n}\n");
             }
-            w.Write(",\n");
-            w.Write("                comparand: null);\n\n");
-            w.Write("            return field;\n        }\n\n");
-            w.Write("        return field ?? MakeEventSource();\n    }\n}\n");
 
             // Emit the public/protected event with Subscribe/Unsubscribe.
             w.Write("\n");
@@ -700,12 +746,20 @@ internal static partial class CodeWriters
             w.Write(" ");
             w.Write(name);
             w.Write("\n{\n");
-            w.Write("    add => _eventSource_");
-            w.Write(name);
-            w.Write(".Subscribe(value);\n");
-            w.Write("    remove => _eventSource_");
-            w.Write(name);
-            w.Write(".Unsubscribe(value);\n");
+            if (w.Settings.ReferenceProjection)
+            {
+                w.Write("    add => throw null;\n");
+                w.Write("    remove => throw null;\n");
+            }
+            else
+            {
+                w.Write("    add => _eventSource_");
+                w.Write(name);
+                w.Write(".Subscribe(value);\n");
+                w.Write("    remove => _eventSource_");
+                w.Write(name);
+                w.Write(".Unsubscribe(value);\n");
+            }
             w.Write("}\n");
         }
     }
