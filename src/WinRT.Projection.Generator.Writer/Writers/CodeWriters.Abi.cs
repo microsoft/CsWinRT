@@ -363,7 +363,7 @@ internal static partial class CodeWriters
             w.Write(callName);
             w.Write(", (int)__");
             w.Write(raw);
-            w.Write("Length);\n");
+            w.Write("Size);\n");
         }
         w.Write("\n");
 
@@ -1490,7 +1490,7 @@ internal static partial class CodeWriters
                     w.Write("uint ");
                     w.Write("__");
                     w.Write(p.Parameter.Name ?? "param");
-                    w.Write("Length, ");
+                    w.Write("Size, ");
                     if (isRefElem)
                     {
                         w.Write("void* ");
@@ -2206,7 +2206,7 @@ internal static partial class CodeWriters
                 w.Write(ptr);
                 w.Write(", (int)__");
                 w.Write(raw);
-                w.Write("Length);\n");
+                w.Write("Size);\n");
             }
             else
             {
@@ -2227,17 +2227,17 @@ internal static partial class CodeWriters
                 w.Write(raw);
                 w.Write(" = __");
                 w.Write(raw);
-                w.Write("Length <= 16\n        ? __");
+                w.Write("Size <= 16\n        ? __");
                 w.Write(raw);
                 w.Write("_inlineArray[..(int)__");
                 w.Write(raw);
-                w.Write("Length]\n        : (__");
+                w.Write("Size]\n        : (__");
                 w.Write(raw);
                 w.Write("_arrayFromPool = global::System.Buffers.ArrayPool<");
                 w.Write(elementProjected);
                 w.Write(">.Shared.Rent((int)__");
                 w.Write(raw);
-                w.Write("Length));\n");
+                w.Write("Size));\n");
             }
         }
         w.Write("    try\n    {\n");
@@ -2283,7 +2283,7 @@ internal static partial class CodeWriters
             w.Write(raw);
             w.Write("(null, __");
             w.Write(raw);
-            w.Write("Length, ");
+            w.Write("Size, ");
             w.Write(dataCastExpr);
             w.Write(", __");
             w.Write(raw);
