@@ -186,11 +186,15 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {kv} item");
         EmitUnsafeAccessor(w, "GetEnumerator", $"IEnumerator<{kvNested}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
 
-        w.Write($"\npublic {v} this[{k} key]\n{{\n    get => {prefix}Item(null, {objRefName}, key);\n    set => {prefix}Item(null, {objRefName}, key, value);\n}}\n");
+        // Public member emission order matches C++ write_dictionary_members_using_static_abi_methods
+        // (code_writers.h:3677-3694): Keys, Values, Count, IsReadOnly, this[], Add(K,V),
+        // ContainsKey, Remove(K), TryGetValue, Add(KVP), Clear, Contains, CopyTo,
+        // ICollection<KVP>.Remove, GetEnumerator. WinRT IMap<K,V> vtable order, NOT alphabetical.
         w.Write($"public ICollection<{k}> Keys => {prefix}Keys(null, {objRefName});\n");
         w.Write($"public ICollection<{v}> Values => {prefix}Values(null, {objRefName});\n");
         w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
         w.Write("public bool IsReadOnly => false;\n");
+        w.Write($"public {v} this[{k} key]\n{{\n    get => {prefix}Item(null, {objRefName}, key);\n    set => {prefix}Item(null, {objRefName}, key, value);\n}}\n");
         w.Write($"public void Add({k} key, {v} value) => {prefix}Add(null, {objRefName}, key, value);\n");
         w.Write($"public bool ContainsKey({k} key) => {prefix}ContainsKey(null, {objRefName}, key);\n");
         w.Write($"public bool Remove({k} key) => {prefix}Remove(null, {objRefName}, key);\n");
@@ -313,18 +317,22 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {t} item");
         EmitUnsafeAccessor(w, "GetEnumerator", $"IEnumerator<{t}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
 
-        w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"ListItem\")]\n");
-        w.Write($"public {t} this[int index]\n{{\n    get => {prefix}Item(null, {objRefName}, index);\n    set => {prefix}Item(null, {objRefName}, index, value);\n}}\n");
+        // Public member emission order matches C++ write_list_members_using_static_abi_methods
+        // (code_writers.h:4017-4046): Count, IsReadOnly, this[], IndexOf, Insert, RemoveAt,
+        // Add, Clear, Contains, CopyTo, Remove. This is the WinRT IVector<T> vtable order
+        // mapped to IList<T>, NOT alphabetical.
         w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
         w.Write("public bool IsReadOnly => false;\n");
+        w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"ListItem\")]\n");
+        w.Write($"public {t} this[int index]\n{{\n    get => {prefix}Item(null, {objRefName}, index);\n    set => {prefix}Item(null, {objRefName}, index, value);\n}}\n");
+        w.Write($"public int IndexOf({t} item) => {prefix}IndexOf(null, {objRefName}, item);\n");
+        w.Write($"public void Insert(int index, {t} item) => {prefix}Insert(null, {objRefName}, index, item);\n");
+        w.Write($"public void RemoveAt(int index) => {prefix}RemoveAt(null, {objRefName}, index);\n");
         w.Write($"public void Add({t} item) => {prefix}Add(null, {objRefName}, item);\n");
         w.Write($"public void Clear() => {prefix}Clear(null, {objRefName});\n");
         w.Write($"public bool Contains({t} item) => {prefix}Contains(null, {objRefName}, item);\n");
         w.Write($"public void CopyTo({t}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, array, arrayIndex);\n");
-        w.Write($"public int IndexOf({t} item) => {prefix}IndexOf(null, {objRefName}, item);\n");
-        w.Write($"public void Insert(int index, {t} item) => {prefix}Insert(null, {objRefName}, index, item);\n");
         w.Write($"public bool Remove({t} item) => {prefix}Remove(null, {objRefName}, item);\n");
-        w.Write($"public void RemoveAt(int index) => {prefix}RemoveAt(null, {objRefName}, index);\n");
         w.Write($"public IEnumerator<{t}> GetEnumerator() => {enumerablePrefix}GetEnumerator(null, {enumerableObjRefName});\n");
         w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }

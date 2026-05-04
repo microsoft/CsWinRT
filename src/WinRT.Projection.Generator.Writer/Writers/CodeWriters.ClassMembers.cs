@@ -23,9 +23,9 @@ internal static partial class CodeWriters
 
         HashSet<string> writtenMethods = new(System.StringComparer.Ordinal);
         // For properties: track per-name accessor presence so we can merge get/set across interfaces.
-        // Use a SortedDictionary so the per-class property emission order is alphabetical
-        // by name (matches C++ std::map iteration order).
-        SortedDictionary<string, PropertyAccessorState> propertyState = new(System.StringComparer.Ordinal);
+        // Use insertion-order Dictionary so the per-class property emission order matches the
+        // .winmd metadata definition order (mirrors C++ which uses type.PropertyList() order).
+        Dictionary<string, PropertyAccessorState> propertyState = new(System.StringComparer.Ordinal);
         HashSet<string> writtenEvents = new(System.StringComparer.Ordinal);
         HashSet<TypeDefinition> writtenInterfaces = new();
 
