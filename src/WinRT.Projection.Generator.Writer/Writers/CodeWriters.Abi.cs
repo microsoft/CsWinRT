@@ -4236,7 +4236,7 @@ internal static partial class CodeWriters
             w.Write(")");
 
             // Emit the body if we can handle this case. Slot comes from the method's WinMD index.
-            EmitAbiMethodBodyIfSimple(w, sig, methodSlot[method]);
+            EmitAbiMethodBodyIfSimple(w, sig, methodSlot[method], isNoExcept: Helpers.IsNoExcept(method));
         }
 
         // Emit property accessors. Each getter / setter consumes one vtable slot — looked up from the underlying method.
@@ -4246,6 +4246,10 @@ internal static partial class CodeWriters
             (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
             string propType = WritePropType(w, prop);
             (MethodDefinition? gMethod, MethodDefinition? sMethod) = (getter, setter);
+            // Mirrors C++ helpers.h:46-49: the [NoException] check on properties applies to BOTH
+            // accessors of the property (the attribute is on the property itself, not on the
+            // individual accessors).
+            bool propIsNoExcept = Helpers.IsNoExcept(prop);
             if (gMethod is not null)
             {
                 MethodSig getSig = new(gMethod);
@@ -4256,7 +4260,7 @@ internal static partial class CodeWriters
                 w.Write(" ");
                 w.Write(pname);
                 w.Write("(WindowsRuntimeObjectReference thisReference)");
-                EmitAbiMethodBodyIfSimple(w, getSig, methodSlot[gMethod]);
+                EmitAbiMethodBodyIfSimple(w, getSig, methodSlot[gMethod], isNoExcept: propIsNoExcept);
             }
             if (sMethod is not null)
             {
@@ -4271,7 +4275,7 @@ internal static partial class CodeWriters
                 // of T[] (the getter's return-type form).
                 w.Write(WritePropType(w, prop, isSetProperty: true));
                 w.Write(" value)");
-                EmitAbiMethodBodyIfSimple(w, setSig, methodSlot[sMethod], paramNameOverride: "value");
+                EmitAbiMethodBodyIfSimple(w, setSig, methodSlot[sMethod], paramNameOverride: "value", isNoExcept: propIsNoExcept);
             }
         }
 
@@ -4480,7 +4484,13 @@ internal static partial class CodeWriters
     /// Emits a real method body for the cases we can fully marshal, otherwise emits
     /// the 'throw null!' stub. Trailing newline is included.
     /// </summary>
-    private static void EmitAbiMethodBodyIfSimple(TypeWriter w, MethodSig sig, int slot, string? paramNameOverride = null)
+    /// <param name="isNoExcept">When true, the vtable call is emitted WITHOUT the
+    /// <c>RestrictedErrorInfo.ThrowExceptionForHR(...)</c> wrap. Mirrors C++
+    /// <c>code_writers.h:6725</c> which checks <c>has_noexcept_attr</c>
+    /// (<c>is_noexcept(MethodDef)</c> / <c>is_noexcept(Property)</c> in <c>helpers.h:41-49</c>):
+    /// methods/properties annotated with <c>[Windows.Foundation.Metadata.NoExceptionAttribute]</c>
+    /// (or remove-overload methods) contractually return <c>S_OK</c>, so the wrap is omitted.</param>
+    private static void EmitAbiMethodBodyIfSimple(TypeWriter w, MethodSig sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
@@ -5220,7 +5230,16 @@ internal static partial class CodeWriters
         }
 
         w.Write(callIndent);
-        w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
+        // Mirrors C++ code_writers.h:6725 - omit the ThrowExceptionForHR wrap when the
+        // method/property is [NoException] (its HRESULT is contractually S_OK).
+        if (!isNoExcept)
+        {
+            w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
+        }
+        else
+        {
+            w.Write("(*(delegate* unmanaged[MemberFunction]<");
+        }
         w.Write(fp.ToString());
         w.Write(">**)ThisPtr)[");
         w.Write(slot);
@@ -5318,7 +5337,8 @@ internal static partial class CodeWriters
         {
             w.Write(",\n  &__retval");
         }
-        w.Write("));\n");
+        // Close the vtable call. One less ')' when noexcept (no ThrowExceptionForHR wrap).
+        w.Write(isNoExcept ? ");\n" : "));\n");
 
         // After call: write back Out params to caller's 'out' var.
         for (int i = 0; i < sig.Params.Count; i++)
