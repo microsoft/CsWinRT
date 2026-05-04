@@ -2556,6 +2556,17 @@ internal static partial class CodeWriters
                 w.Write("__");
                 w.Write(raw);
             }
+            // Non-blittable struct (e.g. authored BasicStruct with string fields): marshal
+            // the local managed value through <Type>Marshaller.ConvertToUnmanaged before
+            // writing it into the *out ABI struct slot. Mirrors C++ marshaler.write_marshal_from_managed
+            // (code_writers.h:7901-7910): "Marshaller.ConvertToUnmanaged(local)".
+            else if (IsComplexStruct(underlying))
+            {
+                w.Write(GetMarshallerFullName(w, underlying));
+                w.Write(".ConvertToUnmanaged(__");
+                w.Write(raw);
+                w.Write(")");
+            }
             else
             {
                 w.Write("__");
