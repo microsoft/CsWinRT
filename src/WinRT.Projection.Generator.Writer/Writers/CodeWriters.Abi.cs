@@ -3527,10 +3527,16 @@ internal static partial class CodeWriters
             }
             else
             {
+                // Mirror C++ write_convert_to_managed_method_struct (code_writers.h:4536-4540):
+                // - In component mode: emit object initializer with named field assignments
+                //   (positional ctor not always available on authored types).
+                // - In non-component mode: emit positional constructor (matches the auto-generated
+                //   primary constructor on projected struct types).
+                bool useObjectInitializer = w.Settings.Component;
                 w.Write(" value)\n    {\n");
                 w.Write("        return new ");
                 WriteTypedefName(w, type, TypedefNameType.Projected, true);
-                w.Write("(){\n");
+                w.Write(useObjectInitializer ? "(){\n" : "(\n");
                 bool first = true;
                 foreach (FieldDefinition field in type.Fields)
                 {
@@ -3540,8 +3546,11 @@ internal static partial class CodeWriters
                     if (!first) { w.Write(",\n"); }
                     first = false;
                     w.Write("            ");
-                    w.Write(fname);
-                    w.Write(" = ");
+                    if (useObjectInitializer)
+                    {
+                        w.Write(fname);
+                        w.Write(" = ");
+                    }
                     if (IsString(ft))
                     {
                         w.Write("HStringMarshaller.ConvertToManaged(value.");
@@ -3579,7 +3588,7 @@ internal static partial class CodeWriters
                         w.Write(fname);
                     }
                 }
-                w.Write("\n        };\n    }\n");
+                w.Write(useObjectInitializer ? "\n        };\n    }\n" : "\n        );\n    }\n");
             }
 
             // Dispose: free non-blittable fields.
