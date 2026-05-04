@@ -35,6 +35,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTRcwFactoryFallbackGeneratorForceOptOut Condition="'$(CsWinRTRcwFactoryFallbackGeneratorForceOptOut)' != 'true'">false</CsWinRTRcwFactoryFallbackGeneratorForceOptOut>
 
     <!--
+      Default path to the internal interop WinMD shipped with the package. This is referenced
+      by both the legacy CsWinRTGenerateProjection target and the CsWinRT 3.0 SDK projection
+      generator, so it must be set unconditionally rather than only inside a single target.
+    -->
+    <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WindowsRuntime.Internal.winmd'))</CsWinRTInteropMetadata>
+
+    <!--
       These properties are defined in this property group and not in the 'CsWinRTGenerateProjection'
       target, because they are also needed in authoring scenarios (which will not run that target).
     -->
@@ -268,7 +275,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 @(CsWinRTIncludeItems->'-include %(Identity)', '&#x0d;&#x0a;')
       </CsWinRTFilters>
 
-      <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WindowsRuntime.Internal.winmd'))</CsWinRTInteropMetadata>
       <CsWinRTIncludeWinRTInterop Condition="$(CsWinRTFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTFilters.Contains('-include Windows&#x0a;'))">
 -input $(CsWinRTInteropMetadata)
 -include WindowsRuntime.Internal
