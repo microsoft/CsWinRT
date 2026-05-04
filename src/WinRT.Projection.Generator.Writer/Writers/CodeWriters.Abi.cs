@@ -1760,7 +1760,20 @@ internal static partial class CodeWriters
         // and the proper Do_Abi_add_*/Do_Abi_remove_* bodies (mirrors C++ write_event_abi_invoke).
         System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition>? eventMap = BuildEventMethodMap(type);
 
-        foreach (MethodDefinition method in type.Methods)
+        // Build sets of property accessors and event accessors so the first loop below can
+        // iterate "regular" methods (non-property, non-event) only. C++ emits Do_Abi bodies in
+        // this order: methods first, then properties (setter before getter per write_property_abi_invoke
+        // at code_writers.h:8245), then events. Mine previously emitted them in pure metadata
+        // (slot) order which matched neither truth nor C++.
+        System.Collections.Generic.HashSet<MethodDefinition> propertyAccessors = new();
+        foreach (PropertyDefinition prop in type.Properties)
+        {
+            if (prop.GetMethod is MethodDefinition g) { propertyAccessors.Add(g); }
+            if (prop.SetMethod is MethodDefinition s) { propertyAccessors.Add(s); }
+        }
+
+        // Local helper to emit a single Do_Abi method body for a given MethodDefinition.
+        void EmitOneDoAbi(MethodDefinition method)
         {
             string vm = GetVMethodName(type, method);
             MethodSig sig = new(method);
@@ -1795,6 +1808,28 @@ internal static partial class CodeWriters
             {
                 EmitDoAbiBodyIfSimple(w, sig, ifaceFullName, mname);
             }
+        }
+
+        // 1. Regular methods (non-property, non-event), in metadata order.
+        foreach (MethodDefinition method in type.Methods)
+        {
+            if (propertyAccessors.Contains(method)) { continue; }
+            if (eventMap is not null && eventMap.ContainsKey(method)) { continue; }
+            EmitOneDoAbi(method);
+        }
+
+        // 2. Properties, in metadata order. Setter before getter per write_property_abi_invoke.
+        foreach (PropertyDefinition prop in type.Properties)
+        {
+            if (prop.SetMethod is MethodDefinition s) { EmitOneDoAbi(s); }
+            if (prop.GetMethod is MethodDefinition g) { EmitOneDoAbi(g); }
+        }
+
+        // 3. Events, in metadata order. Add then Remove (matches metadata order from BuildEventMethodMap).
+        foreach (EventDefinition evt in type.Events)
+        {
+            if (evt.AddMethod is MethodDefinition a) { EmitOneDoAbi(a); }
+            if (evt.RemoveMethod is MethodDefinition r) { EmitOneDoAbi(r); }
         }
         w.Write("}\n");
     }
