@@ -165,9 +165,6 @@ internal static partial class CodeWriters
         string prefix = "IDictionaryMethods_" + keyId + "_" + valId + "_";
         // The IEnumerable<KeyValuePair<K,V>> objref name (matches what WriteClassObjRefDefinitions emits transitively).
         string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + EscapeTypeNameForIdentifier(kvLong, stripGlobal: false) + "_";
-        string kvInteropArgs = "<#corlib>System-Collections-Generic-KeyValuePair'2<" + keyInteropArg + "|" + valInteropArg + ">";
-        string enumerableInteropType = "ABI.System.Collections.Generic.<#corlib>IEnumerable'1<" + kvInteropArgs + ">Methods, WinRT.Interop";
-        string enumerablePrefix = "IEnumerableMethods_System_Collections_Generic_KeyValuePair_" + keyId + "__" + valId + "__";
 
         w.Write("\n");
         EmitUnsafeAccessor(w, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "");
@@ -184,12 +181,14 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "Contains", "bool", $"{prefix}Contains", interopType, $", {kv} item");
         EmitUnsafeAccessor(w, "CopyTo", "void", $"{prefix}CopyTo", interopType, $", WindowsRuntimeObjectReference enumObjRef, {kv}[] array, int arrayIndex");
         EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {kv} item");
-        EmitUnsafeAccessor(w, "GetEnumerator", $"IEnumerator<{kvNested}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
 
         // Public member emission order matches C++ write_dictionary_members_using_static_abi_methods
         // (code_writers.h:3677-3694): Keys, Values, Count, IsReadOnly, this[], Add(K,V),
         // ContainsKey, Remove(K), TryGetValue, Add(KVP), Clear, Contains, CopyTo,
-        // ICollection<KVP>.Remove, GetEnumerator. WinRT IMap<K,V> vtable order, NOT alphabetical.
+        // ICollection<KVP>.Remove. WinRT IMap<K,V> vtable order, NOT alphabetical.
+        // GetEnumerator is NOT emitted here — it's handled separately by IIterable<KVP>'s
+        // own EmitGenericEnumerable invocation (mirrors C++ which only emits GetEnumerator
+        // through write_enumerable_members_using_static_abi_methods).
         w.Write($"public ICollection<{k}> Keys => {prefix}Keys(null, {objRefName});\n");
         w.Write($"public ICollection<{v}> Values => {prefix}Values(null, {objRefName});\n");
         w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
@@ -205,8 +204,6 @@ internal static partial class CodeWriters
         w.Write($"public void CopyTo({kv}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, {enumerableObjRefName}, array, arrayIndex);\n");
         // ICollection<KVP>.Remove must be explicit to avoid clashing with IDictionary<K,V>.Remove(K key).
         w.Write($"bool ICollection<{kv}>.Remove({kv} item) => {prefix}Remove(null, {objRefName}, item);\n");
-        w.Write($"public IEnumerator<{kvNested}> GetEnumerator() => {enumerablePrefix}GetEnumerator(null, {enumerableObjRefName});\n");
-        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
 
     private static void EmitReadOnlyDictionary(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -214,39 +211,30 @@ internal static partial class CodeWriters
         if (args.Count != 2) { return; }
         string k = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[0], TypedefNameType.Projected, true)));
         string v = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, args[1], TypedefNameType.Projected, true)));
-        // See EmitDictionary comment about kv vs kvNested forms.
-        string kv = $"KeyValuePair<{k}, {v}>";
-        string kvNested = $"global::System.Collections.Generic.KeyValuePair<{k}, {v}>";
-        string kvLong = kvNested;
         string keyId = EncodeArgIdentifier(w, args[0]);
         string valId = EncodeArgIdentifier(w, args[1]);
         string keyInteropArg = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
         string valInteropArg = EncodeInteropTypeName(argSigs[1], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
         string prefix = "IReadOnlyDictionaryMethods_" + keyId + "_" + valId + "_";
-        // IEnumerable<KeyValuePair<K,V>> objref for the typed GetEnumerator.
-        string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + EscapeTypeNameForIdentifier(kvLong, stripGlobal: false) + "_";
-        string kvInteropArgs = "<#corlib>System-Collections-Generic-KeyValuePair'2<" + keyInteropArg + "|" + valInteropArg + ">";
-        string enumerableInteropType = "ABI.System.Collections.Generic.<#corlib>IEnumerable'1<" + kvInteropArgs + ">Methods, WinRT.Interop";
-        string enumerablePrefix = "IEnumerableMethods_System_Collections_Generic_KeyValuePair_" + keyId + "__" + valId + "__";
 
         w.Write("\n");
-        EmitUnsafeAccessor(w, "Keys", $"IEnumerable<{k}>", $"{prefix}Keys", interopType, "");
-        EmitUnsafeAccessor(w, "Values", $"IEnumerable<{v}>", $"{prefix}Values", interopType, "");
+        EmitUnsafeAccessor(w, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "");
+        EmitUnsafeAccessor(w, "Values", $"ICollection<{v}>", $"{prefix}Values", interopType, "");
         EmitUnsafeAccessor(w, "Count", "int", $"{prefix}Count", interopType, "");
         EmitUnsafeAccessor(w, "Item", v, $"{prefix}Item", interopType, $", {k} key");
         EmitUnsafeAccessor(w, "ContainsKey", "bool", $"{prefix}ContainsKey", interopType, $", {k} key");
         EmitUnsafeAccessor(w, "TryGetValue", "bool", $"{prefix}TryGetValue", interopType, $", {k} key, out {v} value");
-        EmitUnsafeAccessor(w, "GetEnumerator", $"IEnumerator<{kvNested}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
 
+        // GetEnumerator is NOT emitted here — it's handled separately by IIterable<KVP>'s
+        // EmitGenericEnumerable invocation (mirrors C++ which only emits GetEnumerator
+        // through write_enumerable_members_using_static_abi_methods).
         w.Write($"\npublic {v} this[{k} key] => {prefix}Item(null, {objRefName}, key);\n");
         w.Write($"public IEnumerable<{k}> Keys => {prefix}Keys(null, {objRefName});\n");
         w.Write($"public IEnumerable<{v}> Values => {prefix}Values(null, {objRefName});\n");
         w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
         w.Write($"public bool ContainsKey({k} key) => {prefix}ContainsKey(null, {objRefName}, key);\n");
         w.Write($"public bool TryGetValue({k} key, out {v} value) => {prefix}TryGetValue(null, {objRefName}, key, out value);\n");
-        w.Write($"public IEnumerator<{kvNested}> GetEnumerator() => {enumerablePrefix}GetEnumerator(null, {enumerableObjRefName});\n");
-        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
 
     private static void EmitReadOnlyList(TypeWriter w, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -257,20 +245,17 @@ internal static partial class CodeWriters
         string interopTypeArgs = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IReadOnlyList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IReadOnlyListMethods_" + elementId + "_";
-        string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + EscapeTypeNameForIdentifier(t, stripGlobal: false) + "_";
-        string enumerableInteropType = "ABI.System.Collections.Generic.<#corlib>IEnumerable'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
-        string enumerablePrefix = "IEnumerableMethods_" + elementId + "_";
 
         w.Write("\n");
         EmitUnsafeAccessor(w, "Count", "int", $"{prefix}Count", interopType, "");
         EmitUnsafeAccessor(w, "Item", t, $"{prefix}Item", interopType, ", int index");
-        EmitUnsafeAccessor(w, "GetEnumerator", $"IEnumerator<{t}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
 
+        // GetEnumerator is NOT emitted here — it's handled separately by IIterable<T>'s
+        // EmitGenericEnumerable invocation (mirrors C++ which only emits GetEnumerator
+        // through write_enumerable_members_using_static_abi_methods).
         w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"ReadOnlyListItem\")]\n");
         w.Write($"public {t} this[int index] => {prefix}Item(null, {objRefName}, index);\n");
         w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
-        w.Write($"public IEnumerator<{t}> GetEnumerator() => {enumerablePrefix}GetEnumerator(null, {enumerableObjRefName});\n");
-        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
 
     /// <summary>
@@ -298,10 +283,6 @@ internal static partial class CodeWriters
         string interopTypeArgs = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IListMethods_" + elementId + "_";
-        // The IEnumerable<T> objref name (matches what WriteClassObjRefDefinitions emits transitively).
-        string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + EscapeTypeNameForIdentifier(t, stripGlobal: false) + "_";
-        string enumerableInteropType = "ABI.System.Collections.Generic.<#corlib>IEnumerable'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
-        string enumerablePrefix = "IEnumerableMethods_" + elementId + "_";
 
         w.Write("\n");
         EmitUnsafeAccessor(w, "Count", "int", $"{prefix}Count", interopType, "");
@@ -315,12 +296,13 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "Contains", "bool", $"{prefix}Contains", interopType, $", {t} item");
         EmitUnsafeAccessor(w, "CopyTo", "void", $"{prefix}CopyTo", interopType, $", {t}[] array, int arrayIndex");
         EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {t} item");
-        EmitUnsafeAccessor(w, "GetEnumerator", $"IEnumerator<{t}>", $"{enumerablePrefix}GetEnumerator", enumerableInteropType, "");
 
         // Public member emission order matches C++ write_list_members_using_static_abi_methods
         // (code_writers.h:4017-4046): Count, IsReadOnly, this[], IndexOf, Insert, RemoveAt,
         // Add, Clear, Contains, CopyTo, Remove. This is the WinRT IVector<T> vtable order
-        // mapped to IList<T>, NOT alphabetical.
+        // mapped to IList<T>, NOT alphabetical. GetEnumerator is NOT emitted here — it's
+        // handled separately by IIterable<T>'s own EmitGenericEnumerable invocation
+        // (mirrors C++ which only emits GetEnumerator through write_enumerable_members_using_static_abi_methods).
         w.Write($"public int Count => {prefix}Count(null, {objRefName});\n");
         w.Write("public bool IsReadOnly => false;\n");
         w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"ListItem\")]\n");
@@ -333,8 +315,6 @@ internal static partial class CodeWriters
         w.Write($"public bool Contains({t} item) => {prefix}Contains(null, {objRefName}, item);\n");
         w.Write($"public void CopyTo({t}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, array, arrayIndex);\n");
         w.Write($"public bool Remove({t} item) => {prefix}Remove(null, {objRefName}, item);\n");
-        w.Write($"public IEnumerator<{t}> GetEnumerator() => {enumerablePrefix}GetEnumerator(null, {enumerableObjRefName});\n");
-        w.Write("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();\n");
     }
 
     /// <summary>
@@ -374,6 +354,8 @@ internal static partial class CodeWriters
         w.Write("public void Remove(object value) => throw null!;\n");
         w.Write("public void RemoveAt(int index) => throw null!;\n");
         w.Write("public void CopyTo(global::System.Array array, int index) => throw null!;\n");
-        w.Write("public global::System.Collections.IEnumerator GetEnumerator() => throw null!;\n");
+        // GetEnumerator is NOT emitted here — it's handled separately by IBindableIterable's
+        // EmitNonGenericEnumerable invocation (mirrors C++ which only emits GetEnumerator
+        // through write_nongeneric_enumerable_members_using_static_abi_methods).
     }
 }

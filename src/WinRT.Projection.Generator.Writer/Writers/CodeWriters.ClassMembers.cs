@@ -29,41 +29,6 @@ internal static partial class CodeWriters
         HashSet<string> writtenEvents = new(System.StringComparer.Ordinal);
         HashSet<TypeDefinition> writtenInterfaces = new();
 
-        // Pre-pass: walk all (transitive) implemented interfaces to identify mapped interfaces
-        // that are *subsumed* by another mapped interface in the implemented set (e.g. IIterable`1
-        // is subsumed by IVector`1 because IList<T>'s stub members already cover IEnumerable<T>'s).
-        // Mark subsumed interfaces as already-written so the recursion skips them.
-        HashSet<TypeDefinition> allMappedImplemented = new();
-        CollectAllMappedInterfaces(type, allMappedImplemented);
-        bool hasIVector = HasMapped(allMappedImplemented, "Windows.Foundation.Collections", "IVector`1");
-        bool hasIVectorView = HasMapped(allMappedImplemented, "Windows.Foundation.Collections", "IVectorView`1");
-        bool hasIMap = HasMapped(allMappedImplemented, "Windows.Foundation.Collections", "IMap`2");
-        bool hasIMapView = HasMapped(allMappedImplemented, "Windows.Foundation.Collections", "IMapView`2");
-        bool hasIBindableVector = HasMapped(allMappedImplemented, "Microsoft.UI.Xaml.Interop", "IBindableVector")
-                                  || HasMapped(allMappedImplemented, "Windows.UI.Xaml.Interop", "IBindableVector");
-        if (hasIVector || hasIVectorView || hasIMap || hasIMapView)
-        {
-            // IIterable`1 is subsumed by any of the above.
-            foreach (TypeDefinition td in allMappedImplemented)
-            {
-                if (td.Namespace?.Value == "Windows.Foundation.Collections" && td.Name?.Value == "IIterable`1")
-                {
-                    _ = writtenInterfaces.Add(td);
-                }
-            }
-        }
-        if (hasIBindableVector)
-        {
-            foreach (TypeDefinition td in allMappedImplemented)
-            {
-                if ((td.Namespace?.Value == "Microsoft.UI.Xaml.Interop" || td.Namespace?.Value == "Windows.UI.Xaml.Interop")
-                    && td.Name?.Value == "IBindableIterable")
-                {
-                    _ = writtenInterfaces.Add(td);
-                }
-            }
-        }
-
         // Mirror C++ class member ordering: emit GetInterface()/GetDefaultInterface() per
         // interface inside WriteInterfaceMembersRecursive (right before that interface's
         // members), instead of one upfront block. This interleaves the GetInterface() impls
@@ -250,32 +215,6 @@ internal static partial class CodeWriters
         return sb.ToString();
     }
 
-    private static bool HasMapped(HashSet<TypeDefinition> set, string ns, string name)
-    {
-        foreach (TypeDefinition td in set)
-        {
-            if (td.Namespace?.Value == ns && td.Name?.Value == name) { return true; }
-        }
-        return false;
-    }
-
-    private static void CollectAllMappedInterfaces(TypeDefinition declaringType, HashSet<TypeDefinition> result)
-    {
-        foreach (InterfaceImplementation impl in declaringType.Interfaces)
-        {
-            if (impl.Interface is null) { continue; }
-            TypeDefinition? td = ResolveInterface(impl.Interface);
-            if (td is null) { continue; }
-            string ns = td.Namespace?.Value ?? string.Empty;
-            string name = td.Name?.Value ?? string.Empty;
-            if (MappedTypes.Get(ns, name) is { HasCustomMembersOutput: true })
-            {
-                _ = result.Add(td);
-            }
-            CollectAllMappedInterfaces(td, result);
-        }
-    }
-
     private sealed class PropertyAccessorState
     {
         public bool HasGetter;
@@ -336,6 +275,36 @@ internal static partial class CodeWriters
             bool isOverridable = Helpers.IsOverridable(impl);
             bool isProtected = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "ProtectedAttribute");
 
+            // Substitute generic type arguments using the current generic context BEFORE emitting
+            // any references to this interface. This is critical for nested recursion: e.g. when
+            // emitting members for IObservableMap<string, object>'s base IMap<!0, !1>, we need to
+            // substitute !0/!1 with string/object so the generated code references
+            // IDictionary<string, object> instead of IDictionary<T0, T1>. Mirrors the C++ tool's
+            // writer.push_generic_args() stack inside for_typedef().
+            ITypeDefOrRef substitutedInterface = impl.Interface;
+            AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? nextInstance = null;
+            if (impl.Interface is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
+            {
+                if (currentInstance is not null)
+                {
+                    AsmResolver.DotNet.Signatures.TypeSignature subSig = gi.InstantiateGenericTypes(genCtx);
+                    if (subSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature subGi)
+                    {
+                        nextInstance = subGi;
+                        AsmResolver.DotNet.ITypeDefOrRef? newRef = subGi.ToTypeDefOrRef();
+                        if (newRef is not null) { substitutedInterface = newRef; }
+                    }
+                    else
+                    {
+                        nextInstance = gi;
+                    }
+                }
+                else
+                {
+                    nextInstance = gi;
+                }
+            }
+
             // Emit GetInterface() / GetDefaultInterface() impl for this interface BEFORE its
             // members (mirrors C++ write_class_interface at code_writers.h:4257-4280). For
             // overridable interfaces or non-exclusive direct interfaces, emit
@@ -343,16 +312,16 @@ internal static partial class CodeWriters
             // unsealed class with an exclusive default, emit "internal new GetDefaultInterface()".
             if (IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false))
             {
-                string giObjRefName = GetObjRefName(w, impl.Interface);
+                string giObjRefName = GetObjRefName(w, substitutedInterface);
                 w.Write("\nWindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
-                WriteInterfaceTypeNameForCcw(w, impl.Interface);
+                WriteInterfaceTypeNameForCcw(w, substitutedInterface);
                 w.Write(">.GetInterface()\n{\nreturn ");
                 w.Write(giObjRefName);
                 w.Write(".AsValue();\n}\n");
             }
             else if (Helpers.IsDefaultInterface(impl) && !classType.IsSealed && TypeCategorization.IsExclusiveTo(ifaceType))
             {
-                string giObjRefName = GetObjRefName(w, impl.Interface);
+                string giObjRefName = GetObjRefName(w, substitutedInterface);
                 bool hasBaseType = false;
                 if (classType.BaseType is not null)
                 {
@@ -367,15 +336,6 @@ internal static partial class CodeWriters
                 w.Write(".AsValue();\n}\n");
             }
 
-            // Determine the (possibly substituted) interface signature for the recursion.
-            AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? nextInstance = null;
-            if (impl.Interface is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
-            {
-                nextInstance = currentInstance is not null
-                    ? gi.InstantiateGenericTypes(genCtx) as AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature
-                    : gi;
-            }
-
             // For mapped interfaces with custom members output (e.g. IClosable -> IDisposable, IMap`2
             // -> IDictionary<K,V>), emit stubs for the C# interface's required members so the class
             // satisfies its inheritance contract. The runtime's adapter actually services them.
@@ -388,20 +348,8 @@ internal static partial class CodeWriters
                     // For generic interfaces, use the substituted nextInstance to compute the
                     // objref name so type arguments are concrete (matches the field name emitted
                     // by WriteClassObjRefDefinitions). For non-generic, fall back to impl.Interface.
-                    string objRefName;
-                    if (nextInstance is not null)
-                    {
-                        AsmResolver.DotNet.ITypeDefOrRef? specRef = nextInstance.ToTypeDefOrRef();
-                        objRefName = specRef is not null ? GetObjRefName(w, specRef) : GetObjRefName(w, impl.Interface);
-                    }
-                    else
-                    {
-                        objRefName = GetObjRefName(w, impl.Interface);
-                    }
+                    string objRefName = GetObjRefName(w, substitutedInterface);
                     WriteMappedInterfaceStubs(w, nextInstance, ifaceName, objRefName);
-                    // Mark sibling/parent mapped interfaces whose members are already covered
-                    // (e.g., IMap`2/IVector`1/etc. include the IIterable`1 GetEnumerator stubs).
-                    MarkCoveredMappedInterfaces(declaringType, ifaceName, writtenInterfaces);
                 }
                 continue;
             }
@@ -412,42 +360,6 @@ internal static partial class CodeWriters
             // Recurse into derived interfaces
             WriteInterfaceMembersRecursive(w, classType, ifaceType, nextInstance, writtenMethods, propertyState, writtenEvents, writtenInterfaces);
         }
-    }
-
-    /// <summary>
-    /// When emitting stubs for a mapped interface (e.g. IMap`2 -> IDictionary&lt;K,V&gt;), mark
-    /// other mapped interfaces whose member contracts are already covered (e.g. IIterable`1
-    /// -> IEnumerable&lt;T&gt;) so they don't get re-emitted later in the recursion.
-    /// </summary>
-    private static void MarkCoveredMappedInterfaces(TypeDefinition declaringType, string emittedName, HashSet<TypeDefinition> writtenInterfaces)
-    {
-        // IMap/IMapView/IVector/IVectorView all include the IIterable`1 GetEnumerator stubs.
-        bool coversIterable = emittedName is "IMap`2" or "IMapView`2" or "IVector`1" or "IVectorView`1";
-        // IBindableVector covers IBindableIterable.
-        bool coversBindableIterable = emittedName == "IBindableVector";
-
-        if (!coversIterable && !coversBindableIterable) { return; }
-
-        void Walk(TypeDefinition td)
-        {
-            foreach (InterfaceImplementation imp in td.Interfaces)
-            {
-                if (imp.Interface is null) { continue; }
-                TypeDefinition? rt = ResolveInterface(imp.Interface);
-                if (rt is null) { continue; }
-
-                string n = rt.Name?.Value ?? string.Empty;
-                string ns = rt.Namespace?.Value ?? string.Empty;
-                if ((coversIterable && ns == "Windows.Foundation.Collections" && n == "IIterable`1") ||
-                    (coversBindableIterable && ns == "Microsoft.UI.Xaml.Interop" && n == "IBindableIterable") ||
-                    (coversBindableIterable && ns == "Windows.UI.Xaml.Interop" && n == "IBindableIterable"))
-                {
-                    _ = writtenInterfaces.Add(rt);
-                }
-                Walk(rt);
-            }
-        }
-        Walk(declaringType);
     }
 
     private static TypeDefinition? ResolveInterface(ITypeDefOrRef typeRef)
