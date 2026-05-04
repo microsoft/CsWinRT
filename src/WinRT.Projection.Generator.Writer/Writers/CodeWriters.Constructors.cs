@@ -247,7 +247,10 @@ internal static partial class CodeWriters
         }
         else
         {
-            w.Write("    public override unsafe void Invoke(WindowsRuntimeActivationArgsReference additionalParameters, out void* retval)\n    {\n");
+            // Sealed Invoke signature is multi-line. Mirrors C++ at code_writers.h:6838.
+            w.Write("    public override unsafe void Invoke(\n");
+            w.Write("      WindowsRuntimeActivationArgsReference additionalParameters,\n");
+            w.Write("      out void* retval)\n    {\n");
         }
         w.Write("        using WindowsRuntimeObjectReferenceValue activationFactoryValue = ");
         w.Write(factoryObjRefName);
