@@ -808,18 +808,15 @@ internal static partial class CodeWriters
                 w.Write(" = default;\n");
             }
         }
-        // String params: declare void* locals (initialized later inside try).
+        // String params: NO heap-allocating __<x> locals here. The fast path uses
+        // 'fixed(void* _<x> = x) { HStringMarshaller.ConvertToUnmanagedUnsafe(...,
+        // out HStringReference __<x>); ... }' inside the call site (mirrors C++
+        // abi_marshaler::is_pinnable=true path used by write_native_delegate /
+        // write_abi_method_call_marshalers).
         bool hasStringParams = false;
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (IsString(sig.Params[i].Type))
-            {
-                string raw = sig.Params[i].Parameter.Name ?? "param";
-                w.Write("        void* __");
-                w.Write(raw);
-                w.Write(" = default;\n");
-                hasStringParams = true;
-            }
+            if (IsString(sig.Params[i].Type)) { hasStringParams = true; break; }
         }
 
         // Declare return value local.
@@ -838,24 +835,15 @@ internal static partial class CodeWriters
         {
             if (IsComplexStruct(sig.Params[ci].Type)) { hasComplexStructInputs = true; break; }
         }
-        bool needsTryFinally = hasStringParams || returnIsString || returnIsRefType || returnIsGenericInstance || returnIsComplexStruct || hasComplexStructInputs;
+        // hasStringParams alone does not force a try/finally - the fast path uses fixed +
+        // HStringReference (stack-only, no Free() call needed). It's only the OUT-side return
+        // value cleanup that requires try/finally.
+        bool needsTryFinally = returnIsString || returnIsRefType || returnIsGenericInstance || returnIsComplexStruct || hasComplexStructInputs;
         if (needsTryFinally) { w.Write("        try\n        {\n"); }
         string indent = needsTryFinally ? "            " : "        ";
 
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            if (IsString(sig.Params[i].Type))
-            {
-                string raw = sig.Params[i].Parameter.Name ?? "param";
-                string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
-                w.Write(indent);
-                w.Write("__");
-                w.Write(raw);
-                w.Write(" = HStringMarshaller.ConvertToUnmanaged(");
-                w.Write(callName);
-                w.Write(");\n");
-            }
-        }
+        // Drop the old slow-path "__<x> = HStringMarshaller.ConvertToUnmanaged(<x>);" loop;
+        // the fast path emits the conversion inside the fixed() block at the call site below.
 
         // Inside try (if applicable): assign __<name> for complex-struct In params via marshaller.
         // Mirrors truth: '__<name> = <Marshaller>.ConvertToUnmanaged(<name>);'
@@ -876,26 +864,60 @@ internal static partial class CodeWriters
             w.Write(");\n");
         }
 
-        // Open fixed blocks for PassArray/FillArray params (blittable element only).
+        // Open a SINGLE combined fixed block for ALL string input params + PassArray/
+        // FillArray params (mirrors C++ write_abi_method_call_marshalers fixed-block
+        // emission). Each pinnable variable becomes "_<x> = <expr>" inside the block.
         int fixedNesting = 0;
-        for (int i = 0; i < sig.Params.Count; i++)
+        bool hasPinnable = hasStringParams;
+        if (!hasPinnable)
         {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
-            string raw = p.Parameter.Name ?? "param";
-            string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamCategory cat = ParamHelpers.GetParamCategory(sig.Params[i]);
+                if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray) { hasPinnable = true; break; }
+            }
+        }
+        if (hasPinnable)
+        {
             w.Write(indent);
-            w.Write(new string(' ', fixedNesting * 4));
-            w.Write("fixed(void* _");
-            w.Write(raw);
-            w.Write(" = ");
-            w.Write(callName);
+            w.Write("fixed(void* ");
+            bool firstPin = true;
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                bool isStr = IsString(p.Type);
+                bool isArr = cat == ParamCategory.PassArray || cat == ParamCategory.FillArray;
+                if (!isStr && !isArr) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+                if (!firstPin) { w.Write(", "); }
+                firstPin = false;
+                w.Write("_");
+                w.Write(raw);
+                w.Write(" = ");
+                w.Write(callName);
+            }
             w.Write(")\n");
             w.Write(indent);
-            w.Write(new string(' ', fixedNesting * 4));
             w.Write("{\n");
-            fixedNesting++;
+            fixedNesting = 1;
+            // Inside the fixed block: emit HStringMarshaller.ConvertToUnmanagedUnsafe for
+            // each string input. The HStringReference local lives stack-only here.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                if (!IsString(sig.Params[i].Type)) { continue; }
+                string raw = sig.Params[i].Parameter.Name ?? "param";
+                string callName = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+                w.Write(indent);
+                w.Write("    HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
+                w.Write(raw);
+                w.Write(", ");
+                w.Write(callName);
+                w.Write("?.Length, out HStringReference __");
+                w.Write(raw);
+                w.Write(");\n");
+            }
         }
 
         string callIndent = indent + new string(' ', fixedNesting * 4);
@@ -922,8 +944,10 @@ internal static partial class CodeWriters
             w.Write(",\n  ");
             if (IsString(p.Type))
             {
+                // String fast path: pass the HStringReference's HString handle directly.
                 w.Write("__");
                 w.Write(raw);
+                w.Write(".HString");
             }
             else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type))
             {
@@ -1033,16 +1057,7 @@ internal static partial class CodeWriters
         if (needsTryFinally)
         {
             w.Write("        }\n        finally\n        {\n");
-            for (int i = 0; i < sig.Params.Count; i++)
-            {
-                if (IsString(sig.Params[i].Type))
-                {
-                    string raw = sig.Params[i].Parameter.Name ?? "param";
-                    w.Write("            HStringMarshaller.Free(__");
-                    w.Write(raw);
-                    w.Write(");\n");
-                }
-            }
+            // String inputs use the stack-only HStringReference fast path so no Free() needed.
             if (returnIsString)
             {
                 w.Write("            HStringMarshaller.Free(__retval);\n");
