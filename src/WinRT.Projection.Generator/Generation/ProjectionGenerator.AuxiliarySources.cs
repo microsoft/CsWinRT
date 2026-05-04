@@ -208,7 +208,7 @@ internal partial class ProjectionGenerator
         _ = sb.AppendLine("    /// </summary>");
         _ = sb.AppendLine("    public static nint GetActivationFactory(string activatableClassId)");
         _ = sb.AppendLine("    {");
-        _ = sb.AppendLine("        return (nint)GetActivationFactory(activatableClassId.AsSpan());");
+        _ = sb.AppendLine("        return (nint)GetActivationFactory(global::System.MemoryExtensions.AsSpan(activatableClassId));");
         _ = sb.AppendLine("    }");
         _ = sb.AppendLine("}");
 
