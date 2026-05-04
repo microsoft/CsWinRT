@@ -177,33 +177,6 @@ public static unsafe class WindowsRuntimeActivationFactory
     {
         activationFactory = null;
 
-        // Native-consumer setups produce a single 'WinRT.Component.dll' (the merged component
-        // projection) and route activation for any aggregated component through it. We try
-        // loading 'WinRT.Component.dll' before the prefix-based fallback so:
-        //
-        //   (1) Its module initializer runs first and sets the entry assembly. .NET TypeMap
-        //       discovery is then rooted at WinRT.Component.dll's union '[TypeMapAssemblyTarget]'
-        //       attributes, which cover every aggregated component plus shared infrastructure.
-        //       Per-component dlls' own module initializers run later and find the entry
-        //       assembly already set, so they don't override it.
-        //
-        //   (2) The merged 'ABI.WinRT.Component.ManagedExports.GetActivationFactory' dispatches
-        //       across each input component's namespaced 'ManagedExports'. A single load and
-        //       a single managed call dispatches activation for any class in the aggregate.
-        //
-        // If 'WinRT.Component.dll' is not deployed (e.g. direct managed consumption of a single
-        // component without an aggregator), this attempt fails harmlessly and we fall through
-        // to the prefix-based search for the per-component dll.
-        if (WindowsRuntimeDllModule.TryLoad("WinRT.Component.dll", out WindowsRuntimeDllModule? mergedComponentModule))
-        {
-            HRESULT mergedHresult = mergedComponentModule.GetActivationFactoryUnsafe(runtimeClassName, out activationFactory);
-
-            if (mergedHresult.Succeeded)
-            {
-                return mergedHresult;
-            }
-        }
-
         ReadOnlySpan<char> moduleName = runtimeClassName;
 
         // This method is performing manifest-free Windows Runtime activation. That is, we don't have
