@@ -13,12 +13,14 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 /// <param name="referencesWithoutProjections">The reference assembly paths excluding projection assemblies.</param>
 /// <param name="hasTypesToProject">Whether any types were found to project.</param>
 /// <param name="componentAssemblyNames">Sorted simple names of all input <c>[WindowsRuntimeComponentAssembly]</c> references (component-mode only).</param>
+/// <param name="componentNamespacePrefixes">Per-component top-level namespace segments (component-mode only).</param>
 internal sealed class ProjectionGeneratorProcessingState(
     string sourcesFolder,
     string rspFilePath,
     string[] referencesWithoutProjections,
     bool hasTypesToProject = true,
-    IReadOnlyList<string>? componentAssemblyNames = null)
+    IReadOnlyList<string>? componentAssemblyNames = null,
+    IReadOnlyDictionary<string, IReadOnlyList<string>>? componentNamespacePrefixes = null)
 {
     /// <summary>
     /// Gets the path to the folder where sources will be generated.
@@ -47,4 +49,20 @@ internal sealed class ProjectionGeneratorProcessingState(
     /// (i.e. producing <c>WinRT.Component.dll</c>).
     /// </summary>
     public IReadOnlyList<string> ComponentAssemblyNames { get; } = componentAssemblyNames ?? [];
+
+    /// <summary>
+    /// Per-component top-level namespace segments observed in the corresponding
+    /// <c>.winmd</c> file. The merged activation dispatcher uses these to short-circuit
+    /// to the correct component's <c>ManagedExports.GetActivationFactory</c> based on
+    /// the first segment of the requested runtime class name, instead of walking all
+    /// components linearly.
+    /// </summary>
+    /// <remarks>
+    /// Indexed by component assembly simple name (matches <see cref="ComponentAssemblyNames"/>).
+    /// Each value is the set of distinct first-segment namespace tokens contributed by that
+    /// component. When a runtime class name's first segment doesn't match any entry here,
+    /// the dispatcher falls back to iterating all components.
+    /// </remarks>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> ComponentNamespacePrefixes { get; } =
+        componentNamespacePrefixes ?? new Dictionary<string, IReadOnlyList<string>>();
 }

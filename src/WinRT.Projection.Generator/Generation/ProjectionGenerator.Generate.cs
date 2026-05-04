@@ -51,7 +51,8 @@ internal partial class ProjectionGenerator
             out string rspFile,
             out HashSet<string> projectionReferenceAssemblies,
             out bool hasTypesToProject,
-            out List<string> componentAssemblyNames);
+            out List<string> componentAssemblyNames,
+            out Dictionary<string, IReadOnlyList<string>> componentNamespacePrefixes);
 
         string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
 
@@ -60,7 +61,8 @@ internal partial class ProjectionGenerator
             rspFile,
             referencesWithoutProjections,
             hasTypesToProject,
-            componentAssemblyNames);
+            componentAssemblyNames,
+            componentNamespacePrefixes);
     }
 
     /// <summary>
@@ -123,13 +125,15 @@ internal partial class ProjectionGenerator
     /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used to generate the response file.</param>
     /// <param name="hasTypesToProject">Whether any types were found to include in the projection.</param>
     /// <param name="componentAssemblyNames">Sorted simple names of input <c>[WindowsRuntimeComponentAssembly]</c> references (populated only in component mode).</param>
+    /// <param name="componentNamespacePrefixes">Per-component top-level namespace tokens (populated only in component mode), keyed by component assembly simple name.</param>
     private static void GenerateRspFile(
         ProjectionGeneratorArgs args,
         out string outputFolder,
         out string rspFile,
         out HashSet<string> projectionReferenceAssemblies,
         out bool hasTypesToProject,
-        out List<string> componentAssemblyNames)
+        out List<string> componentAssemblyNames,
+        out Dictionary<string, IReadOnlyList<string>> componentNamespacePrefixes)
     {
         args.Token.ThrowIfCancellationRequested();
 
@@ -138,6 +142,7 @@ internal partial class ProjectionGenerator
         projectionReferenceAssemblies = [];
         hasTypesToProject = false;
         componentAssemblyNames = [];
+        componentNamespacePrefixes = [];
 
         using StreamWriter fileStream = new(rspFile);
 
@@ -179,7 +184,11 @@ internal partial class ProjectionGenerator
             componentAssemblyNames = [.. componentAssemblyNameSet];
             componentAssemblyNames.Sort(StringComparer.Ordinal);
 
-            // Scan WinMD files matching component assembly names (e.g. 'MyComponent.winmd')
+            // Scan WinMD files matching component assembly names (e.g. 'MyComponent.winmd').
+            // Per-component, also collect the set of distinct first-segment namespace tokens
+            // observed on top-level types. The merged activation dispatcher uses these to
+            // route an incoming runtime class name directly to the matching component
+            // instead of probing all components linearly.
             foreach (string winmdPath in args.WinMDPaths)
             {
                 string winmdFileName = Path.GetFileNameWithoutExtension(winmdPath);
@@ -191,6 +200,8 @@ internal partial class ProjectionGenerator
 
                 ModuleDefinition winmdModule = ModuleDefinition.FromFile(winmdPath, resolver.ReaderParameters, createRuntimeContext: false);
 
+                HashSet<string> firstSegments = [];
+
                 foreach (TypeDefinition type in winmdModule.TopLevelTypes)
                 {
                     if (type.Name?.Value is "<Module>")
@@ -200,6 +211,23 @@ internal partial class ProjectionGenerator
 
                     fileStream.WriteLine($"-include {type.FullName}");
                     hasTypesToProject = true;
+
+                    string? typeNamespace = type.Namespace?.Value;
+
+                    if (!string.IsNullOrEmpty(typeNamespace))
+                    {
+                        int dotIndex = typeNamespace!.IndexOf('.');
+                        string firstSegment = dotIndex < 0 ? typeNamespace : typeNamespace[..dotIndex];
+
+                        _ = firstSegments.Add(firstSegment);
+                    }
+                }
+
+                if (firstSegments.Count > 0)
+                {
+                    string[] sorted = [.. firstSegments];
+                    System.Array.Sort(sorted, StringComparer.Ordinal);
+                    componentNamespacePrefixes[winmdFileName] = sorted;
                 }
             }
         }
