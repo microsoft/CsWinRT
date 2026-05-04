@@ -310,7 +310,7 @@ internal partial class ProjectionGenerator
             {
                 _ = sb.AppendLine("        // Fast path: when the runtime class name's first segment uniquely identifies");
                 _ = sb.AppendLine("        // one component, dispatch directly to that component's ManagedExports.");
-                _ = sb.AppendLine("        int dotIndex = activatableClassId.IndexOf('.');");
+                _ = sb.AppendLine("        int dotIndex = global::System.MemoryExtensions.IndexOf(activatableClassId, '.');");
                 _ = sb.AppendLine("        global::System.ReadOnlySpan<char> firstSegment = dotIndex < 0 ? activatableClassId : activatableClassId.Slice(0, dotIndex);");
                 _ = sb.AppendLine();
                 _ = sb.Append("        switch (firstSegment)");
