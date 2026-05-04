@@ -49,6 +49,13 @@ internal static partial class CodeWriters
         {
             string fNs = todr.Type?.Namespace?.Value ?? string.Empty;
             string fName = todr.Type?.Name?.Value ?? string.Empty;
+            // System.Guid is a fundamental blittable type (mirrors C++ guid_type which falls
+            // through to the [&](auto&&) catch-all returning true in is_type_blittable).
+            // Same applies to System.IntPtr / UIntPtr (used in some struct layouts).
+            if (fNs == "System" && (fName == "Guid" || fName == "IntPtr" || fName == "UIntPtr"))
+            {
+                return true;
+            }
             // Mapped struct types: blittable iff the mapping does NOT require marshalling
             // (mirrors C++ is_type_blittable for mapped struct_type case).
             MappedType? mapped = MappedTypes.Get(fNs, fName);
