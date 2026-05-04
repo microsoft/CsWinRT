@@ -40,10 +40,10 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
             return options.GlobalOptions.GetCsWinRTUseWindowsUIXamlProjections();
         });
 
-        // Get whether the project is being built for a native consumer
-        IncrementalValueProvider<bool> isBuildForNativeConsumer = context.AnalyzerConfigOptionsProvider.Select(static (options, token) =>
+        // Get whether the current project is itself a component
+        IncrementalValueProvider<bool> isComponent = context.AnalyzerConfigOptionsProvider.Select(static (options, token) =>
         {
-            return options.GlobalOptions.GetBuildForNativeConsumer();
+            return options.GlobalOptions.GetCsWinRTComponent();
         });
 
         // Get whether the current project is a library published with Native AOT
@@ -52,11 +52,13 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
             .Combine(isPublishAot)
             .Select(static (flags, token) => flags.Left && flags.Right);
 
-        // Get whether the generator should actually run or not
+        // Get whether the generator should actually run or not.
+        // The gate fires for any unit that ships TypeMap entries: an executable, a NativeAOT-published library,
+        // or a Windows Runtime component (the component .dll itself is the deployable when consumed natively).
         IncrementalValueProvider<bool> isGeneratorEnabled =
             isOutputTypeExe
             .Combine(isPublishAotLibrary)
-            .Combine(isBuildForNativeConsumer)
+            .Combine(isComponent)
             .Select(static (flags, token) => flags.Left.Left || flags.Left.Right || flags.Right);
 
         // Gather all PE references from the current compilation
@@ -107,12 +109,6 @@ public sealed partial class TypeMapAssemblyTargetGenerator : IIncrementalGenerat
 
         // Also generate the '[TypeMapAssemblyTarget]' entry for the merged projection
         context.RegisterImplementationSourceOutput(hasMergedProjection, Execute.EmitMergedProjectionTypeMapAssemblyTargetAttributes);
-
-        // Get whether the current project is a component
-        IncrementalValueProvider<bool> isComponent = context.AnalyzerConfigOptionsProvider.Select(static (options, token) =>
-        {
-            return options.GlobalOptions.GetCsWinRTComponent();
-        });
 
         // Whether any component assemblies are referenced, or the current project is itself a component
         IncrementalValueProvider<bool> hasComponentAssembly =
