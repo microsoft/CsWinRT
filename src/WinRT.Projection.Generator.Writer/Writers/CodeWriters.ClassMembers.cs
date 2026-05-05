@@ -534,6 +534,29 @@ internal static partial class CodeWriters
                 methodSpecForThis = "override ";
             }
 
+            // Detect 'bool Equals(object obj)' and 'int GetHashCode()' that override their
+            // System.Object counterparts. Mirrors C++ helpers.h:566 (is_object_equals_method) and
+            // helpers.h:625 (is_object_hashcode_method) + code_writers.h:1962-1974: matching
+            // signature and return type -> 'override'; matching name only -> 'new'.
+            if (name == "Equals" && sig.Params.Count == 1)
+            {
+                AsmResolver.DotNet.Signatures.TypeSignature p0 = sig.Params[0].Type;
+                bool paramIsObject = p0 is AsmResolver.DotNet.Signatures.CorLibTypeSignature po
+                    && po.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object;
+                bool returnsBool = sig.ReturnType is AsmResolver.DotNet.Signatures.CorLibTypeSignature ro
+                    && ro.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean;
+                if (paramIsObject)
+                {
+                    methodSpecForThis = returnsBool ? "override " : (methodSpecForThis + "new ");
+                }
+            }
+            else if (name == "GetHashCode" && sig.Params.Count == 0)
+            {
+                bool returnsInt = sig.ReturnType is AsmResolver.DotNet.Signatures.CorLibTypeSignature ri
+                    && ri.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4;
+                methodSpecForThis = returnsInt ? "override " : (methodSpecForThis + "new ");
+            }
+
             if (isGenericInterface && !string.IsNullOrEmpty(genericInteropType))
             {
                 // Emit UnsafeAccessor static extern + body that dispatches through it.

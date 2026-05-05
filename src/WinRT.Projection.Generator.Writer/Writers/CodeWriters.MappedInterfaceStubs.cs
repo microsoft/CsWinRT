@@ -95,7 +95,7 @@ internal static partial class CodeWriters
                 break;
             case "INotifyDataErrorInfo":
                 w.Write($"\npublic global::System.Collections.IEnumerable GetErrors(string propertyName) => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.GetErrors({objRefName}, propertyName);\n");
-                w.Write($"public bool HasErrors => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors({objRefName});\n");
+                w.Write($"public bool HasErrors {{get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors({objRefName}); }}\n");
                 w.Write($"public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged\n{{\n    add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {objRefName}).Subscribe(value);\n    remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {objRefName}).Unsubscribe(value);\n}}\n");
                 break;
         }
@@ -339,8 +339,8 @@ internal static partial class CodeWriters
 
     private static void EmitNonGenericList(TypeWriter w, string objRefName)
     {
-        w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"BindableListItem\")]\n");
-        w.Write($"public object this[int index] {{ get => global::ABI.System.Collections.IListMethods.Indexer_Get({objRefName}, index); set => global::ABI.System.Collections.IListMethods.Indexer_Set({objRefName}, index, value); }}\n");
+        w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"NonGenericListItem\")]\n");
+        w.Write($"public object this[int index]\n{{\n    get => global::ABI.System.Collections.IListMethods.Item({objRefName}, index);\n    set => global::ABI.System.Collections.IListMethods.Item({objRefName}, index, value);\n}}\n");
         w.Write($"public int Count => global::ABI.System.Collections.IListMethods.Count({objRefName});\n");
         w.Write("public bool IsReadOnly => false;\n");
         w.Write("public bool IsFixedSize => false;\n");
@@ -353,7 +353,7 @@ internal static partial class CodeWriters
         w.Write($"public void Insert(int index, object value) => global::ABI.System.Collections.IListMethods.Insert({objRefName}, index, value);\n");
         w.Write($"public void Remove(object value) => global::ABI.System.Collections.IListMethods.Remove({objRefName}, value);\n");
         w.Write($"public void RemoveAt(int index) => global::ABI.System.Collections.IListMethods.RemoveAt({objRefName}, index);\n");
-        w.Write($"public void CopyTo(global::System.Array array, int index) => global::ABI.System.Collections.IListMethods.CopyTo({objRefName}, array, index);\n");
+        w.Write($"public void CopyTo(Array array, int index) => global::ABI.System.Collections.IListMethods.CopyTo({objRefName}, array, index);\n");
         // GetEnumerator is NOT emitted here — it's handled separately by IBindableIterable's
         // EmitNonGenericEnumerable invocation (mirrors C++ which only emits GetEnumerator
         // through write_nongeneric_enumerable_members_using_static_abi_methods).
