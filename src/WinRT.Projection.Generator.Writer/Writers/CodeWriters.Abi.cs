@@ -89,6 +89,24 @@ internal static partial class CodeWriters
         return false;
     }
 
+    /// <summary>
+    /// Resolves a <see cref="AsmResolver.DotNet.Signatures.TypeDefOrRefSignature"/> to its
+    /// <see cref="TypeDefinition"/>, handling both in-assembly (already a TypeDefinition) and
+    /// cross-assembly/TypeRef-row references via the metadata cache. Returns <c>null</c> when
+    /// the reference cannot be resolved.
+    /// </summary>
+    private static TypeDefinition? TryResolveStructTypeDef(AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr)
+    {
+        if (tdr.Type is TypeDefinition td) { return td; }
+        if (tdr.Type is TypeReference tr && _cacheRef is not null)
+        {
+            string ns = tr.Namespace?.Value ?? string.Empty;
+            string name = tr.Name?.Value ?? string.Empty;
+            return _cacheRef.Find(ns + "." + name);
+        }
+        return null;
+    }
+
     /// <summary>Mirrors C++ <c>write_abi_enum</c>.</summary>
     public static void WriteAbiEnum(TypeWriter w, TypeDefinition type)
     {
@@ -155,7 +173,7 @@ internal static partial class CodeWriters
                     w.Write(GetMappedAbiTypeName(ft));
                 }
                 else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr
-                         && tdr.Type is TypeDefinition fieldTd
+                         && TryResolveStructTypeDef(tdr) is TypeDefinition fieldTd
                          && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
                          && !IsTypeBlittable(fieldTd))
                 {
