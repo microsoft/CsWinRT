@@ -425,7 +425,6 @@ internal static partial class CodeWriters
         w.Write("NativeDelegate\n{\n");
 
         bool canEmit = CanEmitAbiMethodBody(sig);
-        if (canEmit) { w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n"); }
         w.Write(canEmit ? "    public static unsafe " : "    public static ");
         WriteProjectionReturnType(w, sig);
         w.Write(" ");
