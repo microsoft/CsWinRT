@@ -3784,6 +3784,7 @@ internal static partial class CodeWriters
                 if (IsObject(underlying)) { continue; }
                 if (IsSystemType(underlying)) { continue; }
                 if (IsComplexStruct(underlying)) { continue; }
+                if (IsGenericInstance(underlying)) { continue; }
                 return false;
             }
             if (cat == ParamCategory.Ref)
@@ -3890,7 +3891,7 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", ");
-                if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { fp.Append("void**"); }
+                if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut) || IsGenericInstance(uOut)) { fp.Append("void**"); }
                 else if (IsSystemType(uOut)) { fp.Append("global::ABI.System.Type*"); }
                 else if (IsComplexStruct(uOut)) { fp.Append(GetAbiStructTypeName(w, uOut)); fp.Append('*'); }
                 else if (IsAnyStruct(uOut)) { fp.Append(GetBlittableStructAbiType(w, uOut)); fp.Append('*'); }
@@ -4084,7 +4085,7 @@ internal static partial class CodeWriters
             string localName = GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
             w.Write("        ");
-            if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut)) { w.Write("void*"); }
+            if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut) || IsGenericInstance(uOut)) { w.Write("void*"); }
             else if (IsSystemType(uOut)) { w.Write("global::ABI.System.Type"); }
             else if (IsComplexStruct(uOut)) { w.Write(GetAbiStructTypeName(w, uOut)); }
             else if (IsAnyStruct(uOut)) { w.Write(GetBlittableStructAbiType(w, uOut)); }
@@ -4292,7 +4293,7 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.Out) { continue; }
             AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
-            if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut) || IsSystemType(uOut) || IsComplexStruct(uOut)) { hasOutNeedsCleanup = true; break; }
+            if (IsString(uOut) || IsRuntimeClassOrInterface(uOut) || IsObject(uOut) || IsSystemType(uOut) || IsComplexStruct(uOut) || IsGenericInstance(uOut)) { hasOutNeedsCleanup = true; break; }
         }
         bool hasReceiveArray = false;
         for (int i = 0; i < sig.Params.Count; i++)
@@ -4735,6 +4736,34 @@ internal static partial class CodeWriters
             string callName = GetParamName(p, paramNameOverride);
             string localName = GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
+
+            // For Out generic instance: emit inline UnsafeAccessor to ConvertToManaged_<name>
+            // before the writeback. Mirrors the truth pattern (e.g. Collection1HandlerInvoke
+            // emits the accessor inside try, right before the assignment).
+            if (IsGenericInstance(uOut))
+            {
+                string interopTypeName = EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
+                string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, uOut, false)));
+                w.Write(callIndent);
+                w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                w.Write(callIndent);
+                w.Write("static extern ");
+                w.Write(projectedTypeName);
+                w.Write(" ConvertToManaged_");
+                w.Write(localName);
+                w.Write("([UnsafeAccessorType(\"");
+                w.Write(interopTypeName);
+                w.Write("\")] object _, void* value);\n");
+                w.Write(callIndent);
+                w.Write(callName);
+                w.Write(" = ConvertToManaged_");
+                w.Write(localName);
+                w.Write("(null, __");
+                w.Write(localName);
+                w.Write(");\n");
+                continue;
+            }
+
             w.Write(callIndent);
             w.Write(callName);
             w.Write(" = ");
@@ -5115,7 +5144,7 @@ internal static partial class CodeWriters
                     w.Write(localName);
                     w.Write(");\n");
                 }
-                else if (IsObject(uOut) || IsRuntimeClassOrInterface(uOut))
+                else if (IsObject(uOut) || IsRuntimeClassOrInterface(uOut) || IsGenericInstance(uOut))
                 {
                     w.Write("            WindowsRuntimeUnknownMarshaller.Free(__");
                     w.Write(localName);
