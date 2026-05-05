@@ -3909,18 +3909,15 @@ internal static partial class CodeWriters
         w.Write("            iid: in ");
         w.Write(iidExpr);
         w.Write(",\n            wrapperFlags: out wrapperFlags);\n\n");
-        if (nativeSupported)
-        {
-            w.Write("        return new ");
-            w.Write(fullProjected);
-            w.Write("(valueReference.");
-            w.Write(nameStripped);
-            w.Write("Invoke);\n");
-        }
-        else
-        {
-            w.Write("        throw null!;\n");
-        }
+        // Always emit the body. The 'valueReference.<Name>Invoke' extension method always
+        // exists (in NativeDelegate); even when its body is itself a stub, this path compiles
+        // and matches the truth, which never emits 'throw null!' for CreateObject.
+        w.Write("        return new ");
+        w.Write(fullProjected);
+        w.Write("(valueReference.");
+        w.Write(nameStripped);
+        w.Write("Invoke);\n");
+        _ = nativeSupported;
         w.Write("    }\n}\n");
     }
 
