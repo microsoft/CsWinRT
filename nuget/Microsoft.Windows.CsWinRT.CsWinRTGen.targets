@@ -95,6 +95,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTInteropGenEffectiveToolsDirectory Condition="'$(CsWinRTInteropGenEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTInteropGenEffectiveToolsDirectory>
       <CsWinRTImplEffectiveToolsDirectory Condition="'$(CsWinRTImplEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTImplEffectiveToolsDirectory>
       <CsWinRTMergedProjectionEffectiveToolsDirectory Condition="'$(CsWinRTMergedProjectionEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTMergedProjectionEffectiveToolsDirectory>
+      <CsWinRTRefGenEffectiveToolsDirectory Condition="'$(CsWinRTRefGenEffectiveToolsDirectory)' == ''">$(_CsWinRTToolsDirectory)</CsWinRTRefGenEffectiveToolsDirectory>
 
       <!-- Temporarily setting this due to .NET SDK targets check it. -->
       <CsWinRTToolsDirectory>$(CsWinRTInteropGenEffectiveToolsDirectory)</CsWinRTToolsDirectory>
