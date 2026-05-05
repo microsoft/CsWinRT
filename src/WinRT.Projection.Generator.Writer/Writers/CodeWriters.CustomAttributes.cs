@@ -32,9 +32,15 @@ internal static partial class CodeWriters
         for (int i = 0; i < attribute.Signature.FixedArguments.Count; i++)
         {
             CustomAttributeArgument arg = attribute.Signature.FixedArguments[i];
-            if (isAttributeUsage && i == 0 && arg.Element is uint targetsValue)
+            uint? targetsValue = null;
+            if (isAttributeUsage && i == 0)
             {
-                result.Add(FormatAttributeTargets(targetsValue));
+                if (arg.Element is uint u) { targetsValue = u; }
+                else if (arg.Element is int s) { targetsValue = unchecked((uint)s); }
+            }
+            if (targetsValue is uint tv)
+            {
+                result.Add(FormatAttributeTargets(tv));
             }
             else
             {
@@ -98,8 +104,8 @@ internal static partial class CodeWriters
         return element switch
         {
             null => "null",
-            string s => "\"" + EscapeString(s) + "\"",
-            AsmResolver.Utf8String us => "\"" + EscapeString(us.Value) + "\"",
+            string s => "@\"" + EscapeVerbatimString(s) + "\"",
+            AsmResolver.Utf8String us => "@\"" + EscapeVerbatimString(us.Value) + "\"",
             bool b => b ? "true" : "false",
             byte by => by.ToString(CultureInfo.InvariantCulture),
             sbyte sb => sb.ToString(CultureInfo.InvariantCulture),
@@ -123,16 +129,17 @@ internal static partial class CodeWriters
         };
     }
 
-    private static string EscapeString(string s)
+    /// <summary>
+    /// Escapes a string for use inside a C# verbatim string literal (<c>@"..."</c>).
+    /// Mirrors C++ <c>write_custom_attribute_args</c> string emission: only quote characters
+    /// need to be doubled; backslashes and other characters pass through verbatim.
+    /// </summary>
+    private static string EscapeVerbatimString(string s)
     {
         StringBuilder sb = new(s.Length);
         foreach (char c in s)
         {
-            if (c == '\\') { sb.Append('\\').Append('\\'); }
-            else if (c == '"') { sb.Append('\\').Append('"'); }
-            else if (c == '\n') { sb.Append('\\').Append('n'); }
-            else if (c == '\r') { sb.Append('\\').Append('r'); }
-            else if (c == '\t') { sb.Append('\\').Append('t'); }
+            if (c == '"') { sb.Append('"').Append('"'); }
             else { sb.Append(c); }
         }
         return sb.ToString();
