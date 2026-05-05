@@ -5514,7 +5514,14 @@ internal static partial class CodeWriters
                     return cat is TypeCategory.Class or TypeCategory.Interface or TypeCategory.Delegate;
                 }
             }
-            return false;
+            // Unresolved cross-assembly TypeRef (e.g. a referenced winmd we don't have loaded).
+            // Fall back to the signature's encoding: WinRT metadata distinguishes value types
+            // (encoded as ValueType) from reference types (encoded as Class). If the signature
+            // has IsValueType == false, then it MUST be one of class/interface/delegate (since
+            // primitives/enums/strings/object are encoded with their own element type). This
+            // mirrors how the C++ tool's abi_marshaler abstraction handles unknown types — it
+            // dispatches based on the metadata semantics, not on resolution.
+            return !td.IsValueType;
         }
         return false;
     }
