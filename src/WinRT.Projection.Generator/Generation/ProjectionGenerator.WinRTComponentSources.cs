@@ -123,7 +123,7 @@ internal partial class ProjectionGenerator
         // Windows Runtime reference assemblies in scope (i.e. third-party projection references).
         // Only include it in the union when that condition holds; otherwise the runtime would
         // fail with FileNotFoundException trying to enumerate a non-existent assembly.
-        if (HasMergedProjectionReferences(args, processingState))
+        if (HasMergedProjectionReferences(args))
         {
             targetAssemblyNames.Add("WinRT.Projection");
         }
@@ -159,9 +159,8 @@ internal partial class ProjectionGenerator
     /// reference assembly in scope - i.e. the same condition the merged projection target
     /// uses to determine whether <c>WinRT.Projection.dll</c> needs to be generated.
     /// </summary>
-    private static bool HasMergedProjectionReferences(ProjectionGeneratorArgs args, ProjectionGeneratorProcessingState processingState)
+    private static bool HasMergedProjectionReferences(ProjectionGeneratorArgs args)
     {
-        _ = processingState;
         string[] resolverPaths = [.. System.Linq.Enumerable.Where(args.ReferenceAssemblyPaths,
             p => !p.EndsWith(".winmd", StringComparison.OrdinalIgnoreCase))];
 
