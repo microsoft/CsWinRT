@@ -4565,6 +4565,13 @@ internal static partial class CodeWriters
             }
             else
             {
+                // FillArray (Span<T>) of non-blittable element types: skip pre-call
+                // CopyToUnmanaged. The buffer the native side gets (_<name>) is uninitialized
+                // ABI-format storage; the native callee fills it. The post-call writeback loop
+                // emits CopyToManaged_<name> to propagate the native fills into the user's
+                // managed Span<T>. (Mirrors C++ marshaler.write_marshal_to_abi which only emits
+                // CopyToUnmanaged for PassArray, not FillArray.)
+                if (cat == ParamCategory.FillArray) { continue; }
                 string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
                 string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                 // For mapped value types (DateTime/TimeSpan) and complex structs, the storage
@@ -4742,21 +4749,54 @@ internal static partial class CodeWriters
         // Close the vtable call. One less ')' when noexcept (no ThrowExceptionForHR wrap).
         w.Write(isNoExcept ? ");\n" : "));\n");
 
-        // After call: copy native-filled HSTRING handles back into the managed Span<string>
-        // for FillArray of strings. Mirrors C++ truth pattern. Non-string FillArrays don't
-        // emit a post-call copy-back (the C++ tool also doesn't, even though it's debatable
-        // whether the writeback semantics are actually right for those — match truth exactly).
+        // After call: copy native-filled values back into the user's managed Span<T> for
+        // FillArray of non-blittable element types. The native callee wrote into our
+        // ABI-format buffer (_<name>) which is separate from the user's Span<T>; we need to
+        // CopyToManaged_<name> to convert each ABI element back to the projected form and
+        // store it in the user's Span. Mirrors C++ marshaler.write_marshal_from_abi
+        // (code_writers.h:6268).
+        // Blittable element types (primitives and almost-blittable structs) don't need this
+        // because the user's Span wraps the same memory the native side wrote to.
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szFA) { continue; }
-            if (!IsString(szFA.BaseType)) { continue; }
+            if (IsBlittablePrimitive(szFA.BaseType) || IsAnyStruct(szFA.BaseType)) { continue; }
             string callName = GetParamName(p, paramNameOverride);
             string localName = GetParamLocalName(p, paramNameOverride);
             string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szFA.BaseType))));
             string elementInteropArg = EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
+            // Determine the ABI element type for the data pointer parameter.
+            // - Strings / runtime classes / objects: void**
+            // - HResult exception: global::ABI.System.Exception*
+            // - Mapped value types: global::ABI.System.{DateTimeOffset|TimeSpan}*
+            // - Complex structs: <ABI struct>*
+            string dataParamType;
+            string dataCastType;
+            if (IsString(szFA.BaseType) || IsRuntimeClassOrInterface(szFA.BaseType) || IsObject(szFA.BaseType))
+            {
+                dataParamType = "void** data";
+                dataCastType = "(void**)";
+            }
+            else if (IsHResultException(szFA.BaseType))
+            {
+                dataParamType = "global::ABI.System.Exception* data";
+                dataCastType = "(global::ABI.System.Exception*)";
+            }
+            else if (IsMappedAbiValueType(szFA.BaseType))
+            {
+                string abiName = GetMappedAbiTypeName(szFA.BaseType);
+                dataParamType = abiName + "* data";
+                dataCastType = "(" + abiName + "*)";
+            }
+            else
+            {
+                string abiStructName = GetAbiStructTypeName(w, szFA.BaseType);
+                dataParamType = abiStructName + "* data";
+                dataCastType = "(" + abiStructName + "*)";
+            }
             w.Write(callIndent);
             w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]\n");
             w.Write(callIndent);
@@ -4764,7 +4804,9 @@ internal static partial class CodeWriters
             w.Write(localName);
             w.Write("([UnsafeAccessorType(\"");
             w.Write(GetArrayMarshallerInteropPath(w, szFA.BaseType, elementInteropArg));
-            w.Write("\")] object _, uint length, void** data, Span<");
+            w.Write("\")] object _, uint length, ");
+            w.Write(dataParamType);
+            w.Write(", Span<");
             w.Write(elementProjected);
             w.Write("> span);\n");
             w.Write(callIndent);
@@ -4772,7 +4814,9 @@ internal static partial class CodeWriters
             w.Write(localName);
             w.Write("(null, (uint)__");
             w.Write(localName);
-            w.Write("_span.Length, (void**)_");
+            w.Write("_span.Length, ");
+            w.Write(dataCastType);
+            w.Write("_");
             w.Write(localName);
             w.Write(", ");
             w.Write(callName);
