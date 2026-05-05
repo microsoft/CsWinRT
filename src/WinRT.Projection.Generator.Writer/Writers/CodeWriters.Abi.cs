@@ -2901,6 +2901,15 @@ internal static partial class CodeWriters
                         w.Write(fname);
                         w.Write(")");
                     }
+                    else if (IsHResultException(ft))
+                    {
+                        // Mapped value type 'HResult' (excluded from IsMappedAbiValueType because
+                        // it's "treated specially in many places", but for nested struct fields the
+                        // marshalling is identical: use ABI.System.ExceptionMarshaller).
+                        w.Write("global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(value.");
+                        w.Write(fname);
+                        w.Write(")");
+                    }
                     else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd
                              && TryResolveStructTypeDef(ftd) is TypeDefinition fieldStructTd
                              && TypeCategorization.GetCategory(fieldStructTd) == TypeCategory.Struct
@@ -2976,6 +2985,15 @@ internal static partial class CodeWriters
                         w.Write(fname);
                         w.Write(")");
                     }
+                    else if (IsHResultException(ft))
+                    {
+                        // Mapped value type 'HResult' (excluded from IsMappedAbiValueType because
+                        // it's "treated specially in many places", but for nested struct fields the
+                        // marshalling is identical: use ABI.System.ExceptionMarshaller).
+                        w.Write("global::ABI.System.ExceptionMarshaller.ConvertToManaged(value.");
+                        w.Write(fname);
+                        w.Write(")");
+                    }
                     else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd2
                              && TryResolveStructTypeDef(ftd2) is TypeDefinition fieldStructTd2
                              && TypeCategorization.GetCategory(fieldStructTd2) == TypeCategory.Struct
@@ -3023,6 +3041,12 @@ internal static partial class CodeWriters
                         w.Write("        HStringMarshaller.Free(value.");
                         w.Write(fname);
                         w.Write(");\n");
+                    }
+                    else if (IsHResultException(ft))
+                    {
+                        // HResult/Exception field has no per-value resources to release
+                        // (the ABI representation is just an int HRESULT). Skip Dispose entirely.
+                        continue;
                     }
                     else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd3
                              && TryResolveStructTypeDef(ftd3) is TypeDefinition fieldStructTd3
