@@ -421,6 +421,7 @@
   <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
   <Project Path="WinRT.Projection.Generator.Writer/WinRT.Projection.Generator.Writer.csproj" />
   <Project Path="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
+  <Project Path="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
   <Project Path="WinRT.Runtime2/WinRT.Runtime.csproj" />
   <Project Path="WinRT.Sdk.Projection/WinRT.Sdk.Projection.csproj">
     <Build Project="false" />
