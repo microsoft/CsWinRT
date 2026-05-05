@@ -112,7 +112,13 @@ internal static partial class CodeWriters
             float f => f.ToString("R", CultureInfo.InvariantCulture) + "f",
             double d => d.ToString("R", CultureInfo.InvariantCulture),
             char c => "'" + c + "'",
-            TypeSignature ts => "typeof(" + (ts.FullName ?? string.Empty) + ")",
+            // Always prepend 'global::' to typeof() arguments. The C++ cswinrt tool does this for the
+            // same reason: when the generated file's namespace context happens to contain a 'Windows'
+            // sub-namespace (e.g. 'TestComponentCSharp.Windows.*'), an unqualified 'Windows.Foundation.X'
+            // would resolve to 'TestComponentCSharp.Windows.Foundation.X' first under C# name lookup
+            // and fail with CS0234. The 'global::' prefix forces fully-qualified resolution.
+            TypeSignature ts when ts.FullName is { Length: > 0 } fn => "typeof(global::" + fn + ")",
+            TypeSignature => "typeof(object)",
             _ => element.ToString() ?? "null"
         };
     }
