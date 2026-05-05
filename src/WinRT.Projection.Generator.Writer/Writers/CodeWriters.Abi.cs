@@ -3953,7 +3953,19 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", uint*, ");
-                if (IsComplexStruct(sza.BaseType)) { fp.Append(GetAbiStructTypeName(w, sza.BaseType)); }
+                if (IsString(sza.BaseType) || IsRuntimeClassOrInterface(sza.BaseType) || IsObject(sza.BaseType))
+                {
+                    fp.Append("void*");
+                }
+                else if (IsHResultException(sza.BaseType))
+                {
+                    fp.Append("global::ABI.System.Exception");
+                }
+                else if (IsMappedAbiValueType(sza.BaseType))
+                {
+                    fp.Append(GetMappedAbiTypeName(sza.BaseType));
+                }
+                else if (IsComplexStruct(sza.BaseType)) { fp.Append(GetAbiStructTypeName(w, sza.BaseType)); }
                 else if (IsAnyStruct(sza.BaseType)) { fp.Append(GetBlittableStructAbiType(w, sza.BaseType)); }
                 else { fp.Append(GetAbiPrimitiveType(sza.BaseType)); }
                 fp.Append("**");
