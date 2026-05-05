@@ -350,13 +350,13 @@ internal static partial class CodeWriters
             }
             else
             {
-                w.Write(" { ");
+                w.Write("\n{\n");
                 if (s.HasGetter)
                 {
                     if (!string.IsNullOrEmpty(getterPlat)) { w.Write(getterPlat); }
                     if (w.Settings.ReferenceProjection)
                     {
-                        w.Write("get => throw null; ");
+                        w.Write("get => throw null;\n");
                     }
                     else
                     {
@@ -366,7 +366,7 @@ internal static partial class CodeWriters
                         w.Write(kv.Key);
                         w.Write("(");
                         w.Write(s.GetterObjRef);
-                        w.Write("); ");
+                        w.Write(");\n");
                     }
                 }
                 if (s.HasSetter)
@@ -374,7 +374,7 @@ internal static partial class CodeWriters
                     if (!string.IsNullOrEmpty(setterPlat)) { w.Write(setterPlat); }
                     if (w.Settings.ReferenceProjection)
                     {
-                        w.Write("set => throw null; ");
+                        w.Write("set => throw null;\n");
                     }
                     else
                     {
@@ -384,7 +384,7 @@ internal static partial class CodeWriters
                         w.Write(kv.Key);
                         w.Write("(");
                         w.Write(s.SetterObjRef);
-                        w.Write(", value); ");
+                        w.Write(", value);\n");
                     }
                 }
                 w.Write("}\n");
