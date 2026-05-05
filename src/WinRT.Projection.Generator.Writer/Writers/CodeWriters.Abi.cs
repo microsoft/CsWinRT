@@ -3047,6 +3047,14 @@ internal static partial class CodeWriters
                         // (the ABI representation is just an int HRESULT). Skip Dispose entirely.
                         continue;
                     }
+                    else if (IsMappedAbiValueType(ft))
+                    {
+                        // Mapped value types (DateTime/TimeSpan) have no per-value resources to
+                        // release — the ABI representation is just an int64. Mirror C++
+                        // set_skip_disposer_if_needed (code_writers.h:6431-6440) which explicitly
+                        // skips the disposer for global::ABI.System.{DateTimeOffset,TimeSpan,Exception}.
+                        continue;
+                    }
                     else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd3
                              && TryResolveStructTypeDef(ftd3) is TypeDefinition fieldStructTd3
                              && TypeCategorization.GetCategory(fieldStructTd3) == TypeCategory.Struct
