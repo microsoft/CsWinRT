@@ -1344,7 +1344,8 @@ internal static partial class CodeWriters
             if (cat == ParamCategory.Out || cat == ParamCategory.Ref)
             {
                 // Allow Out/Ref for blittable primitive/enum/blittable-struct types,
-                // strings, runtime classes, objects, complex structs, and System.Type.
+                // strings, runtime classes, objects, complex structs, System.Type,
+                // and generic instances.
                 AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
                 if (IsHResultException(underlying)) { allParamsSimple = false; break; }
                 if (IsBlittablePrimitive(underlying)) { continue; }
@@ -1354,6 +1355,7 @@ internal static partial class CodeWriters
                 if (IsObject(underlying)) { continue; }
                 if (IsSystemType(underlying)) { continue; }
                 if (IsComplexStruct(underlying)) { continue; }
+                if (cat == ParamCategory.Out && IsGenericInstance(underlying)) { continue; }
                 allParamsSimple = false;
                 break;
             }
@@ -1457,6 +1459,29 @@ internal static partial class CodeWriters
             w.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
             w.Write("    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
             w.Write(retParamName);
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(interopTypeName);
+            w.Write("\")] object _, ");
+            w.Write(projectedTypeName);
+            w.Write(" value);\n\n");
+        }
+
+        // Hoist [UnsafeAccessor] declarations for Out generic-instance params:
+        // ConvertToUnmanaged_<name> wraps the projected value into a WindowsRuntimeObjectReferenceValue.
+        // The body's writeback later references these already-declared accessors.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.Out) { continue; }
+            AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
+            if (!IsGenericInstance(uOut)) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string interopTypeName = EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
+            string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, uOut, false)));
+            w.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            w.Write("    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
+            w.Write(raw);
             w.Write("([UnsafeAccessorType(\"");
             w.Write(interopTypeName);
             w.Write("\")] object _, ");
@@ -1907,6 +1932,16 @@ internal static partial class CodeWriters
             {
                 w.Write(GetMarshallerFullName(w, underlying));
                 w.Write(".ConvertToUnmanaged(__");
+                w.Write(raw);
+                w.Write(").DetachThisPtrUnsafe()");
+            }
+            // Generic instance (e.g. IEnumerable<string>): use the hoisted UnsafeAccessor
+            // 'ConvertToUnmanaged_<name>' declared at the top of the method body.
+            else if (IsGenericInstance(underlying))
+            {
+                w.Write("ConvertToUnmanaged_");
+                w.Write(raw);
+                w.Write("(null, __");
                 w.Write(raw);
                 w.Write(").DetachThisPtrUnsafe()");
             }
