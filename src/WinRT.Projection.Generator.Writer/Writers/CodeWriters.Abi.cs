@@ -4600,6 +4600,8 @@ internal static partial class CodeWriters
         // For non-blittable PassArray params, emit CopyToUnmanaged_<name> (UnsafeAccessor) and call
         // it to populate the inline/pooled storage from the user-supplied span. For string arrays,
         // use HStringArrayMarshaller.ConvertToUnmanagedUnsafe instead.
+        // FillArray of strings is the exception: the native side fills the HSTRING handles, so
+        // there's nothing to convert pre-call (the post-call CopyToManaged_<name> handles writeback).
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
@@ -4611,6 +4613,9 @@ internal static partial class CodeWriters
             string localName = GetParamLocalName(p, paramNameOverride);
             if (IsString(szArr.BaseType))
             {
+                // Skip pre-call ConvertToUnmanagedUnsafe for FillArray of strings — there's
+                // nothing to convert (native fills the handles). Mirrors C++ truth pattern.
+                if (cat == ParamCategory.FillArray) { continue; }
                 w.Write(callIndent);
                 w.Write("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(\n");
                 w.Write(callIndent);
@@ -4808,6 +4813,43 @@ internal static partial class CodeWriters
         }
         // Close the vtable call. One less ')' when noexcept (no ThrowExceptionForHR wrap).
         w.Write(isNoExcept ? ");\n" : "));\n");
+
+        // After call: copy native-filled HSTRING handles back into the managed Span<string>
+        // for FillArray of strings. Mirrors C++ truth pattern. Non-string FillArrays don't
+        // emit a post-call copy-back (the C++ tool also doesn't, even though it's debatable
+        // whether the writeback semantics are actually right for those — match truth exactly).
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.FillArray) { continue; }
+            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szFA) { continue; }
+            if (!IsString(szFA.BaseType)) { continue; }
+            string callName = GetParamName(p, paramNameOverride);
+            string localName = GetParamLocalName(p, paramNameOverride);
+            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szFA.BaseType))));
+            string elementInteropArg = EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
+            w.Write(callIndent);
+            w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]\n");
+            w.Write(callIndent);
+            w.Write("static extern void CopyToManaged_");
+            w.Write(localName);
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(GetArrayMarshallerInteropPath(w, szFA.BaseType, elementInteropArg));
+            w.Write("\")] object _, uint length, void** data, Span<");
+            w.Write(elementProjected);
+            w.Write("> span);\n");
+            w.Write(callIndent);
+            w.Write("CopyToManaged_");
+            w.Write(localName);
+            w.Write("(null, (uint)__");
+            w.Write(localName);
+            w.Write("_span.Length, (void**)_");
+            w.Write(localName);
+            w.Write(", ");
+            w.Write(callName);
+            w.Write(");\n");
+        }
 
         // After call: write back Out params to caller's 'out' var.
         for (int i = 0; i < sig.Params.Count; i++)
