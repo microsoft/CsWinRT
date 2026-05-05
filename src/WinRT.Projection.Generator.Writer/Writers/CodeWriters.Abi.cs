@@ -3478,8 +3478,10 @@ internal static partial class CodeWriters
                 if (IsString(ft)) { continue; }
                 if (IsMappedAbiValueType(ft)) { continue; }
                 // Nested non-blittable struct fields: marshal via the nested struct's marshaller.
+                // Use TryResolveStructTypeDef to handle both TypeDefinition (in-assembly direct)
+                // and TypeReference (in-assembly TypeRef row or cross-assembly).
                 if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr
-                    && tdr.Type is TypeDefinition fieldTd
+                    && TryResolveStructTypeDef(tdr) is TypeDefinition fieldTd
                     && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct)
                 {
                     continue;
