@@ -3802,6 +3802,9 @@ internal static partial class CodeWriters
                 {
                     if (IsBlittablePrimitive(sza.BaseType)) { continue; }
                     if (IsAnyStruct(sza.BaseType)) { continue; }
+                    if (IsString(sza.BaseType)) { continue; }
+                    if (IsRuntimeClassOrInterface(sza.BaseType)) { continue; }
+                    if (IsObject(sza.BaseType)) { continue; }
                     if (IsComplexStruct(sza.BaseType)) { continue; }
                 }
                 return false;
