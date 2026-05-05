@@ -5197,6 +5197,20 @@ internal static partial class CodeWriters
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
                 if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
                 if (IsMappedAbiValueType(szArr.BaseType)) { continue; }
+                if (IsHResultException(szArr.BaseType))
+                {
+                    // HResultException ABI is just an int; per-element Dispose is a no-op (mirror
+                    // the truth: no Dispose_<name> emitted). Just return the inline-array's pool
+                    // using the correct element type (ABI.System.Exception, not nint).
+                    string localNameH = GetParamLocalName(p, paramNameOverride);
+                    w.Write("\n            if (__");
+                    w.Write(localNameH);
+                    w.Write("_arrayFromPool is not null)\n            {\n");
+                    w.Write("                global::System.Buffers.ArrayPool<global::ABI.System.Exception>.Shared.Return(__");
+                    w.Write(localNameH);
+                    w.Write("_arrayFromPool);\n            }\n");
+                    continue;
+                }
                 string localName = GetParamLocalName(p, paramNameOverride);
                 if (IsString(szArr.BaseType))
                 {
