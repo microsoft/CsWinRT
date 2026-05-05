@@ -4230,9 +4230,11 @@ internal static partial class CodeWriters
             w.Write(callName);
             w.Write(".Length));\n");
 
-            if (IsString(szArr.BaseType))
+            if (IsString(szArr.BaseType) && cat == ParamCategory.PassArray)
             {
                 // Strings need an additional InlineArray16<HStringHeader> + InlineArray16<nint> (pinned handles).
+                // Only required for PassArray (managed -> HSTRING conversion); FillArray's native side
+                // fills HSTRING handles directly into the nint storage.
                 w.Write("\n        Unsafe.SkipInit(out InlineArray16<HStringHeader> __");
                 w.Write(localName);
                 w.Write("_inlineHeaderArray);\n");
@@ -4529,7 +4531,10 @@ internal static partial class CodeWriters
                         w.Write(localName);
                         w.Write("_span");
                     }
-                    if (isStringElem)
+                    // For string elements: only PassArray needs the additional inlineHeaderArray
+                    // pinned alongside the data span. FillArray fills HSTRINGs into the nint
+                    // storage directly (no header conversion needed).
+                    if (isStringElem && cat == ParamCategory.PassArray)
                     {
                         w.Write(", _");
                         w.Write(localName);
@@ -5118,21 +5123,35 @@ internal static partial class CodeWriters
                 string localName = GetParamLocalName(p, paramNameOverride);
                 if (IsString(szArr.BaseType))
                 {
-                    w.Write("            HStringArrayMarshaller.Dispose(__");
+                    // The HStringArrayMarshaller.Dispose + ArrayPool returns for strings only
+                    // apply to PassArray (where we set up the pinned handles + headers in the
+                    // first place). FillArray writes back HSTRING handles into the nint storage
+                    // array directly, with no per-element pinned handle / header to release.
+                    if (cat == ParamCategory.PassArray)
+                    {
+                        w.Write("            HStringArrayMarshaller.Dispose(__");
+                        w.Write(localName);
+                        w.Write("_pinnedHandleSpan);\n\n");
+                        w.Write("            if (__");
+                        w.Write(localName);
+                        w.Write("_pinnedHandleArrayFromPool is not null)\n            {\n");
+                        w.Write("                global::System.Buffers.ArrayPool<nint>.Shared.Return(__");
+                        w.Write(localName);
+                        w.Write("_pinnedHandleArrayFromPool);\n            }\n\n");
+                        w.Write("            if (__");
+                        w.Write(localName);
+                        w.Write("_headerArrayFromPool is not null)\n            {\n");
+                        w.Write("                global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__");
+                        w.Write(localName);
+                        w.Write("_headerArrayFromPool);\n            }\n");
+                    }
+                    // Both PassArray and FillArray need the inline-array's nint pool returned.
+                    w.Write("\n            if (__");
                     w.Write(localName);
-                    w.Write("_pinnedHandleSpan);\n\n");
-                    w.Write("            if (__");
-                    w.Write(localName);
-                    w.Write("_pinnedHandleArrayFromPool is not null)\n            {\n");
+                    w.Write("_arrayFromPool is not null)\n            {\n");
                     w.Write("                global::System.Buffers.ArrayPool<nint>.Shared.Return(__");
                     w.Write(localName);
-                    w.Write("_pinnedHandleArrayFromPool);\n            }\n\n");
-                    w.Write("            if (__");
-                    w.Write(localName);
-                    w.Write("_headerArrayFromPool is not null)\n            {\n");
-                    w.Write("                global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__");
-                    w.Write(localName);
-                    w.Write("_headerArrayFromPool);\n            }\n");
+                    w.Write("_arrayFromPool);\n            }\n");
                 }
                 else
                 {
