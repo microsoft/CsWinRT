@@ -206,24 +206,31 @@ internal static partial class CodeWriters
     {
         if (mapped is not null)
         {
-            // Mapped type — check the target namespace to decide marker.
-            if (typeNs.StartsWith("System.Numerics", StringComparison.Ordinal))
-            {
-                return "<System-Numerics-Vectors>";
-            }
-            if (typeNs == "System.Collections.ObjectModel")
-            {
-                return "<System-ObjectModel>";
-            }
+            // Mirrors C++ helpers.h:693-725 + code_writers.h:441-466. The mapped namespace
+            // determines the marker.
             if (typeNs.StartsWith("System", StringComparison.Ordinal))
             {
+                if (IsMappedTypeInSystemNumericsVectors(typeNs))
+                {
+                    return "<System-Numerics-Vectors>";
+                }
+                if (IsMappedTypeInSystemObjectModel(typeNs, typeName))
+                {
+                    return "<System-ObjectModel>";
+                }
                 return "<#corlib>";
             }
-            // Mapped to a non-System namespace (e.g. Windows.Foundation.IClosable would map back
-            // to itself but with EmitAbi=false, etc.) — defer to <#CsWinRT> marker for simplicity.
-            return "<#CsWinRT>";
+            // Mapped to a non-System namespace.
+            if (!mapped.EmitAbi)
+            {
+                return "<#CsWinRT>";
+            }
+            if (typeNs.StartsWith("Windows", StringComparison.Ordinal))
+            {
+                return "<#%Windows>";
+            }
         }
-        // Unmapped type — assume Windows.* namespace from the Windows projection assembly.
+        // Unmapped type.
         if (typeNs.StartsWith("Windows.", StringComparison.Ordinal) || typeNs == "Windows")
         {
             return "<#Windows>";
@@ -246,6 +253,37 @@ internal static partial class CodeWriters
             }
         }
         return "<#Windows>";
+    }
+
+    /// <summary>Mirrors C++ <c>helpers.h:693</c> <c>is_mapped_type_in_system_objectmodel</c>.</summary>
+    private static bool IsMappedTypeInSystemObjectModel(string typeNs, string typeName)
+    {
+        if (typeNs == "System.Collections.Specialized")
+        {
+            return typeName is "INotifyCollectionChanged"
+                or "NotifyCollectionChangedAction"
+                or "NotifyCollectionChangedEventArgs"
+                or "NotifyCollectionChangedEventHandler";
+        }
+        if (typeNs == "System.ComponentModel")
+        {
+            return typeName is "INotifyDataErrorInfo"
+                or "INotifyPropertyChanged"
+                or "DataErrorsChangedEventArgs"
+                or "PropertyChangedEventArgs"
+                or "PropertyChangedEventHandler";
+        }
+        if (typeNs == "System.Windows.Input")
+        {
+            return typeName == "ICommand";
+        }
+        return false;
+    }
+
+    /// <summary>Mirrors C++ <c>helpers.h:727</c> <c>is_mapped_type_in_system_numerics_vectors</c>.</summary>
+    private static bool IsMappedTypeInSystemNumericsVectors(string typeNs)
+    {
+        return typeNs == "System.Numerics";
     }
 
     /// <summary>
