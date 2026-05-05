@@ -3806,6 +3806,7 @@ internal static partial class CodeWriters
                     if (IsObject(sz.BaseType)) { continue; }
                     if (IsMappedAbiValueType(sz.BaseType)) { continue; }
                     if (IsComplexStruct(sz.BaseType)) { continue; }
+                    if (IsHResultException(sz.BaseType)) { continue; }
                 }
                 return false;
             }
@@ -3843,6 +3844,8 @@ internal static partial class CodeWriters
                     if (IsRuntimeClassOrInterface(sza.BaseType)) { continue; }
                     if (IsObject(sza.BaseType)) { continue; }
                     if (IsComplexStruct(sza.BaseType)) { continue; }
+                    if (IsHResultException(sza.BaseType)) { continue; }
+                    if (IsMappedAbiValueType(sza.BaseType)) { continue; }
                 }
                 return false;
             }
@@ -3864,7 +3867,9 @@ internal static partial class CodeWriters
         bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz0
             && (IsBlittablePrimitive(retSz0.BaseType) || IsAnyStruct(retSz0.BaseType)
                 || IsString(retSz0.BaseType) || IsRuntimeClassOrInterface(retSz0.BaseType) || IsObject(retSz0.BaseType)
-                || IsComplexStruct(retSz0.BaseType));
+                || IsComplexStruct(retSz0.BaseType)
+                || IsHResultException(retSz0.BaseType)
+                || IsMappedAbiValueType(retSz0.BaseType));
         bool returnIsHResultException = rt is not null && IsHResultException(rt);
         bool returnIsComplexStructLocal = rt is not null && IsComplexStruct(rt);
         bool returnSimple = rt is null
@@ -3909,7 +3914,9 @@ internal static partial class CodeWriters
         bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzCheck
             && (IsBlittablePrimitive(retSzCheck.BaseType) || IsAnyStruct(retSzCheck.BaseType)
                 || IsString(retSzCheck.BaseType) || IsRuntimeClassOrInterface(retSzCheck.BaseType) || IsObject(retSzCheck.BaseType)
-                || IsComplexStruct(retSzCheck.BaseType));
+                || IsComplexStruct(retSzCheck.BaseType)
+                || IsHResultException(retSzCheck.BaseType)
+                || IsMappedAbiValueType(retSzCheck.BaseType));
         bool returnIsHResultException = rt is not null && IsHResultException(rt);
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
@@ -3975,6 +3982,14 @@ internal static partial class CodeWriters
                 else if (IsComplexStruct(retSz.BaseType))
                 {
                     fp.Append(GetAbiStructTypeName(w, retSz.BaseType));
+                }
+                else if (IsHResultException(retSz.BaseType))
+                {
+                    fp.Append("global::ABI.System.Exception");
+                }
+                else if (IsMappedAbiValueType(retSz.BaseType))
+                {
+                    fp.Append(GetMappedAbiTypeName(retSz.BaseType));
                 }
                 else if (IsAnyStruct(retSz.BaseType))
                 {
@@ -4184,7 +4199,9 @@ internal static partial class CodeWriters
                 ? GetMappedAbiTypeName(szArr.BaseType)
                 : IsComplexStruct(szArr.BaseType)
                     ? GetAbiStructTypeName(w, szArr.BaseType)
-                    : "nint";
+                    : IsHResultException(szArr.BaseType)
+                        ? "global::ABI.System.Exception"
+                        : "nint";
             w.Write("\n        Unsafe.SkipInit(out InlineArray16<");
             w.Write(storageT);
             w.Write("> __");
@@ -4269,6 +4286,14 @@ internal static partial class CodeWriters
             else if (IsComplexStruct(retSz.BaseType))
             {
                 w.Write(GetAbiStructTypeName(w, retSz.BaseType));
+            }
+            else if (IsHResultException(retSz.BaseType))
+            {
+                w.Write("global::ABI.System.Exception");
+            }
+            else if (IsMappedAbiValueType(retSz.BaseType))
+            {
+                w.Write(GetMappedAbiTypeName(retSz.BaseType));
             }
             else if (IsAnyStruct(retSz.BaseType))
             {
@@ -4604,6 +4629,11 @@ internal static partial class CodeWriters
                     dataParamType = GetMappedAbiTypeName(szArr.BaseType) + "*";
                     dataCastType = "(" + GetMappedAbiTypeName(szArr.BaseType) + "*)";
                 }
+                else if (IsHResultException(szArr.BaseType))
+                {
+                    dataParamType = "global::ABI.System.Exception*";
+                    dataCastType = "(global::ABI.System.Exception*)";
+                }
                 else if (IsComplexStruct(szArr.BaseType))
                 {
                     string abiStructName = GetAbiStructTypeName(w, szArr.BaseType);
@@ -4919,9 +4949,13 @@ internal static partial class CodeWriters
                     ? "void*"
                     : IsComplexStruct(retSz.BaseType)
                         ? GetAbiStructTypeName(w, retSz.BaseType)
-                        : IsAnyStruct(retSz.BaseType)
-                            ? GetBlittableStructAbiType(w, retSz.BaseType)
-                            : GetAbiPrimitiveType(retSz.BaseType);
+                        : IsHResultException(retSz.BaseType)
+                            ? "global::ABI.System.Exception"
+                            : IsMappedAbiValueType(retSz.BaseType)
+                                ? GetMappedAbiTypeName(retSz.BaseType)
+                                : IsAnyStruct(retSz.BaseType)
+                                    ? GetBlittableStructAbiType(w, retSz.BaseType)
+                                    : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
                 w.Write(callIndent);
                 w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
@@ -5265,9 +5299,13 @@ internal static partial class CodeWriters
                     ? "void*"
                     : IsComplexStruct(retSz.BaseType)
                         ? GetAbiStructTypeName(w, retSz.BaseType)
-                        : IsAnyStruct(retSz.BaseType)
-                            ? GetBlittableStructAbiType(w, retSz.BaseType)
-                            : GetAbiPrimitiveType(retSz.BaseType);
+                        : IsHResultException(retSz.BaseType)
+                            ? "global::ABI.System.Exception"
+                            : IsMappedAbiValueType(retSz.BaseType)
+                                ? GetMappedAbiTypeName(retSz.BaseType)
+                                : IsAnyStruct(retSz.BaseType)
+                                    ? GetBlittableStructAbiType(w, retSz.BaseType)
+                                    : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
                 w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
                 w.Write("            static extern void Free_retval([UnsafeAccessorType(\"");
