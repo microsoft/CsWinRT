@@ -80,17 +80,17 @@ internal static partial class ProjectionGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // In component mode (i.e. producing 'WinRT.Component.dll'), emit auxiliary source
-        // files alongside cswinrt.exe's output so the merged dll plays the entry-assembly
+        // In component mode (i.e. producing 'WinRT.Component.dll'), emit the supporting
+        // source files alongside cswinrt.exe's output so the merged dll plays the entry-assembly
         // and merged-activation roles (TypeMap union, SetEntryAssembly module init, merged
         // 'ABI.WinRT.Component.ManagedExports.GetActivationFactory', and AOT native export).
         try
         {
-            EmitAuxiliaryComponentSources(args, processingState);
+            EmitWinRTComponentSources(args, processingState);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
-            throw new UnhandledProjectionGeneratorException("auxiliary-sources", e);
+            throw new UnhandledProjectionGeneratorException("winrt-component-sources", e);
         }
 
         args.Token.ThrowIfCancellationRequested();
