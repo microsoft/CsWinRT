@@ -38,7 +38,8 @@ internal partial class InteropGenerator
         ModuleDefinition module = DefineInteropModule(
             args: args,
             discoveryState: discoveryState,
-            windowsRuntimeModule: out ModuleDefinition windowsRuntimeModule);
+            windowsRuntimeModule: out ModuleDefinition windowsRuntimeModule,
+            windowsRuntimeSdkProjectionModule: out _);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -201,11 +202,13 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
     /// <param name="windowsRuntimeModule">The <see cref="ModuleDefinition"/> for the Windows Runtime assembly.</param>
+    /// <param name="windowsRuntimeSdkProjectionModule">The <see cref="ModuleDefinition"/> for the Windows SDK projection assembly.</param>
     /// <returns>The interop module to populate and emit.</returns>
     private static ModuleDefinition DefineInteropModule(
         InteropGeneratorArgs args,
         InteropGeneratorDiscoveryState discoveryState,
-        out ModuleDefinition windowsRuntimeModule)
+        out ModuleDefinition windowsRuntimeModule,
+        out ModuleDefinition windowsRuntimeSdkProjectionModule)
     {
         // Get the loaded module for the application .dll (this should always be available here)
         if (!discoveryState.Modules.TryGetValue(args.OutputAssemblyPath, out ModuleDefinition? assemblyModule))
@@ -220,12 +223,9 @@ internal partial class InteropGenerator
             throw WellKnownInteropExceptions.WinRTRuntimeModuleNotFound();
         }
 
-        // Validate that the Windows SDK ref/forwarder ('Microsoft.Windows.SDK.NET.dll') reached the
-        // reference set. The SDK projection itself ('WinRT.Sdk.Projection.dll') is loaded explicitly
-        // in discovery from 'args.WinRTSdkProjectionAssemblyPath' and read downstream via
-        // 'discoveryState.WindowsRuntimeSdkProjectionModule', so this check is purely a sanity
-        // check that the consumer's build has the expected CsWinRT 3.0 reference layout.
-        if (!discoveryState.Modules.Any(static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("Microsoft.Windows.SDK.NET.dll")))
+        // Get the loaded module for the Windows SDK projection .dll (same as above)
+        if ((windowsRuntimeSdkProjectionModule = discoveryState.Modules.FirstOrDefault(
+            predicate: static kvp => Path.GetFileName(Path.Normalize(kvp.Key)).Equals("Microsoft.Windows.SDK.NET.dll")).Value) is null)
         {
             throw WellKnownInteropExceptions.WindowsSdkProjectionModuleNotFound();
         }
