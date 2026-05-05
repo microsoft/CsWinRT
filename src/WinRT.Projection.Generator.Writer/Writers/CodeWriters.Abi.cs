@@ -1328,99 +1328,26 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Emits a real Do_Abi (CCW) body for the cases we can handle, else throw null!.
+    /// Emits a real Do_Abi (CCW) body for the cases we can handle. Mirrors C++
+    /// <c>write_abi_method_call_marshalers</c> (<c>code_writers.h:6682</c>) which
+    /// unconditionally emits a real body via the <c>abi_marshaler</c> abstraction
+    /// for every WinRT-valid signature.
     /// </summary>
     private static void EmitDoAbiBodyIfSimple(TypeWriter w, MethodSig sig, string ifaceFullName, string methodName)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
-        bool allParamsSimple = true;
+        // String params drive whether we need HString header allocation in the body.
         bool hasStringParams = false;
         foreach (ParamInfo p in sig.Params)
         {
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat == ParamCategory.Out || cat == ParamCategory.Ref)
-            {
-                // Allow Out/Ref for blittable primitive/enum/blittable-struct types,
-                // strings, runtime classes, objects, complex structs, System.Type,
-                // and generic instances.
-                AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
-                if (IsHResultException(underlying)) { allParamsSimple = false; break; }
-                if (IsBlittablePrimitive(underlying)) { continue; }
-                if (IsAnyStruct(underlying)) { continue; }
-                if (IsString(underlying)) { continue; }
-                if (IsRuntimeClassOrInterface(underlying)) { continue; }
-                if (IsObject(underlying)) { continue; }
-                if (IsSystemType(underlying)) { continue; }
-                if (IsComplexStruct(underlying)) { continue; }
-                if (cat == ParamCategory.Out && IsGenericInstance(underlying)) { continue; }
-                allParamsSimple = false;
-                break;
-            }
-            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
-            {
-                // Allow blittable primitive arrays, almost-blittable structs, strings, runtime classes, objects.
-                if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
-                {
-                    if (IsBlittablePrimitive(sz.BaseType)) { continue; }
-                    if (IsAnyStruct(sz.BaseType)) { continue; }
-                    if (IsString(sz.BaseType)) { continue; }
-                    if (IsRuntimeClassOrInterface(sz.BaseType)) { continue; }
-                    if (IsObject(sz.BaseType)) { continue; }
-                    if (IsMappedAbiValueType(sz.BaseType)) { continue; }
-                    if (IsComplexStruct(sz.BaseType)) { continue; }
-                }
-                allParamsSimple = false;
-                break;
-            }
-            if (cat == ParamCategory.ReceiveArray)
-            {
-                // 'out T[]' as a parameter (FillArray ABI form (uint*, T**)). Allow blittable
-                // primitives, blittable structs, strings, runtime classes, objects, complex structs.
-                AsmResolver.DotNet.Signatures.TypeSignature underlyingArr = StripByRefAndCustomModifiers(p.Type);
-                if (underlyingArr is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza)
-                {
-                    if (IsBlittablePrimitive(sza.BaseType)) { continue; }
-                    if (IsAnyStruct(sza.BaseType)) { continue; }
-                    if (IsString(sza.BaseType)) { continue; }
-                    if (IsRuntimeClassOrInterface(sza.BaseType)) { continue; }
-                    if (IsObject(sza.BaseType)) { continue; }
-                    if (IsComplexStruct(sza.BaseType)) { continue; }
-                }
-                allParamsSimple = false;
-                break;
-            }
-            if (cat != ParamCategory.In) { allParamsSimple = false; break; }
-            if (IsHResultException(p.Type)) { allParamsSimple = false; break; }
-            if (IsBlittablePrimitive(p.Type)) { continue; }
-            if (IsAnyStruct(p.Type)) { continue; }
-            if (IsString(p.Type)) { hasStringParams = true; continue; }
-            if (IsRuntimeClassOrInterface(p.Type)) { continue; }
-            if (IsObject(p.Type)) { continue; }
-            if (IsGenericInstance(p.Type)) { continue; }
-            if (IsMappedAbiValueType(p.Type)) { continue; }
-            if (IsSystemType(p.Type)) { continue; }
-            if (IsComplexStruct(p.Type)) { continue; }
-            allParamsSimple = false;
-            break;
+            if (IsString(p.Type)) { hasStringParams = true; break; }
         }
         bool returnIsReceiveArrayDoAbi = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzAbi
             && (IsBlittablePrimitive(retSzAbi.BaseType) || IsAnyStruct(retSzAbi.BaseType)
                 || IsString(retSzAbi.BaseType) || IsRuntimeClassOrInterface(retSzAbi.BaseType) || IsObject(retSzAbi.BaseType)
                 || IsComplexStruct(retSzAbi.BaseType));
         bool returnIsHResultExceptionDoAbi = rt is not null && IsHResultException(rt);
-        bool returnSimple = rt is null
-            || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
-            || (IsAnyStruct(rt) && !IsHResultException(rt))
-            || IsString(rt)
-            || IsRuntimeClassOrInterface(rt)
-            || IsObject(rt)
-            || IsGenericInstance(rt)
-            || returnIsReceiveArrayDoAbi
-            || returnIsHResultExceptionDoAbi
-            || (rt is not null && IsMappedAbiValueType(rt))
-            || (rt is not null && IsSystemType(rt))
-            || (rt is not null && IsComplexStruct(rt));
         bool returnIsString = rt is not null && IsString(rt);
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
         bool returnIsGenericInstance = rt is not null && IsGenericInstance(rt);
@@ -1431,10 +1358,14 @@ internal static partial class CodeWriters
         bool isAddEvent = methodName.StartsWith("add_", System.StringComparison.Ordinal);
         bool isRemoveEvent = methodName.StartsWith("remove_", System.StringComparison.Ordinal);
 
-        if (isAddEvent || isRemoveEvent || !allParamsSimple || !returnSimple)
+        if (isAddEvent || isRemoveEvent)
         {
-            w.Write(" => throw null!;\n\n");
-            return;
+            // Events go through dedicated EmitDoAbiAddEvent / EmitDoAbiRemoveEvent paths
+            // upstream (see lines 1153-1159). If we reach here for an event accessor it's a
+            // generator bug. Defensive guard against future regressions.
+            throw new System.InvalidOperationException(
+                $"EmitDoAbiBodyIfSimple: unexpectedly called for event accessor '{methodName}' " +
+                $"on '{ifaceFullName}'. Events should dispatch through EmitDoAbiAddEvent / EmitDoAbiRemoveEvent.");
         }
 
         w.Write("\n{\n");
@@ -5689,27 +5620,6 @@ internal static partial class CodeWriters
         return false;
     }
 
-    /// <summary>True if the type is a blittable struct (TypeDef with all blittable fields, no enum).
-    /// These types have an identical ABI representation to their projected form.</summary>
-    private static bool IsBlittableStruct(AsmResolver.DotNet.Signatures.TypeSignature sig)
-    {
-        if (sig is not AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td) { return false; }
-        TypeDefinition? def = td.Type as TypeDefinition;
-        if (def is null && _cacheRef is not null && td.Type is TypeReference tr)
-        {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string name = tr.Name?.Value ?? string.Empty;
-            // Well-known cross-assembly blittable structs
-            if (ns == "System" && name == "Guid") { return true; }
-            def = _cacheRef.Find(ns + "." + name);
-        }
-        if (def is null) { return false; }
-        TypeCategory cat = TypeCategorization.GetCategory(def);
-        if (cat == TypeCategory.Enum) { return false; }  // handled by IsBlittablePrimitive
-        if (cat != TypeCategory.Struct) { return false; }
-        return IsTypeBlittable(def);
-    }
-
     /// <summary>True for any struct type that can be passed directly across the WinRT ABI
     /// (no per-field marshalling required). This includes blittable structs and "almost-blittable"
     /// structs that have only primitive fields like bool/char (whose C# layout matches the WinRT ABI).
@@ -6147,6 +6057,20 @@ internal static partial class CodeWriters
                             break;
                         }
                     }
+                }
+                // Unresolved cross-assembly TypeRef. If the signature was encoded as a value type
+                // (e.g. WindowId from Microsoft.UI.winmd when that winmd isn't loaded), assume it's
+                // a blittable struct and emit the projected type name — the consumer's compiler
+                // will resolve it via their own references. Otherwise (encoded as Class) emit
+                // void* (it's a runtime class/interface/delegate).
+                if (r.IsValueType)
+                {
+                    string rns = r.Reference_.Namespace?.Value ?? string.Empty;
+                    string rname = r.Reference_.Name?.Value ?? string.Empty;
+                    w.Write("global::");
+                    if (!string.IsNullOrEmpty(rns)) { w.Write(rns); w.Write("."); }
+                    w.Write(Helpers.StripBackticks(rname));
+                    break;
                 }
                 w.Write("void*");
                 break;

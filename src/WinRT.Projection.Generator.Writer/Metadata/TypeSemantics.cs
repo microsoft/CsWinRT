@@ -45,7 +45,7 @@ internal abstract record TypeSemantics
     public sealed record GenericTypeIndex(int Index) : TypeSemantics;
     public sealed record GenericMethodIndex(int Index) : TypeSemantics;
     public sealed record GenericParameter_(GenericParameter Parameter) : TypeSemantics;
-    public sealed record Reference(TypeReference Reference_) : TypeSemantics;
+    public sealed record Reference(TypeReference Reference_, bool IsValueType = false) : TypeSemantics;
 }
 
 /// <summary>
@@ -63,14 +63,14 @@ internal static class TypeSemanticsFactory
             GenericParameterSignature gp => gp.ParameterType == GenericParameterType.Type
                 ? new TypeSemantics.GenericTypeIndex(gp.Index)
                 : new TypeSemantics.GenericMethodIndex(gp.Index),
-            TypeDefOrRefSignature tdorref => GetFromTypeDefOrRef(tdorref.Type),
+            TypeDefOrRefSignature tdorref => GetFromTypeDefOrRef(tdorref.Type, tdorref.IsValueType),
             SzArrayTypeSignature sz => Get(sz.BaseType), // SZ arrays handled by callers
             ByReferenceTypeSignature br => Get(br.BaseType),
             _ => GetFromTypeDefOrRef(signature.GetUnderlyingTypeDefOrRef() ?? throw new System.InvalidOperationException("Unsupported signature: " + signature?.ToString())),
         };
     }
 
-    public static TypeSemantics GetFromTypeDefOrRef(ITypeDefOrRef type)
+    public static TypeSemantics GetFromTypeDefOrRef(ITypeDefOrRef type, bool isValueType = false)
     {
         if (type is TypeDefinition def)
         {
@@ -83,13 +83,13 @@ internal static class TypeSemanticsFactory
             if (ns == "System" && name == "Guid") { return new TypeSemantics.Guid_(); }
             if (ns == "System" && name == "Object") { return new TypeSemantics.Object_(); }
             if (ns == "System" && name == "Type") { return new TypeSemantics.Type_(); }
-            return new TypeSemantics.Reference(reference);
+            return new TypeSemantics.Reference(reference, isValueType);
         }
         if (type is TypeSpecification spec && spec.Signature is GenericInstanceTypeSignature gi)
         {
             return GetGenericInstance(gi);
         }
-        return new TypeSemantics.Reference((TypeReference)type);
+        return new TypeSemantics.Reference((TypeReference)type, isValueType);
     }
 
     private static TypeSemantics GetCorLib(ElementType elementType)

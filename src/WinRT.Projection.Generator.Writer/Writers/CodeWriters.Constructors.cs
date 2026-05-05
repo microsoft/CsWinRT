@@ -303,56 +303,6 @@ internal static partial class CodeWriters
         w.Write(">();\n");
 
         // Bind each arg from the args struct to a local of its ABI-marshalable input type.
-        // For simple cases (primitives, blittable structs, enums) this is a direct copy. For
-        // string params we marshal via HStringMarshaller. For runtime classes we marshal via
-        // the appropriate marshaller. For unsupported parameter kinds we emit throw null!.
-        bool canEmit = true;
-        for (int i = 0; i < paramCount; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            AsmResolver.DotNet.Signatures.TypeSignature pt = p.Type;
-            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
-            {
-                if (pt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szP)
-                {
-                    if (IsBlittablePrimitive(szP.BaseType) || IsAnyStruct(szP.BaseType)) { continue; }
-                    if (IsString(szP.BaseType) || IsRuntimeClassOrInterface(szP.BaseType) || IsObject(szP.BaseType)) { continue; }
-                }
-                canEmit = false; break;
-            }
-            if (cat != ParamCategory.In) { canEmit = false; break; }
-            if (IsBlittablePrimitive(pt) || IsBlittableStruct(pt) || IsEnumType(pt) || IsString(pt))
-            {
-                continue;
-            }
-            if (IsRuntimeClassOrInterface(pt) || IsObject(pt) || IsGenericInstance(pt))
-            {
-                continue;
-            }
-            if (IsMappedAbiValueType(pt))
-            {
-                continue;
-            }
-            if (IsHResultException(pt))
-            {
-                // Marshalled via ABI.System.ExceptionMarshaller (see local-conversion block below).
-                continue;
-            }
-            if (IsSystemType(pt))
-            {
-                continue;
-            }
-            canEmit = false;
-            break;
-        }
-
-        if (!canEmit)
-        {
-            w.Write("        throw null!;\n    }\n}\n");
-            return;
-        }
-
         // Bind arg locals.
         for (int i = 0; i < paramCount; i++)
         {
