@@ -1648,12 +1648,16 @@ internal static partial class CodeWriters
         }
         w.Write("    try\n    {\n");
 
-        // For non-blittable PassArray params, emit CopyToManaged_<name> via UnsafeAccessor.
+        // For non-blittable PassArray params (read-only input arrays), emit CopyToManaged_<name>
+        // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
+        // delegate sees. For FillArray params, the buffer is fresh storage the user delegate
+        // fills — the post-call writeback loop handles that. (Mirrors C++ which only emits the
+        // pre-call CopyToManaged for PassArray, see code_writers.h:7772 write_copy_to_managed.)
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+            if (cat != ParamCategory.PassArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
             if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
