@@ -1533,11 +1533,14 @@ internal static partial class CodeWriters
             }
         }
         // For each out parameter, clear the destination and declare a local.
+        // NOTE: Ref params (WinRT 'in T' / 'ref const T') are READ-ONLY inputs from the caller's
+        // perspective. Do NOT zero *<name> (it's the input value) and do NOT declare a local
+        // (we read directly via *<name>).
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.Out && cat != ParamCategory.Ref) { continue; }
+            if (cat != ParamCategory.Out) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
             w.Write("    *");
@@ -1548,7 +1551,7 @@ internal static partial class CodeWriters
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.Out && cat != ParamCategory.Ref) { continue; }
+            if (cat != ParamCategory.Out) { continue; }
             string raw = p.Parameter.Name ?? "param";
             // Use the projected (non-ABI) type for the local variable.
             // Strip ByRef and CustomModifier wrappers to get the underlying base type.
@@ -1809,9 +1812,63 @@ internal static partial class CodeWriters
                 }
                 else if (cat == ParamCategory.Ref)
                 {
+                    // WinRT 'in T' / 'ref const T' is a read-only by-ref input on the ABI side
+                    // (pointer to a value the native caller owns). On the C# delegate / interface
+                    // side it's projected as 'in T'. Read directly from *<name> via the appropriate
+                    // marshaller — DO NOT zero or write back.
                     string raw = p.Parameter.Name ?? "param";
-                    w.Write("ref __");
-                    w.Write(raw);
+                    string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+                    AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
+                    if (IsString(uRef))
+                    {
+                        w.Write("HStringMarshaller.ConvertToManaged(*");
+                        w.Write(ptr);
+                        w.Write(")");
+                    }
+                    else if (IsObject(uRef))
+                    {
+                        w.Write("WindowsRuntimeObjectMarshaller.ConvertToManaged(*");
+                        w.Write(ptr);
+                        w.Write(")");
+                    }
+                    else if (IsRuntimeClassOrInterface(uRef))
+                    {
+                        w.Write(GetMarshallerFullName(w, uRef));
+                        w.Write(".ConvertToManaged(*");
+                        w.Write(ptr);
+                        w.Write(")");
+                    }
+                    else if (IsMappedAbiValueType(uRef))
+                    {
+                        w.Write(GetMappedMarshallerName(uRef));
+                        w.Write(".ConvertToManaged(*");
+                        w.Write(ptr);
+                        w.Write(")");
+                    }
+                    else if (IsHResultException(uRef))
+                    {
+                        w.Write("global::ABI.System.ExceptionMarshaller.ConvertToManaged(*");
+                        w.Write(ptr);
+                        w.Write(")");
+                    }
+                    else if (IsComplexStruct(uRef))
+                    {
+                        w.Write(GetMarshallerFullName(w, uRef));
+                        w.Write(".ConvertToManaged(*");
+                        w.Write(ptr);
+                        w.Write(")");
+                    }
+                    else if (IsAnyStruct(uRef) || IsBlittablePrimitive(uRef) || IsEnumType(uRef))
+                    {
+                        // Blittable/almost-blittable: ABI layout matches projected layout.
+                        w.Write("*");
+                        w.Write(ptr);
+                    }
+                    else
+                    {
+                        w.Write("*");
+                        w.Write(ptr);
+                    }
                 }
                 else if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
                 {
@@ -1832,12 +1889,13 @@ internal static partial class CodeWriters
             }
             w.Write(");\n");
         }
-        // After call: write back out/ref params.
+        // After call: write back out params to caller's pointer.
+        // NOTE: Ref params (WinRT 'in T') are read-only inputs — never written back.
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.Out && cat != ParamCategory.Ref) { continue; }
+            if (cat != ParamCategory.Out) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
             AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
