@@ -2903,7 +2903,7 @@ internal static partial class CodeWriters
                         w.Write(")");
                     }
                     else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd
-                             && ftd.Type is TypeDefinition fieldStructTd
+                             && TryResolveStructTypeDef(ftd) is TypeDefinition fieldStructTd
                              && TypeCategorization.GetCategory(fieldStructTd) == TypeCategory.Struct
                              && !IsTypeBlittable(fieldStructTd))
                     {
@@ -2978,7 +2978,7 @@ internal static partial class CodeWriters
                         w.Write(")");
                     }
                     else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd2
-                             && ftd2.Type is TypeDefinition fieldStructTd2
+                             && TryResolveStructTypeDef(ftd2) is TypeDefinition fieldStructTd2
                              && TypeCategorization.GetCategory(fieldStructTd2) == TypeCategory.Struct
                              && !IsTypeBlittable(fieldStructTd2))
                     {
@@ -3026,7 +3026,7 @@ internal static partial class CodeWriters
                         w.Write(");\n");
                     }
                     else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd3
-                             && ftd3.Type is TypeDefinition fieldStructTd3
+                             && TryResolveStructTypeDef(ftd3) is TypeDefinition fieldStructTd3
                              && TypeCategorization.GetCategory(fieldStructTd3) == TypeCategory.Struct
                              && !IsTypeBlittable(fieldStructTd3))
                     {
