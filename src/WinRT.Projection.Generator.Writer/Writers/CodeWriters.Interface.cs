@@ -209,8 +209,12 @@ internal static partial class CodeWriters
         foreach (PropertyDefinition prop in type.Properties)
         {
             (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
-            // 'new' qualifier - simplified: skip (would require base interface property lookup).
-            string newKeyword = string.Empty;
+            // Mirror C++ code_writers.h:5642 — emit 'new' when the property is setter-only
+            // on this interface AND a property of the same name exists in any base interface
+            // (typically the getter-only counterpart). This hides the inherited member.
+            string newKeyword = (getter is null && setter is not null
+                && FindPropertyInBaseInterfaces(type, prop.Name?.Value ?? string.Empty))
+                ? "new " : string.Empty;
             string propType = WritePropType(w, prop);
             w.Write("\n");
             w.Write(newKeyword);
@@ -231,6 +235,40 @@ internal static partial class CodeWriters
             w.Write(evt.Name?.Value ?? string.Empty);
             w.Write(";");
         }
+    }
+
+    /// <summary>
+    /// Recursively walks the base interfaces of <paramref name="type"/> looking for a property
+    /// with the given <paramref name="propName"/>. Mirrors C++ <c>find_property_interface</c>
+    /// at code_writers.h:4154-4185 (returns true if any base interface declares a property
+    /// with that name; used to decide whether a setter-only property in a derived interface
+    /// needs the <c>new</c> modifier to hide the base getter).
+    /// </summary>
+    private static bool FindPropertyInBaseInterfaces(TypeDefinition type, string propName)
+    {
+        if (string.IsNullOrEmpty(propName)) { return false; }
+        System.Collections.Generic.HashSet<TypeDefinition> visited = new();
+        return FindPropertyInBaseInterfacesRecursive(type, propName, visited);
+    }
+
+    private static bool FindPropertyInBaseInterfacesRecursive(TypeDefinition type, string propName, System.Collections.Generic.HashSet<TypeDefinition> visited)
+    {
+        foreach (InterfaceImplementation impl in type.Interfaces)
+        {
+            if (impl.Interface is null) { continue; }
+            TypeDefinition? baseIface = ResolveInterface(impl.Interface);
+            if (baseIface is null) { continue; }
+            // Skip the original setter-defining interface itself (matches C++ check
+            // 'setter_iface != type'). Also dedupe via the visited set.
+            if (baseIface == type) { continue; }
+            if (!visited.Add(baseIface)) { continue; }
+            foreach (PropertyDefinition prop in baseIface.Properties)
+            {
+                if ((prop.Name?.Value ?? string.Empty) == propName) { return true; }
+            }
+            if (FindPropertyInBaseInterfacesRecursive(baseIface, propName, visited)) { return true; }
+        }
+        return false;
     }
 
     /// <summary>

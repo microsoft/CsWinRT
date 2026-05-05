@@ -176,7 +176,7 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "ContainsKey", "bool", $"{prefix}ContainsKey", interopType, $", {k} key");
         EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {k} key");
         EmitUnsafeAccessor(w, "TryGetValue", "bool", $"{prefix}TryGetValue", interopType, $", {k} key, out {v} value");
-        EmitUnsafeAccessor(w, "Add", "void", $"{prefix}AddPair", interopType, $", {kv} item");
+        EmitUnsafeAccessor(w, "Add", "void", $"{prefix}Add", interopType, $", {kv} item");
         EmitUnsafeAccessor(w, "Clear", "void", $"{prefix}Clear", interopType, "");
         EmitUnsafeAccessor(w, "Contains", "bool", $"{prefix}Contains", interopType, $", {kv} item");
         EmitUnsafeAccessor(w, "CopyTo", "void", $"{prefix}CopyTo", interopType, $", WindowsRuntimeObjectReference enumObjRef, {kv}[] array, int arrayIndex");
@@ -198,7 +198,7 @@ internal static partial class CodeWriters
         w.Write($"public bool ContainsKey({k} key) => {prefix}ContainsKey(null, {objRefName}, key);\n");
         w.Write($"public bool Remove({k} key) => {prefix}Remove(null, {objRefName}, key);\n");
         w.Write($"public bool TryGetValue({k} key, out {v} value) => {prefix}TryGetValue(null, {objRefName}, key, out value);\n");
-        w.Write($"public void Add({kv} item) => {prefix}AddPair(null, {objRefName}, item);\n");
+        w.Write($"public void Add({kv} item) => {prefix}Add(null, {objRefName}, item);\n");
         w.Write($"public void Clear() => {prefix}Clear(null, {objRefName});\n");
         w.Write($"public bool Contains({kv} item) => {prefix}Contains(null, {objRefName}, item);\n");
         w.Write($"public void CopyTo({kv}[] array, int arrayIndex) => {prefix}CopyTo(null, {objRefName}, {enumerableObjRefName}, array, arrayIndex);\n");

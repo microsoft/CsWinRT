@@ -375,8 +375,16 @@ internal static partial class CodeWriters
                 w.Write(giObjRefName);
                 w.Write(".AsValue();\n}\n");
             }
-            else if (Helpers.IsDefaultInterface(impl) && !classType.IsSealed && TypeCategorization.IsExclusiveTo(ifaceType))
+            else if (Helpers.IsDefaultInterface(impl) && !classType.IsSealed)
             {
+                // Mirrors C++ code_writers.h:4263-4280. The C++ source emits the
+                // 'internal new GetDefaultInterface()' helper whenever the interface is the
+                // default interface and the class is unsealed -- regardless of exclusive-to
+                // status. In ref-projection mode this is the only branch that emits the helper
+                // (the prior 'IWindowsRuntimeInterface<T>.GetInterface' branch is gated off).
+                // In non-ref mode this branch is only reached when the prior branch's
+                // IsInterfaceInInheritanceList check fails (i.e., ExclusiveTo default interfaces),
+                // because non-exclusive default interfaces are routed to the prior branch.
                 string giObjRefName = GetObjRefName(w, substitutedInterface);
                 bool hasBaseType = false;
                 if (classType.BaseType is not null)
