@@ -424,8 +424,7 @@ internal static partial class CodeWriters
         w.Write(nameStripped);
         w.Write("NativeDelegate\n{\n");
 
-        bool canEmit = CanEmitAbiMethodBody(sig);
-        w.Write(canEmit ? "    public static unsafe " : "    public static ");
+        w.Write("    public static unsafe ");
         WriteProjectionReturnType(w, sig);
         w.Write(" ");
         w.Write(nameStripped);
@@ -3644,10 +3643,9 @@ internal static partial class CodeWriters
             if (Helpers.IsSpecial(method)) { continue; }
             string mname = method.Name?.Value ?? string.Empty;
             MethodSig sig = new(method);
-            bool canEmit = CanEmitAbiMethodBody(sig);
 
-            if (canEmit) { w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n"); }
-            w.Write(canEmit ? "    public static unsafe " : "    public static ");
+            w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
+            w.Write("    public static unsafe ");
             WriteProjectionReturnType(w, sig);
             w.Write(" ");
             w.Write(mname);
@@ -3674,9 +3672,8 @@ internal static partial class CodeWriters
             if (gMethod is not null)
             {
                 MethodSig getSig = new(gMethod);
-                bool canEmit = CanEmitAbiMethodBody(getSig);
-                if (canEmit) { w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n"); }
-                w.Write(canEmit ? "    public static unsafe " : "    public static ");
+                w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
+                w.Write("    public static unsafe ");
                 w.Write(propType);
                 w.Write(" ");
                 w.Write(pname);
@@ -3686,9 +3683,8 @@ internal static partial class CodeWriters
             if (sMethod is not null)
             {
                 MethodSig setSig = new(sMethod);
-                bool canEmit = CanEmitAbiMethodBody(setSig);
-                if (canEmit) { w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n"); }
-                w.Write(canEmit ? "    public static unsafe void " : "    public static void ");
+                w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
+                w.Write("    public static unsafe void ");
                 w.Write(pname);
                 w.Write("(WindowsRuntimeObjectReference thisReference, ");
                 // Mirrors C++ code_writers.h:7193 — setter parameter uses the is_set_property=true
@@ -3806,111 +3802,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Returns true if <see cref="EmitAbiMethodBodyIfSimple"/> would emit a real method body
-    /// (vs the <c>=> throw null!;</c> stub) for this signature. Used by callers to pre-decorate
-    /// the method header with <c>[MethodImpl(MethodImplOptions.NoInlining)] ... unsafe</c>.
-    /// </summary>
-    private static bool CanEmitAbiMethodBody(MethodSig sig)
-    {
-        AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
-
-        // Mirror the parameter checks from EmitAbiMethodBodyIfSimple.
-        foreach (ParamInfo p in sig.Params)
-        {
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
-            {
-                if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
-                {
-                    if (IsBlittablePrimitive(sz.BaseType)) { continue; }
-                    if (IsAnyStruct(sz.BaseType)) { continue; }
-                    if (IsString(sz.BaseType)) { continue; }
-                    if (IsRuntimeClassOrInterface(sz.BaseType)) { continue; }
-                    if (IsObject(sz.BaseType)) { continue; }
-                    if (IsMappedAbiValueType(sz.BaseType)) { continue; }
-                    if (IsComplexStruct(sz.BaseType)) { continue; }
-                    if (IsHResultException(sz.BaseType)) { continue; }
-                }
-                return false;
-            }
-            if (cat == ParamCategory.Out)
-            {
-                AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
-                if (IsHResultException(underlying)) { return false; }
-                if (IsBlittablePrimitive(underlying)) { continue; }
-                if (IsAnyStruct(underlying)) { continue; }
-                if (IsString(underlying)) { continue; }
-                if (IsRuntimeClassOrInterface(underlying)) { continue; }
-                if (IsObject(underlying)) { continue; }
-                if (IsSystemType(underlying)) { continue; }
-                if (IsComplexStruct(underlying)) { continue; }
-                if (IsGenericInstance(underlying)) { continue; }
-                return false;
-            }
-            if (cat == ParamCategory.Ref)
-            {
-                AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
-                if (IsHResultException(underlying)) { return false; }
-                if (IsBlittablePrimitive(underlying)) { continue; }
-                if (IsAnyStruct(underlying)) { continue; }
-                if (IsComplexStruct(underlying)) { continue; }
-                return false;
-            }
-            if (cat == ParamCategory.ReceiveArray)
-            {
-                AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
-                if (underlying is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza)
-                {
-                    if (IsBlittablePrimitive(sza.BaseType)) { continue; }
-                    if (IsAnyStruct(sza.BaseType)) { continue; }
-                    if (IsString(sza.BaseType)) { continue; }
-                    if (IsRuntimeClassOrInterface(sza.BaseType)) { continue; }
-                    if (IsObject(sza.BaseType)) { continue; }
-                    if (IsComplexStruct(sza.BaseType)) { continue; }
-                    if (IsHResultException(sza.BaseType)) { continue; }
-                    if (IsMappedAbiValueType(sza.BaseType)) { continue; }
-                }
-                return false;
-            }
-            if (cat != ParamCategory.In) { return false; }
-            if (IsHResultException(p.Type)) { continue; }
-            if (IsBlittablePrimitive(p.Type)) { continue; }
-            if (IsAnyStruct(p.Type)) { continue; }
-            if (IsString(p.Type)) { continue; }
-            if (IsRuntimeClassOrInterface(p.Type)) { continue; }
-            if (IsObject(p.Type)) { continue; }
-            if (IsGenericInstance(p.Type)) { continue; }
-            if (IsMappedAbiValueType(p.Type)) { continue; }
-            if (IsComplexStruct(p.Type)) { continue; }
-            if (IsSystemType(p.Type)) { continue; }
-            return false;
-        }
-
-        // Mirror return-type check from EmitAbiMethodBodyIfSimple.
-        bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz0
-            && (IsBlittablePrimitive(retSz0.BaseType) || IsAnyStruct(retSz0.BaseType)
-                || IsString(retSz0.BaseType) || IsRuntimeClassOrInterface(retSz0.BaseType) || IsObject(retSz0.BaseType)
-                || IsComplexStruct(retSz0.BaseType)
-                || IsHResultException(retSz0.BaseType)
-                || IsMappedAbiValueType(retSz0.BaseType));
-        bool returnIsHResultException = rt is not null && IsHResultException(rt);
-        bool returnIsComplexStructLocal = rt is not null && IsComplexStruct(rt);
-        bool returnSimple = rt is null
-            || (IsBlittablePrimitive(rt) && !IsHResultException(rt))
-            || (IsAnyStruct(rt) && !IsHResultException(rt))
-            || returnIsComplexStructLocal
-            || IsString(rt)
-            || IsRuntimeClassOrInterface(rt)
-            || IsObject(rt)
-            || IsGenericInstance(rt)
-            || returnIsReceiveArray
-            || returnIsHResultException
-            || (rt is not null && IsMappedAbiValueType(rt))
-            || (rt is not null && IsSystemType(rt));
-        return returnSimple;
-    }
-
-    /// <summary>
     /// Emits a real method body for the cases we can fully marshal, otherwise emits
     /// the 'throw null!' stub. Trailing newline is included.
     /// </summary>
@@ -3923,12 +3814,6 @@ internal static partial class CodeWriters
     private static void EmitAbiMethodBodyIfSimple(TypeWriter w, MethodSig sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
-
-        if (!CanEmitAbiMethodBody(sig))
-        {
-            w.Write(" => throw null!;\n");
-            return;
-        }
 
         bool returnIsString = rt is not null && IsString(rt);
         bool returnIsRefType = rt is not null && (IsRuntimeClassOrInterface(rt) || IsObject(rt) || IsGenericInstance(rt));
