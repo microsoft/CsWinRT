@@ -227,7 +227,12 @@ internal static partial class CodeWriters
             }
             if (typeNs.StartsWith("Windows", StringComparison.Ordinal))
             {
-                return "<#%Windows>";
+                // Mirror C++ code_writers.h:464 which writes "<#%Windows>" — the '%' is an
+                // unintended template placeholder in C++ that's unreachable in practice (no
+                // standard mapped type maps to a Windows.* namespace with EmitAbi=true). We
+                // emit the corrected '<#Windows>' so any future addition that hits this
+                // branch produces a runtime-resolvable assembly marker rather than garbage.
+                return "<#Windows>";
             }
         }
         // Unmapped type.
