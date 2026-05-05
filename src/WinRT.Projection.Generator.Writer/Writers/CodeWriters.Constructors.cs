@@ -323,7 +323,6 @@ internal static partial class CodeWriters
                 canEmit = false; break;
             }
             if (cat != ParamCategory.In) { canEmit = false; break; }
-            if (IsHResultException(pt)) { canEmit = false; break; }
             if (IsBlittablePrimitive(pt) || IsBlittableStruct(pt) || IsEnumType(pt) || IsString(pt))
             {
                 continue;
@@ -334,6 +333,11 @@ internal static partial class CodeWriters
             }
             if (IsMappedAbiValueType(pt))
             {
+                continue;
+            }
+            if (IsHResultException(pt))
+            {
+                // Marshalled via ABI.System.ExceptionMarshaller (see local-conversion block below).
                 continue;
             }
             if (IsSystemType(pt))
@@ -461,6 +465,22 @@ internal static partial class CodeWriters
             w.Write(" = ");
             w.Write(marshaller);
             w.Write(".ConvertToUnmanaged(");
+            w.Write(pname);
+            w.Write(");\n");
+        }
+
+        // For HResultException params, emit ABI local + ExceptionMarshaller conversion.
+        // (HResult is excluded from IsMappedAbiValueType because it's "treated specially in many
+        // places", but for activator factory ctor params the marshalling pattern is the same.)
+        for (int i = 0; i < paramCount; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            if (!IsHResultException(p.Type)) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string pname = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            w.Write("        global::ABI.System.Exception __");
+            w.Write(raw);
+            w.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(");
             w.Write(pname);
             w.Write(");\n");
         }
@@ -778,6 +798,11 @@ internal static partial class CodeWriters
                 w.Write(".GetThisPtrUnsafe()");
             }
             else if (IsMappedAbiValueType(p.Type))
+            {
+                w.Write("__");
+                w.Write(raw);
+            }
+            else if (IsHResultException(p.Type))
             {
                 w.Write("__");
                 w.Write(raw);
