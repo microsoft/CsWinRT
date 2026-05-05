@@ -83,15 +83,15 @@ internal static partial class CodeWriters
                 EmitReadOnlyList(w, typeArgs, typeArgSigs, objRefName);
                 break;
             case "IBindableIterable":
-                w.Write("\nglobal::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
+                w.Write($"\nIEnumerator global::System.Collections.IEnumerable.GetEnumerator() => global::ABI.System.Collections.IEnumerableMethods.GetEnumerator({objRefName});\n");
                 break;
             case "IBindableIterator":
-                w.Write("\npublic bool MoveNext() => throw null!;\n");
+                w.Write($"\npublic bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext({objRefName});\n");
                 w.Write("public void Reset() => throw new NotSupportedException();\n");
-                w.Write("public object Current => throw null!;\n");
+                w.Write($"public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current({objRefName});\n");
                 break;
             case "IBindableVector":
-                EmitNonGenericList(w);
+                EmitNonGenericList(w, objRefName);
                 break;
             case "INotifyDataErrorInfo":
                 w.Write("\npublic global::System.Collections.IEnumerable GetErrors(string propertyName) => throw null!;\n");
@@ -337,23 +337,23 @@ internal static partial class CodeWriters
         w.Write(");\n\n");
     }
 
-    private static void EmitNonGenericList(TypeWriter w)
+    private static void EmitNonGenericList(TypeWriter w, string objRefName)
     {
         w.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"BindableListItem\")]\n");
-        w.Write("public object this[int index] { get => throw null!; set => throw null!; }\n");
-        w.Write("public int Count => throw null!;\n");
-        w.Write("public bool IsReadOnly => throw null!;\n");
-        w.Write("public bool IsFixedSize => throw null!;\n");
-        w.Write("public bool IsSynchronized => throw null!;\n");
+        w.Write($"public object this[int index] {{ get => global::ABI.System.Collections.IListMethods.Indexer_Get({objRefName}, index); set => global::ABI.System.Collections.IListMethods.Indexer_Set({objRefName}, index, value); }}\n");
+        w.Write($"public int Count => global::ABI.System.Collections.IListMethods.Count({objRefName});\n");
+        w.Write("public bool IsReadOnly => false;\n");
+        w.Write("public bool IsFixedSize => false;\n");
+        w.Write("public bool IsSynchronized => false;\n");
         w.Write("public object SyncRoot => throw null!;\n");
-        w.Write("public int Add(object value) => throw null!;\n");
-        w.Write("public void Clear() => throw null!;\n");
-        w.Write("public bool Contains(object value) => throw null!;\n");
-        w.Write("public int IndexOf(object value) => throw null!;\n");
-        w.Write("public void Insert(int index, object value) => throw null!;\n");
-        w.Write("public void Remove(object value) => throw null!;\n");
-        w.Write("public void RemoveAt(int index) => throw null!;\n");
-        w.Write("public void CopyTo(global::System.Array array, int index) => throw null!;\n");
+        w.Write($"public int Add(object value) => global::ABI.System.Collections.IListMethods.Add({objRefName}, value);\n");
+        w.Write($"public void Clear() => global::ABI.System.Collections.IListMethods.Clear({objRefName});\n");
+        w.Write($"public bool Contains(object value) => global::ABI.System.Collections.IListMethods.Contains({objRefName}, value);\n");
+        w.Write($"public int IndexOf(object value) => global::ABI.System.Collections.IListMethods.IndexOf({objRefName}, value);\n");
+        w.Write($"public void Insert(int index, object value) => global::ABI.System.Collections.IListMethods.Insert({objRefName}, index, value);\n");
+        w.Write($"public void Remove(object value) => global::ABI.System.Collections.IListMethods.Remove({objRefName}, value);\n");
+        w.Write($"public void RemoveAt(int index) => global::ABI.System.Collections.IListMethods.RemoveAt({objRefName}, index);\n");
+        w.Write($"public void CopyTo(global::System.Array array, int index) => global::ABI.System.Collections.IListMethods.CopyTo({objRefName}, array, index);\n");
         // GetEnumerator is NOT emitted here — it's handled separately by IBindableIterable's
         // EmitNonGenericEnumerable invocation (mirrors C++ which only emits GetEnumerator
         // through write_nongeneric_enumerable_members_using_static_abi_methods).
