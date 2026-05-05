@@ -863,7 +863,8 @@ internal static partial class CodeWriters
         bool hasComplexStructInputs = false;
         for (int ci = 0; ci < sig.Params.Count; ci++)
         {
-            if (IsComplexStruct(sig.Params[ci].Type)) { hasComplexStructInputs = true; break; }
+            ParamCategory cci = ParamHelpers.GetParamCategory(sig.Params[ci]);
+            if ((cci == ParamCategory.In || cci == ParamCategory.Ref) && IsComplexStruct(sig.Params[ci].Type)) { hasComplexStructInputs = true; break; }
         }
         // hasStringParams alone does not force a try/finally - the fast path uses fixed +
         // HStringReference (stack-only, no Free() call needed). It's only the OUT-side return
@@ -1106,15 +1107,17 @@ internal static partial class CodeWriters
                 w.Write(GetMarshallerFullName(w, rt!));
                 w.Write(".Dispose(__retval);\n");
             }
-            // Dispose complex-struct In param locals.
+            // Dispose complex-struct In param locals (both 'in' and 'in T' forms).
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 ParamInfo p = sig.Params[i];
-                if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
-                if (!IsComplexStruct(p.Type)) { continue; }
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.In && cat != ParamCategory.Ref) { continue; }
+                AsmResolver.DotNet.Signatures.TypeSignature pType = StripByRefAndCustomModifiers(p.Type);
+                if (!IsComplexStruct(pType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 w.Write("            ");
-                w.Write(GetMarshallerFullName(w, p.Type));
+                w.Write(GetMarshallerFullName(w, pType));
                 w.Write(".Dispose(__");
                 w.Write(raw);
                 w.Write(");\n");
@@ -4730,14 +4733,17 @@ internal static partial class CodeWriters
         // Declare locals for complex-struct input parameters (e.g. ProfileUsage with nested
         // string/Nullable fields): default-initialize OUTSIDE try, assign inside try via marshaller,
         // dispose in finally. Mirrors C++ behavior for non-blittable struct input params.
+        // Includes both 'in' (ParamCategory.In) and 'in T' (ParamCategory.Ref) forms.
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
-            if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
-            if (!IsComplexStruct(p.Type)) { continue; }
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.In && cat != ParamCategory.Ref) { continue; }
+            AsmResolver.DotNet.Signatures.TypeSignature pType = StripByRefAndCustomModifiers(p.Type);
+            if (!IsComplexStruct(pType)) { continue; }
             string localName = GetParamLocalName(p, paramNameOverride);
             w.Write("        ");
-            w.Write(GetAbiStructTypeName(w, p.Type));
+            w.Write(GetAbiStructTypeName(w, pType));
             w.Write(" __");
             w.Write(localName);
             w.Write(" = default;\n");
@@ -4983,7 +4989,8 @@ internal static partial class CodeWriters
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
-            if (ParamHelpers.GetParamCategory(p) == ParamCategory.In && IsComplexStruct(p.Type)) { hasComplexStructInput = true; break; }
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if ((cat == ParamCategory.In || cat == ParamCategory.Ref) && IsComplexStruct(StripByRefAndCustomModifiers(p.Type))) { hasComplexStructInput = true; break; }
         }
         // System.Type return: ABI.System.Type contains an HSTRING that must be disposed
         // after marshalling to managed System.Type, otherwise the HSTRING leaks. Mirrors
@@ -4996,18 +5003,21 @@ internal static partial class CodeWriters
 
         // Inside try (if applicable): assign complex-struct input locals via marshaller.
         // Mirrors truth pattern: '__value = ProfileUsageMarshaller.ConvertToUnmanaged(value);'
+        // Includes both 'in' (ParamCategory.In) and 'in T' (ParamCategory.Ref) forms.
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
-            if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
-            if (!IsComplexStruct(p.Type)) { continue; }
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.In && cat != ParamCategory.Ref) { continue; }
+            AsmResolver.DotNet.Signatures.TypeSignature pType = StripByRefAndCustomModifiers(p.Type);
+            if (!IsComplexStruct(pType)) { continue; }
             string localName = GetParamLocalName(p, paramNameOverride);
             string callName = GetParamName(p, paramNameOverride);
             w.Write(indent);
             w.Write("__");
             w.Write(localName);
             w.Write(" = ");
-            w.Write(GetMarshallerFullName(w, p.Type));
+            w.Write(GetMarshallerFullName(w, pType));
             w.Write(".ConvertToUnmanaged(");
             w.Write(callName);
             w.Write(");\n");
@@ -5057,6 +5067,8 @@ internal static partial class CodeWriters
             }
         }
         // Emit typed fixed lines for Ref params.
+        // Skip Ref+ComplexStruct: those are marshalled via __local (no fixed needed) and
+        // passed as &__local at the call site, mirroring C++ tool's is_value_type_in path.
         int typedFixedCount = 0;
         for (int i = 0; i < sig.Params.Count; i++)
         {
@@ -5064,9 +5076,11 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat == ParamCategory.Ref)
             {
+                AsmResolver.DotNet.Signatures.TypeSignature uRefSkip = StripByRefAndCustomModifiers(p.Type);
+                if (IsComplexStruct(uRefSkip)) { continue; }
                 string callName = GetParamName(p, paramNameOverride);
                 string localName = GetParamLocalName(p, paramNameOverride);
-                AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
+                AsmResolver.DotNet.Signatures.TypeSignature uRef = uRefSkip;
                 string abiType = IsAnyStruct(uRef) ? GetBlittableStructAbiType(w, uRef) : GetAbiPrimitiveType(uRef);
                 w.Write(indent);
                 w.Write(new string(' ', fixedNesting * 4));
@@ -5312,10 +5326,20 @@ internal static partial class CodeWriters
             }
             if (cat == ParamCategory.Ref)
             {
-                // 'in T' projected param: pass the pinned pointer.
                 string localName = GetParamLocalName(p, paramNameOverride);
-                w.Write(",\n  _");
-                w.Write(localName);
+                AsmResolver.DotNet.Signatures.TypeSignature uRefArg = StripByRefAndCustomModifiers(p.Type);
+                if (IsComplexStruct(uRefArg))
+                {
+                    // Complex struct 'in' (Ref) param: pass &__local (the marshaled ABI struct).
+                    w.Write(",\n  &__");
+                    w.Write(localName);
+                }
+                else
+                {
+                    // 'in T' projected param: pass the pinned pointer.
+                    w.Write(",\n  _");
+                    w.Write(localName);
+                }
                 continue;
             }
             w.Write(",\n  ");
@@ -5637,15 +5661,17 @@ internal static partial class CodeWriters
             // 3. ReceiveArray param frees (Free_<name> via UnsafeAccessor)
             // 4. Return free (__retval) — last
 
-            // 0. Dispose complex-struct input params via marshaller.
+            // 0. Dispose complex-struct input params via marshaller (both 'in' and 'in T' forms).
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 ParamInfo p = sig.Params[i];
-                if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
-                if (!IsComplexStruct(p.Type)) { continue; }
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.In && cat != ParamCategory.Ref) { continue; }
+                AsmResolver.DotNet.Signatures.TypeSignature pType = StripByRefAndCustomModifiers(p.Type);
+                if (!IsComplexStruct(pType)) { continue; }
                 string localName = GetParamLocalName(p, paramNameOverride);
                 w.Write("            ");
-                w.Write(GetMarshallerFullName(w, p.Type));
+                w.Write(GetMarshallerFullName(w, pType));
                 w.Write(".Dispose(__");
                 w.Write(localName);
                 w.Write(");\n");
