@@ -166,7 +166,7 @@ internal static partial class CodeWriters
 
             w.Write("\npublic ");
             w.Write(typeName);
-            w.Write("()\n  : base(default(WindowsRuntimeActivationTypes.DerivedSealed), ");
+            w.Write("()\n  :base(default(WindowsRuntimeActivationTypes.DerivedSealed), ");
             w.Write(objRefName);
             w.Write(", ");
             w.Write(defaultIfaceIid);

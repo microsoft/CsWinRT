@@ -567,8 +567,15 @@ internal static partial class CodeWriters
             }
         }
 
-        // Activator/composer constructors from [Activatable]/[Composable] factory interfaces
+        // Activator/composer constructors from [Activatable]/[Composable] factory interfaces.
+        // Mirror C++ write_attributed_types: emits factory ctors AND static members (via
+        // write_static_members) BEFORE the override hooks and instance members.
         WriteAttributedTypes(w, type);
+
+        // Static members from [Static] factory interfaces (e.g. GetForCurrentView).
+        // C++ emits these inside write_attributed_types -> write_static_members; emit them
+        // here right after to preserve the same overall ordering.
+        WriteStaticClassMembers(w, type);
 
         // Conditional finalizer
         if (gcPressure > 0)
@@ -629,9 +636,6 @@ internal static partial class CodeWriters
         }
 
         WriteClassMembers(w, type);
-
-        // Static members from [Static] factory interfaces (e.g. GetForCurrentView).
-        WriteStaticClassMembers(w, type);
 
         w.Write("}\n");
     }
