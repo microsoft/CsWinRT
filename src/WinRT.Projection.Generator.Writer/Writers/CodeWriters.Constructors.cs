@@ -44,7 +44,7 @@ internal static partial class CodeWriters
             {
                 // Mirrors C++ write_activation_factory_objref_definition (code_writers.h:2748):
                 // in ref mode the activation factory objref getter body is just 'throw null;'.
-                w.Write("\n{\n    get\n    {\n        throw null;\n    }\n}\n");
+                EmitRefModeObjRefGetterBody(w);
             }
             else
             {
@@ -288,8 +288,7 @@ internal static partial class CodeWriters
         // Invoke body is just 'throw null;' (no factory dispatch, no marshalling).
         if (w.Settings.ReferenceProjection)
         {
-            w.Write("        throw null;\n");
-            w.Write("    }\n}\n");
+            EmitRefModeInvokeBody(w);
             return;
         }
 

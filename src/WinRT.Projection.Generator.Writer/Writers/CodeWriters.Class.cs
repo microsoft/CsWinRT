@@ -561,9 +561,7 @@ internal static partial class CodeWriters
             }
             if (!hasRefModeCtors)
             {
-                w.Write("\nprivate ");
-                w.Write(typeName);
-                w.Write("() { throw null; }\n");
+                EmitSyntheticPrivateCtor(w, typeName);
             }
         }
 
