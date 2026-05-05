@@ -272,6 +272,37 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
+    /// Like <see cref="FindPropertyInBaseInterfaces"/> but returns the base interface where the
+    /// property was found (or <c>null</c> if not found). Mirrors the C++ tool's
+    /// <c>find_property_interface</c> which returns a pair&lt;TypeDef, bool&gt;.
+    /// </summary>
+    public static TypeDefinition? FindPropertyInterfaceInBases(TypeDefinition type, string propName)
+    {
+        if (string.IsNullOrEmpty(propName)) { return null; }
+        System.Collections.Generic.HashSet<TypeDefinition> visited = new();
+        return FindPropertyInterfaceInBasesRecursive(type, propName, visited);
+    }
+
+    private static TypeDefinition? FindPropertyInterfaceInBasesRecursive(TypeDefinition type, string propName, System.Collections.Generic.HashSet<TypeDefinition> visited)
+    {
+        foreach (InterfaceImplementation impl in type.Interfaces)
+        {
+            if (impl.Interface is null) { continue; }
+            TypeDefinition? baseIface = ResolveInterface(impl.Interface);
+            if (baseIface is null) { continue; }
+            if (baseIface == type) { continue; }
+            if (!visited.Add(baseIface)) { continue; }
+            foreach (PropertyDefinition prop in baseIface.Properties)
+            {
+                if ((prop.Name?.Value ?? string.Empty) == propName) { return baseIface; }
+            }
+            TypeDefinition? deeper = FindPropertyInterfaceInBasesRecursive(baseIface, propName, visited);
+            if (deeper is not null) { return deeper; }
+        }
+        return null;
+    }
+
+    /// <summary>
     /// Emits the projected custom attributes for an interface method. Mirrors C++
     /// <c>write_custom_attributes</c> filtered for the projected attributes.
     /// </summary>

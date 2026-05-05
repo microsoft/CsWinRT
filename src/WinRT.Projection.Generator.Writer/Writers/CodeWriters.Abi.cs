@@ -3296,6 +3296,23 @@ internal static partial class CodeWriters
             }
             if (setter is not null)
             {
+                // If the property has only a setter on this interface BUT a base interface declares
+                // the getter (so the C# interface decl emits 'get; set;'), C# requires an explicit
+                // interface impl to provide both accessors. Emit a synthetic getter that delegates
+                // to the base interface where the getter actually lives. Mirrors C++
+                // code_writers.h:7052-7062.
+                if (getter is null)
+                {
+                    TypeDefinition? baseIfaceWithGetter = FindPropertyInterfaceInBases(type, pname);
+                    if (baseIfaceWithGetter is not null)
+                    {
+                        w.Write("    get { return ((");
+                        WriteInterfaceTypeNameForCcw(w, baseIfaceWithGetter);
+                        w.Write(")(WindowsRuntimeObject)this).");
+                        w.Write(pname);
+                        w.Write("; }\n");
+                    }
+                }
                 w.Write("    set\n    {\n");
                 w.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
                 w.Write(ccwIfaceName);
