@@ -94,9 +94,9 @@ internal static partial class CodeWriters
                 EmitNonGenericList(w, objRefName);
                 break;
             case "INotifyDataErrorInfo":
-                w.Write("\npublic global::System.Collections.IEnumerable GetErrors(string propertyName) => throw null!;\n");
-                w.Write("public bool HasErrors => throw null!;\n");
-                w.Write("public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged { add => throw null!; remove => throw null!; }\n");
+                w.Write($"\npublic global::System.Collections.IEnumerable GetErrors(string propertyName) => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.GetErrors({objRefName}, propertyName);\n");
+                w.Write($"public bool HasErrors => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors({objRefName});\n");
+                w.Write($"public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged\n{{\n    add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {objRefName}).Subscribe(value);\n    remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {objRefName}).Unsubscribe(value);\n}}\n");
                 break;
         }
     }
@@ -345,7 +345,7 @@ internal static partial class CodeWriters
         w.Write("public bool IsReadOnly => false;\n");
         w.Write("public bool IsFixedSize => false;\n");
         w.Write("public bool IsSynchronized => false;\n");
-        w.Write("public object SyncRoot => throw null!;\n");
+        w.Write("public object SyncRoot => this;\n");
         w.Write($"public int Add(object value) => global::ABI.System.Collections.IListMethods.Add({objRefName}, value);\n");
         w.Write($"public void Clear() => global::ABI.System.Collections.IListMethods.Clear({objRefName});\n");
         w.Write($"public bool Contains(object value) => global::ABI.System.Collections.IListMethods.Contains({objRefName}, value);\n");
