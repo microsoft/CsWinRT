@@ -112,7 +112,7 @@ internal static partial class CodeWriters
                 w.Write(typeName);
                 w.Write("(");
                 WriteParameterList(w, sig);
-                w.Write(")\n  : base(");
+                w.Write(")\n  :base(");
                 if (sig.Params.Count == 0)
                 {
                     w.Write("default");
@@ -943,7 +943,7 @@ internal static partial class CodeWriters
                 if (i > 0) { w.Write(", "); }
                 WriteProjectionParameter(w, sig.Params[i]);
             }
-            w.Write(")\n  : base(");
+            w.Write(")\n  :base(");
             if (isParameterless)
             {
                 // base(default(WindowsRuntimeActivationTypes.DerivedComposed), <factoryObjRef>, <iid>, <marshalingType>)
