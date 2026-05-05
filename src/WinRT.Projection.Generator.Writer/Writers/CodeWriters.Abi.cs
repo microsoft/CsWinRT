@@ -3226,7 +3226,12 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Emits the <c>&lt;Name&gt;ComWrappersCallback</c> file-scoped class for a delegate.
-    /// Mirrors C++ <c>write_delegate_comwrappers_callback</c>.
+    /// Mirrors C++ <c>write_delegate_comwrappers_callback</c>. Generic delegates are not emitted
+    /// here at all — the higher-level dispatch in <c>ProjectionGenerator</c> filters out generic
+    /// types from ABI emission (mirrors C++ <c>main.cpp:412</c>:
+    /// <c>if (distance(type.GenericParam()) != 0) { continue; }</c>). Open generic delegates
+    /// can't compile this body anyway because the projected type would have unbound generic
+    /// parameters.
     /// </summary>
     private static void WriteDelegateComWrappersCallback(TypeWriter w, TypeDefinition type)
     {
@@ -3234,18 +3239,7 @@ internal static partial class CodeWriters
         string nameStripped = Helpers.StripBackticks(name);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
-        bool isGeneric = type.GenericParameters.Count > 0;
         string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
-
-        if (isGeneric)
-        {
-            w.Write("\nfile sealed unsafe class ");
-            w.Write(nameStripped);
-            w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
-            w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags) => throw null!;\n");
-            w.Write("}\n");
-            return;
-        }
 
         MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
         bool nativeSupported = invoke is not null && IsDelegateInvokeNativeSupported(new MethodSig(invoke));
@@ -3274,43 +3268,36 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Emits the <c>&lt;Name&gt;ComWrappersMarshallerAttribute</c> class. Mirrors C++
-    /// <c>write_delegate_com_wrappers_marshaller_attribute_impl</c>.
+    /// <c>write_delegate_com_wrappers_marshaller_attribute_impl</c>. Generic delegates are not
+    /// emitted here at all (filtered out in <c>ProjectionGenerator</c>).
     /// </summary>
     private static void WriteDelegateComWrappersMarshallerAttribute(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = Helpers.StripBackticks(name);
-        bool isGeneric = type.GenericParameters.Count > 0;
         string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
 
         w.Write("\ninternal sealed unsafe class ");
         w.Write(nameStripped);
         w.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
-        if (isGeneric)
-        {
-            w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags) => throw null!;\n");
-        }
-        else
-        {
-            w.Write("    /// <inheritdoc/>\n");
-            w.Write("    public override void* GetOrCreateComInterfaceForObject(object value)\n    {\n");
-            w.Write("        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);\n");
-            w.Write("    }\n\n");
-            w.Write("    /// <inheritdoc/>\n");
-            w.Write("    public override ComInterfaceEntry* ComputeVtables(out int count)\n    {\n");
-            w.Write("        count = sizeof(DelegateReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);\n\n");
-            w.Write("        return (ComInterfaceEntry*)Unsafe.AsPointer(in ");
-            w.Write(nameStripped);
-            w.Write("InterfaceEntriesImpl.Entries);\n    }\n\n");
-            w.Write("    /// <inheritdoc/>\n");
-            w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
-            w.Write("        wrapperFlags = CreatedWrapperFlags.NonWrapping;\n");
-            w.Write("        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<");
-            w.Write(nameStripped);
-            w.Write("ComWrappersCallback>(value, in ");
-            w.Write(iidRefExpr);
-            w.Write(")!;\n    }\n");
-        }
+        w.Write("    /// <inheritdoc/>\n");
+        w.Write("    public override void* GetOrCreateComInterfaceForObject(object value)\n    {\n");
+        w.Write("        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);\n");
+        w.Write("    }\n\n");
+        w.Write("    /// <inheritdoc/>\n");
+        w.Write("    public override ComInterfaceEntry* ComputeVtables(out int count)\n    {\n");
+        w.Write("        count = sizeof(DelegateReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);\n\n");
+        w.Write("        return (ComInterfaceEntry*)Unsafe.AsPointer(in ");
+        w.Write(nameStripped);
+        w.Write("InterfaceEntriesImpl.Entries);\n    }\n\n");
+        w.Write("    /// <inheritdoc/>\n");
+        w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+        w.Write("        wrapperFlags = CreatedWrapperFlags.NonWrapping;\n");
+        w.Write("        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<");
+        w.Write(nameStripped);
+        w.Write("ComWrappersCallback>(value, in ");
+        w.Write(iidRefExpr);
+        w.Write(")!;\n    }\n");
         w.Write("}\n");
     }
 
