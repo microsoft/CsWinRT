@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using Microsoft.Win32;
 
-namespace WindowsRuntime.ProjectionGenerator.Generation;
+namespace WindowsRuntime.ProjectionGenerator.Writer;
 
 /// <summary>
 /// Expands a Windows metadata token (e.g. <c>"sdk"</c>, <c>"sdk+"</c>, <c>"local"</c>, <c>"10.0.26100.0"</c>,
@@ -16,7 +16,7 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 /// <c>cmd_reader.h</c> would have expanded for the same input. Mirrors the logic in
 /// <c>src/cswinrt/cmd_reader.h</c>.
 /// </summary>
-internal static class WindowsMetadataExpander
+public static class WindowsMetadataExpander
 {
     private static readonly Regex s_sdkVersionRegex = new(@"^(\d+\.\d+\.\d+\.\d+)\+?$", RegexOptions.Compiled);
 
@@ -25,7 +25,7 @@ internal static class WindowsMetadataExpander
     /// (or directory paths that should be recursively scanned by the writer).
     /// </summary>
     /// <param name="token">The token to expand (path, "local", "sdk", "sdk+", or a version string).</param>
-    /// <returns>A list of paths suitable for <c>ProjectionWriterOptions.InputPaths</c>.</returns>
+    /// <returns>A list of paths suitable for <see cref="ProjectionWriterOptions.InputPaths"/>.</returns>
     public static List<string> Expand(string token)
     {
         List<string> result = [];
