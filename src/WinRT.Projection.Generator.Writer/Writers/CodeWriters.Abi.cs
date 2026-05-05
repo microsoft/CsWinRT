@@ -1989,6 +1989,73 @@ internal static partial class CodeWriters
             w.Write(ptr);
             w.Write(");\n");
         }
+        // After call: for non-blittable FillArray params (Span<T> where T is string/runtime
+        // class/object/non-blittable struct), copy the managed delegate's writes back into the
+        // native ABI buffer. Mirrors C++ write_marshal_from_managed (code_writers.h:7852-7869)
+        // which emits 'CopyToUnmanaged_<name>(null, __<name>, __<name>Size, (T*)<name>)'.
+        // Blittable element types don't need this — the Span wraps the native buffer directly.
+        for (int i = 0; i < sig.Params.Count; i++)
+        {
+            ParamInfo p = sig.Params[i];
+            ParamCategory cat = ParamHelpers.GetParamCategory(p);
+            if (cat != ParamCategory.FillArray) { continue; }
+            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szFA) { continue; }
+            // Blittable element types: Span wraps the native buffer; no copy-back needed.
+            if (IsBlittablePrimitive(szFA.BaseType) || IsAnyStruct(szFA.BaseType)) { continue; }
+            string raw = p.Parameter.Name ?? "param";
+            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szFA.BaseType))));
+            string elementInteropArg = EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
+            // Determine the ABI element type for the data pointer cast.
+            // - Strings / runtime classes / objects: void**
+            // - HResult exception: global::ABI.System.Exception*
+            // - Mapped value types (DateTime/TimeSpan): global::ABI.System.{DateTimeOffset/TimeSpan}*
+            // - Complex structs: <ABI struct>*
+            string dataParamType;
+            string dataCastType;
+            if (IsString(szFA.BaseType) || IsRuntimeClassOrInterface(szFA.BaseType) || IsObject(szFA.BaseType))
+            {
+                dataParamType = "void** data";
+                dataCastType = "(void**)";
+            }
+            else if (IsHResultException(szFA.BaseType))
+            {
+                dataParamType = "global::ABI.System.Exception* data";
+                dataCastType = "(global::ABI.System.Exception*)";
+            }
+            else if (IsMappedAbiValueType(szFA.BaseType))
+            {
+                string abiName = GetMappedAbiTypeName(szFA.BaseType);
+                dataParamType = abiName + "* data";
+                dataCastType = "(" + abiName + "*)";
+            }
+            else
+            {
+                string abiStructName = GetAbiStructTypeName(w, szFA.BaseType);
+                dataParamType = abiStructName + "* data";
+                dataCastType = "(" + abiStructName + "*)";
+            }
+            w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
+            w.Write("        static extern void CopyToUnmanaged_");
+            w.Write(raw);
+            w.Write("([UnsafeAccessorType(\"");
+            w.Write(GetArrayMarshallerInteropPath(w, szFA.BaseType, elementInteropArg));
+            w.Write("\")] object _, ReadOnlySpan<");
+            w.Write(elementProjected);
+            w.Write("> span, uint length, ");
+            w.Write(dataParamType);
+            w.Write(");\n");
+            w.Write("        CopyToUnmanaged_");
+            w.Write(raw);
+            w.Write("(null, __");
+            w.Write(raw);
+            w.Write(", __");
+            w.Write(raw);
+            w.Write("Size, ");
+            w.Write(dataCastType);
+            w.Write(ptr);
+            w.Write(");\n");
+        }
         if (rt is not null)
         {
             if (returnIsHResultExceptionDoAbi)
