@@ -351,11 +351,11 @@ internal static class WellKnownInteropExceptions
     }
 
     /// <summary>
-    /// The Windows SDK ref/forwarder dll (i.e. <c>Microsoft.Windows.SDK.NET.dll</c>) was not in the reference set.
+    /// The Windows SDK projection module was not found.
     /// </summary>
     public static WellKnownInteropException WindowsSdkProjectionModuleNotFound()
     {
-        return Exception(40, "The Windows SDK ref/forwarder dll (i.e. 'Microsoft.Windows.SDK.NET.dll') was not in the reference set. This usually indicates that the consuming project's build is missing the Microsoft.Windows.SDK.NET.Ref framework reference (e.g. the WindowsSdkPackageVersion property was unset or pointed at a version that could not be resolved).");
+        return Exception(40, "The Windows SDK projection module (i.e. 'Microsoft.Windows.SDK.NET.dll') was not found (this might mean that its path was not valid, or that it failed to load).");
     }
 
     /// <summary>
