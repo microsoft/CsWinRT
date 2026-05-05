@@ -1221,11 +1221,16 @@ internal static partial class CodeWriters
         w.Write("        protected override ");
         w.Write(projectedName);
         w.Write(" GetEventInvoke()\n        {\n");
-        // Build parameter name list for the lambda.
+        // Build parameter name list for the lambda. Lambda's parameter list MUST match the
+        // delegate's signature exactly, including in/out/ref modifiers - otherwise CS1676 fires
+        // when calling TargetDelegate.Invoke. Mirror C++ write_parmaeters.
         w.Write("            return (");
         for (int i = 0; i < sig.Params.Count; i++)
         {
             if (i > 0) { w.Write(", "); }
+            ParamCategory pc = ParamHelpers.GetParamCategory(sig.Params[i]);
+            if (pc == ParamCategory.Ref) { w.Write("in "); }
+            else if (pc == ParamCategory.Out || pc == ParamCategory.ReceiveArray) { w.Write("out "); }
             string raw = sig.Params[i].Parameter.Name ?? "p";
             w.Write(Helpers.IsKeyword(raw) ? "@" + raw : raw);
         }
@@ -1233,6 +1238,9 @@ internal static partial class CodeWriters
         for (int i = 0; i < sig.Params.Count; i++)
         {
             if (i > 0) { w.Write(", "); }
+            ParamCategory pc = ParamHelpers.GetParamCategory(sig.Params[i]);
+            if (pc == ParamCategory.Ref) { w.Write("in "); }
+            else if (pc == ParamCategory.Out || pc == ParamCategory.ReceiveArray) { w.Write("out "); }
             string raw = sig.Params[i].Parameter.Name ?? "p";
             w.Write(Helpers.IsKeyword(raw) ? "@" + raw : raw);
         }
