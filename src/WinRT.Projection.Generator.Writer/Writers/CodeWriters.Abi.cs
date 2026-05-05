@@ -1559,7 +1559,7 @@ internal static partial class CodeWriters
                         w.Write("uint* __");
                         w.Write(p.Parameter.Name ?? "param");
                         w.Write("Size, ");
-                        if (isRefElemBr) { w.Write("void** "); }
+                        if (isRefElemBr) { w.Write("void*** "); }
                         else
                         {
                             WriteAbiType(w, TypeSemanticsFactory.Get(brSz.BaseType));
@@ -1570,7 +1570,7 @@ internal static partial class CodeWriters
                     else
                     {
                         w.Write("uint*, ");
-                        if (isRefElemBr) { w.Write("void**"); }
+                        if (isRefElemBr) { w.Write("void***"); }
                         else
                         {
                             WriteAbiType(w, TypeSemanticsFactory.Get(brSz.BaseType));
