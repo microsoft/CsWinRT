@@ -5984,7 +5984,14 @@ internal static partial class CodeWriters
         }
         else
         {
-            w.Write("    public static int get_Value(void* thisPtr, void* result) => throw null!;\n");
+            // Unreachable: WriteReferenceImpl is only called for enum/struct/delegate types
+            // (WriteAbiEnum / WriteAbiStruct / WriteAbiDelegate dispatchers). Enums are blittable
+            // (handled by the first branch), structs by the first/second branches, delegates by
+            // the third. Defensive: emit a runtime assertion in case a future caller dispatches
+            // for an unsupported category.
+            throw new System.InvalidOperationException(
+                $"WriteReferenceImpl: unsupported type category {TypeCategorization.GetCategory(type)} " +
+                $"for type '{type.FullName}'. Expected enum/struct/delegate.");
         }
         // IID property: matches C++ write_reference_impl, which appends a 'public static ref readonly Guid IID'
         // property pointing at the reference type's IID (e.g. IID_Windows_AI_Actions_ActionEntityKindReference).
