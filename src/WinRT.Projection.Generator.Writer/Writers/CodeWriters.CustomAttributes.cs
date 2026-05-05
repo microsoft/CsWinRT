@@ -131,17 +131,36 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Escapes a string for use inside a C# verbatim string literal (<c>@"..."</c>).
-    /// Mirrors C++ <c>write_custom_attribute_args</c> string emission: only quote characters
-    /// need to be doubled; backslashes and other characters pass through verbatim.
+    /// Mirrors C++ <c>write_custom_attribute_args</c> string emission (code_writers.h:2401-2427):
+    /// the WinMD attribute string value carries source-level escape sequences (e.g. <c>\"</c>
+    /// for an embedded quote). The C++ tool un-escapes these before emitting a verbatim string,
+    /// so a WinMD value of <c>\"quotes\"</c> becomes the verbatim source text <c>""quotes""</c>
+    /// (which decodes to <c>"quotes"</c> at runtime).
+    /// Logic:
+    /// - <c>\</c> followed by <c>\</c> / <c>'</c> / <c>"</c>: drop the backslash, keep the char.
+    /// - <c>\</c> followed by anything else: keep both <c>\</c> and the char.
+    /// - Each emitted <c>"</c> is doubled (<c>""</c>) per verbatim-string escape rules.
     /// </summary>
     private static string EscapeVerbatimString(string s)
     {
         StringBuilder sb = new(s.Length);
+        bool prevEscape = false;
         foreach (char c in s)
         {
-            if (c == '"') { sb.Append('"').Append('"'); }
-            else { sb.Append(c); }
+            if (c == '\\' && !prevEscape)
+            {
+                prevEscape = true;
+                continue;
+            }
+            if (prevEscape && c != '\\' && c != '\'' && c != '"')
+            {
+                sb.Append('\\');
+            }
+            prevEscape = false;
+            sb.Append(c);
+            if (c == '"') { sb.Append('"'); }
         }
+        if (prevEscape) { sb.Append('\\'); }
         return sb.ToString();
     }
 
