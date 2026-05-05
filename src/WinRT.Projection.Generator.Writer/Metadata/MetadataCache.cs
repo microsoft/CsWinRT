@@ -38,17 +38,34 @@ internal sealed class MetadataCache
 
     public static MetadataCache Load(IEnumerable<string> inputs)
     {
-        // Collect all .winmd files first so the resolver knows about all of them
+        // Collect all .winmd files first so the resolver knows about all of them. Dedupe by canonical
+        // absolute path so that the same physical file passed via two different but equivalent path
+        // strings (e.g. one absolute and one with '..' components, or one explicitly listed as a file
+        // and one picked up by an enclosing directory scan) is only loaded once. Loading the same
+        // .winmd twice causes duplicate types to be added to NamespaceMembers.Types and ultimately
+        // emitted twice in the same output file (CS0101).
+        HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
         List<string> winmdFiles = new();
         foreach (string input in inputs)
         {
             if (Directory.Exists(input))
             {
-                winmdFiles.AddRange(Directory.EnumerateFiles(input, "*.winmd", SearchOption.AllDirectories));
+                foreach (string path in Directory.EnumerateFiles(input, "*.winmd", SearchOption.AllDirectories))
+                {
+                    string canonical = Path.GetFullPath(path);
+                    if (seen.Add(canonical))
+                    {
+                        winmdFiles.Add(canonical);
+                    }
+                }
             }
             else if (File.Exists(input))
             {
-                winmdFiles.Add(input);
+                string canonical = Path.GetFullPath(input);
+                if (seen.Add(canonical))
+                {
+                    winmdFiles.Add(canonical);
+                }
             }
             else
             {
@@ -127,6 +144,19 @@ internal sealed class MetadataCache
                 continue;
             }
 
+            // Dedupe by full type name. Multiple input .winmd files can legitimately define types
+            // with the same full name (e.g. WindowsRuntime.Internal types appearing in both
+            // WindowsRuntime.Internal.winmd and cswinrt.winmd, or types showing up in both an SDK
+            // contract winmd and a 3rd-party WinMD that re-exports/forwards them). The C++ cswinrt
+            // tool silently dedupes via 'std::map<full_name, TypeDef>' in its cache; the C# port
+            // mirrors that here so the same input set produces semantically identical output.
+            // First-load-wins matches the C++ behavior (the map's insert is "no overwrite").
+            string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
+            if (_typesByFullName.ContainsKey(fullName))
+            {
+                continue;
+            }
+
             if (!_namespaces.TryGetValue(ns, out NamespaceMembers? members))
             {
                 members = new NamespaceMembers(ns);
@@ -134,7 +164,6 @@ internal sealed class MetadataCache
             }
             members.AddType(type);
 
-            string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
             _typesByFullName[fullName] = type;
             _typeToModulePath[type] = moduleFilePath;
         }
