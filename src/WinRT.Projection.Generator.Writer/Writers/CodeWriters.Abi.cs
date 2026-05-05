@@ -2811,10 +2811,9 @@ internal static partial class CodeWriters
         bool isEnum = cat == TypeCategory.Enum;
         // Complex structs are non-almost-blittable structs with reference fields (string, object, etc.).
         bool isComplexStruct = cat == TypeCategory.Struct && !almostBlittable;
-        // For complex structs, check if all reference fields are types we can marshal:
-        // strings (via HStringMarshaller) or Nullable<T> of supported primitive types
-        // (via ABI.System.<T>Marshaller).
-        bool allFieldsSupported = true;
+        // Detect Nullable<T> reference fields to determine whether the struct's BoxToUnmanaged
+        // call needs CreateComInterfaceFlags.TrackerSupport (mirrors C++ use_tracker_object_support
+        // which returns true for IReference`1 generic instances).
         bool hasReferenceFields = false;
         if (isComplexStruct)
         {
@@ -2822,30 +2821,9 @@ internal static partial class CodeWriters
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                if (IsBlittablePrimitive(ft)) { continue; }
-                if (IsAnyStruct(ft)) { continue; }
-                // Plain strings are reference-like in C# but not "tracker support" in WinRT terms.
-                // Mirror C++ use_tracker_object_support which returns false for plain strings.
-                if (IsString(ft)) { continue; }
-                if (IsMappedAbiValueType(ft)) { continue; }
-                // Nested non-blittable struct fields: marshal via the nested struct's marshaller.
-                // Use TryResolveStructTypeDef to handle both TypeDefinition (in-assembly direct)
-                // and TypeReference (in-assembly TypeRef row or cross-assembly).
-                if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr
-                    && TryResolveStructTypeDef(tdr) is TypeDefinition fieldTd
-                    && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct)
-                {
-                    continue;
-                }
-                // Nullable<T> fields project to IReference<T> on the ABI side and DO require
-                // CreateComInterfaceFlags.TrackerSupport (mirrors C++ use_tracker_object_support
-                // which returns true for IReference`1 generic instances).
-                if (TryGetNullablePrimitiveMarshallerName(ft, out _)) { hasReferenceFields = true; continue; }
-                allFieldsSupported = false;
-                break;
+                if (TryGetNullablePrimitiveMarshallerName(ft, out _)) { hasReferenceFields = true; }
             }
         }
-        bool emitComplexBodies = isComplexStruct && allFieldsSupported;
 
         // For structs that are mapped (e.g. Duration, KeyTime, RepeatBehavior — they have
         // EmitAbi=true and an addition file that completely replaces the public struct), skip
@@ -2855,7 +2833,7 @@ internal static partial class CodeWriters
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string typeNm = type.Name?.Value ?? string.Empty;
         bool isMappedStruct = isComplexStruct && MappedTypes.Get(typeNs, typeNm) is not null;
-        if (isMappedStruct) { emitComplexBodies = false; isComplexStruct = false; }
+        if (isMappedStruct) { isComplexStruct = false; }
 
         w.Write("public static unsafe class ");
         w.Write(nameStripped);
@@ -2868,219 +2846,198 @@ internal static partial class CodeWriters
             WriteTypedefName(w, type, TypedefNameType.ABI, false);
             w.Write(" ConvertToUnmanaged(");
             WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            if (!emitComplexBodies)
+            w.Write(" value)\n    {\n");
+            w.Write("        return new() {\n");
+            bool first = true;
+            foreach (FieldDefinition field in type.Fields)
             {
-                w.Write(" value) => throw null!;\n");
-            }
-            else
-            {
-                w.Write(" value)\n    {\n");
-                w.Write("        return new() {\n");
-                bool first = true;
-                foreach (FieldDefinition field in type.Fields)
+                if (field.IsStatic || field.Signature is null) { continue; }
+                string fname = field.Name?.Value ?? "";
+                AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                if (!first) { w.Write(",\n"); }
+                first = false;
+                w.Write("            ");
+                w.Write(fname);
+                w.Write(" = ");
+                if (IsString(ft))
                 {
-                    if (field.IsStatic || field.Signature is null) { continue; }
-                    string fname = field.Name?.Value ?? "";
-                    AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                    if (!first) { w.Write(",\n"); }
-                    first = false;
-                    w.Write("            ");
+                    w.Write("HStringMarshaller.ConvertToUnmanaged(value.");
                     w.Write(fname);
-                    w.Write(" = ");
-                    if (IsString(ft))
-                    {
-                        w.Write("HStringMarshaller.ConvertToUnmanaged(value.");
-                        w.Write(fname);
-                        w.Write(")");
-                    }
-                    else if (IsMappedAbiValueType(ft))
-                    {
-                        w.Write(GetMappedMarshallerName(ft));
-                        w.Write(".ConvertToUnmanaged(value.");
-                        w.Write(fname);
-                        w.Write(")");
-                    }
-                    else if (IsHResultException(ft))
-                    {
-                        // Mapped value type 'HResult' (excluded from IsMappedAbiValueType because
-                        // it's "treated specially in many places", but for nested struct fields the
-                        // marshalling is identical: use ABI.System.ExceptionMarshaller).
-                        w.Write("global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(value.");
-                        w.Write(fname);
-                        w.Write(")");
-                    }
-                    else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd
-                             && TryResolveStructTypeDef(ftd) is TypeDefinition fieldStructTd
-                             && TypeCategorization.GetCategory(fieldStructTd) == TypeCategory.Struct
-                             && !IsTypeBlittable(fieldStructTd))
-                    {
-                        // Nested non-blittable struct: marshal via its <Name>Marshaller.
-                        w.Write(Helpers.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty));
-                        w.Write("Marshaller.ConvertToUnmanaged(value.");
-                        w.Write(fname);
-                        w.Write(")");
-                    }
-                    else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
-                    {
-                        w.Write(nullableMarshaller!);
-                        w.Write(".BoxToUnmanaged(value.");
-                        w.Write(fname);
-                        w.Write(").DetachThisPtrUnsafe()");
-                    }
-                    else
-                    {
-                        w.Write("value.");
-                        w.Write(fname);
-                    }
+                    w.Write(")");
                 }
-                w.Write("\n        };\n    }\n");
+                else if (IsMappedAbiValueType(ft))
+                {
+                    w.Write(GetMappedMarshallerName(ft));
+                    w.Write(".ConvertToUnmanaged(value.");
+                    w.Write(fname);
+                    w.Write(")");
+                }
+                else if (IsHResultException(ft))
+                {
+                    // Mapped value type 'HResult' (excluded from IsMappedAbiValueType because
+                    // it's "treated specially in many places", but for nested struct fields the
+                    // marshalling is identical: use ABI.System.ExceptionMarshaller).
+                    w.Write("global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(value.");
+                    w.Write(fname);
+                    w.Write(")");
+                }
+                else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd
+                         && TryResolveStructTypeDef(ftd) is TypeDefinition fieldStructTd
+                         && TypeCategorization.GetCategory(fieldStructTd) == TypeCategory.Struct
+                         && !IsTypeBlittable(fieldStructTd))
+                {
+                    // Nested non-blittable struct: marshal via its <Name>Marshaller.
+                    w.Write(Helpers.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty));
+                    w.Write("Marshaller.ConvertToUnmanaged(value.");
+                    w.Write(fname);
+                    w.Write(")");
+                }
+                else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
+                {
+                    w.Write(nullableMarshaller!);
+                    w.Write(".BoxToUnmanaged(value.");
+                    w.Write(fname);
+                    w.Write(").DetachThisPtrUnsafe()");
+                }
+                else
+                {
+                    w.Write("value.");
+                    w.Write(fname);
+                }
             }
+            w.Write("\n        };\n    }\n");
 
             // ConvertToManaged: construct projected struct via constructor accepting the marshalled fields.
             w.Write("    public static ");
             WriteTypedefName(w, type, TypedefNameType.Projected, true);
             w.Write(" ConvertToManaged(");
             WriteTypedefName(w, type, TypedefNameType.ABI, false);
-            if (!emitComplexBodies)
+            // Mirror C++ write_convert_to_managed_method_struct (code_writers.h:4536-4540):
+            // - In component mode: emit object initializer with named field assignments
+            //   (positional ctor not always available on authored types).
+            // - In non-component mode: emit positional constructor (matches the auto-generated
+            //   primary constructor on projected struct types).
+            bool useObjectInitializer = w.Settings.Component;
+            w.Write(" value)\n    {\n");
+            w.Write("        return new ");
+            WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write(useObjectInitializer ? "(){\n" : "(\n");
+            first = true;
+            foreach (FieldDefinition field in type.Fields)
             {
-                w.Write(" value) => throw null!;\n");
-            }
-            else
-            {
-                // Mirror C++ write_convert_to_managed_method_struct (code_writers.h:4536-4540):
-                // - In component mode: emit object initializer with named field assignments
-                //   (positional ctor not always available on authored types).
-                // - In non-component mode: emit positional constructor (matches the auto-generated
-                //   primary constructor on projected struct types).
-                bool useObjectInitializer = w.Settings.Component;
-                w.Write(" value)\n    {\n");
-                w.Write("        return new ");
-                WriteTypedefName(w, type, TypedefNameType.Projected, true);
-                w.Write(useObjectInitializer ? "(){\n" : "(\n");
-                bool first = true;
-                foreach (FieldDefinition field in type.Fields)
+                if (field.IsStatic || field.Signature is null) { continue; }
+                string fname = field.Name?.Value ?? "";
+                AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                if (!first) { w.Write(",\n"); }
+                first = false;
+                w.Write("            ");
+                if (useObjectInitializer)
                 {
-                    if (field.IsStatic || field.Signature is null) { continue; }
-                    string fname = field.Name?.Value ?? "";
-                    AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                    if (!first) { w.Write(",\n"); }
-                    first = false;
-                    w.Write("            ");
-                    if (useObjectInitializer)
-                    {
-                        w.Write(fname);
-                        w.Write(" = ");
-                    }
-                    if (IsString(ft))
-                    {
-                        w.Write("HStringMarshaller.ConvertToManaged(value.");
-                        w.Write(fname);
-                        w.Write(")");
-                    }
-                    else if (IsMappedAbiValueType(ft))
-                    {
-                        w.Write(GetMappedMarshallerName(ft));
-                        w.Write(".ConvertToManaged(value.");
-                        w.Write(fname);
-                        w.Write(")");
-                    }
-                    else if (IsHResultException(ft))
-                    {
-                        // Mapped value type 'HResult' (excluded from IsMappedAbiValueType because
-                        // it's "treated specially in many places", but for nested struct fields the
-                        // marshalling is identical: use ABI.System.ExceptionMarshaller).
-                        w.Write("global::ABI.System.ExceptionMarshaller.ConvertToManaged(value.");
-                        w.Write(fname);
-                        w.Write(")");
-                    }
-                    else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd2
-                             && TryResolveStructTypeDef(ftd2) is TypeDefinition fieldStructTd2
-                             && TypeCategorization.GetCategory(fieldStructTd2) == TypeCategory.Struct
-                             && !IsTypeBlittable(fieldStructTd2))
-                    {
-                        // Nested non-blittable struct: convert via its <Name>Marshaller.
-                        w.Write(Helpers.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty));
-                        w.Write("Marshaller.ConvertToManaged(value.");
-                        w.Write(fname);
-                        w.Write(")");
-                    }
-                    else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
-                    {
-                        w.Write(nullableMarshaller!);
-                        w.Write(".UnboxToManaged(value.");
-                        w.Write(fname);
-                        w.Write(")");
-                    }
-                    else
-                    {
-                        w.Write("value.");
-                        w.Write(fname);
-                    }
+                    w.Write(fname);
+                    w.Write(" = ");
                 }
-                w.Write(useObjectInitializer ? "\n        };\n    }\n" : "\n        );\n    }\n");
+                if (IsString(ft))
+                {
+                    w.Write("HStringMarshaller.ConvertToManaged(value.");
+                    w.Write(fname);
+                    w.Write(")");
+                }
+                else if (IsMappedAbiValueType(ft))
+                {
+                    w.Write(GetMappedMarshallerName(ft));
+                    w.Write(".ConvertToManaged(value.");
+                    w.Write(fname);
+                    w.Write(")");
+                }
+                else if (IsHResultException(ft))
+                {
+                    // Mapped value type 'HResult' (excluded from IsMappedAbiValueType because
+                    // it's "treated specially in many places", but for nested struct fields the
+                    // marshalling is identical: use ABI.System.ExceptionMarshaller).
+                    w.Write("global::ABI.System.ExceptionMarshaller.ConvertToManaged(value.");
+                    w.Write(fname);
+                    w.Write(")");
+                }
+                else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd2
+                         && TryResolveStructTypeDef(ftd2) is TypeDefinition fieldStructTd2
+                         && TypeCategorization.GetCategory(fieldStructTd2) == TypeCategory.Struct
+                         && !IsTypeBlittable(fieldStructTd2))
+                {
+                    // Nested non-blittable struct: convert via its <Name>Marshaller.
+                    w.Write(Helpers.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty));
+                    w.Write("Marshaller.ConvertToManaged(value.");
+                    w.Write(fname);
+                    w.Write(")");
+                }
+                else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
+                {
+                    w.Write(nullableMarshaller!);
+                    w.Write(".UnboxToManaged(value.");
+                    w.Write(fname);
+                    w.Write(")");
+                }
+                else
+                {
+                    w.Write("value.");
+                    w.Write(fname);
+                }
             }
+            w.Write(useObjectInitializer ? "\n        };\n    }\n" : "\n        );\n    }\n");
 
             // Dispose: free non-blittable fields.
             w.Write("    public static void Dispose(");
             WriteTypedefName(w, type, TypedefNameType.ABI, false);
-            if (!emitComplexBodies)
+            w.Write(" value)\n    {\n");
+            foreach (FieldDefinition field in type.Fields)
             {
-                w.Write(" value) => throw null!;\n");
-            }
-            else
-            {
-                w.Write(" value)\n    {\n");
-                foreach (FieldDefinition field in type.Fields)
+                if (field.IsStatic || field.Signature is null) { continue; }
+                string fname = field.Name?.Value ?? "";
+                AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
+                if (IsString(ft))
                 {
-                    if (field.IsStatic || field.Signature is null) { continue; }
-                    string fname = field.Name?.Value ?? "";
-                    AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                    if (IsString(ft))
-                    {
-                        w.Write("        HStringMarshaller.Free(value.");
-                        w.Write(fname);
-                        w.Write(");\n");
-                    }
-                    else if (IsHResultException(ft))
-                    {
-                        // HResult/Exception field has no per-value resources to release
-                        // (the ABI representation is just an int HRESULT). Skip Dispose entirely.
-                        continue;
-                    }
-                    else if (IsMappedAbiValueType(ft))
-                    {
-                        // Mapped value types (DateTime/TimeSpan) have no per-value resources to
-                        // release — the ABI representation is just an int64. Mirror C++
-                        // set_skip_disposer_if_needed (code_writers.h:6431-6440) which explicitly
-                        // skips the disposer for global::ABI.System.{DateTimeOffset,TimeSpan,Exception}.
-                        continue;
-                    }
-                    else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd3
-                             && TryResolveStructTypeDef(ftd3) is TypeDefinition fieldStructTd3
-                             && TypeCategorization.GetCategory(fieldStructTd3) == TypeCategory.Struct
-                             && !IsTypeBlittable(fieldStructTd3))
-                    {
-                        // Nested non-blittable struct: dispose via its <Name>Marshaller.
-                        // Mirror C++: this site always uses the fully-qualified marshaller name.
-                        string nestedNs = fieldStructTd3.Namespace?.Value ?? string.Empty;
-                        string nestedNm = Helpers.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty);
-                        w.Write("        global::ABI.");
-                        w.Write(nestedNs);
-                        w.Write(".");
-                        w.Write(nestedNm);
-                        w.Write("Marshaller.Dispose(value.");
-                        w.Write(fname);
-                        w.Write(");\n");
-                    }
-                    else if (TryGetNullablePrimitiveMarshallerName(ft, out _))
-                    {
-                        w.Write("        WindowsRuntimeUnknownMarshaller.Free(value.");
-                        w.Write(fname);
-                        w.Write(");\n");
-                    }
+                    w.Write("        HStringMarshaller.Free(value.");
+                    w.Write(fname);
+                    w.Write(");\n");
                 }
-                w.Write("    }\n");
+                else if (IsHResultException(ft))
+                {
+                    // HResult/Exception field has no per-value resources to release
+                    // (the ABI representation is just an int HRESULT). Skip Dispose entirely.
+                    continue;
+                }
+                else if (IsMappedAbiValueType(ft))
+                {
+                    // Mapped value types (DateTime/TimeSpan) have no per-value resources to
+                    // release — the ABI representation is just an int64. Mirror C++
+                    // set_skip_disposer_if_needed (code_writers.h:6431-6440) which explicitly
+                    // skips the disposer for global::ABI.System.{DateTimeOffset,TimeSpan,Exception}.
+                    continue;
+                }
+                else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd3
+                         && TryResolveStructTypeDef(ftd3) is TypeDefinition fieldStructTd3
+                         && TypeCategorization.GetCategory(fieldStructTd3) == TypeCategory.Struct
+                         && !IsTypeBlittable(fieldStructTd3))
+                {
+                    // Nested non-blittable struct: dispose via its <Name>Marshaller.
+                    // Mirror C++: this site always uses the fully-qualified marshaller name.
+                    string nestedNs = fieldStructTd3.Namespace?.Value ?? string.Empty;
+                    string nestedNm = Helpers.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty);
+                    w.Write("        global::ABI.");
+                    w.Write(nestedNs);
+                    w.Write(".");
+                    w.Write(nestedNm);
+                    w.Write("Marshaller.Dispose(value.");
+                    w.Write(fname);
+                    w.Write(");\n");
+                }
+                else if (TryGetNullablePrimitiveMarshallerName(ft, out _))
+                {
+                    w.Write("        WindowsRuntimeUnknownMarshaller.Free(value.");
+                    w.Write(fname);
+                    w.Write(");\n");
+                }
             }
+            w.Write("    }\n");
         }
 
         // BoxToUnmanaged: same pattern for all (enum, almost-blittable, complex).
@@ -3088,7 +3045,7 @@ internal static partial class CodeWriters
         // fields (Nullable<T>, etc.) to avoid GC issues with the boxed managed object reference.
         w.Write("    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(");
         WriteTypedefName(w, type, TypedefNameType.Projected, true);
-        if (isEnum || almostBlittable || emitComplexBodies)
+        if (isEnum || almostBlittable || isComplexStruct)
         {
             w.Write("? value)\n    {\n");
             w.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.");
@@ -3099,7 +3056,13 @@ internal static partial class CodeWriters
         }
         else
         {
-            w.Write("? value) => throw null!;\n");
+            // Mapped struct (Duration/KeyTime/etc.): BoxToUnmanaged is still required because the
+            // public projected type still routes through this marshaller (it just lacks per-field
+            // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
+            w.Write("? value)\n    {\n");
+            w.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in ");
+            WriteIidReferenceExpression(w, type);
+            w.Write(");\n    }\n");
         }
 
         // UnboxToManaged: simple for almost-blittable; for complex, unbox to ABI struct then ConvertToManaged.
@@ -3112,7 +3075,7 @@ internal static partial class CodeWriters
             WriteTypedefName(w, type, TypedefNameType.Projected, true);
             w.Write(">(value);\n    }\n");
         }
-        else if (emitComplexBodies)
+        else if (isComplexStruct)
         {
             w.Write("? UnboxToManaged(void* value)\n    {\n");
             w.Write("        ");
@@ -3124,7 +3087,12 @@ internal static partial class CodeWriters
         }
         else
         {
-            w.Write("? UnboxToManaged(void* value) => throw null!;\n");
+            // Mapped struct: unbox directly to projected type (no per-field ConvertToManaged needed
+            // because the projected struct's field layout matches the WinMD struct layout).
+            w.Write("? UnboxToManaged(void* value)\n    {\n");
+            w.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
+            WriteTypedefName(w, type, TypedefNameType.Projected, true);
+            w.Write(">(value);\n    }\n");
         }
 
         w.Write("}\n\n");
@@ -3135,7 +3103,7 @@ internal static partial class CodeWriters
         // For complex structs (with reference fields), it uses TrackerSupport.
         // For complex structs, CreateObject converts via the *Marshaller.ConvertToManaged after
         // unboxing to the ABI struct.
-        if (isEnum || almostBlittable || emitComplexBodies)
+        if (isEnum || almostBlittable || isComplexStruct)
         {
             string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
 
@@ -3190,7 +3158,7 @@ internal static partial class CodeWriters
             w.Write("InterfaceEntriesImpl.Entries);\n    }\n\n");
             w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
             w.Write("        wrapperFlags = CreatedWrapperFlags.NonWrapping;\n");
-            if (isComplexStruct && emitComplexBodies)
+            if (isComplexStruct)
             {
                 w.Write("        return ");
                 w.Write(nameStripped);
