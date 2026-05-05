@@ -86,9 +86,9 @@ internal static partial class CodeWriters
                 w.Write("\nglobal::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => throw null!;\n");
                 break;
             case "IBindableIterator":
-                w.Write("\nbool global::System.Collections.IEnumerator.MoveNext() => throw null!;\n");
-                w.Write("void global::System.Collections.IEnumerator.Reset() => throw null!;\n");
-                w.Write("object global::System.Collections.IEnumerator.Current => throw null!;\n");
+                w.Write("\npublic bool MoveNext() => throw null!;\n");
+                w.Write("public void Reset() => throw new NotSupportedException();\n");
+                w.Write("public object Current => throw null!;\n");
                 break;
             case "IBindableVector":
                 EmitNonGenericList(w);
