@@ -16,9 +16,14 @@ namespace WindowsRuntime.ProjectionGenerator.Writer;
 /// <c>cmd_reader.h</c> would have expanded for the same input. Mirrors the logic in
 /// <c>src/cswinrt/cmd_reader.h</c>.
 /// </summary>
-public static class WindowsMetadataExpander
+public static partial class WindowsMetadataExpander
 {
-    private static readonly Regex s_sdkVersionRegex = new(@"^(\d+\.\d+\.\d+\.\d+)\+?$", RegexOptions.Compiled);
+    /// <summary>
+    /// Matches an SDK version string like <c>"10.0.26100.0"</c> or <c>"10.0.26100.0+"</c>
+    /// (the trailing <c>+</c> indicates that extension SDKs should also be included).
+    /// </summary>
+    [GeneratedRegex(@"^(\d+\.\d+\.\d+\.\d+)\+?$")]
+    private static partial Regex SdkVersionRegex { get; }
 
     /// <summary>
     /// Expands a single Windows metadata token to the resulting set of .winmd file paths
@@ -66,7 +71,7 @@ public static class WindowsMetadataExpander
         }
         else
         {
-            Match m = s_sdkVersionRegex.Match(token);
+            Match m = SdkVersionRegex.Match(token);
             if (m.Success)
             {
                 sdkVersion = m.Groups[1].Value;
