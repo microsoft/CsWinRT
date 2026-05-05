@@ -53,10 +53,10 @@ internal partial class ProjectionGenerator
     /// <summary>
     /// Emits a <c>[ModuleInitializer]</c>-driven <c>SetEntryAssembly</c> in <c>WinRT.Component.dll</c>.
     /// This designates <c>WinRT.Component.dll</c> as the entry assembly the .NET runtime uses
-    /// to root <c>[TypeMapAssemblyTarget]</c> discovery. The runtime side ensures
-    /// <c>WinRT.Component.dll</c> loads first (so this initializer fires before per-component
-    /// module initializers), and the check is idempotent so any later per-component module
-    /// initializer (which is also idempotent in the new design) is a no-op.
+    /// to root <c>[TypeMapAssemblyTarget]</c> discovery. Idempotent: skipped if the host has
+    /// already set an entry assembly. Per-component dlls intentionally do not emit a similar
+    /// initializer; consumers using a single component dll directly must call
+    /// <c>Assembly.SetEntryAssembly</c> themselves if they need TypeMap discovery rooted there.
     /// </summary>
     private static void WriteProjectionTypesInitializer(ProjectionGeneratorProcessingState processingState)
     {
