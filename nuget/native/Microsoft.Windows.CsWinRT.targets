@@ -49,6 +49,15 @@ Properties:
     <ItemGroup>
       <_CsWinRTComponentProjectPaths Include="%(_ResolvedProjectReferencePaths.MSBuildSourceProjectFile)"
                                      Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true'" />
+      <!--
+        Component references that expose a non-empty CsWinRTComponentWindowsSdkPackageVersion
+        metadata. Filtering both to component refs AND to non-empty metadata is necessary because
+        not all components set $(WindowsSdkPackageVersion) at the time Authoring.targets captures
+        the metadata (so the value can be empty), and we want to fall through to other sources
+        when that's the case.
+      -->
+      <_CsWinRTComponentSdkVersionRefs Include="@(_ResolvedProjectReferencePaths)"
+                                       Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)' != ''" />
     </ItemGroup>
 
     <!-- Use the TFM from the first component reference. All referenced components must agree on a TFM for the aggregator's single-TFM build. -->
@@ -60,12 +69,12 @@ Properties:
         Microsoft.Windows.SDK.NET.Ref FrameworkReference resolves a known ref-pack version (and
         thus 'Microsoft.Windows.SDK.NET.dll'). Sources, in precedence order:
           1. The consumer's vcxproj (set 'CsWinRTNativeConsumerWindowsSdkPackageVersion').
-          2. The first component reference (exposed via the 'CsWinRTComponentWindowsSdkPackageVersion'
-             metadata on TargetPathWithTargetPlatformMoniker).
+          2. A component reference's CsWinRTComponentWindowsSdkPackageVersion metadata (filtered
+             above to actual components with non-empty metadata).
         If neither is set, the property is omitted from the aggregator and the SDK default applies.
       -->
       <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(CsWinRTNativeConsumerWindowsSdkPackageVersion)' != ''">$(CsWinRTNativeConsumerWindowsSdkPackageVersion)</_CsWinRTAggregatorWindowsSdkPackageVersion>
-      <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' == ''">%(_ResolvedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)</_CsWinRTAggregatorWindowsSdkPackageVersion>
+      <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' == ''">%(_CsWinRTComponentSdkVersionRefs.CsWinRTComponentWindowsSdkPackageVersion)</_CsWinRTAggregatorWindowsSdkPackageVersion>
     </PropertyGroup>
 
   </Target>
@@ -157,9 +166,12 @@ Properties:
       <_CsWinRTTempProjectLines Include="  &lt;PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;TargetFramework&gt;$(_CsWinRTComponentTargetFramework)&lt;/TargetFramework&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;Platforms&gt;x64%3Bx86%3BARM64&lt;/Platforms&gt;" />
-      <!-- Match the consumer- or component-specified WindowsSdkPackageVersion so the SDK-injected
-           Microsoft.Windows.SDK.NET.Ref FrameworkReference resolves a known ref-pack version (and
-           thus the same Microsoft.Windows.SDK.NET.dll). -->
+      <!-- Match the consumer-specified WindowsSdkPackageVersion (when set) so the SDK-injected
+           Microsoft.Windows.SDK.NET.Ref FrameworkReference resolves a known ref-pack version.
+           Otherwise leave it unset and let the SDK pick its default - the same default the
+           referenced components used when they were compiled (since both go through the same
+           SDK install on the same machine), so the resolved Microsoft.Windows.SDK.NET.dll
+           versions match and the SDK's NETSDK1148 cross-version check is satisfied. -->
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' != ''"
                                 Include="    &lt;WindowsSdkPackageVersion&gt;$(_CsWinRTAggregatorWindowsSdkPackageVersion)&lt;/WindowsSdkPackageVersion&gt;" />
       <!--
