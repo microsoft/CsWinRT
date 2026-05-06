@@ -216,6 +216,10 @@ Properties:
                                 Include="    &lt;OutputType&gt;Exe&lt;/OutputType&gt;" />
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
                                 Include="    &lt;CustomNativeMain&gt;true&lt;/CustomNativeMain&gt;" />
+      <!-- IsTrimmable=true matches the AuthoringTest project's AOT setup; required for ILC's
+           dependency analysis to keep the right closure of types. -->
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
+                                Include="    &lt;IsTrimmable&gt;true&lt;/IsTrimmable&gt;" />
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
                                 Include="    &lt;RuntimeIdentifier&gt;$(_CsWinRTAggregatorRuntimeIdentifier)&lt;/RuntimeIdentifier&gt;" />
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
