@@ -86,14 +86,6 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     /// </summary>
     public bool WindowsUIXamlProjection { get; set; }
 
-    /// <summary>
-    /// Gets or sets whether the consuming build is publishing with Native AOT. Forwarded to
-    /// the projection generator so that, in component mode (<c>WinRT.Component.dll</c>), an
-    /// <c>[UnmanagedCallersOnly] DllGetActivationFactory</c> wrapper is also emitted. Has no
-    /// effect outside component mode.
-    /// </summary>
-    public bool PublishAot { get; set; }
-
     /// <inheritdoc/>
     protected override string ToolName => "cswinrtprojectiongen.exe";
 
@@ -214,11 +206,6 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         if (WindowsUIXamlProjection)
         {
             AppendResponseFileCommand(args, "--windows-ui-xaml-projection", "true");
-        }
-
-        if (PublishAot)
-        {
-            AppendResponseFileCommand(args, "--publish-aot", "true");
         }
 
         // Add any additional arguments that are not statically known
