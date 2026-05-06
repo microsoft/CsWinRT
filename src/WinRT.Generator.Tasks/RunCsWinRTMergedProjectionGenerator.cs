@@ -86,6 +86,14 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
     /// </summary>
     public bool WindowsUIXamlProjection { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether to skip the projection generator's in-process Roslyn compile and
+    /// DLL emit. When true, only the generated .cs files are produced (the SDK's CoreCompile
+    /// in the consuming csproj is responsible for compiling them into a DLL). Used by the
+    /// multi-component aggregator path.
+    /// </summary>
+    public bool EmitSourcesOnly { get; set; }
+
     /// <inheritdoc/>
     protected override string ToolName => "cswinrtprojectiongen.exe";
 
@@ -206,6 +214,11 @@ public sealed class RunCsWinRTMergedProjectionGenerator : ToolTask
         if (WindowsUIXamlProjection)
         {
             AppendResponseFileCommand(args, "--windows-ui-xaml-projection", "true");
+        }
+
+        if (EmitSourcesOnly)
+        {
+            AppendResponseFileCommand(args, "--emit-sources-only", "true");
         }
 
         // Add any additional arguments that are not statically known

@@ -54,6 +54,17 @@ internal sealed partial class ProjectionGeneratorArgs
     [CommandLineArgumentName("--windows-ui-xaml-projection")]
     public bool WindowsUIXamlProjection { get; init; }
 
+    /// <summary>
+    /// Gets whether to skip the in-process Roslyn compilation and DLL emit, leaving only
+    /// the cswinrt.exe-generated and projection-generator-emitted .cs files on disk in
+    /// <see cref="GeneratedAssemblyDirectory"/>. Used by the multi-component aggregator
+    /// path so the SDK's CoreCompile picks up the sources as Compile items and produces
+    /// WinRT.Component.dll as the aggregator csproj's primary output (which is what ILC
+    /// then sees under AOT publish).
+    /// </summary>
+    [CommandLineArgumentName("--emit-sources-only")]
+    public bool EmitSourcesOnly { get; init; }
+
     /// <summary>Gets the token for the operation.</summary>
     public required CancellationToken Token { get; init; }
 }

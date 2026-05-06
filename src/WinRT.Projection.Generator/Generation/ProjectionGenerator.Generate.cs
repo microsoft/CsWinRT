@@ -133,7 +133,33 @@ internal partial class ProjectionGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
-        outputFolder = GetTempFolder();
+        // For sources-only mode, route the generated .cs files to a predictable, targets-
+        // controlled location (under the consumer's intermediate output) so the SDK's
+        // CoreCompile can include them as Compile items. For the normal in-process Roslyn
+        // path, a random %TEMP% subfolder is fine - those files are short-lived inputs to
+        // the projection generator's own compilation.
+        if (args.EmitSourcesOnly)
+        {
+            outputFolder = Path.Combine(args.GeneratedAssemblyDirectory, "cswinrt-sources").TrimEnd('\\');
+
+            // Clean any stale generated files from a previous run so the SDK's CoreCompile
+            // doesn't pick up dead code (e.g. a .cs for a component that was removed).
+            if (Directory.Exists(outputFolder))
+            {
+                foreach (string staleFile in Directory.GetFiles(outputFolder, "*.cs"))
+                {
+                    File.Delete(staleFile);
+                }
+            }
+            else
+            {
+                _ = Directory.CreateDirectory(outputFolder);
+            }
+        }
+        else
+        {
+            outputFolder = GetTempFolder();
+        }
         rspFile = Path.Combine(outputFolder, "ProjectionGenerator.rsp");
         projectionReferenceAssemblies = [];
         hasTypesToProject = false;

@@ -144,12 +144,36 @@ Properties:
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTBuildForNativeConsumer&gt;true&lt;/CsWinRTBuildForNativeConsumer&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateInteropAssembly&gt;true&lt;/CsWinRTGenerateInteropAssembly&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateProjection&gt;false&lt;/CsWinRTGenerateProjection&gt;" />
+      <!--
+        AssemblyName=WinRT.Component makes the aggregator's primary CoreCompile output the merged
+        WinRT.Component.dll directly, instead of producing it as a side-output of the projection
+        generator's in-process Roslyn. This is required so that 'dotnet publish -p:PublishAot=true'
+        of the aggregator runs ILC over WinRT.Component.dll itself, materializing the
+        [UnmanagedCallersOnly("DllGetActivationFactory")] attribute as a real native PE export.
+      -->
+      <_CsWinRTTempProjectLines Include="    &lt;AssemblyName&gt;WinRT.Component&lt;/AssemblyName&gt;" />
+      <!--
+        MergeReferencedActivationFactories=true tells the source generator's EmitManagedExports
+        to emit the merged 'ABI.WinRT.Component.ManagedExports.GetActivationFactory' dispatcher
+        on the aggregator's primary assembly (walking each referenced component's ManagedExports
+        in turn). Combined with PublishAot=true (propagated from the consumer), the source
+        generator's EmitNativeExports also emits the [UnmanagedCallersOnly] DllGetActivationFactory
+        wrapper - same logic that makes single-component AOT work, just running on the aggregator.
+      -->
+      <_CsWinRTTempProjectLines Include="    &lt;CsWinRTMergeReferencedActivationFactories&gt;true&lt;/CsWinRTMergeReferencedActivationFactories&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;EnableDefaultItems&gt;false&lt;/EnableDefaultItems&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;GenerateAssemblyInfo&gt;false&lt;/GenerateAssemblyInfo&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProduceReferenceAssembly&gt;false&lt;/ProduceReferenceAssembly&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;/PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
+      <!--
+        The CsWinRT source generator (AuthoringExportTypesGenerator) flows in transitively from
+        the referenced component projects' Microsoft.Windows.CsWinRT package reference, so we
+        don't need to add it as an explicit Analyzer item here. (Adding it explicitly produces
+        a duplicate-load: the consumer's package-local copy plus the transitive .nuget copy load
+        as separate analyzer instances and emit duplicate ManagedExports.g.cs.)
+      -->
       <_CsWinRTTempProjectLines Include="  &lt;/ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;Sdk.targets&quot; Sdk=&quot;Microsoft.NET.Sdk&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;$(_CsWinRTTargetsForAggregator)&quot; /&gt;" />

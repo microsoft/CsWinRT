@@ -380,6 +380,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     assemblies by checking for [WindowsRuntimeComponentAssembly] on
     the assemblies and only includes types from those.
     If no component types are found, the tool produces no output DLL.
+
+    Skipped when the consuming csproj's own AssemblyName is 'WinRT.Component' (the multi-
+    component aggregator case driven by build/native/Microsoft.Windows.CsWinRT.Native.targets).
+    In that case, _GenerateMergedAggregatorSources runs in 'emit-sources-only' mode before
+    CoreCompile and the SDK's CoreCompile produces WinRT.Component.dll directly.
     ============================================================
   -->
   <Target
@@ -387,7 +392,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     DependsOnTargets="CoreCompile;_ResolveCsWinRToolsDirectory;_RunCsWinRTMergedProjectionGenerator"
     Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorComponentAssemblyPath)"
-    Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true'">
+    Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(AssemblyName)' != 'WinRT.Component'">
 
     <ItemGroup>
       <_ComponentProjectionReferenceAssemblyPaths Include="@(ReferencePath)" Condition="!$([System.String]::new('%(Identity)').EndsWith('.winmd'))" />
@@ -430,6 +435,95 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
       <!-- Append to 'FileWrites' so the component .dll will be removed on clean -->
       <FileWrites Include="@(CsWinRTGeneratorComponentPath)"/>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    ============================================================
+                 _GenerateMergedAggregatorSources
+
+    Pre-CoreCompile sibling of _RunCsWinRTComponentProjectionGenerator for the multi-
+    component aggregator scenario (consuming csproj's AssemblyName == 'WinRT.Component').
+
+    Runs cswinrtprojectiongen with EmitSourcesOnly=true so the tool generates the
+    cswinrt projection .cs files (per-component projected types, per-component ABI
+    ManagedExports, TypeMap union, ProjectionTypesInitializer module ctor) into a
+    targets-controlled folder, then injects them as <Compile> items so the SDK's
+    CoreCompile produces WinRT.Component.dll directly as the aggregator's primary output.
+
+    The merged ABI.WinRT.Component.ManagedExports dispatcher and (under PublishAot) the
+    [UnmanagedCallersOnly] DllGetActivationFactory native export are NOT produced here -
+    the source generator's existing EmitManagedExports / EmitNativeExports logic emits them
+    into the aggregator's compilation when CsWinRTMergeReferencedActivationFactories=true
+    (which the synthesized aggregator csproj sets).
+
+    Aligning the aggregator's primary output with WinRT.Component.dll is what makes
+    'dotnet publish -p:PublishAot=true' of the aggregator produce a real native PE export -
+    ILC compiles whatever is the publish unit's primary assembly.
+    ============================================================
+  -->
+  <Target
+    Name="_GenerateMergedAggregatorSources"
+    BeforeTargets="CoreCompile"
+    DependsOnTargets="ResolveAssemblyReferences;ResolveProjectReferences;CsWinRTCaptureProjectReferenceWinMDs;CsWinRTRemoveWinMDReferences;_ResolveCsWinRToolsDirectory"
+    Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(AssemblyName)' == 'WinRT.Component'">
+
+    <ItemGroup>
+      <!-- Collect winmds from all referenced components (same logic as
+           _RunCsWinRTMergedProjectionGenerator's _WinMDPathsList computation). -->
+      <_AggregatorReferencePathsWithWinMDs Include="@(ReferencePathWithRefAssemblies)"
+                                           Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
+      <_AggregatorWinMDPathsList Include="@(CsWinRTInputs)" />
+      <_AggregatorWinMDPathsList Include="$([MSBuild]::ValueOrDefault('%(_AggregatorReferencePathsWithWinMDs.CsWinRTInputs)', '').Split(';'))"
+                                 Condition="'%(_AggregatorReferencePathsWithWinMDs.CsWinRTInputs)' != ''" />
+      <_AggregatorWinMDPathsList Include="$(CsWinRTInteropMetadata)" />
+
+      <_AggregatorReferenceAssemblyPaths Include="@(ReferencePath)"
+                                         Condition="!$([System.String]::new('%(Identity)').EndsWith('.winmd'))" />
+    </ItemGroup>
+
+    <!-- Skip if no component winmds were resolved (nothing to aggregate). -->
+    <PropertyGroup>
+      <_HasAggregatorWinMDInputs Condition="'@(_AggregatorReferencePathsWithWinMDs)' != '' or '@(CsWinRTInputs)' != ''">true</_HasAggregatorWinMDInputs>
+    </PropertyGroup>
+
+    <RunCsWinRTMergedProjectionGenerator
+      Condition="'$(_HasAggregatorWinMDInputs)' == 'true'"
+      ReferenceAssemblyPaths="@(_AggregatorReferenceAssemblyPaths)"
+      GeneratedAssemblyDirectory="$(CsWinRTGeneratorInteropAssemblyDirectory)"
+      WinMDPaths="@(_AggregatorWinMDPathsList)"
+      TargetFramework="$(CsWinRTExeTFM)"
+      WindowsMetadata="$(CsWinRTWindowsMetadata)"
+      CsWinRTExePath="$(CsWinRTExe)"
+      AssemblyName="WinRT.Component"
+      EmitSourcesOnly="true"
+      CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
+      CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+      StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
+      StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
+
+    <!-- Inject the generated .cs files as Compile items for SDK's CoreCompile. -->
+    <ItemGroup Condition="'$(_HasAggregatorWinMDInputs)' == 'true'">
+      <_AggregatorGeneratedSources Include="$(CsWinRTGeneratorInteropAssemblyDirectory)cswinrt-sources\*.cs" />
+      <Compile Include="@(_AggregatorGeneratedSources)" Visible="false" />
+      <FileWrites Include="@(_AggregatorGeneratedSources)" />
+
+      <!--
+        Wire up our own to-be-produced WinRT.Component.dll (the aggregator csproj's primary
+        output, produced by the SDK's CoreCompile after our target finishes) as the
+        CsWinRTGeneratorComponentPath. The interop generator (_RunCsWinRTInteropGenerator) runs
+        after CoreCompile and reads this item to know where the merged WinRT.Component.dll lives.
+      -->
+      <CsWinRTGeneratorComponentPath Include="$(_CsWinRTGeneratorComponentAssemblyPath)">
+        <AssemblyName>WinRT.Component</AssemblyName>
+        <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+        <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        <IncludeRuntimeDependency>true</IncludeRuntimeDependency>
+        <Private>true</Private>
+        <MSBuildSourceTargetName>_GenerateMergedAggregatorSources</MSBuildSourceTargetName>
+        <Platforms>AnyCPU</Platforms>
+      </CsWinRTGeneratorComponentPath>
     </ItemGroup>
   </Target>
 

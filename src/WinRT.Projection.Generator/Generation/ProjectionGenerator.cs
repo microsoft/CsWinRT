@@ -95,6 +95,16 @@ internal static partial class ProjectionGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Sources-only mode: cswinrt.exe + the projection-generator-emitted aux sources
+        // are now sitting on disk in GeneratedAssemblyDirectory / processingState.SourcesFolder.
+        // Skip the in-process Roslyn compile and DLL emit; the aggregator csproj will pick the
+        // .cs files up as Compile items and SDK CoreCompile will produce the dll instead.
+        if (args.EmitSourcesOnly)
+        {
+            ConsoleApp.Log($"Sources emitted -> {processingState.SourcesFolder}");
+            return;
+        }
+
         // Invoke Roslyn to compile the generated sources into 'WinRT.Projection.dll'
         try
         {
