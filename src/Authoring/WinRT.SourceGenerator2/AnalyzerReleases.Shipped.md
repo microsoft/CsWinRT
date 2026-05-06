@@ -22,3 +22,4 @@ CSWINRT2012 | WindowsRuntime.SourceGenerator | Warning | Invalid 'ContractVersio
 CSWINRT2013 | WindowsRuntime.SourceGenerator | Warning | Invalid 'ContractVersionAttribute' contract type argument
 CSWINRT2014 | WindowsRuntime.SourceGenerator | Warning | API contract type missing 'ContractVersionAttribute'
 CSWINRT2015 | WindowsRuntime.SourceGenerator | Info | Public authored type missing version metadata
+CSWINRT2016 | WindowsRuntime.SourceGenerator | Warning | Public authored type missing 'ContractVersionAttribute'

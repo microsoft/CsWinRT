@@ -217,4 +217,18 @@ internal static partial class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "Public types in a Windows Runtime component should declare their version using either '[ContractVersion(typeof(SomeContract), version)]' (to associate with an API contract) or '[Version(version)]' (to specify a Windows Runtime version), so that consumers can target a specific version.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a public authored type missing a <c>[ContractVersion]</c> attribute when at least one other public type in the same component has one applied.
+    /// </summary>
+    public static readonly DiagnosticDescriptor PublicTypeMissingContractVersion = new(
+        id: "CSWINRT2016",
+        title: "Public authored type missing 'ContractVersionAttribute'",
+        messageFormat: """The type '{0}' is publicly exposed in a Windows Runtime component that uses '[ContractVersion]' on at least one other public type, but '{0}' itself does not have a '[ContractVersion]' attribute applied. Public types in a component using contract versioning should consistently declare their associated API contract using '[ContractVersion(typeof(SomeContract), version)]'.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Public types in a Windows Runtime component should use a consistent versioning scheme. If at least one public type uses '[ContractVersion]', all other public types should also use '[ContractVersion]' to declare their associated API contract.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT",
+        customTags: WellKnownDiagnosticTags.CompilationEnd);
 }
