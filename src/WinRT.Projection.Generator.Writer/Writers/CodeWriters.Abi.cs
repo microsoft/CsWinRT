@@ -5939,6 +5939,16 @@ internal static partial class CodeWriters
     {
         string ns = def.Namespace?.Value ?? string.Empty;
         string name = def.Name?.Value ?? string.Empty;
+        // Apply mapped-type translation so consumers see the projected (.NET) enum name
+        // (e.g. Windows.UI.Xaml.Interop.NotifyCollectionChangedAction →
+        // System.Collections.Specialized.NotifyCollectionChangedAction). Mirrors the same
+        // remapping that WriteTypedefName performs.
+        MappedType? mapped = MappedTypes.Get(ns, name);
+        if (mapped is not null)
+        {
+            ns = mapped.MappedNamespace;
+            name = mapped.MappedName;
+        }
         return string.IsNullOrEmpty(ns) ? "global::" + name : "global::" + ns + "." + name;
     }
 
