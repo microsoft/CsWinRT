@@ -7,13 +7,13 @@ using WindowsRuntime.SourceGenerator.Tests.Helpers;
 
 namespace WindowsRuntime.SourceGenerator.Tests;
 
-using VerifyCS = CSharpAnalyzerTest<PublicTypeRequiresContractVersionAnalyzer>;
+using VerifyCS = CSharpAnalyzerTest<PublicTypeRequiresVersioningAnalyzer>;
 
 /// <summary>
-/// Tests for <see cref="PublicTypeRequiresContractVersionAnalyzer"/>.
+/// Tests for <see cref="PublicTypeRequiresVersioningAnalyzer"/>.
 /// </summary>
 [TestClass]
-public sealed class Test_PublicTypeRequiresContractVersionAnalyzer
+public sealed class Test_PublicTypeRequiresVersioningAnalyzer
 {
     [TestMethod]
     public async Task PublicClass_WithContractVersion_DoesNotWarn()
@@ -26,6 +26,37 @@ public sealed class Test_PublicTypeRequiresContractVersionAnalyzer
             public enum MyContract;
 
             [ContractVersion(typeof(MyContract), 1u)]
+            public sealed class MyClass;
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task PublicClass_WithVersion_DoesNotWarn()
+    {
+        const string source = """
+            using Windows.Foundation.Metadata;
+
+            [Version(1u)]
+            public sealed class MyClass;
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
+    }
+
+    [TestMethod]
+    public async Task PublicClass_WithBothContractVersionAndVersion_DoesNotWarn()
+    {
+        const string source = """
+            using Windows.Foundation.Metadata;
+
+            [ApiContract]
+            [ContractVersion(1u)]
+            public enum MyContract;
+
+            [ContractVersion(typeof(MyContract), 1u)]
+            [Version(1u)]
             public sealed class MyClass;
             """;
 
@@ -46,7 +77,7 @@ public sealed class Test_PublicTypeRequiresContractVersionAnalyzer
     }
 
     [TestMethod]
-    public async Task InternalClass_WithoutContractVersion_DoesNotWarn()
+    public async Task InternalClass_WithoutVersioning_DoesNotWarn()
     {
         const string source = """
             internal sealed class MyClass;
@@ -56,7 +87,7 @@ public sealed class Test_PublicTypeRequiresContractVersionAnalyzer
     }
 
     [TestMethod]
-    public async Task NestedPublicClass_WithoutContractVersion_DoesNotWarn()
+    public async Task NestedPublicClass_WithoutVersioning_DoesNotWarn()
     {
         const string source = """
             using Windows.Foundation.Metadata;
@@ -86,7 +117,7 @@ public sealed class Test_PublicTypeRequiresContractVersionAnalyzer
     }
 
     [TestMethod]
-    public async Task PublicClass_WithoutContractVersion_Warns()
+    public async Task PublicClass_WithoutVersioning_Warns()
     {
         const string source = """
             public sealed class {|CSWINRT2015:MyClass|};
@@ -96,7 +127,7 @@ public sealed class Test_PublicTypeRequiresContractVersionAnalyzer
     }
 
     [TestMethod]
-    public async Task PublicInterface_WithoutContractVersion_Warns()
+    public async Task PublicInterface_WithoutVersioning_Warns()
     {
         const string source = """
             public interface {|CSWINRT2015:IMyInterface|};
@@ -106,7 +137,7 @@ public sealed class Test_PublicTypeRequiresContractVersionAnalyzer
     }
 
     [TestMethod]
-    public async Task PublicStruct_WithoutContractVersion_Warns()
+    public async Task PublicStruct_WithoutVersioning_Warns()
     {
         const string source = """
             public struct {|CSWINRT2015:MyStruct|};
@@ -116,7 +147,7 @@ public sealed class Test_PublicTypeRequiresContractVersionAnalyzer
     }
 
     [TestMethod]
-    public async Task PublicEnum_WithoutContractVersion_Warns()
+    public async Task PublicEnum_WithoutVersioning_Warns()
     {
         const string source = """
             public enum {|CSWINRT2015:MyEnum|}
@@ -130,7 +161,7 @@ public sealed class Test_PublicTypeRequiresContractVersionAnalyzer
     }
 
     [TestMethod]
-    public async Task PublicDelegate_WithoutContractVersion_Warns()
+    public async Task PublicDelegate_WithoutVersioning_Warns()
     {
         const string source = """
             public delegate void {|CSWINRT2015:MyDelegate|}();

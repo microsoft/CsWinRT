@@ -206,15 +206,15 @@ internal static partial class DiagnosticDescriptors
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
 
     /// <summary>
-    /// Gets a <see cref="DiagnosticDescriptor"/> for a public authored type missing a <c>[ContractVersion]</c> attribute.
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a public authored type missing version metadata (either <c>[ContractVersion]</c> or <c>[Version]</c>).
     /// </summary>
-    public static readonly DiagnosticDescriptor PublicTypeMissingContractVersion = new(
+    public static readonly DiagnosticDescriptor PublicTypeMissingVersioning = new(
         id: "CSWINRT2015",
-        title: "Public authored type missing 'ContractVersionAttribute'",
-        messageFormat: """The type '{0}' is publicly exposed in a Windows Runtime component, but it does not have a '[ContractVersion]' attribute applied to it. Public types should declare their associated API contract using '[ContractVersion(typeof(SomeContract), version)]' so that consumers can target a specific contract version.""",
+        title: "Public authored type missing version metadata",
+        messageFormat: """The type '{0}' is publicly exposed in a Windows Runtime component, but it does not have either a '[ContractVersion]' or a '[Version]' attribute applied to it. Public types should declare their associated API contract version using '[ContractVersion(typeof(SomeContract), version)]', or specify a Windows Runtime version using '[Version(version)]', so that consumers can target a specific version.""",
         category: "WindowsRuntime.SourceGenerator",
         defaultSeverity: DiagnosticSeverity.Info,
         isEnabledByDefault: true,
-        description: "Public types in a Windows Runtime component should declare their associated API contract using '[ContractVersion(typeof(SomeContract), version)]', so that consumers can target a specific contract version.",
+        description: "Public types in a Windows Runtime component should declare their version using either '[ContractVersion(typeof(SomeContract), version)]' (to associate with an API contract) or '[Version(version)]' (to specify a Windows Runtime version), so that consumers can target a specific version.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
