@@ -36,9 +36,17 @@
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI">
       <!-- Keep build assets imported. -->
       <ExcludeAssets>compile;runtime</ExcludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Web.WebView2">
-      <ExcludeAssets>all</ExcludeAssets>
+      <!--
+        Stop transitive package flow to consumers (e.g. the synthesized aggregator csproj
+        used by native consumers in AuthoringConsumptionTest). Without this, WindowsAppSDK.WinUI's
+        transitive dependency on Microsoft.Web.WebView2 propagates buildTransitive assets into
+        the aggregator's closure - including its CsWinRT 2.x style projection .dll
+        (Microsoft.Web.WebView2.Core.Projection.dll), which is stamped against
+        Microsoft.Windows.SDK.NET v10.0.17763.38 (PublicKeyToken=31bf3856ad364e35) and conflicts
+        with the in-repo built Microsoft.Windows.SDK.NET.dll (v1.0.0.0 PK=null), tripping
+        NETSDK1148.
+      -->
+      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
   
