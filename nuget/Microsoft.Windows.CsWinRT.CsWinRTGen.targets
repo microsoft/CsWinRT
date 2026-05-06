@@ -25,6 +25,37 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       generators -> CoreCompile -> _GenerateMergedAggregatorSources via BeforeTargets).
     -->
     <_CsWinRTProjectionGeneratorPreCoreCompileDep Condition="'$(AssemblyName)' != 'WinRT.Component'">CoreCompile</_CsWinRTProjectionGeneratorPreCoreCompileDep>
+  </PropertyGroup>
+
+  <!--
+    ============================================================
+                _CsWinRTSuppressWindowsSDKConflictForAggregator
+
+    Multi-component aggregator scenario only (AssemblyName == WinRT.Component): the synthesized
+    aggregator csproj's ResolveAssemblyReferences may report Microsoft.Windows.SDK.NET version
+    conflicts between the SDK-resolved framework reference and what the referenced component
+    .dll-s were compiled against (which can pick up newer SDK.NET versions transitively from
+    package references like Microsoft.WindowsAppSDK.WinUI). The SDK then fires NETSDK1148.
+
+    The aggregator is a dynamically synthesized wrapper - it doesn't actually consume any newer
+    Microsoft.Windows.SDK.NET API surface (it only routes activation factory calls via the
+    source-generator-emitted merged dispatcher, using stable APIs). The cross-version validation
+    is not meaningful here, so suppress the conflict entry before the SDK's
+    _ErrorOnUnresolvedWindowsSDKAssemblyConflict target inspects it.
+    ============================================================
+  -->
+  <Target Name="_CsWinRTSuppressWindowsSDKConflictForAggregator"
+          AfterTargets="ResolveAssemblyReferences"
+          BeforeTargets="_ErrorOnUnresolvedWindowsSDKAssemblyConflict"
+          Condition="'$(AssemblyName)' == 'WinRT.Component'">
+    <ItemGroup>
+      <ResolveAssemblyReferenceUnresolvedAssemblyConflicts
+        Remove="@(ResolveAssemblyReferenceUnresolvedAssemblyConflicts)"
+        Condition="'%(Identity)' == 'Microsoft.Windows.SDK.NET'" />
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup>
 
     <!--
       Running 'cswinrtinteropgen' is required for CsWinRT 3.0, and it is currently in preview.
