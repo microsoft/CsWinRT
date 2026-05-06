@@ -1,0 +1,15 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="ClassLibrary1/ClassLibrary1.csproj" Id="fed8b887-3368-4c29-8991-1c0b4a1e3c1d">
+    <Platform Solution="Debug|x64" Project="x64" />
+  </Project>
+  <Project Path="ClassLibrary2/ClassLibrary2.csproj">
+    <Platform Solution="Debug|x64" Project="x64" />
+  </Project>
+  <Project Path="ConsoleApp40/ConsoleApp40.csproj" />
+  <Project Path="ConsoleApplication1/ConsoleApplication1.vcxproj" Id="f2ee4269-fc5f-482a-8056-62ed5f0a74f5" />
+</Solution>

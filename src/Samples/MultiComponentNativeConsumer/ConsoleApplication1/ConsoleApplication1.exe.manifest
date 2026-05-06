@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="ConsoleApplication1"/>
+  <file name="WinRT.Host.dll">
+    <activatableClass
+        name="ClassLibrary1.Class1"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="ClassLibrary2.Greeter"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+  </file>
+</assembly>

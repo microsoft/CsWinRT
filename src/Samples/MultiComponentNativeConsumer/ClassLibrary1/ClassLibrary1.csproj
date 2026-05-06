@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<Platforms>x86;x64</Platforms>
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <WindowsSdkPackageVersion>10.0.26100.85-preview</WindowsSdkPackageVersion>
+	<CsWinRTComponent>true</CsWinRTComponent>
+  </PropertyGroup>
+
+    <ItemGroup>
+	    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="3.0.0-prerelease-ci.260503.26" />
+    </ItemGroup>
+
+</Project>
