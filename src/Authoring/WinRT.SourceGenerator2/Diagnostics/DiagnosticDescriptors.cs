@@ -231,4 +231,17 @@ internal static partial class DiagnosticDescriptors
         description: "Public types in a Windows Runtime component should use a consistent versioning scheme. If at least one public type uses '[ContractVersion]', all other public types should also use '[ContractVersion]' to declare their associated API contract.",
         helpLinkUri: "https://github.com/microsoft/CsWinRT",
         customTags: WellKnownDiagnosticTags.CompilationEnd);
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for a public authored type that has both a <c>[ContractVersion]</c> and a <c>[Version]</c> attribute applied.
+    /// </summary>
+    public static readonly DiagnosticDescriptor PublicTypeMixedVersioningAttributes = new(
+        id: "CSWINRT2017",
+        title: "Public authored type mixing '[ContractVersion]' and '[Version]'",
+        messageFormat: """The type '{0}' is publicly exposed in a Windows Runtime component and has both a '[ContractVersion]' and a '[Version]' attribute applied. Public types in a component should not mix two different versioning schemes; pick one of '[ContractVersion]' (to associate with an API contract) or '[Version]' (to specify a Windows Runtime version), and apply it consistently.""",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Public types in a Windows Runtime component should not mix '[ContractVersion]' and '[Version]', as these represent two different versioning schemes. Pick one and apply it consistently across the public API surface of the component.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
 }
