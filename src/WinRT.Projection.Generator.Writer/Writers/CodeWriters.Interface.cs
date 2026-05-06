@@ -371,19 +371,6 @@ internal static partial class CodeWriters
             return;
         }
 
-        // Skip interfaces whose owning class is mapped with SuppressExclusiveInterfaces=true.
-        if (TypeCategorization.IsExclusiveTo(type))
-        {
-            TypeDefinition? owner = GetExclusiveToType(type);
-            if (owner is not null)
-            {
-                string ownerNs = owner.Namespace?.Value ?? string.Empty;
-                string ownerNm = owner.Name?.Value ?? string.Empty;
-                MappedType? ownerMapped = MappedTypes.Get(ownerNs, ownerNm);
-                if (ownerMapped is not null && ownerMapped.SuppressExclusiveInterfaces) { return; }
-            }
-        }
-
         if (w.Settings.Component && !TypeCategorization.IsExclusiveTo(type))
         {
             return;
