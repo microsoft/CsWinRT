@@ -14,6 +14,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGeneratorTasksOverriden>true</CsWinRTGeneratorTasksOverriden>
 
     <!--
+      For the multi-component aggregator scenario (consuming csproj's AssemblyName == WinRT.Component),
+      _GenerateMergedAggregatorSources must run BEFORE CoreCompile so the projection .cs files it injects
+      can be compiled by the SDK's CoreCompile. That target depends on _RunCsWinRTSdkProjectionGenerator,
+      _RunCsWinRTSdkXamlProjectionGenerator and _RunCsWinRTMergedProjectionGenerator (so the aggregator's
+      compilation can resolve types in the projection .dll-s those produce). Those generators do not
+      actually consume any CoreCompile output, but they declare DependsOnTargets="CoreCompile" for the
+      non-aggregator scenarios where ordering safety matters. Drop the CoreCompile dependency in the
+      aggregator case so we don't induce a cycle (_GenerateMergedAggregatorSources -> projection
+      generators -> CoreCompile -> _GenerateMergedAggregatorSources via BeforeTargets).
+    -->
+    <_CsWinRTProjectionGeneratorPreCoreCompileDep Condition="'$(AssemblyName)' != 'WinRT.Component'">CoreCompile</_CsWinRTProjectionGeneratorPreCoreCompileDep>
+
+    <!--
       Running 'cswinrtinteropgen' is required for CsWinRT 3.0, and it is currently in preview.
       So the switch for it is currently opt-in. It can be changed to opt-out in the future.
       We only enable this automatically if the project is explicitly targeting CsWinRT 3.0.
@@ -308,7 +321,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
   <Target
     Name="_RunCsWinRTMergedProjectionGenerator"
-    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
+    DependsOnTargets="$(_CsWinRTProjectionGeneratorPreCoreCompileDep);$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
@@ -465,7 +478,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target
     Name="_GenerateMergedAggregatorSources"
     BeforeTargets="CoreCompile"
-    DependsOnTargets="ResolveAssemblyReferences;ResolveProjectReferences;CsWinRTCaptureProjectReferenceWinMDs;CsWinRTRemoveWinMDReferences;_ResolveCsWinRToolsDirectory"
+    DependsOnTargets="ResolveAssemblyReferences;ResolveProjectReferences;CsWinRTCaptureProjectReferenceWinMDs;CsWinRTRemoveWinMDReferences;_ResolveCsWinRToolsDirectory;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator;_RunCsWinRTMergedProjectionGenerator"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(AssemblyName)' == 'WinRT.Component'">
 
     <ItemGroup>
@@ -510,10 +523,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <FileWrites Include="@(_AggregatorGeneratedSources)" />
 
       <!--
-        Wire up our own to-be-produced WinRT.Component.dll (the aggregator csproj's primary
-        output, produced by the SDK's CoreCompile after our target finishes) as the
-        CsWinRTGeneratorComponentPath. The interop generator (_RunCsWinRTInteropGenerator) runs
-        after CoreCompile and reads this item to know where the merged WinRT.Component.dll lives.
+        Wire up our own to-be-produced WinRT.Component.dll (which IS the aggregator csproj's primary
+        @(IntermediateAssembly) - same path) as the CsWinRTGeneratorComponentPath. The interop
+        generator's discovery code recognizes the equality (WinRTComponentAssemblyPath == OutputAssemblyPath)
+        and promotes the consumer module to WindowsRuntimeComponentModule after the main load loop runs,
+        so component-specific discovery (e.g. exclusive-to interface lookup) finds the merged component
+        metadata in the consumer's own assembly.
       -->
       <CsWinRTGeneratorComponentPath Include="$(_CsWinRTGeneratorComponentAssemblyPath)">
         <AssemblyName>WinRT.Component</AssemblyName>
@@ -539,7 +554,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target
     Name="_RunCsWinRTSdkProjectionGenerator"
-    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
+    DependsOnTargets="$(_CsWinRTProjectionGeneratorPreCoreCompileDep);$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTSdkProjectionAssemblyPath)"
@@ -621,7 +636,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target
     Name="_RunCsWinRTSdkXamlProjectionGenerator"
-    DependsOnTargets="CoreCompile;$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
+    DependsOnTargets="$(_CsWinRTProjectionGeneratorPreCoreCompileDep);$(GetTargetPathDependsOn);$(GetTargetPathWithTargetPlatformMonikerDependsOn);_ResolveCsWinRToolsDirectory"
     BeforeTargets="GetTargetPath;GetTargetPathWithTargetPlatformMoniker;GenerateBuildDependencyFile;GeneratePublishDependencyFile;GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Inputs="@(ReferencePathWithRefAssemblies);$(_RunCsWinRTGeneratorPropertyInputsCachePath)"
     Outputs="$(_CsWinRTSdkXamlAssemblyPath)"

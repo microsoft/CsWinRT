@@ -39,9 +39,14 @@ public static class Shim
         {
             Assembly assembly = LoadInDefaultContext(targetAssembly);
 
-            // ABI.<ModuleName>.ManagedExports.GetActivationFactory(ReadOnlySpan<char>) -> void*
+            // The source generator's ManagedExports type lives in 'ABI.{EscapedAssemblyName}'
+            // (CsWinRT 3.0; '.' replaced with '_'). The legacy 2.x form was 'ABI.{ModuleName}'
+            // (treating '.' as a namespace separator). Try both, so this shim works whether
+            // the consumer's projection was built with the new or the legacy generator output.
             string moduleName = Path.GetFileNameWithoutExtension(targetAssembly);
-            var managedExportsType = assembly.GetType($"ABI.{moduleName}.ManagedExports");
+            string escapedModuleName = moduleName.Replace('.', '_');
+            var managedExportsType = assembly.GetType($"ABI.{escapedModuleName}.ManagedExports")
+                ?? assembly.GetType($"ABI.{moduleName}.ManagedExports");
             if (managedExportsType == null)
             {
                 return REGDB_E_READREGDB;
