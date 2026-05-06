@@ -37,15 +37,28 @@
       <!-- Keep build assets imported. -->
       <ExcludeAssets>compile;runtime</ExcludeAssets>
       <!--
-        Stop transitive package flow to consumers (e.g. the synthesized aggregator csproj
-        used by native consumers in AuthoringConsumptionTest). Without this, WindowsAppSDK.WinUI's
-        transitive dependency on Microsoft.Web.WebView2 propagates buildTransitive assets into
-        the aggregator's closure - including its CsWinRT 2.x style projection .dll
-        (Microsoft.Web.WebView2.Core.Projection.dll), which is stamped against
-        Microsoft.Windows.SDK.NET v10.0.17763.38 (PublicKeyToken=31bf3856ad364e35) and conflicts
-        with the in-repo built Microsoft.Windows.SDK.NET.dll (v1.0.0.0 PK=null), tripping
+        Stop the WinUI package graph (which transitively depends on Microsoft.Web.WebView2)
+        from flowing through to AuthoringTest's consumers - notably the synthesized aggregator
+        csproj used by native consumers in AuthoringConsumptionTest. Without PrivateAssets=all,
+        the aggregator's RAR closure picks up WebView2's buildTransitive Projection.dll
+        (Microsoft.Web.WebView2.Core.Projection.dll, a CsWinRT 2.x style projection stamped
+        against Microsoft.Windows.SDK.NET v10.0.17763.38 PK=31bf3856ad364e35), which conflicts
+        with the in-repo built Microsoft.Windows.SDK.NET.dll (v1.0.0.0 PK=null) and trips
         NETSDK1148.
       -->
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <!--
+      Keep this direct PackageReference (with ExcludeAssets=all) even though no AuthoringTest
+      source uses WebView2. With the direct reference present, NuGet treats WebView2 as
+      "directly referenced, contributing nothing"; without it, WebView2 enters AuthoringTest's
+      closure transitively via WindowsAppSDK.WinUI and its buildTransitive auto-import pulls
+      Microsoft.Web.WebView2.Core.Projection.dll into RAR, which then conflicts with the
+      in-repo Microsoft.Windows.SDK.NET.dll on AuthoringTest itself (NETSDK1148).
+      PrivateAssets=all here is for the same reason as above: don't propagate to the aggregator.
+    -->
+    <PackageReference Include="Microsoft.Web.WebView2">
+      <ExcludeAssets>all</ExcludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
