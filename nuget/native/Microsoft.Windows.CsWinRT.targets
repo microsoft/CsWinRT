@@ -116,6 +116,36 @@ Properties:
       -->
       <_CsWinRTPropsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.props'))</_CsWinRTPropsForAggregator>
       <_CsWinRTTargetsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.targets'))</_CsWinRTTargetsForAggregator>
+
+      <!--
+        AOT vs JIT mode for the aggregator sub-build:
+        - When the consumer's vcxproj sets PublishAot=true, the aggregator csproj is
+          published with PublishAot=true so ILC produces a single native WinRT.Component.dll
+          containing every component dll, the projection dlls, and WinRT.Runtime statically
+          linked. The native consumer needs ONLY that file at runtime - no .NET runtime,
+          no WinRT.Host*.dll, no per-component dlls.
+        - Otherwise (default), the aggregator is built (not published). Output is a managed
+          WinRT.Component.dll plus the existing JIT runtime closure (host dlls, per-component
+          dlls, projection dlls, WinRT.Runtime, .NET runtime resolved from the system).
+      -->
+      <_CsWinRTAggregatorPublishAot Condition="'$(PublishAot)' == 'true'">true</_CsWinRTAggregatorPublishAot>
+      <_CsWinRTAggregatorVerb Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'">Publish</_CsWinRTAggregatorVerb>
+      <_CsWinRTAggregatorVerb Condition="'$(_CsWinRTAggregatorVerb)' == ''">Build</_CsWinRTAggregatorVerb>
+
+      <!--
+        For AOT publish, ILC requires a RuntimeIdentifier. Map the vcxproj $(Platform) (Win32,
+        x64, ARM64) to the corresponding 'win-X' RID. For non-AOT builds we leave RID empty so
+        the SDK builds the framework-dependent managed dll in its usual location.
+      -->
+      <_CsWinRTAggregatorRuntimeIdentifier Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true' and '$(Platform)' == 'Win32'">win-x86</_CsWinRTAggregatorRuntimeIdentifier>
+      <_CsWinRTAggregatorRuntimeIdentifier Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true' and '$(Platform)' == 'x64'">win-x64</_CsWinRTAggregatorRuntimeIdentifier>
+      <_CsWinRTAggregatorRuntimeIdentifier Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true' and '$(Platform)' == 'ARM64'">win-arm64</_CsWinRTAggregatorRuntimeIdentifier>
+
+      <!--
+        Pin the publish dir to a known location so the copy step has a stable source. The SDK's
+        default is bin/Configuration/TargetFramework/RuntimeIdentifier/publish/. We override.
+      -->
+      <_CsWinRTAggregatorPublishDir Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'">$(_CsWinRTTempProjectDir)publish\</_CsWinRTAggregatorPublishDir>
     </PropertyGroup>
 
     <MakeDir Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" Directories="$(_CsWinRTTempProjectDir)" />
@@ -161,12 +191,48 @@ Properties:
         wrapper - same logic that makes single-component AOT work, just running on the aggregator.
       -->
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTMergeReferencedActivationFactories&gt;true&lt;/CsWinRTMergeReferencedActivationFactories&gt;" />
+      <!--
+        AOT plumbing: when the consumer's vcxproj sets PublishAot=true, propagate it (and the
+        chosen RuntimeIdentifier + a pinned PublishDir) into the aggregator csproj so its
+        publish run produces a single native WinRT.Component.dll with everything statically
+        linked.
+      -->
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
+                                Include="    &lt;PublishAot&gt;true&lt;/PublishAot&gt;" />
+      <!--
+        AOT publish trick (mirrors src/Tests/AuthoringTest/Directory.Build.props):
+        - NativeLib=Shared tells ILC to produce a single native .dll.
+        - SelfContained=true ensures all managed deps are linked in.
+        - OutputType=Exe + CustomNativeMain=true is a workaround to keep TypeMapAssemblyTarget
+          attributes alive under AOT until the relevant ILC/runtime fix is available.
+          (For a Library publish, ILC currently strips the TypeMap union; for an Exe with
+          NativeLib=Shared and CustomNativeMain it preserves them.)
+      -->
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
+                                Include="    &lt;NativeLib&gt;Shared&lt;/NativeLib&gt;" />
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
+                                Include="    &lt;SelfContained&gt;true&lt;/SelfContained&gt;" />
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
+                                Include="    &lt;OutputType&gt;Exe&lt;/OutputType&gt;" />
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
+                                Include="    &lt;CustomNativeMain&gt;true&lt;/CustomNativeMain&gt;" />
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
+                                Include="    &lt;RuntimeIdentifier&gt;$(_CsWinRTAggregatorRuntimeIdentifier)&lt;/RuntimeIdentifier&gt;" />
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
+                                Include="    &lt;PublishDir&gt;$(_CsWinRTAggregatorPublishDir)&lt;/PublishDir&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;EnableDefaultItems&gt;false&lt;/EnableDefaultItems&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;GenerateAssemblyInfo&gt;false&lt;/GenerateAssemblyInfo&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProduceReferenceAssembly&gt;false&lt;/ProduceReferenceAssembly&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;/PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
+      <!--
+        Stub Main entry point: csc requires a Main method when OutputType=Exe (the AOT path).
+        ILC's CustomNativeMain bypasses it at native-link time, but csc still validates the
+        source. We emit a tiny EntryPoint.cs alongside the synthesized csproj.
+      -->
+      <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
+                                Include="    &lt;Compile Include=&quot;EntryPoint.cs&quot; /&gt;" />
       <!--
         The CsWinRT source generator (AuthoringExportTypesGenerator) flows in transitively from
         the referenced component projects' Microsoft.Windows.CsWinRT package reference, so we
@@ -185,25 +251,44 @@ Properties:
                       Lines="@(_CsWinRTTempProjectLines)"
                       Overwrite="true" />
 
-    <!-- Restore and build the temporary project. -->
+    <!--
+      AOT only: write a stub EntryPoint.cs alongside the synthesized csproj. csc requires a
+      static Main on Exe projects; ILC's CustomNativeMain replaces it natively at link time
+      so the body is never executed.
+    -->
+    <WriteLinesToFile Condition="'$(_CsWinRTHasComponentReferences)' == 'true' and '$(_CsWinRTAggregatorPublishAot)' == 'true'"
+                      File="$(_CsWinRTTempProjectDir)EntryPoint.cs"
+                      Lines="internal static class CsWinRTNativeConsumerEntryPoint { internal static void Main() { } }"
+                      Overwrite="true" />
+
+    <!-- Restore and (Build|Publish) the temporary project. -->
     <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
              Projects="$(_CsWinRTTempProjectPath)"
              Targets="Restore"
-             Properties="Configuration=$(Configuration);Platform=$(Platform)" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(_CsWinRTAggregatorRuntimeIdentifier)" />
 
     <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
              Projects="$(_CsWinRTTempProjectPath)"
-             Targets="Build"
-             Properties="Configuration=$(Configuration);Platform=$(Platform)" />
+             Targets="$(_CsWinRTAggregatorVerb)"
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(_CsWinRTAggregatorRuntimeIdentifier);TargetFramework=$(_CsWinRTComponentTargetFramework)" />
 
-    <!-- Copy generated DLLs to the output directory -->
+    <!--
+      Copy generated DLLs to the output directory.
+      - JIT (Build): the merged dlls live in the aggregator's intermediate dir; copy each one.
+      - AOT (Publish): ILC produces ONE native WinRT.Component.dll in the publish dir with
+        every component, projection, and runtime statically linked. Copy that single file.
+    -->
 
-    <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
+    <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true' and '$(_CsWinRTAggregatorPublishAot)' != 'true'">
       <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll')" />
       <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Interop.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Interop.dll')" />
       <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Projection.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Projection.dll')" />
       <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Projection.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Projection.dll')" />
       <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Xaml.Projection.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Xaml.Projection.dll')" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true' and '$(_CsWinRTAggregatorPublishAot)' == 'true'">
+      <_CsWinRTGeneratedDlls Include="$(_CsWinRTAggregatorPublishDir)WinRT.Component.dll" Condition="Exists('$(_CsWinRTAggregatorPublishDir)WinRT.Component.dll')" />
     </ItemGroup>
 
     <Copy Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" SourceFiles="@(_CsWinRTGeneratedDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />

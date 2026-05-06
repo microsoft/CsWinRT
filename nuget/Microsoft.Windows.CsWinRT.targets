@@ -69,6 +69,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CompilerVisibleProperty Include="CsWinRTMergeReferencedActivationFactories" />
     <CompilerVisibleProperty Include="CsWinRTAotWarningLevel" />
     <CompilerVisibleProperty Include="CsWinRTGenerateManagedDllGetActivationFactory" />
+    <!--
+      PublishAot is exposed unconditionally so the multi-component aggregator scenario (where
+      CsWinRTComponent=false but CsWinRTMergeReferencedActivationFactories=true on the
+      synthesized aggregator csproj) can still gate AuthoringExportTypesGenerator's
+      EmitNativeExports on it. The Authoring.targets file (imported only when CsWinRTComponent=true)
+      also exposes PublishAot; this declaration is benign in that case (the SDK accepts duplicate
+      CompilerVisibleProperty items).
+    -->
+    <CompilerVisibleProperty Include="PublishAot" />
   </ItemGroup>
   
   <Target Name="CsWinRTMinNet10" Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) &lt;= 9" BeforeTargets="CsWinRTPrepareProjection">
