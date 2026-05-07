@@ -488,15 +488,28 @@ internal static partial class CodeWriters
         // static_iface_target and the objref to the default interface for fast-abi cases.
         TypeDefinition abiInterface = ifaceType;
         ITypeDefOrRef abiInterfaceRef = originalInterface;
-        if (IsFastAbiClass(classType, w.Settings) && TypeCategorization.IsExclusiveTo(ifaceType))
+        bool isFastAbiExclusive = IsFastAbiClass(classType, w.Settings) && TypeCategorization.IsExclusiveTo(ifaceType);
+        bool isDefaultInterface = false;
+        if (isFastAbiExclusive)
         {
             (TypeDefinition? defaultIface, _) = GetFastAbiInterfaces(classType);
             if (defaultIface is not null)
             {
                 abiInterface = defaultIface;
                 abiInterfaceRef = defaultIface;
+                isDefaultInterface = ReferenceEquals(defaultIface, ifaceType);
             }
         }
+
+        // Mirrors C++ code_writers.h:4293 — the 'inline_event_source_field' arg is
+        // '!is_fast_abi_iface || is_default_interface'. For events on a fast-abi non-default
+        // exclusive interface (e.g. ISimple5.Event0 on the Simple class), the inline
+        // _eventSource_X field pattern is WRONG: the slot computed from the interface's own
+        // method index is invalid (the runtime exposes only the merged ISimple vtable, not
+        // a separate ISimple5 vtable). Instead, dispatch through the default interface's
+        // ABI Methods class helper (e.g. ISimpleMethods.Event0(this, _objRef_..ISimple))
+        // which uses the correct merged-vtable slot and a ConditionalWeakTable for caching.
+        bool inlineEventSourceField = !isFastAbiExclusive || isDefaultInterface;
 
         // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.Foundation.IDeferralMethods")
         // — note this is the ungenerified Methods class for generic interfaces (matches truth output).
@@ -792,8 +805,10 @@ internal static partial class CodeWriters
             // Emit the _eventSource_<name> property field — skipped in ref mode (the event
             // accessors below become 'add => throw null;' / 'remove => throw null;' which
             // don't reference the field, mirrors C++ where the inline_event_source_field
-            // path emits 'throw null' at code_writers.h:2215, 2238).
-            if (!w.Settings.ReferenceProjection)
+            // path emits 'throw null' at code_writers.h:2215, 2238). Also skipped when the
+            // event must dispatch through the ABI Methods class instead (see
+            // 'inlineEventSourceField' computation above for fast-abi non-default exclusive).
+            if (!w.Settings.ReferenceProjection && inlineEventSourceField)
             {
                 w.Write("\nprivate ");
                 w.Write(eventSourceTypeFull);
@@ -859,7 +874,7 @@ internal static partial class CodeWriters
                 w.Write("    add => throw null;\n");
                 w.Write("    remove => throw null;\n");
             }
-            else
+            else if (inlineEventSourceField)
             {
                 w.Write("    add => _eventSource_");
                 w.Write(name);
@@ -867,6 +882,28 @@ internal static partial class CodeWriters
                 w.Write("    remove => _eventSource_");
                 w.Write(name);
                 w.Write(".Unsubscribe(value);\n");
+            }
+            else
+            {
+                // Fast-abi non-default exclusive: dispatch through the default interface's
+                // ABI Methods class helper. Mirrors C++ code_writers.h write_event when
+                // inline_event_source_field is false (the default helper-based path).
+                // Example: Simple.Event0 (on ISimple5) becomes
+                //   add => global::ABI.test_component_fast.ISimpleMethods.Event0((WindowsRuntimeObject)this, _objRef_test_component_fast_ISimple).Subscribe(value);
+                w.Write("    add => ");
+                w.Write(abiClass);
+                w.Write(".");
+                w.Write(name);
+                w.Write("((WindowsRuntimeObject)this, ");
+                w.Write(objRef);
+                w.Write(").Subscribe(value);\n");
+                w.Write("    remove => ");
+                w.Write(abiClass);
+                w.Write(".");
+                w.Write(name);
+                w.Write("((WindowsRuntimeObject)this, ");
+                w.Write(objRef);
+                w.Write(").Unsubscribe(value);\n");
             }
             w.Write("}\n");
         }
