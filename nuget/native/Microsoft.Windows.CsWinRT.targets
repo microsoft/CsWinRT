@@ -38,6 +38,73 @@ Properties:
 
   <!--
     ============================================================
+                _WriteCsWinRTAggregatorPublicKey
+
+    Inline task that writes the CsWinRT public-key blob (160 bytes) to a .snk file at the
+    given OutputPath. Same byte sequence the projection generator already uses to delay-sign
+    WinRT.Projection.dll and WinRT.Sdk.Projection.dll - see
+    src/WinRT.Projection.Generator/Generation/ProjectionGenerator.Emit.cs (CsWinRTPublicKey
+    field). Its public key token is 31bf3856ad364e35 (the well-known MS .NET / ECMA libraries
+    key), which matches what the interop generator hardcodes for WinRT.Component in
+    src/WinRT.Interop.Generator/References/InteropReferences.cs (WinRTComponent property).
+
+    Bundling the bytes inline (rather than shipping a .snk file in the NuGet package) avoids
+    distributing any key material as a separate package asset and keeps the source-of-truth in
+    one place.
+    ============================================================
+  -->
+  <UsingTask TaskName="_WriteCsWinRTAggregatorPublicKey"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <OutputPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+          byte[] bytes = new byte[]
+          {
+            0x00, 0x24, 0x00, 0x00, 0x04, 0x80, 0x00, 0x00, 0x94, 0x00, 0x00, 0x00, 0x06, 0x02, 0x00, 0x00,
+            0x00, 0x24, 0x00, 0x00, 0x52, 0x53, 0x41, 0x31, 0x00, 0x04, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00,
+            0xB5, 0xFC, 0x90, 0xE7, 0x02, 0x7F, 0x67, 0x87, 0x1E, 0x77, 0x3A, 0x8F, 0xDE, 0x89, 0x38, 0xC8,
+            0x1D, 0xD4, 0x02, 0xBA, 0x65, 0xB9, 0x20, 0x1D, 0x60, 0x59, 0x3E, 0x96, 0xC4, 0x92, 0x65, 0x1E,
+            0x88, 0x9C, 0xC1, 0x3F, 0x14, 0x15, 0xEB, 0xB5, 0x3F, 0xAC, 0x11, 0x31, 0xAE, 0x0B, 0xD3, 0x33,
+            0xC5, 0xEE, 0x60, 0x21, 0x67, 0x2D, 0x97, 0x18, 0xEA, 0x31, 0xA8, 0xAE, 0xBD, 0x0D, 0xA0, 0x07,
+            0x2F, 0x25, 0xD8, 0x7D, 0xBA, 0x6F, 0xC9, 0x0F, 0xFD, 0x59, 0x8E, 0xD4, 0xDA, 0x35, 0xE4, 0x4C,
+            0x39, 0x8C, 0x45, 0x43, 0x07, 0xE8, 0xE3, 0x3B, 0x84, 0x26, 0x14, 0x3D, 0xAE, 0xC9, 0xF5, 0x96,
+            0x83, 0x6F, 0x97, 0xC8, 0xF7, 0x47, 0x50, 0xE5, 0x97, 0x5C, 0x64, 0xE2, 0x18, 0x9F, 0x45, 0xDE,
+            0xF4, 0x6B, 0x2A, 0x2B, 0x12, 0x47, 0xAD, 0xC3, 0x65, 0x2B, 0xF5, 0xC3, 0x08, 0x05, 0x5D, 0xA9
+          };
+          string dir = System.IO.Path.GetDirectoryName(OutputPath);
+          if (!string.IsNullOrEmpty(dir) && !System.IO.Directory.Exists(dir))
+          {
+              System.IO.Directory.CreateDirectory(dir);
+          }
+          // Only rewrite if missing or content differs, to preserve incremental build state
+          bool needWrite = !System.IO.File.Exists(OutputPath);
+          if (!needWrite)
+          {
+              byte[] existing = System.IO.File.ReadAllBytes(OutputPath);
+              needWrite = existing.Length != bytes.Length;
+              if (!needWrite)
+              {
+                  for (int i = 0; i < bytes.Length; i++)
+                  {
+                      if (existing[i] != bytes[i]) { needWrite = true; break; }
+                  }
+              }
+          }
+          if (needWrite)
+          {
+              System.IO.File.WriteAllBytes(OutputPath, bytes);
+          }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <!--
+    ============================================================
                     _DetectCsWinRTNativeComponentReferences
 
     Collects component project reference paths.
@@ -125,6 +192,17 @@ Properties:
       -->
       <_CsWinRTPropsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.props'))</_CsWinRTPropsForAggregator>
       <_CsWinRTTargetsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.targets'))</_CsWinRTTargetsForAggregator>
+
+      <!--
+        Path to the build-time-generated CsWinRT public-key file. We write the public-key blob
+        (160 bytes, taken from src/WinRT.Projection.Generator/Generation/ProjectionGenerator.Emit.cs's
+        CsWinRTPublicKey field, public-key token = 31bf3856ad364e35) into this file via the
+        _WriteCsWinRTAggregatorPublicKey inline task before the aggregator csproj's build runs.
+        The aggregator's csproj uses it with PublicSign=true to produce a strong-named
+        WinRT.Component.dll whose PublicKeyToken matches the value the interop generator
+        hardcodes in InteropReferences.WinRTComponent.
+      -->
+      <_CsWinRTAggregatorKeyFilePath>$(_CsWinRTTempProjectDir)cswinrt-aggregator-publickey.snk</_CsWinRTAggregatorKeyFilePath>
 
       <!--
         AOT vs JIT mode for the aggregator sub-build:
@@ -239,6 +317,27 @@ Properties:
       <_CsWinRTTempProjectLines Include="    &lt;EnableDefaultItems&gt;false&lt;/EnableDefaultItems&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;GenerateAssemblyInfo&gt;false&lt;/GenerateAssemblyInfo&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProduceReferenceAssembly&gt;false&lt;/ProduceReferenceAssembly&gt;" />
+      <!--
+        Public-sign (a.k.a. open-source / delay-sign without skip-verification) the aggregator's
+        WinRT.Component.dll with the CsWinRT public key so the resulting assembly identity is:
+          WinRT.Component, Version=0.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+
+        The interop generator hardcodes that exact assembly reference at
+        src/WinRT.Interop.Generator/References/InteropReferences.cs (WinRTComponent property,
+        publicKeyOrToken = WellKnownPublicKeyTokens.CsWinRT). When it emits TypeRefs targeting
+        the aggregator's ABI types (e.g. ABI.AuthoringTest.BasicStruct), the TypeRef's
+        AssemblyRef carries that public key token. Later type-resolution loads the actual
+        WinRT.Component.dll via the consumer-supplied component assembly path; if the loaded
+        assembly's identity doesn't match the AssemblyRef (PublicKeyToken in particular), the
+        resolver throws FileNotFoundException, surfacing as CSWINRTINTEROPGEN0025.
+
+        We use PublicSign rather than full SignAssembly because the package only ships the
+        public portion of key.snk (delay-sign style). PublicSign produces a fully verifiable
+        strong-named assembly without requiring the private key at consumer build time.
+      -->
+      <_CsWinRTTempProjectLines Include="    &lt;SignAssembly&gt;true&lt;/SignAssembly&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;PublicSign&gt;true&lt;/PublicSign&gt;" />
+      <_CsWinRTTempProjectLines Include="    &lt;AssemblyOriginatorKeyFile&gt;$(_CsWinRTAggregatorKeyFilePath)&lt;/AssemblyOriginatorKeyFile&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;/PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
@@ -276,6 +375,17 @@ Properties:
                       File="$(_CsWinRTTempProjectDir)EntryPoint.cs"
                       Lines="internal static class CsWinRTNativeConsumerEntryPoint { internal static void Main() { } }"
                       Overwrite="true" />
+
+    <!--
+      Write the CsWinRT public-key blob (160 bytes) to a build-time-generated .snk file in the
+      aggregator's temp dir. The aggregator's csproj uses it for PublicSign so the resulting
+      WinRT.Component.dll has PublicKeyToken=31bf3856ad364e35 - matching what the interop
+      generator hardcodes for type lookups against WinRT.Component (see
+      src/WinRT.Interop.Generator/References/InteropReferences.cs and the CsWinRTPublicKey
+      bytes in src/WinRT.Projection.Generator/Generation/ProjectionGenerator.Emit.cs).
+    -->
+    <_WriteCsWinRTAggregatorPublicKey Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+                                      OutputPath="$(_CsWinRTAggregatorKeyFilePath)" />
 
     <!-- Restore and (Build|Publish) the temporary project. -->
     <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
