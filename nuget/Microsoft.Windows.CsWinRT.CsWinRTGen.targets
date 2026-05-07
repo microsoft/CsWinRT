@@ -545,6 +545,32 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <ReferencePathWithRefAssemblies Include="@(CsWinRTSdkXamlPath)" />
 
       <!--
+        Drop the reference-only projection .dll-s from csc's reference list to avoid CS0433
+        ('type X exists in both ...') against the merged projection .dll-s above.
+
+        The freshly-generated WinRT.Projection.dll / WinRT.Sdk.Projection.dll carry the FULL
+        projection (public API surface + ABI implementation types). The user-facing
+        Microsoft.WinUI.dll / Microsoft.Windows.SDK.NET.dll that flow into
+        @(ReferencePathWithRefAssemblies) via referenced components' transitive
+        ProjectReference closure (the in-repo Projections/WinAppSDK and Projections/Windows
+        projects, both built with CsWinRTGenerateReferenceProjection=true) carry only the
+        public API surface. csc sees both copies of every public type and emits CS0433.
+
+        In real downstream consumer scenarios the NuGet package ships a TYPE-FORWARDER
+        Microsoft.WinUI.dll (produced by cswinrtimplgen) whose [TypeForwardedTo] attributes
+        redirect public types to WinRT.Projection - so csc sees no duplication. The in-repo
+        ProjectReference closure flows the raw reference projection from obj/ instead, which
+        doesn't have those forwarders. For the aggregator we can safely drop the reference
+        projections altogether: the merged projection .dll-s above provide everything the
+        injected cswinrt-sources need, and the aggregator's own assembly does not consume any
+        CsWinRT-projected public type directly (it only routes activation factory calls).
+      -->
+      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)"
+        Condition="'%(Filename)%(Extension)' == 'Microsoft.WinUI.dll'
+                or '%(Filename)%(Extension)' == 'Microsoft.Windows.SDK.NET.dll'
+                or '%(Filename)%(Extension)' == 'Microsoft.Windows.UI.Xaml.dll'" />
+
+      <!--
         Wire up our own to-be-produced WinRT.Component.dll (which IS the aggregator csproj's primary
         @(IntermediateAssembly) - same path) as the CsWinRTGeneratorComponentPath. The interop
         generator's discovery code recognizes the equality (WinRTComponentAssemblyPath == OutputAssemblyPath)
