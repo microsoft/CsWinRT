@@ -523,6 +523,28 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <FileWrites Include="@(_AggregatorGeneratedSources)" />
 
       <!--
+        Wire the projection .dll-s onto ReferencePathWithRefAssemblies (which is what
+        the SDK's CoreCompile -> Csc task actually consumes for /reference:). The
+        in-tree _RunCsWinRTSdkProjectionGenerator / _RunCsWinRTSdkXamlProjectionGenerator
+        / _RunCsWinRTMergedProjectionGenerator targets only add their outputs to
+        @(ReferencePath) - that is sufficient for the post-CoreCompile interop generator
+        which reads @(ReferencePath) directly, but csc ignores it.
+
+        For the aggregator scenario this matters because the cs files we just injected as
+        @(Compile) reference ABI implementation types (e.g. ABI.Microsoft.UI.Xaml.*,
+        ABI.Windows.*) that live in WinRT.Projection.dll / WinRT.Sdk.Projection.dll
+        (and WinRT.Sdk.Xaml.Projection.dll when UWP XAML is enabled). The user-facing
+        Microsoft.WinUI.dll / Microsoft.Windows.SDK.NET.dll on @(ReferencePathWithRefAssemblies)
+        only carry the public API surface (CsWinRTGenerateReferenceProjection=true is
+        used to build them in the in-repo Projections/* projects), so without these
+        explicit additions csc fails with CS0234 "Microsoft does not exist in ABI"
+        / "Windows does not exist in ABI".
+      -->
+      <ReferencePathWithRefAssemblies Include="@(CsWinRTGeneratorMergedProjectionPath)" />
+      <ReferencePathWithRefAssemblies Include="@(CsWinRTSdkProjectionPath)" />
+      <ReferencePathWithRefAssemblies Include="@(CsWinRTSdkXamlPath)" />
+
+      <!--
         Wire up our own to-be-produced WinRT.Component.dll (which IS the aggregator csproj's primary
         @(IntermediateAssembly) - same path) as the CsWinRTGeneratorComponentPath. The interop
         generator's discovery code recognizes the equality (WinRTComponentAssemblyPath == OutputAssemblyPath)
