@@ -575,15 +575,31 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
         Real downstream NuGet consumer scenarios don't ship the reference projection at all -
         only the forwarder. To match that here we swap each ReferencePathWithRefAssemblies
-        item that came from a CsWinRT reference projection (detected via the CsWinRTInputs
-        metadata, set only on those by CsWinRTGetForwarderTargetPathWithTargetPlatformMoniker)
-        for a new item whose Identity is the forwarder path (the existing OriginalItemSpec
-        metadata = bin/X.dll). The new item has no ReferenceAssembly metadata, so csc
-        consumes the forwarder. The forwarder's [TypeForwardedTo] attributes redirect public
-        types to WinRT.Projection / WinRT.Sdk.Projection, leaving no duplicate definitions.
+        item that came from a CsWinRT reference projection for a new item whose Identity is
+        the forwarder path (the existing OriginalItemSpec metadata = bin/X.dll). The new item
+        has no ReferenceAssembly metadata, so csc consumes the forwarder. The forwarder's
+        [TypeForwardedTo] attributes redirect public types to WinRT.Projection /
+        WinRT.Sdk.Projection, leaving no duplicate definitions.
+
+        Detection criteria (must all match):
+          - ReferenceAssembly metadata != '' (the item has a separate compile-time ref).
+          - ReferenceSourceTarget == 'ProjectReference' (excludes .NET ref pack items, which
+            also carry ReferenceAssembly metadata but come from ResolveAssemblyReference).
+          - OriginalItemSpec != '' AND != ReferenceAssembly (the runtime-target path differs
+            from the compile-time path - the exact pattern
+            CsWinRTGetForwarderTargetPathWithTargetPlatformMoniker produces).
+
+        We deliberately do NOT key off CsWinRTInputs metadata: that metadata depends on
+        CsWinRT inputs being collected at the referenced project's GetTargetPath time, which
+        can be unreliable under incremental local builds (e.g. when a transitive cswinrt.winmd
+        hasn't been captured yet). The above three checks cover the structural shape of a
+        CsWinRT reference projection regardless of whether CsWinRTInputs metadata is present.
       -->
       <_CsWinRTAggregatorRefProjItems Include="@(ReferencePathWithRefAssemblies)"
-                                      Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
+                                      Condition="'%(ReferencePathWithRefAssemblies.ReferenceAssembly)' != ''
+                                                 and '%(ReferencePathWithRefAssemblies.ReferenceSourceTarget)' == 'ProjectReference'
+                                                 and '%(ReferencePathWithRefAssemblies.OriginalItemSpec)' != ''
+                                                 and '%(ReferencePathWithRefAssemblies.ReferenceAssembly)' != '%(ReferencePathWithRefAssemblies.OriginalItemSpec)'" />
       <ReferencePathWithRefAssemblies Remove="@(_CsWinRTAggregatorRefProjItems)" />
       <ReferencePathWithRefAssemblies Include="@(_CsWinRTAggregatorRefProjItems->'%(OriginalItemSpec)')" />
 
