@@ -545,30 +545,47 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <ReferencePathWithRefAssemblies Include="@(CsWinRTSdkXamlPath)" />
 
       <!--
-        Drop the reference-only projection .dll-s from csc's reference list to avoid CS0433
-        ('type X exists in both ...') against the merged projection .dll-s above.
+        Swap CsWinRT reference-projection items in @(ReferencePathWithRefAssemblies) for
+        their forwarder-variant counterparts (the bin/ TargetPath of the same project).
 
-        The freshly-generated WinRT.Projection.dll / WinRT.Sdk.Projection.dll carry the FULL
-        projection (public API surface + ABI implementation types). The user-facing
-        Microsoft.WinUI.dll / Microsoft.Windows.SDK.NET.dll that flow into
-        @(ReferencePathWithRefAssemblies) via referenced components' transitive
-        ProjectReference closure (the in-repo Projections/WinAppSDK and Projections/Windows
-        projects, both built with CsWinRTGenerateReferenceProjection=true) carry only the
-        public API surface. csc sees both copies of every public type and emits CS0433.
+        Background: in-repo Projections/* csprojs build with CsWinRTGenerateReferenceProjection=true.
+        For each of those, two .dll-s are produced:
+          * obj/X.dll - the reference projection (public type definitions, no [TypeForwardedTo])
+          * obj/forwarder/X.dll then copied to bin/X.dll - the forwarder (only [TypeForwardedTo]
+            attributes routing public types to WinRT.Projection / WinRT.Sdk.Projection)
+        See `cswinrtimplgen` (src/WinRT.Impl.Generator/) and the IntermediateAssembly swap at
+        the top of this file (target around line 250-292).
 
-        In real downstream consumer scenarios the NuGet package ships a TYPE-FORWARDER
-        Microsoft.WinUI.dll (produced by cswinrtimplgen) whose [TypeForwardedTo] attributes
-        redirect public types to WinRT.Projection - so csc sees no duplication. The in-repo
-        ProjectReference closure flows the raw reference projection from obj/ instead, which
-        doesn't have those forwarders. For the aggregator we can safely drop the reference
-        projections altogether: the merged projection .dll-s above provide everything the
-        injected cswinrt-sources need, and the aggregator's own assembly does not consume any
-        CsWinRT-projected public type directly (it only routes activation factory calls).
+        CsWinRTGetForwarderTargetPathWithTargetPlatformMoniker (line ~295) sets metadata on
+        TargetPathWithTargetPlatformMoniker so the SDK's ProjectReference resolution gives
+        consumers:
+          - Identity = $(TargetPath) = bin/X.dll - the FORWARDER (after IntermediateAssembly swap)
+          - ReferenceAssembly = $(_CsWinRTRefAssemblyPath) = obj/X.dll - the reference projection
+
+        For NORMAL (non-aggregator) consumers, RAR honors ReferenceAssembly metadata: csc reads
+        the reference projection (obj/X.dll, public types) and the runtime loads the forwarder
+        (bin/X.dll, [TypeForwardedTo] -> WinRT.Projection). That's the correct compile-time
+        behavior because the consumer's own CoreCompile only references the public surface.
+
+        For the AGGREGATOR scenario, the @(Compile) sources we just injected reference BOTH
+        the public surface AND the ABI types (e.g. ABI.Microsoft.UI.Xaml.*). The merged
+        projection .dll-s we just added carry both. So csc would see the public types in BOTH
+        the reference projection (via ReferenceAssembly metadata) AND the merged projection
+        - that's CS0433.
+
+        Real downstream NuGet consumer scenarios don't ship the reference projection at all -
+        only the forwarder. To match that here we swap each ReferencePathWithRefAssemblies
+        item that came from a CsWinRT reference projection (detected via the CsWinRTInputs
+        metadata, set only on those by CsWinRTGetForwarderTargetPathWithTargetPlatformMoniker)
+        for a new item whose Identity is the forwarder path (the existing OriginalItemSpec
+        metadata = bin/X.dll). The new item has no ReferenceAssembly metadata, so csc
+        consumes the forwarder. The forwarder's [TypeForwardedTo] attributes redirect public
+        types to WinRT.Projection / WinRT.Sdk.Projection, leaving no duplicate definitions.
       -->
-      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)"
-        Condition="'%(Filename)%(Extension)' == 'Microsoft.WinUI.dll'
-                or '%(Filename)%(Extension)' == 'Microsoft.Windows.SDK.NET.dll'
-                or '%(Filename)%(Extension)' == 'Microsoft.Windows.UI.Xaml.dll'" />
+      <_CsWinRTAggregatorRefProjItems Include="@(ReferencePathWithRefAssemblies)"
+                                      Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
+      <ReferencePathWithRefAssemblies Remove="@(_CsWinRTAggregatorRefProjItems)" />
+      <ReferencePathWithRefAssemblies Include="@(_CsWinRTAggregatorRefProjItems->'%(OriginalItemSpec)')" />
 
       <!--
         Wire up our own to-be-produced WinRT.Component.dll (which IS the aggregator csproj's primary
