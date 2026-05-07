@@ -205,6 +205,30 @@ Properties:
       <_CsWinRTAggregatorKeyFilePath>$(_CsWinRTTempProjectDir)cswinrt-aggregator-publickey.snk</_CsWinRTAggregatorKeyFilePath>
 
       <!--
+        Path to the WinRT.SourceGenerator analyzer assembly, ONLY used in the in-repo
+        SimulateCsWinRTNugetReference scenario. In the real package-install scenario the
+        synthesized aggregator csproj's transitive ProjectReferences to consumer components
+        carry the Microsoft.Windows.CsWinRT package's analyzer through NuGet's standard
+        transitive analyzer flow - adding it explicitly there causes a duplicate-load (the
+        analyzer runs twice, emits ManagedExports.g.cs twice, csc emits CS0579/CS0111).
+
+        In the in-repo scenario the consumer components use ProjectReference to
+        WinRT.SourceGenerator2.csproj with OutputItemType="Analyzer" - that flow is NOT
+        transitive, so the aggregator never picks up the analyzer and the merged
+        ABI.{AssemblyName}.ManagedExports type isn't emitted. At runtime
+        WinRT.Host.Shim.GetActivationFactory's reflection lookup for that type fails and
+        returns 0x80040150 (REGDB_E_READREGDB).
+
+        Detect by file existence: if the package-layout analyzer exists at the standard
+        'analyzers/dotnet/cs/' location relative to this targets file, we're running from
+        a real package install - leave _CsWinRTAggregatorAnalyzerPath empty and rely on the
+        transitive flow. Otherwise we're in-repo - point at the locally-built analyzer dll
+        and add it explicitly to the synthesized csproj below.
+      -->
+      <_CsWinRTAggregatorAnalyzerPathPackage>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\..\analyzers\dotnet\cs\WinRT.SourceGenerator.dll'))</_CsWinRTAggregatorAnalyzerPathPackage>
+      <_CsWinRTAggregatorAnalyzerPath Condition="!Exists('$(_CsWinRTAggregatorAnalyzerPathPackage)')">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\..\src\Authoring\WinRT.SourceGenerator2\bin\$(Configuration)\net10.0\WinRT.SourceGenerator.dll'))</_CsWinRTAggregatorAnalyzerPath>
+
+      <!--
         AOT vs JIT mode for the aggregator sub-build:
         - When the consumer's vcxproj sets PublishAot=true, the aggregator csproj is
           published with PublishAot=true so ILC produces a single native WinRT.Component.dll
@@ -349,12 +373,18 @@ Properties:
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
                                 Include="    &lt;Compile Include=&quot;EntryPoint.cs&quot; /&gt;" />
       <!--
-        The CsWinRT source generator (AuthoringExportTypesGenerator) flows in transitively from
-        the referenced component projects' Microsoft.Windows.CsWinRT package reference, so we
-        don't need to add it as an explicit Analyzer item here. (Adding it explicitly produces
-        a duplicate-load: the consumer's package-local copy plus the transitive .nuget copy load
-        as separate analyzer instances and emit duplicate ManagedExports.g.cs.)
+        Add the CsWinRT source generator (AuthoringExportTypesGenerator) explicitly as an
+        Analyzer item ONLY in the in-repo scenario (see the comment on
+        _CsWinRTAggregatorAnalyzerPath above). For real package installs, the analyzer flows
+        transitively through the components' Microsoft.Windows.CsWinRT PackageReferences;
+        adding it explicitly there causes a duplicate-load with CS0579/CS0111. For in-repo
+        SimulateCsWinRTNugetReference scenarios, the components ProjectReference
+        WinRT.SourceGenerator2 with OutputItemType="Analyzer" - that's not transitive, so the
+        aggregator wouldn't otherwise see the analyzer and the merged ManagedExports type
+        wouldn't be emitted.
       -->
+      <_CsWinRTTempProjectLines Include="    &lt;Analyzer Include=&quot;$(_CsWinRTAggregatorAnalyzerPath)&quot; /&gt;"
+                                Condition="'$(_CsWinRTAggregatorAnalyzerPath)' != ''" />
       <_CsWinRTTempProjectLines Include="  &lt;/ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;Sdk.targets&quot; Sdk=&quot;Microsoft.NET.Sdk&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;$(_CsWinRTTargetsForAggregator)&quot; /&gt;" />
