@@ -194,6 +194,16 @@ internal partial class InteropGenerator
             ModuleDefinition winRTComponentModule = discoveryState.RuntimeContext.LoadModule(componentAssemblyPath);
 
             discoveryState.TrackWindowsRuntimeComponentModule(winRTComponentModule);
+
+            // In the aggregator scenario the consumer's own primary output IS 'WinRT.Component.dll'. The main
+            // input loop unconditionally skips this assembly (it contains only cswinrt/source-generator-emitted
+            // code that should not participate in user-defined-type discovery), so the module would otherwise
+            // never be registered in 'discoveryState.Modules'. 'DefineInteropModule' looks up the output assembly
+            // by path in that dictionary, so we register it here as well to avoid CSWINRTINTEROPGEN0003.
+            if (componentAssemblyPath == args.OutputAssemblyPath)
+            {
+                discoveryState.TrackModule(componentAssemblyPath, winRTComponentModule);
+            }
         }
     }
 
