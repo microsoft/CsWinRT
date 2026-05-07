@@ -35,6 +35,74 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
+    /// Returns the fast-abi class type for <paramref name="iface"/> if the interface is
+    /// exclusive_to a class marked <c>[FastAbi]</c>; otherwise <c>null</c>. Mirrors C++
+    /// <c>find_fast_abi_class_type</c> in <c>helpers.h</c>.
+    /// </summary>
+    public static TypeDefinition? FindFastAbiClassType(TypeDefinition iface)
+    {
+        if (_cacheRef is null) { return null; }
+        TypeDefinition? exclusiveToClass = GetExclusiveToType(iface);
+        if (exclusiveToClass is null) { return null; }
+        if (!IsFastAbiClass(exclusiveToClass, GetSettings(iface))) { return null; }
+        return exclusiveToClass;
+    }
+
+    /// <summary>
+    /// Returns the fast-abi class info (class type + default interface + sorted other exclusive
+    /// interfaces) for <paramref name="iface"/>, if the interface is exclusive_to a fast-abi
+    /// class; otherwise <c>null</c>. Mirrors C++ <c>get_fast_abi_class_for_interface</c>.
+    /// </summary>
+    public static (TypeDefinition Class, TypeDefinition? Default, System.Collections.Generic.List<TypeDefinition> Others)? GetFastAbiClassForInterface(TypeDefinition iface)
+    {
+        TypeDefinition? cls = FindFastAbiClassType(iface);
+        if (cls is null) { return null; }
+        (TypeDefinition? def, System.Collections.Generic.List<TypeDefinition> others) = GetFastAbiInterfaces(cls);
+        return (cls, def, others);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="iface"/> is a non-default exclusive interface of a fast-abi class
+    /// (i.e. its members are merged into the default interface's vtable and dispatched through
+    /// the default interface's ABI <c>Methods</c> class). Mirrors C++ <c>fast_abi_class::contains_other_interface</c>.
+    /// </summary>
+    public static bool IsFastAbiOtherInterface(TypeDefinition iface)
+    {
+        var fastAbi = GetFastAbiClassForInterface(iface);
+        if (fastAbi is null) { return false; }
+        if (fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface)) { return false; }
+        foreach (TypeDefinition other in fastAbi.Value.Others)
+        {
+            if (InterfacesEqual(other, iface)) { return true; }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="iface"/> is the default interface of a fast-abi class.
+    /// </summary>
+    public static bool IsFastAbiDefaultInterface(TypeDefinition iface)
+    {
+        var fastAbi = GetFastAbiClassForInterface(iface);
+        if (fastAbi is null) { return false; }
+        return fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface);
+    }
+
+    private static bool InterfacesEqual(TypeDefinition a, TypeDefinition b)
+    {
+        if (a == b) { return true; }
+        return (a.Namespace?.Value ?? string.Empty) == (b.Namespace?.Value ?? string.Empty)
+            && (a.Name?.Value ?? string.Empty) == (b.Name?.Value ?? string.Empty);
+    }
+
+    // We don't have direct access to the active Settings from a static helper that only takes
+    // a TypeDefinition. The fast-abi flag is purely determined by the [FastAbiAttribute] (the
+    // netstandard_compat gate is always false in CsWinRT 3.0). Pass an empty Settings stand-in
+    // so the IsFastAbiClass check evaluates only the attribute presence.
+    private static Settings GetSettings(TypeDefinition _) => s_emptySettingsForFastAbi;
+    private static readonly Settings s_emptySettingsForFastAbi = new() { NetstandardCompat = false };
+
+    /// <summary>
     /// Returns the [Default] interface and the [ExclusiveTo] interfaces (sorted) for fast ABI.
     /// Mirrors C++ <c>get_default_and_exclusive_interfaces</c> + <c>sort_fast_abi_ifaces</c>.
     /// </summary>

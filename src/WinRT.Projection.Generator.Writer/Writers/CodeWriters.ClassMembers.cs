@@ -479,19 +479,38 @@ internal static partial class CodeWriters
         // post-build interop assembly).
         bool isGenericInterface = ifaceType.GenericParameters.Count > 0;
 
+        // Fast ABI: when this interface is exclusive_to a fast-abi class (and we're emitting
+        // class members, classType is that fast-abi class), dispatch routes through the
+        // default interface's ABI Methods class and objref instead of through this interface's
+        // own ABI Methods class. The native vtable bundles all exclusive interfaces' methods
+        // into the default interface's vtable in a fixed order. Mirrors C++
+        // code_writers.h:4250-4251 (semantics_for_abi_call assignment) which redirects both
+        // static_iface_target and the objref to the default interface for fast-abi cases.
+        TypeDefinition abiInterface = ifaceType;
+        ITypeDefOrRef abiInterfaceRef = originalInterface;
+        if (IsFastAbiClass(classType, w.Settings) && TypeCategorization.IsExclusiveTo(ifaceType))
+        {
+            (TypeDefinition? defaultIface, _) = GetFastAbiInterfaces(classType);
+            if (defaultIface is not null)
+            {
+                abiInterface = defaultIface;
+                abiInterfaceRef = defaultIface;
+            }
+        }
+
         // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.Foundation.IDeferralMethods")
         // — note this is the ungenerified Methods class for generic interfaces (matches truth output).
         // The _objRef_ field name uses the full instantiated interface name so generic instantiations
         // (e.g. IAsyncOperation<uint>) get a per-instantiation field.
         string abiClass = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
         {
-            WriteTypedefName(w, ifaceType, TypedefNameType.StaticAbiClass, true);
+            WriteTypedefName(w, abiInterface, TypedefNameType.StaticAbiClass, true);
         }));
         if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal))
         {
             abiClass = "global::" + abiClass;
         }
-        string objRef = GetObjRefName(w, originalInterface);
+        string objRef = GetObjRefName(w, abiInterfaceRef);
 
         // For generic interfaces, also compute the encoded parent type name (used in UnsafeAccessor
         // function names) and the WinRT.Interop accessor type string (passed to UnsafeAccessorType).

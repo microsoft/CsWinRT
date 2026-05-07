@@ -3577,6 +3577,12 @@ internal static partial class CodeWriters
         bool useInternal = (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
             || TypeCategorization.IsProjectionInternal(type);
 
+        // Fast ABI: if this interface is a non-default exclusive-to interface of a fast-abi
+        // class, skip emitting it entirely — its members are merged into the default
+        // interface's Methods class. Mirrors C++ code_writers.h:9082-9089
+        // (write_static_abi_classes early return on contains_other_interface(iface)).
+        if (IsFastAbiOtherInterface(type)) { return; }
+
         // If the interface is exclusive-to a class that's been excluded from the projection,
         // skip emitting the entire *Methods class — it would be dead code (the owning class
         // is manually projected in WinRT.Runtime, e.g. IColorHelperStatics for ColorHelper,
@@ -3611,38 +3617,117 @@ internal static partial class CodeWriters
             }
         }
 
-        // Skip emission for empty interfaces (no non-special methods, no properties, no events
-        // — except events skipped due to skipExclusiveEvents). Mirrors C++ 'if (members.empty()) { return; }'.
-        bool hasMembers = false;
-        foreach (MethodDefinition m in type.Methods)
+        // Fast ABI: if this interface is the default interface of a fast-abi class, the
+        // generated Methods class must include the merged members of the default interface
+        // PLUS each [ExclusiveTo] non-default interface in vtable order, with progressively
+        // increasing slot indices. Mirrors C++ code_writers.h:9113-9128.
+        // For non-fast-abi interfaces, the segment list is just [(type, INSPECTABLE_METHOD_COUNT, skipExclusiveEvents)].
+        const int InspectableMethodCount = 6;
+        var segments = new List<(TypeDefinition Iface, int StartSlot, bool SkipEvents)>();
+        var fastAbi = GetFastAbiClassForInterface(type);
+        bool isFastAbiDefault = fastAbi is not null && fastAbi.Value.Default is not null
+            && InterfacesEqualByName(fastAbi.Value.Default, type);
+        if (isFastAbiDefault)
         {
-            if (!Helpers.IsSpecial(m)) { hasMembers = true; break; }
+            int slot = InspectableMethodCount;
+            // Default interface: skip its events (they're inlined in the RCW class).
+            segments.Add((type, slot, true));
+            slot += CountMethods(type) + GetClassHierarchyIndex(fastAbi!.Value.Class);
+            foreach (TypeDefinition other in fastAbi.Value.Others)
+            {
+                segments.Add((other, slot, false));
+                slot += CountMethods(other);
+            }
         }
-        if (!hasMembers)
+        else
         {
-            foreach (PropertyDefinition _ in type.Properties) { hasMembers = true; break; }
+            segments.Add((type, InspectableMethodCount, skipExclusiveEvents));
         }
-        if (!hasMembers && !skipExclusiveEvents)
+
+        // Skip emission if the entire merged class would be empty.
+        bool hasAnyMember = false;
+        foreach ((TypeDefinition seg, int _, bool segSkipEvents) in segments)
         {
-            foreach (EventDefinition _ in type.Events) { hasMembers = true; break; }
+            if (HasEmittableMembers(seg, segSkipEvents)) { hasAnyMember = true; break; }
         }
-        if (!hasMembers) { return; }
+        if (!hasAnyMember) { return; }
 
         w.Write(useInternal ? "internal static class " : "public static class ");
         w.Write(nameStripped);
         w.Write("Methods\n{\n");
 
+        foreach ((TypeDefinition iface, int startSlot, bool segSkipEvents) in segments)
+        {
+            EmitMethodsClassMembersFor(w, iface, startSlot, segSkipEvents);
+        }
+
+        w.Write("}\n");
+    }
+
+    /// <summary>True if the interface has at least one non-special method, property, or non-skipped event.</summary>
+    private static bool HasEmittableMembers(TypeDefinition iface, bool skipExclusiveEvents)
+    {
+        foreach (MethodDefinition m in iface.Methods)
+        {
+            if (!Helpers.IsSpecial(m)) { return true; }
+        }
+        foreach (PropertyDefinition _ in iface.Properties) { return true; }
+        if (!skipExclusiveEvents)
+        {
+            foreach (EventDefinition _ in iface.Events) { return true; }
+        }
+        return false;
+    }
+
+    /// <summary>Returns the number of methods (including special accessors) on the interface.</summary>
+    private static int CountMethods(TypeDefinition iface)
+    {
+        int count = 0;
+        foreach (MethodDefinition _ in iface.Methods) { count++; }
+        return count;
+    }
+
+    /// <summary>Mirrors C++ <c>get_class_hierarchy_index</c>: distance from <see cref="object"/> in inheritance.</summary>
+    private static int GetClassHierarchyIndex(TypeDefinition classType)
+    {
+        if (classType.BaseType is null) { return 0; }
+        string ns = classType.BaseType.Namespace?.Value ?? string.Empty;
+        string nm = classType.BaseType.Name?.Value ?? string.Empty;
+        if (ns == "System" && nm == "Object") { return 0; }
+        TypeDefinition? baseDef = classType.BaseType as TypeDefinition;
+        if (baseDef is null && _cacheRef is not null)
+        {
+            try { baseDef = classType.BaseType.Resolve(_cacheRef.RuntimeContext); }
+            catch { baseDef = null; }
+            baseDef ??= _cacheRef.Find(string.IsNullOrEmpty(ns) ? nm : (ns + "." + nm));
+        }
+        if (baseDef is null) { return 0; }
+        return GetClassHierarchyIndex(baseDef) + 1;
+    }
+
+    private static bool InterfacesEqualByName(TypeDefinition a, TypeDefinition b)
+    {
+        if (a == b) { return true; }
+        return (a.Namespace?.Value ?? string.Empty) == (b.Namespace?.Value ?? string.Empty)
+            && (a.Name?.Value ?? string.Empty) == (b.Name?.Value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// Emits the per-interface members (methods, properties, events) into an already-open Methods
+    /// static class. Used both for the standalone case and for the fast-abi merged emission.
+    /// </summary>
+    private static void EmitMethodsClassMembersFor(TypeWriter w, TypeDefinition type, int startSlot, bool skipExclusiveEvents)
+    {
         // Build a map from each MethodDefinition to its WinMD vtable slot.
-        // Mirrors C++ get_vmethod_index: slot = (method.index() - vtable_base) + INSPECTABLE_METHOD_COUNT.
+        // Mirrors C++ get_vmethod_index: slot = (method.index() - vtable_base) + start_slot.
         // In AsmResolver, type.Methods is iterated in MethodDef row order, so the position of each
         // method in type.Methods (relative to the first method of the type) gives us the same value.
-        // INSPECTABLE_METHOD_COUNT = 6 (3 IUnknown + 3 IInspectable).
         Dictionary<MethodDefinition, int> methodSlot = new();
         {
             int idx = 0;
             foreach (MethodDefinition m in type.Methods)
             {
-                methodSlot[m] = idx + 6;
+                methodSlot[m] = idx + startSlot;
                 idx++;
             }
         }
@@ -3807,8 +3892,6 @@ internal static partial class CodeWriters
             }
             w.Write("    }\n");
         }
-
-        w.Write("}\n");
     }
 
     /// <summary>
