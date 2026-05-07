@@ -588,6 +588,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <ReferencePathWithRefAssemblies Include="@(_CsWinRTAggregatorRefProjItems->'%(OriginalItemSpec)')" />
 
       <!--
+        Stash the original reference-projection items in a property-bag-like ItemGroup so the
+        post-CoreCompile target _RestoreAggregatorRefProjectionsForInteropGenerator can read
+        them back. ItemGroup state persists across targets within the same project, so this
+        is sufficient.
+      -->
+      <_CsWinRTAggregatorStashedRefProjItems Include="@(_CsWinRTAggregatorRefProjItems)" />
+
+      <!--
         Wire up our own to-be-produced WinRT.Component.dll (which IS the aggregator csproj's primary
         @(IntermediateAssembly) - same path) as the CsWinRTGeneratorComponentPath. The interop
         generator's discovery code recognizes the equality (WinRTComponentAssemblyPath == OutputAssemblyPath)
@@ -604,6 +612,39 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <MSBuildSourceTargetName>_GenerateMergedAggregatorSources</MSBuildSourceTargetName>
         <Platforms>AnyCPU</Platforms>
       </CsWinRTGeneratorComponentPath>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    ============================================================
+            _RestoreAggregatorRefProjectionsForInteropGenerator
+
+    Aggregator scenario only (AssemblyName == WinRT.Component).
+
+    _GenerateMergedAggregatorSources (above) swaps the reference-projection items in
+    @(ReferencePathWithRefAssemblies) for their forwarder counterparts so csc compiles
+    cleanly (no CS0433 against the merged projection). But the interop generator
+    (_RunCsWinRTInteropGenerator below) needs the reference projection - it filters its
+    discovery by the [WindowsRuntimeReferenceAssembly] attribute (see
+    src/cswinrt/strings/InspectableVftbl.cs which adds the attribute only under
+    CSWINRT_REFERENCE_PROJECTION) and that attribute is stamped exclusively on the
+    obj/X.dll reference projection. Without those items in the closure the interop
+    generator's type-hierarchy discovery finds zero entries and fails with
+    CSWINRTINTEROPGEN0036 ("No type hierarchy key-value pairs were discovered").
+
+    Re-add the stashed reference-projection items to @(ReferencePathWithRefAssemblies)
+    after CoreCompile and before _RunCsWinRTInteropGenerator. csc has already finished
+    so adding them now does not affect its compilation. The interop generator's filter
+    only iterates items with [WindowsRuntimeReferenceAssembly], so the additional
+    forwarder/merged items already in the list are ignored for type-hierarchy purposes.
+    ============================================================
+  -->
+  <Target Name="_RestoreAggregatorRefProjectionsForInteropGenerator"
+          AfterTargets="CoreCompile"
+          BeforeTargets="_RunCsWinRTInteropGenerator"
+          Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(AssemblyName)' == 'WinRT.Component' and '@(_CsWinRTAggregatorStashedRefProjItems)' != ''">
+    <ItemGroup>
+      <ReferencePathWithRefAssemblies Include="@(_CsWinRTAggregatorStashedRefProjItems)" />
     </ItemGroup>
   </Target>
 
