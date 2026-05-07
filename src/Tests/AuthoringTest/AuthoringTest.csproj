@@ -36,26 +36,32 @@
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI">
       <!-- Keep build assets imported. -->
       <ExcludeAssets>compile;runtime</ExcludeAssets>
-      <!--
-        Stop the WinUI package graph (which transitively depends on Microsoft.Web.WebView2)
-        from flowing through to AuthoringTest's consumers - notably the synthesized aggregator
-        csproj used by native consumers in AuthoringConsumptionTest. Without PrivateAssets=all,
-        the aggregator's RAR closure picks up WebView2's buildTransitive Projection.dll
-        (Microsoft.Web.WebView2.Core.Projection.dll, a CsWinRT 2.x style projection stamped
-        against Microsoft.Windows.SDK.NET v10.0.17763.38 PK=31bf3856ad364e35), which conflicts
-        with the in-repo built Microsoft.Windows.SDK.NET.dll (v1.0.0.0 PK=null) and trips
-        NETSDK1148.
-      -->
-      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <!--
-      Keep this direct PackageReference (with ExcludeAssets=all) even though no AuthoringTest
-      source uses WebView2. With the direct reference present, NuGet treats WebView2 as
-      "directly referenced, contributing nothing"; without it, WebView2 enters AuthoringTest's
-      closure transitively via WindowsAppSDK.WinUI and its buildTransitive auto-import pulls
-      Microsoft.Web.WebView2.Core.Projection.dll into RAR, which then conflicts with the
-      in-repo Microsoft.Windows.SDK.NET.dll on AuthoringTest itself (NETSDK1148).
-      PrivateAssets=all here is for the same reason as above: don't propagate to the aggregator.
+      Direct PackageReference to Microsoft.Web.WebView2 (transitively brought in by
+      WindowsAppSDK.WinUI). Two roles:
+
+        1. ExcludeAssets=all: with the direct reference present, NuGet treats WebView2 as
+           "directly referenced, contributing nothing" for THIS project, which suppresses
+           WebView2's buildTransitive auto-import. Without this direct ref, AuthoringTest's
+           own build picks up WebView2's buildTransitive Projection.dll
+           (Microsoft.Web.WebView2.Core.Projection.dll, a CsWinRT 2.x style projection
+           stamped against Microsoft.Windows.SDK.NET v10.0.17763.38 PK=31bf3856ad364e35),
+           which conflicts with the in-repo Microsoft.Windows.SDK.NET.dll (v1.0.0.0
+           PK=null) and trips NETSDK1148 on AuthoringTest.
+
+        2. PrivateAssets=all: stop WebView2's package assets from flowing to AuthoringTest's
+           consumers. The native-consumer aggregator csproj used by AuthoringConsumptionTest
+           inherits AuthoringTest's package graph through ProjectReference, and without
+           PrivateAssets=all here it would pick up WebView2's buildTransitive Projection.dll
+           the same way AuthoringTest would have - tripping NETSDK1148 on the aggregator.
+           NuGet's direct-ref-wins (centroid) rule means this PrivateAssets=all is the
+           authoritative metadata for WebView2 across the closure, so it also blocks the
+           WinUI->WebView2 transitive path.
+
+      We deliberately do NOT set PrivateAssets=all on WindowsAppSDK.WinUI itself: the
+      aggregator needs WinUI's WinMD metadata to generate the merged projection .dll for
+      Microsoft.UI.Xaml.* types referenced by AuthoringTest.winmd.
     -->
     <PackageReference Include="Microsoft.Web.WebView2">
       <ExcludeAssets>all</ExcludeAssets>
