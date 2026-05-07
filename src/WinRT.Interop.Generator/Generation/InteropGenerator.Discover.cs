@@ -84,11 +84,9 @@ internal partial class InteropGenerator
                 : WellKnownInteropExceptions.LoadAndDiscoverModulesLoopError(innerException);
         }
 
-        // Multi-component aggregator scenario: when the consumer's primary output IS 'WinRT.Component.dll',
-        // there is no separate component module - the consumer module IS the component. 'LoadWinRTModules'
-        // detects this and tracks the output assembly as the component module, and the main input loop
-        // unconditionally skips it (see 'LoadAndProcessModule'). Activation factory types from this assembly
-        // are still picked up below via 'DiscoverComponentActivationFactoryTypes'.
+        // 'WinRT.Component.dll' is loaded separately by 'LoadWinRTModules' and skipped by the main
+        // input loop (see 'LoadAndProcessModule'). 'DiscoverComponentActivationFactoryTypes' below
+        // scans it for activation factory CCW types, which is the only discovery work needed on it.
 
         // Discover activation factory types from the component module, if available.
         // These types are in 'WinRT.Component.dll' (which is not in the main processing set),
@@ -173,14 +171,9 @@ internal partial class InteropGenerator
             args.Token.ThrowIfCancellationRequested();
         }
 
-        // Load the 'WinRT.Component.dll' module, if available. In the multi-component aggregator
-        // scenario the consumer's own primary output IS 'WinRT.Component.dll' - the consumer module
-        // serves double-duty as the merged component module, so we use the output assembly path as
-        // the component path. The main input loop will then unconditionally skip 'WinRT.Component.dll',
-        // and 'DiscoverComponentActivationFactoryTypes' will scan it for activation factory types
-        // only (which is the only meaningful discovery work needed on this assembly - all other types
-        // in it are cswinrt/source-generator-emitted ABI types and merged dispatchers, which must
-        // not participate in user-defined-type discovery).
+        // Load the 'WinRT.Component.dll' module, if available. When the consumer's own output assembly
+        // is 'WinRT.Component.dll' (the multi-component aggregator scenario), use that path - the output
+        // module serves double-duty as the merged component module.
         string? componentAssemblyPath = args.WinRTComponentAssemblyPath;
 
         if (componentAssemblyPath is null &&
@@ -195,11 +188,9 @@ internal partial class InteropGenerator
 
             discoveryState.TrackWindowsRuntimeComponentModule(winRTComponentModule);
 
-            // In the aggregator scenario the consumer's own primary output IS 'WinRT.Component.dll'. The main
-            // input loop unconditionally skips this assembly (it contains only cswinrt/source-generator-emitted
-            // code that should not participate in user-defined-type discovery), so the module would otherwise
-            // never be registered in 'discoveryState.Modules'. 'DefineInteropModule' looks up the output assembly
-            // by path in that dictionary, so we register it here as well to avoid CSWINRTINTEROPGEN0003.
+            // The main input loop unconditionally skips 'WinRT.Component.dll', so when it is also
+            // the output assembly we must register it in 'discoveryState.Modules' explicitly here -
+            // 'DefineInteropModule' looks up the output assembly in that dictionary by path.
             if (componentAssemblyPath == args.OutputAssemblyPath)
             {
                 discoveryState.TrackModule(componentAssemblyPath, winRTComponentModule);
@@ -224,12 +215,8 @@ internal partial class InteropGenerator
         //   - 'WinRT.Sdk.Projection.dll': the precompiled projection assembly for the Windows SDK.
         //   - 'WinRT.Sdk.Xaml.Projection.dll': the precompiled projection assembly for the Windows SDK XAML types.
         //   - 'WinRT.Projection.dll': the generated merged projection assembly.
-        //   - 'WinRT.Component.dll': the optional generated merged component assembly.
-        //
-        // For the multi-component aggregator scenario the consumer's own primary output IS 'WinRT.Component.dll',
-        // and 'args.WinRTComponentAssemblyPath' is intentionally null (the consumer is the component); 'LoadWinRTModules'
-        // recognizes this configuration and tracks the output assembly as the component module. Accept that path here
-        // without raising the path-mismatch error.
+        //   - 'WinRT.Component.dll': the optional generated merged component assembly. Also accept the path when
+        //     it equals the output assembly (aggregator scenario where the consumer is the merged component).
         if ((fileName.SequenceEqual(InteropNames.WindowsRuntimeSdkProjectionDllName) && path != args.WinRTSdkProjectionAssemblyPath) ||
             (fileName.SequenceEqual(InteropNames.WindowsRuntimeSdkXamlProjectionDllName) && path != args.WinRTSdkXamlProjectionAssemblyPath) ||
             (fileName.SequenceEqual(InteropNames.WindowsRuntimeProjectionDllName) && path != args.WinRTProjectionAssemblyPath) ||
@@ -238,16 +225,11 @@ internal partial class InteropGenerator
             throw WellKnownInteropExceptions.ReservedDllOriginalPathMismatch(fileName.ToString());
         }
 
-        // If the current module is one of these reserved .dll-s, we just skip it. They will be loaded separately (see above).
-        // However since they're also passed in the reference set (as they need to be referenced by the app directly), they
-        // will also show up here. This is intended, and it simplifies the targets (no need for them to filter items).
-        //
-        // Note: 'WinRT.Component.dll' is *always* skipped in this loop, even when it is the consumer's own output assembly
-        // (the multi-component aggregator scenario). That assembly contains only cswinrt/source-generator-emitted code -
-        // forwarders, ABI mapping types, merged activation-factory dispatchers - none of which represent user-defined types
-        // that should participate in the normal discovery walk. Walking them would cause downstream issues (e.g. constructing
-        // generic instantiations of 'IEnumerator<T>' over ABI mapping structs whose 'void*' fields cannot be marshalled).
-        // Activation factory types from this assembly are picked up separately by 'DiscoverComponentActivationFactoryTypes'.
+        // If the current module is one of these reserved .dll-s, skip it - they are loaded separately above.
+        // 'WinRT.Component.dll' is always skipped, even when it is the consumer's own output assembly: it contains
+        // only cswinrt/source-generator-emitted code (forwarders, ABI mapping types, merged dispatchers) that must
+        // not participate in user-defined-type discovery. Activation factory types in it are picked up separately
+        // by 'DiscoverComponentActivationFactoryTypes'.
         if (fileName.SequenceEqual(InteropNames.WindowsRuntimeSdkProjectionDllName) ||
             fileName.SequenceEqual(InteropNames.WindowsRuntimeSdkXamlProjectionDllName) ||
             fileName.SequenceEqual(InteropNames.WindowsRuntimeProjectionDllName) ||

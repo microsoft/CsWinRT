@@ -40,17 +40,11 @@ Properties:
     ============================================================
                 _WriteCsWinRTAggregatorPublicKey
 
-    Inline task that writes the CsWinRT public-key blob (160 bytes) to a .snk file at the
-    given OutputPath. Same byte sequence the projection generator already uses to delay-sign
-    WinRT.Projection.dll and WinRT.Sdk.Projection.dll - see
-    src/WinRT.Projection.Generator/Generation/ProjectionGenerator.Emit.cs (CsWinRTPublicKey
-    field). Its public key token is 31bf3856ad364e35 (the well-known MS .NET / ECMA libraries
-    key), which matches what the interop generator hardcodes for WinRT.Component in
-    src/WinRT.Interop.Generator/References/InteropReferences.cs (WinRTComponent property).
-
-    Bundling the bytes inline (rather than shipping a .snk file in the NuGet package) avoids
-    distributing any key material as a separate package asset and keeps the source-of-truth in
-    one place.
+    Inline task that writes the CsWinRT public-key blob (160 bytes; public-key token
+    31bf3856ad364e35) to OutputPath. Same bytes the projection generator uses to delay-sign
+    WinRT.Projection.dll / WinRT.Sdk.Projection.dll, and the same token the interop generator
+    hardcodes for WinRT.Component. Embedded inline so the package does not ship a separate
+    .snk asset.
     ============================================================
   -->
   <UsingTask TaskName="_WriteCsWinRTAggregatorPublicKey"
@@ -116,13 +110,8 @@ Properties:
     <ItemGroup>
       <_CsWinRTComponentProjectPaths Include="%(_ResolvedProjectReferencePaths.MSBuildSourceProjectFile)"
                                      Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true'" />
-      <!--
-        Component references that expose a non-empty CsWinRTComponentWindowsSdkPackageVersion
-        metadata. Filtering both to component refs AND to non-empty metadata is necessary because
-        not all components set $(WindowsSdkPackageVersion) at the time Authoring.targets captures
-        the metadata (so the value can be empty), and we want to fall through to other sources
-        when that's the case.
-      -->
+      <!-- Component references that expose a non-empty CsWinRTComponentWindowsSdkPackageVersion.
+           Filter to non-empty here so the property fallback below picks the next valid source. -->
       <_CsWinRTComponentSdkVersionRefs Include="@(_ResolvedProjectReferencePaths)"
                                        Condition="'%(_ResolvedProjectReferencePaths.CsWinRTComponent)' == 'true' and '%(_ResolvedProjectReferencePaths.CsWinRTComponentWindowsSdkPackageVersion)' != ''" />
     </ItemGroup>
@@ -132,13 +121,10 @@ Properties:
       <_CsWinRTComponentTargetFramework>%(_ResolvedProjectReferencePaths.CsWinRTComponentTargetFramework)</_CsWinRTComponentTargetFramework>
       <_CsWinRTComponentTargetFramework Condition="'$(_CsWinRTComponentTargetFramework)' == ''">net10.0-windows10.0.26100.1</_CsWinRTComponentTargetFramework>
       <!--
-        Pick a WindowsSdkPackageVersion for the synthesized aggregator csproj so the SDK-injected
-        Microsoft.Windows.SDK.NET.Ref FrameworkReference resolves a known ref-pack version (and
-        thus 'Microsoft.Windows.SDK.NET.dll'). Sources, in precedence order:
-          1. The consumer's vcxproj (set 'CsWinRTNativeConsumerWindowsSdkPackageVersion').
-          2. A component reference's CsWinRTComponentWindowsSdkPackageVersion metadata (filtered
-             above to actual components with non-empty metadata).
-        If neither is set, the property is omitted from the aggregator and the SDK default applies.
+        WindowsSdkPackageVersion for the synthesized aggregator csproj, in precedence order:
+          1. CsWinRTNativeConsumerWindowsSdkPackageVersion on the consumer's vcxproj.
+          2. CsWinRTComponentWindowsSdkPackageVersion from a referenced component (filtered above).
+        If neither is set, the property is omitted and the SDK default applies.
       -->
       <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(CsWinRTNativeConsumerWindowsSdkPackageVersion)' != ''">$(CsWinRTNativeConsumerWindowsSdkPackageVersion)</_CsWinRTAggregatorWindowsSdkPackageVersion>
       <_CsWinRTAggregatorWindowsSdkPackageVersion Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' == ''">%(_CsWinRTComponentSdkVersionRefs.CsWinRTComponentWindowsSdkPackageVersion)</_CsWinRTAggregatorWindowsSdkPackageVersion>
@@ -172,90 +158,62 @@ Properties:
       <_CsWinRTTempProjectPath>$(_CsWinRTTempProjectDir)CsWinRT.NativeConsumer.csproj</_CsWinRTTempProjectPath>
       <_CsWinRTTempProjectTFMDir>$(_CsWinRTComponentTargetFramework)</_CsWinRTTempProjectTFMDir>
       <!--
-        Intermediate output paths for the aggregator. We pin BaseIntermediateOutputPath and the
-        config-level IntermediateOutputPath so the post-build Copy step can read merged DLLs
-        from a path this targets file owns, independent of any $(Platform)-aware logic the SDK
-        applies to its default. We deliberately stop one segment short of the TargetFramework
-        because the SDK appends $(TargetFramework)\ to IntermediateOutputPath in its
-        post-evaluation pass; the final on-disk path is _CsWinRTTempProjectIntermediateDir.
+        Pin BaseIntermediateOutputPath / IntermediateOutputPath one segment short of the TFM:
+        the SDK appends $(TargetFramework)\ post-evaluation, so the final on-disk path is
+        _CsWinRTTempProjectIntermediateDir. We pin them so the post-build Copy can read merged
+        DLLs from a known path independent of the SDK's $(Platform)-aware logic.
       -->
       <_CsWinRTTempProjectBaseIntermediateDir>$(_CsWinRTTempProjectDir)obj\</_CsWinRTTempProjectBaseIntermediateDir>
       <_CsWinRTTempProjectIntermediateConfigDir>$(_CsWinRTTempProjectBaseIntermediateDir)$(Configuration)\</_CsWinRTTempProjectIntermediateConfigDir>
       <_CsWinRTTempProjectIntermediateDir>$(_CsWinRTTempProjectIntermediateConfigDir)$(_CsWinRTTempProjectTFMDir)\</_CsWinRTTempProjectIntermediateDir>
       <!--
-        Absolute paths to the cswinrt props/targets that the aggregator must <Import>
-        directly. The aggregator has no PackageReference to cswinrt, so cswinrt's build
-        logic (CsWinRTGen.targets, CsWinRTRemoveWinMDReferences, etc.) is not auto-imported
-        through the package convention. Without these explicit imports, the aggregator's
-        CsWinRTBuildForNativeConsumer / CsWinRTGenerateInteropAssembly properties have no
-        consumer in scope and cswinrtinteropgen never runs.
+        Absolute paths to cswinrt's props/targets. The aggregator has no PackageReference to
+        CsWinRT, so it must <Import> these directly to pick up CsWinRTBuildForNativeConsumer /
+        CsWinRTGenerateInteropAssembly handling.
       -->
       <_CsWinRTPropsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.props'))</_CsWinRTPropsForAggregator>
       <_CsWinRTTargetsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.targets'))</_CsWinRTTargetsForAggregator>
 
       <!--
-        Path to the build-time-generated CsWinRT public-key file. We write the public-key blob
-        (160 bytes, taken from src/WinRT.Projection.Generator/Generation/ProjectionGenerator.Emit.cs's
-        CsWinRTPublicKey field, public-key token = 31bf3856ad364e35) into this file via the
-        _WriteCsWinRTAggregatorPublicKey inline task before the aggregator csproj's build runs.
-        The aggregator's csproj uses it with PublicSign=true to produce a strong-named
-        WinRT.Component.dll whose PublicKeyToken matches the value the interop generator
-        hardcodes in InteropReferences.WinRTComponent.
+        Build-time-generated .snk file. The aggregator's csproj uses it via PublicSign so
+        the resulting WinRT.Component.dll has PublicKeyToken=31bf3856ad364e35, matching the
+        identity the interop generator hardcodes for WinRT.Component.
       -->
       <_CsWinRTAggregatorKeyFilePath>$(_CsWinRTTempProjectDir)cswinrt-aggregator-publickey.snk</_CsWinRTAggregatorKeyFilePath>
 
       <!--
-        Path to the WinRT.SourceGenerator analyzer assembly, ONLY used in the in-repo
-        SimulateCsWinRTNugetReference scenario. In the real package-install scenario the
-        synthesized aggregator csproj's transitive ProjectReferences to consumer components
-        carry the Microsoft.Windows.CsWinRT package's analyzer through NuGet's standard
-        transitive analyzer flow - adding it explicitly there causes a duplicate-load (the
-        analyzer runs twice, emits ManagedExports.g.cs twice, csc emits CS0579/CS0111).
+        Path to the WinRT.SourceGenerator analyzer, only set in the in-repo
+        SimulateCsWinRTNugetReference scenario. In real package installs the analyzer flows
+        transitively through the components' Microsoft.Windows.CsWinRT PackageReferences;
+        adding it explicitly there causes a duplicate-load (CS0579/CS0111). The in-repo
+        scenario uses ProjectReference with OutputItemType="Analyzer" which is not transitive,
+        so we add the analyzer to the aggregator manually.
 
-        In the in-repo scenario the consumer components use ProjectReference to
-        WinRT.SourceGenerator2.csproj with OutputItemType="Analyzer" - that flow is NOT
-        transitive, so the aggregator never picks up the analyzer and the merged
-        ABI.{AssemblyName}.ManagedExports type isn't emitted. At runtime
-        WinRT.Host.Shim.GetActivationFactory's reflection lookup for that type fails and
-        returns 0x80040150 (REGDB_E_READREGDB).
-
-        Detect by file existence: if the package-layout analyzer exists at the standard
-        'analyzers/dotnet/cs/' location relative to this targets file, we're running from
-        a real package install - leave _CsWinRTAggregatorAnalyzerPath empty and rely on the
-        transitive flow. Otherwise we're in-repo - point at the locally-built analyzer dll
-        and add it explicitly to the synthesized csproj below.
+        Detect by file existence: if the package-layout analyzer at analyzers/dotnet/cs/ exists
+        relative to this targets file, leave the path empty (transitive flow handles it);
+        otherwise point at the locally-built dll.
       -->
       <_CsWinRTAggregatorAnalyzerPathPackage>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\..\analyzers\dotnet\cs\WinRT.SourceGenerator.dll'))</_CsWinRTAggregatorAnalyzerPathPackage>
       <_CsWinRTAggregatorAnalyzerPath Condition="!Exists('$(_CsWinRTAggregatorAnalyzerPathPackage)')">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\..\src\Authoring\WinRT.SourceGenerator2\bin\$(Configuration)\net10.0\WinRT.SourceGenerator.dll'))</_CsWinRTAggregatorAnalyzerPath>
 
       <!--
-        AOT vs JIT mode for the aggregator sub-build:
-        - When the consumer's vcxproj sets PublishAot=true, the aggregator csproj is
-          published with PublishAot=true so ILC produces a single native WinRT.Component.dll
-          containing every component dll, the projection dlls, and WinRT.Runtime statically
-          linked. The native consumer needs ONLY that file at runtime - no .NET runtime,
-          no WinRT.Host*.dll, no per-component dlls.
-        - Otherwise (default), the aggregator is built (not published). Output is a managed
-          WinRT.Component.dll plus the existing JIT runtime closure (host dlls, per-component
-          dlls, projection dlls, WinRT.Runtime, .NET runtime resolved from the system).
+        AOT vs JIT mode. When the consumer's vcxproj sets PublishAot=true the aggregator csproj
+        is published with PublishAot=true so ILC produces a single native WinRT.Component.dll
+        with everything statically linked - the consumer needs ONLY that file at runtime.
+        Otherwise the aggregator is built (not published) and the consumer ships the JIT
+        runtime closure (host dlls, per-component dlls, projection dlls, WinRT.Runtime).
       -->
       <_CsWinRTAggregatorPublishAot Condition="'$(PublishAot)' == 'true'">true</_CsWinRTAggregatorPublishAot>
       <_CsWinRTAggregatorVerb Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'">Publish</_CsWinRTAggregatorVerb>
       <_CsWinRTAggregatorVerb Condition="'$(_CsWinRTAggregatorVerb)' == ''">Build</_CsWinRTAggregatorVerb>
 
-      <!--
-        For AOT publish, ILC requires a RuntimeIdentifier. Map the vcxproj $(Platform) (Win32,
-        x64, ARM64) to the corresponding 'win-X' RID. For non-AOT builds we leave RID empty so
-        the SDK builds the framework-dependent managed dll in its usual location.
-      -->
+      <!-- AOT publish requires a RuntimeIdentifier; map vcxproj $(Platform) to a 'win-X' RID.
+           Non-AOT builds leave RID empty for the SDK's framework-dependent default. -->
       <_CsWinRTAggregatorRuntimeIdentifier Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true' and '$(Platform)' == 'Win32'">win-x86</_CsWinRTAggregatorRuntimeIdentifier>
       <_CsWinRTAggregatorRuntimeIdentifier Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true' and '$(Platform)' == 'x64'">win-x64</_CsWinRTAggregatorRuntimeIdentifier>
       <_CsWinRTAggregatorRuntimeIdentifier Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true' and '$(Platform)' == 'ARM64'">win-arm64</_CsWinRTAggregatorRuntimeIdentifier>
 
-      <!--
-        Pin the publish dir to a known location so the copy step has a stable source. The SDK's
-        default is bin/Configuration/TargetFramework/RuntimeIdentifier/publish/. We override.
-      -->
+      <!-- Pin the publish dir so the post-build copy step has a stable source. -->
       <_CsWinRTAggregatorPublishDir Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'">$(_CsWinRTTempProjectDir)publish\</_CsWinRTAggregatorPublishDir>
     </PropertyGroup>
 
@@ -268,60 +226,34 @@ Properties:
       <_CsWinRTTempProjectLines Include="  &lt;PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;TargetFramework&gt;$(_CsWinRTComponentTargetFramework)&lt;/TargetFramework&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;Platforms&gt;x64%3Bx86%3BARM64&lt;/Platforms&gt;" />
-      <!-- Match the consumer-specified WindowsSdkPackageVersion (when set) so the SDK-injected
-           Microsoft.Windows.SDK.NET.Ref FrameworkReference resolves a known ref-pack version.
-           Otherwise leave it unset and let the SDK pick its default - the same default the
-           referenced components used when they were compiled (since both go through the same
-           SDK install on the same machine), so the resolved Microsoft.Windows.SDK.NET.dll
-           versions match and the SDK's NETSDK1148 cross-version check is satisfied. -->
+      <!-- Set WindowsSdkPackageVersion explicitly when supplied. Otherwise leave unset so
+           the SDK picks its default (the same default the components used). -->
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorWindowsSdkPackageVersion)' != ''"
                                 Include="    &lt;WindowsSdkPackageVersion&gt;$(_CsWinRTAggregatorWindowsSdkPackageVersion)&lt;/WindowsSdkPackageVersion&gt;" />
-      <!--
-        Pin IntermediateOutputPath / BaseIntermediateOutputPath as project-local properties so
-        the aggregator writes outputs to a path Native.targets can read back from. Setting them
-        here (rather than as global properties on the parent <MSBuild> call) keeps them scoped
-        to the aggregator and stops them from flowing into transitive ProjectReferences such as
-        the C++ cswinrt.vcxproj, whose legacy packages.config NuGet resolver breaks if they do.
-      -->
+      <!-- Pin Intermediate paths as project-local properties (not global on the parent
+           <MSBuild> call) so they don't leak to transitive ProjectReferences. -->
       <_CsWinRTTempProjectLines Include="    &lt;BaseIntermediateOutputPath&gt;$(_CsWinRTTempProjectBaseIntermediateDir)&lt;/BaseIntermediateOutputPath&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;IntermediateOutputPath&gt;$(_CsWinRTTempProjectIntermediateConfigDir)&lt;/IntermediateOutputPath&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTBuildForNativeConsumer&gt;true&lt;/CsWinRTBuildForNativeConsumer&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateInteropAssembly&gt;true&lt;/CsWinRTGenerateInteropAssembly&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTGenerateProjection&gt;false&lt;/CsWinRTGenerateProjection&gt;" />
-      <!--
-        AssemblyName=WinRT.Component makes the aggregator's primary CoreCompile output the merged
-        WinRT.Component.dll directly, instead of producing it as a side-output of the projection
-        generator's in-process Roslyn. This is required so that 'dotnet publish -p:PublishAot=true'
-        of the aggregator runs ILC over WinRT.Component.dll itself, materializing the
-        [UnmanagedCallersOnly("DllGetActivationFactory")] attribute as a real native PE export.
-      -->
+      <!-- AssemblyName=WinRT.Component routes CoreCompile's primary output to WinRT.Component.dll,
+           making it the publish unit's primary assembly so 'dotnet publish -p:PublishAot=true'
+           runs ILC over it and materializes [UnmanagedCallersOnly] DllGetActivationFactory as a
+           native PE export. -->
       <_CsWinRTTempProjectLines Include="    &lt;AssemblyName&gt;WinRT.Component&lt;/AssemblyName&gt;" />
-      <!--
-        MergeReferencedActivationFactories=true tells the source generator's EmitManagedExports
-        to emit the merged 'ABI.WinRT.Component.ManagedExports.GetActivationFactory' dispatcher
-        on the aggregator's primary assembly (walking each referenced component's ManagedExports
-        in turn). Combined with PublishAot=true (propagated from the consumer), the source
-        generator's EmitNativeExports also emits the [UnmanagedCallersOnly] DllGetActivationFactory
-        wrapper - same logic that makes single-component AOT work, just running on the aggregator.
-      -->
+      <!-- Tells the source generator to emit ABI.WinRT_Component.ManagedExports.GetActivationFactory
+           dispatching to each referenced component's ManagedExports. Combined with PublishAot it
+           also emits the [UnmanagedCallersOnly] DllGetActivationFactory native export wrapper. -->
       <_CsWinRTTempProjectLines Include="    &lt;CsWinRTMergeReferencedActivationFactories&gt;true&lt;/CsWinRTMergeReferencedActivationFactories&gt;" />
-      <!--
-        AOT plumbing: when the consumer's vcxproj sets PublishAot=true, propagate it (and the
-        chosen RuntimeIdentifier + a pinned PublishDir) into the aggregator csproj so its
-        publish run produces a single native WinRT.Component.dll with everything statically
-        linked.
-      -->
+      <!-- AOT plumbing: propagate PublishAot, RuntimeIdentifier, and a pinned PublishDir to the
+           aggregator csproj so its publish run produces a single self-contained native dll. -->
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
                                 Include="    &lt;PublishAot&gt;true&lt;/PublishAot&gt;" />
-      <!--
-        AOT publish trick (mirrors src/Tests/AuthoringTest/Directory.Build.props):
-        - NativeLib=Shared tells ILC to produce a single native .dll.
-        - SelfContained=true ensures all managed deps are linked in.
-        - OutputType=Exe + CustomNativeMain=true is a workaround to keep TypeMapAssemblyTarget
-          attributes alive under AOT until the relevant ILC/runtime fix is available.
-          (For a Library publish, ILC currently strips the TypeMap union; for an Exe with
-          NativeLib=Shared and CustomNativeMain it preserves them.)
-      -->
+      <!-- AOT publish trick (mirrors src/Tests/AuthoringTest/Directory.Build.props):
+           NativeLib=Shared + SelfContained + OutputType=Exe + CustomNativeMain together preserve
+           TypeMapAssemblyTarget under ILC. (Library publish currently strips the TypeMap union;
+           the Exe + NativeLib=Shared + CustomNativeMain combination keeps it.) -->
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
                                 Include="    &lt;NativeLib&gt;Shared&lt;/NativeLib&gt;" />
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
@@ -330,8 +262,6 @@ Properties:
                                 Include="    &lt;OutputType&gt;Exe&lt;/OutputType&gt;" />
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
                                 Include="    &lt;CustomNativeMain&gt;true&lt;/CustomNativeMain&gt;" />
-      <!-- IsTrimmable=true matches the AuthoringTest project's AOT setup; required for ILC's
-           dependency analysis to keep the right closure of types. -->
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
                                 Include="    &lt;IsTrimmable&gt;true&lt;/IsTrimmable&gt;" />
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
@@ -342,22 +272,12 @@ Properties:
       <_CsWinRTTempProjectLines Include="    &lt;GenerateAssemblyInfo&gt;false&lt;/GenerateAssemblyInfo&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProduceReferenceAssembly&gt;false&lt;/ProduceReferenceAssembly&gt;" />
       <!--
-        Public-sign (a.k.a. open-source / delay-sign without skip-verification) the aggregator's
-        WinRT.Component.dll with the CsWinRT public key so the resulting assembly identity is:
-          WinRT.Component, Version=0.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
-
-        The interop generator hardcodes that exact assembly reference at
-        src/WinRT.Interop.Generator/References/InteropReferences.cs (WinRTComponent property,
-        publicKeyOrToken = WellKnownPublicKeyTokens.CsWinRT). When it emits TypeRefs targeting
-        the aggregator's ABI types (e.g. ABI.AuthoringTest.BasicStruct), the TypeRef's
-        AssemblyRef carries that public key token. Later type-resolution loads the actual
-        WinRT.Component.dll via the consumer-supplied component assembly path; if the loaded
-        assembly's identity doesn't match the AssemblyRef (PublicKeyToken in particular), the
-        resolver throws FileNotFoundException, surfacing as CSWINRTINTEROPGEN0025.
-
-        We use PublicSign rather than full SignAssembly because the package only ships the
-        public portion of key.snk (delay-sign style). PublicSign produces a fully verifiable
-        strong-named assembly without requiring the private key at consumer build time.
+        Public-sign WinRT.Component.dll with the CsWinRT public key so its identity is
+        WinRT.Component, Version=0.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35.
+        The interop generator emits TypeRefs into this assembly identity (its WinRTComponent
+        AssemblyRef hardcodes that token); a mismatch surfaces as type resolution failure.
+        PublicSign (rather than full signing) suffices because the package only ships the
+        public key portion of key.snk.
       -->
       <_CsWinRTTempProjectLines Include="    &lt;SignAssembly&gt;true&lt;/SignAssembly&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;PublicSign&gt;true&lt;/PublicSign&gt;" />
@@ -365,24 +285,13 @@ Properties:
       <_CsWinRTTempProjectLines Include="  &lt;/PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
-      <!--
-        Stub Main entry point: csc requires a Main method when OutputType=Exe (the AOT path).
-        ILC's CustomNativeMain bypasses it at native-link time, but csc still validates the
-        source. We emit a tiny EntryPoint.cs alongside the synthesized csproj.
-      -->
+      <!-- Stub Main: csc requires it for OutputType=Exe (the AOT path); ILC's CustomNativeMain
+           replaces it natively at link time so the body is never executed. -->
       <_CsWinRTTempProjectLines Condition="'$(_CsWinRTAggregatorPublishAot)' == 'true'"
                                 Include="    &lt;Compile Include=&quot;EntryPoint.cs&quot; /&gt;" />
-      <!--
-        Add the CsWinRT source generator (AuthoringExportTypesGenerator) explicitly as an
-        Analyzer item ONLY in the in-repo scenario (see the comment on
-        _CsWinRTAggregatorAnalyzerPath above). For real package installs, the analyzer flows
-        transitively through the components' Microsoft.Windows.CsWinRT PackageReferences;
-        adding it explicitly there causes a duplicate-load with CS0579/CS0111. For in-repo
-        SimulateCsWinRTNugetReference scenarios, the components ProjectReference
-        WinRT.SourceGenerator2 with OutputItemType="Analyzer" - that's not transitive, so the
-        aggregator wouldn't otherwise see the analyzer and the merged ManagedExports type
-        wouldn't be emitted.
-      -->
+      <!-- In the in-repo scenario only (see _CsWinRTAggregatorAnalyzerPath above), add the
+           CsWinRT source generator explicitly. In package-install scenarios it flows
+           transitively through the components' PackageReferences. -->
       <_CsWinRTTempProjectLines Include="    &lt;Analyzer Include=&quot;$(_CsWinRTAggregatorAnalyzerPath)&quot; /&gt;"
                                 Condition="'$(_CsWinRTAggregatorAnalyzerPath)' != ''" />
       <_CsWinRTTempProjectLines Include="  &lt;/ItemGroup&gt;" />
@@ -396,24 +305,13 @@ Properties:
                       Lines="@(_CsWinRTTempProjectLines)"
                       Overwrite="true" />
 
-    <!--
-      AOT only: write a stub EntryPoint.cs alongside the synthesized csproj. csc requires a
-      static Main on Exe projects; ILC's CustomNativeMain replaces it natively at link time
-      so the body is never executed.
-    -->
+    <!-- AOT only: stub EntryPoint.cs (see <Compile> include above for explanation). -->
     <WriteLinesToFile Condition="'$(_CsWinRTHasComponentReferences)' == 'true' and '$(_CsWinRTAggregatorPublishAot)' == 'true'"
                       File="$(_CsWinRTTempProjectDir)EntryPoint.cs"
                       Lines="internal static class CsWinRTNativeConsumerEntryPoint { internal static void Main() { } }"
                       Overwrite="true" />
 
-    <!--
-      Write the CsWinRT public-key blob (160 bytes) to a build-time-generated .snk file in the
-      aggregator's temp dir. The aggregator's csproj uses it for PublicSign so the resulting
-      WinRT.Component.dll has PublicKeyToken=31bf3856ad364e35 - matching what the interop
-      generator hardcodes for type lookups against WinRT.Component (see
-      src/WinRT.Interop.Generator/References/InteropReferences.cs and the CsWinRTPublicKey
-      bytes in src/WinRT.Projection.Generator/Generation/ProjectionGenerator.Emit.cs).
-    -->
+    <!-- Materialize the public-key blob to a .snk for PublicSign. -->
     <_WriteCsWinRTAggregatorPublicKey Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
                                       OutputPath="$(_CsWinRTAggregatorKeyFilePath)" />
 

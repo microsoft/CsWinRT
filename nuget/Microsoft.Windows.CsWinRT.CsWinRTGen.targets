@@ -14,15 +14,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGeneratorTasksOverriden>true</CsWinRTGeneratorTasksOverriden>
 
     <!--
-      For the multi-component aggregator scenario (consuming csproj's AssemblyName == WinRT.Component),
-      _GenerateMergedAggregatorSources must run BEFORE CoreCompile so the projection .cs files it injects
-      can be compiled by the SDK's CoreCompile. That target depends on _RunCsWinRTSdkProjectionGenerator,
-      _RunCsWinRTSdkXamlProjectionGenerator and _RunCsWinRTMergedProjectionGenerator (so the aggregator's
-      compilation can resolve types in the projection .dll-s those produce). Those generators do not
-      actually consume any CoreCompile output, but they declare DependsOnTargets="CoreCompile" for the
-      non-aggregator scenarios where ordering safety matters. Drop the CoreCompile dependency in the
-      aggregator case so we don't induce a cycle (_GenerateMergedAggregatorSources -> projection
-      generators -> CoreCompile -> _GenerateMergedAggregatorSources via BeforeTargets).
+      In the aggregator scenario (AssemblyName == 'WinRT.Component'), _GenerateMergedAggregatorSources
+      runs BEFORE CoreCompile and depends on the projection generators below. The projection generators
+      declare DependsOnTargets="CoreCompile" for ordering safety in non-aggregator scenarios; drop
+      that dependency here to avoid a cycle (_GenerateMergedAggregatorSources -> projection generators
+      -> CoreCompile -> _GenerateMergedAggregatorSources via BeforeTargets).
     -->
     <_CsWinRTProjectionGeneratorPreCoreCompileDep Condition="'$(AssemblyName)' != 'WinRT.Component'">CoreCompile</_CsWinRTProjectionGeneratorPreCoreCompileDep>
 
@@ -394,10 +390,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     the assemblies and only includes types from those.
     If no component types are found, the tool produces no output DLL.
 
-    Skipped when the consuming csproj's own AssemblyName is 'WinRT.Component' (the multi-
-    component aggregator case driven by build/native/Microsoft.Windows.CsWinRT.Native.targets).
-    In that case, _GenerateMergedAggregatorSources runs in 'emit-sources-only' mode before
-    CoreCompile and the SDK's CoreCompile produces WinRT.Component.dll directly.
+    Skipped when AssemblyName is 'WinRT.Component' (the multi-component aggregator scenario);
+    in that case _GenerateMergedAggregatorSources runs in EmitSourcesOnly mode before CoreCompile
+    and the SDK's CoreCompile produces WinRT.Component.dll directly.
     ============================================================
   -->
   <Target
@@ -455,24 +450,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
                  _GenerateMergedAggregatorSources
 
-    Pre-CoreCompile sibling of _RunCsWinRTComponentProjectionGenerator for the multi-
-    component aggregator scenario (consuming csproj's AssemblyName == 'WinRT.Component').
-
-    Runs cswinrtprojectiongen with EmitSourcesOnly=true so the tool generates the
-    cswinrt projection .cs files (per-component projected types, per-component ABI
-    ManagedExports, TypeMap union, ProjectionTypesInitializer module ctor) into a
-    targets-controlled folder, then injects them as <Compile> items so the SDK's
+    Aggregator scenario only (AssemblyName == 'WinRT.Component'). Pre-CoreCompile sibling of
+    _RunCsWinRTComponentProjectionGenerator. Runs cswinrtprojectiongen with EmitSourcesOnly=true
+    to emit per-component projection sources, then injects them as <Compile> items so the SDK's
     CoreCompile produces WinRT.Component.dll directly as the aggregator's primary output.
 
-    The merged ABI.WinRT.Component.ManagedExports dispatcher and (under PublishAot) the
-    [UnmanagedCallersOnly] DllGetActivationFactory native export are NOT produced here -
-    the source generator's existing EmitManagedExports / EmitNativeExports logic emits them
-    into the aggregator's compilation when CsWinRTMergeReferencedActivationFactories=true
-    (which the synthesized aggregator csproj sets).
-
-    Aligning the aggregator's primary output with WinRT.Component.dll is what makes
-    'dotnet publish -p:PublishAot=true' of the aggregator produce a real native PE export -
-    ILC compiles whatever is the publish unit's primary assembly.
+    The merged ABI.WinRT_Component.ManagedExports dispatcher and the [UnmanagedCallersOnly]
+    DllGetActivationFactory native export are emitted by the source generator's existing
+    EmitManagedExports / EmitNativeExports logic when CsWinRTMergeReferencedActivationFactories=true
+    (set by the synthesized aggregator csproj). Aligning the aggregator's primary output with
+    WinRT.Component.dll is what makes 'dotnet publish -p:PublishAot=true' produce a real native
+    PE export, since ILC compiles the publish unit's primary assembly.
     ============================================================
   -->
   <Target
@@ -523,77 +511,32 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <FileWrites Include="@(_AggregatorGeneratedSources)" />
 
       <!--
-        Wire the projection .dll-s onto ReferencePathWithRefAssemblies (which is what
-        the SDK's CoreCompile -> Csc task actually consumes for /reference:). The
-        in-tree _RunCsWinRTSdkProjectionGenerator / _RunCsWinRTSdkXamlProjectionGenerator
-        / _RunCsWinRTMergedProjectionGenerator targets only add their outputs to
-        @(ReferencePath) - that is sufficient for the post-CoreCompile interop generator
-        which reads @(ReferencePath) directly, but csc ignores it.
-
-        For the aggregator scenario this matters because the cs files we just injected as
-        @(Compile) reference ABI implementation types (e.g. ABI.Microsoft.UI.Xaml.*,
-        ABI.Windows.*) that live in WinRT.Projection.dll / WinRT.Sdk.Projection.dll
-        (and WinRT.Sdk.Xaml.Projection.dll when UWP XAML is enabled). The user-facing
-        Microsoft.WinUI.dll / Microsoft.Windows.SDK.NET.dll on @(ReferencePathWithRefAssemblies)
-        only carry the public API surface (CsWinRTGenerateReferenceProjection=true is
-        used to build them in the in-repo Projections/* projects), so without these
-        explicit additions csc fails with CS0234 "Microsoft does not exist in ABI"
-        / "Windows does not exist in ABI".
+        Add the merged projection .dll-s to ReferencePathWithRefAssemblies (which csc consumes
+        for /reference:). The in-tree projection-generator targets only add their outputs to
+        @(ReferencePath); that suffices for the post-CoreCompile interop generator but csc
+        ignores it. The injected aggregator sources reference ABI implementation types that
+        live in these projection .dll-s, so without these csc fails with CS0234.
       -->
       <ReferencePathWithRefAssemblies Include="@(CsWinRTGeneratorMergedProjectionPath)" />
       <ReferencePathWithRefAssemblies Include="@(CsWinRTSdkProjectionPath)" />
       <ReferencePathWithRefAssemblies Include="@(CsWinRTSdkXamlPath)" />
 
       <!--
-        Swap CsWinRT reference-projection items in @(ReferencePathWithRefAssemblies) for
-        their forwarder-variant counterparts (the bin/ TargetPath of the same project).
+        Swap CsWinRT reference-projection items in @(ReferencePathWithRefAssemblies) for their
+        forwarder-variant counterparts (the bin/ TargetPath of the same project). Reference
+        projections (obj/X.dll) carry public type definitions; forwarders (bin/X.dll) carry only
+        [TypeForwardedTo] attributes routing public types to the merged projection.
 
-        Background: in-repo Projections/* csprojs build with CsWinRTGenerateReferenceProjection=true.
-        For each of those, two .dll-s are produced:
-          * obj/X.dll - the reference projection (public type definitions, no [TypeForwardedTo])
-          * obj/forwarder/X.dll then copied to bin/X.dll - the forwarder (only [TypeForwardedTo]
-            attributes routing public types to WinRT.Projection / WinRT.Sdk.Projection)
-        See `cswinrtimplgen` (src/WinRT.Impl.Generator/) and the IntermediateAssembly swap at
-        the top of this file (target around line 250-292).
+        For normal consumers the SDK's ReferenceAssembly metadata routing is correct: csc reads
+        the reference projection, runtime loads the forwarder. For the aggregator, csc compiles
+        sources that need both public and ABI types, and the merged projection .dll-s above
+        already carry the public types - reading the reference projection on top causes CS0433.
+        Real downstream NuGet consumers ship only the forwarder; replicate that here by swapping
+        each reference-projection item for its OriginalItemSpec (the forwarder bin/ path).
 
-        CsWinRTGetForwarderTargetPathWithTargetPlatformMoniker (line ~295) sets metadata on
-        TargetPathWithTargetPlatformMoniker so the SDK's ProjectReference resolution gives
-        consumers:
-          - Identity = $(TargetPath) = bin/X.dll - the FORWARDER (after IntermediateAssembly swap)
-          - ReferenceAssembly = $(_CsWinRTRefAssemblyPath) = obj/X.dll - the reference projection
-
-        For NORMAL (non-aggregator) consumers, RAR honors ReferenceAssembly metadata: csc reads
-        the reference projection (obj/X.dll, public types) and the runtime loads the forwarder
-        (bin/X.dll, [TypeForwardedTo] -> WinRT.Projection). That's the correct compile-time
-        behavior because the consumer's own CoreCompile only references the public surface.
-
-        For the AGGREGATOR scenario, the @(Compile) sources we just injected reference BOTH
-        the public surface AND the ABI types (e.g. ABI.Microsoft.UI.Xaml.*). The merged
-        projection .dll-s we just added carry both. So csc would see the public types in BOTH
-        the reference projection (via ReferenceAssembly metadata) AND the merged projection
-        - that's CS0433.
-
-        Real downstream NuGet consumer scenarios don't ship the reference projection at all -
-        only the forwarder. To match that here we swap each ReferencePathWithRefAssemblies
-        item that came from a CsWinRT reference projection for a new item whose Identity is
-        the forwarder path (the existing OriginalItemSpec metadata = bin/X.dll). The new item
-        has no ReferenceAssembly metadata, so csc consumes the forwarder. The forwarder's
-        [TypeForwardedTo] attributes redirect public types to WinRT.Projection /
-        WinRT.Sdk.Projection, leaving no duplicate definitions.
-
-        Detection criteria (must all match):
-          - ReferenceAssembly metadata != '' (the item has a separate compile-time ref).
-          - ReferenceSourceTarget == 'ProjectReference' (excludes .NET ref pack items, which
-            also carry ReferenceAssembly metadata but come from ResolveAssemblyReference).
-          - OriginalItemSpec != '' AND != ReferenceAssembly (the runtime-target path differs
-            from the compile-time path - the exact pattern
-            CsWinRTGetForwarderTargetPathWithTargetPlatformMoniker produces).
-
-        We deliberately do NOT key off CsWinRTInputs metadata: that metadata depends on
-        CsWinRT inputs being collected at the referenced project's GetTargetPath time, which
-        can be unreliable under incremental local builds (e.g. when a transitive cswinrt.winmd
-        hasn't been captured yet). The above three checks cover the structural shape of a
-        CsWinRT reference projection regardless of whether CsWinRTInputs metadata is present.
+        Detection: ReferenceAssembly metadata is set, ReferenceSourceTarget is 'ProjectReference'
+        (excludes .NET ref-pack items), and OriginalItemSpec differs from ReferenceAssembly
+        (the structural shape produced by CsWinRTGetForwarderTargetPathWithTargetPlatformMoniker).
       -->
       <_CsWinRTAggregatorRefProjItems Include="@(ReferencePathWithRefAssemblies)"
                                       Condition="'%(ReferencePathWithRefAssemblies.ReferenceAssembly)' != ''
@@ -603,21 +546,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <ReferencePathWithRefAssemblies Remove="@(_CsWinRTAggregatorRefProjItems)" />
       <ReferencePathWithRefAssemblies Include="@(_CsWinRTAggregatorRefProjItems->'%(OriginalItemSpec)')" />
 
-      <!--
-        Stash the original reference-projection items in a property-bag-like ItemGroup so the
-        post-CoreCompile target _RestoreAggregatorRefProjectionsForInteropGenerator can read
-        them back. ItemGroup state persists across targets within the same project, so this
-        is sufficient.
-      -->
+      <!-- Stash the swapped-out items so _RestoreAggregatorRefProjectionsForInteropGenerator
+           can re-add them post-CoreCompile (the interop generator needs them; csc does not). -->
       <_CsWinRTAggregatorStashedRefProjItems Include="@(_CsWinRTAggregatorRefProjItems)" />
 
       <!--
-        Wire up our own to-be-produced WinRT.Component.dll (which IS the aggregator csproj's primary
-        @(IntermediateAssembly) - same path) as the CsWinRTGeneratorComponentPath. The interop
-        generator's discovery code recognizes the equality (WinRTComponentAssemblyPath == OutputAssemblyPath)
-        and promotes the consumer module to WindowsRuntimeComponentModule after the main load loop runs,
-        so component-specific discovery (e.g. exclusive-to interface lookup) finds the merged component
-        metadata in the consumer's own assembly.
+        Promote our own to-be-produced WinRT.Component.dll (which is also @(IntermediateAssembly))
+        as the CsWinRTGeneratorComponentPath. The interop generator recognizes the equality
+        WinRTComponentAssemblyPath == OutputAssemblyPath and treats the consumer module as the
+        merged component module.
       -->
       <CsWinRTGeneratorComponentPath Include="$(_CsWinRTGeneratorComponentAssemblyPath)">
         <AssemblyName>WinRT.Component</AssemblyName>
@@ -635,24 +572,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     ============================================================
             _RestoreAggregatorRefProjectionsForInteropGenerator
 
-    Aggregator scenario only (AssemblyName == WinRT.Component).
-
-    _GenerateMergedAggregatorSources (above) swaps the reference-projection items in
-    @(ReferencePathWithRefAssemblies) for their forwarder counterparts so csc compiles
-    cleanly (no CS0433 against the merged projection). But the interop generator
-    (_RunCsWinRTInteropGenerator below) needs the reference projection - it filters its
-    discovery by the [WindowsRuntimeReferenceAssembly] attribute (see
-    src/cswinrt/strings/InspectableVftbl.cs which adds the attribute only under
-    CSWINRT_REFERENCE_PROJECTION) and that attribute is stamped exclusively on the
-    obj/X.dll reference projection. Without those items in the closure the interop
-    generator's type-hierarchy discovery finds zero entries and fails with
-    CSWINRTINTEROPGEN0036 ("No type hierarchy key-value pairs were discovered").
-
-    Re-add the stashed reference-projection items to @(ReferencePathWithRefAssemblies)
-    after CoreCompile and before _RunCsWinRTInteropGenerator. csc has already finished
-    so adding them now does not affect its compilation. The interop generator's filter
-    only iterates items with [WindowsRuntimeReferenceAssembly], so the additional
-    forwarder/merged items already in the list are ignored for type-hierarchy purposes.
+    Aggregator scenario only. _GenerateMergedAggregatorSources removed reference-projection items
+    from ReferencePathWithRefAssemblies for csc's benefit; the interop generator needs them to
+    discover the type hierarchy (it filters on the [WindowsRuntimeReferenceAssembly] attribute,
+    which is stamped only on the obj/X.dll reference projections). Re-add them after CoreCompile
+    and before _RunCsWinRTInteropGenerator.
     ============================================================
   -->
   <Target Name="_RestoreAggregatorRefProjectionsForInteropGenerator"

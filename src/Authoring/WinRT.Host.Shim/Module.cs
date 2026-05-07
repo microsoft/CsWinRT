@@ -39,10 +39,9 @@ public static class Shim
         {
             Assembly assembly = LoadInDefaultContext(targetAssembly);
 
-            // The source generator's ManagedExports type lives in 'ABI.{EscapedAssemblyName}'
-            // (CsWinRT 3.0; '.' replaced with '_'). The legacy 2.x form was 'ABI.{ModuleName}'
-            // (treating '.' as a namespace separator). Try both, so this shim works whether
-            // the consumer's projection was built with the new or the legacy generator output.
+            // ABI.{EscapedAssemblyName}.ManagedExports.GetActivationFactory(ReadOnlySpan&lt;char&gt;) -> void*
+            // The escaped form ('.' -> '_') is the canonical CsWinRT 3.0 name. The unescaped form
+            // is checked as a fallback for legacy 2.x-shaped projections.
             string moduleName = Path.GetFileNameWithoutExtension(targetAssembly);
             string escapedModuleName = moduleName.Replace('.', '_');
             var managedExportsType = assembly.GetType($"ABI.{escapedModuleName}.ManagedExports")
