@@ -2285,6 +2285,7 @@ namespace AuthoringTest
 
         // Contract versioning
         [Windows.Foundation.Metadata.ApiContract]
+        [Windows.Foundation.Metadata.ContractVersion(1u)]
         public enum AnotherNamespaceContract { }
 
         [Windows.Foundation.Metadata.ContractVersion(typeof(AnotherNamespaceContract), 1u)]
