@@ -107,11 +107,9 @@ internal static class AttributedTypes
     /// </summary>
     private static int GetVisibility(CustomAttribute attr)
     {
-        if (attr.Signature is null) { return 0; }
-        for (int i = 0; i < attr.Signature.FixedArguments.Count; i++)
+        if (attr.Signature is { FixedArguments: [_, { Element: int e }, ..] })
         {
-            CustomAttributeArgument arg = attr.Signature.FixedArguments[i];
-            if (arg.Element is int e) { return e; }
+            return e;
         }
         return 0;
     }
