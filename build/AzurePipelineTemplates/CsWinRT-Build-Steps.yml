@@ -168,7 +168,7 @@ steps:
     # Stage BinLog
     - task: CopyFiles@2
       displayName: Stage BinLog
-      condition: failed()
+      condition: always()
       inputs:
         SourceFolder: $(Build.SourcesDirectory)
         Contents: cswinrt.binlog
@@ -177,7 +177,7 @@ steps:
     # Stage merged projection
     - task: ArchiveFiles@2
       displayName: Stage merged projection
-      condition: failed()
+      condition: always()
       inputs:
         rootFolderOrFile: $(temp)\CsWinRT\
         includeRootFolder: false
@@ -187,7 +187,7 @@ steps:
     # Stage Windows projection
     - task: ArchiveFiles@2
       displayName: Stage Windows projection
-      condition: and(succeeded(), eq(variables['PublishGeneratedFiles'], 'true'))
+      condition: always()
       inputs:
         rootFolderOrFile: $(Build.SourcesDirectory)\Projections\Windows\Generated Files
         includeRootFolder: false
