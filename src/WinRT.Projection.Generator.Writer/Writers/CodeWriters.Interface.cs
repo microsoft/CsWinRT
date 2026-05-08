@@ -27,16 +27,17 @@ internal static partial class CodeWriters
     {
         string delimiter = " : ";
 
-        // Check the base type. If the class extends another runtime class (not System.Object,
-        // not WindowsRuntime.WindowsRuntimeObject), emit the projected base type name.
+        // Check the base type. If the class extends another runtime class (not System.Object),
+        // emit the projected base type name. Mirrors C++ write_type_inheritance, which only
+        // checks for object_type — WindowsRuntime.WindowsRuntimeObject is a managed type
+        // defined in WinRT.Runtime and is never referenced as a base type in any .winmd, so
+        // there is no need to check for it here.
         bool hasNonObjectBase = false;
         if (type.BaseType is not null)
         {
             string? baseNs = type.BaseType.Namespace?.Value;
             string? baseName = type.BaseType.Name?.Value;
-            bool isObject = (baseNs == "System" && baseName == "Object")
-                || (baseNs == "WindowsRuntime" && baseName == "WindowsRuntimeObject");
-            hasNonObjectBase = !isObject;
+            hasNonObjectBase = !(baseNs == "System" && baseName == "Object");
         }
 
         if (hasNonObjectBase)
