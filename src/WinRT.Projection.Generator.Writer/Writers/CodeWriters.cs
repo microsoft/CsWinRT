@@ -405,18 +405,6 @@ internal static partial class CodeWriters
         w.Write("}\n");
     }
 
-    /// <summary>
-    /// Mirrors C++ <c>add_generic_type_references_in_type</c>.
-    /// Tracks generic types referenced by delegate signatures and method/property/field signatures.
-    /// In the C++ version this populates a concurrent set used internally; in this port it's a no-op
-    /// because the set is never used in the file output (only for internal tracking).
-    /// </summary>
-    public static void AddGenericTypeReferencesInType(TypeDefinition type)
-    {
-        // No-op: the C++ version collects entries into a set that's never used in main.cpp output.
-        _ = type;
-    }
-
     private static MetadataCache? _cacheRef;
 
     /// <summary>Sets the cache reference used by writers that need source-file paths.</summary>
@@ -438,38 +426,5 @@ internal static partial class CodeWriters
             return char.ToLowerInvariant(c) + name.Substring(1);
         }
         return name;
-    }
-
-    /// <summary>
-    /// Mirrors C++ <c>write_interface</c>. (Now implemented in CodeWriters.Interface.cs.)
-    /// </summary>
-    public static void WriteInterfacePlaceholder(TypeWriter w, TypeDefinition type)
-    {
-        string name = type.Name?.Value ?? string.Empty;
-        w.Write("public partial interface ");
-        w.Write(name);
-        w.Write(" { /* TODO: interface members */ }\n\n");
-    }
-
-    /// <summary>
-    /// Mirrors C++ <c>write_class</c>. (Now implemented in CodeWriters.Class.cs.)
-    /// </summary>
-    public static void WriteClassPlaceholder(TypeWriter w, TypeDefinition type)
-    {
-        string name = type.Name?.Value ?? string.Empty;
-        w.Write("public partial class ");
-        w.Write(name);
-        w.Write(" { /* TODO: class members */ }\n\n");
-    }
-
-    /// <summary>
-    /// Mirrors C++ <c>write_attribute</c>. Emits an attribute projection.
-    /// </summary>
-    public static void WriteAttributePlaceholder(TypeWriter w, TypeDefinition type)
-    {
-        string name = type.Name?.Value ?? string.Empty;
-        w.Write("public sealed class ");
-        w.Write(name);
-        w.Write(" : System.Attribute { /* TODO: attribute members */ }\n\n");
     }
 }

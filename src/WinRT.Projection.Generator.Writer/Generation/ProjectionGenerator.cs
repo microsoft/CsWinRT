@@ -298,7 +298,6 @@ internal sealed class ProjectionGenerator
                 CodeWriters.AddMetadataTypeEntry(w, type, authoredTypeNameToMetadataMap);
             }
 
-            CodeWriters.AddGenericTypeReferencesInType(type);
             written = true;
         }
 
