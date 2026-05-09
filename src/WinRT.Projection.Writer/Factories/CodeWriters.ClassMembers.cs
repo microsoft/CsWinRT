@@ -16,10 +16,6 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static partial class CodeWriters
 {
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteClassMembers(TypeWriter w, TypeDefinition type)
-        => WriteClassMembers(w.Writer, w.Context, type);
-
     /// <summary>
     /// Emits all instance members (methods, properties, events) inherited from implemented interfaces.
     /// In reference-projection mode, type declarations and per-interface objref getters are

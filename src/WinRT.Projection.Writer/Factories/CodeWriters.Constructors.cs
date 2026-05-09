@@ -15,10 +15,6 @@ namespace WindowsRuntime.ProjectionWriter;
 internal static partial class CodeWriters
 {
     /// <summary>Primary <see cref="IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> overload of <see cref="WriteAttributedTypes(TypeWriter, TypeDefinition)"/>.</summary>
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteAttributedTypes(TypeWriter w, TypeDefinition classType)
-        => WriteAttributedTypes(w.Writer, w.Context, classType);
-
     /// <summary>
     /// Emits the activator and composer constructor wrappers for the given runtime class.
     /// </summary>
@@ -80,11 +76,6 @@ internal static partial class CodeWriters
             }
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteFactoryConstructors(TypeWriter w, TypeDefinition? factoryType, TypeDefinition classType)
-        => WriteFactoryConstructors(w.Writer, w.Context, factoryType, classType);
-
     /// <summary>Emits the public constructors generated from a [Activatable] factory type.</summary>
     public static void WriteFactoryConstructors(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition? factoryType, TypeDefinition classType)
     {
@@ -870,11 +861,6 @@ internal static partial class CodeWriters
         WriteIidExpression(__scratchIid, context, defaultIface);
         return __scratchIid.ToString();
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteComposableConstructors(TypeWriter w, TypeDefinition? composableType, TypeDefinition classType, string visibility)
-        => WriteComposableConstructors(w.Writer, w.Context, composableType, classType, visibility);
-
     /// <summary>
     /// Emits:
     /// 1. Public/protected constructors for each composable factory method (with proper body).

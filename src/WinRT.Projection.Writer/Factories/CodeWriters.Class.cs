@@ -33,11 +33,6 @@ internal static partial class CodeWriters
             writer.Write("sealed ");
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteClassModifiers(TypeWriter w, TypeDefinition type)
-        => WriteClassModifiers(w.Writer, type);
-
     /// <summary>
     /// Returns the fast-abi class type for <paramref name="iface"/> if the interface is
     /// exclusive_to a class marked <c>[FastAbi]</c>; otherwise <c>null</c>. Mirrors C++
@@ -189,11 +184,6 @@ internal static partial class CodeWriters
             _ => 0
         };
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteStaticClass(TypeWriter w, TypeDefinition type)
-        => WriteStaticClass(w.Writer, w.Context, type);
-
     /// <summary>Writes a static class declaration with [ContractVersion]-derived platform suppression.</summary>
     public static void WriteStaticClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -219,11 +209,6 @@ internal static partial class CodeWriters
             context.Platform = prevPlatform;
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteStaticClassMembers(TypeWriter w, TypeDefinition type)
-        => WriteStaticClassMembers(w.Writer, w.Context, type);
-
     /// <summary>Emits static members from [Static] factory interfaces.</summary>
     public static void WriteStaticClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -492,11 +477,6 @@ internal static partial class CodeWriters
         WriteIidExpression(writer, context, staticIface);
         writer.Write(");\n    }\n}\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteClass(TypeWriter w, TypeDefinition type)
-        => WriteClass(w.Writer, w.Context, type);
-
     /// <summary>Writes a projected runtime class.</summary>
     public static void WriteClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {

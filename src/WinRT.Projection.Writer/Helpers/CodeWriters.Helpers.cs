@@ -347,11 +347,6 @@ internal static partial class CodeWriters
 
         _ = entries.TryAdd(className, interfaceName);
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void AddDefaultInterfaceEntry(TypeWriter w, TypeDefinition type, System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
-        => AddDefaultInterfaceEntry(w.Context, type, entries);
-
     /// <summary>Adds entries for [ExclusiveTo] interfaces of the class type.</summary>
     public static void AddExclusiveToInterfaceEntries(ProjectionEmitContext context, TypeDefinition type, System.Collections.Concurrent.ConcurrentBag<KeyValuePair<string, string>> entries)
     {
@@ -404,11 +399,6 @@ internal static partial class CodeWriters
             }
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void AddExclusiveToInterfaceEntries(TypeWriter w, TypeDefinition type, System.Collections.Concurrent.ConcurrentBag<KeyValuePair<string, string>> entries)
-        => AddExclusiveToInterfaceEntries(w.Context, type, entries);
-
     /// <summary>Writes the generated WindowsRuntimeDefaultInterfaces.cs file (mirrors C++ <c>write_default_interfaces_class</c>).</summary>
     public static void WriteDefaultInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {

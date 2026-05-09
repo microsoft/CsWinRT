@@ -101,11 +101,6 @@ internal static partial class CodeWriters
                 break;
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteMappedInterfaceStubs(TypeWriter w, GenericInstanceTypeSignature? instance, string ifaceName, string objRefName)
-        => WriteMappedInterfaceStubs(w.Writer, w.Context, instance, ifaceName, objRefName);
-
     private static void EmitDisposable(IndentedTextWriter writer, string objRefName)
     {
         writer.Write("\npublic void Dispose() => global::ABI.System.IDisposableMethods.Dispose(");

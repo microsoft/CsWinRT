@@ -77,25 +77,25 @@ internal sealed partial class ProjectionGenerator
                 switch (cat)
                 {
                     case TypeCategory.Delegate:
-                        CodeWriters.WriteIidGuidPropertyFromSignature(guidWriter, type);
-                        CodeWriters.WriteIidGuidPropertyFromType(guidWriter, type);
+                        CodeWriters.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
+                        CodeWriters.WriteIidGuidPropertyFromType(guidIndented, guidContext, type);
                         break;
                     case TypeCategory.Enum:
-                        CodeWriters.WriteIidGuidPropertyFromSignature(guidWriter, type);
+                        CodeWriters.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
                         break;
                     case TypeCategory.Interface:
-                        CodeWriters.WriteIidGuidPropertyFromType(guidWriter, type);
+                        CodeWriters.WriteIidGuidPropertyFromType(guidIndented, guidContext, type);
                         break;
                     case TypeCategory.Struct:
-                        CodeWriters.WriteIidGuidPropertyFromSignature(guidWriter, type);
+                        CodeWriters.WriteIidGuidPropertyFromSignature(guidIndented, guidContext, type);
                         break;
                     case TypeCategory.Class:
-                        CodeWriters.WriteIidGuidPropertyForClassInterfaces(guidWriter, type, interfacesFromClassesEmitted);
+                        CodeWriters.WriteIidGuidPropertyForClassInterfaces(guidIndented, guidContext, type, interfacesFromClassesEmitted);
                         break;
                 }
             }
         }
-        CodeWriters.WriteInterfaceIidsEnd(guidWriter);
+        CodeWriters.WriteInterfaceIidsEnd(guidIndented);
         if (iidWritten)
         {
             guidIndented.FlushToFile(Path.Combine(_settings.OutputFolder, "GeneratedInterfaceIIDs.cs"));

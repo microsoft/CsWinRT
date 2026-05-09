@@ -54,11 +54,6 @@ internal static partial class CodeWriters
         }
         return "_objRef_" + EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static string GetObjRefName(TypeWriter w, ITypeDefOrRef ifaceType)
-        => GetObjRefName(w.Context, ifaceType);
-
     /// <summary>
     /// Like <see cref="WriteInterfaceTypeName(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
     /// but always emits a fully qualified name with <c>global::</c> prefix on every type
@@ -176,11 +171,6 @@ internal static partial class CodeWriters
             writer.Write(id);
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteIidExpression(TypeWriter w, ITypeDefOrRef ifaceType)
-        => WriteIidExpression(w.Writer, w.Context, ifaceType);
-
     /// <summary>
     /// Builds the IID property name for a generic interface instantiation.
     /// E.g. <c>IObservableMap&lt;string, object&gt;</c> -> <c>IID_Windows_Foundation_Collections_IObservableMap_string__object_</c>.
@@ -233,11 +223,6 @@ internal static partial class CodeWriters
         writer.Write(id);
         writer.Write("Reference");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteIidReferenceExpression(TypeWriter w, TypeDefinition type)
-        => WriteIidReferenceExpression(w.Writer, type);
-
     /// <summary>
     /// Emits the lazy <c>_objRef_*</c> field definitions for each interface implementation on
     /// the given runtime class. For sealed classes, the default interface is emitted as a
@@ -304,11 +289,6 @@ internal static partial class CodeWriters
             EmitTransitiveInterfaceObjRefs(writer, context, impl.Interface, emitted);
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteClassObjRefDefinitions(TypeWriter w, TypeDefinition type)
-        => WriteClassObjRefDefinitions(w.Writer, w.Context, type);
-
     /// <summary>Emits an _objRef_ field for a single interface impl reference.</summary>
     /// <param name="useSimplePattern">When true, emit the simple expression-bodied form
     /// <c>=> NativeObjectReference</c>. Otherwise emit the lazy MakeObjectReference pattern.</param>

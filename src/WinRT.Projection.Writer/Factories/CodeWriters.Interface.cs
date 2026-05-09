@@ -24,11 +24,6 @@ internal static partial class CodeWriters
         WriteGuid(writer, type, false);
         writer.Write("\")]");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteGuidAttribute(TypeWriter w, TypeDefinition type)
-        => WriteGuidAttribute(w.Writer, type);
-
     /// <summary>Writes a class or interface inheritance clause: " : Base, Iface1, Iface2&lt;T&gt;".</summary>
     public static void WriteTypeInheritance(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool includeExclusiveInterface, bool includeWindowsRuntimeObject)
     {
@@ -116,11 +111,6 @@ internal static partial class CodeWriters
             }
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteTypeInheritance(TypeWriter w, TypeDefinition type, bool includeExclusiveInterface, bool includeWindowsRuntimeObject)
-        => WriteTypeInheritance(w.Writer, w.Context, type, includeExclusiveInterface, includeWindowsRuntimeObject);
-
     /// <summary>
     /// Writes the projected name for an interface reference (TypeDefinition, TypeReference, or
     /// generic instance), applying mapped-type remapping (e.g.,
@@ -179,11 +169,6 @@ internal static partial class CodeWriters
             writer.Write(">");
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteInterfaceTypeName(TypeWriter w, ITypeDefOrRef ifaceType)
-        => WriteInterfaceTypeName(w.Writer, w.Context, ifaceType);
-
     /// <summary>Returns the projected property type for <paramref name="prop"/>.</summary>
     public static string WritePropType(ProjectionEmitContext context, PropertyDefinition prop, bool isSetProperty = false)
         => WritePropType(context, prop, null, isSetProperty);
@@ -198,14 +183,6 @@ internal static partial class CodeWriters
         WriteProjectedSignature(scratch, context, typeSig, isSetProperty);
         return scratch.ToString();
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static string WritePropType(TypeWriter w, PropertyDefinition prop, bool isSetProperty = false)
-        => WritePropType(w.Context, prop, null, isSetProperty);
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static string WritePropType(TypeWriter w, PropertyDefinition prop, GenericContext? genCtx, bool isSetProperty = false)
-        => WritePropType(w.Context, prop, genCtx, isSetProperty);
 
     /// <summary>Emits all method, property, and event signatures of an interface.</summary>
     public static void WriteInterfaceMemberSignatures(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -256,11 +233,6 @@ internal static partial class CodeWriters
             writer.Write(";");
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteInterfaceMemberSignatures(TypeWriter w, TypeDefinition type)
-        => WriteInterfaceMemberSignatures(w.Writer, w.Context, type);
-
     /// <summary>
     /// Recursively walks the base interfaces of <paramref name="type"/> looking for a property
     /// with the given <paramref name="propName"/>. Returns true if any base interface declares
@@ -409,11 +381,6 @@ internal static partial class CodeWriters
         WriteInterfaceMemberSignatures(writer, context, type);
         writer.Write("\n}\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteInterface(TypeWriter w, TypeDefinition type)
-        => WriteInterface(w.Writer, w.Context, type);
-
     /// <summary>Returns true if the given exclusive interface is referenced as a [Default] or
     /// [Overridable] interface impl on the class it's exclusive to.</summary>
     private static bool IsDefaultOrOverridableInterfaceTypedef(TypeDefinition iface)

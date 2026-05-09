@@ -36,11 +36,6 @@ internal static partial class CodeWriters
 
         _ = map.TryAdd(typeName, metadataTypeName);
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void AddMetadataTypeEntry(TypeWriter w, TypeDefinition type, ConcurrentDictionary<string, string> map)
-        => AddMetadataTypeEntry(w.Context, type, map);
-
     /// <summary>Writes the per-runtime-class server-activation-factory type for component mode.</summary>
     public static void WriteFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -143,11 +138,6 @@ internal static partial class CodeWriters
 
         writer.Write("}\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteFactoryClass(TypeWriter w, TypeDefinition type)
-        => WriteFactoryClass(w.Writer, w.Context, type);
-
     /// <summary>
     /// Writes a factory-class activatable wrapper method:
     /// <c>public T MethodName(args) =&gt; new T(args);</c>.
@@ -336,8 +326,4 @@ internal static partial class CodeWriters
             writer.Write("default:\n    return null;\n}\n}\n}\n}\n");
         }
     }
-
-    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteModuleActivationFactory(TextWriter w, IReadOnlyDictionary<string, HashSet<TypeDefinition>> typesByModule)
-        => WriteModuleActivationFactory(w.Writer, typesByModule);
 }

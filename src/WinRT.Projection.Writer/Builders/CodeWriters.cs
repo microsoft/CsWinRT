@@ -128,11 +128,6 @@ internal static partial class CodeWriters
         }
         writer.Write("}\n\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteEnum(TypeWriter w, TypeDefinition type)
-        => WriteEnum(w.Writer, w.Context, type);
-
     /// <summary>Formats a metadata Constant value as a C# literal.</summary>
     private static string FormatConstant(AsmResolver.DotNet.Constant constant)
     {
@@ -307,11 +302,6 @@ internal static partial class CodeWriters
         writer.Write(";\n");
         writer.Write("}\n\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteStruct(TypeWriter w, TypeDefinition type)
-        => WriteStruct(w.Writer, w.Context, type);
-
     /// <summary>Writes a projected API contract (an empty enum stand-in).</summary>
     public static void WriteContract(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -324,11 +314,6 @@ internal static partial class CodeWriters
         writer.Write(typeName);
         writer.Write("\n{\n}\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteContract(TypeWriter w, TypeDefinition type)
-        => WriteContract(w.Writer, w.Context, type);
-
     /// <summary>Writes a projected delegate.</summary>
     public static void WriteDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -359,11 +344,6 @@ internal static partial class CodeWriters
         WriteParameterList(writer, context, sig);
         writer.Write(");\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteDelegate(TypeWriter w, TypeDefinition type)
-        => WriteDelegate(w.Writer, w.Context, type);
-
     /// <summary>Writes a projected attribute class.</summary>
     public static void WriteAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -399,11 +379,6 @@ internal static partial class CodeWriters
         }
         writer.Write("}\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteAttribute(TypeWriter w, TypeDefinition type)
-        => WriteAttribute(w.Writer, w.Context, type);
-
     private static MetadataCache? _cacheRef;
 
     /// <summary>Sets the cache reference used by writers that need source-file paths.</summary>

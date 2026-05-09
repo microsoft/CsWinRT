@@ -20,8 +20,7 @@ internal sealed partial class ProjectionGenerator
         ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap)
     {
         ProjectionEmitContext context = new(_settings, _cache, ns);
-        TypeWriter w = new(context);
-        Writers.IndentedTextWriter writer = w.Writer;
+        Writers.IndentedTextWriter writer = new();
 
         writer.WriteFileHeader(context);
 

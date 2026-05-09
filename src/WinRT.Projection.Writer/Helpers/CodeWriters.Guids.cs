@@ -111,11 +111,6 @@ internal static partial class CodeWriters
         writer.Write("-");
         for (int i = 2; i < 8; i++) { writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
     }
-
-    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteGuid(TextWriter w, TypeDefinition type, bool lowerCase)
-        => WriteGuid(w.Writer, type, lowerCase);
-
     /// <summary>Writes the GUID bytes for <paramref name="type"/> as a hex byte list.</summary>
     public static void WriteGuidBytes(IndentedTextWriter writer, TypeDefinition type)
     {
@@ -131,11 +126,6 @@ internal static partial class CodeWriters
         WriteByte(writer, (uint)((data3 >> 8) & 0xFF), false);
         for (int i = 0; i < 8; i++) { WriteByte(writer, data4[i], false); }
     }
-
-    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteGuidBytes(TextWriter w, TypeDefinition type)
-        => WriteGuidBytes(w.Writer, type);
-
     private static void WriteByte(IndentedTextWriter writer, uint b, bool first)
     {
         if (!first) { writer.Write(", "); }
@@ -153,11 +143,6 @@ internal static partial class CodeWriters
         writer.Write("IID_");
         writer.Write(name);
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteIidGuidPropertyName(TypeWriter w, TypeDefinition type)
-        => WriteIidGuidPropertyName(w.Writer, w.Context, type);
-
     /// <summary>Writes the property name <c>IID_XReference</c> for the reference IID property.</summary>
     public static void WriteIidReferenceGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -169,11 +154,6 @@ internal static partial class CodeWriters
         writer.Write(name);
         writer.Write("Reference");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteIidReferenceGuidPropertyName(TypeWriter w, TypeDefinition type)
-        => WriteIidReferenceGuidPropertyName(w.Writer, w.Context, type);
-
     /// <summary>Writes a static IID property whose body is built from the [Guid] attribute bytes.</summary>
     public static void WriteIidGuidPropertyFromType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -183,11 +163,6 @@ internal static partial class CodeWriters
         WriteGuidBytes(writer, type);
         writer.Write("\n        ];\n        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));\n    }\n}\n\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteIidGuidPropertyFromType(TypeWriter w, TypeDefinition type)
-        => WriteIidGuidPropertyFromType(w.Writer, w.Context, type);
-
     /// <summary>Writes the WinRT GUID parametric signature string for a type semantics.</summary>
     public static void WriteGuidSignature(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics)
     {
@@ -262,11 +237,6 @@ internal static partial class CodeWriters
                 break;
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteGuidSignature(TypeWriter w, TypeSemantics semantics)
-        => WriteGuidSignature(w.Writer, w.Context, semantics);
-
     private static void WriteGuidSignatureForType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         TypeCategory cat = TypeCategorization.GetCategory(type);
@@ -348,11 +318,6 @@ internal static partial class CodeWriters
         }
         writer.Write("\n        ];\n        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));\n    }\n}\n\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteIidGuidPropertyFromSignature(TypeWriter w, TypeDefinition type)
-        => WriteIidGuidPropertyFromSignature(w.Writer, w.Context, type);
-
     /// <summary>Emits IID properties for any not-included interfaces transitively implemented by a class.</summary>
     public static void WriteIidGuidPropertyForClassInterfaces(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, System.Collections.Generic.HashSet<TypeDefinition> interfacesEmitted)
     {
@@ -384,11 +349,6 @@ internal static partial class CodeWriters
             }
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteIidGuidPropertyForClassInterfaces(TypeWriter w, TypeDefinition type, System.Collections.Generic.HashSet<TypeDefinition> interfacesEmitted)
-        => WriteIidGuidPropertyForClassInterfaces(w.Writer, w.Context, type, interfacesEmitted);
-
     private static TypeDefinition? ResolveCrossModuleType(string ns, string name)
     {
         if (_cacheRef is null) { return null; }
