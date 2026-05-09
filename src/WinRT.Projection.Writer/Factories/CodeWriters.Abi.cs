@@ -4,9 +4,8 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Extensions;
-
+using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter;
@@ -599,8 +598,8 @@ internal static partial class CodeWriters
             if (defaultIface is not null)
             {
                 IndentedTextWriter __scratchDefaultIid = new();
-                        WriteIidExpression(__scratchDefaultIid, context, defaultIface);
-                        defaultIfaceIid = __scratchDefaultIid.ToString();
+                WriteIidExpression(__scratchDefaultIid, context, defaultIface);
+                defaultIfaceIid = __scratchDefaultIid.ToString();
             }
             else
             {
@@ -619,8 +618,8 @@ internal static partial class CodeWriters
             // Emit the UnsafeAccessor declaration (uses 'object?' since component-mode
             // marshallers run inside #nullable enable).
             IndentedTextWriter __scratchAccessor = new();
-                EmitUnsafeAccessorForIid(__scratchAccessor, context, defaultGenericInst, isInNullableContext: true);
-                string accessorBlock = __scratchAccessor.ToString();
+            EmitUnsafeAccessorForIid(__scratchAccessor, context, defaultGenericInst, isInNullableContext: true);
+            string accessorBlock = __scratchAccessor.ToString();
             // Re-emit each line indented by 8 spaces.
             string[] accessorLines = accessorBlock.TrimEnd('\n').Split('\n');
             foreach (string accessorLine in accessorLines)
@@ -1069,8 +1068,8 @@ internal static partial class CodeWriters
         {
             {
                 IndentedTextWriter __scratchIfaceFullName = new();
-                        WriteTypedefName(__scratchIfaceFullName, context, type, TypedefNameType.Projected, true);
-                        ifaceFullName = __scratchIfaceFullName.ToString();
+                WriteTypedefName(__scratchIfaceFullName, context, type, TypedefNameType.Projected, true);
+                ifaceFullName = __scratchIfaceFullName.ToString();
             }
             if (!ifaceFullName.StartsWith("global::", System.StringComparison.Ordinal)) { ifaceFullName = "global::" + ifaceFullName; }
         }
@@ -2390,7 +2389,7 @@ internal static partial class CodeWriters
                     IndentedTextWriter __scratchKeyText = new();
                     WriteTypeName(__scratchKeyText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true);
                     string keyText = __scratchKeyText.ToString();
-                                IndentedTextWriter __scratchValueText = new();
+                    IndentedTextWriter __scratchValueText = new();
                     WriteTypeName(__scratchValueText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true);
                     string valueText = __scratchValueText.ToString();
                     EmitDicShimIObservableMapForwarders(writer, context, keyText, valueText);
@@ -3422,8 +3421,8 @@ internal static partial class CodeWriters
         if (defaultIface is not null)
         {
             IndentedTextWriter __scratchIid = new();
-                WriteIidExpression(__scratchIid, context, defaultIface);
-                defaultIfaceIid = __scratchIid.ToString();
+            WriteIidExpression(__scratchIid, context, defaultIface);
+            defaultIfaceIid = __scratchIid.ToString();
         }
         else
         {
@@ -3459,8 +3458,8 @@ internal static partial class CodeWriters
         else if (!defaultIfaceIsExclusive && defaultIface is not null)
         {
             IndentedTextWriter __scratchDefIfaceTypeName = new();
-                WriteTypeName(__scratchDefIfaceTypeName, context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
-                string defIfaceTypeName = __scratchDefIfaceTypeName.ToString();
+            WriteTypeName(__scratchDefIfaceTypeName, context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
+            string defIfaceTypeName = __scratchDefIfaceTypeName.ToString();
             writer.Write("        if (value is IWindowsRuntimeInterface<");
             writer.Write(defIfaceTypeName);
             writer.Write("> windowsRuntimeInterface)\n        {\n");
@@ -3831,8 +3830,8 @@ internal static partial class CodeWriters
             if (isGenericEvent)
             {
                 IndentedTextWriter __scratchEvSrcGeneric = new();
-                        WriteTypeName(__scratchEvSrcGeneric, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
-                        eventSourceProjectedFull = __scratchEvSrcGeneric.ToString();
+                WriteTypeName(__scratchEvSrcGeneric, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
+                eventSourceProjectedFull = __scratchEvSrcGeneric.ToString();
                 if (!eventSourceProjectedFull.StartsWith("global::", System.StringComparison.Ordinal))
                 {
                     eventSourceProjectedFull = "global::" + eventSourceProjectedFull;
