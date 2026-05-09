@@ -253,7 +253,7 @@ internal static partial class CodeWriters
             string name = attrType.Name?.Value ?? string.Empty;
             if (name.EndsWith("Attribute", System.StringComparison.Ordinal))
             {
-                name = name.Substring(0, name.Length - "Attribute".Length);
+                name = name[..^"Attribute".Length];
             }
             if (name == "ContractVersion" && attr.Signature?.FixedArguments.Count == 2)
             {
@@ -293,7 +293,7 @@ internal static partial class CodeWriters
             if (attrType is null) { continue; }
             (string ns, string name) = attrType.Names();
             string strippedName = name.EndsWith("Attribute", System.StringComparison.Ordinal)
-                ? name.Substring(0, name.Length - "Attribute".Length)
+                ? name[..^"Attribute".Length]
                 : name;
 
             // Skip attributes handled separately

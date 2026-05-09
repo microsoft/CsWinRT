@@ -60,8 +60,8 @@ internal readonly struct TypeFilter
         }
         else
         {
-            ns = fullName.Substring(0, dot);
-            name = fullName.Substring(dot + 1);
+            ns = fullName[..dot];
+            name = fullName[(dot + 1)..];
         }
 
         // Walk both lists in descending length order; on tie, includes win over excludes.
@@ -115,7 +115,7 @@ internal readonly struct TypeFilter
             return false;
         }
         // The rest of the rule (after 'namespace.') is matched as a prefix against typeName.
-        string rest = rule.Substring(typeNamespace.Length + 1);
+        string rest = rule[(typeNamespace.Length + 1)..];
         return typeName.StartsWith(rest, StringComparison.Ordinal);
     }
 

@@ -19,7 +19,7 @@ internal static class IdentifierEscaping
     public static string StripBackticks(string typeName)
     {
         int idx = typeName.IndexOf('`');
-        return idx >= 0 ? typeName.Substring(0, idx) : typeName;
+        return idx >= 0 ? typeName[..idx] : typeName;
     }
 
     /// <summary>

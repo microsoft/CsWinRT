@@ -43,11 +43,11 @@ internal static partial class CodeWriters
         string result = s_typeNameEscapeRe.Replace(typeName, "_");
         if (stripGlobalABI && typeName.StartsWith("global::ABI.", StringComparison.Ordinal))
         {
-            result = result.Substring(12); // Remove "global::ABI." (with ":" and "." already replaced)
+            result = result[12..]; // Remove "global::ABI." (with ":" and "." already replaced)
         }
         else if (stripGlobal && typeName.StartsWith("global::", StringComparison.Ordinal))
         {
-            result = result.Substring(8); // Remove "global::"
+            result = result[8..]; // Remove "global::"
         }
         return result;
     }

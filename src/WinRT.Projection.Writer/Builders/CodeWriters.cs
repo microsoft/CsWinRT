@@ -430,7 +430,7 @@ internal static partial class CodeWriters
         char c = name[0];
         if (c >= 'A' && c <= 'Z')
         {
-            return char.ToLowerInvariant(c) + name.Substring(1);
+            return char.ToLowerInvariant(c) + name[1..];
         }
         return name;
     }

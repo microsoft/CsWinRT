@@ -44,7 +44,7 @@ internal static partial class CodeWriters
                 asm, typeof(System.Reflection.AssemblyInformationalVersionAttribute));
         string version = attr?.InformationalVersion ?? "0.0.0-private.0";
         int plus = version.IndexOf('+');
-        return plus >= 0 ? version.Substring(0, plus) : version;
+        return plus >= 0 ? version[..plus] : version;
     }
     public static void WriteFileHeader(TextWriter w) => WriteFileHeader(w.Writer);
 

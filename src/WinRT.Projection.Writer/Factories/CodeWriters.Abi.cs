@@ -1724,7 +1724,7 @@ internal static partial class CodeWriters
 
         if (isGetter)
         {
-            string propName = methodName.Substring(4);
+            string propName = methodName[4..];
             w.Write("ComInterfaceDispatch.GetInstance<");
             w.Write(ifaceFullName);
             w.Write(">((ComInterfaceDispatch*)thisPtr).");
@@ -1733,7 +1733,7 @@ internal static partial class CodeWriters
         }
         else if (isSetter)
         {
-            string propName = methodName.Substring(4);
+            string propName = methodName[4..];
             w.Write("ComInterfaceDispatch.GetInstance<");
             w.Write(ifaceFullName);
             w.Write(">((ComInterfaceDispatch*)thisPtr).");
