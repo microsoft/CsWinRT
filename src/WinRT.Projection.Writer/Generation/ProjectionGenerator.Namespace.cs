@@ -100,19 +100,19 @@ internal sealed partial class ProjectionGenerator
             {
                 MetadataAttributeFactory.AddDefaultInterfaceEntry(context, type, defaultInterfaceEntries);
                 MetadataAttributeFactory.AddExclusiveToInterfaceEntries(context, type, exclusiveToInterfaceEntries);
-                CodeWriters.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
+                ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
                 if (_settings.Component && componentActivatable.Contains(type))
                 {
-                    CodeWriters.WriteFactoryClass(writer, context, type);
+                    ComponentFactory.WriteFactoryClass(writer, context, type);
                 }
             }
             else if (category is TypeCategory.Delegate or TypeCategory.Enum or TypeCategory.Interface)
             {
-                CodeWriters.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
+                ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
             }
             else if (category == TypeCategory.Struct && !TypeCategorization.IsApiContractType(type))
             {
-                CodeWriters.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
+                ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
             }
 
             written = true;

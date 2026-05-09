@@ -69,7 +69,7 @@ internal sealed partial class ProjectionGenerator
         // IndentedTextWriter adds the full prelude (usings + pragmas) which is the wrong shape
         // for the WinRT_Module.cs / GeneratedInterfaceIIDs.cs / Resources/Base/*.cs outputs.
         MetadataAttributeFactory.WriteFileHeader(wm);
-        CodeWriters.WriteModuleActivationFactory(wm, componentByModule);
+        ComponentFactory.WriteModuleActivationFactory(wm, componentByModule);
         wm.FlushToFile(Path.Combine(_settings.OutputFolder, "WinRT_Module.cs"));
     }
 }

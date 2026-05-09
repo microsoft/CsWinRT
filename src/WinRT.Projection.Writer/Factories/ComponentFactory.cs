@@ -12,7 +12,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <summary>
 /// Component-mode helpers.
 /// </summary>
-internal static partial class CodeWriters
+internal static class ComponentFactory
 {
     /// <summary>Adds a (projected -> CCW) type-name pair to the metadata-type map.</summary>
     public static void AddMetadataTypeEntry(ProjectionEmitContext context, TypeDefinition type, ConcurrentDictionary<string, string> map)
