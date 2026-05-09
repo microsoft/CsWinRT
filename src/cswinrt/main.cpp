@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "settings.h"
-#include "strings.h"
 #include "helpers.h"
 #include "type_writers.h"
 #include "code_writers.h"
@@ -447,14 +446,7 @@ Where <spec> is one or more of:
 
                             currentType = "";
 
-                            // Custom additions to namespaces
-                            for (auto addition : strings::additions)
-                            {
-                                if (ns == addition.name && settings.addition_filter.includes(ns))
-                                {
-                                    w.write(addition.value);
-                                }
-                            }
+                            // Custom additions to namespaces (REMOVED)
 
                             auto filename = w.write_temp("%.cs", ns);
                             w.flush_to_file(settings.output_folder / filename);
@@ -503,36 +495,7 @@ Where <spec> is one or more of:
 
             if (projectionFileWritten)
             {
-                for (auto&& string : strings::base)
-                {
-                    if (std::string(string.name) == "ComInteropExtensions" && !settings.filter.includes("Windows"))
-                    {
-                        continue;
-                    }
-                    writer ws;
-                    write_file_header(ws);
-
-                    if (std::string(string.name) == "ComInteropExtensions")
-                    {
-                        // Determine which COM interop helpers to include by checking whether the newer
-                        // types used in the COM interop helpers are being projected or not.
-                        // The ComInteropExtensions file makes use of UAC_VERSION_* to conditionally
-                        // include the ones that are being projected.
-                        int uapContractversion = 7;  // default to 17763
-                        if (c.find("Windows.Graphics.Display.DisplayInformation"))
-                        {
-                            uapContractversion = 15;
-                        }
-
-                        ws.write(R"(
-#define UAC_VERSION_%
-)",
-                            uapContractversion);
-                    }
-
-                    ws.write(string.value);
-                    ws.flush_to_file(settings.output_folder / (std::string(string.name) + ".cs"));
-                }
+                // Additional source files (REMOVED)
             }
 
             if (settings.verbose)

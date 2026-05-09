@@ -92,6 +92,7 @@
   <Folder Name="/Projections/">
     <File Path="Projections/Directory.Build.props" />
     <Project Path="Projections/Benchmark/Benchmark.csproj">
+      <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
@@ -100,6 +101,7 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Projections/Test/Test.csproj">
+      <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
@@ -108,6 +110,7 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Projections/TestHost.ProbeByClass/TestHost.ProbeByClass.csproj">
+      <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
@@ -115,6 +118,7 @@
       <Build Project="false" />
     </Project>
     <Project Path="Projections/TestPublicExclusiveTo/TestPublicExclusiveTo.csproj">
+      <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
       <Platform Solution="*|ARM" Project="x64" />
       <Platform Solution="*|ARM64" Project="x64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -123,6 +127,7 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Projections/TestSubset/TestSubset.csproj">
+      <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
@@ -131,6 +136,7 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Projections/WinAppSDK/WinAppSDK.csproj">
+      <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
@@ -139,6 +145,7 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Projections/Windows.UI.Xaml/Windows.UI.Xaml.csproj">
+      <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
@@ -151,6 +158,7 @@
       <BuildDependency Project="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
       <BuildDependency Project="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
       <BuildDependency Project="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
+      <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
@@ -416,10 +424,12 @@
     <Platform Solution="*|ARM64" Project="Win32" />
     <Build Solution="*|ARM" Project="false" />
   </Project>
-  <Project Path="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" Id="d71298e7-f1c7-4534-8f5f-b9ef7c40d9de" />
+  <Project Path="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
   <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
   <Project Path="WinRT.Interop.Generator/WinRT.Interop.Generator.csproj" />
-  <Project Path="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" Id="eac7df05-21df-4129-b0dd-566733fd8bdc" />
+  <Project Path="WinRT.Projection.Generator.Writer/WinRT.Projection.Generator.Writer.csproj" />
+  <Project Path="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
+  <Project Path="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
   <Project Path="WinRT.Runtime2/WinRT.Runtime.csproj" />
   <Project Path="WinRT.Sdk.Projection/WinRT.Sdk.Projection.csproj">
     <Build Project="false" />

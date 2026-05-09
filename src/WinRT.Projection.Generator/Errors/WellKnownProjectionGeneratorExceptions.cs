@@ -69,27 +69,27 @@ internal static class WellKnownProjectionGeneratorExceptions
     }
 
     /// <summary>
-    /// The <c>cswinrt.exe</c> process failed to start.
+    /// The projection writer failed to start.
     /// </summary>
     public static Exception CsWinRTProcessStartError()
     {
-        return Exception(7, "Failed to start the 'cswinrt.exe' process.");
+        return Exception(7, "Failed to invoke the projection writer.");
     }
 
     /// <summary>
-    /// The <c>cswinrt.exe</c> process failed to start.
+    /// The projection writer failed to start.
     /// </summary>
     public static Exception CsWinRTProcessStartError(Exception exception)
     {
-        return Exception(7, "Failed to start the 'cswinrt.exe' process.", exception);
+        return Exception(7, "Failed to invoke the projection writer.", exception);
     }
 
     /// <summary>
-    /// The <c>cswinrt.exe</c> process exited with a non-zero exit code.
+    /// The projection writer failed during source generation.
     /// </summary>
     public static Exception CsWinRTProcessError(int exitCode, Exception exception)
     {
-        return Exception(8, $"The 'cswinrt.exe' process exited with code {exitCode}.", exception);
+        return Exception(8, $"The projection writer failed during source generation (exit code {exitCode}).", exception);
     }
 
     /// <summary>

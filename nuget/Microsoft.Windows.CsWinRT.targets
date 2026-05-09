@@ -215,10 +215,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <Delete Files="$(CsWinRTGeneratedFilesDir)cswinrt_internal.rsp" />
   </Target>
 
+  <!--
+    Register the new C# 'cswinrtprojectionrefgen' MSBuild task. CsWinRTGenTasksAssembly is set in
+    the imported CsWinRTGen.targets file (see line 11 of that file); since UsingTask resolves
+    AssemblyFile lazily at task-usage time, the import order at the bottom of this file is fine.
+  -->
+  <UsingTask TaskName="RunCsWinRTProjectionRefGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
+
   <Target Name="CsWinRTGenerateProjection"
-          DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences;CsWinRTResolveWindowsMetadata"
+          DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences;CsWinRTResolveWindowsMetadata;_ResolveCsWinRToolsDirectory"
           Condition="'$(CsWinRTGenerateProjection)' == 'true'"
-          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExe)"
+          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTGenTasksAssembly)"
           Outputs="$(CsWinRTGeneratedFilesDir)cswinrt.rsp">
 
     <PropertyGroup>
@@ -333,19 +340,102 @@ $(CsWinRTInternalProjection)
     <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" />
     <WriteLinesToFile File="$(CsWinRTResponseFilePrivateProjection)" Lines="$(CsWinRTPrivateParams)" Overwrite="true" />
-    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
-    <Exec Command="$(CsWinRTCommand)" ContinueOnError="$(CsWinRTContinueOnError)">
-      <Output TaskParameter="ExitCode" PropertyName="CsWinRTProjectionExitCode" />
-    </Exec>
 
-    <Message Text="$(CsWinRTCommandPrivateProjection)" Importance="$(CsWinRTMessageImportance)" />
-    <Exec Command="$(CsWinRTCommandPrivateProjection)" ContinueOnError="$(CsWinRTContinueOnError)" Condition="'$(CsWinRTPrivateProjection)' == 'true'">
+    <!--
+      Reconstruct the include/exclude/input lists for the new C# generator from the historical
+      CsWinRTFilters/CsWinRTPrivateFilters multi-line strings. Some projects (e.g. the in-repo
+      Windows.csproj/Windows.UI.Xaml.csproj/WinAppSDK.csproj) set CsWinRTFilters directly with raw
+      cswinrt.exe-style '-include X' / '-exclude Y' directives; others rely on the default item-based
+      computation via CsWinRTIncludeItems/CsWinRTExcludeItems. Parsing the final filter strings back
+      into items handles both cases uniformly.
+    -->
+    <ItemGroup>
+      <_CsWinRTRefFilterLines Include="$([System.Text.RegularExpressions.Regex]::Split('$(CsWinRTFilters)', '[\r\n]+'))" />
+      <_CsWinRTRefPrivateFilterLines Include="$([System.Text.RegularExpressions.Regex]::Split('$(CsWinRTPrivateFilters)', '[\r\n]+'))" />
+
+      <_CsWinRTRefIncludes Include="$([System.String]::Copy('%(_CsWinRTRefFilterLines.Identity)').Trim().Substring(9))"
+                           Condition="$([System.String]::Copy('%(_CsWinRTRefFilterLines.Identity)').Trim().StartsWith('-include '))" />
+      <_CsWinRTRefExcludes Include="$([System.String]::Copy('%(_CsWinRTRefFilterLines.Identity)').Trim().Substring(9))"
+                           Condition="$([System.String]::Copy('%(_CsWinRTRefFilterLines.Identity)').Trim().StartsWith('-exclude '))" />
+
+      <_CsWinRTRefPrivateIncludes Include="$([System.String]::Copy('%(_CsWinRTRefPrivateFilterLines.Identity)').Trim().Substring(9))"
+                                  Condition="$([System.String]::Copy('%(_CsWinRTRefPrivateFilterLines.Identity)').Trim().StartsWith('-include '))" />
+      <_CsWinRTRefPrivateExcludes Include="$([System.String]::Copy('%(_CsWinRTRefPrivateFilterLines.Identity)').Trim().Substring(9))"
+                                  Condition="$([System.String]::Copy('%(_CsWinRTRefPrivateFilterLines.Identity)').Trim().StartsWith('-exclude '))" />
+    </ItemGroup>
+
+    <!--
+      Auto-include WindowsRuntime.Internal (and the matching interop metadata WinMD) when the user
+      requested the Windows namespace, mirroring the OLD CsWinRTIncludeWinRTInterop / 
+      CsWinRTPrivateIncludeWinRTInterop behavior.
+    -->
+    <ItemGroup>
+      <_CsWinRTRefHasWindows Include="@(_CsWinRTRefIncludes)" Condition="'%(Identity)' == 'Windows'" />
+      <_CsWinRTRefPrivateHasWindows Include="@(_CsWinRTRefPrivateIncludes)" Condition="'%(Identity)' == 'Windows'" />
+    </ItemGroup>
+    <ItemGroup Condition="'@(_CsWinRTRefHasWindows)' != ''">
+      <_CsWinRTRefIncludes Include="WindowsRuntime.Internal" />
+      <_CsWinRTRefInteropInputs Include="$(CsWinRTInteropMetadata)" />
+    </ItemGroup>
+    <ItemGroup Condition="'@(_CsWinRTRefPrivateHasWindows)' != ''">
+      <_CsWinRTRefPrivateIncludes Include="WindowsRuntime.Internal" />
+      <_CsWinRTRefPrivateInteropInputs Include="$(CsWinRTInteropMetadata)" />
+    </ItemGroup>
+
+    <!--
+      Build the final input-paths list for each pass: user-provided WinMD inputs + Windows SDK
+      metadata token (if any) + the auto-added interop metadata path (if any).
+    -->
+    <ItemGroup>
+      <_CsWinRTRefInputs Include="@(CsWinRTInputs->'%(FullPath)')" />
+      <_CsWinRTRefInputs Include="$(CsWinRTWindowsMetadata)" Condition="'$(CsWinRTWindowsMetadata)' != ''" />
+      <_CsWinRTRefInputs Include="@(_CsWinRTRefInteropInputs)" />
+
+      <_CsWinRTRefPrivateInputs Include="@(CsWinRTInputs->'%(FullPath)')" />
+      <_CsWinRTRefPrivateInputs Include="$(CsWinRTWindowsMetadata)" Condition="'$(CsWinRTWindowsMetadata)' != ''" />
+      <_CsWinRTRefPrivateInputs Include="@(_CsWinRTRefPrivateInteropInputs)" />
+    </ItemGroup>
+
+    <Message Text="cswinrtprojectionrefgen (public projection): @(_CsWinRTRefInputs->Count()) input(s), @(_CsWinRTRefIncludes->Count()) include(s), @(_CsWinRTRefExcludes->Count()) exclude(s)" Importance="$(CsWinRTMessageImportance)" />
+    <RunCsWinRTProjectionRefGenerator
+        InputWinMDPaths="@(_CsWinRTRefInputs)"
+        OutputDirectory="$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
+        TargetFramework="$(CsWinRTExeTFM)"
+        IncludeNamespaces="@(_CsWinRTRefIncludes)"
+        ExcludeNamespaces="@(_CsWinRTRefExcludes)"
+        Verbose="$(CsWinRTMessageImportance.Equals('high'))"
+        Component="$(CsWinRTComponent)"
+        Embedded="$(CsWinRTEmbedded)"
+        PublicEnums="$(CsWinRTEmbeddedPublicEnums)"
+        PublicExclusiveTo="$(CsWinRTPublicExclusiveToInterfaces)"
+        IdicExclusiveTo="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)"
+        ReferenceProjection="$(CsWinRTGenerateReferenceProjection)"
+        CsWinRTToolsDirectory="$(CsWinRTRefGenEffectiveToolsDirectory)"
+        CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+        ContinueOnError="$(CsWinRTContinueOnError)">
+      <Output TaskParameter="ExitCode" PropertyName="CsWinRTProjectionExitCode" />
+    </RunCsWinRTProjectionRefGenerator>
+
+    <Message Text="cswinrtprojectionrefgen (private projection): @(_CsWinRTRefPrivateInputs->Count()) input(s), @(_CsWinRTRefPrivateIncludes->Count()) include(s), @(_CsWinRTRefPrivateExcludes->Count()) exclude(s)" Importance="$(CsWinRTMessageImportance)" Condition="'$(CsWinRTPrivateProjection)' == 'true'" />
+    <RunCsWinRTProjectionRefGenerator
+        InputWinMDPaths="@(_CsWinRTRefPrivateInputs)"
+        OutputDirectory="$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
+        TargetFramework="$(CsWinRTExeTFM)"
+        IncludeNamespaces="@(_CsWinRTRefPrivateIncludes)"
+        ExcludeNamespaces="@(_CsWinRTRefPrivateExcludes)"
+        Verbose="$(CsWinRTMessageImportance.Equals('high'))"
+        Component="$(CsWinRTComponent)"
+        InternalProjection="true"
+        CsWinRTToolsDirectory="$(CsWinRTRefGenEffectiveToolsDirectory)"
+        CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+        ContinueOnError="$(CsWinRTContinueOnError)"
+        Condition="'$(CsWinRTPrivateProjection)' == 'true'">
       <Output TaskParameter="ExitCode" PropertyName="CsWinRTPrivateProjectionExitCode" />
-    </Exec>
+    </RunCsWinRTProjectionRefGenerator>
 
     <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTResponseFile)')">
       <UpToDateCheckInput Include="@(CsWinRTInputs)" Set="WinMDs" />
-      <UpToDateCheckInput Include="$(CsWinRTExe)" Set="WinMDs" />
+      <UpToDateCheckInput Include="$(CsWinRTGenTasksAssembly)" Set="WinMDs" />
       <UpToDateCheckBuilt Include="$(CsWinRTResponseFile)" Set="WinMDs" />
     </ItemGroup>
 

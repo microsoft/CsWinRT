@@ -3,13 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionGenerator.Errors;
+using WindowsRuntime.ProjectionGenerator.Writer;
 
 #pragma warning disable IDE0270
 
@@ -45,78 +44,56 @@ internal partial class ProjectionGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
-        GenerateRspFile(args, out string outputFolder, out string rspFile, out HashSet<string> projectionReferenceAssemblies, out bool hasTypesToProject);
+        BuildWriterOptions(
+            args,
+            out string outputFolder,
+            out string rspFile,
+            out HashSet<string> projectionReferenceAssemblies,
+            out bool hasTypesToProject,
+            out ProjectionWriterOptions writerOptions);
 
         string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
 
-        return new ProjectionGeneratorProcessingState(outputFolder, rspFile, referencesWithoutProjections, hasTypesToProject);
+        return new ProjectionGeneratorProcessingState(outputFolder, rspFile, referencesWithoutProjections, writerOptions, hasTypesToProject);
     }
 
     /// <summary>
     /// Runs the source generation logic for the generator.
     /// </summary>
-    /// <param name="args">The arguments for this invocation.</param>
     /// <param name="processingState">The state from the processing phase.</param>
-    private static void GenerateSources(ProjectionGeneratorArgs args, ProjectionGeneratorProcessingState processingState)
+    private static void GenerateSources(ProjectionGeneratorProcessingState processingState)
     {
-        ProcessStartInfo processInfo = new()
-        {
-            FileName = args.CsWinRTExePath,
-            Arguments = "@" + processingState.RspFilePath,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            WindowStyle = ProcessWindowStyle.Hidden,
-            CreateNoWindow = true
-        };
-
-        Process? cswinrtProcess;
-
+        // Invoke the projection writer in-process. Previously this spawned cswinrt.exe; now we
+        // call the public C# API directly to avoid the process boundary and to allow the writer
+        // to be replaced/extended without needing to re-publish a separate executable.
         try
         {
-            cswinrtProcess = Process.Start(processInfo);
-
-            // Make sure we did successfully start the process ('Start' can return 'null')
-            if (cswinrtProcess is null)
-            {
-                throw WellKnownProjectionGeneratorExceptions.CsWinRTProcessStartError();
-            }
+            ProjectionWriter.Run(processingState.WriterOptions);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {
-            throw WellKnownProjectionGeneratorExceptions.CsWinRTProcessStartError(e);
-        }
-
-        // Validate that generation was successful
-        using (cswinrtProcess)
-        {
-            string error = cswinrtProcess.StandardError.ReadToEnd();
-
-            cswinrtProcess.WaitForExit();
-
-            if (cswinrtProcess.ExitCode != 0)
-            {
-                throw WellKnownProjectionGeneratorExceptions.CsWinRTProcessError(
-                    exitCode: cswinrtProcess.ExitCode,
-                    exception: new Win32Exception(cswinrtProcess.ExitCode, error));
-            }
+            throw WellKnownProjectionGeneratorExceptions.CsWinRTProcessError(exitCode: -1, exception: e);
         }
     }
 
     /// <summary>
-    /// Generates a response file for CsWinRT based on the provided arguments and reference assemblies.
+    /// Builds the <see cref="ProjectionWriterOptions"/> from the supplied arguments and reference assemblies,
+    /// also writing out a debug-only response file with the same options encoded in the historical
+    /// <c>cswinrt.exe</c> CLI format.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="outputFolder">The folder where sources will be generated.</param>
-    /// <param name="rspFile">The generated response file for running <c>cswinrt.exe</c>.</param>
-    /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used to generate the response file.</param>
+    /// <param name="rspFile">The path to the response file (kept as a debug artifact).</param>
+    /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used.</param>
     /// <param name="hasTypesToProject">Whether any types were found to include in the projection.</param>
-    private static void GenerateRspFile(
+    /// <param name="writerOptions">The resulting writer options.</param>
+    private static void BuildWriterOptions(
         ProjectionGeneratorArgs args,
         out string outputFolder,
         out string rspFile,
         out HashSet<string> projectionReferenceAssemblies,
-        out bool hasTypesToProject)
+        out bool hasTypesToProject,
+        out ProjectionWriterOptions writerOptions)
     {
         args.Token.ThrowIfCancellationRequested();
 
@@ -124,6 +101,10 @@ internal partial class ProjectionGenerator
         rspFile = Path.Combine(outputFolder, "ProjectionGenerator.rsp");
         projectionReferenceAssemblies = [];
         hasTypesToProject = false;
+
+        List<string> includes = [];
+        List<string> excludes = [];
+        List<string> winmdInputs = [];
 
         using StreamWriter fileStream = new(rspFile);
 
@@ -181,6 +162,7 @@ internal partial class ProjectionGenerator
                     }
 
                     fileStream.WriteLine($"-include {type.FullName}");
+                    includes.Add(type.FullName);
                     hasTypesToProject = true;
                 }
             }
@@ -226,8 +208,8 @@ internal partial class ProjectionGenerator
                 {
                     if (isWindowsSdk)
                     {
-                        // Write the filtes for the Windows SDK projection mode.
-                        WriteWindowsSdkFilters(fileStream, args.WindowsUIXamlProjection);
+                        // Write the filters for the Windows SDK projection mode.
+                        WriteWindowsSdkFilters(fileStream, includes, excludes, args.WindowsUIXamlProjection);
 
                         hasTypesToProject = true;
 
@@ -238,12 +220,14 @@ internal partial class ProjectionGenerator
                         // In addition to projecting the individual types, make sure
                         // the additions get included by including the namespace.
                         fileStream.WriteLine($"-include Microsoft.UI");
+                        includes.Add("Microsoft.UI");
                     }
                 }
 
                 foreach (TypeDefinition exportedType in moduleDefinition.TopLevelTypes)
                 {
                     fileStream.WriteLine($"-include {exportedType.FullName}");
+                    includes.Add(exportedType.FullName);
                     hasTypesToProject = true;
                 }
             }
@@ -253,24 +237,31 @@ internal partial class ProjectionGenerator
         // (e.g., pipeline builds that pass WinMDs directly), hardcode the includes.
         if (isWindowsSdkMode && projectionReferenceAssemblies.Count == 0)
         {
-            WriteWindowsSdkFilters(fileStream, args.WindowsUIXamlProjection);
+            WriteWindowsSdkFilters(fileStream, includes, excludes, args.WindowsUIXamlProjection);
         }
 
         // If we're not in Windows SDK mode, we exclude the Windows namespace to avoid
         // the merged projection from generating all namespaces when there are no projection references
-        // and thereby no includes / excludes passed to cswinrt. 
+        // and thereby no includes / excludes passed to the writer.
         if (!isWindowsSdkMode)
         {
             fileStream.WriteLine("-exclude Windows");
+            excludes.Add("Windows");
         }
 
         fileStream.WriteLine($"-target {args.TargetFramework}");
         fileStream.WriteLine($"-input {args.WindowsMetadata}");
         fileStream.WriteLine($"-output \"{outputFolder}\"");
 
-        // When generating 'WinRT.Component.dll', pass -component to 'cswinrt.exe' to enable
-        // component-specific code generation (activation factories, exclusive-to interfaces, etc.)
-        if (args.AssemblyName == "WinRT.Component")
+        // Expand the windows metadata token (path | "local" | "sdk[+]" | version[+]) into actual
+        // .winmd file paths (or directories the writer will recursively scan). The C++ cswinrt.exe
+        // tool did this in cmd_reader.h via reader.files() — see WindowsMetadataExpander.
+        winmdInputs.AddRange(WindowsMetadataExpander.Expand(args.WindowsMetadata));
+
+        // When generating 'WinRT.Component.dll', enable component-specific code generation
+        // (activation factories, exclusive-to interfaces, etc.).
+        bool componentMode = args.AssemblyName == "WinRT.Component";
+        if (componentMode)
         {
             fileStream.WriteLine("-component");
         }
@@ -278,52 +269,79 @@ internal partial class ProjectionGenerator
         foreach (string winmdPath in args.WinMDPaths)
         {
             fileStream.WriteLine($"-input \"{winmdPath}\"");
+            winmdInputs.Add(winmdPath);
         }
+
+        writerOptions = new ProjectionWriterOptions
+        {
+            InputPaths = winmdInputs,
+            OutputFolder = outputFolder,
+            Include = includes,
+            Exclude = excludes,
+            Component = componentMode,
+            CancellationToken = args.Token,
+        };
     }
 
     /// <summary>
-    /// Writes the cswinrt.exe include/exclude filter directives for the Windows SDK projection.
+    /// Writes the include/exclude filter directives for the Windows SDK projection.
+    /// Emits to both the <c>.rsp</c> file (for debugging) and the in-memory include/exclude lists
+    /// passed to <see cref="ProjectionWriterOptions"/>.
     /// </summary>
     /// <param name="writer">The RSP file writer.</param>
+    /// <param name="includes">The list of namespace prefixes to include.</param>
+    /// <param name="excludes">The list of namespace prefixes to exclude.</param>
     /// <param name="xamlProjection">
     /// When <c>true</c>, writes the Windows.UI.Xaml filter set.
     /// When <c>false</c>, writes the base Windows SDK filter set.
     /// </param>
-    private static void WriteWindowsSdkFilters(StreamWriter writer, bool xamlProjection)
+    private static void WriteWindowsSdkFilters(StreamWriter writer, List<string> includes, List<string> excludes, bool xamlProjection)
     {
+        void Include(string ns)
+        {
+            writer.WriteLine($"-include {ns}");
+            includes.Add(ns);
+        }
+
+        void Exclude(string ns)
+        {
+            writer.WriteLine($"-exclude {ns}");
+            excludes.Add(ns);
+        }
+
         if (xamlProjection)
         {
-            writer.WriteLine("-exclude Windows");
-            writer.WriteLine("-include Windows.UI.Colors");
-            writer.WriteLine("-include Windows.UI.ColorHelper");
-            writer.WriteLine("-include Windows.UI.IColorHelper");
-            writer.WriteLine("-include Windows.UI.IColors");
-            writer.WriteLine("-include Windows.UI.Text.FontWeights");
-            writer.WriteLine("-include Windows.UI.Text.IFontWeights");
-            writer.WriteLine("-include Windows.UI.Xaml");
-            writer.WriteLine("-include Windows.ApplicationModel.Store.Preview.WebAuthenticationCoreManagerHelper");
-            writer.WriteLine("-include Windows.ApplicationModel.Store.Preview.IWebAuthenticationCoreManagerHelper");
-            writer.WriteLine("-exclude Windows.UI.Xaml.Interop");
-            writer.WriteLine("-exclude Windows.UI.Xaml.Data.BindableAttribute");
-            writer.WriteLine("-exclude Windows.UI.Xaml.Markup.ContentPropertyAttribute");
+            Exclude("Windows");
+            Include("Windows.UI.Colors");
+            Include("Windows.UI.ColorHelper");
+            Include("Windows.UI.IColorHelper");
+            Include("Windows.UI.IColors");
+            Include("Windows.UI.Text.FontWeights");
+            Include("Windows.UI.Text.IFontWeights");
+            Include("Windows.UI.Xaml");
+            Include("Windows.ApplicationModel.Store.Preview.WebAuthenticationCoreManagerHelper");
+            Include("Windows.ApplicationModel.Store.Preview.IWebAuthenticationCoreManagerHelper");
+            Exclude("Windows.UI.Xaml.Interop");
+            Exclude("Windows.UI.Xaml.Data.BindableAttribute");
+            Exclude("Windows.UI.Xaml.Markup.ContentPropertyAttribute");
         }
         else
         {
-            writer.WriteLine("-include Windows");
-            writer.WriteLine("-include WindowsRuntime.Internal");
+            Include("Windows");
+            Include("WindowsRuntime.Internal");
 
-            writer.WriteLine("-exclude Windows.UI.Colors");
-            writer.WriteLine("-exclude Windows.UI.ColorHelper");
-            writer.WriteLine("-exclude Windows.UI.IColorHelper");
-            writer.WriteLine("-exclude Windows.UI.IColors");
-            writer.WriteLine("-exclude Windows.UI.Text.FontWeights");
-            writer.WriteLine("-exclude Windows.UI.Text.IFontWeights");
-            writer.WriteLine("-exclude Windows.UI.Xaml");
-            writer.WriteLine("-exclude Windows.ApplicationModel.Store.Preview.WebAuthenticationCoreManagerHelper");
-            writer.WriteLine("-exclude Windows.ApplicationModel.Store.Preview.IWebAuthenticationCoreManagerHelper");
-            writer.WriteLine("-include Windows.UI.Xaml.Interop");
-            writer.WriteLine("-include Windows.UI.Xaml.Data.BindableAttribute");
-            writer.WriteLine("-include Windows.UI.Xaml.Markup.ContentPropertyAttribute");
+            Exclude("Windows.UI.Colors");
+            Exclude("Windows.UI.ColorHelper");
+            Exclude("Windows.UI.IColorHelper");
+            Exclude("Windows.UI.IColors");
+            Exclude("Windows.UI.Text.FontWeights");
+            Exclude("Windows.UI.Text.IFontWeights");
+            Exclude("Windows.UI.Xaml");
+            Exclude("Windows.ApplicationModel.Store.Preview.WebAuthenticationCoreManagerHelper");
+            Exclude("Windows.ApplicationModel.Store.Preview.IWebAuthenticationCoreManagerHelper");
+            Include("Windows.UI.Xaml.Interop");
+            Include("Windows.UI.Xaml.Data.BindableAttribute");
+            Include("Windows.UI.Xaml.Markup.ContentPropertyAttribute");
         }
     }
 

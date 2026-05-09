@@ -9,8 +9,8 @@
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
 
     <!-- Common metadata properties for publishing -->
-    <Description>C#/WinRT Projection Generator v$(VersionString)</Description>
-    <AssemblyTitle>C#/WinRT Projection Generator v$(VersionString)</AssemblyTitle>
+    <Description>C#/WinRT Reference Projection Generator v$(VersionString)</Description>
+    <AssemblyTitle>C#/WinRT Reference Projection Generator v$(VersionString)</AssemblyTitle>
     <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
     <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
     <FileVersion>$(VersionNumber)</FileVersion>
@@ -19,10 +19,10 @@
     <EmitSkipLocalsInitAttribute>true</EmitSkipLocalsInitAttribute>
       
     <!-- Set the root namespace to match the other projects -->
-    <RootNamespace>WindowsRuntime.ProjectionGenerator</RootNamespace>
+    <RootNamespace>WindowsRuntime.ReferenceProjectionGenerator</RootNamespace>
 
     <!-- This project produces a CLI tool, so we want a nice short name for it -->
-    <AssemblyName>cswinrtprojectiongen</AssemblyName>
+    <AssemblyName>cswinrtprojectionrefgen</AssemblyName>
       
     <!-- Same settings as 'WinRT.Runtime' -->
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
@@ -37,9 +37,6 @@
     <IsBuildTool>true</IsBuildTool>
     <RuntimeIdentifier Condition="'$(PublishBuildTool)' == 'true'">win-$(BuildToolArch)</RuntimeIdentifier>
     <SelfContained Condition="'$(PublishBuildTool)' == 'true'">true</SelfContained>
-
-    <!-- Temporarily suppress warnings for 'Microsoft.CodeAnalysis.CSharp' -->    
-    <NoWarn>$(NoWarn);IL2091;IL2050;IL2072;IL2075;IL2026;</NoWarn>
   </PropertyGroup>
 
   <!-- NativeAOT and optimization options (same as 'WinRT.Interop.Generator') -->
@@ -59,6 +56,5 @@
 
   <ItemGroup>
     <PackageReference Include="ConsoleAppFramework" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 </Project>
