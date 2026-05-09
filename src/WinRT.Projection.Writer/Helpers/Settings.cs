@@ -12,12 +12,12 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal sealed class Settings
 {
-    public HashSet<string> Input { get; } = new();
+    public HashSet<string> Input { get; } = [];
     public string OutputFolder { get; set; } = string.Empty;
     public bool Verbose { get; set; }
-    public HashSet<string> Include { get; } = new();
-    public HashSet<string> Exclude { get; } = new();
-    public HashSet<string> AdditionExclude { get; } = new();
+    public HashSet<string> Include { get; } = [];
+    public HashSet<string> Exclude { get; } = [];
+    public HashSet<string> AdditionExclude { get; } = [];
     public TypeFilter Filter { get; set; } = TypeFilter.Empty;
     public TypeFilter AdditionFilter { get; set; } = TypeFilter.Empty;
     public bool Component { get; set; }

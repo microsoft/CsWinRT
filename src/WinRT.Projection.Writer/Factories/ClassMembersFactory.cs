@@ -29,7 +29,7 @@ internal static class ClassMembersFactory
         // .winmd metadata definition order order).
         Dictionary<string, PropertyAccessorState> propertyState = new(System.StringComparer.Ordinal);
         HashSet<string> writtenEvents = new(System.StringComparer.Ordinal);
-        HashSet<TypeDefinition> writtenInterfaces = new();
+        HashSet<TypeDefinition> writtenInterfaces = [];
         // interface inside WriteInterfaceMembersRecursive (right before that interface's
         // members), instead of one upfront block. This interleaves the GetInterface() impls
         // with their corresponding interface body, matching truth's per-interface layout.

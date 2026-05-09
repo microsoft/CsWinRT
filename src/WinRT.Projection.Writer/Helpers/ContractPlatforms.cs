@@ -35,11 +35,11 @@ internal static class ContractPlatforms
 
     private static Dictionary<string, List<(int, string)>> Build()
     {
-        Dictionary<string, List<(int, string)>> t = new();
+        Dictionary<string, List<(int, string)>> t = [];
 
         void Add(string name, params (int v, string p)[] vs)
         {
-            List<(int, string)> list = new();
+            List<(int, string)> list = [];
             foreach ((int v, string p) in vs) { list.Add((v, p)); }
             t[name] = list;
         }

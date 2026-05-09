@@ -210,7 +210,7 @@ internal static class AbiTypeHelpers
     internal static System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition>? BuildEventMethodMap(TypeDefinition type)
     {
         if (type.Events.Count == 0) { return null; }
-        System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition> map = new();
+        System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition> map = [];
         foreach (EventDefinition evt in type.Events)
         {
             if (evt.AddMethod is MethodDefinition add) { map[add] = evt; }

@@ -798,7 +798,7 @@ internal static class AbiMethodBodyFactory
         // Build a map from each MethodDefinition to its WinMD vtable slot.
         // In AsmResolver, type.Methods is iterated in MethodDef row order, so the position of each
         // method in type.Methods (relative to the first method of the type) gives us the same value.
-        Dictionary<MethodDefinition, int> methodSlot = new();
+        Dictionary<MethodDefinition, int> methodSlot = [];
         {
             int idx = 0;
             foreach (MethodDefinition m in type.Methods)

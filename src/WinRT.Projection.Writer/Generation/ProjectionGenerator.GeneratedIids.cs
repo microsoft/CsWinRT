@@ -29,7 +29,7 @@ internal sealed partial class ProjectionGenerator
         // Collect factory interfaces (Static/Activatable/Composable) referenced by included
         // classes globally. Their IIDs must be present in GeneratedInterfaceIIDs.cs even if
         // the filter excludes them, because static class members reference them.
-        HashSet<TypeDefinition> factoryInterfacesGlobal = new();
+        HashSet<TypeDefinition> factoryInterfacesGlobal = [];
         foreach ((_, NamespaceMembers nsMembers) in _cache.Namespaces)
         {
             foreach (TypeDefinition type in nsMembers.Classes)
@@ -51,7 +51,7 @@ internal sealed partial class ProjectionGenerator
         }
 
         bool iidWritten = false;
-        HashSet<TypeDefinition> interfacesFromClassesEmitted = new();
+        HashSet<TypeDefinition> interfacesFromClassesEmitted = [];
         ProjectionEmitContext guidContext = new(_settings, _cache, "ABI");
         Writers.IndentedTextWriter guidIndented = new();
         IIDExpressionWriter.WriteInterfaceIidsBegin(guidIndented);

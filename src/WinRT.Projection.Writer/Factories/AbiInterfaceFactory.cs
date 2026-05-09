@@ -263,7 +263,7 @@ internal static class AbiInterfaceFactory
         // this order: methods first, then properties (setter before getter per write_property_abi_invoke
         // at), then events. Mine previously emitted them in pure metadata
         // (slot) order which matched neither truth nor C++.
-        System.Collections.Generic.HashSet<MethodDefinition> propertyAccessors = new();
+        System.Collections.Generic.HashSet<MethodDefinition> propertyAccessors = [];
         foreach (PropertyDefinition prop in type.Properties)
         {
             if (prop.GetMethod is MethodDefinition g) { propertyAccessors.Add(g); }
@@ -411,7 +411,7 @@ internal static class AbiInterfaceFactory
         // increasing slot indices.
         // For non-fast-abi interfaces, the segment list is just [(type, INSPECTABLE_METHOD_COUNT, skipExclusiveEvents)].
         const int InspectableMethodCount = 6;
-        List<(TypeDefinition Iface, int StartSlot, bool SkipEvents)> segments = new();
+        List<(TypeDefinition Iface, int StartSlot, bool SkipEvents)> segments = [];
         (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = ClassFactory.GetFastAbiClassForInterface(context.Cache, type);
         bool isFastAbiDefault = fastAbi is not null && fastAbi.Value.Default is not null
             && AbiTypeHelpers.InterfacesEqualByName(fastAbi.Value.Default, type);

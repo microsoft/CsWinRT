@@ -25,7 +25,7 @@ internal sealed partial class ProjectionGenerator
     /// </returns>
     private (HashSet<TypeDefinition> ComponentActivatable, Dictionary<string, HashSet<TypeDefinition>> ByModule) DiscoverComponentActivatableTypes()
     {
-        HashSet<TypeDefinition> componentActivatable = new();
+        HashSet<TypeDefinition> componentActivatable = [];
         Dictionary<string, HashSet<TypeDefinition>> componentByModule = new(System.StringComparer.Ordinal);
 
         if (!_settings.Component)
@@ -45,7 +45,7 @@ internal sealed partial class ProjectionGenerator
                     string moduleName = Path.GetFileNameWithoutExtension(_cache.GetSourcePath(type));
                     if (!componentByModule.TryGetValue(moduleName, out HashSet<TypeDefinition>? set))
                     {
-                        set = new HashSet<TypeDefinition>();
+                        set = [];
                         componentByModule[moduleName] = set;
                     }
                     _ = set.Add(type);

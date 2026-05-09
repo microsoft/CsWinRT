@@ -152,7 +152,7 @@ internal static class ProjectionFileBuilder
         if (context.Settings.Component) { return; }
 
         // Collect field info
-        System.Collections.Generic.List<(string TypeStr, string Name, string ParamName, bool IsInterface)> fields = new();
+        System.Collections.Generic.List<(string TypeStr, string Name, string ParamName, bool IsInterface)> fields = [];
         foreach (FieldDefinition field in type.Fields)
         {
             if (field.IsStatic || field.Signature is null) { continue; }

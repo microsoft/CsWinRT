@@ -40,7 +40,7 @@ internal static class AbiInterfaceIDicFactory
     /// </summary>
     internal static void WriteInterfaceIdicImplMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        HashSet<TypeDefinition> visited = new();
+        HashSet<TypeDefinition> visited = [];
         WriteInterfaceIdicImplMembersForInterface(writer, context, type);
 
         // Also walk required (inherited) interfaces and emit members for each one.

@@ -104,7 +104,7 @@ internal static class ClassFactory
     public static (TypeDefinition? DefaultInterface, System.Collections.Generic.List<TypeDefinition> OtherInterfaces) GetFastAbiInterfaces(MetadataCache cache, TypeDefinition classType)
     {
         TypeDefinition? defaultIface = null;
-        System.Collections.Generic.List<TypeDefinition> exclusiveIfaces = new();
+        System.Collections.Generic.List<TypeDefinition> exclusiveIfaces = [];
         foreach (InterfaceImplementation impl in classType.Interfaces)
         {
             if (impl.Interface is null) { continue; }

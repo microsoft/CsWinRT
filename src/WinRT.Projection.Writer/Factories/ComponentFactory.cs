@@ -49,7 +49,7 @@ internal static class ComponentFactory
 
         // Build the inheritance list: factory interfaces ([Activatable]/[Static]) only.
         MetadataCache cache = context.Cache;
-        List<TypeDefinition> factoryInterfaces = new();
+        List<TypeDefinition> factoryInterfaces = [];
         {
             foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, cache))
             {

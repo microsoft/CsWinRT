@@ -132,7 +132,7 @@ internal sealed partial class ProjectionGenerator
             // included in this namespace. These must have their ABI Methods classes emitted even
             // when the filter excludes them, because the projected static class members dispatch
             // through them.
-            HashSet<TypeDefinition> factoryInterfacesInThisNs = new();
+            HashSet<TypeDefinition> factoryInterfacesInThisNs = [];
             foreach (TypeDefinition type in members.Types)
             {
                 if (!_settings.Filter.Includes(type)) { continue; }

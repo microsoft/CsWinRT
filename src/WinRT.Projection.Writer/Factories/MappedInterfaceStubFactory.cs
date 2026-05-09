@@ -49,8 +49,8 @@ internal static class MappedInterfaceStubFactory
     public static void WriteMappedInterfaceStubs(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature? instance, string ifaceName, string objRefName)
     {
         // Resolve type arguments from the (substituted) generic instance signature, if any.
-        List<TypeSemantics> typeArgs = new();
-        List<TypeSignature> typeArgSigs = new();
+        List<TypeSemantics> typeArgs = [];
+        List<TypeSignature> typeArgSigs = [];
         if (instance is not null)
         {
             foreach (TypeSignature arg in instance.TypeArguments)

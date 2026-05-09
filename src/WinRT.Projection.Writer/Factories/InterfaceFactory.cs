@@ -223,7 +223,7 @@ internal static class InterfaceFactory
     private static bool FindPropertyInBaseInterfaces(MetadataCache cache, TypeDefinition type, string propName)
     {
         if (string.IsNullOrEmpty(propName)) { return false; }
-        System.Collections.Generic.HashSet<TypeDefinition> visited = new();
+        System.Collections.Generic.HashSet<TypeDefinition> visited = [];
         return FindPropertyInBaseInterfacesRecursive(cache, type, propName, visited);
     }
 
@@ -253,7 +253,7 @@ internal static class InterfaceFactory
     internal static TypeDefinition? FindPropertyInterfaceInBases(MetadataCache cache, TypeDefinition type, string propName)
     {
         if (string.IsNullOrEmpty(propName)) { return null; }
-        System.Collections.Generic.HashSet<TypeDefinition> visited = new();
+        System.Collections.Generic.HashSet<TypeDefinition> visited = [];
         return FindPropertyInterfaceInBasesRecursive(cache, type, propName, visited);
     }
 

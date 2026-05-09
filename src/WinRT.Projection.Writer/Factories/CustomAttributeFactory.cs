@@ -23,7 +23,7 @@ internal static class CustomAttributeFactory
     /// <returns>A list of pre-formatted positional + named argument strings (in order).</returns>
     public static List<string> WriteCustomAttributeArgs(CustomAttribute attribute)
     {
-        List<string> result = new();
+        List<string> result = [];
         if (attribute.Signature is null) { return result; }
 
         // Detect AttributeUsage which takes an AttributeTargets enum
@@ -83,7 +83,7 @@ internal static class CustomAttributeFactory
             (2048, "All"),      // InterfaceImpl - not directly representable, use All
             (8192, "Struct"),   // ApiContract -> Struct
         ];
-        List<string> values = new();
+        List<string> values = [];
         foreach ((uint bit, string name) in entries)
         {
             if ((value & bit) != 0)
@@ -301,7 +301,7 @@ internal static class CustomAttributeFactory
                 {
                     if (!attributes.TryGetValue("System.Runtime.Versioning.SupportedOSPlatform", out List<string>? list))
                     {
-                        list = new List<string>();
+                        list = [];
                         attributes["System.Runtime.Versioning.SupportedOSPlatform"] = list;
                     }
                     list.Add(platform);

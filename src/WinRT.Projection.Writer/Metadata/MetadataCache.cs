@@ -18,8 +18,8 @@ internal sealed class MetadataCache
 {
     private readonly Dictionary<string, NamespaceMembers> _namespaces = new(StringComparer.Ordinal);
     private readonly Dictionary<string, TypeDefinition> _typesByFullName = new(StringComparer.Ordinal);
-    private readonly Dictionary<TypeDefinition, string> _typeToModulePath = new();
-    private readonly List<ModuleDefinition> _modules = new();
+    private readonly Dictionary<TypeDefinition, string> _typeToModulePath = [];
+    private readonly List<ModuleDefinition> _modules = [];
 
     public IReadOnlyDictionary<string, NamespaceMembers> Namespaces => _namespaces;
 
@@ -46,7 +46,7 @@ internal sealed class MetadataCache
         // .winmd twice causes duplicate types to be added to NamespaceMembers.Types and ultimately
         // emitted twice in the same output file (CS0101).
         HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
-        List<string> winmdFiles = new();
+        List<string> winmdFiles = [];
         foreach (string input in inputs)
         {
             if (Directory.Exists(input))
@@ -202,14 +202,14 @@ internal sealed class NamespaceMembers
 {
     public string Name { get; }
 
-    public List<TypeDefinition> Types { get; } = new();
-    public List<TypeDefinition> Interfaces { get; } = new();
-    public List<TypeDefinition> Classes { get; } = new();
-    public List<TypeDefinition> Enums { get; } = new();
-    public List<TypeDefinition> Structs { get; } = new();
-    public List<TypeDefinition> Delegates { get; } = new();
-    public List<TypeDefinition> Attributes { get; } = new();
-    public List<TypeDefinition> Contracts { get; } = new();
+    public List<TypeDefinition> Types { get; } = [];
+    public List<TypeDefinition> Interfaces { get; } = [];
+    public List<TypeDefinition> Classes { get; } = [];
+    public List<TypeDefinition> Enums { get; } = [];
+    public List<TypeDefinition> Structs { get; } = [];
+    public List<TypeDefinition> Delegates { get; } = [];
+    public List<TypeDefinition> Attributes { get; } = [];
+    public List<TypeDefinition> Contracts { get; } = [];
 
     public NamespaceMembers(string name)
     {
