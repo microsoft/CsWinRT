@@ -124,7 +124,7 @@ internal static class AbiMethodBodyFactory
             string elementInteropArg = CodeWriters.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
-            string marshallerPath = CodeWriters.GetArrayMarshallerInteropPath(sza.BaseType);
+            string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
             string elementAbi = sza.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject()
                 ? "void*"
                 : CodeWriters.IsComplexStruct(context.Cache, sza.BaseType)
@@ -158,7 +158,7 @@ internal static class AbiMethodBodyFactory
             string elementInteropArg = CodeWriters.EncodeInteropTypeName(retSzHoist.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
-            string marshallerPath = CodeWriters.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
+            string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
             writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
             writer.Write("    static extern void ConvertToUnmanaged_");
             writer.Write(retParamName);
@@ -395,7 +395,7 @@ internal static class AbiMethodBodyFactory
             writer.Write("        static extern void CopyToManaged_");
             writer.Write(raw);
             writer.Write("([UnsafeAccessorType(\"");
-            writer.Write(CodeWriters.GetArrayMarshallerInteropPath(szArr.BaseType));
+            writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType));
             writer.Write("\")] object _, uint length, ");
             writer.Write(dataParamType);
             writer.Write(", Span<");
@@ -759,7 +759,7 @@ internal static class AbiMethodBodyFactory
             writer.Write("        static extern void CopyToUnmanaged_");
             writer.Write(raw);
             writer.Write("([UnsafeAccessorType(\"");
-            writer.Write(CodeWriters.GetArrayMarshallerInteropPath(szFA.BaseType));
+            writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType));
             writer.Write("\")] object _, ReadOnlySpan<");
             writer.Write(elementProjected);
             writer.Write("> span, uint length, ");
@@ -2019,7 +2019,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write("static extern void CopyToUnmanaged_");
                 writer.Write(localName);
                 writer.Write("([UnsafeAccessorType(\"");
-                writer.Write(CodeWriters.GetArrayMarshallerInteropPath(szArr.BaseType));
+                writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType));
                 writer.Write("\")] object _, ReadOnlySpan<");
                 writer.Write(elementProjected);
                 writer.Write("> span, uint length, ");
@@ -2218,7 +2218,7 @@ internal static class AbiMethodBodyFactory
             writer.Write("static extern void CopyToManaged_");
             writer.Write(localName);
             writer.Write("([UnsafeAccessorType(\"");
-            writer.Write(CodeWriters.GetArrayMarshallerInteropPath(szFA.BaseType));
+            writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType));
             writer.Write("\")] object _, uint length, ");
             writer.Write(dataParamType);
             writer.Write(", Span<");
@@ -2367,7 +2367,7 @@ internal static class AbiMethodBodyFactory
             string elementInteropArg = CodeWriters.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
-            string marshallerPath = CodeWriters.GetArrayMarshallerInteropPath(sza.BaseType);
+            string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
             writer.Write(callIndent);
             writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
             writer.Write(callIndent);
@@ -2418,7 +2418,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write("static extern ");
                 writer.Write(elementProjected);
                 writer.Write("[] ConvertToManaged_retval([UnsafeAccessorType(\"");
-                writer.Write(CodeWriters.GetArrayMarshallerInteropPath(retSz.BaseType));
+                writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType));
                 writer.Write("\")] object _, uint length, ");
                 writer.Write(elementAbi);
                 writer.Write("* data);\n");
@@ -2650,7 +2650,7 @@ internal static class AbiMethodBodyFactory
                     writer.Write("            static extern void Dispose_");
                     writer.Write(localName);
                     writer.Write("([UnsafeAccessorType(\"");
-                    writer.Write(CodeWriters.GetArrayMarshallerInteropPath(szArr.BaseType));
+                    writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType));
                     writer.Write("\")] object _, uint length, ");
                     writer.Write(disposeDataParamType);
                     if (!disposeDataParamType.EndsWith("data", System.StringComparison.Ordinal)) { writer.Write(" data"); }
@@ -2745,7 +2745,7 @@ internal static class AbiMethodBodyFactory
                 string elementInteropArg = CodeWriters.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
-                string marshallerPath = CodeWriters.GetArrayMarshallerInteropPath(sza.BaseType);
+                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
                 writer.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
                 writer.Write("            static extern void Free_");
                 writer.Write(localName);
@@ -2802,7 +2802,7 @@ internal static class AbiMethodBodyFactory
                 _ = elementInteropArg;
                 writer.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
                 writer.Write("            static extern void Free_retval([UnsafeAccessorType(\"");
-                writer.Write(CodeWriters.GetArrayMarshallerInteropPath(retSz.BaseType));
+                writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType));
                 writer.Write("\")] object _, uint length, ");
                 writer.Write(elementAbi);
                 writer.Write("* data);\n");

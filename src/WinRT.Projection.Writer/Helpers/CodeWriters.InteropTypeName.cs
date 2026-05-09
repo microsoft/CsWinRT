@@ -31,7 +31,7 @@ internal static partial class CodeWriters
         return sb.ToString();
     }
 
-    private static void EncodeInteropTypeNameInto(StringBuilder sb, TypeSignature sig, TypedefNameType nameType)
+    internal static void EncodeInteropTypeNameInto(StringBuilder sb, TypeSignature sig, TypedefNameType nameType)
     {
         // Special case for System.Guid: matches C++ guid_type case in write_interop_dll_type_name.
         if (sig is TypeDefOrRefSignature gtd
@@ -77,7 +77,7 @@ internal static partial class CodeWriters
         }
     }
 
-    private static void EncodeFundamental(StringBuilder sb, CorLibTypeSignature corlib, TypedefNameType nameType)
+    internal static void EncodeFundamental(StringBuilder sb, CorLibTypeSignature corlib, TypedefNameType nameType)
     {
         switch (corlib.ElementType)
         {
@@ -202,7 +202,7 @@ internal static partial class CodeWriters
     /// Returns the assembly marker (e.g. <c>&lt;#corlib&gt;</c>) for a (possibly remapped)
     /// type/namespace. Mirrors C++ <c>write_interop_assembly_name</c>.
     /// </summary>
-    private static string GetInteropAssemblyMarker(string typeNs, string typeName, MappedType? mapped, ITypeDefOrRef? type = null)
+    internal static string GetInteropAssemblyMarker(string typeNs, string typeName, MappedType? mapped, ITypeDefOrRef? type = null)
     {
         if (mapped is not null)
         {

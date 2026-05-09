@@ -656,7 +656,7 @@ internal static partial class CodeWriters
                 writer.Write("static extern void CopyToUnmanaged_");
                 writer.Write(raw);
                 writer.Write("([UnsafeAccessorType(\"");
-                writer.Write(GetArrayMarshallerInteropPath(szArr.BaseType));
+                writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType));
                 writer.Write("\")] object _, ReadOnlySpan<");
                 writer.Write(elementProjected);
                 writer.Write("> span, uint length, void** data);\n");
@@ -823,7 +823,7 @@ internal static partial class CodeWriters
                     writer.Write("            static extern void Dispose_");
                     writer.Write(raw);
                     writer.Write("([UnsafeAccessorType(\"");
-                    writer.Write(GetArrayMarshallerInteropPath(szArr.BaseType));
+                    writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType));
                     writer.Write("\")] object _, uint length, void** data);\n\n");
                     writer.Write("            fixed(void* _");
                     writer.Write(raw);
