@@ -152,8 +152,7 @@ internal static class ConstructorFactory
 
     /// <summary>
     /// Reads the <c>[MarshalingBehaviorAttribute]</c> on the class and returns the corresponding
-    /// <c>CreateObjectReferenceMarshalingType.*</c> expression. Mirrors C++
-    /// <c>get_marshaling_type_name</c>.
+    /// <c>CreateObjectReferenceMarshalingType.*</c> expression.
     /// </summary>
     internal static string GetMarshalingTypeName(TypeDefinition classType)
     {

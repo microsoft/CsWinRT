@@ -257,8 +257,7 @@ internal static class AbiDelegateFactory
     /// Writes a marshaller stub for a delegate.
     /// </summary>
     /// <summary>
-    /// Emits just the <c>&lt;Name&gt;Marshaller</c> class for a delegate. Mirrors C++
-    /// <c>write_delegate_marshaller</c>.
+    /// Emits just the <c>&lt;Name&gt;Marshaller</c> class for a delegate.
     /// </summary>
     private static void WriteDelegateMarshallerOnly(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {

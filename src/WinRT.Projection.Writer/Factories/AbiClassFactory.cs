@@ -32,8 +32,7 @@ internal static class AbiClassFactory
     }
 
     /// <summary>
-    /// Emits the simpler component-mode class marshaller. Mirrors C++
-    /// <c>write_component_class_marshaller</c>.
+    /// Emits the simpler component-mode class marshaller.
     /// </summary>
     internal static void WriteComponentClassMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -94,8 +93,7 @@ internal static class AbiClassFactory
 
     /// <summary>
     /// Emits the metadata wrapper type <c>file static class &lt;Name&gt; {}</c> with the conditional
-    /// set of attributes required for the type's category. Mirrors C++
-    /// <c>write_authoring_metadata_type</c>.
+    /// set of attributes required for the type's category.
     /// </summary>
     internal static void WriteAuthoringMetadataType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
