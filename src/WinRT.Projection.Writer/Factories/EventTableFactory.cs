@@ -78,7 +78,7 @@ internal static class EventTableFactory
         {
             string interopTypeName = CodeWriters.EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + ", WinRT.Interop";
             IndentedTextWriter __scratchProjectedTypeName = new();
-            CodeWriters.WriteProjectedSignature(__scratchProjectedTypeName, context, evtTypeSig, false);
+            MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, evtTypeSig, false);
             string projectedTypeName = __scratchProjectedTypeName.ToString();
             writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
             writer.Write("        static extern ");

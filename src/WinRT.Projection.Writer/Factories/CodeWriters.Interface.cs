@@ -180,7 +180,7 @@ internal static partial class CodeWriters
         if (typeSig is null) { return "object"; }
         if (genCtx is not null) { typeSig = typeSig.InstantiateGenericTypes(genCtx.Value); }
         IndentedTextWriter scratch = new();
-        WriteProjectedSignature(scratch, context, typeSig, isSetProperty);
+        MethodFactory.WriteProjectedSignature(scratch, context, typeSig, isSetProperty);
         return scratch.ToString();
     }
 
@@ -195,11 +195,11 @@ internal static partial class CodeWriters
             // Only emit Windows.Foundation.Metadata attributes that have a projected form
             // (Overload, DefaultOverload, AttributeUsage, Experimental).
             WriteMethodCustomAttributes(writer, method);
-            WriteProjectionReturnType(writer, context, sig);
+            MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write(" ");
             writer.Write(method.Name?.Value ?? string.Empty);
             writer.Write("(");
-            WriteParameterList(writer, context, sig);
+            MethodFactory.WriteParameterList(writer, context, sig);
             writer.Write(");");
         }
 

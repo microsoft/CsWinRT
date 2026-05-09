@@ -561,7 +561,7 @@ internal static partial class CodeWriters
                 writer.Write(name);
                 writer.Write("\")]\n");
                 writer.Write("static extern ");
-                WriteProjectionReturnType(writer, context, sig);
+                MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write(" ");
                 writer.Write(accessorName);
                 writer.Write("([UnsafeAccessorType(\"");
@@ -570,7 +570,7 @@ internal static partial class CodeWriters
                 for (int i = 0; i < sig.Params.Count; i++)
                 {
                     writer.Write(", ");
-                    WriteProjectionParameter(writer, context, sig.Params[i]);
+                    MethodFactory.WriteProjectionParameter(writer, context, sig.Params[i]);
                 }
                 writer.Write(");\n");
                 // string to each public method emission. In ref mode this produces e.g.
@@ -578,11 +578,11 @@ internal static partial class CodeWriters
                 if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
                 writer.Write(access);
                 writer.Write(methodSpecForThis);
-                WriteProjectionReturnType(writer, context, sig);
+                MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write(" ");
                 writer.Write(name);
                 writer.Write("(");
-                WriteParameterList(writer, context, sig);
+                MethodFactory.WriteParameterList(writer, context, sig);
                 if (context.Settings.ReferenceProjection)
                 {
                     // which emits 'throw null' in reference projection mode.
@@ -608,11 +608,11 @@ internal static partial class CodeWriters
                 if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
                 writer.Write(access);
                 writer.Write(methodSpecForThis);
-                WriteProjectionReturnType(writer, context, sig);
+                MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write(" ");
                 writer.Write(name);
                 writer.Write("(");
-                WriteParameterList(writer, context, sig);
+                MethodFactory.WriteParameterList(writer, context, sig);
                 if (context.Settings.ReferenceProjection)
                 {
                     // which emits 'throw null' in reference projection mode.
@@ -643,13 +643,13 @@ internal static partial class CodeWriters
             {
                 // impl as well (since it shares the same originating interface).
                 if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
-                WriteProjectionReturnType(writer, context, sig);
+                MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write(" ");
                 WriteInterfaceTypeNameForCcw(writer, context, originalInterface);
                 writer.Write(".");
                 writer.Write(name);
                 writer.Write("(");
-                WriteParameterList(writer, context, sig);
+                MethodFactory.WriteParameterList(writer, context, sig);
                 writer.Write(") => ");
                 writer.Write(name);
                 writer.Write("(");
@@ -885,7 +885,7 @@ internal static partial class CodeWriters
                 writer.Write("out ");
                 break;
         }
-        WriteParameterName(writer, p);
+        MethodFactory.WriteParameterName(writer, p);
     }
     /// <summary>
     /// Writes the projected name for an interface reference (TypeDefinition, TypeReference, or

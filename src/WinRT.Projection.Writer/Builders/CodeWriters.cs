@@ -129,7 +129,7 @@ internal static partial class CodeWriters
         writer.Write("}\n\n");
     }
     /// <summary>Formats a metadata Constant value as a C# literal.</summary>
-    private static string FormatConstant(AsmResolver.DotNet.Constant constant)
+    internal static string FormatConstant(AsmResolver.DotNet.Constant constant)
     {
         // The Constant.Value contains raw bytes representing the value
         AsmResolver.PE.DotNet.Metadata.Tables.ElementType type = constant.Type;
@@ -336,12 +336,12 @@ internal static partial class CodeWriters
         }
         writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
         writer.Write(" delegate ");
-        WriteProjectionReturnType(writer, context, sig);
+        MethodFactory.WriteProjectionReturnType(writer, context, sig);
         writer.Write(" ");
         WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         WriteTypeParams(writer, type);
         writer.Write("(");
-        WriteParameterList(writer, context, sig);
+        MethodFactory.WriteParameterList(writer, context, sig);
         writer.Write(");\n");
     }
     /// <summary>Writes a projected attribute class.</summary>
@@ -364,7 +364,7 @@ internal static partial class CodeWriters
             writer.Write("public ");
             writer.Write(typeName);
             writer.Write("(");
-            WriteParameterList(writer, context, sig);
+            MethodFactory.WriteParameterList(writer, context, sig);
             writer.Write("){}\n");
         }
         // Fields

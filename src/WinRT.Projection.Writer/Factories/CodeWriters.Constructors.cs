@@ -110,7 +110,7 @@ internal static partial class CodeWriters
                 writer.Write("public unsafe ");
                 writer.Write(typeName);
                 writer.Write("(");
-                WriteParameterList(writer, context, sig);
+                MethodFactory.WriteParameterList(writer, context, sig);
                 writer.Write(")\n  :base(");
                 if (sig.Params.Count == 0)
                 {
@@ -227,7 +227,7 @@ internal static partial class CodeWriters
         for (int i = 0; i < count; i++)
         {
             if (i > 0) { writer.Write(", "); }
-            WriteProjectionParameter(writer, context, sig.Params[i]);
+            MethodFactory.WriteProjectionParameter(writer, context, sig.Params[i]);
         }
         writer.Write(")\n{\n");
         for (int i = 0; i < count; i++)
@@ -238,7 +238,7 @@ internal static partial class CodeWriters
             writer.Write("    public readonly ");
             // Use the parameter's projected type (matches the constructor parameter type, including
             // ReadOnlySpan<T>/Span<T> for array params).
-            WriteProjectionParameterType(writer, context, p);
+            MethodFactory.WriteProjectionParameterType(writer, context, p);
             writer.Write(" ");
             writer.Write(pname);
             writer.Write(" = ");
@@ -323,7 +323,7 @@ internal static partial class CodeWriters
             }
             else
             {
-                WriteProjectedSignature(writer, context, p.Type, true);
+                MethodFactory.WriteProjectedSignature(writer, context, p.Type, true);
             }
             writer.Write(" ");
             writer.Write(pname);
@@ -354,7 +354,7 @@ internal static partial class CodeWriters
             }
             string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
             IndentedTextWriter __scratchProjType = new();
-            WriteProjectedSignature(__scratchProjType, context, p.Type, false);
+            MethodFactory.WriteProjectedSignature(__scratchProjType, context, p.Type, false);
             string projectedTypeName = __scratchProjType.ToString();
             writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
             writer.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
@@ -919,7 +919,7 @@ internal static partial class CodeWriters
             for (int i = 0; i < userParamCount; i++)
             {
                 if (i > 0) { writer.Write(", "); }
-                WriteProjectionParameter(writer, context, sig.Params[i]);
+                MethodFactory.WriteProjectionParameter(writer, context, sig.Params[i]);
             }
             writer.Write(")\n  :base(");
             if (isParameterless)

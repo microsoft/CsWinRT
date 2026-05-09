@@ -127,12 +127,12 @@ internal static class AbiDelegateFactory
         writer.Write("NativeDelegate\n{\n");
 
         writer.Write("    public static unsafe ");
-        CodeWriters.WriteProjectionReturnType(writer, context, sig);
+        MethodFactory.WriteProjectionReturnType(writer, context, sig);
         writer.Write(" ");
         writer.Write(nameStripped);
         writer.Write("Invoke(this WindowsRuntimeObjectReference thisReference");
         if (sig.Params.Count > 0) { writer.Write(", "); }
-        CodeWriters.WriteParameterList(writer, context, sig);
+        MethodFactory.WriteParameterList(writer, context, sig);
         writer.Write(")");
 
         // Reuse the interface caller body emitter. Delegate Invoke is at vtable slot 3

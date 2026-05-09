@@ -72,7 +72,7 @@ internal static class AbiMethodBodyFactory
         {
             string interopTypeName = CodeWriters.EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
             IndentedTextWriter __scratchProjectedTypeName = new();
-            CodeWriters.WriteProjectedSignature(__scratchProjectedTypeName, context, rt!, false);
+            MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, rt!, false);
             string projectedTypeName = __scratchProjectedTypeName.ToString();
             writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
             writer.Write("    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
@@ -97,7 +97,7 @@ internal static class AbiMethodBodyFactory
             string raw = p.Parameter.Name ?? "param";
             string interopTypeName = CodeWriters.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
             IndentedTextWriter __scratchProjectedTypeName = new();
-            CodeWriters.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
+            MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
             string projectedTypeName = __scratchProjectedTypeName.ToString();
             writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
             writer.Write("    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
@@ -182,7 +182,7 @@ internal static class AbiMethodBodyFactory
             else if (returnIsRefType)
             {
                 IndentedTextWriter __scratchProjected = new();
-                CodeWriters.WriteProjectedSignature(__scratchProjected, context, rt, false);
+                MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
                 string projected = __scratchProjected.ToString();
                 writer.Write("    ");
                 writer.Write(projected);
@@ -193,7 +193,7 @@ internal static class AbiMethodBodyFactory
             else if (returnIsReceiveArrayDoAbi)
             {
                 IndentedTextWriter __scratchProjected = new();
-                CodeWriters.WriteProjectedSignature(__scratchProjected, context, rt, false);
+                MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
                 string projected = __scratchProjected.ToString();
                 writer.Write("    ");
                 writer.Write(projected);
@@ -204,7 +204,7 @@ internal static class AbiMethodBodyFactory
             else
             {
                 IndentedTextWriter __scratchProjected = new();
-                CodeWriters.WriteProjectedSignature(__scratchProjected, context, rt, false);
+                MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
                 string projected = __scratchProjected.ToString();
                 writer.Write("    ");
                 writer.Write(projected);
@@ -257,7 +257,7 @@ internal static class AbiMethodBodyFactory
             // Strip ByRef and CustomModifier wrappers to get the underlying base type.
             AsmResolver.DotNet.Signatures.TypeSignature underlying = CodeWriters.StripByRefAndCustomModifiers(p.Type);
             IndentedTextWriter __scratchProjected = new();
-            CodeWriters.WriteProjectedSignature(__scratchProjected, context, underlying, false);
+            MethodFactory.WriteProjectedSignature(__scratchProjected, context, underlying, false);
             string projected = __scratchProjected.ToString();
             writer.Write("    ");
             writer.Write(projected);
@@ -438,7 +438,7 @@ internal static class AbiMethodBodyFactory
                 string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
                 string interopTypeName = CodeWriters.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
                 IndentedTextWriter __scratchProjectedTypeName = new();
-                CodeWriters.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
+                MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
                 string projectedTypeName = __scratchProjectedTypeName.ToString();
                 writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
                 writer.Write("        static extern ");
@@ -1074,12 +1074,12 @@ internal static class AbiMethodBodyFactory
 
             writer.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
             writer.Write("    public static unsafe ");
-            CodeWriters.WriteProjectionReturnType(writer, context, sig);
+            MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write(" ");
             writer.Write(mname);
             writer.Write("(WindowsRuntimeObjectReference thisReference");
             if (sig.Params.Count > 0) { writer.Write(", "); }
-            CodeWriters.WriteParameterList(writer, context, sig);
+            MethodFactory.WriteParameterList(writer, context, sig);
             writer.Write(")");
 
             // Emit the body if we can handle this case. Slot comes from the method's WinMD index.
@@ -1403,7 +1403,7 @@ internal static class AbiMethodBodyFactory
                 string callName = CodeWriters.GetParamName(p, paramNameOverride);
                 string interopTypeName = CodeWriters.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
                 IndentedTextWriter __scratchProjectedTypeName = new();
-                CodeWriters.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
+                MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
                 string projectedTypeName = __scratchProjectedTypeName.ToString();
                 writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
                 writer.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
@@ -2255,7 +2255,7 @@ internal static class AbiMethodBodyFactory
             {
                 string interopTypeName = CodeWriters.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
                 IndentedTextWriter __scratchProjectedTypeName = new();
-                CodeWriters.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
+                MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
                 string projectedTypeName = __scratchProjectedTypeName.ToString();
                 writer.Write(callIndent);
                 writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
@@ -2452,7 +2452,7 @@ internal static class AbiMethodBodyFactory
                 {
                     string interopTypeName = CodeWriters.EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
                     IndentedTextWriter __scratchProjectedTypeName = new();
-                    CodeWriters.WriteProjectedSignature(__scratchProjectedTypeName, context, rt, false);
+                    MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, rt, false);
                     string projectedTypeName = __scratchProjectedTypeName.ToString();
                     writer.Write(callIndent);
                     writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
@@ -2514,7 +2514,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(callIndent);
                 writer.Write("return ");
                 IndentedTextWriter __scratchProjected = new();
-                CodeWriters.WriteProjectedSignature(__scratchProjected, context, rt!, false);
+                MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt!, false);
                 string projected = __scratchProjected.ToString();
                 string abiType = CodeWriters.GetAbiPrimitiveType(context.Cache, rt!);
                 if (projected == abiType) { writer.Write("__retval;\n"); }

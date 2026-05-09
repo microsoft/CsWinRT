@@ -259,11 +259,11 @@ internal static partial class CodeWriters
                 writer.Write("\n");
                 if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
                 writer.Write("public static ");
-                WriteProjectionReturnType(writer, context, sig);
+                MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write(" ");
                 writer.Write(mname);
                 writer.Write("(");
-                WriteParameterList(writer, context, sig);
+                MethodFactory.WriteParameterList(writer, context, sig);
                 if (context.Settings.ReferenceProjection)
                 {
                     // method bodies become 'throw null' in reference projection mode.

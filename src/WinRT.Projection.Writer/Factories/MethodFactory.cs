@@ -11,7 +11,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <summary>
 /// Helpers for method/parameter/return type emission.
 /// </summary>
-internal static partial class CodeWriters
+internal static class MethodFactory
 {
     /// <summary>Writes the projected C# type for the given <paramref name="typeSig"/>.</summary>
     /// <param name="writer">The writer to emit to.</param>
@@ -27,22 +27,22 @@ internal static partial class CodeWriters
             if (isParameter)
             {
                 writer.Write("ReadOnlySpan<");
-                WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
+                CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
                 writer.Write(">");
             }
             else
             {
-                WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
+                CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
                 writer.Write("[]");
             }
             return;
         }
         if (typeSig is ByReferenceTypeSignature br)
         {
-            WriteProjectionType(writer, context, TypeSemanticsFactory.Get(br.BaseType));
+            CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(br.BaseType));
             return;
         }
-        WriteProjectionType(writer, context, TypeSemanticsFactory.Get(typeSig));
+        CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(typeSig));
     }
 
     /// <summary>Writes a parameter's projected type, applying the <see cref="ParamCategory"/>-specific transformations.</summary>
@@ -64,12 +64,12 @@ internal static partial class CodeWriters
                 break;
             case ParamCategory.PassArray:
                 writer.Write("ReadOnlySpan<");
-                WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
                 writer.Write(">");
                 break;
             case ParamCategory.FillArray:
                 writer.Write("Span<");
-                WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
                 writer.Write(">");
                 break;
             case ParamCategory.ReceiveArray:
@@ -79,7 +79,7 @@ internal static partial class CodeWriters
                         ?? (p.Type is ByReferenceTypeSignature br ? br.BaseType as SzArrayTypeSignature : null);
                     if (sz is not null)
                     {
-                        WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
+                        CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
                         writer.Write("[]");
                     }
                     else
@@ -149,6 +149,6 @@ internal static partial class CodeWriters
     public static string FormatField(FieldDefinition field)
     {
         if (field.Constant is null) { return string.Empty; }
-        return FormatConstant(field.Constant);
+        return CodeWriters.FormatConstant(field.Constant);
     }
 }

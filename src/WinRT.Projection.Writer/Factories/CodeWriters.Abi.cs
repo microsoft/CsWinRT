@@ -696,7 +696,7 @@ internal static partial class CodeWriters
         // Mapped value types (DateTime/TimeSpan) use the ABI type, not the projected type.
         if (IsMappedAbiValueType(sig)) { return GetMappedAbiTypeName(sig); }
         IndentedTextWriter __scratchProj = new();
-        WriteProjectedSignature(__scratchProj, context, sig, false);
+        MethodFactory.WriteProjectedSignature(__scratchProj, context, sig, false);
         return __scratchProj.ToString();
     }
 

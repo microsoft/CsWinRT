@@ -242,13 +242,13 @@ internal static class AbiInterfaceIDicFactory
             string mname = method.Name?.Value ?? string.Empty;
 
             writer.Write("\n");
-            CodeWriters.WriteProjectionReturnType(writer, context, sig);
+            MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write(" ");
             writer.Write(ccwIfaceName);
             writer.Write(".");
             writer.Write(mname);
             writer.Write("(");
-            CodeWriters.WriteParameterList(writer, context, sig);
+            MethodFactory.WriteParameterList(writer, context, sig);
             writer.Write(") => ((");
             writer.Write(ccwIfaceName);
             writer.Write(")(WindowsRuntimeObject)this).");
@@ -395,13 +395,13 @@ internal static class AbiInterfaceIDicFactory
             string mname = method.Name?.Value ?? string.Empty;
 
             writer.Write("\nunsafe ");
-            CodeWriters.WriteProjectionReturnType(writer, context, sig);
+            MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write(" ");
             writer.Write(ccwIfaceName);
             writer.Write(".");
             writer.Write(mname);
             writer.Write("(");
-            CodeWriters.WriteParameterList(writer, context, sig);
+            MethodFactory.WriteParameterList(writer, context, sig);
             writer.Write(")\n{\n");
             writer.Write("    var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
             writer.Write(ccwIfaceName);

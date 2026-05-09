@@ -70,7 +70,7 @@ internal static class AbiStructFactory
                 }
                 else
                 {
-                    CodeWriters.WriteProjectedSignature(writer, context, ft, false);
+                    MethodFactory.WriteProjectedSignature(writer, context, ft, false);
                 }
                 writer.Write(" ");
                 writer.Write(field.Name?.Value ?? string.Empty);
