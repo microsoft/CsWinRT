@@ -595,7 +595,7 @@ internal static partial class CodeWriters
             }
             if (!hasRefModeCtors)
             {
-                EmitSyntheticPrivateCtor(w, typeName);
+                EmitSyntheticPrivateCtor(w.Writer, typeName);
             }
         }
 

@@ -15,13 +15,18 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static partial class CodeWriters
 {
-    public static void WritePragmaDisableIL2026(TextWriter w)
+    /// <summary>Writes <c>#pragma warning disable IL2026</c>.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    public static void WritePragmaDisableIL2026(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer)
     {
-        w.Write("\n#pragma warning disable IL2026\n");
+        writer.Write("\n#pragma warning disable IL2026\n");
     }
-    public static void WritePragmaRestoreIL2026(TextWriter w)
+
+    /// <summary>Writes <c>#pragma warning restore IL2026</c>.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    public static void WritePragmaRestoreIL2026(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer)
     {
-        w.Write("\n#pragma warning restore IL2026\n");
+        writer.Write("\n#pragma warning restore IL2026\n");
     }
 
     /// <summary>

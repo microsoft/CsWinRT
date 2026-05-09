@@ -44,7 +44,7 @@ internal static partial class CodeWriters
             if (w.Settings.ReferenceProjection)
             {
                 // in ref mode the activation factory objref getter body is just 'throw null;'.
-                EmitRefModeObjRefGetterBody(w);
+                EmitRefModeObjRefGetterBody(w.Writer);
             }
             else
             {
@@ -285,7 +285,7 @@ internal static partial class CodeWriters
         // Invoke body is just 'throw null;' (no factory dispatch, no marshalling).
         if (w.Settings.ReferenceProjection)
         {
-            EmitRefModeInvokeBody(w);
+            EmitRefModeInvokeBody(w.Writer);
             return;
         }
 

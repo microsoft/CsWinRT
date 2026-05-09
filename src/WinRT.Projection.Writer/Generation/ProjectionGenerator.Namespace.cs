@@ -30,7 +30,7 @@ internal sealed partial class ProjectionGenerator
         // Phase 1: TypeMapGroup assembly attributes
         if (!_settings.ReferenceProjection)
         {
-            CodeWriters.WritePragmaDisableIL2026(w);
+            CodeWriters.WritePragmaDisableIL2026(writer);
             foreach (TypeDefinition type in members.Types)
             {
                 if (!_settings.Filter.Includes(type)) { continue; }
@@ -76,7 +76,7 @@ internal sealed partial class ProjectionGenerator
                         break;
                 }
             }
-            CodeWriters.WritePragmaRestoreIL2026(w);
+            CodeWriters.WritePragmaRestoreIL2026(writer);
         }
 
         // Phase 2: Projected types

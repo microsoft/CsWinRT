@@ -1,24 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using WindowsRuntime.ProjectionWriter.Writers;
+
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// Reference-projection stub emission helpers. In reference projection mode, all method/property/
 /// event bodies (and certain other constructs like static factory objref getters, activation
 /// factory objref getters, and the synthetic private ctor for classes without explicit
-/// constructors) collapse to <c>throw null</c>. Mirrors C++ <c>code_writers.h:1639/1655/1671/
-/// 1685/1699/1713/2755/2796/2217/2240/6851/9536</c>.
+/// constructors) collapse to <c>throw null</c>.
 /// </summary>
 internal static partial class CodeWriters
 {
     /// <summary>
     /// Emits the body of an <c>_objRef_*</c> property getter in reference projection mode.
-    /// (code_writers.h:2755 and 2796) which emit <c>{ get { throw null; } }</c> in ref mode.
     /// </summary>
-    public static void EmitRefModeObjRefGetterBody(TypeWriter w)
+    /// <param name="writer">The writer to emit to.</param>
+    public static void EmitRefModeObjRefGetterBody(IndentedTextWriter writer)
     {
-        w.Write("\n{\n    get\n    {\n        throw null;\n    }\n}\n");
+        writer.Write("\n{\n    get\n    {\n        throw null;\n    }\n}\n");
     }
 
     /// <summary>
@@ -26,19 +27,21 @@ internal static partial class CodeWriters
     /// projection mode to suppress the C# compiler's implicit public default constructor when
     /// no explicit ctors are emitted by <c>WriteAttributedTypes</c>.
     /// </summary>
-    public static void EmitSyntheticPrivateCtor(TypeWriter w, string typeName)
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="typeName">The type name to emit the synthetic constructor for.</param>
+    public static void EmitSyntheticPrivateCtor(IndentedTextWriter writer, string typeName)
     {
-        w.Write("\nprivate ");
-        w.Write(typeName);
-        w.Write("() { throw null; }\n");
+        writer.Write("\nprivate ");
+        writer.Write(typeName);
+        writer.Write("() { throw null; }\n");
     }
 
     /// <summary>
     /// Emits the body of a delegate factory <c>Invoke</c> method in reference projection mode.
-    /// factory delegate's <c>Invoke</c> body in ref mode.
     /// </summary>
-    public static void EmitRefModeInvokeBody(TypeWriter w)
+    /// <param name="writer">The writer to emit to.</param>
+    public static void EmitRefModeInvokeBody(IndentedTextWriter writer)
     {
-        w.Write("        throw null;\n    }\n}\n");
+        writer.Write("        throw null;\n    }\n}\n");
     }
 }
