@@ -378,7 +378,7 @@ internal static partial class CodeWriters
         {
             ParamInfo p = sig.Params[i];
             if (p.Type.IsGenericInstance()) { continue; } // already handled above
-            if (!IsRuntimeClassOrInterface(p.Type) && !p.Type.IsObject()) { continue; }
+            if (!IsRuntimeClassOrInterface(context.Cache, p.Type) && !p.Type.IsObject()) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             writer.Write("        using WindowsRuntimeObjectReferenceValue __");
@@ -442,7 +442,7 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-            if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
+            if (IsBlittablePrimitive(context.Cache, szArr.BaseType) || IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             hasNonBlittableArray = true;
             string raw = p.Parameter.Name ?? "param";
             string callName = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -567,7 +567,7 @@ internal static partial class CodeWriters
                 else if (isArr)
                 {
                     AsmResolver.DotNet.Signatures.TypeSignature elemT = ((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType;
-                    bool isBlittableElem = IsBlittablePrimitive(elemT) || IsAnyStruct(elemT);
+                    bool isBlittableElem = IsBlittablePrimitive(context.Cache, elemT) || IsAnyStruct(context.Cache, elemT);
                     bool isStringElem = elemT.IsString();
                     if (isBlittableElem) { writer.Write(pname); }
                     else { writer.Write("__"); writer.Write(raw); writer.Write("_span"); }
@@ -619,7 +619,7 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-            if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
+            if (IsBlittablePrimitive(context.Cache, szArr.BaseType) || IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             if (szArr.BaseType.IsString())
@@ -715,7 +715,7 @@ internal static partial class CodeWriters
             // For enums, cast to underlying type. For bool, cast to byte. For char, cast to ushort.
             // For string params, use the marshalled HString from the fixed block.
             // For runtime class / object / generic instance params, use __<name>.GetThisPtrUnsafe().
-            if (IsEnumType(p.Type))
+            if (IsEnumType(context.Cache, p.Type))
             {
                 // No cast needed: function pointer signature uses the projected enum type.
                 writer.Write(pname);
@@ -742,7 +742,7 @@ internal static partial class CodeWriters
                 writer.Write(raw);
                 writer.Write(".ConvertToUnmanagedUnsafe()");
             }
-            else if (IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
+            else if (IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
             {
                 writer.Write("__");
                 writer.Write(raw);
@@ -795,7 +795,7 @@ internal static partial class CodeWriters
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
                 if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-                if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
+                if (IsBlittablePrimitive(context.Cache, szArr.BaseType) || IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 if (szArr.BaseType.IsString())
                 {

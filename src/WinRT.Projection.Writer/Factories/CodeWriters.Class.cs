@@ -108,9 +108,9 @@ internal static partial class CodeWriters
         {
             if (impl.Interface is null) { continue; }
             TypeDefinition? ifaceTd = impl.Interface as TypeDefinition;
-            if (ifaceTd is null && _cacheRef is not null)
+            if (ifaceTd is null)
             {
-                try { ifaceTd = impl.Interface.Resolve(_cacheRef.RuntimeContext); }
+                try { ifaceTd = impl.Interface.Resolve(cache.RuntimeContext); }
                 catch { ifaceTd = null; }
             }
             if (ifaceTd is null) { continue; }

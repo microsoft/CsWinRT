@@ -259,7 +259,7 @@ internal static partial class CodeWriters
             bool isDefault = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
             if (!isDefault && IsFastAbiClass(type))
             {
-                TypeDefinition? implTypeDef = ResolveInterfaceTypeDef(impl.Interface);
+                TypeDefinition? implTypeDef = ResolveInterfaceTypeDef(context.Cache, impl.Interface);
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
                 {
                     continue;
@@ -280,7 +280,7 @@ internal static partial class CodeWriters
             bool isDefault2 = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
             if (!isDefault2 && IsFastAbiClass(type))
             {
-                TypeDefinition? implTypeDef = ResolveInterfaceTypeDef(impl.Interface);
+                TypeDefinition? implTypeDef = ResolveInterfaceTypeDef(context.Cache, impl.Interface);
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
                 {
                     continue;
@@ -350,7 +350,7 @@ internal static partial class CodeWriters
     private static void EmitTransitiveInterfaceObjRefs(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceRef, HashSet<string> emitted)
     {
         // Resolve the interface to its TypeDefinition; if cross-module, look it up in the cache.
-        TypeDefinition? ifaceTd = ResolveInterfaceTypeDef(ifaceRef);
+        TypeDefinition? ifaceTd = ResolveInterfaceTypeDef(context.Cache, ifaceRef);
         if (ifaceTd is null) { return; }
 
         // Compute a substitution context if the parent is a closed generic instance.

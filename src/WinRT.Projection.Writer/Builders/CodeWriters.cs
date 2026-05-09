@@ -379,16 +379,6 @@ internal static partial class CodeWriters
         }
         writer.Write("}\n");
     }
-    private static MetadataCache? _cacheRef;
-
-    /// <summary>Sets the cache reference used by writers that need source-file paths.</summary>
-    public static void SetMetadataCache(MetadataCache cache)
-    {
-        _cacheRef = cache;
-    }
-
-    /// <summary>Gets the metadata cache previously set via <see cref="SetMetadataCache"/>.</summary>
-    internal static MetadataCache? GetMetadataCache() => _cacheRef;
 
     /// <summary>Returns the camel-case form of <paramref name="name"/>.</summary>
     public static string ToCamelCase(string name)

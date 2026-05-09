@@ -48,9 +48,8 @@ internal static partial class CodeWriters
         bool isActivatable = !TypeCategorization.IsStatic(type) && type.HasDefaultConstructor();
 
         // Build the inheritance list: factory interfaces ([Activatable]/[Static]) only.
-        MetadataCache? cache = GetMetadataCache();
+        MetadataCache cache = context.Cache;
         List<TypeDefinition> factoryInterfaces = new();
-        if (cache is not null)
         {
             foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, cache))
             {

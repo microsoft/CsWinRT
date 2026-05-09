@@ -27,10 +27,6 @@ internal sealed partial class ProjectionGenerator
 
     public void Run()
     {
-        // Set the static cache reference for writers that need source-file paths
-        // (deprecated: will be removed in Pass 11 once writers consume an explicit context).
-        CodeWriters.SetMetadataCache(_cache);
-
         // Phase 1: discover the activatable runtime classes (component mode only).
         (HashSet<TypeDefinition> componentActivatable, Dictionary<string, HashSet<TypeDefinition>> componentByModule) = DiscoverComponentActivatableTypes();
 
