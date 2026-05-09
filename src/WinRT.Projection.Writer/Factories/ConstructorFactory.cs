@@ -233,7 +233,7 @@ internal static class ConstructorFactory
         if (isComposable)
         {
             // Composable Invoke signature is multi-line and includes baseInterface (in) +
-            // innerInterface (out). Mirrors truth output exactly.
+            // innerInterface (out).
             writer.WriteLine("    public override unsafe void Invoke(");
             writer.WriteLine("      WindowsRuntimeActivationArgsReference additionalParameters,");
             writer.WriteLine("      WindowsRuntimeObject baseInterface,");
@@ -332,7 +332,7 @@ internal static class ConstructorFactory
         }
 
         // For composable factories, marshal the additional `baseInterface` (which is a
-        // WindowsRuntimeObject parameter on Invoke, not an args field). Truth pattern:
+        // WindowsRuntimeObject parameter on Invoke, not an args field).
         //   using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
         if (isComposable)
         {

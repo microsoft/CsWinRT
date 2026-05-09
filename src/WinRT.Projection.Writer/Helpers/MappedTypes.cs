@@ -6,7 +6,6 @@ using System.Collections.Generic;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Mirrors the C++ <c>mapped_type</c> struct in <c>helpers.h</c>.
 /// Maps a Windows Runtime type to the corresponding .NET type.
 /// </summary>
 internal sealed record MappedType(
@@ -18,7 +17,7 @@ internal sealed record MappedType(
     bool EmitAbi = false);
 
 /// <summary>
-/// Static lookup table for Windows Runtime → .NET type mappings (from <c>helpers.h</c>).
+/// Static lookup table for Windows Runtime → .NET type mappings
 /// </summary>
 internal static class MappedTypes
 {

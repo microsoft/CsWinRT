@@ -38,7 +38,6 @@ internal static class ClassFactory
     /// <summary>
     /// Returns the fast-abi class type for <paramref name="iface"/> if the interface is
     /// exclusive_to a class marked <c>[FastAbi]</c>; otherwise <c>null</c>.
-    /// <c>find_fast_abi_class_type</c> in <c>helpers.h</c>.
     /// </summary>
     public static TypeDefinition? FindFastAbiClassType(MetadataCache cache, TypeDefinition iface)
     {

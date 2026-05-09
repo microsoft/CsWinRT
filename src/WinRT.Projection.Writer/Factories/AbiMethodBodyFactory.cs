@@ -328,7 +328,7 @@ internal static class AbiMethodBodyFactory
             ParamInfo p = sig.Params[i];
             if (p.Type.IsNullableT())
             {
-                // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged. Mirrors truth pattern.
+                // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged.
                 string rawName = p.Parameter.Name ?? "param";
                 string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
                 AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
@@ -885,7 +885,7 @@ internal static class AbiMethodBodyFactory
             else
             {
                 // Non-generic delegate handler: the EventSource lives in the same ABI namespace
-                // as this Methods class, so we use just the short name (matches truth output).
+                // as this Methods class, so we use just the short name
                 string delegateName = string.Empty;
                 if (evtSig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
                 {
@@ -1107,7 +1107,7 @@ internal static class AbiMethodBodyFactory
             }
             else if (p.Type.IsNullableT())
             {
-                // Nullable<T> param: use <T>Marshaller.BoxToUnmanaged. Mirrors truth pattern.
+                // Nullable<T> param: use <T>Marshaller.BoxToUnmanaged.
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
@@ -1396,7 +1396,7 @@ internal static class AbiMethodBodyFactory
         string indent = needsTryFinally ? "            " : "        ";
 
         // Inside try (if applicable): assign complex-struct input locals via marshaller.
-        // Mirrors truth pattern: '__value = ProfileUsageMarshaller.ConvertToUnmanaged(value);'
+        //.: '__value = ProfileUsageMarshaller.ConvertToUnmanaged(value);'
         // Includes both 'in' (ParamCategory.In) and 'in T' (ParamCategory.Ref) forms.
         for (int i = 0; i < sig.Params.Count; i++)
         {
@@ -1449,7 +1449,7 @@ internal static class AbiMethodBodyFactory
         }
         // Emit typed fixed lines for Ref params.
         // Skip Ref+ComplexStruct: those are marshalled via __local (no fixed needed) and
-        // passed as &__local at the call site, mirroring C++ tool's is_value_type_in path.
+        // passed as &__local at the call site (the is-value-type-in path).
         int typedFixedCount = 0;
         for (int i = 0; i < sig.Params.Count; i++)
         {
@@ -1812,7 +1812,7 @@ internal static class AbiMethodBodyFactory
             AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
 
             // For Out generic instance: emit inline UnsafeAccessor to ConvertToManaged_<name>
-            // before the writeback. Mirrors the truth pattern (e.g. Collection1HandlerInvoke
+            // before the writeback. (e.g. Collection1HandlerInvoke
             // emits the accessor inside try, right before the assignment).
             if (uOut.IsGenericInstance())
             {
@@ -1966,7 +1966,7 @@ internal static class AbiMethodBodyFactory
             {
                 if (rt.IsNullableT())
                 {
-                    // Nullable<T> return: use <T>Marshaller.UnboxToManaged. Mirrors truth pattern;
+                    // Nullable<T> return: use <T>Marshaller.UnboxToManaged.;
                     // there is no Nullable<T>Marshaller, the inner-T marshaller has UnboxToManaged.
                     AsmResolver.DotNet.Signatures.TypeSignature inner = rt.GetNullableInnerType()!;
                     string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);

@@ -183,7 +183,6 @@ internal static class AbiTypeHelpers
 
     /// <summary>
     /// Returns the metadata-derived name for the return parameter, or the C++ default <c>__return_value__</c>.
-    /// Mirrors <c>method_signature::return_param_name()</c> in <c>helpers.h</c>.
     /// </summary>
     internal static string GetReturnParamName(MethodSig sig)
     {
@@ -432,7 +431,7 @@ internal static class AbiTypeHelpers
     }
 
     /// <summary>Returns the marshaller name for the inner type T of <c>Nullable&lt;T&gt;</c>.
-    /// Mirrors the truth pattern: e.g. for <c>Nullable&lt;DateTimeOffset&gt;</c> returns
+    ///.: e.g. for <c>Nullable&lt;DateTimeOffset&gt;</c> returns
     /// <c>global::ABI.System.DateTimeOffsetMarshaller</c>; for primitives like <c>Nullable&lt;int&gt;</c>
     /// returns <c>global::ABI.System.Int32Marshaller</c>.</summary>
     internal static string GetNullableInnerMarshallerName(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature innerType)
@@ -739,7 +738,7 @@ internal static class AbiTypeHelpers
                 _ => GetAbiFundamentalTypeFromCorLib(corlib.ElementType),
             };
         }
-        // Enum: use the projected enum type as the ABI signature (truth pattern).
+        // Enum: use the projected enum type as the ABI signature
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
         {
             TypeDefinition? def = td.Type as TypeDefinition;

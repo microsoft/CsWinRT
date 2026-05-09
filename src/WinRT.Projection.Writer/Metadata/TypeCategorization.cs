@@ -20,7 +20,6 @@ internal enum TypeCategory
 
 /// <summary>
 /// Static type categorization helpers, mirroring <c>winmd::reader::get_category</c> and various
-/// <c>helpers.h</c> functions like <c>is_static</c>, <c>is_attribute_type</c>, etc.
 /// </summary>
 internal static class TypeCategorization
 {

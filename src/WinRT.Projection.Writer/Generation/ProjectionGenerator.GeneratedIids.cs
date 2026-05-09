@@ -15,7 +15,6 @@ internal sealed partial class ProjectionGenerator
     /// <summary>
     /// Writes the <c>GeneratedInterfaceIIDs.cs</c> file containing the IID GUID property
     /// definitions for every projected interface, delegate, enum, struct, and runtime class.
-    /// Mirrors the corresponding logic from <c>main.cpp</c>.
     /// </summary>
     /// <remarks>
     /// Skipped entirely in reference-projection mode (no IIDs are needed in the public API surface).

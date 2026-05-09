@@ -50,7 +50,6 @@ internal abstract record TypeSemantics
 
 /// <summary>
 /// Static helpers for converting AsmResolver type signatures into <see cref="TypeSemantics"/> instances.
-/// Mirrors <c>get_type_semantics</c> in <c>helpers.h</c>.
 /// </summary>
 internal static class TypeSemanticsFactory
 {

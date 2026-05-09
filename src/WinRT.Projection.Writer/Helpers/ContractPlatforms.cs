@@ -7,7 +7,6 @@ namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// Maps Windows Runtime API contracts to their first available Windows SDK platform version.
-/// Mirrors the C++ <c>contract_mappings</c> table in <c>helpers.h</c>.
 /// </summary>
 internal static class ContractPlatforms
 {

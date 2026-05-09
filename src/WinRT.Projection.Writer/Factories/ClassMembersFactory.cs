@@ -163,7 +163,7 @@ internal static class ClassMembersFactory
             }
 
             // For overridable properties, emit an explicit interface implementation that
-            // delegates to the protected property. Mirrors truth pattern:
+            // delegates to the protected property.:
             //   T InterfaceName.PropName { get => PropName; }
             //   T InterfaceName.PropName { set => PropName = value; }
             if (s.IsOverridable && s.OverridableInterface is not null)
@@ -408,7 +408,7 @@ internal static class ClassMembersFactory
         bool inlineEventSourceField = !isFastAbiExclusive || isDefaultInterface;
 
         // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.Foundation.IDeferralMethods")
-        // — note this is the ungenerified Methods class for generic interfaces (matches truth output).
+        // — note this is the ungenerified Methods class for generic interfaces
         // The _objRef_ field name uses the full instantiated interface name so generic instantiations
         // (e.g. IAsyncOperation<uint>) get a per-instantiation field.
         IndentedTextWriter __scratchAbiClass = new();
@@ -465,7 +465,7 @@ internal static class ClassMembersFactory
 
             // Detect 'bool Equals(object obj)' and 'int GetHashCode()' that override their
             // System.Object counterparts.h:566 (is_object_equals_method) and
-            // helpers.h:625 (is_object_hashcode_method) +: matching
+            //matching
             // signature and return type -> 'override'; matching name only -> 'new'.
             if (name == "Equals" && sig.Params.Count == 1)
             {

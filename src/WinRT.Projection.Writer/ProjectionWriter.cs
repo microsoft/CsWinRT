@@ -8,7 +8,6 @@ namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// Public API for generating C# Windows Runtime projections from <c>.winmd</c> metadata.
-/// 
 /// <para>
 /// Usage: call <see cref="Run"/> with the desired options. The tool will generate
 /// <c>.cs</c> files in the specified output folder, one per Windows Runtime namespace.

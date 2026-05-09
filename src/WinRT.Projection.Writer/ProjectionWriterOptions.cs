@@ -8,7 +8,6 @@ namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// Input parameters for <see cref="ProjectionWriter"/>. CLI options
-/// from <c>main.cpp</c>'s <c>process_args()</c>.
 /// </summary>
 public sealed class ProjectionWriterOptions
 {

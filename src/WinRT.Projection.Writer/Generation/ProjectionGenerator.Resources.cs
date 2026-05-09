@@ -43,7 +43,7 @@ internal sealed partial class ProjectionGenerator
                 content = $"#define UAC_VERSION_{uapContractVersion}\n" + content;
             }
 
-            // See main.cpp where 'write_file_header(ws);' is called before each base string is written.
+            // Each base resource gets the standard auto-generated file header prepended.
             IndentedTextWriter headerWriter = new();
             MetadataAttributeFactory.WriteFileHeader(headerWriter);
             string header = headerWriter.FlushToString();
