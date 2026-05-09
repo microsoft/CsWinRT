@@ -18,7 +18,6 @@ internal sealed class Settings
     public HashSet<string> AdditionExclude { get; } = new();
     public TypeFilter Filter { get; set; } = TypeFilter.Empty;
     public TypeFilter AdditionFilter { get; set; } = TypeFilter.Empty;
-    public bool NetstandardCompat { get; set; }
     public bool Component { get; set; }
     public bool Internal { get; set; }
     public bool Embedded { get; set; }

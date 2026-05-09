@@ -293,7 +293,7 @@ internal static partial class CodeWriters
             // classes, skip non-default exclusive interfaces — their methods dispatch through
             // the default interface's vtable so a separate objref is unnecessary.
             bool isDefault = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute");
-            if (!isDefault && IsFastAbiClass(type, w.Settings))
+            if (!isDefault && IsFastAbiClass(type))
             {
                 TypeDefinition? implTypeDef = ResolveInterfaceTypeDef(impl.Interface);
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
@@ -314,7 +314,7 @@ internal static partial class CodeWriters
             }
             // Same fast-abi guard as the first pass.
             bool isDefault2 = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute");
-            if (!isDefault2 && IsFastAbiClass(type, w.Settings))
+            if (!isDefault2 && IsFastAbiClass(type))
             {
                 TypeDefinition? implTypeDef = ResolveInterfaceTypeDef(impl.Interface);
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))

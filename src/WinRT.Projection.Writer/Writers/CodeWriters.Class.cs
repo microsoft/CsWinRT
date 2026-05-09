@@ -12,12 +12,11 @@ namespace WindowsRuntime.ProjectionWriter;
 internal static partial class CodeWriters
 {
     /// <summary>Mirrors C++ <c>is_fast_abi_class</c>.</summary>
-    public static bool IsFastAbiClass(TypeDefinition type, Settings settings)
+    public static bool IsFastAbiClass(TypeDefinition type)
     {
-        // Fast ABI is enabled when the type is marked [FastAbi] and netstandard_compat is off
-        // (CsWinRT 3.0 always has netstandard_compat = false, but we keep the gate for fidelity).
-        return !settings.NetstandardCompat &&
-               TypeCategorization.HasAttribute(type, "Windows.Foundation.Metadata", "FastAbiAttribute");
+        // Fast ABI is enabled when the type is marked [FastAbi]. (CsWinRT 3.0 has no
+        // netstandard_compat gate -- it was always false in the C# port.)
+        return TypeCategorization.HasAttribute(type, "Windows.Foundation.Metadata", "FastAbiAttribute");
     }
 
     /// <summary>Mirrors C++ <c>write_class_modifiers</c>.</summary>
@@ -44,7 +43,7 @@ internal static partial class CodeWriters
         if (_cacheRef is null) { return null; }
         TypeDefinition? exclusiveToClass = GetExclusiveToType(iface);
         if (exclusiveToClass is null) { return null; }
-        if (!IsFastAbiClass(exclusiveToClass, GetSettings(iface))) { return null; }
+        if (!IsFastAbiClass(exclusiveToClass)) { return null; }
         return exclusiveToClass;
     }
 
@@ -97,10 +96,7 @@ internal static partial class CodeWriters
 
     // We don't have direct access to the active Settings from a static helper that only takes
     // a TypeDefinition. The fast-abi flag is purely determined by the [FastAbiAttribute] (the
-    // netstandard_compat gate is always false in CsWinRT 3.0). Pass an empty Settings stand-in
-    // so the IsFastAbiClass check evaluates only the attribute presence.
-    private static Settings GetSettings(TypeDefinition _) => s_emptySettingsForFastAbi;
-    private static readonly Settings s_emptySettingsForFastAbi = new() { NetstandardCompat = false };
+    // netstandard_compat gate is always false in CsWinRT 3.0 -- the flag has been removed).
 
     /// <summary>
     /// Returns the [Default] interface and the [ExclusiveTo] interfaces (sorted) for fast ABI.

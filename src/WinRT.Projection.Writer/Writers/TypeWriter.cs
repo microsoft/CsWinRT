@@ -89,10 +89,7 @@ using static System.Runtime.InteropServices.ComWrappers;
 
     public void WriteBeginAbiNamespace()
     {
-        if (!Settings.NetstandardCompat)
-        {
-            Write("\n#pragma warning disable CA1416");
-        }
+        Write("\n#pragma warning disable CA1416");
         Write("\nnamespace ABI.");
         Write(CurrentNamespace);
         Write("\n{\n");
@@ -102,10 +99,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     public void WriteEndAbiNamespace()
     {
         Write("}\n");
-        if (!Settings.NetstandardCompat)
-        {
-            Write("#pragma warning restore CA1416\n");
-        }
+        Write("#pragma warning restore CA1416\n");
         InAbiNamespace = false;
     }
 }
