@@ -262,12 +262,12 @@ internal static partial class CodeWriters
     /// Returns true if the given interface implementation should appear in the class's inheritance list
     /// (i.e., it has [Overridable], or is not [ExclusiveTo], or includeExclusiveInterface is set).
     /// </summary>
-    private static bool IsInterfaceInInheritanceList(InterfaceImplementation impl, bool includeExclusiveInterface)
+    private static bool IsInterfaceInInheritanceList(MetadataCache cache, InterfaceImplementation impl, bool includeExclusiveInterface)
     {
         if (impl.Interface is null) { return false; }
         if (impl.IsOverridable()) { return true; }
         if (includeExclusiveInterface) { return true; }
-        TypeDefinition? td = ResolveInterface(impl.Interface);
+        TypeDefinition? td = ResolveInterface(cache, impl.Interface);
         if (td is null) { return true; }
         return !TypeCategorization.IsExclusiveTo(td);
     }
@@ -283,7 +283,7 @@ internal static partial class CodeWriters
             if (impl.Interface is null) { continue; }
 
             // Resolve TypeRef to TypeDef using our cache
-            TypeDefinition? ifaceType = ResolveInterface(impl.Interface);
+            TypeDefinition? ifaceType = ResolveInterface(context.Cache, impl.Interface);
             if (ifaceType is null) { continue; }
 
             if (writtenInterfaces.Contains(ifaceType)) { continue; }
@@ -333,7 +333,7 @@ internal static partial class CodeWriters
             // '&& !settings.reference_projection' in the corresponding condition). The
             // 'internal new GetDefaultInterface()' helper IS emitted in both modes since
             // it's referenced by overrides on derived classes.
-            if (IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false) && !context.Settings.ReferenceProjection)
+            if (IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false) && !context.Settings.ReferenceProjection)
             {
                 string giObjRefName = GetObjRefName(context, substitutedInterface);
                 writer.Write("\nWindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
@@ -392,14 +392,13 @@ internal static partial class CodeWriters
         }
     }
 
-    private static TypeDefinition? ResolveInterface(ITypeDefOrRef typeRef)
+    private static TypeDefinition? ResolveInterface(MetadataCache cache, ITypeDefOrRef typeRef)
     {
         if (typeRef is TypeDefinition td) { return td; }
-        if (_cacheRef is null) { return null; }
         // Try the runtime context resolver first (handles cross-module references via the resolver)
         try
         {
-            TypeDefinition? resolved = typeRef.Resolve(_cacheRef.RuntimeContext);
+            TypeDefinition? resolved = typeRef.Resolve(cache.RuntimeContext);
             if (resolved is not null) { return resolved; }
         }
         catch
@@ -411,11 +410,11 @@ internal static partial class CodeWriters
         {
             (string ns, string name) = tr.Names();
             string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
-            return _cacheRef.Find(fullName);
+            return cache.Find(fullName);
         }
         if (typeRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
-            return ResolveInterface(gi.GenericType);
+            return ResolveInterface(cache, gi.GenericType);
         }
         return null;
     }

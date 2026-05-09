@@ -249,7 +249,7 @@ internal static partial class CodeWriters
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            if (!IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false)
+            if (!IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
                 && !IsInterfaceForObjRef(impl))
             {
                 continue;
@@ -271,7 +271,7 @@ internal static partial class CodeWriters
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            if (!IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false)
+            if (!IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
                 && !IsInterfaceForObjRef(impl))
             {
                 continue;

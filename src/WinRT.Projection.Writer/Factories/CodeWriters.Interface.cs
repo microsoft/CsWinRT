@@ -85,7 +85,7 @@ internal static partial class CodeWriters
             }
             else
             {
-                TypeDefinition? resolved = ResolveInterface(impl.Interface);
+                TypeDefinition? resolved = ResolveInterface(context.Cache, impl.Interface);
                 if (resolved is not null)
                 {
                     isExclusive = TypeCategorization.IsExclusiveTo(resolved);
@@ -210,7 +210,7 @@ internal static partial class CodeWriters
             // name exists on a base interface (typically the getter-only counterpart). This hides
             // the inherited member.
             string newKeyword = (getter is null && setter is not null
-                && FindPropertyInBaseInterfaces(type, prop.Name?.Value ?? string.Empty))
+                && FindPropertyInBaseInterfaces(context.Cache, type, prop.Name?.Value ?? string.Empty))
                 ? "new " : string.Empty;
             string propType = WritePropType(context, prop);
             writer.Write("\n");
@@ -239,19 +239,19 @@ internal static partial class CodeWriters
     /// a property with that name (used to decide whether a setter-only property in a derived
     /// interface needs the <c>new</c> modifier to hide the base getter).
     /// </summary>
-    private static bool FindPropertyInBaseInterfaces(TypeDefinition type, string propName)
+    private static bool FindPropertyInBaseInterfaces(MetadataCache cache, TypeDefinition type, string propName)
     {
         if (string.IsNullOrEmpty(propName)) { return false; }
         System.Collections.Generic.HashSet<TypeDefinition> visited = new();
-        return FindPropertyInBaseInterfacesRecursive(type, propName, visited);
+        return FindPropertyInBaseInterfacesRecursive(cache, type, propName, visited);
     }
 
-    private static bool FindPropertyInBaseInterfacesRecursive(TypeDefinition type, string propName, System.Collections.Generic.HashSet<TypeDefinition> visited)
+    private static bool FindPropertyInBaseInterfacesRecursive(MetadataCache cache, TypeDefinition type, string propName, System.Collections.Generic.HashSet<TypeDefinition> visited)
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            TypeDefinition? baseIface = ResolveInterface(impl.Interface);
+            TypeDefinition? baseIface = ResolveInterface(cache, impl.Interface);
             if (baseIface is null) { continue; }
             // Skip the original setter-defining interface itself. Also dedupe via the visited set.
             if (baseIface == type) { continue; }
@@ -260,7 +260,7 @@ internal static partial class CodeWriters
             {
                 if ((prop.Name?.Value ?? string.Empty) == propName) { return true; }
             }
-            if (FindPropertyInBaseInterfacesRecursive(baseIface, propName, visited)) { return true; }
+            if (FindPropertyInBaseInterfacesRecursive(cache, baseIface, propName, visited)) { return true; }
         }
         return false;
     }
@@ -269,19 +269,19 @@ internal static partial class CodeWriters
     /// Like <see cref="FindPropertyInBaseInterfaces"/> but returns the base interface where the
     /// property was found (or <c>null</c> if not found).
     /// </summary>
-    public static TypeDefinition? FindPropertyInterfaceInBases(TypeDefinition type, string propName)
+    public static TypeDefinition? FindPropertyInterfaceInBases(MetadataCache cache, TypeDefinition type, string propName)
     {
         if (string.IsNullOrEmpty(propName)) { return null; }
         System.Collections.Generic.HashSet<TypeDefinition> visited = new();
-        return FindPropertyInterfaceInBasesRecursive(type, propName, visited);
+        return FindPropertyInterfaceInBasesRecursive(cache, type, propName, visited);
     }
 
-    private static TypeDefinition? FindPropertyInterfaceInBasesRecursive(TypeDefinition type, string propName, System.Collections.Generic.HashSet<TypeDefinition> visited)
+    private static TypeDefinition? FindPropertyInterfaceInBasesRecursive(MetadataCache cache, TypeDefinition type, string propName, System.Collections.Generic.HashSet<TypeDefinition> visited)
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            TypeDefinition? baseIface = ResolveInterface(impl.Interface);
+            TypeDefinition? baseIface = ResolveInterface(cache, impl.Interface);
             if (baseIface is null) { continue; }
             if (baseIface == type) { continue; }
             if (!visited.Add(baseIface)) { continue; }
@@ -289,7 +289,7 @@ internal static partial class CodeWriters
             {
                 if ((prop.Name?.Value ?? string.Empty) == propName) { return baseIface; }
             }
-            TypeDefinition? deeper = FindPropertyInterfaceInBasesRecursive(baseIface, propName, visited);
+            TypeDefinition? deeper = FindPropertyInterfaceInBasesRecursive(cache, baseIface, propName, visited);
             if (deeper is not null) { return deeper; }
         }
         return null;

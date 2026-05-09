@@ -2748,7 +2748,7 @@ internal static partial class CodeWriters
                 //.
                 if (getter is null)
                 {
-                    TypeDefinition? baseIfaceWithGetter = FindPropertyInterfaceInBases(type, pname);
+                    TypeDefinition? baseIfaceWithGetter = FindPropertyInterfaceInBases(context.Cache, type, pname);
                     if (baseIfaceWithGetter is not null)
                     {
                         writer.Write("    get { return ((");
