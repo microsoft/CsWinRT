@@ -30,7 +30,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!-- We don't need XML documentation warnings for the internals here -->
-    <NoWarn>$(NoWarn);CS1591;CS1573;CS1574;CS1712;CS1734;IDE0060;IDE0059;IDE0010;IDE0022;IDE0028;IDE0046;IDE0072;IDE0078;IDE0058</NoWarn>
+    <NoWarn>$(NoWarn);IDE0060;IDE0059;IDE0010;IDE0022;IDE0028;IDE0046;IDE0072;IDE0078;IDE0058</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -183,6 +183,10 @@ internal static class ConstructorFactory
     }
 
     /// <summary>Emits the <c>private readonly ref struct &lt;Name&gt;Args(args...) {...}</c>.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="sig">The factory method signature whose parameters are turned into struct fields.</param>
+    /// <param name="argsName">The simple name of the emitted args struct.</param>
     /// <param name="userParamCount">If &gt;= 0, only emit the first <paramref name="userParamCount"/>
     /// params (used for composable factories where the trailing baseInterface/innerInterface params
     /// are consumed by the callback Invoke signature directly, not stored in args).</param>
@@ -211,10 +215,18 @@ internal static class ConstructorFactory
     }
 
     /// <summary>Emits the <c>private sealed class &lt;Name&gt; : WindowsRuntimeActivationFactoryCallback.DerivedSealed</c>.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="sig">The factory method signature.</param>
+    /// <param name="callbackName">The simple name of the emitted callback class.</param>
+    /// <param name="argsName">The simple name of the args struct previously emitted by <see cref="EmitFactoryArgsStruct"/>.</param>
+    /// <param name="factoryObjRefName">The name of the static lazy <c>WindowsRuntimeObjectReference</c> property holding the activation factory.</param>
+    /// <param name="factoryMethodIndex">The vtable slot of the factory method on the activation factory interface.</param>
     /// <param name="isComposable">When true, emit the DerivedComposed callback variant whose
     /// Invoke signature includes the additional <c>WindowsRuntimeObject baseInterface</c> +
     /// <c>out void* innerInterface</c> params. Iteration over user params is bounded by
     /// <paramref name="userParamCount"/> (defaults to all params).</param>
+    /// <param name="userParamCount">If &gt;= 0, only emit the first <paramref name="userParamCount"/> user params (used for composable factories).</param>
     private static void EmitFactoryCallbackClass(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, string callbackName, string argsName, string factoryObjRefName, int factoryMethodIndex, bool isComposable = false, int userParamCount = -1)
     {
         int paramCount = userParamCount >= 0 ? userParamCount : sig.Params.Count;

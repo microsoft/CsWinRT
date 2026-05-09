@@ -182,6 +182,9 @@ internal static class ObjRefNameGenerator
     /// Emits the [UnsafeAccessor] extern method declaration that exposes the IID for a generic
     /// interface instantiation.
     /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="gi">The generic interface instantiation whose IID accessor is being emitted.</param>
     /// <param name="isInNullableContext">When <c>true</c>, the accessor's parameter type is
     /// <c>object?</c> (used inside <c>#nullable enable</c> regions); otherwise <c>object</c>.</param>
     internal static void EmitUnsafeAccessorForIid(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
@@ -282,6 +285,11 @@ internal static class ObjRefNameGenerator
         }
     }
     /// <summary>Emits an _objRef_ field for a single interface impl reference.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="ifaceRef">The interface reference being objref-d.</param>
+    /// <param name="emitted">A set tracking objref names already emitted into the current class (deduplication).</param>
+    /// <param name="isDefault">When true, the interface is the runtime class's default interface (which the WindowsRuntimeObject base already exposes).</param>
     /// <param name="useSimplePattern">When true, emit the simple expression-bodied form
     /// <c>=> NativeObjectReference</c>. Otherwise emit the lazy MakeObjectReference pattern.</param>
     private static void EmitObjRefForInterface(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceRef, HashSet<string> emitted, bool isDefault, bool useSimplePattern = false)

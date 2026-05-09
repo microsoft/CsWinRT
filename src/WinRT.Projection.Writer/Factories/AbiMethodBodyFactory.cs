@@ -956,12 +956,15 @@ internal static class AbiMethodBodyFactory
     /// Emits a real method body for the cases we can fully marshal, otherwise emits
     /// the 'throw null!' stub. Trailing newline is included.
     /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="sig">The interface method signature being emitted.</param>
+    /// <param name="slot">The vtable slot of the method on the runtime interface.</param>
+    /// <param name="paramNameOverride">When provided, overrides the default 'thisReference' parameter name (used by FastAbi-merged Methods classes).</param>
     /// <param name="isNoExcept">When true, the vtable call is emitted WITHOUT the
-    /// <c>RestrictedErrorInfo.ThrowExceptionForHR(...)</c> wrap. Mirrors C++
-    /// <c>code_writers.h:6725</c> which checks <c>has_noexcept_attr</c>
-    /// (<c>is_noexcept(MethodDef)</c> / <c>is_noexcept(Property)</c> in <c>helpers.h:41-49</c>):
-    /// methods/properties annotated with <c>[Windows.Foundation.Metadata.NoExceptionAttribute]</c>
-    /// (or remove-overload methods) contractually return <c>S_OK</c>, so the wrap is omitted.</param>
+    /// <c>RestrictedErrorInfo.ThrowExceptionForHR(...)</c> wrap (methods/properties annotated with
+    /// <c>[Windows.Foundation.Metadata.NoExceptionAttribute]</c>, or remove-overload methods,
+    /// contractually return <c>S_OK</c>).</param>
     internal static void EmitAbiMethodBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
