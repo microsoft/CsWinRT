@@ -6,19 +6,24 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// Class member emission: walks implemented interfaces and emits the public/protected
-/// instance methods, properties, and events (mirrors C++ <c>write_class_members</c>).
+/// instance methods, properties, and events.
 /// </summary>
 internal static partial class CodeWriters
 {
+    /// <summary>Primary <see cref="IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> overload of <see cref="WriteClassMembers(TypeWriter, TypeDefinition)"/>.</summary>
+    public static void WriteClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+        => WriteClassMembers(new TypeWriter(writer, context), type);
+
     /// <summary>
     /// Emits all instance members (methods, properties, events) inherited from implemented interfaces.
-    /// declarations and per-interface objref getters are emitted, but non-mapped instance
-    /// method/property/event bodies are emitted as <c>=> throw null;</c> stubs.
+    /// In reference-projection mode, type declarations and per-interface objref getters are
+    /// emitted, but non-mapped instance method/property/event bodies are emitted as <c>=> throw null;</c> stubs.
     /// </summary>
     public static void WriteClassMembers(TypeWriter w, TypeDefinition type)
     {

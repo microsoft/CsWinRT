@@ -5,17 +5,21 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Activator/composer constructor emission. Mirrors C++ <c>write_factory_constructors</c>
-/// and <c>write_composable_constructors</c>.
+/// Activator/composer constructor emission.
 /// </summary>
 internal static partial class CodeWriters
 {
+    /// <summary>Primary <see cref="IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> overload of <see cref="WriteAttributedTypes(TypeWriter, TypeDefinition)"/>.</summary>
+    public static void WriteAttributedTypes(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType)
+        => WriteAttributedTypes(new TypeWriter(writer, context), classType);
+
     /// <summary>
-    /// for the given runtime class.
+    /// Emits the activator and composer constructor wrappers for the given runtime class.
     /// </summary>
     public static void WriteAttributedTypes(TypeWriter w, TypeDefinition classType)
     {
@@ -76,8 +80,11 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>
-    /// </summary>
+    /// <summary>Primary <see cref="IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> overload of <see cref="WriteFactoryConstructors(TypeWriter, TypeDefinition?, TypeDefinition)"/>.</summary>
+    public static void WriteFactoryConstructors(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition? factoryType, TypeDefinition classType)
+        => WriteFactoryConstructors(new TypeWriter(writer, context), factoryType, classType);
+
+    /// <summary>Emits the public constructors generated from a [Activatable] factory type.</summary>
     public static void WriteFactoryConstructors(TypeWriter w, TypeDefinition? factoryType, TypeDefinition classType)
     {
         string typeName = classType.Name?.Value ?? string.Empty;
@@ -852,6 +859,10 @@ internal static partial class CodeWriters
         if (defaultIface is null) { return "default(global::System.Guid)"; }
         return w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, defaultIface)));
     }
+
+    /// <summary>Primary <see cref="IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> overload of <see cref="WriteComposableConstructors(TypeWriter, TypeDefinition?, TypeDefinition, string)"/>.</summary>
+    public static void WriteComposableConstructors(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition? composableType, TypeDefinition classType, string visibility)
+        => WriteComposableConstructors(new TypeWriter(writer, context), composableType, classType, visibility);
 
     /// <summary>
     /// Emits:
