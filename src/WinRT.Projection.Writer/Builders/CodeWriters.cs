@@ -98,7 +98,7 @@ internal static partial class CodeWriters
         }
         WriteWinRTMetadataAttribute(writer, type, context.Cache);
         WriteValueTypeWinRTClassNameAttribute(writer, context, type);
-        WriteTypeCustomAttributes(writer, context, type, true);
+        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
         WriteComWrapperMarshallerAttribute(writer, context, type);
         WriteWinRTReferenceTypeAttribute(writer, context, type);
 
@@ -118,7 +118,7 @@ internal static partial class CodeWriters
             string fieldName = field.Name?.Value ?? string.Empty;
             string constantValue = FormatConstant(field.Constant);
             // Emits per-enum-field [SupportedOSPlatform] when the field has a [ContractVersion].
-            WritePlatformAttribute(writer, context, field);
+            CustomAttributeFactory.WritePlatformAttribute(writer, context, field);
             writer.Write(fieldName);
             writer.Write(" = unchecked((");
             writer.Write(enumUnderlyingType);
@@ -190,7 +190,7 @@ internal static partial class CodeWriters
         // Header attributes
         WriteWinRTMetadataAttribute(writer, type, context.Cache);
         WriteValueTypeWinRTClassNameAttribute(writer, context, type);
-        WriteTypeCustomAttributes(writer, context, type, true);
+        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
         WriteComWrapperMarshallerAttribute(writer, context, type);
         WriteWinRTReferenceTypeAttribute(writer, context, type);
         writer.Write("public");
@@ -308,7 +308,7 @@ internal static partial class CodeWriters
         if (context.Settings.Component) { return; }
 
         string typeName = type.Name?.Value ?? string.Empty;
-        WriteTypeCustomAttributes(writer, context, type, false);
+        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
         writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
         writer.Write(" enum ");
         writer.Write(typeName);
@@ -325,7 +325,7 @@ internal static partial class CodeWriters
 
         writer.Write("\n");
         WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        WriteTypeCustomAttributes(writer, context, type, false);
+        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
         WriteComWrapperMarshallerAttribute(writer, context, type);
         if (!context.Settings.ReferenceProjection)
         {
@@ -350,7 +350,7 @@ internal static partial class CodeWriters
         string typeName = type.Name?.Value ?? string.Empty;
 
         WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        WriteTypeCustomAttributes(writer, context, type, true);
+        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
         writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
         writer.Write(" sealed class ");
         writer.Write(typeName);

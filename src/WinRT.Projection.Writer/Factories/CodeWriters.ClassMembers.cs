@@ -506,7 +506,7 @@ internal static partial class CodeWriters
         // immediately if not ref). Mirrors C++
         // 'auto platform_attribute = write_platform_attribute_temp(w, interface_type);'.
         IndentedTextWriter __scratchPlatform = new();
-        WritePlatformAttribute(__scratchPlatform, context, ifaceType);
+        CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, ifaceType);
         string platformAttribute = __scratchPlatform.ToString();
 
         // Methods

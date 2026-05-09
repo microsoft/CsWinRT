@@ -193,7 +193,7 @@ internal static partial class CodeWriters
         try
         {
             WriteWinRTMetadataAttribute(writer, type, context.Cache);
-            WriteTypeCustomAttributes(writer, context, type, true);
+            CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
             writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
             writer.Write(" static class ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
@@ -247,7 +247,7 @@ internal static partial class CodeWriters
             // 'auto platform_attribute = write_platform_attribute_temp(w, factory.type);'
             // and the per-static-method/event/property emission at lines 3316-3349.
             IndentedTextWriter __scratchPlatform = new();
-            WritePlatformAttribute(__scratchPlatform, context, staticIface);
+            CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, staticIface);
             string platformAttribute = __scratchPlatform.ToString();
 
             // Methods
@@ -511,7 +511,7 @@ internal static partial class CodeWriters
         // Header attributes
         writer.Write("\n");
         WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        WriteTypeCustomAttributes(writer, context, type, true);
+        CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
         WriteComWrapperMarshallerAttribute(writer, context, type);
         writer.Write(context.Settings.Internal ? "internal" : "public");
         writer.Write(" ");

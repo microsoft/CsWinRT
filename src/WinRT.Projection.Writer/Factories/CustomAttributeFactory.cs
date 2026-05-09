@@ -14,7 +14,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <summary>
 /// Custom attribute carry-over and platform attribute helpers.
 /// </summary>
-internal static partial class CodeWriters
+internal static class CustomAttributeFactory
 {
     /// <summary>
     /// Returns the formatted argument list for emitting <paramref name="attribute"/> as a C# attribute.

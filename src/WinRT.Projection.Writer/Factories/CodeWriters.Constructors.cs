@@ -94,7 +94,7 @@ internal static partial class CodeWriters
             // 'auto platform_attribute = write_platform_attribute_temp(w, factory_type);'
             // emitted at line 2872 before the public ctor.
             IndentedTextWriter __scratchPlatform = new();
-            WritePlatformAttribute(__scratchPlatform, context, factoryType);
+            CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, factoryType);
             string platformAttribute = __scratchPlatform.ToString();
             int methodIndex = 0;
             foreach (MethodDefinition method in factoryType.Methods)
@@ -890,7 +890,7 @@ internal static partial class CodeWriters
         // 'auto platform_attribute = write_platform_attribute_temp(w, composable_type);'
         // emitted at line 3179 before the public ctor.
         IndentedTextWriter __scratchPlatform = new();
-        WritePlatformAttribute(__scratchPlatform, context, composableType);
+        CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, composableType);
         string platformAttribute = __scratchPlatform.ToString();
 
         int methodIndex = 0;
