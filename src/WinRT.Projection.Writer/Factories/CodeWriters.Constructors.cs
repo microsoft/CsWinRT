@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Models;
 
 namespace WindowsRuntime.ProjectionWriter;
 

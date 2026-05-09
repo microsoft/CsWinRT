@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Models;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -454,21 +455,6 @@ internal static partial class CodeWriters
                 w.Write("}\n");
             }
         }
-    }
-
-    private sealed class StaticPropertyAccessorState
-    {
-        public bool HasGetter;
-        public bool HasSetter;
-        public string PropTypeText = string.Empty;
-        public string GetterAbiClass = string.Empty;
-        public string GetterObjRef = string.Empty;
-        public string SetterAbiClass = string.Empty;
-        public string SetterObjRef = string.Empty;
-        // Per-accessor platform attribute strings. Mirrors C++ getter_platform/setter_platform
-        // tracking in code_writers.h:3328-3349.
-        public string GetterPlatformAttribute = string.Empty;
-        public string SetterPlatformAttribute = string.Empty;
     }
 
     /// <summary>

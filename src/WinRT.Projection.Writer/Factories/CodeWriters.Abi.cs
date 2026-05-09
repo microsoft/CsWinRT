@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Models;
 
 namespace WindowsRuntime.ProjectionWriter;
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Models;
 
 namespace WindowsRuntime.ProjectionWriter;
 
