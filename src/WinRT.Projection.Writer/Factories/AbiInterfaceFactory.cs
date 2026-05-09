@@ -310,7 +310,7 @@ internal static class AbiInterfaceFactory
             // before the Do_Abi method (mirrors C++ ordering).
             if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt) && evt.AddMethod == method)
             {
-                CodeWriters.EmitEventTableField(writer, context, evt, ifaceFullName);
+                EventTableFactory.EmitEventTableField(writer, context, evt, ifaceFullName);
             }
 
             writer.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
@@ -324,11 +324,11 @@ internal static class AbiInterfaceFactory
             {
                 if (evt2.AddMethod == method)
                 {
-                    CodeWriters.EmitDoAbiAddEvent(writer, context, evt2, sig, ifaceFullName);
+                    EventTableFactory.EmitDoAbiAddEvent(writer, context, evt2, sig, ifaceFullName);
                 }
                 else
                 {
-                    CodeWriters.EmitDoAbiRemoveEvent(writer, context, evt2, sig, ifaceFullName);
+                    EventTableFactory.EmitDoAbiRemoveEvent(writer, context, evt2, sig, ifaceFullName);
                 }
             }
             else
