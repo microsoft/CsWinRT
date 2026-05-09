@@ -59,7 +59,7 @@ internal static partial class CodeWriters
     {
         CustomAttribute? attr = type.GetAttribute("Windows.Foundation.Metadata", "GuidAttribute");
         if (attr is null || attr.Signature is null) { return null; }
-        var args = attr.Signature.FixedArguments;
+        System.Collections.Generic.IList<AsmResolver.DotNet.Signatures.CustomAttributeArgument> args = attr.Signature.FixedArguments;
         if (args.Count < 11) { return null; }
 
         uint data1 = ToUInt32(args[0].Element);

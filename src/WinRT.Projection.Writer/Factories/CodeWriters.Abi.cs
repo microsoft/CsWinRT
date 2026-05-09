@@ -3566,8 +3566,8 @@ internal static partial class CodeWriters
         // increasing slot indices. Mirrors C++.
         // For non-fast-abi interfaces, the segment list is just [(type, INSPECTABLE_METHOD_COUNT, skipExclusiveEvents)].
         const int InspectableMethodCount = 6;
-        var segments = new List<(TypeDefinition Iface, int StartSlot, bool SkipEvents)>();
-        var fastAbi = GetFastAbiClassForInterface(type);
+        List<(TypeDefinition Iface, int StartSlot, bool SkipEvents)> segments = new();
+        (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(type);
         bool isFastAbiDefault = fastAbi is not null && fastAbi.Value.Default is not null
             && InterfacesEqualByName(fastAbi.Value.Default, type);
         if (isFastAbiDefault)
@@ -5399,7 +5399,7 @@ internal static partial class CodeWriters
     {
         marshallerName = null;
         if (sig is not AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi) { return false; }
-        var gt = gi.GenericType;
+        AsmResolver.DotNet.ITypeDefOrRef gt = gi.GenericType;
         string ns = gt?.Namespace?.Value ?? string.Empty;
         string name = gt?.Name?.Value ?? string.Empty;
         // In WinMD metadata, Nullable<T> is encoded as Windows.Foundation.IReference<T>.

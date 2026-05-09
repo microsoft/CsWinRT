@@ -72,7 +72,7 @@ internal static partial class CodeWriters
     /// </summary>
     public static bool IsFastAbiOtherInterface(TypeDefinition iface)
     {
-        var fastAbi = GetFastAbiClassForInterface(iface);
+        (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(iface);
         if (fastAbi is null) { return false; }
         if (fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface)) { return false; }
         foreach (TypeDefinition other in fastAbi.Value.Others)
@@ -87,7 +87,7 @@ internal static partial class CodeWriters
     /// </summary>
     public static bool IsFastAbiDefaultInterface(TypeDefinition iface)
     {
-        var fastAbi = GetFastAbiClassForInterface(iface);
+        (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(iface);
         if (fastAbi is null) { return false; }
         return fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface);
     }

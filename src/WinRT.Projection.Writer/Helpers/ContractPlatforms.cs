@@ -41,7 +41,7 @@ internal static class ContractPlatforms
         void Add(string name, params (int v, string p)[] vs)
         {
             List<(int, string)> list = new();
-            foreach (var (v, p) in vs) { list.Add((v, p)); }
+            foreach ((int v, string p) in vs) { list.Add((v, p)); }
             t[name] = list;
         }
 
