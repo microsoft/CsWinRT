@@ -226,35 +226,35 @@ internal static partial class CodeWriters
             IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
         }
         writer.Write(")\n{\n");
-        foreach (var f in fields)
+        foreach ((string _, string name, string paramName, bool _) in fields)
         {
             // When the param name matches the field name (i.e. ToCamelCase couldn't change casing),
             // qualify with this. to disambiguate.
-            if (f.Name == f.ParamName)
+            if (name == paramName)
             {
                 writer.Write("this.");
-                writer.Write(f.Name);
+                writer.Write(name);
                 writer.Write(" = ");
-                IdentifierEscaping.WriteEscapedIdentifier(writer, f.ParamName);
+                IdentifierEscaping.WriteEscapedIdentifier(writer, paramName);
                 writer.Write("; ");
             }
             else
             {
-                writer.Write(f.Name);
+                writer.Write(name);
                 writer.Write(" = ");
-                IdentifierEscaping.WriteEscapedIdentifier(writer, f.ParamName);
+                IdentifierEscaping.WriteEscapedIdentifier(writer, paramName);
                 writer.Write("; ");
             }
         }
         writer.Write("\n}\n");
 
         // properties
-        foreach (var f in fields)
+        foreach ((string typeStr, string name, string _, bool _) in fields)
         {
             writer.Write("public ");
-            writer.Write(f.TypeStr);
+            writer.Write(typeStr);
             writer.Write(" ");
-            writer.Write(f.Name);
+            writer.Write(name);
             writer.Write("\n{\nreadonly get; set;\n}\n");
         }
 

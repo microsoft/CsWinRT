@@ -97,19 +97,19 @@ internal static partial class CodeWriters
     /// <summary>Writes the GUID for <paramref name="type"/> in canonical hyphenated string form.</summary>
     public static void WriteGuid(IndentedTextWriter writer, TypeDefinition type, bool lowerCase)
     {
-        var fields = GetGuidFields(type) ?? throw new InvalidOperationException(
+        (uint data1, ushort data2, ushort data3, byte[] data4) = GetGuidFields(type) ?? throw new InvalidOperationException(
             $"'Windows.Foundation.Metadata.GuidAttribute' attribute for type '{type.Namespace}.{type.Name}' not found");
         string fmt = lowerCase ? "x" : "X";
         // Format: %08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x
-        writer.Write(fields.Data1.ToString(fmt + "8", CultureInfo.InvariantCulture));
+        writer.Write(data1.ToString(fmt + "8", CultureInfo.InvariantCulture));
         writer.Write("-");
-        writer.Write(fields.Data2.ToString(fmt + "4", CultureInfo.InvariantCulture));
+        writer.Write(data2.ToString(fmt + "4", CultureInfo.InvariantCulture));
         writer.Write("-");
-        writer.Write(fields.Data3.ToString(fmt + "4", CultureInfo.InvariantCulture));
+        writer.Write(data3.ToString(fmt + "4", CultureInfo.InvariantCulture));
         writer.Write("-");
-        for (int i = 0; i < 2; i++) { writer.Write(fields.Data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
+        for (int i = 0; i < 2; i++) { writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
         writer.Write("-");
-        for (int i = 2; i < 8; i++) { writer.Write(fields.Data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
+        for (int i = 2; i < 8; i++) { writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
     }
 
     /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to the primary one.</summary>
@@ -119,17 +119,17 @@ internal static partial class CodeWriters
     /// <summary>Writes the GUID bytes for <paramref name="type"/> as a hex byte list.</summary>
     public static void WriteGuidBytes(IndentedTextWriter writer, TypeDefinition type)
     {
-        var fields = GetGuidFields(type) ?? throw new InvalidOperationException(
+        (uint data1, ushort data2, ushort data3, byte[] data4) = GetGuidFields(type) ?? throw new InvalidOperationException(
             $"'Windows.Foundation.Metadata.GuidAttribute' attribute for type '{type.Namespace}.{type.Name}' not found");
-        WriteByte(writer, (fields.Data1 >> 0) & 0xFF, true);
-        WriteByte(writer, (fields.Data1 >> 8) & 0xFF, false);
-        WriteByte(writer, (fields.Data1 >> 16) & 0xFF, false);
-        WriteByte(writer, (fields.Data1 >> 24) & 0xFF, false);
-        WriteByte(writer, (uint)((fields.Data2 >> 0) & 0xFF), false);
-        WriteByte(writer, (uint)((fields.Data2 >> 8) & 0xFF), false);
-        WriteByte(writer, (uint)((fields.Data3 >> 0) & 0xFF), false);
-        WriteByte(writer, (uint)((fields.Data3 >> 8) & 0xFF), false);
-        for (int i = 0; i < 8; i++) { WriteByte(writer, fields.Data4[i], false); }
+        WriteByte(writer, (data1 >> 0) & 0xFF, true);
+        WriteByte(writer, (data1 >> 8) & 0xFF, false);
+        WriteByte(writer, (data1 >> 16) & 0xFF, false);
+        WriteByte(writer, (data1 >> 24) & 0xFF, false);
+        WriteByte(writer, (uint)((data2 >> 0) & 0xFF), false);
+        WriteByte(writer, (uint)((data2 >> 8) & 0xFF), false);
+        WriteByte(writer, (uint)((data3 >> 0) & 0xFF), false);
+        WriteByte(writer, (uint)((data3 >> 8) & 0xFF), false);
+        for (int i = 0; i < 8; i++) { WriteByte(writer, data4[i], false); }
     }
 
     /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to the primary one.</summary>

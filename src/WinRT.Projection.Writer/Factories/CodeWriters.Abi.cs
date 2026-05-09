@@ -108,14 +108,10 @@ internal static partial class CodeWriters
     public static void WriteAbiEnum(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         TypeWriter w = new(writer, context);
-        // The C++ version emits: write_struct_and_enum_marshaller_class, write_interface_entries_impl,
-        // write_struct_and_enum_com_wrappers_marshaller_attribute_impl, write_reference_impl.
-        // For now, emit a minimal marshaller class so the ComWrappersMarshaller attribute reference resolves.
-        string name = type.Name?.Value ?? string.Empty;
         WriteStructEnumMarshallerClass(w, type);
         WriteReferenceImpl(w, type);
 
-        // In component mode, the C++ tool also emits the authoring metadata wrapper for enums.
+        // In component mode, also emit the authoring metadata wrapper for enums.
         if (w.Settings.Component)
         {
             WriteAuthoringMetadataType(w, type);
@@ -124,7 +120,6 @@ internal static partial class CodeWriters
     public static void WriteAbiStruct(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         TypeWriter w = new(writer, context);
-        string name = type.Name?.Value ?? string.Empty;
 
         // Emit the underlying ABI struct only when not blittable AND not a mapped struct
         // (mapped structs like Duration/KeyTime/RepeatBehavior have addition files that

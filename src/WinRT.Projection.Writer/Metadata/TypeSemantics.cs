@@ -116,14 +116,13 @@ internal static class TypeSemanticsFactory
     private static TypeSemantics GetGenericInstance(GenericInstanceTypeSignature gi)
     {
         ITypeDefOrRef genericType = gi.GenericType;
-        TypeDefinition? def = genericType as TypeDefinition;
         // Always preserve the type arguments.
         List<TypeSemantics> args = new(gi.TypeArguments.Count);
         foreach (TypeSignature arg in gi.TypeArguments)
         {
             args.Add(Get(arg));
         }
-        if (def is null)
+        if (genericType is not TypeDefinition def)
         {
             // Wrap the generic-type reference along with the resolved type arguments.
             return new TypeSemantics.GenericInstanceRef(genericType, args);
