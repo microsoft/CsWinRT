@@ -290,7 +290,7 @@ internal static partial class CodeWriters
                 w.Write("}");
                 break;
             case TypeCategory.Class:
-                ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
+                ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
                 if (defaultIface is TypeDefinition di)
                 {
                     w.Write("rc(");

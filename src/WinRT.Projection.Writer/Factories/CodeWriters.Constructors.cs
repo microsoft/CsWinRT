@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -101,7 +102,7 @@ internal static partial class CodeWriters
             int methodIndex = 0;
             foreach (MethodDefinition method in factoryType.Methods)
             {
-                if (Helpers.IsSpecial(method)) { methodIndex++; continue; }
+                if (method.IsSpecial()) { methodIndex++; continue; }
                 MethodSig sig = new(method);
                 string callbackName = (method.Name?.Value ?? "Create") + "_" + sig.Params.Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 string argsName = callbackName + "Args";
@@ -852,7 +853,7 @@ internal static partial class CodeWriters
     /// <summary>Returns the IID expression for the class's default interface.</summary>
     private static string GetDefaultInterfaceIid(TypeWriter w, TypeDefinition classType)
     {
-        ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(classType);
+        ITypeDefOrRef? defaultIface = classType.GetDefaultInterface();
         if (defaultIface is null) { return "default(global::System.Guid)"; }
         return w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, defaultIface)));
     }
@@ -880,7 +881,7 @@ internal static partial class CodeWriters
         string defaultIfaceIid = GetDefaultInterfaceIid(w, classType);
         string marshalingType = GetMarshalingTypeName(classType);
         string defaultIfaceObjRef;
-        ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(classType);
+        ITypeDefOrRef? defaultIface = classType.GetDefaultInterface();
         defaultIfaceObjRef = defaultIface is not null ? GetObjRefName(w, defaultIface) : string.Empty;
         int gcPressure = GetGcPressureAmount(classType);
         // Compute the platform attribute string from the composable factory interface's
@@ -892,7 +893,7 @@ internal static partial class CodeWriters
         int methodIndex = 0;
         foreach (MethodDefinition method in composableType.Methods)
         {
-            if (Helpers.IsSpecial(method)) { methodIndex++; continue; }
+            if (method.IsSpecial()) { methodIndex++; continue; }
             // Composable factory methods have signature like:
             //   T CreateInstance(args, object baseInterface, out object innerInterface)
             // For the constructor on the projected class, we exclude the trailing two params.

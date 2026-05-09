@@ -249,7 +249,7 @@ internal static partial class CodeWriters
     public static void AddDefaultInterfaceEntry(TypeWriter w, TypeDefinition type, System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
     {
         if (w.Settings.ReferenceProjection) { return; }
-        ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
+        ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
         if (defaultIface is null) { return; }
 
         (string typeNs, string typeName) = type.Names();

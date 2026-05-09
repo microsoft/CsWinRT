@@ -3,6 +3,7 @@
 
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -342,7 +343,7 @@ internal static partial class CodeWriters
     {
         if (w.Settings.Component) { return; }
 
-        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        MethodDefinition? invoke = type.GetDelegateInvoke();
         if (invoke is null) { return; }
         MethodSig sig = new(invoke);
 

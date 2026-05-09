@@ -76,7 +76,7 @@ internal static partial class CodeWriters
         {
             if (impl.Interface is null) { continue; }
 
-            bool isOverridable = Helpers.IsOverridable(impl);
+            bool isOverridable = impl.IsOverridable();
 
             // For TypeDef interfaces, check exclusive_to attribute to decide inclusion.
             // For TypeRef interfaces, attempt to resolve via the runtime context.
@@ -192,7 +192,7 @@ internal static partial class CodeWriters
     {
         foreach (MethodDefinition method in type.Methods)
         {
-            if (Helpers.IsSpecial(method)) { continue; }
+            if (method.IsSpecial()) { continue; }
             MethodSig sig = new(method);
             w.Write("\n");
             // Mirror C++ write_interface_required which calls write_custom_attributes for method.CustomAttribute().
@@ -403,7 +403,7 @@ internal static partial class CodeWriters
         if (classType is null) { return false; }
         foreach (InterfaceImplementation impl in classType.Interfaces)
         {
-            if (!Helpers.IsDefaultInterface(impl) && !Helpers.IsOverridable(impl)) { continue; }
+            if (!impl.IsDefaultInterface() && !impl.IsOverridable()) { continue; }
             ITypeDefOrRef? implRef = impl.Interface;
             if (implRef is null) { continue; }
             TypeDefinition? implDef = ResolveInterfaceTypeDefForExclusiveCheck(implRef);

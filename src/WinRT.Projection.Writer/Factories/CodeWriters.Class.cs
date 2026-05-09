@@ -119,7 +119,7 @@ internal static partial class CodeWriters
             }
             if (ifaceTd is null) { continue; }
 
-            if (Helpers.IsDefaultInterface(impl))
+            if (impl.IsDefaultInterface())
             {
                 defaultIface = ifaceTd;
             }
@@ -264,7 +264,7 @@ internal static partial class CodeWriters
             // Methods
             foreach (MethodDefinition method in staticIface.Methods)
             {
-                if (Helpers.IsSpecial(method)) { continue; }
+                if (method.IsSpecial()) { continue; }
                 MethodSig sig = new(method);
                 string mname = method.Name?.Value ?? string.Empty;
                 w.Write("\n");
@@ -564,7 +564,7 @@ internal static partial class CodeWriters
                 // For unsealed classes, the default interface objref needs to be initialized only
                 // when GetType() matches the projected class exactly (derived classes have their own
                 // default interface). The init; accessor on _objRef_<DefaultIface> allows this set.
-                ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
+                ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
                 if (defaultIface is not null)
                 {
                     string defaultObjRefName = GetObjRefName(w, defaultIface);
@@ -662,7 +662,7 @@ internal static partial class CodeWriters
             bool firstClause = true;
             foreach (InterfaceImplementation impl in type.Interfaces)
             {
-                if (!Helpers.IsOverridable(impl)) { continue; }
+                if (!impl.IsOverridable()) { continue; }
                 ITypeDefOrRef? implRef = impl.Interface;
                 if (implRef is null) { continue; }
                 if (!firstClause) { w.Write(" || "); }

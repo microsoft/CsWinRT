@@ -46,7 +46,7 @@ internal static partial class CodeWriters
             ? $"global::{Helpers.StripBackticks(typeName)}"
             : $"global::{typeNs}.{Helpers.StripBackticks(typeName)}";
         string factoryTypeName = $"{Helpers.StripBackticks(typeName)}ServerActivationFactory";
-        bool isActivatable = !TypeCategorization.IsStatic(type) && Helpers.HasDefaultConstructor(type);
+        bool isActivatable = !TypeCategorization.IsStatic(type) && type.HasDefaultConstructor();
 
         // Build the inheritance list: factory interfaces ([Activatable]/[Static]) only.
         // Mirrors C++ write_factory_class_inheritance.

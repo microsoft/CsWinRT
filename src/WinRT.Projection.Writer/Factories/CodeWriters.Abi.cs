@@ -233,7 +233,7 @@ internal static partial class CodeWriters
     private static void WriteDelegateImpl(TypeWriter w, TypeDefinition type)
     {
         if (type.GenericParameters.Count > 0) { return; }
-        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        MethodDefinition? invoke = type.GetDelegateInvoke();
         if (invoke is null) { return; }
         MethodSig sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
@@ -387,7 +387,7 @@ internal static partial class CodeWriters
     private static void WriteDelegateVftbl(TypeWriter w, TypeDefinition type)
     {
         if (type.GenericParameters.Count > 0) { return; }
-        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        MethodDefinition? invoke = type.GetDelegateInvoke();
         if (invoke is null) { return; }
         MethodSig sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
@@ -410,7 +410,7 @@ internal static partial class CodeWriters
     private static void WriteNativeDelegate(TypeWriter w, TypeDefinition type)
     {
         if (type.GenericParameters.Count > 0) { return; }
-        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        MethodDefinition? invoke = type.GetDelegateInvoke();
         if (invoke is null) { return; }
         MethodSig sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
@@ -433,7 +433,7 @@ internal static partial class CodeWriters
         // (after QI/AddRef/Release). Functionally equivalent to the truth's
         // 'var abiInvoke = ((<Name>Vftbl*)*(void***)ThisPtr)->Invoke;' form, just routed
         // through the slot-indexed dispatch shared with interface CCW callers.
-        EmitAbiMethodBodyIfSimple(w, sig, slot: 3, isNoExcept: Helpers.IsNoExcept(invoke));
+        EmitAbiMethodBodyIfSimple(w, sig, slot: 3, isNoExcept: invoke.IsNoExcept());
 
         w.Write("}\n");
     }
@@ -491,7 +491,7 @@ internal static partial class CodeWriters
         // Generic delegates (e.g. EventHandler<T>) use the generic EventHandlerEventSource<T> directly.
         if (type.GenericParameters.Count > 0) { return; }
 
-        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        MethodDefinition? invoke = type.GetDelegateInvoke();
         if (invoke is null) { return; }
         MethodSig sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
@@ -590,7 +590,7 @@ internal static partial class CodeWriters
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string projectedType = $"global::{typeNs}.{nameStripped}";
 
-        ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
+        ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
 
         // Mirror C++ write_component_class_marshaller: if the default interface is a generic
         // instantiation (e.g. IDictionary<K,V>), emit an UnsafeAccessor extern declaration
@@ -737,7 +737,7 @@ internal static partial class CodeWriters
             {
                 if (impl.Interface is null) { continue; }
                 TypeDefinition? ifaceTd = ResolveInterfaceTypeDef(impl.Interface);
-                if (ifaceTd == type && Helpers.IsOverridable(impl)) { hasOverridable = true; break; }
+                if (ifaceTd == type && impl.IsOverridable()) { hasOverridable = true; break; }
             }
             return hasOverridable;
         }
@@ -2511,7 +2511,7 @@ internal static partial class CodeWriters
 
         foreach (MethodDefinition method in type.Methods)
         {
-            if (Helpers.IsSpecial(method)) { continue; }
+            if (method.IsSpecial()) { continue; }
             MethodSig sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
@@ -2660,7 +2660,7 @@ internal static partial class CodeWriters
 
         foreach (MethodDefinition method in type.Methods)
         {
-            if (Helpers.IsSpecial(method)) { continue; }
+            if (method.IsSpecial()) { continue; }
             MethodSig sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
@@ -3279,7 +3279,7 @@ internal static partial class CodeWriters
         string fullProjected = $"global::{typeNs}.{nameStripped}";
         string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
 
-        MethodDefinition? invoke = Helpers.GetDelegateInvoke(type);
+        MethodDefinition? invoke = type.GetDelegateInvoke();
         bool nativeSupported = invoke is not null && IsDelegateInvokeNativeSupported(new MethodSig(invoke));
 
         w.Write("\nfile abstract unsafe class ");
@@ -3391,7 +3391,7 @@ internal static partial class CodeWriters
         string fullProjected = $"global::{typeNs}.{nameStripped}";
 
         // Get the IID expression for the default interface (used by CreateObject).
-        ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
+        ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
         string defaultIfaceIid = defaultIface is not null
             ? w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, defaultIface)))
             : "default(global::System.Guid)";
@@ -3660,7 +3660,7 @@ internal static partial class CodeWriters
     {
         foreach (MethodDefinition m in iface.Methods)
         {
-            if (!Helpers.IsSpecial(m)) { return true; }
+            if (!m.IsSpecial()) { return true; }
         }
         foreach (PropertyDefinition _ in iface.Properties) { return true; }
         if (!skipExclusiveEvents)
@@ -3725,7 +3725,7 @@ internal static partial class CodeWriters
         // Emit non-special methods first (output order is unchanged from before; only the slot lookup changes).
         foreach (MethodDefinition method in type.Methods)
         {
-            if (Helpers.IsSpecial(method)) { continue; }
+            if (method.IsSpecial()) { continue; }
             string mname = method.Name?.Value ?? string.Empty;
             MethodSig sig = new(method);
 
@@ -3740,7 +3740,7 @@ internal static partial class CodeWriters
             w.Write(")");
 
             // Emit the body if we can handle this case. Slot comes from the method's WinMD index.
-            EmitAbiMethodBodyIfSimple(w, sig, methodSlot[method], isNoExcept: Helpers.IsNoExcept(method));
+            EmitAbiMethodBodyIfSimple(w, sig, methodSlot[method], isNoExcept: method.IsNoExcept());
         }
 
         // Emit property accessors. Each getter / setter consumes one vtable slot — looked up from the underlying method.
@@ -3753,7 +3753,7 @@ internal static partial class CodeWriters
             // Mirrors C++ helpers.h:46-49: the [NoException] check on properties applies to BOTH
             // accessors of the property (the attribute is on the property itself, not on the
             // individual accessors).
-            bool propIsNoExcept = Helpers.IsNoExcept(prop);
+            bool propIsNoExcept = prop.IsNoExcept();
             if (gMethod is not null)
             {
                 MethodSig getSig = new(gMethod);

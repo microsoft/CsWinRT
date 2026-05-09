@@ -267,7 +267,7 @@ internal static partial class CodeWriters
     private static bool IsInterfaceInInheritanceList(InterfaceImplementation impl, bool includeExclusiveInterface)
     {
         if (impl.Interface is null) { return false; }
-        if (Helpers.IsOverridable(impl)) { return true; }
+        if (impl.IsOverridable()) { return true; }
         if (includeExclusiveInterface) { return true; }
         TypeDefinition? td = ResolveInterface(impl.Interface);
         if (td is null) { return true; }
@@ -291,7 +291,7 @@ internal static partial class CodeWriters
             if (writtenInterfaces.Contains(ifaceType)) { continue; }
             _ = writtenInterfaces.Add(ifaceType);
 
-            bool isOverridable = Helpers.IsOverridable(impl);
+            bool isOverridable = impl.IsOverridable();
             bool isProtected = impl.HasAttribute("Windows.Foundation.Metadata", "ProtectedAttribute");
 
             // Substitute generic type arguments using the current generic context BEFORE emitting
@@ -344,7 +344,7 @@ internal static partial class CodeWriters
                 w.Write(giObjRefName);
                 w.Write(".AsValue();\n}\n");
             }
-            else if (Helpers.IsDefaultInterface(impl) && !classType.IsSealed)
+            else if (impl.IsDefaultInterface() && !classType.IsSealed)
             {
                 // Mirrors C++ code_writers.h:4263-4280. The C++ source emits the
                 // 'internal new GetDefaultInterface()' helper whenever the interface is the
@@ -515,7 +515,7 @@ internal static partial class CodeWriters
         // Methods
         foreach (MethodDefinition method in ifaceType.Methods)
         {
-            if (Helpers.IsSpecial(method)) { continue; }
+            if (method.IsSpecial()) { continue; }
             string name = method.Name?.Value ?? string.Empty;
             // Track by full signature (name + each param's element-type code) to avoid trivial overload duplicates.
             // This prevents collapsing distinct overloads like Format(double) and Format(ulong).
