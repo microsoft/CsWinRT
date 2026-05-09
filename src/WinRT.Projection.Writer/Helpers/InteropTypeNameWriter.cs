@@ -106,7 +106,7 @@ internal static class InteropTypeNameWriter
     {
         (string typeNs, string typeName) = type.Names();
 
-        bool isAbi = nameType != TypedefNameType.Projected && nameType != TypedefNameType.InteropIID;
+        bool isAbi = nameType is not (TypedefNameType.Projected or TypedefNameType.InteropIID);
         if (isAbi) { sb.Append("ABI."); }
 
         // Special case for EventSource on Windows.Foundation event-handler delegate types

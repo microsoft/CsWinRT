@@ -61,7 +61,7 @@ internal static class AbiTypeHelpers
             string fName = todr.Type?.Name?.Value ?? string.Empty;
             // System.Guid is a fundamental blittable type .
             // Same applies to System.IntPtr / UIntPtr (used in some struct layouts).
-            if (fNs == "System" && (fName == "Guid" || fName == "IntPtr" || fName == "UIntPtr"))
+            if (fNs == "System" && (fName is "Guid" or "IntPtr" || fName == "UIntPtr"))
             {
                 return true;
             }
@@ -251,7 +251,7 @@ internal static class AbiTypeHelpers
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
             {
                 if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szP)
                 {

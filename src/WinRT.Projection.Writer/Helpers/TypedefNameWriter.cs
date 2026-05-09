@@ -266,8 +266,7 @@ internal static class TypedefNameWriter
         // handler is EventHandler<object> but C# expects non-generic EventHandler.
         if (evt.Name?.Value == "CanExecuteChanged"
             && evt.DeclaringType is { } declaringType
-            && (declaringType.FullName == "Microsoft.UI.Xaml.Input.ICommand"
-                || declaringType.FullName == "Windows.UI.Xaml.Input.ICommand"))
+            && (declaringType.FullName is "Microsoft.UI.Xaml.Input.ICommand" or "Windows.UI.Xaml.Input.ICommand"))
         {
             // Verify the event type matches EventHandler<object> before applying override.
             if (sig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi

@@ -234,7 +234,7 @@ internal static class AbiDelegateFactory
             if (i > 0) { writer.Write(", "); }
             ParamCategory pc = ParamHelpers.GetParamCategory(sig.Params[i]);
             if (pc == ParamCategory.Ref) { writer.Write("in "); }
-            else if (pc == ParamCategory.Out || pc == ParamCategory.ReceiveArray) { writer.Write("out "); }
+            else if (pc is ParamCategory.Out or ParamCategory.ReceiveArray) { writer.Write("out "); }
             string raw = sig.Params[i].Parameter.Name ?? "p";
             writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
@@ -244,7 +244,7 @@ internal static class AbiDelegateFactory
             if (i > 0) { writer.Write(", "); }
             ParamCategory pc = ParamHelpers.GetParamCategory(sig.Params[i]);
             if (pc == ParamCategory.Ref) { writer.Write("in "); }
-            else if (pc == ParamCategory.Out || pc == ParamCategory.ReceiveArray) { writer.Write("out "); }
+            else if (pc is ParamCategory.Out or ParamCategory.ReceiveArray) { writer.Write("out "); }
             string raw = sig.Params[i].Parameter.Name ?? "p";
             writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }

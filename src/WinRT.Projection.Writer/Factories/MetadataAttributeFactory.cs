@@ -219,7 +219,7 @@ internal static class MetadataAttributeFactory
 
         // For non-interface, non-struct authored types, emit proxy association.
         TypeCategory cat = TypeCategorization.GetCategory(type);
-        if (cat != TypeCategory.Interface && cat != TypeCategory.Struct && context.Settings.Component)
+        if (cat is not (TypeCategory.Interface or TypeCategory.Struct) && context.Settings.Component)
         {
             writer.Write($"\n[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(\n    source: typeof({projectionName}),\n    proxy: typeof(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);

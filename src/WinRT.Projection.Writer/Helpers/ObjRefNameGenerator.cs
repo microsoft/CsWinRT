@@ -203,7 +203,7 @@ internal static class ObjRefNameGenerator
         System.Text.StringBuilder sb = new(s.Length);
         foreach (char c in s)
         {
-            sb.Append((c == ' ' || c == ':' || c == '<' || c == '>' || c == '`' || c == ',' || c == '.') ? '_' : c);
+            sb.Append(c is ' ' or ':' or '<' or '>' or '`' or ',' or '.' ? '_' : c);
         }
         return sb.ToString();
     }

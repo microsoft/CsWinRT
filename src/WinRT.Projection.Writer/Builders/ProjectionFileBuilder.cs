@@ -339,7 +339,7 @@ internal static class ProjectionFileBuilder
     {
         if (string.IsNullOrEmpty(name)) { return name; }
         char c = name[0];
-        if (c >= 'A' && c <= 'Z')
+        if (c is >= 'A' and <= 'Z')
         {
             return char.ToLowerInvariant(c) + name[1..];
         }

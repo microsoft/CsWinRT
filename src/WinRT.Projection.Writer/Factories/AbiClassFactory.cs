@@ -105,14 +105,14 @@ internal static class AbiClassFactory
 
         // [WindowsRuntimeReferenceType(typeof(<projected>?))] for non-delegate, non-class types
         // (i.e. enums, structs, interfaces).
-        if (category != TypeCategory.Delegate && category != TypeCategory.Class)
+        if (category is not (TypeCategory.Delegate or TypeCategory.Class))
         {
             writer.WriteLine($"[WindowsRuntimeReferenceType(typeof({projectedType}?))]");
         }
 
         // [ABI.<ns>.<name>ComWrappersMarshaller] for non-struct, non-class types
         // (delegates, enums, interfaces).
-        if (category != TypeCategory.Struct && category != TypeCategory.Class)
+        if (category is not (TypeCategory.Struct or TypeCategory.Class))
         {
             writer.WriteLine($"[ABI.{typeNs}.{nameStripped}ComWrappersMarshaller]");
         }

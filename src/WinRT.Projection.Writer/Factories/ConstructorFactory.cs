@@ -371,7 +371,7 @@ internal static class ConstructorFactory
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+            if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
             if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             hasNonBlittableArray = true;
@@ -442,7 +442,7 @@ internal static class ConstructorFactory
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (p.Type.IsString() || p.Type.IsSystemType()) { pinnableCount++; }
-            else if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray) { pinnableCount++; }
+            else if (cat is ParamCategory.PassArray or ParamCategory.FillArray) { pinnableCount++; }
         }
         if (pinnableCount > 0)
         {
@@ -455,7 +455,7 @@ internal static class ConstructorFactory
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
                 bool isStr = p.Type.IsString();
                 bool isType = p.Type.IsSystemType();
-                bool isArr = cat == ParamCategory.PassArray || cat == ParamCategory.FillArray;
+                bool isArr = cat is ParamCategory.PassArray or ParamCategory.FillArray;
                 if (!isStr && !isType && !isArr) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -504,7 +504,7 @@ internal static class ConstructorFactory
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+            if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
             if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
@@ -553,7 +553,7 @@ internal static class ConstructorFactory
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
             {
                 writer.Write("uint, void*, ");
                 continue;
@@ -574,7 +574,7 @@ internal static class ConstructorFactory
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             writer.Write(",\n  ");
-            if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
+            if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
             {
                 writer.Write($"(uint){pname}.Length, _{raw}");
                 continue;
@@ -649,7 +649,7 @@ internal static class ConstructorFactory
             {
                 ParamInfo p = sig.Params[i];
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
+                if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
                 if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";

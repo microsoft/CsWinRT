@@ -634,8 +634,7 @@ internal static class ClassMembersFactory
             // EventHandler<object> but C# expects non-generic EventHandler. Use the non-generic
             // EventHandlerEventSource backing field.
             bool isICommandCanExecuteChanged = name == "CanExecuteChanged"
-                && (ifaceType.FullName == "Microsoft.UI.Xaml.Input.ICommand"
-                    || ifaceType.FullName == "Windows.UI.Xaml.Input.ICommand");
+                && (ifaceType.FullName is "Microsoft.UI.Xaml.Input.ICommand" or "Windows.UI.Xaml.Input.ICommand");
 
             string eventSourceType;
             if (isICommandCanExecuteChanged)
