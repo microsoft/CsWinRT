@@ -29,10 +29,9 @@ Properties consumers may set on the vcxproj:
                                             WindowsSdkPackageVersion to pass to the aggregator.
                                             Falls back to a value picked from any component ref
                                             metadata, then to the SDK default.
-  CsWinRTSkipNativeHostingAssetsOverride    Set to 'true' to suppress the arch-correct
-                                            replacement of WinRT.Host.dll/.mui in the consumer's
-                                            ReferenceCopyLocalPaths. Useful when the consumer
-                                            ships its own host bundle.
+  CsWinRTSkipNativeHostingAssetsOverride    Set to 'true' to opt out of the arch-correct
+                                            replacement of WinRT.Host.dll / .mui in the
+                                            consumer's ReferenceCopyLocalPaths.
 ***********************************************************************************************
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">

@@ -106,7 +106,7 @@ Consumer-side properties:
 | `CsWinRTDisableNativeComponentInterop` | Set to `true` to disable aggregator generation. |
 | `CsWinRTComponentTargetFrameworkOverride` | TFM to use for the aggregator project. Required when referenced components disagree on TFM, or when no referenced component supplies a TFM. |
 | `CsWinRTNativeConsumerWindowsSdkPackageVersion` | `WindowsSdkPackageVersion` to pass to the aggregator. Falls back to a value picked from any component reference, then to the SDK default. |
-| `CsWinRTSkipNativeHostingAssetsOverride` | Set to `true` to skip the arch-correct replacement of `WinRT.Host.dll` / `WinRT.Host.dll.mui` in the consumer's reference closure. Use when the consumer ships its own host bundle. |
+| `CsWinRTSkipNativeHostingAssetsOverride` | Set to `true` to opt out of the arch-correct replacement of `WinRT.Host.dll` / `.mui` in the consumer's reference closure. |
 
 ### Distributing a CsWinRT component for native consumers
 

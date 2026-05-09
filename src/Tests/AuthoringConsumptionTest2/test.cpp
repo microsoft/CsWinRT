@@ -4,9 +4,7 @@ using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 
-// Verifies multi-component aggregation: a single native exe references two managed CsWinRT
-// components (AuthoringTest and AuthoringTest2) and the merged WinRT.Component.dll produced
-// by Microsoft.Windows.CsWinRT.targets resolves activation for both.
+// Activation tests across two CsWinRT components aggregated into one WinRT.Component.dll.
 
 TEST(MultiComponent, AuthoringTestStatics)
 {
@@ -30,35 +28,27 @@ TEST(MultiComponent, BothComponentsActivateInOneProcess)
     EXPECT_EQ(second.Add(10, 20), 30);
 }
 
-// Exercises the merged TypeMap deduplication that justifies the aggregator's existence:
-// both components expose generic collection instantiations across the WinRT ABI, and the
-// merged WinRT.Interop.dll must register marshalling for each instantiation exactly once.
+// Generic instantiations from both components flow through the merged WinRT.Interop.dll.
 // If per-component interop generation had run independently, type-map registration would
-// fail at publish time with duplicate-key errors, or these calls would fail at runtime.
+// fail at publish time or these calls would fail at runtime.
 
 TEST(MultiComponent, GenericCollectionsFromBothComponents)
 {
-    // IList<int> from component 2.
     AuthoringTest2::Greeter greeter;
     auto numbers = greeter.GetNumbers();
     ASSERT_EQ(numbers.Size(), 6u);
     EXPECT_EQ(numbers.GetAt(0), 1);
     EXPECT_EQ(numbers.GetAt(5), 13);
 
-    // IList<bool> from component 1.
     auto bools = AuthoringTest::TestClass::GetBools();
     EXPECT_GT(bools.Size(), 0u);
 
-    // IReadOnlyList<Uri> from component 1: exercises a reference-type generic
-    // instantiation that the merged interop closure must marshal correctly.
     auto uris = AuthoringTest::TestClass::GetUris();
     EXPECT_GT(uris.Size(), 0u);
 }
 
 TEST(MultiComponent, GenericMapFromComponent2)
 {
-    // IDictionary<string, int> from component 2: a generic map instantiation that
-    // exists only in component 2; covers the IMap<TKey, TValue> marshalling path.
     AuthoringTest2::Greeter greeter;
     auto counts = greeter.GetCounts();
 
