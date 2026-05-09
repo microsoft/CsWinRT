@@ -193,7 +193,7 @@ internal static partial class CodeWriters
         context.Platform = string.Empty;
         try
         {
-            WriteWinRTMetadataAttribute(writer, type, _cacheRef!);
+            WriteWinRTMetadataAttribute(writer, type, context.Cache);
             WriteTypeCustomAttributes(writer, context, type, true);
             writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
             writer.Write(" static class ");
@@ -212,7 +212,7 @@ internal static partial class CodeWriters
     /// <summary>Emits static members from [Static] factory interfaces.</summary>
     public static void WriteStaticClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (_cacheRef is null) { return; }
+        if (context.Cache is null) { return; }
         // Per-property accessor state (origin tracking for getter/setter)
         Dictionary<string, StaticPropertyAccessorState> properties = new(System.StringComparer.Ordinal);
         // Track the static factory ifaces we've emitted objref fields for (to dedupe)
@@ -220,7 +220,7 @@ internal static partial class CodeWriters
 
         string runtimeClassFullName = (type.Namespace?.Value ?? string.Empty) + "." + (type.Name?.Value ?? string.Empty);
 
-        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cacheRef))
+        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
         {
             AttributedType factory = kv.Value;
             if (!(factory.Statics && factory.Type is not null)) { continue; }
@@ -511,7 +511,7 @@ internal static partial class CodeWriters
 
         // Header attributes
         writer.Write("\n");
-        WriteWinRTMetadataAttribute(writer, type, _cacheRef!);
+        WriteWinRTMetadataAttribute(writer, type, context.Cache);
         WriteTypeCustomAttributes(writer, context, type, true);
         WriteComWrapperMarshallerAttribute(writer, context, type);
         writer.Write(context.Settings.Internal ? "internal" : "public");
@@ -563,7 +563,7 @@ internal static partial class CodeWriters
             }
             writer.Write("}\n");
         }
-        else if (_cacheRef is not null)
+        else if (context.Cache is not null)
         {
             // In ref mode, if WriteAttributedTypes will not emit any public constructors,
             // we need a 'private TypeName() { throw null; }' to suppress the C# compiler's
@@ -574,7 +574,7 @@ internal static partial class CodeWriters
             //  - factory.composable && factory.type && factory.type.MethodList().size() > 0
             //    (composable factories with NO methods don't emit any ctors).
             bool hasRefModeCtors = false;
-            foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cacheRef))
+            foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, context.Cache))
             {
                 AttributedType factory = kv.Value;
                 if (factory.Activatable)

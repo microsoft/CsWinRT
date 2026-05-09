@@ -19,13 +19,13 @@ internal static partial class CodeWriters
     /// </summary>
     public static void WriteAttributedTypes(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType)
     {
-        if (_cacheRef is null) { return; }
+        if (context.Cache is null) { return; }
 
         // Track whether we need to emit the static _objRef_<RuntimeClassName> field (used by
         // default constructors). Emit it once per class if any [Activatable] factory exists.
         bool needsClassObjRef = false;
 
-        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, _cacheRef))
+        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, context.Cache))
         {
             AttributedType factory = kv.Value;
             if (factory.Activatable && factory.Type is null)
@@ -62,7 +62,7 @@ internal static partial class CodeWriters
             }
         }
 
-        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, _cacheRef))
+        foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(classType, context.Cache))
         {
             AttributedType factory = kv.Value;
             if (factory.Activatable)

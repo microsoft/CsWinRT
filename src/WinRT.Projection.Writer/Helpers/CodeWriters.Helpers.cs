@@ -290,11 +290,11 @@ internal static partial class CodeWriters
         // Resolve TypeReference -> TypeDefinition so WriteTypeName goes through the Definition
         // branch which knows about authored-type CCW namespacing (ABI.Impl. prefix).
         ITypeDefOrRef capturedIface = defaultIface;
-        if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && _cacheRef is not null)
+        if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && context.Cache is not null)
         {
             try
             {
-                TypeDefinition? resolved = capturedIface.Resolve(_cacheRef.RuntimeContext);
+                TypeDefinition? resolved = capturedIface.Resolve(context.Cache.RuntimeContext);
                 if (resolved is not null) { capturedIface = resolved; }
             }
             catch { /* leave as TypeReference */ }
@@ -322,18 +322,18 @@ internal static partial class CodeWriters
 
             // Resolve the interface to a TypeDefinition for the [ExclusiveTo] check.
             TypeDefinition? ifaceDef = impl.Interface as TypeDefinition;
-            if (ifaceDef is null && _cacheRef is not null)
+            if (ifaceDef is null && context.Cache is not null)
             {
-                try { ifaceDef = impl.Interface.Resolve(_cacheRef.RuntimeContext); }
+                try { ifaceDef = impl.Interface.Resolve(context.Cache.RuntimeContext); }
                 catch { ifaceDef = null; }
             }
             if (ifaceDef is null && impl.Interface is TypeSpecification spec
                 && spec.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
             {
                 ifaceDef = gi.GenericType as TypeDefinition;
-                if (ifaceDef is null && _cacheRef is not null)
+                if (ifaceDef is null && context.Cache is not null)
                 {
-                    try { ifaceDef = gi.GenericType.Resolve(_cacheRef.RuntimeContext); }
+                    try { ifaceDef = gi.GenericType.Resolve(context.Cache.RuntimeContext); }
                     catch { ifaceDef = null; }
                 }
             }
@@ -344,11 +344,11 @@ internal static partial class CodeWriters
                 // Resolve TypeReference -> TypeDefinition so WriteTypeName goes through the
                 // Definition branch which knows about authored-type CCW namespacing.
                 ITypeDefOrRef capturedIface = impl.Interface;
-                if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && _cacheRef is not null)
+                if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && context.Cache is not null)
                 {
                     try
                     {
-                        TypeDefinition? resolved = capturedIface.Resolve(_cacheRef.RuntimeContext);
+                        TypeDefinition? resolved = capturedIface.Resolve(context.Cache.RuntimeContext);
                         if (resolved is not null) { capturedIface = resolved; }
                     }
                     catch { /* leave as TypeReference */ }

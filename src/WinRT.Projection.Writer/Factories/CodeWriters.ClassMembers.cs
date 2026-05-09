@@ -897,11 +897,11 @@ internal static partial class CodeWriters
         // If the reference is to a type in the same module, resolve to TypeDefinition so
         // WriteTypedefName can drop the 'global::<NS>.' prefix when the namespace matches.
         // Mirrors the C++ tool's behavior of emitting the bare interface name when in scope.
-        if (ifaceType is not TypeDefinition && ifaceType is not TypeSpecification && _cacheRef is not null)
+        if (ifaceType is not TypeDefinition && ifaceType is not TypeSpecification && context.Cache is not null)
         {
             try
             {
-                TypeDefinition? resolved = ifaceType.Resolve(_cacheRef.RuntimeContext);
+                TypeDefinition? resolved = ifaceType.Resolve(context.Cache.RuntimeContext);
                 if (resolved is not null) { ifaceType = resolved; }
             }
             catch { /* leave as TypeReference */ }

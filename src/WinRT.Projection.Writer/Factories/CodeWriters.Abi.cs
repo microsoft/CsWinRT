@@ -6222,7 +6222,7 @@ internal static partial class CodeWriters
             case TypeSemantics.Reference r:
                 // Cross-module typeref: try resolving the type, applying mapped-type translation
                 // for the field/parameter type after resolution.
-                if (_cacheRef is not null)
+                if (context.Cache is not null)
                 {
                     (string rns, string rname) = r.Reference_.Names();
                     // Special case: mapped value types that require ABI marshalling.
@@ -6242,14 +6242,14 @@ internal static partial class CodeWriters
                         break;
                     }
                     // Look up the type by its ORIGINAL (unmapped) name in the cache.
-                    TypeDefinition? rd = _cacheRef.Find(rns + "." + rname);
+                    TypeDefinition? rd = context.Cache.Find(rns + "." + rname);
                     // If not found, try the mapped name (for cases where the mapping target is in the cache).
                     if (rd is null)
                     {
                         MappedType? rmapped = MappedTypes.Get(rns, rname);
                         if (rmapped is not null)
                         {
-                            rd = _cacheRef.Find(rmapped.MappedNamespace + "." + rmapped.MappedName);
+                            rd = context.Cache.Find(rmapped.MappedNamespace + "." + rmapped.MappedName);
                         }
                     }
                     if (rd is not null)

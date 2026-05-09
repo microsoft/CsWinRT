@@ -185,11 +185,11 @@ internal static partial class CodeWriters
                     // Resolve the reference to a TypeDefinition (cross-module struct field, etc.).
                     (string ns, string name) = r.Reference_.Names();
                     TypeDefinition? resolved = null;
-                    if (_cacheRef is not null)
+                    if (context.Cache is not null)
                     {
-                        try { resolved = r.Reference_.Resolve(_cacheRef.RuntimeContext); }
+                        try { resolved = r.Reference_.Resolve(context.Cache.RuntimeContext); }
                         catch { resolved = null; }
-                        resolved ??= _cacheRef.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
+                        resolved ??= context.Cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
                     }
                     if (resolved is not null)
                     {
@@ -215,11 +215,11 @@ internal static partial class CodeWriters
                     // so we can extract its [Guid]; recurse on each type argument.
                     (string ns, string name) = gir.GenericType.Names();
                     TypeDefinition? resolved = null;
-                    if (_cacheRef is not null)
+                    if (context.Cache is not null)
                     {
-                        try { resolved = gir.GenericType.Resolve(_cacheRef.RuntimeContext); }
+                        try { resolved = gir.GenericType.Resolve(context.Cache.RuntimeContext); }
                         catch { resolved = null; }
-                        resolved ??= _cacheRef.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
+                        resolved ??= context.Cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
                     }
                     if (resolved is not null)
                     {

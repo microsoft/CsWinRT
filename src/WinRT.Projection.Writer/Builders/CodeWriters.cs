@@ -96,7 +96,7 @@ internal static partial class CodeWriters
         {
             writer.Write("\n");
         }
-        WriteWinRTMetadataAttribute(writer, type, _cacheRef!);
+        WriteWinRTMetadataAttribute(writer, type, context.Cache);
         WriteValueTypeWinRTClassNameAttribute(writer, context, type);
         WriteTypeCustomAttributes(writer, context, type, true);
         WriteComWrapperMarshallerAttribute(writer, context, type);
@@ -188,7 +188,7 @@ internal static partial class CodeWriters
         bool hasAddition = AdditionTypes.HasAdditionToType(type.Namespace?.Value ?? string.Empty, projectionName);
 
         // Header attributes
-        WriteWinRTMetadataAttribute(writer, type, _cacheRef!);
+        WriteWinRTMetadataAttribute(writer, type, context.Cache);
         WriteValueTypeWinRTClassNameAttribute(writer, context, type);
         WriteTypeCustomAttributes(writer, context, type, true);
         WriteComWrapperMarshallerAttribute(writer, context, type);
@@ -324,7 +324,7 @@ internal static partial class CodeWriters
         MethodSig sig = new(invoke);
 
         writer.Write("\n");
-        WriteWinRTMetadataAttribute(writer, type, _cacheRef!);
+        WriteWinRTMetadataAttribute(writer, type, context.Cache);
         WriteTypeCustomAttributes(writer, context, type, false);
         WriteComWrapperMarshallerAttribute(writer, context, type);
         if (!context.Settings.ReferenceProjection)
@@ -349,7 +349,7 @@ internal static partial class CodeWriters
     {
         string typeName = type.Name?.Value ?? string.Empty;
 
-        WriteWinRTMetadataAttribute(writer, type, _cacheRef!);
+        WriteWinRTMetadataAttribute(writer, type, context.Cache);
         WriteTypeCustomAttributes(writer, context, type, true);
         writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
         writer.Write(" sealed class ");
