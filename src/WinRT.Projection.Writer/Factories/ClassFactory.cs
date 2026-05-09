@@ -40,7 +40,7 @@ internal static class ClassFactory
     /// </summary>
     public static TypeDefinition? FindFastAbiClassType(MetadataCache cache, TypeDefinition iface)
     {
-        TypeDefinition? exclusiveToClass = Helpers.GetExclusiveToType(iface, cache);
+        TypeDefinition? exclusiveToClass = AbiTypeHelpers.GetExclusiveToType(cache, iface);
         if (exclusiveToClass is null) { return null; }
         if (!IsFastAbiClass(exclusiveToClass)) { return null; }
         return exclusiveToClass;

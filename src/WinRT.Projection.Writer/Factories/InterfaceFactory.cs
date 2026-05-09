@@ -361,7 +361,7 @@ internal static class InterfaceFactory
     private static bool IsDefaultOrOverridableInterfaceTypedef(MetadataCache cache, TypeDefinition iface)
     {
         if (!TypeCategorization.IsExclusiveTo(iface)) { return false; }
-        TypeDefinition? classType = Helpers.GetExclusiveToType(iface, cache);
+        TypeDefinition? classType = AbiTypeHelpers.GetExclusiveToType(cache, iface);
         if (classType is null) { return false; }
         foreach (InterfaceImplementation impl in classType.Interfaces)
         {

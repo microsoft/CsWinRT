@@ -215,7 +215,7 @@ internal static class AbiInterfaceFactory
         if (context.Settings.Component)
         {
             MetadataCache cache = context.Cache;
-            exclusiveToOwner = Helpers.GetExclusiveToType(type, cache);
+            exclusiveToOwner = AbiTypeHelpers.GetExclusiveToType(cache, type);
             if (exclusiveToOwner is not null)
             {
                 foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(exclusiveToOwner, cache))
