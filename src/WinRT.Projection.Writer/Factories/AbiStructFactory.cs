@@ -43,7 +43,7 @@ internal static class AbiStructFactory
             CodeWriters.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
             writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
             writer.Write(" unsafe struct ");
-            CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write("\n{\n");
             foreach (FieldDefinition field in type.Fields)
             {
@@ -66,7 +66,7 @@ internal static class AbiStructFactory
                          && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
                          && !CodeWriters.IsTypeBlittable(context.Cache, fieldTd))
                 {
-                    CodeWriters.WriteTypedefName(writer, context, fieldTd, TypedefNameType.ABI, false);
+                    TypedefNameWriter.WriteTypedefName(writer, context, fieldTd, TypedefNameType.ABI, false);
                 }
                 else
                 {

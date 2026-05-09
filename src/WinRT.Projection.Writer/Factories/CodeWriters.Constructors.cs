@@ -312,13 +312,13 @@ internal static partial class CodeWriters
             if (cat == ParamCategory.PassArray)
             {
                 writer.Write("ReadOnlySpan<");
-                WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType));
+                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType));
                 writer.Write(">");
             }
             else if (cat == ParamCategory.FillArray)
             {
                 writer.Write("Span<");
-                WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType));
+                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType));
                 writer.Write(">");
             }
             else
@@ -646,7 +646,7 @@ internal static partial class CodeWriters
             else
             {
                 IndentedTextWriter __scratchElement = new();
-                WriteProjectionType(__scratchElement, context, TypeSemanticsFactory.Get(szArr.BaseType));
+                TypedefNameWriter.WriteProjectionType(__scratchElement, context, TypeSemanticsFactory.Get(szArr.BaseType));
                 string elementProjected = __scratchElement.ToString();
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                 _ = elementInteropArg;

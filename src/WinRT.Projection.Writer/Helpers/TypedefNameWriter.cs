@@ -10,7 +10,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <summary>
 /// Type-name emission helpers.
 /// </summary>
-internal static partial class CodeWriters
+internal static class TypedefNameWriter
 {
     /// <summary>Writes a fundamental (primitive) type's projected name.</summary>
     /// <param name="writer">The writer to emit to.</param>

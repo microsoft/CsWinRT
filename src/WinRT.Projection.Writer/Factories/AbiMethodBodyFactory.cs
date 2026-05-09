@@ -119,7 +119,7 @@ internal static class AbiMethodBodyFactory
             string raw = p.Parameter.Name ?? "param";
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)CodeWriters.StripByRefAndCustomModifiers(p.Type);
             IndentedTextWriter __scratchElementProjected = new();
-            CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
+            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
             string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
@@ -146,7 +146,7 @@ internal static class AbiMethodBodyFactory
         if (returnIsReceiveArrayDoAbi && rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzHoist)
         {
             IndentedTextWriter __scratchElementProjected = new();
-            CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
+            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
             string elementAbi = retSzHoist.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, retSzHoist.BaseType) || retSzHoist.BaseType.IsObject()
                 ? "void*"
@@ -277,7 +277,7 @@ internal static class AbiMethodBodyFactory
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)CodeWriters.StripByRefAndCustomModifiers(p.Type);
             IndentedTextWriter __scratchElementProjected = new();
-            CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
+            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
             writer.Write("    *");
             writer.Write(ptr);
@@ -304,7 +304,7 @@ internal static class AbiMethodBodyFactory
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             IndentedTextWriter __scratchElementProjected = new();
-            CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sz.BaseType));
+            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sz.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
             bool isBlittableElem = CodeWriters.IsBlittablePrimitive(context.Cache, sz.BaseType) || CodeWriters.IsAnyStruct(context.Cache, sz.BaseType);
             if (isBlittableElem)
@@ -369,7 +369,7 @@ internal static class AbiMethodBodyFactory
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             IndentedTextWriter __scratchElementProjected = new();
-            CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
+            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
             string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
 
@@ -721,7 +721,7 @@ internal static class AbiMethodBodyFactory
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             IndentedTextWriter __scratchElementProjected = new();
-            CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
+            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
             string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
 
@@ -942,7 +942,7 @@ internal static class AbiMethodBodyFactory
                 if (CodeWriters.IsBlittablePrimitive(context.Cache, szArr.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 IndentedTextWriter __scratchElementProjected = new();
-                CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
+                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
                 string elementProjected = __scratchElementProjected.ToString();
                 writer.Write("\n        if (__");
                 writer.Write(raw);
@@ -1144,7 +1144,7 @@ internal static class AbiMethodBodyFactory
             if (isGenericEvent)
             {
                 IndentedTextWriter __scratchEvSrcGeneric = new();
-                CodeWriters.WriteTypeName(__scratchEvSrcGeneric, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
+                TypedefNameWriter.WriteTypeName(__scratchEvSrcGeneric, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
                 eventSourceProjectedFull = __scratchEvSrcGeneric.ToString();
                 if (!eventSourceProjectedFull.StartsWith("global::", System.StringComparison.Ordinal))
                 {
@@ -1981,7 +1981,7 @@ internal static class AbiMethodBodyFactory
                 // CopyToUnmanaged for PassArray, not FillArray.)
                 if (cat == ParamCategory.FillArray) { continue; }
                 IndentedTextWriter __scratchElementProjected = new();
-                CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
+                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
                 string elementProjected = __scratchElementProjected.ToString();
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
 
@@ -2178,7 +2178,7 @@ internal static class AbiMethodBodyFactory
             string callName = CodeWriters.GetParamName(p, paramNameOverride);
             string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
             IndentedTextWriter __scratchElementProjected = new();
-            CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
+            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
             string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
 
@@ -2352,7 +2352,7 @@ internal static class AbiMethodBodyFactory
             string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)CodeWriters.StripByRefAndCustomModifiers(p.Type);
             IndentedTextWriter __scratchElementProjected = new();
-            CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
+            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
             // Element ABI type: void* for ref types (string/runtime class/object); ABI struct
             // type for complex structs (e.g. authored BasicStruct); blittable struct ABI for
@@ -2396,7 +2396,7 @@ internal static class AbiMethodBodyFactory
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
                 IndentedTextWriter __scratchElementProjected = new();
-                CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSz.BaseType));
+                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSz.BaseType));
                 string elementProjected = __scratchElementProjected.ToString();
                 string elementAbi = retSz.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject()
                     ? "void*"

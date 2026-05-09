@@ -25,13 +25,13 @@ internal static partial class CodeWriters
             return;
         }
         IndentedTextWriter scratch1 = new();
-        WriteTypedefName(scratch1, context, type, TypedefNameType.Projected, true);
-        WriteTypeParams(scratch1, type);
+        TypedefNameWriter.WriteTypedefName(scratch1, context, type, TypedefNameType.Projected, true);
+        TypedefNameWriter.WriteTypeParams(scratch1, type);
         string typeName = scratch1.ToString();
 
         IndentedTextWriter scratch2 = new();
-        WriteTypedefName(scratch2, context, type, TypedefNameType.CCW, true);
-        WriteTypeParams(scratch2, type);
+        TypedefNameWriter.WriteTypedefName(scratch2, context, type, TypedefNameType.CCW, true);
+        TypedefNameWriter.WriteTypeParams(scratch2, type);
         string metadataTypeName = scratch2.ToString();
 
         _ = map.TryAdd(typeName, metadataTypeName);
@@ -68,8 +68,8 @@ internal static partial class CodeWriters
         {
             writer.Write(", ");
             // CCW + non-forced namespace is the user-facing interface name (e.g. 'IButtonUtilsStatic').
-            WriteTypedefName(writer, context, iface, TypedefNameType.CCW, false);
-            WriteTypeParams(writer, iface);
+            TypedefNameWriter.WriteTypedefName(writer, context, iface, TypedefNameType.CCW, false);
+            TypedefNameWriter.WriteTypeParams(writer, iface);
         }
         writer.Write("\n{\n");
 
@@ -229,7 +229,7 @@ internal static partial class CodeWriters
         if (evt.EventType is not null)
         {
             TypeSemantics evtSemantics = TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType);
-            WriteTypeName(writer, context, evtSemantics, TypedefNameType.Projected, false);
+            TypedefNameWriter.WriteTypeName(writer, context, evtSemantics, TypedefNameType.Projected, false);
         }
         writer.Write(" ");
         writer.Write(evtName);
@@ -256,7 +256,7 @@ internal static partial class CodeWriters
             return;
         }
         TypeSemantics semantics = TypeSemanticsFactory.Get(returnType);
-        WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
+        TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
     }
 
     private static void WriteFactoryPropertyType(IndentedTextWriter writer, ProjectionEmitContext context, PropertyDefinition prop)
@@ -264,7 +264,7 @@ internal static partial class CodeWriters
         AsmResolver.DotNet.Signatures.TypeSignature? sig = prop.Signature?.ReturnType;
         if (sig is null) { writer.Write("object"); return; }
         TypeSemantics semantics = TypeSemanticsFactory.Get(sig);
-        WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
+        TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
     }
 
     private static void WriteFactoryMethodParameters(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method, bool includeTypes)
@@ -279,7 +279,7 @@ internal static partial class CodeWriters
             if (includeTypes)
             {
                 TypeSemantics semantics = TypeSemanticsFactory.Get(sig.ParameterTypes[i]);
-                WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
+                TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
                 writer.Write(" ");
                 writer.Write(paramName);
             }

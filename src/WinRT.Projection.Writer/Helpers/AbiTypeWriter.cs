@@ -34,7 +34,7 @@ internal static class AbiTypeWriter
                 {
                     // Enums in WinRT ABI use the projected enum type directly (since their C#
                     // layout matches their underlying integer ABI representation 1:1).
-                    CodeWriters.WriteTypedefName(writer, context, d.Type, TypedefNameType.Projected, true);
+                    TypedefNameWriter.WriteTypedefName(writer, context, d.Type, TypedefNameType.Projected, true);
                 }
                 else if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Struct)
                 {
@@ -70,11 +70,11 @@ internal static class AbiTypeWriter
                     // Nullable<T> fields) need the ABI struct.
                     if (CodeWriters.IsAnyStruct(context.Cache, dts))
                     {
-                        CodeWriters.WriteTypedefName(writer, context, d.Type, TypedefNameType.Projected, true);
+                        TypedefNameWriter.WriteTypedefName(writer, context, d.Type, TypedefNameType.Projected, true);
                     }
                     else
                     {
-                        CodeWriters.WriteTypedefName(writer, context, d.Type, TypedefNameType.ABI, true);
+                        TypedefNameWriter.WriteTypedefName(writer, context, d.Type, TypedefNameType.ABI, true);
                     }
                 }
                 else
@@ -121,7 +121,7 @@ internal static class AbiTypeWriter
                         if (cat == TypeCategory.Enum)
                         {
                             // Enums use the projected enum type directly (C# layout == ABI layout).
-                            CodeWriters.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
+                            TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
                             break;
                         }
                         if (cat == TypeCategory.Struct)
@@ -137,11 +137,11 @@ internal static class AbiTypeWriter
                             }
                             if (CodeWriters.IsAnyStruct(context.Cache, rd.ToTypeSignature()))
                             {
-                                CodeWriters.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
+                                TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
                             }
                             else
                             {
-                                CodeWriters.WriteTypedefName(writer, context, rd, TypedefNameType.ABI, true);
+                                TypedefNameWriter.WriteTypedefName(writer, context, rd, TypedefNameType.ABI, true);
                             }
                             break;
                         }

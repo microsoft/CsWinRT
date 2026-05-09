@@ -106,7 +106,7 @@ internal static class ObjRefNameGenerator
             {
                 if (i > 0) { writer.Write(", "); }
                 // forceWriteNamespace=true so generic args also get global:: prefix.
-                CodeWriters.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
+                TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
             }
             writer.Write(">");
         }
@@ -179,7 +179,7 @@ internal static class ObjRefNameGenerator
     {
         TypeSemantics sem = TypeSemanticsFactory.Get(gi);
         IndentedTextWriter scratch = new();
-        CodeWriters.WriteTypeName(scratch, context, sem, TypedefNameType.ABI, forceWriteNamespace: true);
+        TypedefNameWriter.WriteTypeName(scratch, context, sem, TypedefNameType.ABI, forceWriteNamespace: true);
         return "IID_" + IIDExpressionWriter.EscapeTypeNameForIdentifier(scratch.ToString(), stripGlobal: true, stripGlobalABI: true);
     }
     /// <summary>

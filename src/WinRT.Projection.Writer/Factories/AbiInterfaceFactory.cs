@@ -277,7 +277,7 @@ internal static class AbiInterfaceFactory
         {
             {
                 IndentedTextWriter __scratchIfaceFullName = new();
-                CodeWriters.WriteTypedefName(__scratchIfaceFullName, context, type, TypedefNameType.Projected, true);
+                TypedefNameWriter.WriteTypedefName(__scratchIfaceFullName, context, type, TypedefNameType.Projected, true);
                 ifaceFullName = __scratchIfaceFullName.ToString();
             }
             if (!ifaceFullName.StartsWith("global::", System.StringComparison.Ordinal)) { ifaceFullName = "global::" + ifaceFullName; }
@@ -373,22 +373,22 @@ internal static class AbiInterfaceFactory
         writer.Write(nameStripped);
         writer.Write("Marshaller\n{\n");
         writer.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
-        CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        CodeWriters.WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write(" value)\n    {\n");
         writer.Write("        return WindowsRuntimeInterfaceMarshaller<");
-        CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        CodeWriters.WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write(">.ConvertToUnmanaged(value, ");
         CodeWriters.WriteIidGuidReference(writer, context, type);
         writer.Write(");\n    }\n\n");
         writer.Write("    public static ");
-        CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        CodeWriters.WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("? ConvertToManaged(void* value)\n    {\n");
         writer.Write("        return (");
-        CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        CodeWriters.WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n");
         writer.Write("#nullable disable\n");
     }

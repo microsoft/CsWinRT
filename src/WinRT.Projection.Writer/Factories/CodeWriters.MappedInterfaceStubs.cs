@@ -258,7 +258,7 @@ internal static partial class CodeWriters
     private static string WriteTypeNameToString(ProjectionEmitContext context, TypeSemantics arg, TypedefNameType nameType, bool forceQualified)
     {
         IndentedTextWriter scratch = new();
-        WriteTypeName(scratch, context, arg, nameType, forceQualified);
+        TypedefNameWriter.WriteTypeName(scratch, context, arg, nameType, forceQualified);
         return scratch.ToString();
     }
 

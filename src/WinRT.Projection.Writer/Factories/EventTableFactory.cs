@@ -23,7 +23,7 @@ internal static class EventTableFactory
     {
         string evName = evt.Name?.Value ?? "Event";
         IndentedTextWriter __scratchEvtType = new();
-        CodeWriters.WriteEventType(__scratchEvtType, context, evt);
+        TypedefNameWriter.WriteEventType(__scratchEvtType, context, evt);
         string evtType = __scratchEvtType.ToString();
 
         writer.Write("\nprivate static ConditionalWeakTable<");
@@ -93,7 +93,7 @@ internal static class EventTableFactory
         else
         {
             writer.Write("        var __handler = ");
-            CodeWriters.WriteTypeName(writer, context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
+            TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
             writer.Write("Marshaller.ConvertToManaged(");
             writer.Write(handlerRef);
             writer.Write(");\n");

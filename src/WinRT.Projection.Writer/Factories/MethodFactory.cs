@@ -27,22 +27,22 @@ internal static class MethodFactory
             if (isParameter)
             {
                 writer.Write("ReadOnlySpan<");
-                CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
+                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
                 writer.Write(">");
             }
             else
             {
-                CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
+                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
                 writer.Write("[]");
             }
             return;
         }
         if (typeSig is ByReferenceTypeSignature br)
         {
-            CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(br.BaseType));
+            TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(br.BaseType));
             return;
         }
-        CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(typeSig));
+        TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(typeSig));
     }
 
     /// <summary>Writes a parameter's projected type, applying the <see cref="ParamCategory"/>-specific transformations.</summary>
@@ -64,12 +64,12 @@ internal static class MethodFactory
                 break;
             case ParamCategory.PassArray:
                 writer.Write("ReadOnlySpan<");
-                CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
                 writer.Write(">");
                 break;
             case ParamCategory.FillArray:
                 writer.Write("Span<");
-                CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
+                TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(((SzArrayTypeSignature)p.Type).BaseType));
                 writer.Write(">");
                 break;
             case ParamCategory.ReceiveArray:
@@ -79,7 +79,7 @@ internal static class MethodFactory
                         ?? (p.Type is ByReferenceTypeSignature br ? br.BaseType as SzArrayTypeSignature : null);
                     if (sz is not null)
                     {
-                        CodeWriters.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
+                        TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(sz.BaseType));
                         writer.Write("[]");
                     }
                     else

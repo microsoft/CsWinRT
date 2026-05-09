@@ -80,7 +80,7 @@ internal static class AbiDelegateFactory
         // which is exactly the same shape as interface CCW dispatch. Pass the delegate's
         // projected name as 'ifaceFullName' and "Invoke" as 'methodName'.
         IndentedTextWriter __scratchProjectedDelegateForBody = new();
-        CodeWriters.WriteTypedefName(__scratchProjectedDelegateForBody, context, type, TypedefNameType.Projected, true);
+        TypedefNameWriter.WriteTypedefName(__scratchProjectedDelegateForBody, context, type, TypedefNameType.Projected, true);
         string projectedDelegateForBody = __scratchProjectedDelegateForBody.ToString();
         if (!projectedDelegateForBody.StartsWith("global::", System.StringComparison.Ordinal)) { projectedDelegateForBody = "global::" + projectedDelegateForBody; }
         AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
@@ -207,7 +207,7 @@ internal static class AbiDelegateFactory
 
         // Compute the projected type name (with global::) used as the generic argument.
         IndentedTextWriter __scratchProjectedName = new();
-        CodeWriters.WriteTypedefName(__scratchProjectedName, context, type, TypedefNameType.Projected, true);
+        TypedefNameWriter.WriteTypedefName(__scratchProjectedName, context, type, TypedefNameType.Projected, true);
         string projectedName = __scratchProjectedName.ToString();
         if (!projectedName.StartsWith("global::", System.StringComparison.Ordinal))
         {

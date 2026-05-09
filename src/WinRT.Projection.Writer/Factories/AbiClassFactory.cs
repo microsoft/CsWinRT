@@ -240,7 +240,7 @@ internal static class AbiClassFactory
         else if (!defaultIfaceIsExclusive && defaultIface is not null)
         {
             IndentedTextWriter __scratchDefIfaceTypeName = new();
-            CodeWriters.WriteTypeName(__scratchDefIfaceTypeName, context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
+            TypedefNameWriter.WriteTypeName(__scratchDefIfaceTypeName, context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
             string defIfaceTypeName = __scratchDefIfaceTypeName.ToString();
             writer.Write("        if (value is IWindowsRuntimeInterface<");
             writer.Write(defIfaceTypeName);

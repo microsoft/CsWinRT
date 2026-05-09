@@ -137,8 +137,8 @@ internal static class IIDExpressionWriter
     public static void WriteIidGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         IndentedTextWriter scratch = new();
-        CodeWriters.WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
-        CodeWriters.WriteTypeParams(scratch, type);
+        TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
+        TypedefNameWriter.WriteTypeParams(scratch, type);
         string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
         writer.Write("IID_");
         writer.Write(name);
@@ -147,8 +147,8 @@ internal static class IIDExpressionWriter
     public static void WriteIidReferenceGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         IndentedTextWriter scratch = new();
-        CodeWriters.WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
-        CodeWriters.WriteTypeParams(scratch, type);
+        TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
+        TypedefNameWriter.WriteTypeParams(scratch, type);
         string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
         writer.Write("IID_");
         writer.Write(name);
@@ -244,16 +244,16 @@ internal static class IIDExpressionWriter
         {
             case TypeCategory.Enum:
                 writer.Write("enum(");
-                CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
-                CodeWriters.WriteTypeParams(writer, type);
+                TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
+                TypedefNameWriter.WriteTypeParams(writer, type);
                 writer.Write(";");
                 writer.Write(TypeCategorization.IsFlagsEnum(type) ? "u4" : "i4");
                 writer.Write(")");
                 break;
             case TypeCategory.Struct:
                 writer.Write("struct(");
-                CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
-                CodeWriters.WriteTypeParams(writer, type);
+                TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
+                TypedefNameWriter.WriteTypeParams(writer, type);
                 writer.Write(";");
                 bool first = true;
                 foreach (FieldDefinition field in type.Fields)
@@ -281,8 +281,8 @@ internal static class IIDExpressionWriter
                 if (defaultIface is TypeDefinition di)
                 {
                     writer.Write("rc(");
-                    CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
-                    CodeWriters.WriteTypeParams(writer, type);
+                    TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
+                    TypedefNameWriter.WriteTypeParams(writer, type);
                     writer.Write(";");
                     WriteGuidSignature(writer, context, new TypeSemantics.Definition(di));
                     writer.Write(")");

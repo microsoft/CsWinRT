@@ -88,8 +88,8 @@ internal static partial class CodeWriters
     public static void WriteWinRTMetadataTypeNameAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         writer.Write("[WindowsRuntimeMetadataTypeName(\"");
-        WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
-        WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("\")]\n");
     }
 
@@ -100,8 +100,8 @@ internal static partial class CodeWriters
     public static void WriteWinRTMappedTypeAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         writer.Write("[WindowsRuntimeMappedType(typeof(");
-        WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-        WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("))]\n");
     }
 
@@ -128,8 +128,8 @@ internal static partial class CodeWriters
     {
         if (context.Settings.ReferenceProjection) { return; }
         writer.Write("[WindowsRuntimeReferenceType(typeof(");
-        WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("?))]\n");
     }
 
@@ -166,8 +166,8 @@ internal static partial class CodeWriters
 
         // Capture the projected type name as a string by writing into a scratch writer at indent 0.
         WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
-        WriteTypedefName(scratch, context, type, TypedefNameType.NonProjected, true);
-        WriteTypeParams(scratch, type);
+        TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.NonProjected, true);
+        TypedefNameWriter.WriteTypeParams(scratch, type);
         string projectionName = scratch.ToString();
 
         writer.Write("\n[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(\n    value: \"");
@@ -175,8 +175,8 @@ internal static partial class CodeWriters
         writer.Write("\",\n    target: typeof(");
         if (context.Settings.Component)
         {
-            WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-            WriteTypeParams(writer, type);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
+            TypedefNameWriter.WriteTypeParams(writer, type);
         }
         else
         {
@@ -191,8 +191,8 @@ internal static partial class CodeWriters
             writer.Write("\n[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(\n    source: typeof(");
             writer.Write(projectionName);
             writer.Write("),\n    proxy: typeof(");
-            WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-            WriteTypeParams(writer, type);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
+            TypedefNameWriter.WriteTypeParams(writer, type);
             writer.Write("))]\n\n");
         }
     }
@@ -208,8 +208,8 @@ internal static partial class CodeWriters
     public static void WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool isValueType)
     {
         WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
-        WriteTypedefName(scratch, context, type, TypedefNameType.NonProjected, true);
-        WriteTypeParams(scratch, type);
+        TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.NonProjected, true);
+        TypedefNameWriter.WriteTypeParams(scratch, type);
         string projectionName = scratch.ToString();
 
         writer.Write("\n[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(\n    value: \"");
@@ -226,8 +226,8 @@ internal static partial class CodeWriters
         writer.Write("\",\n    target: typeof(");
         if (context.Settings.Component)
         {
-            WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-            WriteTypeParams(writer, type);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
+            TypedefNameWriter.WriteTypeParams(writer, type);
         }
         else
         {
@@ -244,8 +244,8 @@ internal static partial class CodeWriters
             writer.Write("\n[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(\n    source: typeof(");
             writer.Write(projectionName);
             writer.Write("),\n    proxy: typeof(");
-            WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-            WriteTypeParams(writer, type);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
+            TypedefNameWriter.WriteTypeParams(writer, type);
             writer.Write("))]\n\n");
         }
     }
@@ -269,11 +269,11 @@ internal static partial class CodeWriters
         }
 
         writer.Write("\n[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(\n    source: typeof(");
-        WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-        WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("),\n    proxy: typeof(");
-        WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-        WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("))]\n\n");
     }
 
@@ -304,7 +304,7 @@ internal static partial class CodeWriters
         // (e.g. IDictionary<string, BasicStruct>), TypeRefs and TypeDefs are all handled correctly.
         WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
         TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
-        WriteTypeName(scratch, context, semantics, TypedefNameType.CCW, true);
+        TypedefNameWriter.WriteTypeName(scratch, context, semantics, TypedefNameType.CCW, true);
         string interfaceName = scratch.ToString();
 
         _ = entries.TryAdd(className, interfaceName);
@@ -355,7 +355,7 @@ internal static partial class CodeWriters
                 }
                 WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
                 TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
-                WriteTypeName(scratch, context, semantics, TypedefNameType.CCW, true);
+                TypedefNameWriter.WriteTypeName(scratch, context, semantics, TypedefNameType.CCW, true);
                 string interfaceName = scratch.ToString();
                 entries.Add(new KeyValuePair<string, string>(className, interfaceName));
             }

@@ -478,7 +478,7 @@ internal static partial class CodeWriters
         // The _objRef_ field name uses the full instantiated interface name so generic instantiations
         // (e.g. IAsyncOperation<uint>) get a per-instantiation field.
         IndentedTextWriter __scratchAbiClass = new();
-        WriteTypedefName(__scratchAbiClass, context, abiInterface, TypedefNameType.StaticAbiClass, true);
+        TypedefNameWriter.WriteTypedefName(__scratchAbiClass, context, abiInterface, TypedefNameType.StaticAbiClass, true);
         string abiClass = __scratchAbiClass.ToString();
         if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal))
         {
@@ -493,7 +493,7 @@ internal static partial class CodeWriters
         if (isGenericInterface && currentInstance is not null)
         {
             IndentedTextWriter __scratchProjectedParent = new();
-            WriteTypeName(__scratchProjectedParent, context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
+            TypedefNameWriter.WriteTypeName(__scratchProjectedParent, context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
             string projectedParent = __scratchProjectedParent.ToString();
             genericParentEncoded = IIDExpressionWriter.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
             genericInteropType = InteropTypeNameWriter.EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
@@ -737,7 +737,7 @@ internal static partial class CodeWriters
             else
             {
                 IndentedTextWriter __scratchEventSource = new();
-                WriteTypeName(__scratchEventSource, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false);
+                TypedefNameWriter.WriteTypeName(__scratchEventSource, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false);
                 eventSourceType = __scratchEventSource.ToString();
             }
             string eventSourceTypeFull = eventSourceType;
@@ -822,7 +822,7 @@ internal static partial class CodeWriters
             writer.Write(access);
             writer.Write(methodSpec);
             writer.Write("event ");
-            WriteEventType(writer, context, evt, currentInstance);
+            TypedefNameWriter.WriteEventType(writer, context, evt, currentInstance);
             writer.Write(" ");
             writer.Write(name);
             writer.Write("\n{\n");
@@ -907,8 +907,8 @@ internal static partial class CodeWriters
         }
         if (ifaceType is TypeDefinition td)
         {
-            WriteTypedefName(writer, context, td, TypedefNameType.CCW, false);
-            WriteTypeParams(writer, td);
+            TypedefNameWriter.WriteTypedefName(writer, context, td, TypedefNameType.CCW, false);
+            TypedefNameWriter.WriteTypeParams(writer, td);
         }
         else if (ifaceType is TypeReference tr)
         {
@@ -942,7 +942,7 @@ internal static partial class CodeWriters
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
                 if (i > 0) { writer.Write(", "); }
-                WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
+                TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
             }
             writer.Write(">");
         }

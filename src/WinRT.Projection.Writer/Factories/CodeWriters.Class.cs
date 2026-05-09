@@ -196,8 +196,8 @@ internal static partial class CodeWriters
             WriteTypeCustomAttributes(writer, context, type, true);
             writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
             writer.Write(" static class ");
-            WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-            WriteTypeParams(writer, type);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+            TypedefNameWriter.WriteTypeParams(writer, type);
             writer.Write("\n{\n");
             WriteStaticClassMembers(writer, context, type);
             writer.Write("}\n");
@@ -229,7 +229,7 @@ internal static partial class CodeWriters
             string objRef = ObjRefNameGenerator.GetObjRefName(context, staticIface);
             // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.System.ILauncherStaticsMethods")
             IndentedTextWriter __scratchAbiClass = new();
-            WriteTypedefName(__scratchAbiClass, context, staticIface, TypedefNameType.StaticAbiClass, true);
+            TypedefNameWriter.WriteTypedefName(__scratchAbiClass, context, staticIface, TypedefNameType.StaticAbiClass, true);
             string abiClass = __scratchAbiClass.ToString();
             if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal))
             {
@@ -292,7 +292,7 @@ internal static partial class CodeWriters
                 writer.Write("\n");
                 if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
                 writer.Write("public static event ");
-                WriteEventType(writer, context, evt);
+                TypedefNameWriter.WriteEventType(writer, context, evt);
                 writer.Write(" ");
                 writer.Write(evtName);
                 writer.Write("\n{\n");
@@ -518,8 +518,8 @@ internal static partial class CodeWriters
         WriteClassModifiers(writer, type);
         // are emitted as plain (non-partial) classes.
         writer.Write("class ");
-        WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         WriteTypeInheritance(writer, context, type, false, true);
         writer.Write("\n{\n");
 

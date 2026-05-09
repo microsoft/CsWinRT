@@ -50,10 +50,10 @@ internal static class ReferenceImplFactory
             writer.Write("            return unchecked((int)0x80004003);\n        }\n\n");
             writer.Write("        try\n        {\n");
             writer.Write("            var value = (");
-            CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(")(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));\n");
             writer.Write("            *(");
-            CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write("*)result = value;\n");
             writer.Write("            return 0;\n        }\n");
             writer.Write("        catch (Exception e)\n        {\n");
@@ -69,17 +69,17 @@ internal static class ReferenceImplFactory
             writer.Write("            return unchecked((int)0x80004003);\n        }\n\n");
             writer.Write("        try\n        {\n");
             writer.Write("            ");
-            CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" unboxedValue = (");
-            CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);\n");
             writer.Write("            ");
-            CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write(" value = ");
             writer.Write(nameStripped);
             writer.Write("Marshaller.ConvertToUnmanaged(unboxedValue);\n");
             writer.Write("            *(");
-            CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write("*)result = value;\n");
             writer.Write("            return 0;\n        }\n");
             writer.Write("        catch (Exception e)\n        {\n");
@@ -94,9 +94,9 @@ internal static class ReferenceImplFactory
             writer.Write("            return unchecked((int)0x80004003);\n        }\n\n");
             writer.Write("        try\n        {\n");
             writer.Write("            ");
-            CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" unboxedValue = (");
-            CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);\n");
             writer.Write("            void* value = ");
             // Use the same-namespace short marshaller name (we're in the ABI namespace).

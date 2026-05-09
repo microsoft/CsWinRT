@@ -168,7 +168,7 @@ internal static partial class CodeWriters
             if (field.IsStatic || field.Signature is null) { continue; }
             TypeSemantics semantics = TypeSemanticsFactory.Get(field.Signature.FieldType);
             IndentedTextWriter scratch = new();
-            WriteProjectionType(scratch, context, semantics);
+            TypedefNameWriter.WriteProjectionType(scratch, context, semantics);
             string fieldType = scratch.ToString();
             string fieldName = field.Name?.Value ?? string.Empty;
             string paramName = ToCamelCase(fieldName);
@@ -338,8 +338,8 @@ internal static partial class CodeWriters
         writer.Write(" delegate ");
         MethodFactory.WriteProjectionReturnType(writer, context, sig);
         writer.Write(" ");
-        WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("(");
         MethodFactory.WriteParameterList(writer, context, sig);
         writer.Write(");\n");
@@ -372,7 +372,7 @@ internal static partial class CodeWriters
         {
             if (field.IsStatic || field.Signature is null) { continue; }
             writer.Write("public ");
-            WriteProjectionType(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
+            TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
             writer.Write(" ");
             writer.Write(field.Name?.Value ?? string.Empty);
             writer.Write(";\n");

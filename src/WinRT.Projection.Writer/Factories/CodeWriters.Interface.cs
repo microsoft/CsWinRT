@@ -120,8 +120,8 @@ internal static partial class CodeWriters
     {
         if (ifaceType is TypeDefinition td)
         {
-            WriteTypedefName(writer, context, td, TypedefNameType.CCW, false);
-            WriteTypeParams(writer, td);
+            TypedefNameWriter.WriteTypedefName(writer, context, td, TypedefNameType.CCW, false);
+            TypedefNameWriter.WriteTypeParams(writer, td);
         }
         else if (ifaceType is TypeReference tr)
         {
@@ -164,7 +164,7 @@ internal static partial class CodeWriters
             {
                 if (i > 0) { writer.Write(", "); }
                 // Pass forceWriteNamespace=false so type args also respect the current namespace.
-                WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, false);
+                TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, false);
             }
             writer.Write(">");
         }
@@ -227,7 +227,7 @@ internal static partial class CodeWriters
         foreach (EventDefinition evt in type.Events)
         {
             writer.Write("\nevent ");
-            WriteEventType(writer, context, evt);
+            TypedefNameWriter.WriteEventType(writer, context, evt);
             writer.Write(" ");
             writer.Write(evt.Name?.Value ?? string.Empty);
             writer.Write(";");
@@ -374,8 +374,8 @@ internal static partial class CodeWriters
                           TypeCategorization.IsProjectionInternal(type);
         writer.Write(isInternal ? "internal" : "public");
         writer.Write(" interface ");
-        WriteTypedefName(writer, context, type, TypedefNameType.CCW, false);
-        WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.CCW, false);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         WriteTypeInheritance(writer, context, type, false, false);
         writer.Write("\n{");
         WriteInterfaceMemberSignatures(writer, context, type);

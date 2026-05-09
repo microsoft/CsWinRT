@@ -29,8 +29,8 @@ internal static class AbiInterfaceIDicFactory
         writer.Write("file interface ");
         writer.Write(nameStripped);
         writer.Write(" : ");
-        CodeWriters.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
-        CodeWriters.WriteTypeParams(writer, type);
+        TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("\n{\n");
         // Emit DIM bodies that dispatch through the static ABI Methods class.
         WriteInterfaceIdicImplMembers(writer, context, type);
@@ -92,10 +92,10 @@ internal static class AbiInterfaceIDicFactory
                 if (impl.Interface is TypeSpecification tsMap && tsMap.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature giMap && giMap.TypeArguments.Count == 2)
                 {
                     IndentedTextWriter __scratchKeyText = new();
-                    CodeWriters.WriteTypeName(__scratchKeyText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true);
+                    TypedefNameWriter.WriteTypeName(__scratchKeyText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true);
                     string keyText = __scratchKeyText.ToString();
                     IndentedTextWriter __scratchValueText = new();
-                    CodeWriters.WriteTypeName(__scratchValueText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true);
+                    TypedefNameWriter.WriteTypeName(__scratchValueText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true);
                     string valueText = __scratchValueText.ToString();
                     EmitDicShimIObservableMapForwarders(writer, context, keyText, valueText);
                     // Mark the inherited IMap`2 / IIterable`1 as visited so they aren't re-emitted.
@@ -113,7 +113,7 @@ internal static class AbiInterfaceIDicFactory
                 if (impl.Interface is TypeSpecification tsVec && tsVec.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature giVec && giVec.TypeArguments.Count == 1)
                 {
                     IndentedTextWriter __scratchElementText = new();
-                    CodeWriters.WriteTypeName(__scratchElementText, context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true);
+                    TypedefNameWriter.WriteTypeName(__scratchElementText, context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true);
                     string elementText = __scratchElementText.ToString();
                     EmitDicShimIObservableVectorForwarders(writer, context, elementText);
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
@@ -231,7 +231,7 @@ internal static class AbiInterfaceIDicFactory
         // The CCW interface name (the projected interface name with global:: prefix). For the
         // delegating thunks we cast through this same projected interface type.
         IndentedTextWriter __scratchCcwIfaceName = new();
-        CodeWriters.WriteTypedefName(__scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
+        TypedefNameWriter.WriteTypedefName(__scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
         string ccwIfaceName = __scratchCcwIfaceName.ToString();
         if (!ccwIfaceName.StartsWith("global::", System.StringComparison.Ordinal)) { ccwIfaceName = "global::" + ccwIfaceName; }
 
@@ -310,7 +310,7 @@ internal static class AbiInterfaceIDicFactory
         {
             string evtName = evt.Name?.Value ?? string.Empty;
             writer.Write("\nevent ");
-            CodeWriters.WriteEventType(writer, context, evt);
+            TypedefNameWriter.WriteEventType(writer, context, evt);
             writer.Write(" ");
             writer.Write(ccwIfaceName);
             writer.Write(".");
@@ -379,12 +379,12 @@ internal static class AbiInterfaceIDicFactory
     {
         // The CCW interface name (the projected interface name with global:: prefix).
         IndentedTextWriter __scratchCcwIfaceName = new();
-        CodeWriters.WriteTypedefName(__scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
+        TypedefNameWriter.WriteTypedefName(__scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
         string ccwIfaceName = __scratchCcwIfaceName.ToString();
         if (!ccwIfaceName.StartsWith("global::", System.StringComparison.Ordinal)) { ccwIfaceName = "global::" + ccwIfaceName; }
         // The static ABI Methods class name.
         IndentedTextWriter __scratchAbiClass = new();
-        CodeWriters.WriteTypedefName(__scratchAbiClass, context, type, TypedefNameType.StaticAbiClass, true);
+        TypedefNameWriter.WriteTypedefName(__scratchAbiClass, context, type, TypedefNameType.StaticAbiClass, true);
         string abiClass = __scratchAbiClass.ToString();
         if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal)) { abiClass = "global::" + abiClass; }
 
@@ -482,7 +482,7 @@ internal static class AbiInterfaceIDicFactory
         {
             string evtName = evt.Name?.Value ?? string.Empty;
             writer.Write("\nevent ");
-            CodeWriters.WriteEventType(writer, context, evt);
+            TypedefNameWriter.WriteEventType(writer, context, evt);
             writer.Write(" ");
             writer.Write(ccwIfaceName);
             writer.Write(".");
