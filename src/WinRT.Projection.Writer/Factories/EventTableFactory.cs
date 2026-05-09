@@ -76,7 +76,7 @@ internal static class EventTableFactory
 
         if (isGeneric)
         {
-            string interopTypeName = CodeWriters.EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + ", WinRT.Interop";
+            string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + ", WinRT.Interop";
             IndentedTextWriter __scratchProjectedTypeName = new();
             MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, evtTypeSig, false);
             string projectedTypeName = __scratchProjectedTypeName.ToString();

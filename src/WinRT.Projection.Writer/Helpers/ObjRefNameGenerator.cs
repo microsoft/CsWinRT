@@ -191,7 +191,7 @@ internal static class ObjRefNameGenerator
     internal static void EmitUnsafeAccessorForIid(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
     {
         string propName = BuildIidPropertyNameForGenericInterface(context, gi);
-        string interopName = CodeWriters.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
+        string interopName = InteropTypeNameWriter.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
         writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"get_IID_");
         writer.Write(interopName);
         writer.Write("\")]\n");

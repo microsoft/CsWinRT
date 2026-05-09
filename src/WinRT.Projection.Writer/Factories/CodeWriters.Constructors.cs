@@ -352,7 +352,7 @@ internal static partial class CodeWriters
                 writer.Write(");\n");
                 continue;
             }
-            string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
+            string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
             IndentedTextWriter __scratchProjType = new();
             MethodFactory.WriteProjectedSignature(__scratchProjType, context, p.Type, false);
             string projectedTypeName = __scratchProjType.ToString();
@@ -648,7 +648,7 @@ internal static partial class CodeWriters
                 IndentedTextWriter __scratchElement = new();
                 WriteProjectionType(__scratchElement, context, TypeSemanticsFactory.Get(szArr.BaseType));
                 string elementProjected = __scratchElement.ToString();
-                string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                 _ = elementInteropArg;
                 writer.Write(callIndent);
                 writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
@@ -817,7 +817,7 @@ internal static partial class CodeWriters
                 }
                 else
                 {
-                    string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+                    string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                     _ = elementInteropArg;
                     writer.Write("\n            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]\n");
                     writer.Write("            static extern void Dispose_");

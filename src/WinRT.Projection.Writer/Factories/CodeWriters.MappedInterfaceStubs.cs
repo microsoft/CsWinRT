@@ -113,7 +113,7 @@ internal static partial class CodeWriters
         if (args.Count != 1) { return; }
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string elementId = EncodeArgIdentifier(context, args[0]);
-        string interopTypeArgs = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IEnumerable'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IEnumerableMethods_" + elementId + "_";
 
@@ -129,7 +129,7 @@ internal static partial class CodeWriters
         if (args.Count != 1) { return; }
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string elementId = EncodeArgIdentifier(context, args[0]);
-        string interopTypeArgs = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IEnumerator'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IEnumeratorMethods_" + elementId + "_";
 
@@ -159,8 +159,8 @@ internal static partial class CodeWriters
         string kvLong = kvNested;
         string keyId = EncodeArgIdentifier(context, args[0]);
         string valId = EncodeArgIdentifier(context, args[1]);
-        string keyInteropArg = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
-        string valInteropArg = EncodeInteropTypeName(argSigs[1], TypedefNameType.Projected);
+        string keyInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string valInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[1], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
         string prefix = "IDictionaryMethods_" + keyId + "_" + valId + "_";
         // The IEnumerable<KeyValuePair<K,V>> objref name (matches what WriteClassObjRefDefinitions emits transitively).
@@ -209,8 +209,8 @@ internal static partial class CodeWriters
         string v = WriteTypeNameToString(context, args[1], TypedefNameType.Projected, true);
         string keyId = EncodeArgIdentifier(context, args[0]);
         string valId = EncodeArgIdentifier(context, args[1]);
-        string keyInteropArg = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
-        string valInteropArg = EncodeInteropTypeName(argSigs[1], TypedefNameType.Projected);
+        string keyInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string valInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[1], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
         string prefix = "IReadOnlyDictionaryMethods_" + keyId + "_" + valId + "_";
 
@@ -237,7 +237,7 @@ internal static partial class CodeWriters
         if (args.Count != 1) { return; }
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string elementId = EncodeArgIdentifier(context, args[0]);
-        string interopTypeArgs = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IReadOnlyList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IReadOnlyListMethods_" + elementId + "_";
 
@@ -277,7 +277,7 @@ internal static partial class CodeWriters
         if (args.Count != 1) { return; }
         string t = WriteTypeNameToString(context, args[0], TypedefNameType.Projected, true);
         string elementId = EncodeArgIdentifier(context, args[0]);
-        string interopTypeArgs = EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IListMethods_" + elementId + "_";
 

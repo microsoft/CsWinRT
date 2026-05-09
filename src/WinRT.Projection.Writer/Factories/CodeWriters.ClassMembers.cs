@@ -496,7 +496,7 @@ internal static partial class CodeWriters
             WriteTypeName(__scratchProjectedParent, context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
             string projectedParent = __scratchProjectedParent.ToString();
             genericParentEncoded = IIDExpressionWriter.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
-            genericInteropType = EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
+            genericInteropType = InteropTypeNameWriter.EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
         }
 
         // Compute the platform attribute string from the interface type's [ContractVersion]
@@ -747,7 +747,7 @@ internal static partial class CodeWriters
             }
             // The "interop" type name string for the EventSource UnsafeAccessor (only needed for generic events).
             string eventSourceInteropType = isGenericEvent
-                ? EncodeInteropTypeName(evtSig, TypedefNameType.EventSource) + ", WinRT.Interop"
+                ? InteropTypeNameWriter.EncodeInteropTypeName(evtSig, TypedefNameType.EventSource) + ", WinRT.Interop"
                 : string.Empty;
 
             // Compute vtable index = method index in the interface vtable + 6 (for IInspectable methods).

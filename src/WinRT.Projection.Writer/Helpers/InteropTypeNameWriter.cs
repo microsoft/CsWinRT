@@ -15,7 +15,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// Mirrors the C++ helpers <c>write_interop_assembly_name</c>, <c>write_interop_dll_type_name</c>,
 /// and <c>write_interop_dll_type_name_for_typedef</c>.
 /// </summary>
-internal static partial class CodeWriters
+internal static class InteropTypeNameWriter
 {
     /// <summary>
     /// Encodes a TypeSignature using the WinRT.Interop name format. Used as the value of an

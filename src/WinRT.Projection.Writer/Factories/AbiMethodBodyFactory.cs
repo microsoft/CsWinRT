@@ -70,7 +70,7 @@ internal static class AbiMethodBodyFactory
         // instead of the generic-instance UnsafeAccessor (V3-M7).
         if (returnIsGenericInstance && !(rt is not null && rt.IsNullableT()))
         {
-            string interopTypeName = CodeWriters.EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
+            string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
             IndentedTextWriter __scratchProjectedTypeName = new();
             MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, rt!, false);
             string projectedTypeName = __scratchProjectedTypeName.ToString();
@@ -95,7 +95,7 @@ internal static class AbiMethodBodyFactory
             AsmResolver.DotNet.Signatures.TypeSignature uOut = CodeWriters.StripByRefAndCustomModifiers(p.Type);
             if (!uOut.IsGenericInstance()) { continue; }
             string raw = p.Parameter.Name ?? "param";
-            string interopTypeName = CodeWriters.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
+            string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
             IndentedTextWriter __scratchProjectedTypeName = new();
             MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
             string projectedTypeName = __scratchProjectedTypeName.ToString();
@@ -121,7 +121,7 @@ internal static class AbiMethodBodyFactory
             IndentedTextWriter __scratchElementProjected = new();
             CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
-            string elementInteropArg = CodeWriters.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
             string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
@@ -155,7 +155,7 @@ internal static class AbiMethodBodyFactory
                     : CodeWriters.IsAnyStruct(context.Cache, retSzHoist.BaseType)
                         ? CodeWriters.GetBlittableStructAbiType(writer, context, retSzHoist.BaseType)
                         : CodeWriters.GetAbiPrimitiveType(context.Cache, retSzHoist.BaseType);
-            string elementInteropArg = CodeWriters.EncodeInteropTypeName(retSzHoist.BaseType, TypedefNameType.Projected);
+            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSzHoist.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
             string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
@@ -371,7 +371,7 @@ internal static class AbiMethodBodyFactory
             IndentedTextWriter __scratchElementProjected = new();
             CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
-            string elementInteropArg = CodeWriters.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
             // For complex structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
@@ -436,7 +436,7 @@ internal static class AbiMethodBodyFactory
             {
                 string rawName = p.Parameter.Name ?? "param";
                 string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
-                string interopTypeName = CodeWriters.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
+                string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
                 IndentedTextWriter __scratchProjectedTypeName = new();
                 MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
                 string projectedTypeName = __scratchProjectedTypeName.ToString();
@@ -723,7 +723,7 @@ internal static class AbiMethodBodyFactory
             IndentedTextWriter __scratchElementProjected = new();
             CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
-            string elementInteropArg = CodeWriters.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
+            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
             // Determine the ABI element type for the data pointer cast.
@@ -1164,7 +1164,7 @@ internal static class AbiMethodBodyFactory
                 eventSourceProjectedFull = delegateName + "EventSource";
             }
             string eventSourceInteropType = isGenericEvent
-                ? CodeWriters.EncodeInteropTypeName(evtSig, TypedefNameType.EventSource) + ", WinRT.Interop"
+                ? InteropTypeNameWriter.EncodeInteropTypeName(evtSig, TypedefNameType.EventSource) + ", WinRT.Interop"
                 : string.Empty;
 
             // Emit the per-event ConditionalWeakTable static field.
@@ -1401,7 +1401,7 @@ internal static class AbiMethodBodyFactory
                 // Generic instance param: emit a local UnsafeAccessor delegate to get the marshaller method.
                 string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
                 string callName = CodeWriters.GetParamName(p, paramNameOverride);
-                string interopTypeName = CodeWriters.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
+                string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
                 IndentedTextWriter __scratchProjectedTypeName = new();
                 MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
                 string projectedTypeName = __scratchProjectedTypeName.ToString();
@@ -1983,7 +1983,7 @@ internal static class AbiMethodBodyFactory
                 IndentedTextWriter __scratchElementProjected = new();
                 CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
                 string elementProjected = __scratchElementProjected.ToString();
-                string elementInteropArg = CodeWriters.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
                 // For mapped value types (DateTime/TimeSpan) and complex structs, the storage
@@ -2180,7 +2180,7 @@ internal static class AbiMethodBodyFactory
             IndentedTextWriter __scratchElementProjected = new();
             CodeWriters.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
-            string elementInteropArg = CodeWriters.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
+            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
             // Determine the ABI element type for the data pointer parameter.
@@ -2253,7 +2253,7 @@ internal static class AbiMethodBodyFactory
             // emits the accessor inside try, right before the assignment).
             if (uOut.IsGenericInstance())
             {
-                string interopTypeName = CodeWriters.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
+                string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
                 IndentedTextWriter __scratchProjectedTypeName = new();
                 MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
                 string projectedTypeName = __scratchProjectedTypeName.ToString();
@@ -2364,7 +2364,7 @@ internal static class AbiMethodBodyFactory
                     : CodeWriters.IsAnyStruct(context.Cache, sza.BaseType)
                         ? CodeWriters.GetBlittableStructAbiType(writer, context, sza.BaseType)
                         : CodeWriters.GetAbiPrimitiveType(context.Cache, sza.BaseType);
-            string elementInteropArg = CodeWriters.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
             string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
@@ -2409,7 +2409,7 @@ internal static class AbiMethodBodyFactory
                                 : CodeWriters.IsAnyStruct(context.Cache, retSz.BaseType)
                                     ? CodeWriters.GetBlittableStructAbiType(writer, context, retSz.BaseType)
                                     : CodeWriters.GetAbiPrimitiveType(context.Cache, retSz.BaseType);
-                string elementInteropArg = CodeWriters.EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
+                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
                 writer.Write(callIndent);
@@ -2450,7 +2450,7 @@ internal static class AbiMethodBodyFactory
                 }
                 else if (rt.IsGenericInstance())
                 {
-                    string interopTypeName = CodeWriters.EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
+                    string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
                     IndentedTextWriter __scratchProjectedTypeName = new();
                     MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, rt, false);
                     string projectedTypeName = __scratchProjectedTypeName.ToString();
@@ -2643,7 +2643,7 @@ internal static class AbiMethodBodyFactory
                         fixedPtrType = "void*";
                         disposeCastType = "(void**)";
                     }
-                    string elementInteropArg = CodeWriters.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+                    string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
 
                     _ = elementInteropArg;
                     writer.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]\n");
@@ -2742,7 +2742,7 @@ internal static class AbiMethodBodyFactory
                         : CodeWriters.IsAnyStruct(context.Cache, sza.BaseType)
                             ? CodeWriters.GetBlittableStructAbiType(writer, context, sza.BaseType)
                             : CodeWriters.GetAbiPrimitiveType(context.Cache, sza.BaseType);
-                string elementInteropArg = CodeWriters.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
@@ -2797,7 +2797,7 @@ internal static class AbiMethodBodyFactory
                                 : CodeWriters.IsAnyStruct(context.Cache, retSz.BaseType)
                                     ? CodeWriters.GetBlittableStructAbiType(writer, context, retSz.BaseType)
                                     : CodeWriters.GetAbiPrimitiveType(context.Cache, retSz.BaseType);
-                string elementInteropArg = CodeWriters.EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
+                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
                 writer.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");

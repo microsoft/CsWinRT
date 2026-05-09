@@ -58,7 +58,7 @@ internal static class ArrayElementEncoder
         switch (sig)
         {
             case AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib:
-                CodeWriters.EncodeFundamental(sb, corlib, TypedefNameType.Projected);
+                InteropTypeNameWriter.EncodeFundamental(sb, corlib, TypedefNameType.Projected);
                 return;
             case AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td:
                 EncodeArrayElementForTypeDef(sb, td.Type, generic_args: null);
@@ -88,7 +88,7 @@ internal static class ArrayElementEncoder
         // Assembly marker prefix. Pass the type so that third-party (e.g. component-authored)
         // types resolve to their actual assembly name (e.g. <AuthoringTest>) instead of
         // defaulting to <#Windows>.
-        sb.Append(CodeWriters.GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
+        sb.Append(InteropTypeNameWriter.GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
         // Top-level: just the type name (no namespace).
         sb.Append(typeName);
 
@@ -99,7 +99,7 @@ internal static class ArrayElementEncoder
             for (int i = 0; i < generic_args.Count; i++)
             {
                 if (i > 0) { sb.Append('|'); }
-                CodeWriters.EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
+                InteropTypeNameWriter.EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
             }
             sb.Append('>');
         }
