@@ -73,14 +73,14 @@ internal sealed partial class ProjectionGenerator
         // Phase 5: WindowsRuntimeDefaultInterfaces.cs and WindowsRuntimeExclusiveToInterfaces.cs.
         if (defaultInterfaceEntries.Count > 0 && !_settings.ReferenceProjection)
         {
-            List<KeyValuePair<string, string>> sorted = new(defaultInterfaceEntries);
+            List<KeyValuePair<string, string>> sorted = [.. defaultInterfaceEntries];
             sorted.Sort((a, b) => System.StringComparer.Ordinal.Compare(a.Key, b.Key));
             CodeWriters.WriteDefaultInterfacesClass(_settings, sorted);
         }
 
         if (!exclusiveToInterfaceEntries.IsEmpty && _settings.Component && !_settings.ReferenceProjection)
         {
-            List<KeyValuePair<string, string>> sorted = new(exclusiveToInterfaceEntries);
+            List<KeyValuePair<string, string>> sorted = [.. exclusiveToInterfaceEntries];
             sorted.Sort((a, b) => System.StringComparer.Ordinal.Compare(a.Key, b.Key));
             CodeWriters.WriteExclusiveToInterfacesClass(_settings, sorted);
         }

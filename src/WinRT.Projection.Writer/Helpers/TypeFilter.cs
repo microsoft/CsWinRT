@@ -19,12 +19,12 @@ internal readonly struct TypeFilter
     private readonly List<string> _include;
     private readonly List<string> _exclude;
 
-    public static TypeFilter Empty { get; } = new(Array.Empty<string>(), Array.Empty<string>());
+    public static TypeFilter Empty { get; } = new([], []);
 
     public TypeFilter(IEnumerable<string> include, IEnumerable<string> exclude)
     {
-        _include = include.OrderByDescending(s => s.Length).ToList();
-        _exclude = exclude.OrderByDescending(s => s.Length).ToList();
+        _include = [.. include.OrderByDescending(s => s.Length)];
+        _exclude = [.. exclude.OrderByDescending(s => s.Length)];
     }
 
     /// <summary>

@@ -16,8 +16,8 @@ internal static class Additions
     /// (namespace, embedded-resource-manifest-name) pairs. The manifest-name resolves to a
     /// <see cref="System.Reflection.Assembly.GetManifestResourceStream(string)"/> call.
     /// </summary>
-    public static readonly IReadOnlyList<(string Namespace, string ResourceName)> All = new (string, string)[]
-    {
+    public static readonly IReadOnlyList<(string Namespace, string ResourceName)> All =
+    [
         ("Microsoft.UI.Dispatching", "WindowsRuntime.ProjectionWriter.Resources.Additions.Microsoft.UI.Dispatching.Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext.cs"),
         ("Microsoft.UI.Xaml", "WindowsRuntime.ProjectionWriter.Resources.Additions.Microsoft.UI.Xaml.Microsoft.UI.Xaml.CornerRadius.cs"),
         ("Microsoft.UI.Xaml", "WindowsRuntime.ProjectionWriter.Resources.Additions.Microsoft.UI.Xaml.Microsoft.UI.Xaml.Duration.cs"),
@@ -42,5 +42,5 @@ internal static class Additions
         ("Windows.UI.Xaml.Media.Animation", "WindowsRuntime.ProjectionWriter.Resources.Additions.Windows.UI.Xaml.Media.Animation.Windows.UI.Xaml.Media.Animation.KeyTime.cs"),
         ("Windows.UI.Xaml.Media.Animation", "WindowsRuntime.ProjectionWriter.Resources.Additions.Windows.UI.Xaml.Media.Animation.Windows.UI.Xaml.Media.Animation.RepeatBehavior.cs"),
         ("Windows.UI.Xaml.Media.Media3D", "WindowsRuntime.ProjectionWriter.Resources.Additions.Windows.UI.Xaml.Media.Media3D.Windows.UI.Xaml.Media.Media3D.Matrix3D.cs"),
-    };
+    ];
 }

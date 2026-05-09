@@ -311,7 +311,7 @@ internal static partial class CodeWriters
             writer.Write(kv.Key);
             writer.Write("\n{\npublic static class ManagedExports\n{\npublic static unsafe void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)\n{\nswitch (activatableClassId)\n{\n");
             // Sort by the type's metadata token / row index so cases appear in WinMD declaration order.
-            List<TypeDefinition> orderedTypes = new(kv.Value);
+            List<TypeDefinition> orderedTypes = [.. kv.Value];
             orderedTypes.Sort((a, b) =>
             {
                 uint ra = a.MetadataToken.Rid;

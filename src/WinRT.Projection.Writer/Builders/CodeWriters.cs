@@ -146,7 +146,7 @@ internal static partial class CodeWriters
     {
         // The Constant.Value contains raw bytes representing the value
         AsmResolver.PE.DotNet.Metadata.Tables.ElementType type = constant.Type;
-        byte[] data = constant.Value?.Data ?? System.Array.Empty<byte>();
+        byte[] data = constant.Value?.Data ?? [];
         return type switch
         {
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1 => ((sbyte)data[0]).ToString(System.Globalization.CultureInfo.InvariantCulture),

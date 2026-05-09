@@ -74,7 +74,7 @@ internal static partial class CodeWriters
         // Map each bit to its corresponding enum name. Includes WinMD-specific values
         // that map to the same .NET enum (e.g., RuntimeClass=512 -> Class, ApiContract=8192 -> Struct).
         (uint Bit, string Name)[] entries =
-        {
+        [
             (1, "Delegate"),
             (2, "Enum"),
             (4, "Event"),
@@ -87,7 +87,7 @@ internal static partial class CodeWriters
             (1024, "Struct"),
             (2048, "All"),      // InterfaceImpl - not directly representable, use All
             (8192, "Struct"),   // ApiContract -> Struct
-        };
+        ];
         List<string> values = new();
         foreach ((uint bit, string name) in entries)
         {

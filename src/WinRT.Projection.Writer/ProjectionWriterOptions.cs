@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -27,17 +26,17 @@ public sealed class ProjectionWriterOptions
     /// <summary>
     /// Optional list of namespace prefixes to include in the projection.
     /// </summary>
-    public IReadOnlyList<string> Include { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> Include { get; init; } = [];
 
     /// <summary>
     /// Optional list of namespace prefixes to exclude from the projection.
     /// </summary>
-    public IReadOnlyList<string> Exclude { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> Exclude { get; init; } = [];
 
     /// <summary>
     /// Optional list of namespace prefixes to exclude from the projection additions.
     /// </summary>
-    public IReadOnlyList<string> AdditionExclude { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> AdditionExclude { get; init; } = [];
 
     /// <summary>Generate a Windows Runtime component projection.</summary>
     public bool Component { get; init; }
