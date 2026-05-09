@@ -270,7 +270,7 @@ internal static class AbiClassFactory
         writer.Write("file sealed unsafe class ");
         writer.Write(nameStripped);
         writer.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
-        CodeWriters.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
+        AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
         writer.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
         writer.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(\n");
         writer.Write("            externalComObject: value,\n");
@@ -291,7 +291,7 @@ internal static class AbiClassFactory
             writer.Write("file sealed unsafe class ");
             writer.Write(nameStripped);
             writer.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
-            CodeWriters.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
+            AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
             writer.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
             writer.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
             writer.Write("            externalComObject: value,\n");
@@ -313,7 +313,7 @@ internal static class AbiClassFactory
             writer.Write("file sealed unsafe class ");
             writer.Write(nameStripped);
             writer.Write("ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback\n{\n");
-            CodeWriters.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
+            AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
 
             // TryCreateObject (non-projected runtime class name match)
             writer.Write("    public static unsafe bool TryCreateObject(\n");

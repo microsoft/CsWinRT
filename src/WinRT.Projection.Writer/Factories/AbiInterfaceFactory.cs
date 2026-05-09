@@ -333,7 +333,7 @@ internal static class AbiInterfaceFactory
             }
             else
             {
-                CodeWriters.EmitDoAbiBodyIfSimple(writer, context, sig, ifaceFullName, mname);
+                AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, ifaceFullName, mname);
             }
         }
 
@@ -486,7 +486,7 @@ internal static class AbiInterfaceFactory
 
         foreach ((TypeDefinition iface, int startSlot, bool segSkipEvents) in segments)
         {
-            CodeWriters.EmitMethodsClassMembersFor(writer, context, iface, startSlot, segSkipEvents);
+            AbiMethodBodyFactory.EmitMethodsClassMembersFor(writer, context, iface, startSlot, segSkipEvents);
         }
 
         writer.Write("}\n");

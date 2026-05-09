@@ -384,7 +384,7 @@ internal static partial class CodeWriters
             writer.Write("        using WindowsRuntimeObjectReferenceValue __");
             writer.Write(raw);
             writer.Write(" = ");
-            EmitMarshallerConvertToUnmanaged(writer, context, p.Type, pname);
+            AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(writer, context, p.Type, pname);
             writer.Write(";\n");
         }
 

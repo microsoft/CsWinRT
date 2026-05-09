@@ -83,7 +83,7 @@ internal static class AbiDelegateFactory
         CodeWriters.WriteTypedefName(__scratchProjectedDelegateForBody, context, type, TypedefNameType.Projected, true);
         string projectedDelegateForBody = __scratchProjectedDelegateForBody.ToString();
         if (!projectedDelegateForBody.StartsWith("global::", System.StringComparison.Ordinal)) { projectedDelegateForBody = "global::" + projectedDelegateForBody; }
-        CodeWriters.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
+        AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
         writer.Write("\n");
 
         writer.Write("    public static ref readonly Guid IID\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => ref ");
@@ -139,7 +139,7 @@ internal static class AbiDelegateFactory
         // (after QI/AddRef/Release). Functionally equivalent to the truth's
         // 'var abiInvoke = ((<Name>Vftbl*)*(void***)ThisPtr)->Invoke;' form, just routed
         // through the slot-indexed dispatch shared with interface CCW callers.
-        CodeWriters.EmitAbiMethodBodyIfSimple(writer, context, sig, slot: 3, isNoExcept: invoke.IsNoExcept());
+        AbiMethodBodyFactory.EmitAbiMethodBodyIfSimple(writer, context, sig, slot: 3, isNoExcept: invoke.IsNoExcept());
 
         writer.Write("}\n");
     }
