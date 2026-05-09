@@ -84,11 +84,7 @@ internal static class AbiDelegateFactory
         string projectedDelegateForBody = __scratchProjectedDelegateForBody.ToString();
         if (!projectedDelegateForBody.StartsWith("global::", System.StringComparison.Ordinal)) { projectedDelegateForBody = "global::" + projectedDelegateForBody; }
         AbiMethodBodyFactory.EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
-        writer.Write("\n");
-
-        writer.Write("    public static ref readonly Guid IID\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => ref ");
-        writer.Write(iidExpr);
-        writer.Write(";\n    }\n}\n");
+        writer.Write($"\n    public static ref readonly Guid IID\n    {{\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => ref {iidExpr};\n    }}\n}}\n");
     }
 
     private static void WriteDelegateVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -122,15 +118,9 @@ internal static class AbiDelegateFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        writer.Write("\npublic static unsafe class ");
-        writer.Write(nameStripped);
-        writer.Write("NativeDelegate\n{\n");
-
-        writer.Write("    public static unsafe ");
+        writer.Write($"\npublic static unsafe class {nameStripped}NativeDelegate\n{{\n    public static unsafe ");
         MethodFactory.WriteProjectionReturnType(writer, context, sig);
-        writer.Write(" ");
-        writer.Write(nameStripped);
-        writer.Write("Invoke(this WindowsRuntimeObjectReference thisReference");
+        writer.Write($" {nameStripped}Invoke(this WindowsRuntimeObjectReference thisReference");
         if (sig.Params.Count > 0) { writer.Write(", "); }
         MethodFactory.WriteParameterList(writer, context, sig);
         writer.Write(")");
@@ -239,13 +229,7 @@ internal static class AbiDelegateFactory
         writer.WriteLine("        /// <inheritdoc cref=\"EventSourceState{T}.EventSourceState\"/>");
         writer.Write("        public EventState(void* thisPtr, int index)\n            : base(thisPtr, index)\n        {\n        }\n\n");
         writer.WriteLine("        /// <inheritdoc/>");
-        writer.Write("        protected override ");
-        writer.Write(projectedName);
-        writer.Write(" GetEventInvoke()\n        {\n");
-        // Build parameter name list for the lambda. Lambda's parameter list MUST match the
-        // delegate's signature exactly, including in/out/ref modifiers - otherwise CS1676 fires
-        // when calling TargetDelegate.Invoke. Mirror C++ write_parmaeters.
-        writer.Write("            return (");
+        writer.Write($"        protected override {projectedName} GetEventInvoke()\n        {{\n            return (");
         for (int i = 0; i < sig.Params.Count; i++)
         {
             if (i > 0) { writer.Write(", "); }
@@ -336,17 +320,7 @@ internal static class AbiDelegateFactory
         writer.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
         writer.WriteLine("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(");
         writer.WriteLine("            externalComObject: value,");
-        writer.Write("            iid: in ");
-        writer.Write(iidExpr);
-        writer.Write(",\n            wrapperFlags: out wrapperFlags);\n\n");
-        // Always emit the body. The 'valueReference.<Name>Invoke' extension method always
-        // exists (in NativeDelegate); even when its body is itself a stub, this path compiles
-        // and matches the truth, which never emits 'throw null!' for CreateObject.
-        writer.Write("        return new ");
-        writer.Write(fullProjected);
-        writer.Write("(valueReference.");
-        writer.Write(nameStripped);
-        writer.WriteLine("Invoke);");
+        writer.WriteLine($"            iid: in {iidExpr},\n            wrapperFlags: out wrapperFlags);\n\n        return new {fullProjected}(valueReference.{nameStripped}Invoke);");
         _ = nativeSupported;
         writer.Write("    }\n}\n");
     }
@@ -380,12 +354,7 @@ internal static class AbiDelegateFactory
         writer.WriteLine("    /// <inheritdoc/>");
         writer.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
         writer.WriteLine("        wrapperFlags = CreatedWrapperFlags.NonWrapping;");
-        writer.Write("        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<");
-        writer.Write(nameStripped);
-        writer.Write("ComWrappersCallback>(value, in ");
-        writer.Write(iidRefExpr);
-        writer.Write(")!;\n    }\n");
-        writer.WriteLine("}");
+        writer.WriteLine($"        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<{nameStripped}ComWrappersCallback>(value, in {iidRefExpr})!;\n    }}\n}}");
     }
 
 }

@@ -74,12 +74,7 @@ internal static class AbiClassFactory
             }
         }
 
-        writer.Write("\npublic static unsafe class ");
-        writer.Write(nameStripped);
-        writer.Write("Marshaller\n{\n");
-        writer.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
-        writer.Write(projectedType);
-        writer.Write(" value)\n    {\n");
+        writer.Write($"\npublic static unsafe class {nameStripped}Marshaller\n{{\n    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({projectedType} value)\n    {{\n");
         if (defaultGenericInst is not null)
         {
             // Emit the UnsafeAccessor declaration (uses 'object?' since component-mode
@@ -91,22 +86,10 @@ internal static class AbiClassFactory
             string[] accessorLines = accessorBlock.TrimEnd('\n').Split('\n');
             foreach (string accessorLine in accessorLines)
             {
-                writer.Write("        ");
-                writer.Write(accessorLine);
-                writer.Write("\n");
+                writer.Write($"        {accessorLine}\n");
             }
         }
-        writer.Write("        return WindowsRuntimeInterfaceMarshaller<");
-        writer.Write(projectedType);
-        writer.Write(">.ConvertToUnmanaged(value, ");
-        writer.Write(defaultIfaceIid);
-        writer.Write(");\n    }\n\n");
-        writer.Write("    public static ");
-        writer.Write(projectedType);
-        writer.Write("? ConvertToManaged(void* value)\n    {\n");
-        writer.Write("        return (");
-        writer.Write(projectedType);
-        writer.Write("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n");
+        writer.Write($"        return WindowsRuntimeInterfaceMarshaller<{projectedType}>.ConvertToUnmanaged(value, {defaultIfaceIid});\n    }}\n\n    public static {projectedType}? ConvertToManaged(void* value)\n    {{\n        return ({projectedType}?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }}\n}}\n");
     }
 
     /// <summary>
@@ -126,28 +109,20 @@ internal static class AbiClassFactory
         // (i.e. enums, structs, interfaces).
         if (category != TypeCategory.Delegate && category != TypeCategory.Class)
         {
-            writer.Write("[WindowsRuntimeReferenceType(typeof(");
-            writer.Write(projectedType);
-            writer.WriteLine("?))]");
+            writer.WriteLine($"[WindowsRuntimeReferenceType(typeof({projectedType}?))]");
         }
 
         // [ABI.<ns>.<name>ComWrappersMarshaller] for non-struct, non-class types
         // (delegates, enums, interfaces).
         if (category != TypeCategory.Struct && category != TypeCategory.Class)
         {
-            writer.Write("[ABI.");
-            writer.Write(typeNs);
-            writer.Write(".");
-            writer.Write(nameStripped);
-            writer.WriteLine("ComWrappersMarshaller]");
+            writer.WriteLine($"[ABI.{typeNs}.{nameStripped}ComWrappersMarshaller]");
         }
 
         // [WindowsRuntimeClassName("Windows.Foundation.IReference`1<<ns>.<name>>")] for non-class types.
         if (category != TypeCategory.Class)
         {
-            writer.Write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<");
-            writer.Write(fullName);
-            writer.WriteLine(">\")]");
+            writer.WriteLine($"[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<{fullName}>\")]");
         }
 
         writer.Write("[WindowsRuntimeMetadataTypeName(\"");
@@ -156,9 +131,7 @@ internal static class AbiClassFactory
         writer.Write("[WindowsRuntimeMappedType(typeof(");
         writer.Write(projectedType);
         writer.WriteLine("))]");
-        writer.Write("file static class ");
-        writer.Write(nameStripped);
-        writer.WriteLine(" {}");
+        writer.WriteLine($"file static class {nameStripped} {{}}");
     }
 
     public static bool EmitImplType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -224,12 +197,7 @@ internal static class AbiClassFactory
         bool defaultIfaceIsExclusive = defaultIfaceTd is not null && TypeCategorization.IsExclusiveTo(defaultIfaceTd);
 
         // Public *Marshaller class
-        writer.Write("public static unsafe class ");
-        writer.Write(nameStripped);
-        writer.Write("Marshaller\n{\n");
-        writer.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
-        writer.Write(fullProjected);
-        writer.Write(" value)\n    {\n");
+        writer.Write($"public static unsafe class {nameStripped}Marshaller\n{{\n    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged({fullProjected} value)\n    {{\n");
         if (isSealed)
         {
             // For projected sealed runtime classes, the RCW type is always unwrappable.
@@ -254,22 +222,7 @@ internal static class AbiClassFactory
             writer.WriteLine("            return value.GetDefaultInterface();");
             writer.WriteLine("        }");
         }
-        writer.Write("        return default;\n    }\n\n");
-        writer.Write("    public static ");
-        writer.Write(fullProjected);
-        writer.Write("? ConvertToManaged(void* value)\n    {\n");
-        writer.Write("        return (");
-        writer.Write(fullProjected);
-        writer.Write("?)");
-        writer.Write(isSealed ? "WindowsRuntimeObjectMarshaller" : "WindowsRuntimeUnsealedObjectMarshaller");
-        writer.Write(".ConvertToManaged<");
-        writer.Write(nameStripped);
-        writer.Write("ComWrappersCallback>(value);\n    }\n}\n\n");
-
-        // file-scoped *ComWrappersMarshallerAttribute - implements WindowsRuntimeComWrappersMarshallerAttribute.CreateObject
-        writer.Write("file sealed unsafe class ");
-        writer.Write(nameStripped);
-        writer.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
+        writer.Write($"        return default;\n    }}\n\n    public static {fullProjected}? ConvertToManaged(void* value)\n    {{\n        return ({fullProjected}?){(isSealed ? "WindowsRuntimeObjectMarshaller" : "WindowsRuntimeUnsealedObjectMarshaller")}.ConvertToManaged<{nameStripped}ComWrappersCallback>(value);\n    }}\n}}\n\nfile sealed unsafe class {nameStripped}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{{\n");
         AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
         writer.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
         writer.WriteLine("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(");
@@ -280,17 +233,12 @@ internal static class AbiClassFactory
         writer.Write("            marshalingType: ");
         writer.Write(marshalingType);
         writer.WriteLine(",");
-        writer.Write("            wrapperFlags: out wrapperFlags);\n\n");
-        writer.Write("        return new ");
-        writer.Write(fullProjected);
-        writer.Write("(valueReference);\n    }\n}\n\n");
+        writer.Write($"            wrapperFlags: out wrapperFlags);\n\n        return new {fullProjected}(valueReference);\n    }}\n}}\n\n");
 
         if (isSealed)
         {
             // file-scoped *ComWrappersCallback - implements IWindowsRuntimeObjectComWrappersCallback
-            writer.Write("file sealed unsafe class ");
-            writer.Write(nameStripped);
-            writer.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
+            writer.Write($"file sealed unsafe class {nameStripped}ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{{\n");
             AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
             writer.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
             writer.WriteLine("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(");
@@ -301,18 +249,13 @@ internal static class AbiClassFactory
             writer.Write("            marshalingType: ");
             writer.Write(marshalingType);
             writer.WriteLine(",");
-            writer.Write("            wrapperFlags: out wrapperFlags);\n\n");
-            writer.Write("        return new ");
-            writer.Write(fullProjected);
-            writer.Write("(valueReference);\n    }\n}\n");
+            writer.Write($"            wrapperFlags: out wrapperFlags);\n\n        return new {fullProjected}(valueReference);\n    }}\n}}\n");
         }
         else
         {
             // file-scoped *ComWrappersCallback - implements IWindowsRuntimeUnsealedObjectComWrappersCallback
             string nonProjectedRcn = $"{typeNs}.{nameStripped}";
-            writer.Write("file sealed unsafe class ");
-            writer.Write(nameStripped);
-            writer.Write("ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback\n{\n");
+            writer.Write($"file sealed unsafe class {nameStripped}ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback\n{{\n");
             AbiMethodBodyFactory.EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
 
             // TryCreateObject (non-projected runtime class name match)
@@ -348,10 +291,7 @@ internal static class AbiClassFactory
             writer.Write("            marshalingType: ");
             writer.Write(marshalingType);
             writer.WriteLine(",");
-            writer.Write("            wrapperFlags: out wrapperFlags);\n\n");
-            writer.Write("        return new ");
-            writer.Write(fullProjected);
-            writer.Write("(valueReference);\n    }\n}\n");
+            writer.Write($"            wrapperFlags: out wrapperFlags);\n\n        return new {fullProjected}(valueReference);\n    }}\n}}\n");
         }
     }
 

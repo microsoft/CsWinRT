@@ -101,12 +101,7 @@ internal static class IIDExpressionWriter
             $"'Windows.Foundation.Metadata.GuidAttribute' attribute for type '{type.Namespace}.{type.Name}' not found");
         string fmt = lowerCase ? "x" : "X";
         // Format: %08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x
-        writer.Write(data1.ToString(fmt + "8", CultureInfo.InvariantCulture));
-        writer.Write("-");
-        writer.Write(data2.ToString(fmt + "4", CultureInfo.InvariantCulture));
-        writer.Write("-");
-        writer.Write(data3.ToString(fmt + "4", CultureInfo.InvariantCulture));
-        writer.Write("-");
+        writer.Write($"{data1.ToString(fmt + "8", CultureInfo.InvariantCulture)}-{data2.ToString(fmt + "4", CultureInfo.InvariantCulture)}-{data3.ToString(fmt + "4", CultureInfo.InvariantCulture)}-");
         for (int i = 0; i < 2; i++) { writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
         writer.Write("-");
         for (int i = 2; i < 8; i++) { writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
@@ -129,8 +124,7 @@ internal static class IIDExpressionWriter
     private static void WriteByte(IndentedTextWriter writer, uint b, bool first)
     {
         if (!first) { writer.Write(", "); }
-        writer.Write("0x");
-        writer.Write((b & 0xFF).ToString("X", CultureInfo.InvariantCulture));
+        writer.Write($"0x{(b & 0xFF).ToString("X", CultureInfo.InvariantCulture)}");
     }
 
     /// <summary>Writes the property name <c>IID_X</c> for the IID property of <paramref name="type"/>.</summary>
@@ -140,8 +134,7 @@ internal static class IIDExpressionWriter
         TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
-        writer.Write("IID_");
-        writer.Write(name);
+        writer.Write($"IID_{name}");
     }
     /// <summary>Writes the property name <c>IID_XReference</c> for the reference IID property.</summary>
     public static void WriteIidReferenceGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -150,9 +143,7 @@ internal static class IIDExpressionWriter
         TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
-        writer.Write("IID_");
-        writer.Write(name);
-        writer.Write("Reference");
+        writer.Write($"IID_{name}Reference");
     }
     /// <summary>Writes a static IID property whose body is built from the [Guid] attribute bytes.</summary>
     public static void WriteIidGuidPropertyFromType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -313,8 +304,7 @@ internal static class IIDExpressionWriter
         for (int i = 0; i < 16; i++)
         {
             if (i > 0) { writer.Write(", "); }
-            writer.Write("0x");
-            writer.Write(bytes[i].ToString("X", CultureInfo.InvariantCulture));
+            writer.Write($"0x{bytes[i].ToString("X", CultureInfo.InvariantCulture)}");
         }
         writer.Write("\n        ];\n        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));\n    }\n}\n\n");
     }

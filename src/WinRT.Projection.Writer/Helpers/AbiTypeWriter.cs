@@ -156,7 +156,7 @@ internal static class AbiTypeWriter
                 {
                     (string rns, string rname) = r.Reference_.Names();
                     writer.Write("global::");
-                    if (!string.IsNullOrEmpty(rns)) { writer.Write(rns); writer.Write("."); }
+                    if (!string.IsNullOrEmpty(rns)) { writer.Write($"{rns}."); }
                     writer.Write(IdentifierEscaping.StripBackticks(rname));
                     break;
                 }

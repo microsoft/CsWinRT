@@ -25,10 +25,7 @@ internal static class AbiInterfaceIDicFactory
 
         writer.Write("\n[DynamicInterfaceCastableImplementation]\n");
         InterfaceFactory.WriteGuidAttribute(writer, type);
-        writer.Write("\n");
-        writer.Write("file interface ");
-        writer.Write(nameStripped);
-        writer.Write(" : ");
+        writer.Write($"\nfile interface {nameStripped} : ");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("\n{\n");
@@ -154,28 +151,14 @@ internal static class AbiInterfaceIDicFactory
         writer.Write($"get => {target}[key];\n");
         writer.Write($"set => {target}[key] = value;\n");
         writer.WriteLine("}");
-        writer.Write($"void {self}Add({keyText} key, {valueText} value) => {target}.Add(key, value);\n");
-        writer.Write($"bool {self}ContainsKey({keyText} key) => {target}.ContainsKey(key);\n");
-        writer.Write($"bool {self}Remove({keyText} key) => {target}.Remove(key);\n");
-        writer.Write($"bool {self}TryGetValue({keyText} key, out {valueText} value) => {target}.TryGetValue(key, out value);\n");
-        writer.Write($"void {icoll}Add(KeyValuePair<{keyText}, {valueText}> item) => {target}.Add(item);\n");
-        writer.Write($"void {icoll}Clear() => {target}.Clear();\n");
-        writer.Write($"bool {icoll}Contains(KeyValuePair<{keyText}, {valueText}> item) => {target}.Contains(item);\n");
-        writer.Write($"void {icoll}CopyTo(KeyValuePair<{keyText}, {valueText}>[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n");
-        writer.Write($"bool ICollection<KeyValuePair<{keyText}, {valueText}>>.Remove(KeyValuePair<{keyText}, {valueText}> item) => {target}.Remove(item);\n");
-        // Enumerable forwarders.
-        writer.Write("\n");
-        writer.Write($"IEnumerator<KeyValuePair<{keyText}, {valueText}>> IEnumerable<KeyValuePair<{keyText}, {valueText}>>.GetEnumerator() => {target}.GetEnumerator();\n");
-        writer.WriteLine("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();");
+        writer.WriteLine($"{$"void {self}Add({keyText} key, {valueText} value) => {target}.Add(key, value);\n"}{$"bool {self}ContainsKey({keyText} key) => {target}.ContainsKey(key);\n"}{$"bool {self}Remove({keyText} key) => {target}.Remove(key);\n"}{$"bool {self}TryGetValue({keyText} key, out {valueText} value) => {target}.TryGetValue(key, out value);\n"}{$"void {icoll}Add(KeyValuePair<{keyText}, {valueText}> item) => {target}.Add(item);\n"}{$"void {icoll}Clear() => {target}.Clear();\n"}{$"bool {icoll}Contains(KeyValuePair<{keyText}, {valueText}> item) => {target}.Contains(item);\n"}{$"void {icoll}CopyTo(KeyValuePair<{keyText}, {valueText}>[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n"}{$"bool ICollection<KeyValuePair<{keyText}, {valueText}>>.Remove(KeyValuePair<{keyText}, {valueText}> item) => {target}.Remove(item);\n"}\n{$"IEnumerator<KeyValuePair<{keyText}, {valueText}>> IEnumerable<KeyValuePair<{keyText}, {valueText}>>.GetEnumerator() => {target}.GetEnumerator();\n"}IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();");
         // IObservableMap.MapChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>.";
         writer.Write("\n");
         writer.Write($"event global::Windows.Foundation.Collections.MapChangedEventHandler<{keyText}, {valueText}> {obsSelf}MapChanged\n");
         writer.WriteLine("{");
-        writer.Write($"add => {obsTarget}.MapChanged += value;\n");
-        writer.Write($"remove => {obsTarget}.MapChanged -= value;\n");
-        writer.WriteLine("}");
+        writer.WriteLine($"{$"add => {obsTarget}.MapChanged += value;\n"}{$"remove => {obsTarget}.MapChanged -= value;\n"}}}");
     }
 
     /// <summary>
@@ -197,26 +180,14 @@ internal static class AbiInterfaceIDicFactory
         writer.Write($"get => {target}[index];\n");
         writer.Write($"set => {target}[index] = value;\n");
         writer.WriteLine("}");
-        writer.Write($"int {self}IndexOf({elementText} item) => {target}.IndexOf(item);\n");
-        writer.Write($"void {self}Insert(int index, {elementText} item) => {target}.Insert(index, item);\n");
-        writer.Write($"void {self}RemoveAt(int index) => {target}.RemoveAt(index);\n");
-        writer.Write($"void {icoll}Add({elementText} item) => {target}.Add(item);\n");
-        writer.Write($"void {icoll}Clear() => {target}.Clear();\n");
-        writer.Write($"bool {icoll}Contains({elementText} item) => {target}.Contains(item);\n");
-        writer.Write($"void {icoll}CopyTo({elementText}[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n");
-        writer.Write($"bool {icoll}Remove({elementText} item) => {target}.Remove(item);\n");
-        writer.Write("\n");
-        writer.Write($"IEnumerator<{elementText}> IEnumerable<{elementText}>.GetEnumerator() => {target}.GetEnumerator();\n");
-        writer.WriteLine("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();");
+        writer.WriteLine($"{$"int {self}IndexOf({elementText} item) => {target}.IndexOf(item);\n"}{$"void {self}Insert(int index, {elementText} item) => {target}.Insert(index, item);\n"}{$"void {self}RemoveAt(int index) => {target}.RemoveAt(index);\n"}{$"void {icoll}Add({elementText} item) => {target}.Add(item);\n"}{$"void {icoll}Clear() => {target}.Clear();\n"}{$"bool {icoll}Contains({elementText} item) => {target}.Contains(item);\n"}{$"void {icoll}CopyTo({elementText}[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n"}{$"bool {icoll}Remove({elementText} item) => {target}.Remove(item);\n"}\n{$"IEnumerator<{elementText}> IEnumerable<{elementText}>.GetEnumerator() => {target}.GetEnumerator();\n"}IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();");
         // IObservableVector.VectorChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableVector<{elementText}>.";
         writer.Write("\n");
         writer.Write($"event global::Windows.Foundation.Collections.VectorChangedEventHandler<{elementText}> {obsSelf}VectorChanged\n");
         writer.WriteLine("{");
-        writer.Write($"add => {obsTarget}.VectorChanged += value;\n");
-        writer.Write($"remove => {obsTarget}.VectorChanged -= value;\n");
-        writer.WriteLine("}");
+        writer.WriteLine($"{$"add => {obsTarget}.VectorChanged += value;\n"}{$"remove => {obsTarget}.VectorChanged -= value;\n"}}}");
     }
 
     /// <summary>
@@ -243,17 +214,9 @@ internal static class AbiInterfaceIDicFactory
 
             writer.Write("\n");
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
-            writer.Write(" ");
-            writer.Write(ccwIfaceName);
-            writer.Write(".");
-            writer.Write(mname);
-            writer.Write("(");
+            writer.Write($" {ccwIfaceName}.{mname}(");
             MethodFactory.WriteParameterList(writer, context, sig);
-            writer.Write(") => ((");
-            writer.Write(ccwIfaceName);
-            writer.Write(")(WindowsRuntimeObject)this).");
-            writer.Write(mname);
-            writer.Write("(");
+            writer.Write($") => (({ccwIfaceName})(WindowsRuntimeObject)this).{mname}(");
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 if (i > 0) { writer.Write(", "); }
@@ -268,39 +231,22 @@ internal static class AbiInterfaceIDicFactory
             string pname = prop.Name?.Value ?? string.Empty;
             string propType = InterfaceFactory.WritePropType(context, prop);
 
-            writer.Write("\n");
-            writer.Write(propType);
-            writer.Write(" ");
-            writer.Write(ccwIfaceName);
-            writer.Write(".");
-            writer.Write(pname);
+            writer.Write($"\n{propType} {ccwIfaceName}.{pname}");
             if (getter is not null && setter is null)
             {
                 // Read-only: single-line expression body.
-                writer.Write(" => ((");
-                writer.Write(ccwIfaceName);
-                writer.Write(")(WindowsRuntimeObject)this).");
-                writer.Write(pname);
-                writer.WriteLine(";");
+                writer.WriteLine($" => (({ccwIfaceName})(WindowsRuntimeObject)this).{pname};");
             }
             else
             {
                 writer.Write("\n{\n");
                 if (getter is not null)
                 {
-                    writer.Write("    get => ((");
-                    writer.Write(ccwIfaceName);
-                    writer.Write(")(WindowsRuntimeObject)this).");
-                    writer.Write(pname);
-                    writer.WriteLine(";");
+                    writer.WriteLine($"    get => (({ccwIfaceName})(WindowsRuntimeObject)this).{pname};");
                 }
                 if (setter is not null)
                 {
-                    writer.Write("    set => ((");
-                    writer.Write(ccwIfaceName);
-                    writer.Write(")(WindowsRuntimeObject)this).");
-                    writer.Write(pname);
-                    writer.WriteLine(" = value;");
+                    writer.WriteLine($"    set => (({ccwIfaceName})(WindowsRuntimeObject)this).{pname} = value;");
                 }
                 writer.WriteLine("}");
             }
@@ -396,21 +342,11 @@ internal static class AbiInterfaceIDicFactory
 
             writer.Write("\nunsafe ");
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
-            writer.Write(" ");
-            writer.Write(ccwIfaceName);
-            writer.Write(".");
-            writer.Write(mname);
-            writer.Write("(");
+            writer.Write($" {ccwIfaceName}.{mname}(");
             MethodFactory.WriteParameterList(writer, context, sig);
-            writer.Write(")\n{\n");
-            writer.Write("    var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
-            writer.Write(ccwIfaceName);
-            writer.Write(").TypeHandle);\n    ");
+            writer.Write($")\n{{\n    var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({ccwIfaceName}).TypeHandle);\n    ");
             if (sig.ReturnType is not null) { writer.Write("return "); }
-            writer.Write(abiClass);
-            writer.Write(".");
-            writer.Write(mname);
-            writer.Write("(_obj");
+            writer.Write($"{abiClass}.{mname}(_obj");
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 writer.Write(", ");
@@ -425,24 +361,14 @@ internal static class AbiInterfaceIDicFactory
             string pname = prop.Name?.Value ?? string.Empty;
             string propType = InterfaceFactory.WritePropType(context, prop);
 
-            writer.Write("\nunsafe ");
-            writer.Write(propType);
-            writer.Write(" ");
-            writer.Write(ccwIfaceName);
-            writer.Write(".");
-            writer.Write(pname);
-            writer.Write("\n{\n");
+            writer.Write($"\nunsafe {propType} {ccwIfaceName}.{pname}\n{{\n");
             if (getter is not null)
             {
                 writer.Write("    get\n    {\n");
                 writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
                 writer.Write(ccwIfaceName);
                 writer.WriteLine(").TypeHandle);");
-                writer.Write("        return ");
-                writer.Write(abiClass);
-                writer.Write(".");
-                writer.Write(pname);
-                writer.Write("(_obj);\n    }\n");
+                writer.Write($"        return {abiClass}.{pname}(_obj);\n    }}\n");
             }
             if (setter is not null)
             {
@@ -458,20 +384,14 @@ internal static class AbiInterfaceIDicFactory
                     {
                         writer.Write("    get { return ((");
                         ClassMembersFactory.WriteInterfaceTypeNameForCcw(writer, context, baseIfaceWithGetter);
-                        writer.Write(")(WindowsRuntimeObject)this).");
-                        writer.Write(pname);
-                        writer.WriteLine("; }");
+                        writer.WriteLine($")(WindowsRuntimeObject)this).{pname}; }}");
                     }
                 }
                 writer.Write("    set\n    {\n");
                 writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
                 writer.Write(ccwIfaceName);
                 writer.WriteLine(").TypeHandle);");
-                writer.Write("        ");
-                writer.Write(abiClass);
-                writer.Write(".");
-                writer.Write(pname);
-                writer.Write("(_obj, value);\n    }\n");
+                writer.Write($"        {abiClass}.{pname}(_obj, value);\n    }}\n");
             }
             writer.WriteLine("}");
         }
@@ -483,30 +403,7 @@ internal static class AbiInterfaceIDicFactory
             string evtName = evt.Name?.Value ?? string.Empty;
             writer.Write("\nevent ");
             TypedefNameWriter.WriteEventType(writer, context, evt);
-            writer.Write(" ");
-            writer.Write(ccwIfaceName);
-            writer.Write(".");
-            writer.Write(evtName);
-            writer.Write("\n{\n");
-            // add accessor
-            writer.Write("    add\n    {\n");
-            writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
-            writer.Write(ccwIfaceName);
-            writer.Write(").TypeHandle);\n        ");
-            writer.Write(abiClass);
-            writer.Write(".");
-            writer.Write(evtName);
-            writer.Write("((WindowsRuntimeObject)this, _obj).Subscribe(value);\n    }\n");
-            // remove accessor
-            writer.Write("    remove\n    {\n");
-            writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
-            writer.Write(ccwIfaceName);
-            writer.Write(").TypeHandle);\n        ");
-            writer.Write(abiClass);
-            writer.Write(".");
-            writer.Write(evtName);
-            writer.Write("((WindowsRuntimeObject)this, _obj).Unsubscribe(value);\n    }\n");
-            writer.WriteLine("}");
+            writer.WriteLine($" {ccwIfaceName}.{evtName}\n{{\n    add\n    {{\n        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({ccwIfaceName}).TypeHandle);\n        {abiClass}.{evtName}((WindowsRuntimeObject)this, _obj).Subscribe(value);\n    }}\n    remove\n    {{\n        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof({ccwIfaceName}).TypeHandle);\n        {abiClass}.{evtName}((WindowsRuntimeObject)this, _obj).Unsubscribe(value);\n    }}\n}}");
         }
     }
 

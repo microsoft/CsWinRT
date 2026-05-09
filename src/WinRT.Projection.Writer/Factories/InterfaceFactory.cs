@@ -18,9 +18,7 @@ internal static class InterfaceFactory
     public static void WriteGuidAttribute(IndentedTextWriter writer, TypeDefinition type)
     {
         bool fullyQualify = type.Namespace == "Windows.Foundation.Metadata";
-        writer.Write("[");
-        writer.Write(fullyQualify ? "global::System.Runtime.InteropServices.Guid" : "Guid");
-        writer.Write("(\"");
+        writer.Write($"[{(fullyQualify ? "global::System.Runtime.InteropServices.Guid" : "Guid")}(\"");
         IIDExpressionWriter.WriteGuid(writer, type, false);
         writer.Write("\")]");
     }
@@ -56,17 +54,14 @@ internal static class InterfaceFactory
             }
             if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
             {
-                writer.Write("global::");
-                writer.Write(ns);
-                writer.Write(".");
+                writer.Write($"global::{ns}.");
             }
             writer.Write(IdentifierEscaping.StripBackticks(name));
             delimiter = ", ";
         }
         else if (includeWindowsRuntimeObject)
         {
-            writer.Write(delimiter);
-            writer.Write("WindowsRuntimeObject");
+            writer.Write($"{delimiter}WindowsRuntimeObject");
             delimiter = ", ";
         }
 
@@ -136,9 +131,7 @@ internal static class InterfaceFactory
             // namespace (mirrors WriteTypedefName behavior -- same-namespace stays unqualified).
             if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
             {
-                writer.Write("global::");
-                writer.Write(ns);
-                writer.Write(".");
+                writer.Write($"global::{ns}.");
             }
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
@@ -154,12 +147,9 @@ internal static class InterfaceFactory
             }
             if (!string.IsNullOrEmpty(ns) && ns != context.CurrentNamespace)
             {
-                writer.Write("global::");
-                writer.Write(ns);
-                writer.Write(".");
+                writer.Write($"global::{ns}.");
             }
-            writer.Write(IdentifierEscaping.StripBackticks(name));
-            writer.Write("<");
+            writer.Write($"{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
                 if (i > 0) { writer.Write(", "); }
@@ -196,9 +186,7 @@ internal static class InterfaceFactory
             // (Overload, DefaultOverload, AttributeUsage, Experimental).
             WriteMethodCustomAttributes(writer, method);
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
-            writer.Write(" ");
-            writer.Write(method.Name?.Value ?? string.Empty);
-            writer.Write("(");
+            writer.Write($" {method.Name?.Value ?? string.Empty}(");
             MethodFactory.WriteParameterList(writer, context, sig);
             writer.Write(");");
         }
@@ -213,12 +201,7 @@ internal static class InterfaceFactory
                 && FindPropertyInBaseInterfaces(context.Cache, type, prop.Name?.Value ?? string.Empty))
                 ? "new " : string.Empty;
             string propType = WritePropType(context, prop);
-            writer.Write("\n");
-            writer.Write(newKeyword);
-            writer.Write(propType);
-            writer.Write(" ");
-            writer.Write(prop.Name?.Value ?? string.Empty);
-            writer.Write(" {");
+            writer.Write($"\n{newKeyword}{propType} {prop.Name?.Value ?? string.Empty} {{");
             if (getter is not null || setter is not null) { writer.Write(" get;"); }
             if (setter is not null) { writer.Write(" set;"); }
             writer.Write(" }");
@@ -228,9 +211,7 @@ internal static class InterfaceFactory
         {
             writer.Write("\nevent ");
             TypedefNameWriter.WriteEventType(writer, context, evt);
-            writer.Write(" ");
-            writer.Write(evt.Name?.Value ?? string.Empty);
-            writer.Write(";");
+            writer.Write($" {evt.Name?.Value ?? string.Empty};");
         }
     }
     /// <summary>
@@ -312,8 +293,7 @@ internal static class InterfaceFactory
             {
                 continue;
             }
-            writer.Write("[global::Windows.Foundation.Metadata.");
-            writer.Write(baseName);
+            writer.Write($"[global::Windows.Foundation.Metadata.{baseName}");
             // Args: only handle string args (sufficient for [Overload(@"X")]). [DefaultOverload] has none.
             if (attr.Signature is not null && attr.Signature.FixedArguments.Count > 0)
             {
@@ -324,15 +304,11 @@ internal static class InterfaceFactory
                     object? val = attr.Signature.FixedArguments[i].Element;
                     if (val is AsmResolver.Utf8String s)
                     {
-                        writer.Write("@\"");
-                        writer.Write(s.Value);
-                        writer.Write("\"");
+                        writer.Write($"@\"{s.Value}\"");
                     }
                     else if (val is string ss)
                     {
-                        writer.Write("@\"");
-                        writer.Write(ss);
-                        writer.Write("\"");
+                        writer.Write($"@\"{ss}\"");
                     }
                     else
                     {
@@ -372,8 +348,7 @@ internal static class InterfaceFactory
 
         bool isInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo) ||
                           TypeCategorization.IsProjectionInternal(type);
-        writer.Write(isInternal ? "internal" : "public");
-        writer.Write(" interface ");
+        writer.Write($"{(isInternal ? "internal" : "public")} interface ");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.CCW, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         WriteTypeInheritance(writer, context, type, false, false);

@@ -72,7 +72,7 @@ internal static class ObjRefNameGenerator
                 name = mapped.MappedName;
             }
             writer.Write("global::");
-            if (!string.IsNullOrEmpty(ns)) { writer.Write(ns); writer.Write("."); }
+            if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
         else if (ifaceType is TypeReference tr)
@@ -85,7 +85,7 @@ internal static class ObjRefNameGenerator
                 name = mapped.MappedName;
             }
             writer.Write("global::");
-            if (!string.IsNullOrEmpty(ns)) { writer.Write(ns); writer.Write("."); }
+            if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
         else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
@@ -99,9 +99,8 @@ internal static class ObjRefNameGenerator
                 name = mapped.MappedName;
             }
             writer.Write("global::");
-            if (!string.IsNullOrEmpty(ns)) { writer.Write(ns); writer.Write("."); }
-            writer.Write(IdentifierEscaping.StripBackticks(name));
-            writer.Write("<");
+            if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
+            writer.Write($"{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
                 if (i > 0) { writer.Write(", "); }
@@ -122,8 +121,7 @@ internal static class ObjRefNameGenerator
         if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
             string propName = BuildIidPropertyNameForGenericInterface(context, gi);
-            writer.Write(propName);
-            writer.Write("(null)");
+            writer.Write($"{propName}(null)");
             return;
         }
 
@@ -159,16 +157,14 @@ internal static class ObjRefNameGenerator
             }
             // Mapped interface: use WellKnownInterfaceIIDs.IID_<EscapedNonProjectedName>.
             string id = EscapeIdentifier(ns + "." + IdentifierEscaping.StripBackticks(name));
-            writer.Write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_");
-            writer.Write(id);
+            writer.Write($"global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_{id}");
         }
         else
         {
             // Non-mapped, non-generic: ABI.InterfaceIIDs.IID_<EscapedABIName>.
             string abiQualified = "global::ABI." + ns + "." + IdentifierEscaping.StripBackticks(name);
             string id = IIDExpressionWriter.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
-            writer.Write("global::ABI.InterfaceIIDs.IID_");
-            writer.Write(id);
+            writer.Write($"global::ABI.InterfaceIIDs.IID_{id}");
         }
     }
     /// <summary>
@@ -195,9 +191,7 @@ internal static class ObjRefNameGenerator
         writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"get_IID_");
         writer.Write(interopName);
         writer.WriteLine("\")]");
-        writer.Write("static extern ref readonly Guid ");
-        writer.Write(propName);
-        writer.Write("([UnsafeAccessorType(\"ABI.InterfaceIIDs, WinRT.Interop\")] object");
+        writer.Write($"static extern ref readonly Guid {propName}([UnsafeAccessorType(\"ABI.InterfaceIIDs, WinRT.Interop\")] object");
         if (isInNullableContext) { writer.Write("?"); }
         writer.WriteLine(" _);");
     }
@@ -219,9 +213,7 @@ internal static class ObjRefNameGenerator
         (string ns, string name) = type.Names();
         string abiQualified = "global::ABI." + ns + "." + IdentifierEscaping.StripBackticks(name);
         string id = IIDExpressionWriter.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
-        writer.Write("global::ABI.InterfaceIIDs.IID_");
-        writer.Write(id);
-        writer.Write("Reference");
+        writer.Write($"global::ABI.InterfaceIIDs.IID_{id}Reference");
     }
     /// <summary>
     /// Emits the lazy <c>_objRef_*</c> field definitions for each interface implementation on
@@ -306,9 +298,7 @@ internal static class ObjRefNameGenerator
         if (useSimplePattern)
         {
             // Sealed-class default interface: simple expression-bodied property pointing at NativeObjectReference.
-            writer.Write("private WindowsRuntimeObjectReference ");
-            writer.Write(objRefName);
-            writer.WriteLine(" => NativeObjectReference;");
+            writer.WriteLine($"private WindowsRuntimeObjectReference {objRefName} => NativeObjectReference;");
             // Emit the unsafe accessor AFTER the field so it can be used to pass the IID in the
             // constructor for the default interface.
             if (gi is not null)
@@ -336,9 +326,7 @@ internal static class ObjRefNameGenerator
             writer.Write("                value: NativeObjectReference.As(");
             WriteIidExpression(writer, context, ifaceRef);
             writer.WriteLine("),");
-            writer.Write("                comparand: null);\n\n");
-            writer.Write("            return field;\n        }\n\n");
-            writer.Write("        return field ?? MakeObjectReference();\n    }\n");
+            writer.Write("                comparand: null);\n\n            return field;\n        }\n\n        return field ?? MakeObjectReference();\n    }\n");
             if (isDefault) { writer.WriteLine("    init;"); }
             writer.WriteLine("}");
         }

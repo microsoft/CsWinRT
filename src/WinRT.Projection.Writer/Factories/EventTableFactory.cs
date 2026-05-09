@@ -43,8 +43,7 @@ internal static class EventTableFactory
         writer.Write(">> MakeTable()\n        {\n");
         writer.Write("            _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);\n\n");
         writer.WriteLine("            return global::System.Threading.Volatile.Read(in field);");
-        writer.Write("        }\n\n");
-        writer.Write("        return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n    }\n}\n");
+        writer.Write("        }\n\n        return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n    }\n}\n");
     }
 
     /// <summary>
@@ -69,10 +68,7 @@ internal static class EventTableFactory
         writer.Write("    *");
         writer.Write(cookieName);
         writer.WriteLine(" = default;");
-        writer.Write("    try\n    {\n");
-        writer.Write("        var __this = ComInterfaceDispatch.GetInstance<");
-        writer.Write(ifaceFullName);
-        writer.WriteLine(">((ComInterfaceDispatch*)thisPtr);");
+        writer.WriteLine($"    try\n    {{\n        var __this = ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr);");
 
         if (isGeneric)
         {
@@ -86,17 +82,13 @@ internal static class EventTableFactory
             writer.Write(" ConvertToManaged([UnsafeAccessorType(\"");
             writer.Write(interopTypeName);
             writer.WriteLine("\")] object _, void* value);");
-            writer.Write("        var __handler = ConvertToManaged(null, ");
-            writer.Write(handlerRef);
-            writer.WriteLine(");");
+            writer.WriteLine($"        var __handler = ConvertToManaged(null, {handlerRef});");
         }
         else
         {
             writer.Write("        var __handler = ");
             TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
-            writer.Write("Marshaller.ConvertToManaged(");
-            writer.Write(handlerRef);
-            writer.WriteLine(");");
+            writer.WriteLine($"Marshaller.ConvertToManaged({handlerRef});");
         }
 
         writer.Write("        *");
@@ -107,9 +99,7 @@ internal static class EventTableFactory
         writer.Write("        __this.");
         writer.Write(evName);
         writer.WriteLine(" += __handler;");
-        writer.Write("        return 0;\n    }\n");
-        writer.Write("    catch (Exception __exception__)\n    {\n");
-        writer.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");
+        writer.Write("        return 0;\n    }\n    catch (Exception __exception__)\n    {\n        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");
     }
 
     /// <summary>
@@ -136,8 +126,6 @@ internal static class EventTableFactory
         writer.Write(evName);
         writer.WriteLine(" -= __handler;");
         writer.WriteLine("        }");
-        writer.Write("        return 0;\n    }\n");
-        writer.Write("    catch (Exception __exception__)\n    {\n");
-        writer.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");
+        writer.Write("        return 0;\n    }\n    catch (Exception __exception__)\n    {\n        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");
     }
 }

@@ -102,12 +102,7 @@ internal static class ProjectionFileBuilder
         MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
         MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
 
-        writer.Write(accessibility);
-        writer.Write(" enum ");
-        writer.Write(typeName);
-        writer.Write(" : ");
-        writer.Write(enumUnderlyingType);
-        writer.Write("\n{\n");
+        writer.Write($"{accessibility} enum {typeName} : {enumUnderlyingType}\n{{\n");
 
         foreach (FieldDefinition field in type.Fields)
         {
@@ -119,12 +114,7 @@ internal static class ProjectionFileBuilder
             string constantValue = FormatConstant(field.Constant);
             // Emits per-enum-field [SupportedOSPlatform] when the field has a [ContractVersion].
             CustomAttributeFactory.WritePlatformAttribute(writer, context, field);
-            writer.Write(fieldName);
-            writer.Write(" = unchecked((");
-            writer.Write(enumUnderlyingType);
-            writer.Write(")");
-            writer.Write(constantValue);
-            writer.WriteLine("),");
+            writer.WriteLine($"{fieldName} = unchecked(({enumUnderlyingType}){constantValue}),");
         }
         writer.Write("}\n\n");
     }
@@ -195,21 +185,11 @@ internal static class ProjectionFileBuilder
         MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
         writer.Write("public");
         if (hasAddition) { writer.Write(" partial"); }
-        writer.Write(" struct ");
-        writer.Write(projectionName);
-        writer.Write(": IEquatable<");
-        writer.Write(projectionName);
-        writer.Write(">\n{\n");
-
-        // ctor
-        writer.Write("public ");
-        writer.Write(projectionName);
-        writer.Write("(");
+        writer.Write($" struct {projectionName}: IEquatable<{projectionName}>\n{{\npublic {projectionName}(");
         for (int i = 0; i < fields.Count; i++)
         {
             if (i > 0) { writer.Write(", "); }
-            writer.Write(fields[i].TypeStr);
-            writer.Write(" ");
+            writer.Write($"{fields[i].TypeStr} ");
             IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
         }
         writer.Write(")\n{\n");
@@ -219,16 +199,13 @@ internal static class ProjectionFileBuilder
             // qualify with this. to disambiguate.
             if (name == paramName)
             {
-                writer.Write("this.");
-                writer.Write(name);
-                writer.Write(" = ");
+                writer.Write($"this.{name} = ");
                 IdentifierEscaping.WriteEscapedIdentifier(writer, paramName);
                 writer.Write("; ");
             }
             else
             {
-                writer.Write(name);
-                writer.Write(" = ");
+                writer.Write($"{name} = ");
                 IdentifierEscaping.WriteEscapedIdentifier(writer, paramName);
                 writer.Write("; ");
             }
@@ -238,19 +215,11 @@ internal static class ProjectionFileBuilder
         // properties
         foreach ((string typeStr, string name, string _, bool _) in fields)
         {
-            writer.Write("public ");
-            writer.Write(typeStr);
-            writer.Write(" ");
-            writer.Write(name);
-            writer.Write("\n{\nreadonly get; set;\n}\n");
+            writer.Write($"public {typeStr} {name}\n{{\nreadonly get; set;\n}}\n");
         }
 
         // ==
-        writer.Write("public static bool operator ==(");
-        writer.Write(projectionName);
-        writer.Write(" x, ");
-        writer.Write(projectionName);
-        writer.Write(" y) => ");
+        writer.Write($"public static bool operator ==({projectionName} x, {projectionName} y) => ");
         if (fields.Count == 0)
         {
             writer.Write("true");
@@ -260,10 +229,7 @@ internal static class ProjectionFileBuilder
             for (int i = 0; i < fields.Count; i++)
             {
                 if (i > 0) { writer.Write(" && "); }
-                writer.Write("x.");
-                writer.Write(fields[i].Name);
-                writer.Write(" == y.");
-                writer.Write(fields[i].Name);
+                writer.Write($"x.{fields[i].Name} == y.{fields[i].Name}");
             }
         }
         writer.WriteLine(";");
@@ -295,8 +261,7 @@ internal static class ProjectionFileBuilder
             for (int i = 0; i < fields.Count; i++)
             {
                 if (i > 0) { writer.Write(" ^ "); }
-                writer.Write(fields[i].Name);
-                writer.Write(".GetHashCode()");
+                writer.Write($"{fields[i].Name}.GetHashCode()");
             }
         }
         writer.WriteLine(";");
@@ -309,10 +274,7 @@ internal static class ProjectionFileBuilder
 
         string typeName = type.Name?.Value ?? string.Empty;
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
-        writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
-        writer.Write(" enum ");
-        writer.Write(typeName);
-        writer.Write("\n{\n}\n");
+        writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} enum {typeName}\n{{\n}}\n");
     }
     /// <summary>Writes a projected delegate.</summary>
     public static void WriteDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -334,8 +296,7 @@ internal static class ProjectionFileBuilder
             IIDExpressionWriter.WriteGuid(writer, type, false);
             writer.WriteLine("\")]");
         }
-        writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
-        writer.Write(" delegate ");
+        writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} delegate ");
         MethodFactory.WriteProjectionReturnType(writer, context, sig);
         writer.Write(" ");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
@@ -351,19 +312,14 @@ internal static class ProjectionFileBuilder
 
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
-        writer.Write(" sealed class ");
-        writer.Write(typeName);
-        writer.Write(": Attribute\n{\n");
+        writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} sealed class {typeName}: Attribute\n{{\n");
 
         // Constructors
         foreach (MethodDefinition method in type.Methods)
         {
             if (method.Name?.Value != ".ctor") { continue; }
             MethodSig sig = new(method);
-            writer.Write("public ");
-            writer.Write(typeName);
-            writer.Write("(");
+            writer.Write($"public {typeName}(");
             MethodFactory.WriteParameterList(writer, context, sig);
             writer.WriteLine("){}");
         }
@@ -373,9 +329,7 @@ internal static class ProjectionFileBuilder
             if (field.IsStatic || field.Signature is null) { continue; }
             writer.Write("public ");
             TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
-            writer.Write(" ");
-            writer.Write(field.Name?.Value ?? string.Empty);
-            writer.WriteLine(";");
+            writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
         }
         writer.WriteLine("}");
     }

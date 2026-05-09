@@ -51,9 +51,7 @@ internal static class StructEnumMarshallerFactory
         bool isMappedStruct = isComplexStruct && MappedTypes.Get(typeNs, typeNm) is not null;
         if (isMappedStruct) { isComplexStruct = false; }
 
-        writer.Write("public static unsafe class ");
-        writer.Write(nameStripped);
-        writer.Write("Marshaller\n{\n");
+        writer.Write($"public static unsafe class {nameStripped}Marshaller\n{{\n");
 
         if (isComplexStruct)
         {
@@ -62,8 +60,7 @@ internal static class StructEnumMarshallerFactory
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write(" ConvertToUnmanaged(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(" value)\n    {\n");
-            writer.WriteLine("        return new() {");
+            writer.WriteLine(" value)\n    {\n        return new() {");
             bool first = true;
             foreach (FieldDefinition field in type.Fields)
             {
@@ -72,30 +69,21 @@ internal static class StructEnumMarshallerFactory
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
                 if (!first) { writer.WriteLine(","); }
                 first = false;
-                writer.Write("            ");
-                writer.Write(fname);
-                writer.Write(" = ");
+                writer.Write($"            {fname} = ");
                 if (ft.IsString())
                 {
-                    writer.Write("HStringMarshaller.ConvertToUnmanaged(value.");
-                    writer.Write(fname);
-                    writer.Write(")");
+                    writer.Write($"HStringMarshaller.ConvertToUnmanaged(value.{fname})");
                 }
                 else if (AbiTypeHelpers.IsMappedAbiValueType(ft))
                 {
-                    writer.Write(AbiTypeHelpers.GetMappedMarshallerName(ft));
-                    writer.Write(".ConvertToUnmanaged(value.");
-                    writer.Write(fname);
-                    writer.Write(")");
+                    writer.Write($"{AbiTypeHelpers.GetMappedMarshallerName(ft)}.ConvertToUnmanaged(value.{fname})");
                 }
                 else if (ft.IsHResultException())
                 {
                     // Mapped value type 'HResult' (excluded from IsMappedAbiValueType because
                     // it's "treated specially in many places", but for nested struct fields the
                     // marshalling is identical: use ABI.System.ExceptionMarshaller).
-                    writer.Write("global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(value.");
-                    writer.Write(fname);
-                    writer.Write(")");
+                    writer.Write($"global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(value.{fname})");
                 }
                 else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd) is TypeDefinition fieldStructTd
@@ -103,28 +91,18 @@ internal static class StructEnumMarshallerFactory
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd))
                 {
                     // Nested non-blittable struct: marshal via its <Name>Marshaller.
-                    writer.Write(IdentifierEscaping.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty));
-                    writer.Write("Marshaller.ConvertToUnmanaged(value.");
-                    writer.Write(fname);
-                    writer.Write(")");
+                    writer.Write($"{IdentifierEscaping.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty)}Marshaller.ConvertToUnmanaged(value.{fname})");
                 }
                 else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                 {
-                    writer.Write(nullableMarshaller!);
-                    writer.Write(".BoxToUnmanaged(value.");
-                    writer.Write(fname);
-                    writer.Write(").DetachThisPtrUnsafe()");
+                    writer.Write($"{nullableMarshaller!}.BoxToUnmanaged(value.{fname}).DetachThisPtrUnsafe()");
                 }
                 else
                 {
-                    writer.Write("value.");
-                    writer.Write(fname);
+                    writer.Write($"value.{fname}");
                 }
             }
-            writer.Write("\n        };\n    }\n");
-
-            // ConvertToManaged: construct projected struct via constructor accepting the marshalled fields.
-            writer.Write("    public static ");
+            writer.Write("\n        };\n    }\n    public static ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" ConvertToManaged(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
@@ -133,8 +111,7 @@ internal static class StructEnumMarshallerFactory
             // - In non-component mode: emit positional constructor (matches the auto-generated
             //   primary constructor on projected struct types).
             bool useObjectInitializer = context.Settings.Component;
-            writer.Write(" value)\n    {\n");
-            writer.Write("        return new ");
+            writer.Write(" value)\n    {\n        return new ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(useObjectInitializer ? "(){\n" : "(\n");
             first = true;
@@ -148,30 +125,22 @@ internal static class StructEnumMarshallerFactory
                 writer.Write("            ");
                 if (useObjectInitializer)
                 {
-                    writer.Write(fname);
-                    writer.Write(" = ");
+                    writer.Write($"{fname} = ");
                 }
                 if (ft.IsString())
                 {
-                    writer.Write("HStringMarshaller.ConvertToManaged(value.");
-                    writer.Write(fname);
-                    writer.Write(")");
+                    writer.Write($"HStringMarshaller.ConvertToManaged(value.{fname})");
                 }
                 else if (AbiTypeHelpers.IsMappedAbiValueType(ft))
                 {
-                    writer.Write(AbiTypeHelpers.GetMappedMarshallerName(ft));
-                    writer.Write(".ConvertToManaged(value.");
-                    writer.Write(fname);
-                    writer.Write(")");
+                    writer.Write($"{AbiTypeHelpers.GetMappedMarshallerName(ft)}.ConvertToManaged(value.{fname})");
                 }
                 else if (ft.IsHResultException())
                 {
                     // Mapped value type 'HResult' (excluded from IsMappedAbiValueType because
                     // it's "treated specially in many places", but for nested struct fields the
                     // marshalling is identical: use ABI.System.ExceptionMarshaller).
-                    writer.Write("global::ABI.System.ExceptionMarshaller.ConvertToManaged(value.");
-                    writer.Write(fname);
-                    writer.Write(")");
+                    writer.Write($"global::ABI.System.ExceptionMarshaller.ConvertToManaged(value.{fname})");
                 }
                 else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd2
                          && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd2) is TypeDefinition fieldStructTd2
@@ -179,28 +148,18 @@ internal static class StructEnumMarshallerFactory
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd2))
                 {
                     // Nested non-blittable struct: convert via its <Name>Marshaller.
-                    writer.Write(IdentifierEscaping.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty));
-                    writer.Write("Marshaller.ConvertToManaged(value.");
-                    writer.Write(fname);
-                    writer.Write(")");
+                    writer.Write($"{IdentifierEscaping.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty)}Marshaller.ConvertToManaged(value.{fname})");
                 }
                 else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                 {
-                    writer.Write(nullableMarshaller!);
-                    writer.Write(".UnboxToManaged(value.");
-                    writer.Write(fname);
-                    writer.Write(")");
+                    writer.Write($"{nullableMarshaller!}.UnboxToManaged(value.{fname})");
                 }
                 else
                 {
-                    writer.Write("value.");
-                    writer.Write(fname);
+                    writer.Write($"value.{fname}");
                 }
             }
-            writer.Write(useObjectInitializer ? "\n        };\n    }\n" : "\n        );\n    }\n");
-
-            // Dispose: free non-blittable fields.
-            writer.Write("    public static void Dispose(");
+            writer.Write($"{(useObjectInitializer ? "\n        };\n    }\n" : "\n        );\n    }\n")}    public static void Dispose(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write(" value)\n    {\n");
             foreach (FieldDefinition field in type.Fields)
@@ -210,9 +169,7 @@ internal static class StructEnumMarshallerFactory
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
                 if (ft.IsString())
                 {
-                    writer.Write("        HStringMarshaller.Free(value.");
-                    writer.Write(fname);
-                    writer.WriteLine(");");
+                    writer.WriteLine($"        HStringMarshaller.Free(value.{fname});");
                 }
                 else if (ft.IsHResultException())
                 {
@@ -237,19 +194,11 @@ internal static class StructEnumMarshallerFactory
                     // Mirror C++: this site always uses the fully-qualified marshaller name.
                     string nestedNs = fieldStructTd3.Namespace?.Value ?? string.Empty;
                     string nestedNm = IdentifierEscaping.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty);
-                    writer.Write("        global::ABI.");
-                    writer.Write(nestedNs);
-                    writer.Write(".");
-                    writer.Write(nestedNm);
-                    writer.Write("Marshaller.Dispose(value.");
-                    writer.Write(fname);
-                    writer.WriteLine(");");
+                    writer.WriteLine($"        global::ABI.{nestedNs}.{nestedNm}Marshaller.Dispose(value.{fname});");
                 }
                 else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
-                    writer.Write("        WindowsRuntimeUnknownMarshaller.Free(value.");
-                    writer.Write(fname);
-                    writer.WriteLine(");");
+                    writer.WriteLine($"        WindowsRuntimeUnknownMarshaller.Free(value.{fname});");
                 }
             }
             writer.WriteLine("    }");
@@ -262,10 +211,7 @@ internal static class StructEnumMarshallerFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
         if (isEnum || almostBlittable || isComplexStruct)
         {
-            writer.Write("? value)\n    {\n");
-            writer.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.");
-            writer.Write(hasReferenceFields ? "TrackerSupport" : "None");
-            writer.Write(", in ");
+            writer.Write($"? value)\n    {{\n        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.{(hasReferenceFields ? "TrackerSupport" : "None")}, in ");
             ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
             writer.Write(");\n    }\n");
         }
@@ -274,8 +220,7 @@ internal static class StructEnumMarshallerFactory
             // Mapped struct (Duration/KeyTime/etc.): BoxToUnmanaged is still required because the
             // public projected type still routes through this marshaller (it just lacks per-field
             // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
-            writer.Write("? value)\n    {\n");
-            writer.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in ");
+            writer.Write("? value)\n    {\n        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in ");
             ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
             writer.Write(");\n    }\n");
         }
@@ -285,15 +230,13 @@ internal static class StructEnumMarshallerFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
         if (isEnum || almostBlittable)
         {
-            writer.Write("? UnboxToManaged(void* value)\n    {\n");
-            writer.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
+            writer.Write("? UnboxToManaged(void* value)\n    {\n        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(">(value);\n    }\n");
         }
         else if (isComplexStruct)
         {
-            writer.Write("? UnboxToManaged(void* value)\n    {\n");
-            writer.Write("        ");
+            writer.Write("? UnboxToManaged(void* value)\n    {\n        ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write("? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
@@ -304,8 +247,7 @@ internal static class StructEnumMarshallerFactory
         {
             // Mapped struct: unbox directly to projected type (no per-field ConvertToManaged needed
             // because the projected struct's field layout matches the WinMD struct layout).
-            writer.Write("? UnboxToManaged(void* value)\n    {\n");
-            writer.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
+            writer.Write("? UnboxToManaged(void* value)\n    {\n        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(">(value);\n    }\n");
         }
@@ -368,37 +310,25 @@ internal static class StructEnumMarshallerFactory
             writer.Write(");\n    }\n\n");
             writer.Write("    public override ComInterfaceEntry* ComputeVtables(out int count)\n    {\n");
             writer.WriteLine("        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);");
-            writer.Write("        return (ComInterfaceEntry*)Unsafe.AsPointer(in ");
-            writer.Write(nameStripped);
-            writer.Write("InterfaceEntriesImpl.Entries);\n    }\n\n");
-            writer.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
-            writer.WriteLine("        wrapperFlags = CreatedWrapperFlags.NonWrapping;");
+            writer.WriteLine($"        return (ComInterfaceEntry*)Unsafe.AsPointer(in {nameStripped}InterfaceEntriesImpl.Entries);\n    }}\n\n    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {{\n        wrapperFlags = CreatedWrapperFlags.NonWrapping;");
             if (isComplexStruct)
             {
-                writer.Write("        return ");
-                writer.Write(nameStripped);
-                writer.Write("Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
+                writer.Write($"        return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
                 TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
-                writer.Write(">(value, in ");
-                writer.Write(iidRefExpr);
-                writer.WriteLine("));");
+                writer.WriteLine($">(value, in {iidRefExpr}));");
             }
             else
             {
                 writer.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
                 TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-                writer.Write(">(value, in ");
-                writer.Write(iidRefExpr);
-                writer.WriteLine(");");
+                writer.WriteLine($">(value, in {iidRefExpr});");
             }
             writer.Write("    }\n}\n");
         }
         else
         {
             // Fallback: keep the placeholder class so consumer attribute references resolve.
-            writer.Write("internal sealed class ");
-            writer.Write(nameStripped);
-            writer.Write("ComWrappersMarshallerAttribute : global::System.Attribute\n{\n}\n");
+            writer.Write($"internal sealed class {nameStripped}ComWrappersMarshallerAttribute : global::System.Attribute\n{{\n}}\n");
         }
     }
 }

@@ -255,9 +255,7 @@ internal static class CustomAttributeFactory
                 string platform = GetPlatform(context, attr);
                 if (!string.IsNullOrEmpty(platform))
                 {
-                    writer.Write("[global::System.Runtime.Versioning.SupportedOSPlatform(");
-                    writer.Write(platform);
-                    writer.WriteLine(")]");
+                    writer.WriteLine($"[global::System.Runtime.Versioning.SupportedOSPlatform({platform})]");
                     return;
                 }
             }
@@ -338,8 +336,7 @@ internal static class CustomAttributeFactory
 
         foreach (KeyValuePair<string, List<string>> kv in attributes)
         {
-            writer.Write("[global::");
-            writer.Write(kv.Key);
+            writer.Write($"[global::{kv.Key}");
             if (kv.Value.Count > 0)
             {
                 writer.Write("(");

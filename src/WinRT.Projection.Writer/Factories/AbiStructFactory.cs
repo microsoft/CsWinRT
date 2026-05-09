@@ -41,8 +41,7 @@ internal static class AbiStructFactory
                 MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
             }
             MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
-            writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
-            writer.Write(" unsafe struct ");
+            writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} unsafe struct ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write("\n{\n");
             foreach (FieldDefinition field in type.Fields)
@@ -72,9 +71,7 @@ internal static class AbiStructFactory
                 {
                     MethodFactory.WriteProjectedSignature(writer, context, ft, false);
                 }
-                writer.Write(" ");
-                writer.Write(field.Name?.Value ?? string.Empty);
-                writer.WriteLine(";");
+                writer.WriteLine($" {field.Name?.Value ?? string.Empty};");
             }
             writer.Write("}\n\n");
         }

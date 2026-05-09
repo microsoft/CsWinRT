@@ -58,10 +58,7 @@ internal static class AbiInterfaceFactory
                 // regardless of element type.
                 if (includeParamNames)
                 {
-                    writer.Write("uint ");
-                    writer.Write("__");
-                    writer.Write(p.Parameter.Name ?? "param");
-                    writer.Write("Size, void* ");
+                    writer.Write($"uint __{p.Parameter.Name ?? "param"}Size, void* ");
                     IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
                 }
                 else
@@ -78,9 +75,7 @@ internal static class AbiInterfaceFactory
                     bool isRefElemBr = brSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, brSz.BaseType) || brSz.BaseType.IsObject() || brSz.BaseType.IsGenericInstance();
                     if (includeParamNames)
                     {
-                        writer.Write("uint* __");
-                        writer.Write(p.Parameter.Name ?? "param");
-                        writer.Write("Size, ");
+                        writer.Write($"uint* __{p.Parameter.Name ?? "param"}Size, ");
                         if (isRefElemBr) { writer.Write("void*** "); }
                         else
                         {
@@ -133,12 +128,9 @@ internal static class AbiInterfaceFactory
             {
                 if (includeParamNames)
                 {
-                    writer.Write("uint* ");
-                    writer.Write(retSizeName);
-                    writer.Write(", ");
+                    writer.Write($"uint* {retSizeName}, ");
                     AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(retSz.BaseType));
-                    writer.Write("** ");
-                    writer.Write(retName);
+                    writer.Write($"** {retName}");
                 }
                 else
                 {
@@ -151,7 +143,7 @@ internal static class AbiInterfaceFactory
             {
                 AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(sig.ReturnType));
                 writer.Write("*");
-                if (includeParamNames) { writer.Write(" "); writer.Write(retName); }
+                if (includeParamNames) { writer.Write($" {retName}"); }
             }
         }
     }
@@ -180,9 +172,7 @@ internal static class AbiInterfaceFactory
             MethodSig sig = new(method);
             writer.Write("public delegate* unmanaged[MemberFunction]<");
             WriteAbiParameterTypesPointer(writer, context, sig);
-            writer.Write(", int> ");
-            writer.Write(vm);
-            writer.WriteLine(";");
+            writer.WriteLine($", int> {vm};");
         }
         writer.WriteLine("}");
     }
@@ -199,30 +189,15 @@ internal static class AbiInterfaceFactory
         writer.Write(nameStripped);
         writer.Write("Impl\n{\n");
         writer.WriteLine("[FixedAddressValueType]");
-        writer.Write("private static readonly ");
-        writer.Write(nameStripped);
-        writer.Write("Vftbl Vftbl;\n\n");
-
-        writer.Write("static ");
-        writer.Write(nameStripped);
-        writer.Write("Impl()\n{\n");
-        writer.WriteLine("    *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;");
+        writer.WriteLine($"private static readonly {nameStripped}Vftbl Vftbl;\n\nstatic {nameStripped}Impl()\n{{\n    *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;");
         foreach (MethodDefinition method in type.Methods)
         {
             string vm = AbiTypeHelpers.GetVMethodName(type, method);
-            writer.Write("    Vftbl.");
-            writer.Write(vm);
-            writer.Write(" = &Do_Abi_");
-            writer.Write(vm);
-            writer.WriteLine(";");
+            writer.WriteLine($"    Vftbl.{vm} = &Do_Abi_{vm};");
         }
-        writer.Write("}\n\n");
-
-        writer.Write("public static ref readonly Guid IID\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => ref ");
+        writer.Write("}\n\npublic static ref readonly Guid IID\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => ref ");
         AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.Write(";\n}\n\n");
-
-        writer.Write("public static nint Vtable\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => (nint)Unsafe.AsPointer(in Vftbl);\n}\n\n");
+        writer.Write(";\n}\n\npublic static nint Vtable\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => (nint)Unsafe.AsPointer(in Vftbl);\n}\n\n");
 
         // Do_Abi_* implementations: emit real bodies for simple primitive cases,
         // throw null! for everything else (deferred — needs full per-parameter marshalling).
@@ -314,9 +289,7 @@ internal static class AbiInterfaceFactory
             }
 
             writer.WriteLine("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]");
-            writer.Write("private static unsafe int Do_Abi_");
-            writer.Write(vm);
-            writer.Write("(");
+            writer.Write($"private static unsafe int Do_Abi_{vm}(");
             WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
             writer.Write(")");
 
@@ -368,29 +341,21 @@ internal static class AbiInterfaceFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        writer.Write("\n#nullable enable\n");
-        writer.Write("public static unsafe class ");
-        writer.Write(nameStripped);
-        writer.Write("Marshaller\n{\n");
-        writer.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
+        writer.Write($"\n#nullable enable\npublic static unsafe class {nameStripped}Marshaller\n{{\n    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write(" value)\n    {\n");
-        writer.Write("        return WindowsRuntimeInterfaceMarshaller<");
+        writer.Write(" value)\n    {\n        return WindowsRuntimeInterfaceMarshaller<");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write(">.ConvertToUnmanaged(value, ");
         AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.Write(");\n    }\n\n");
-        writer.Write("    public static ");
+        writer.Write(");\n    }\n\n    public static ");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write("? ConvertToManaged(void* value)\n    {\n");
-        writer.Write("        return (");
+        writer.Write("? ConvertToManaged(void* value)\n    {\n        return (");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n");
-        writer.WriteLine("#nullable disable");
+        writer.WriteLine("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n#nullable disable");
     }
 
     /// <summary>
@@ -480,9 +445,7 @@ internal static class AbiInterfaceFactory
         }
         if (!hasAnyMember) { return; }
 
-        writer.Write(useInternal ? "internal static class " : "public static class ");
-        writer.Write(nameStripped);
-        writer.Write("Methods\n{\n");
+        writer.Write($"{(useInternal ? "internal static class " : "public static class ")}{nameStripped}Methods\n{{\n");
 
         foreach ((TypeDefinition iface, int startSlot, bool segSkipEvents) in segments)
         {

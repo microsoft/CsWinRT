@@ -61,9 +61,7 @@ internal static class ComponentFactory
             }
         }
 
-        writer.Write("\ninternal sealed class ");
-        writer.Write(factoryTypeName);
-        writer.Write(" : global::WindowsRuntime.InteropServices.IActivationFactory");
+        writer.Write($"\ninternal sealed class {factoryTypeName} : global::WindowsRuntime.InteropServices.IActivationFactory");
         foreach (TypeDefinition iface in factoryInterfaces)
         {
             writer.Write(", ");
@@ -89,9 +87,7 @@ internal static class ComponentFactory
         writer.Write("\npublic object ActivateInstance()\n{\n");
         if (isActivatable)
         {
-            writer.Write("return new ");
-            writer.Write(projectedTypeName);
-            writer.Write("();");
+            writer.Write($"return new {projectedTypeName}();");
         }
         else
         {
@@ -145,15 +141,9 @@ internal static class ComponentFactory
     {
         if (method.IsSpecialName) { return; }
         string methodName = method.Name?.Value ?? string.Empty;
-        writer.Write("\npublic ");
-        writer.Write(projectedTypeName);
-        writer.Write(" ");
-        writer.Write(methodName);
-        writer.Write("(");
+        writer.Write($"\npublic {projectedTypeName} {methodName}(");
         WriteFactoryMethodParameters(writer, context, method, includeTypes: true);
-        writer.Write(") => new ");
-        writer.Write(projectedTypeName);
-        writer.Write("(");
+        writer.Write($") => new {projectedTypeName}(");
         WriteFactoryMethodParameters(writer, context, method, includeTypes: false);
         writer.WriteLine(");");
     }
@@ -168,15 +158,9 @@ internal static class ComponentFactory
         string methodName = method.Name?.Value ?? string.Empty;
         writer.Write("\npublic ");
         WriteFactoryReturnType(writer, context, method);
-        writer.Write(" ");
-        writer.Write(methodName);
-        writer.Write("(");
+        writer.Write($" {methodName}(");
         WriteFactoryMethodParameters(writer, context, method, includeTypes: true);
-        writer.Write(") => ");
-        writer.Write(projectedTypeName);
-        writer.Write(".");
-        writer.Write(methodName);
-        writer.Write("(");
+        writer.Write($") => {projectedTypeName}.{methodName}(");
         WriteFactoryMethodParameters(writer, context, method, includeTypes: false);
         writer.WriteLine(");");
     }
@@ -191,27 +175,15 @@ internal static class ComponentFactory
         {
             writer.Write("\npublic ");
             WriteFactoryPropertyType(writer, context, prop);
-            writer.Write(" ");
-            writer.Write(propName);
-            writer.Write(" => ");
-            writer.Write(projectedTypeName);
-            writer.Write(".");
-            writer.Write(propName);
-            writer.WriteLine(";");
+            writer.WriteLine($" {propName} => {projectedTypeName}.{propName};");
             return;
         }
         writer.Write("\npublic ");
         WriteFactoryPropertyType(writer, context, prop);
-        writer.Write(" ");
-        writer.Write(propName);
-        writer.Write("\n{\n");
+        writer.Write($" {propName}\n{{\n");
         if (getter is not null)
         {
-            writer.Write("get => ");
-            writer.Write(projectedTypeName);
-            writer.Write(".");
-            writer.Write(propName);
-            writer.WriteLine(";");
+            writer.WriteLine($"get => {projectedTypeName}.{propName};");
         }
         writer.Write("set => ");
         writer.Write(projectedTypeName);
@@ -280,8 +252,7 @@ internal static class ComponentFactory
             {
                 TypeSemantics semantics = TypeSemanticsFactory.Get(sig.ParameterTypes[i]);
                 TypedefNameWriter.WriteTypeName(writer, context, semantics, TypedefNameType.Projected, true);
-                writer.Write(" ");
-                writer.Write(paramName);
+                writer.Write($" {paramName}");
             }
             else
             {
@@ -296,9 +267,7 @@ internal static class ComponentFactory
         writer.Write("\nusing System;\n");
         foreach (KeyValuePair<string, HashSet<TypeDefinition>> kv in typesByModule)
         {
-            writer.Write("\nnamespace ABI.");
-            writer.Write(kv.Key);
-            writer.Write("\n{\npublic static class ManagedExports\n{\npublic static unsafe void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)\n{\nswitch (activatableClassId)\n{\n");
+            writer.Write($"\nnamespace ABI.{kv.Key}\n{{\npublic static class ManagedExports\n{{\npublic static unsafe void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)\n{{\nswitch (activatableClassId)\n{{\n");
             // Sort by the type's metadata token / row index so cases appear in WinMD declaration order.
             List<TypeDefinition> orderedTypes = [.. kv.Value];
             orderedTypes.Sort((a, b) =>
@@ -310,17 +279,7 @@ internal static class ComponentFactory
             foreach (TypeDefinition type in orderedTypes)
             {
                 (string ns, string name) = type.Names();
-                writer.Write("case \"");
-                writer.Write(ns);
-                writer.Write(".");
-                writer.Write(name);
-                writer.Write("\":\n    return ");
-                // emits 'global::ABI.Impl.<ns>.<name>'.
-                writer.Write("global::ABI.Impl.");
-                writer.Write(ns);
-                writer.Write(".");
-                writer.Write(IdentifierEscaping.StripBackticks(name));
-                writer.WriteLine("ServerActivationFactory.Make();");
+                writer.WriteLine($"case \"{ns}.{name}\":\n    return global::ABI.Impl.{ns}.{IdentifierEscaping.StripBackticks(name)}ServerActivationFactory.Make();");
             }
             writer.Write("default:\n    return null;\n}\n}\n}\n}\n");
         }

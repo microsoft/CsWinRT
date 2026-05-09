@@ -73,10 +73,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     public static void WriteBeginProjectedNamespace(this IndentedTextWriter writer, ProjectionEmitContext context)
     {
         string nsPrefix = context.Settings.Component ? "ABI.Impl." : string.Empty;
-        writer.Write("\nnamespace ");
-        writer.Write(nsPrefix);
-        writer.Write(context.CurrentNamespace);
-        writer.Write("\n{\n");
+        writer.Write($"\nnamespace {nsPrefix}{context.CurrentNamespace}\n{{\n");
     }
 
     /// <summary>Writes the closing <c>}</c> for the projected namespace.</summary>
@@ -94,10 +91,7 @@ using static System.Runtime.InteropServices.ComWrappers;
     /// <param name="context">The active emit context (provides the namespace).</param>
     public static void WriteBeginAbiNamespace(this IndentedTextWriter writer, ProjectionEmitContext context)
     {
-        writer.Write("\n#pragma warning disable CA1416");
-        writer.Write("\nnamespace ABI.");
-        writer.Write(context.CurrentNamespace);
-        writer.Write("\n{\n");
+        writer.Write($"\n#pragma warning disable CA1416\nnamespace ABI.{context.CurrentNamespace}\n{{\n");
     }
 
     /// <summary>

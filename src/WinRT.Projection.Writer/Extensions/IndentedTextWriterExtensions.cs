@@ -56,8 +56,7 @@ internal static class IndentedTextWriterExtensions
     /// <param name="typeName">The fully-qualified type name to emit after the <c>global::</c> prefix.</param>
     public static void WriteGlobal(this IndentedTextWriter writer, string typeName)
     {
-        writer.Write(References.ProjectionNames.GlobalPrefix);
-        writer.Write(typeName);
+        writer.Write($"{References.ProjectionNames.GlobalPrefix}{typeName}");
     }
 
     /// <summary>
@@ -69,7 +68,6 @@ internal static class IndentedTextWriterExtensions
     /// <param name="typeName">The dot-qualified type name to emit after the <c>global::ABI.</c> prefix.</param>
     public static void WriteGlobalAbi(this IndentedTextWriter writer, string typeName)
     {
-        writer.Write(References.ProjectionNames.GlobalAbiPrefix);
-        writer.Write(typeName);
+        writer.Write($"{References.ProjectionNames.GlobalAbiPrefix}{typeName}");
     }
 }

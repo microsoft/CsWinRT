@@ -41,9 +41,7 @@ internal static class TypedefNameWriter
 
         if (nameType == TypedefNameType.NonProjected)
         {
-            writer.Write(typeNamespace);
-            writer.Write(".");
-            writer.Write(typeName);
+            writer.Write($"{typeNamespace}.{typeName}");
             return;
         }
 
@@ -89,19 +87,16 @@ internal static class TypedefNameWriter
             {
                 writer.Write("ABI.Impl.");
             }
-            writer.Write(typeNamespace);
-            writer.Write(".");
+            writer.Write($"{typeNamespace}.");
         }
 
         if (nameToWrite == TypedefNameType.StaticAbiClass)
         {
-            writer.Write(IdentifierEscaping.StripBackticks(typeName));
-            writer.Write("Methods");
+            writer.Write($"{IdentifierEscaping.StripBackticks(typeName)}Methods");
         }
         else if (nameToWrite == TypedefNameType.EventSource)
         {
-            writer.Write(IdentifierEscaping.StripBackticks(typeName));
-            writer.Write("EventSource");
+            writer.Write($"{IdentifierEscaping.StripBackticks(typeName)}EventSource");
         }
         else
         {
@@ -182,8 +177,7 @@ internal static class TypedefNameWriter
                         {
                             writer.Write("ABI.");
                         }
-                        writer.Write(ns);
-                        writer.Write(".");
+                        writer.Write($"{ns}.");
                     }
                     writer.Write(IdentifierEscaping.StripBackticks(name));
                     if (nameType == TypedefNameType.StaticAbiClass) { writer.Write("Methods"); }
@@ -221,8 +215,7 @@ internal static class TypedefNameWriter
                         {
                             writer.Write("ABI.");
                         }
-                        writer.Write(ns);
-                        writer.Write(".");
+                        writer.Write($"{ns}.");
                     }
                     writer.Write(IdentifierEscaping.StripBackticks(name));
                     if (nameType == TypedefNameType.StaticAbiClass) { writer.Write("Methods"); }

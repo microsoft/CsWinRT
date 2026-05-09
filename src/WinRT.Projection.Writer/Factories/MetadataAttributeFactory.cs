@@ -76,9 +76,7 @@ internal static class MetadataAttributeFactory
     {
         string path = cache.GetSourcePath(type);
         string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
-        writer.Write("[WindowsRuntimeMetadata(\"");
-        writer.Write(stem);
-        writer.WriteLine("\")]");
+        writer.WriteLine($"[WindowsRuntimeMetadata(\"{stem}\")]");
     }
 
     /// <summary>Writes a <c>[WindowsRuntimeMetadataTypeName]</c> attribute carrying the WinRT type name string.</summary>
@@ -113,11 +111,7 @@ internal static class MetadataAttributeFactory
     {
         if (context.Settings.ReferenceProjection) { return; }
         (string ns, string name) = type.Names();
-        writer.Write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<");
-        writer.Write(ns);
-        writer.Write(".");
-        writer.Write(name);
-        writer.WriteLine(">\")]");
+        writer.WriteLine($"[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<{ns}.{name}>\")]");
     }
 
     /// <summary>Writes a <c>[WindowsRuntimeReferenceType(typeof(NullableX))]</c> attribute on a reference type.</summary>
@@ -141,11 +135,7 @@ internal static class MetadataAttributeFactory
     {
         if (context.Settings.ReferenceProjection) { return; }
         (string ns, string name) = type.Names();
-        writer.Write("[ABI.");
-        writer.Write(ns);
-        writer.Write(".");
-        writer.Write(IdentifierEscaping.StripBackticks(name));
-        writer.WriteLine("ComWrappersMarshaller]");
+        writer.WriteLine($"[ABI.{ns}.{IdentifierEscaping.StripBackticks(name)}ComWrappersMarshaller]");
     }
 
     /// <summary>
@@ -170,9 +160,7 @@ internal static class MetadataAttributeFactory
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string projectionName = scratch.ToString();
 
-        writer.Write("\n[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(\n    value: \"");
-        writer.Write(projectionName);
-        writer.Write("\",\n    target: typeof(");
+        writer.Write($"\n[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(\n    value: \"{projectionName}\",\n    target: typeof(");
         if (context.Settings.Component)
         {
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
@@ -182,15 +170,11 @@ internal static class MetadataAttributeFactory
         {
             writer.Write(projectionName);
         }
-        writer.Write("),\n    trimTarget: typeof(");
-        writer.Write(projectionName);
-        writer.WriteLine("))]");
+        writer.WriteLine($"),\n    trimTarget: typeof({projectionName}))]");
 
         if (context.Settings.Component)
         {
-            writer.Write("\n[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(\n    source: typeof(");
-            writer.Write(projectionName);
-            writer.Write("),\n    proxy: typeof(");
+            writer.Write($"\n[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(\n    source: typeof({projectionName}),\n    proxy: typeof(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
             TypedefNameWriter.WriteTypeParams(writer, type);
             writer.Write("))]\n\n");
@@ -215,9 +199,7 @@ internal static class MetadataAttributeFactory
         writer.Write("\n[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(\n    value: \"");
         if (isValueType)
         {
-            writer.Write("Windows.Foundation.IReference`1<");
-            writer.Write(projectionName);
-            writer.Write(">");
+            writer.Write($"Windows.Foundation.IReference`1<{projectionName}>");
         }
         else
         {
@@ -233,17 +215,13 @@ internal static class MetadataAttributeFactory
         {
             writer.Write(projectionName);
         }
-        writer.Write("),\n    trimTarget: typeof(");
-        writer.Write(projectionName);
-        writer.WriteLine("))]");
+        writer.WriteLine($"),\n    trimTarget: typeof({projectionName}))]");
 
         // For non-interface, non-struct authored types, emit proxy association.
         TypeCategory cat = TypeCategorization.GetCategory(type);
         if (cat != TypeCategory.Interface && cat != TypeCategory.Struct && context.Settings.Component)
         {
-            writer.Write("\n[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(\n    source: typeof(");
-            writer.Write(projectionName);
-            writer.Write("),\n    proxy: typeof(");
+            writer.Write($"\n[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(\n    source: typeof({projectionName}),\n    proxy: typeof(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
             TypedefNameWriter.WriteTypeParams(writer, type);
             writer.Write("))]\n\n");
@@ -370,11 +348,7 @@ internal static class MetadataAttributeFactory
         w.Write("using System;\nusing WindowsRuntime;\n\n#pragma warning disable CSWINRT3001\n\nnamespace ABI\n{\n");
         foreach (KeyValuePair<string, string> kv in sortedEntries)
         {
-            w.Write("[WindowsRuntimeDefaultInterface(typeof(");
-            w.Write(kv.Key);
-            w.Write("), typeof(");
-            w.Write(kv.Value);
-            w.WriteLine("))]");
+            w.WriteLine($"[WindowsRuntimeDefaultInterface(typeof({kv.Key}), typeof({kv.Value}))]");
         }
         w.Write("internal static class WindowsRuntimeDefaultInterfaces;\n}\n");
         w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeDefaultInterfaces.cs"));
@@ -389,11 +363,7 @@ internal static class MetadataAttributeFactory
         w.Write("using System;\nusing WindowsRuntime;\n\n#pragma warning disable CSWINRT3001\n\nnamespace ABI\n{\n");
         foreach (KeyValuePair<string, string> kv in sortedEntries)
         {
-            w.Write("[WindowsRuntimeExclusiveToInterface(typeof(");
-            w.Write(kv.Key);
-            w.Write("), typeof(");
-            w.Write(kv.Value);
-            w.WriteLine("))]");
+            w.WriteLine($"[WindowsRuntimeExclusiveToInterface(typeof({kv.Key}), typeof({kv.Value}))]");
         }
         w.Write("internal static class WindowsRuntimeExclusiveToInterfaces;\n}\n");
         w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeExclusiveToInterfaces.cs"));
