@@ -36,8 +36,73 @@ internal static class Program
         {
             return RunCompareAuthoring(args[1]);
         }
+        if (args.Length >= 2 && args[0] == "rsp")
+        {
+            return RunRsp(args[1], refMode);
+        }
 
         return RunSimple(args);
+    }
+
+    /// <summary>
+    /// Reads a `.rsp` file (matching the orchestrator's response file format) and invokes
+    /// <see cref="ProjectionWriter.Run"/> with the parsed options. Used by the refactor
+    /// validation harness to drive the writer with input-aligned scenarios.
+    /// </summary>
+    private static int RunRsp(string rspPath, bool refMode)
+    {
+        if (!File.Exists(rspPath)) { Console.Error.WriteLine($"RSP not found: {rspPath}"); return 1; }
+        string text = File.ReadAllText(rspPath);
+        var inputs = new System.Collections.Generic.List<string>();
+        var include = new System.Collections.Generic.List<string>();
+        var exclude = new System.Collections.Generic.List<string>();
+        string? outputFolder = null;
+        bool component = false, internalMode = false;
+        var tokens = new System.Collections.Generic.List<string>();
+        foreach (string raw in text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+        {
+            string line = raw.Trim();
+            if (line.Length == 0 || line.StartsWith('#')) { continue; }
+            int sp = line.IndexOf(' ');
+            if (sp < 0) { tokens.Add(line); }
+            else { tokens.Add(line.Substring(0, sp)); tokens.Add(line.Substring(sp + 1).Trim()); }
+        }
+        for (int i = 0; i < tokens.Count; i++)
+        {
+            string a = tokens[i];
+            string? next = i + 1 < tokens.Count ? tokens[i + 1] : null;
+            switch (a)
+            {
+                case "--input-paths": case "--input-path": case "--input":
+                    if (next is not null) { inputs.AddRange(next.Split(',', StringSplitOptions.RemoveEmptyEntries)); i++; } break;
+                case "--output-directory": case "--output-folder": case "--output":
+                    if (next is not null) { outputFolder = next; i++; } break;
+                case "--include-namespaces": case "--include":
+                    if (next is not null) { include.AddRange(next.Split(',', StringSplitOptions.RemoveEmptyEntries)); i++; } break;
+                case "--exclude-namespaces": case "--exclude":
+                    if (next is not null) { exclude.AddRange(next.Split(',', StringSplitOptions.RemoveEmptyEntries)); i++; } break;
+                case "--component": component = true; break;
+                case "--internal": internalMode = true; break;
+                case "--reference-projection": refMode = true; break;
+                case "--target-framework": if (next is not null) { i++; } break;
+            }
+        }
+        if (outputFolder is null) { Console.Error.WriteLine("Missing --output-directory"); return 1; }
+        if (Directory.Exists(outputFolder)) { Directory.Delete(outputFolder, true); }
+        _ = Directory.CreateDirectory(outputFolder);
+        try
+        {
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = inputs, OutputFolder = outputFolder,
+                Include = include, Exclude = exclude,
+                Component = component, Internal = internalMode,
+                ReferenceProjection = refMode, Verbose = false,
+            });
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"ERROR: {ex.Message}"); Console.Error.WriteLine(ex.StackTrace); return 1; }
+        Console.WriteLine($"Generated {Directory.GetFiles(outputFolder, "*.cs", SearchOption.AllDirectories).Length} files");
+        return 0;
     }
 
     private static int RunSimple(string[] args)
