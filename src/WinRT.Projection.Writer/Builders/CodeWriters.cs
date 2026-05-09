@@ -17,9 +17,6 @@ internal static partial class CodeWriters
     /// <summary>Dispatches type emission based on the type category.</summary>
     public static void WriteType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeCategory category)
     {
-        // The Class family is being migrated incrementally. For not-yet-migrated entries, wrap
-        // the writer+context in a transient TypeWriter so the underlying buffer + state are shared.
-        TypeWriter w = new(writer, context);
         switch (category)
         {
             case TypeCategory.Class:
@@ -29,7 +26,7 @@ internal static partial class CodeWriters
                 }
                 else
                 {
-                    WriteClass(w, type);
+                    WriteClass(writer, context, type);
                 }
                 break;
             case TypeCategory.Delegate:

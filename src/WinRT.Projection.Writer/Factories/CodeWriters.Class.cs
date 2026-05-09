@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -19,18 +20,23 @@ internal static partial class CodeWriters
         // netstandard_compat gate -- it was always false in the C# port.)
         return type.HasAttribute("Windows.Foundation.Metadata", "FastAbiAttribute");
     }
-    public static void WriteClassModifiers(TypeWriter w, TypeDefinition type)
+    /// <summary>Writes the class modifiers ('static '/'sealed ').</summary>
+    public static void WriteClassModifiers(IndentedTextWriter writer, TypeDefinition type)
     {
         if (TypeCategorization.IsStatic(type))
         {
-            w.Write("static ");
+            writer.Write("static ");
             return;
         }
         if (type.IsSealed)
         {
-            w.Write("sealed ");
+            writer.Write("sealed ");
         }
     }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteClassModifiers(TypeWriter w, TypeDefinition type)
+        => WriteClassModifiers(w.Writer, type);
 
     /// <summary>
     /// Returns the fast-abi class type for <paramref name="iface"/> if the interface is
@@ -184,8 +190,11 @@ internal static partial class CodeWriters
         };
     }
 
-    /// <summary>
-    /// </summary>
+    /// <summary>Writes a static class declaration with [ContractVersion]-derived platform suppression.</summary>
+    public static void WriteStaticClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+        => WriteStaticClass(new TypeWriter(writer, context), type);
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload (the primary impl).</summary>
     public static void WriteStaticClass(TypeWriter w, TypeDefinition type)
     {
         bool prevCheckPlatform = w.CheckPlatform;
@@ -211,9 +220,11 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>
-    /// Emits static members from [Static] factory interfaces. Mirrors C++ <c>write_static_members</c>.
-    /// </summary>
+    /// <summary>Emits static members from [Static] factory interfaces.</summary>
+    public static void WriteStaticClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+        => WriteStaticClassMembers(new TypeWriter(writer, context), type);
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload (the primary impl).</summary>
     public static void WriteStaticClassMembers(TypeWriter w, TypeDefinition type)
     {
         if (_cacheRef is null) { return; }
@@ -481,8 +492,11 @@ internal static partial class CodeWriters
         w.Write(");\n    }\n}\n");
     }
 
-    /// <summary>
-    /// </summary>
+    /// <summary>Writes a projected runtime class.</summary>
+    public static void WriteClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+        => WriteClass(new TypeWriter(writer, context), type);
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload (the primary impl).</summary>
     public static void WriteClass(TypeWriter w, TypeDefinition type)
     {
         if (w.Settings.Component) { return; }
