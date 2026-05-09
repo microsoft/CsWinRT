@@ -341,12 +341,12 @@ internal static partial class CodeWriters
         for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
-            if (!IsGenericInstance(p.Type)) { continue; }
+            if (!p.Type.IsGenericInstance()) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            if (IsNullableT(p.Type))
+            if (p.Type.IsNullableT())
             {
-                AsmResolver.DotNet.Signatures.TypeSignature inner = GetNullableInnerType(p.Type)!;
+                AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
                 string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
                 w.Write("        using WindowsRuntimeObjectReferenceValue __");
                 w.Write(raw);
@@ -380,8 +380,8 @@ internal static partial class CodeWriters
         for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
-            if (IsGenericInstance(p.Type)) { continue; } // already handled above
-            if (!IsRuntimeClassOrInterface(p.Type) && !IsObject(p.Type)) { continue; }
+            if (p.Type.IsGenericInstance()) { continue; } // already handled above
+            if (!IsRuntimeClassOrInterface(p.Type) && !p.Type.IsObject()) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             w.Write("        using WindowsRuntimeObjectReferenceValue __");
@@ -426,7 +426,7 @@ internal static partial class CodeWriters
         for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
-            if (!IsHResultException(p.Type)) { continue; }
+            if (!p.Type.IsHResultException()) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             w.Write("        global::ABI.System.Exception __");
@@ -469,7 +469,7 @@ internal static partial class CodeWriters
             w.Write(callName);
             w.Write(".Length));\n");
 
-            if (IsString(szArr.BaseType))
+            if (szArr.BaseType.IsString())
             {
                 w.Write("\n        Unsafe.SkipInit(out InlineArray16<HStringHeader> __");
                 w.Write(raw);
@@ -522,7 +522,7 @@ internal static partial class CodeWriters
         for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
-            if (!IsSystemType(p.Type)) { continue; }
+            if (!p.Type.IsSystemType()) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             w.Write(baseIndent);
@@ -542,7 +542,7 @@ internal static partial class CodeWriters
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (IsString(p.Type) || IsSystemType(p.Type)) { pinnableCount++; }
+            if (p.Type.IsString() || p.Type.IsSystemType()) { pinnableCount++; }
             else if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray) { pinnableCount++; }
         }
         if (pinnableCount > 0)
@@ -555,8 +555,8 @@ internal static partial class CodeWriters
             {
                 ParamInfo p = sig.Params[i];
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                bool isStr = IsString(p.Type);
-                bool isType = IsSystemType(p.Type);
+                bool isStr = p.Type.IsString();
+                bool isType = p.Type.IsSystemType();
                 bool isArr = cat == ParamCategory.PassArray || cat == ParamCategory.FillArray;
                 if (!isStr && !isType && !isArr) { continue; }
                 string raw = p.Parameter.Name ?? "param";
@@ -571,7 +571,7 @@ internal static partial class CodeWriters
                 {
                     AsmResolver.DotNet.Signatures.TypeSignature elemT = ((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType;
                     bool isBlittableElem = IsBlittablePrimitive(elemT) || IsAnyStruct(elemT);
-                    bool isStringElem = IsString(elemT);
+                    bool isStringElem = elemT.IsString();
                     if (isBlittableElem) { w.Write(pname); }
                     else { w.Write("__"); w.Write(raw); w.Write("_span"); }
                     if (isStringElem)
@@ -599,7 +599,7 @@ internal static partial class CodeWriters
             for (int i = 0; i < paramCount; i++)
             {
                 ParamInfo p = sig.Params[i];
-                if (!IsString(p.Type)) { continue; }
+                if (!p.Type.IsString()) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                 w.Write(innerIndent);
@@ -625,7 +625,7 @@ internal static partial class CodeWriters
             if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            if (IsString(szArr.BaseType))
+            if (szArr.BaseType.IsString())
             {
                 w.Write(callIndent);
                 w.Write("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(\n");
@@ -730,19 +730,19 @@ internal static partial class CodeWriters
             {
                 w.Write(pname);
             }
-            else if (IsString(p.Type))
+            else if (p.Type.IsString())
             {
                 w.Write("__");
                 w.Write(raw);
                 w.Write(".HString");
             }
-            else if (IsSystemType(p.Type))
+            else if (p.Type.IsSystemType())
             {
                 w.Write("__");
                 w.Write(raw);
                 w.Write(".ConvertToUnmanagedUnsafe()");
             }
-            else if (IsRuntimeClassOrInterface(p.Type) || IsObject(p.Type) || IsGenericInstance(p.Type))
+            else if (IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
             {
                 w.Write("__");
                 w.Write(raw);
@@ -753,7 +753,7 @@ internal static partial class CodeWriters
                 w.Write("__");
                 w.Write(raw);
             }
-            else if (IsHResultException(p.Type))
+            else if (p.Type.IsHResultException())
             {
                 w.Write("__");
                 w.Write(raw);
@@ -797,7 +797,7 @@ internal static partial class CodeWriters
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
                 if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
-                if (IsString(szArr.BaseType))
+                if (szArr.BaseType.IsString())
                 {
                     w.Write("\n            HStringArrayMarshaller.Dispose(__");
                     w.Write(raw);

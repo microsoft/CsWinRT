@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter.Models;
 
@@ -27,10 +28,10 @@ internal static class ParamHelpers
         // Check both the captured signature type and the parameter's own type (handles cases where
         // the signature is wrapped in a ByReferenceTypeSignature only on one side after substitution).
         // Also peel custom modifiers (e.g. modreq[InAttribute]) which can hide a ByRef beneath.
-        bool isByRef = IsByRefType(p.Type) || IsByRefType(p.Parameter.ParameterType);
+        bool isByRef = p.Type.IsByRefType() || p.Parameter.ParameterType.IsByRefType();
         // If byref and underlying is an array, treat as array param (PassArray/ReceiveArray/FillArray)
         // based on in/out flags. WinRT metadata represents 'out byte[]' as 'byte[]&' with [out].
-        bool isByRefArray = isByRef && PeelByRefAndCustomModifiers(p.Type) is SzArrayTypeSignature;
+        bool isByRefArray = isByRef && p.Type.StripByRefAndCustomModifiers() is SzArrayTypeSignature;
         if (isArray || isByRefArray)
         {
             if (isIn) { return ParamCategory.PassArray; }
@@ -40,28 +41,5 @@ internal static class ParamHelpers
         if (isOut) { return ParamCategory.Out; }
         if (isByRef) { return ParamCategory.Ref; }
         return ParamCategory.In;
-    }
-
-    private static TypeSignature? PeelByRefAndCustomModifiers(TypeSignature? sig)
-    {
-        TypeSignature? cur = sig;
-        while (true)
-        {
-            if (cur is CustomModifierTypeSignature cm) { cur = cm.BaseType; continue; }
-            if (cur is ByReferenceTypeSignature br) { cur = br.BaseType; continue; }
-            break;
-        }
-        return cur;
-    }
-
-    private static bool IsByRefType(TypeSignature? sig)
-    {
-        // Strip custom modifiers (e.g. modreq[InAttribute] or modopt[IsExternalInit]) before checking byref.
-        TypeSignature? cur = sig;
-        while (cur is CustomModifierTypeSignature cm)
-        {
-            cur = cm.BaseType;
-        }
-        return cur is ByReferenceTypeSignature;
     }
 }
