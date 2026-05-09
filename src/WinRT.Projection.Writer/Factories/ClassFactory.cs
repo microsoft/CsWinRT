@@ -595,7 +595,7 @@ internal static class ClassFactory
 
         // Activator/composer constructors from [Activatable]/[Composable] factory interfaces.
         // write_static_members) BEFORE the override hooks and instance members.
-        CodeWriters.WriteAttributedTypes(writer, context, type);
+        ConstructorFactory.WriteAttributedTypes(writer, context, type);
 
         // Static members from [Static] factory interfaces (e.g. GetForCurrentView).
         // C++ emits these inside write_attributed_types -> write_static_members; emit them

@@ -214,7 +214,7 @@ internal static class AbiClassFactory
         // Determine the marshalingType expression from the class's [MarshalingBehaviorAttribute]
         // (mirrors C++ get_marshaling_type_name). This is used by both the marshaller attribute and the
         // callback (the C++ code uses the same value for both).
-        string marshalingType = CodeWriters.GetMarshalingTypeName(type);
+        string marshalingType = ConstructorFactory.GetMarshalingTypeName(type);
 
         bool isSealed = type.IsSealed;
 
