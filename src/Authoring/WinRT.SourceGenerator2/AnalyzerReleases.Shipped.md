@@ -16,3 +16,11 @@ CSWINRT2006 | WindowsRuntime.SourceGenerator | Error | Property name not found f
 CSWINRT2007 | WindowsRuntime.SourceGenerator | Error | Indexer type not found for '[GeneratedCustomPropertyProvider]'
 CSWINRT2008 | WindowsRuntime.SourceGenerator | Error | Static indexer for '[GeneratedCustomPropertyProvider]'
 CSWINRT2009 | WindowsRuntime.SourceGenerator | Warning | Cast to '[ComImport]' type not supported
+CSWINRT2010 | WindowsRuntime.SourceGenerator | Warning | API contract enum type with enum cases
+CSWINRT2011 | WindowsRuntime.SourceGenerator | Warning | Invalid 'ContractVersionAttribute' target for version-only constructor
+CSWINRT2012 | WindowsRuntime.SourceGenerator | Warning | Invalid 'ContractVersionAttribute' target for contract-type constructor
+CSWINRT2013 | WindowsRuntime.SourceGenerator | Warning | Invalid 'ContractVersionAttribute' contract type argument
+CSWINRT2014 | WindowsRuntime.SourceGenerator | Warning | API contract type missing 'ContractVersionAttribute'
+CSWINRT2015 | WindowsRuntime.SourceGenerator | Info | Public authored type missing version metadata
+CSWINRT2016 | WindowsRuntime.SourceGenerator | Warning | Public authored type missing 'ContractVersionAttribute'
+CSWINRT2017 | WindowsRuntime.SourceGenerator | Warning | Public authored type mixing '[ContractVersion]' and '[Version]'
