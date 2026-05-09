@@ -354,7 +354,7 @@ internal static partial class CodeWriters
             !context.Settings.Component &&
             TypeCategorization.IsExclusiveTo(type) &&
             !context.Settings.PublicExclusiveTo &&
-            !IsDefaultOrOverridableInterfaceTypedef(type))
+            !IsDefaultOrOverridableInterfaceTypedef(context.Cache, type))
         {
             return;
         }
@@ -383,34 +383,34 @@ internal static partial class CodeWriters
     }
     /// <summary>Returns true if the given exclusive interface is referenced as a [Default] or
     /// [Overridable] interface impl on the class it's exclusive to.</summary>
-    private static bool IsDefaultOrOverridableInterfaceTypedef(TypeDefinition iface)
+    private static bool IsDefaultOrOverridableInterfaceTypedef(MetadataCache cache, TypeDefinition iface)
     {
         if (!TypeCategorization.IsExclusiveTo(iface)) { return false; }
-        TypeDefinition? classType = GetExclusiveToType(iface);
+        TypeDefinition? classType = Helpers.GetExclusiveToType(iface, cache);
         if (classType is null) { return false; }
         foreach (InterfaceImplementation impl in classType.Interfaces)
         {
             if (!impl.IsDefaultInterface() && !impl.IsOverridable()) { continue; }
             ITypeDefOrRef? implRef = impl.Interface;
             if (implRef is null) { continue; }
-            TypeDefinition? implDef = ResolveInterfaceTypeDefForExclusiveCheck(implRef);
+            TypeDefinition? implDef = ResolveInterfaceTypeDefForExclusiveCheck(cache, implRef);
             if (implDef is not null && implDef == iface) { return true; }
         }
         return false;
     }
 
-    private static TypeDefinition? ResolveInterfaceTypeDefForExclusiveCheck(ITypeDefOrRef ifaceRef)
+    private static TypeDefinition? ResolveInterfaceTypeDefForExclusiveCheck(MetadataCache cache, ITypeDefOrRef ifaceRef)
     {
         if (ifaceRef is TypeDefinition td) { return td; }
-        if (ifaceRef is TypeReference tr && _cacheRef is not null)
+        if (ifaceRef is TypeReference tr)
         {
             (string ns, string nm) = tr.Names();
-            return _cacheRef.Find(ns + "." + nm);
+            return cache.Find(ns + "." + nm);
         }
         if (ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
             ITypeDefOrRef? gen = gi.GenericType;
-            return gen is null ? null : ResolveInterfaceTypeDefForExclusiveCheck(gen);
+            return gen is null ? null : ResolveInterfaceTypeDefForExclusiveCheck(cache, gen);
         }
         return null;
     }

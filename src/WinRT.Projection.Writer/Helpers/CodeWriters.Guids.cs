@@ -330,7 +330,7 @@ internal static partial class CodeWriters
             if (ifaceType is null && impl.Interface is TypeReference tr)
             {
                 (string trNs, string trNm) = tr.Names();
-                ifaceType = ResolveCrossModuleType(trNs, trNm);
+                ifaceType = ResolveCrossModuleType(context.Cache, trNs, trNm);
             }
             if (ifaceType is null) { continue; }
 
@@ -349,10 +349,9 @@ internal static partial class CodeWriters
             }
         }
     }
-    private static TypeDefinition? ResolveCrossModuleType(string ns, string name)
+    private static TypeDefinition? ResolveCrossModuleType(MetadataCache cache, string ns, string name)
     {
-        if (_cacheRef is null) { return null; }
-        return _cacheRef.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
+        return cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
     }
 
     /// <summary>Writes the InterfaceIIDs file header.</summary>
