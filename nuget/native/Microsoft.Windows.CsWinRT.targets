@@ -127,12 +127,18 @@ Properties consumers may set on the vcxproj:
           BeforeTargets="Link"
           Inputs="@(_CsWinRTAggregatorInputs)"
           Outputs="$(OutDir)WinRT.Component.dll"
-          Condition="'$(CsWinRTDisableNativeComponentInterop)' != 'true' and '$(_CsWinRTHasComponentReferences)' == 'true'">
+          Condition="'$(CsWinRTDisableNativeComponentInterop)' != 'true'">
 
-    <Message Importance="$(CsWinRTMessageImportance)"
+    <!-- _CsWinRTHasComponentReferences is set in _DetectCsWinRTNativeComponentReferences (DependsOnTargets above). -->
+    <Message Condition="'$(_CsWinRTHasComponentReferences)' != 'true'"
+             Importance="Low"
+             Text="No CsWinRT component references found. Skipping aggregator generation." />
+
+    <Message Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+             Importance="$(CsWinRTMessageImportance)"
              Text="CsWinRT: aggregating components into $(OutDir)WinRT.Component.dll: @(_CsWinRTComponentProjectPaths);@(CsWinRTNativeComponent)" />
 
-    <PropertyGroup>
+    <PropertyGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
       <_CsWinRTTempProjectDir>$(_CsWinRTNativeConsumerIntermediateDir)</_CsWinRTTempProjectDir>
       <_CsWinRTTempProjectPath>$(_CsWinRTTempProjectDir)CsWinRT.NativeConsumer.csproj</_CsWinRTTempProjectPath>
       <_CsWinRTTempProjectTFMDir>$(_CsWinRTComponentTargetFramework)</_CsWinRTTempProjectTFMDir>
@@ -147,9 +153,9 @@ Properties consumers may set on the vcxproj:
       <_CsWinRTTargetsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.targets'))</_CsWinRTTargetsForAggregator>
     </PropertyGroup>
 
-    <MakeDir Directories="$(_CsWinRTTempProjectDir)" />
+    <MakeDir Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" Directories="$(_CsWinRTTempProjectDir)" />
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
       <_CsWinRTTempProjectLines Include="&lt;Project&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;Sdk.props&quot; Sdk=&quot;Microsoft.NET.Sdk&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;$(_CsWinRTPropsForAggregator)&quot; /&gt;" />
@@ -183,19 +189,22 @@ Properties consumers may set on the vcxproj:
       <_CsWinRTTempProjectLines Include="&lt;/Project&gt;" />
     </ItemGroup>
 
-    <WriteLinesToFile File="$(_CsWinRTTempProjectPath)"
+    <WriteLinesToFile Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+                      File="$(_CsWinRTTempProjectPath)"
                       Lines="@(_CsWinRTTempProjectLines)"
                       Overwrite="true" />
 
-    <MSBuild Projects="$(_CsWinRTTempProjectPath)"
+    <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+             Projects="$(_CsWinRTTempProjectPath)"
              Targets="Restore"
              Properties="Configuration=$(Configuration);Platform=$(_CsWinRTNormalizedPlatform)" />
 
-    <MSBuild Projects="$(_CsWinRTTempProjectPath)"
+    <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
+             Projects="$(_CsWinRTTempProjectPath)"
              Targets="Build"
              Properties="Configuration=$(Configuration);Platform=$(_CsWinRTNormalizedPlatform)" />
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
       <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll')" />
       <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Interop.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Interop.dll')" />
       <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Projection.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Projection.dll')" />
@@ -203,7 +212,7 @@ Properties consumers may set on the vcxproj:
       <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Xaml.Projection.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Sdk.Xaml.Projection.dll')" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(_CsWinRTGeneratedDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" SourceFiles="@(_CsWinRTGeneratedDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
 
   </Target>
 
