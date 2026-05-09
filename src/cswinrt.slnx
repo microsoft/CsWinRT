@@ -174,7 +174,27 @@
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/AuthoringConsumptionTest2/AuthoringConsumptionTest2.vcxproj" Id="8a4b1f2a-9c2e-4d3a-bf68-2a4f5b7c8d9e">
+      <BuildDependency Project="Tests/AuthoringTest/AuthoringTest.csproj" />
+      <BuildDependency Project="Tests/AuthoringTest2/AuthoringTest2.csproj" />
+      <Platform Solution="*|ARM" Project="x64" />
+      <Platform Solution="*|ARM64" Project="x64" />
+      <Platform Solution="*|Win32" Project="x64" />
+      <Platform Solution="*|x86" Project="x64" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+      <Build Solution="*|Win32" Project="false" />
+      <Build Solution="*|x86" Project="false" />
+    </Project>
     <Project Path="Tests/AuthoringTest/AuthoringTest.csproj">
+      <Platform Solution="*|ARM" Project="x86" />
+      <Platform Solution="*|ARM64" Project="x86" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM" Project="false" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/AuthoringTest2/AuthoringTest2.csproj">
       <Platform Solution="*|ARM" Project="x86" />
       <Platform Solution="*|ARM64" Project="x86" />
       <Platform Solution="*|x64" Project="x64" />
