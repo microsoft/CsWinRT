@@ -14,9 +14,8 @@
     <RootNamespace>WindowsRuntime.ProjectionWriter</RootNamespace>
 
     <!--
-      Mirror the C++ 'cswinrt.exe' VERSION_STRING define (set from $(VersionString)
-      in src/Directory.Build.props) so the generated banner reads the same version.
-      Read at runtime via AssemblyInformationalVersionAttribute on this assembly.
+      Stamp the assembly with $(VersionString) so the generated 'cswinrt.exe version' banner
+      in projection file headers can read it back via AssemblyInformationalVersionAttribute.
     -->
     <InformationalVersion>$(VersionString)</InformationalVersion>
       
