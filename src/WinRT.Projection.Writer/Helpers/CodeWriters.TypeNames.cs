@@ -20,9 +20,6 @@ internal static partial class CodeWriters
         writer.Write(FundamentalTypes.ToCSharpType(t));
     }
 
-    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to <see cref="WriteFundamentalType(IndentedTextWriter, FundamentalType)"/>.</summary>
-    public static void WriteFundamentalType(TextWriter w, FundamentalType t) => WriteFundamentalType(w.Writer, t);
-
     /// <summary>Writes a fundamental (primitive) type's non-projected (.NET BCL) name.</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="t">The fundamental type.</param>
@@ -30,9 +27,6 @@ internal static partial class CodeWriters
     {
         writer.Write(FundamentalTypes.ToDotNetType(t));
     }
-
-    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to <see cref="WriteFundamentalNonProjectedType(IndentedTextWriter, FundamentalType)"/>.</summary>
-    public static void WriteFundamentalNonProjectedType(TextWriter w, FundamentalType t) => WriteFundamentalNonProjectedType(w.Writer, t);
 
     /// <summary>Writes the C# type name for a typed reference.</summary>
     /// <param name="writer">The writer to emit to.</param>
@@ -115,10 +109,6 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteTypedefName(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, TypedefNameType, bool)"/>.</summary>
-    public static void WriteTypedefName(TypeWriter w, TypeDefinition type, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
-        => WriteTypedefName(w.Writer, w.Context, type, nameType, forceWriteNamespace);
-
     /// <summary>Writes <c>&lt;T1, T2&gt;</c> for generic types.</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="type">The (potentially generic) type definition.</param>
@@ -134,9 +124,6 @@ internal static partial class CodeWriters
         }
         writer.Write(">");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteTypeParams(IndentedTextWriter, TypeDefinition)"/>.</summary>
-    public static void WriteTypeParams(TypeWriter w, TypeDefinition type) => WriteTypeParams(w.Writer, type);
 
     /// <summary>Writes the typedef name + generic params for a <see cref="TypeSemantics"/> handle.</summary>
     /// <param name="writer">The writer to emit to.</param>
@@ -248,10 +235,6 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteTypeName(IndentedTextWriter, ProjectionEmitContext, TypeSemantics, TypedefNameType, bool)"/>.</summary>
-    public static void WriteTypeName(TypeWriter w, TypeSemantics semantics, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
-        => WriteTypeName(w.Writer, w.Context, semantics, nameType, forceWriteNamespace);
-
     /// <summary>Writes a projected type name (.NET-style).</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
@@ -261,32 +244,19 @@ internal static partial class CodeWriters
         WriteTypeName(writer, context, semantics, TypedefNameType.Projected, false);
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteProjectionType(IndentedTextWriter, ProjectionEmitContext, TypeSemantics)"/>.</summary>
-    public static void WriteProjectionType(TypeWriter w, TypeSemantics semantics) => WriteProjectionType(w.Writer, w.Context, semantics);
-
     /// <summary>
     /// Writes the event handler type for an EventDefinition. Handles all the cases:
     /// TypeDefinition, TypeReference, TypeSpecification (generic instances like <c>EventHandler&lt;T&gt;</c>),
     /// and any other ITypeDefOrRef.
     /// </summary>
-    public static void WriteEventType(TypeWriter w, EventDefinition evt)
-    {
-        WriteEventType(w, evt, null);
-    }
-
-    /// <summary>Primary overload of <see cref="WriteEventType(TypeWriter, EventDefinition)"/>.</summary>
     public static void WriteEventType(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt)
         => WriteEventType(writer, context, evt, null);
 
     /// <summary>
-    /// Same as <see cref="WriteEventType(TypeWriter, EventDefinition)"/> but applies the supplied
-    /// generic context for substitution (e.g., <c>T0</c>/<c>T1</c> -&gt; concrete type arguments
-    /// when emitting members for an instantiated parent generic interface).
+    /// Same as <see cref="WriteEventType(IndentedTextWriter, ProjectionEmitContext, EventDefinition)"/>
+    /// but applies the supplied generic context for substitution (e.g., <c>T0</c>/<c>T1</c> -&gt;
+    /// concrete type arguments when emitting members for an instantiated parent generic interface).
     /// </summary>
-    public static void WriteEventType(TypeWriter w, EventDefinition evt, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance)
-        => WriteEventType(w.Writer, w.Context, evt, currentInstance);
-
-    /// <summary>Primary overload of <see cref="WriteEventType(TypeWriter, EventDefinition, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature?)"/>.</summary>
     public static void WriteEventType(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance)
     {
         if (evt.EventType is null)

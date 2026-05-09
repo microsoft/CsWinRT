@@ -46,8 +46,6 @@ internal static partial class CodeWriters
         int plus = version.IndexOf('+');
         return plus >= 0 ? version[..plus] : version;
     }
-    public static void WriteFileHeader(TextWriter w) => WriteFileHeader(w.Writer);
-
     /// <summary>
     /// Writes the standard auto-generated banner comment (no <c>using</c> imports, no pragmas).
     /// Used for the leaner <c>WinRT_Module.cs</c> / <c>GeneratedInterfaceIIDs.cs</c> /
@@ -83,10 +81,6 @@ internal static partial class CodeWriters
         writer.Write("\")]\n");
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteWinRTMetadataAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, TypeDefinition, MetadataCache)"/>.</summary>
-    public static void WriteWinRTMetadataAttribute(TypeWriter w, TypeDefinition type, MetadataCache cache)
-        => WriteWinRTMetadataAttribute(w.Writer, type, cache);
-
     /// <summary>Writes a <c>[WindowsRuntimeMetadataTypeName]</c> attribute carrying the WinRT type name string.</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
@@ -99,10 +93,6 @@ internal static partial class CodeWriters
         writer.Write("\")]\n");
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteWinRTMetadataTypeNameAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.</summary>
-    public static void WriteWinRTMetadataTypeNameAttribute(TypeWriter w, TypeDefinition type)
-        => WriteWinRTMetadataTypeNameAttribute(w.Writer, w.Context, type);
-
     /// <summary>Writes a <c>[WindowsRuntimeMappedType]</c> attribute pointing at the projected type.</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
@@ -114,10 +104,6 @@ internal static partial class CodeWriters
         WriteTypeParams(writer, type);
         writer.Write("))]\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteWinRTMappedTypeAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.</summary>
-    public static void WriteWinRTMappedTypeAttribute(TypeWriter w, TypeDefinition type)
-        => WriteWinRTMappedTypeAttribute(w.Writer, w.Context, type);
 
     /// <summary>Writes a <c>[WindowsRuntimeClassName("Windows.Foundation.IReference`1&lt;NS.Name&gt;")]</c> attribute for a value type.</summary>
     /// <param name="writer">The writer to emit to.</param>
@@ -134,10 +120,6 @@ internal static partial class CodeWriters
         writer.Write(">\")]\n");
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteValueTypeWinRTClassNameAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.</summary>
-    public static void WriteValueTypeWinRTClassNameAttribute(TypeWriter w, TypeDefinition type)
-        => WriteValueTypeWinRTClassNameAttribute(w.Writer, w.Context, type);
-
     /// <summary>Writes a <c>[WindowsRuntimeReferenceType(typeof(NullableX))]</c> attribute on a reference type.</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
@@ -150,10 +132,6 @@ internal static partial class CodeWriters
         WriteTypeParams(writer, type);
         writer.Write("?))]\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteWinRTReferenceTypeAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.</summary>
-    public static void WriteWinRTReferenceTypeAttribute(TypeWriter w, TypeDefinition type)
-        => WriteWinRTReferenceTypeAttribute(w.Writer, w.Context, type);
 
     /// <summary>Writes the <c>[ABI.NS.NameComWrappersMarshaller]</c> attribute.</summary>
     /// <param name="writer">The writer to emit to.</param>
@@ -169,10 +147,6 @@ internal static partial class CodeWriters
         writer.Write(IdentifierEscaping.StripBackticks(name));
         writer.Write("ComWrappersMarshaller]\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteComWrapperMarshallerAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.</summary>
-    public static void WriteComWrapperMarshallerAttribute(TypeWriter w, TypeDefinition type)
-        => WriteComWrapperMarshallerAttribute(w.Writer, w.Context, type);
 
     /// <summary>
     /// Writes the <c>[assembly: TypeMap&lt;WindowsRuntimeMetadataTypeMapGroup&gt;]</c> attribute
@@ -222,10 +196,6 @@ internal static partial class CodeWriters
             writer.Write("))]\n\n");
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the <see cref="Writers.IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> form.</summary>
-    public static void WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type)
-        => WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w.Writer, w.Context, type);
 
     /// <summary>
     /// Writes the <c>[assembly: TypeMap&lt;WindowsRuntimeComWrappersTypeMapGroup&gt;]</c> attribute
@@ -280,10 +250,6 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the <see cref="Writers.IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> form.</summary>
-    public static void WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type, bool isValueType)
-        => WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(w.Writer, w.Context, type, isValueType);
-
     /// <summary>
     /// Writes the <c>[assembly: TypeMapAssociation&lt;DynamicInterfaceCastableImplementationTypeMapGroup&gt;]</c>
     /// attribute for an interface's dynamic-interface-castable implementation registration.
@@ -310,10 +276,6 @@ internal static partial class CodeWriters
         WriteTypeParams(writer, type);
         writer.Write("))]\n\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the <see cref="Writers.IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> form.</summary>
-    public static void WriteWinRTIdicTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type)
-        => WriteWinRTIdicTypeMapGroupAssemblyAttribute(w.Writer, w.Context, type);
 
     /// <summary>Adds an entry to the default-interface map for a class type.</summary>
     public static void AddDefaultInterfaceEntry(ProjectionEmitContext context, TypeDefinition type, System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
@@ -399,11 +361,11 @@ internal static partial class CodeWriters
             }
         }
     }
-    /// <summary>Writes the generated WindowsRuntimeDefaultInterfaces.cs file (mirrors C++ <c>write_default_interfaces_class</c>).</summary>
+    /// <summary>Writes the generated WindowsRuntimeDefaultInterfaces.cs file.</summary>
     public static void WriteDefaultInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
         if (sortedEntries.Count == 0) { return; }
-        TextWriter w = new();
+        WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter w = new();
         WriteFileHeader(w);
         w.Write("using System;\nusing WindowsRuntime;\n\n#pragma warning disable CSWINRT3001\n\nnamespace ABI\n{\n");
         foreach (KeyValuePair<string, string> kv in sortedEntries)
@@ -418,11 +380,11 @@ internal static partial class CodeWriters
         w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeDefaultInterfaces.cs"));
     }
 
-    /// <summary>Writes the generated WindowsRuntimeExclusiveToInterfaces.cs file (mirrors C++ <c>write_exclusive_to_interfaces_class</c>).</summary>
+    /// <summary>Writes the generated WindowsRuntimeExclusiveToInterfaces.cs file.</summary>
     public static void WriteExclusiveToInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
         if (sortedEntries.Count == 0) { return; }
-        TextWriter w = new();
+        WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter w = new();
         WriteFileHeader(w);
         w.Write("using System;\nusing WindowsRuntime;\n\n#pragma warning disable CSWINRT3001\n\nnamespace ABI\n{\n");
         foreach (KeyValuePair<string, string> kv in sortedEntries)

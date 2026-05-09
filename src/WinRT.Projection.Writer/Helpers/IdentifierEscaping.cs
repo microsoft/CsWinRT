@@ -36,10 +36,4 @@ internal static class IdentifierEscaping
         }
         writer.Write(identifier);
     }
-
-    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to <see cref="WriteEscapedIdentifier(IndentedTextWriter, string)"/>.</summary>
-    /// <param name="writer">The writer to emit to.</param>
-    /// <param name="identifier">The identifier to write.</param>
-    public static void WriteEscapedIdentifier(TextWriter writer, string identifier)
-        => WriteEscapedIdentifier(writer.Writer, identifier);
 }

@@ -45,10 +45,6 @@ internal static partial class CodeWriters
         WriteProjectionType(writer, context, TypeSemanticsFactory.Get(typeSig));
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteProjectedSignature(IndentedTextWriter, ProjectionEmitContext, TypeSignature, bool)"/>.</summary>
-    public static void WriteProjectedSignature(TypeWriter w, TypeSignature typeSig, bool isParameter)
-        => WriteProjectedSignature(w.Writer, w.Context, typeSig, isParameter);
-
     /// <summary>Writes a parameter's projected type, applying the <see cref="ParamCategory"/>-specific transformations.</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
@@ -98,9 +94,6 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteProjectionParameterType(IndentedTextWriter, ProjectionEmitContext, ParamInfo)"/>.</summary>
-    public static void WriteProjectionParameterType(TypeWriter w, ParamInfo p) => WriteProjectionParameterType(w.Writer, w.Context, p);
-
     /// <summary>Writes the parameter name (escaped if it would clash with a C# keyword).</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="p">The parameter info.</param>
@@ -110,9 +103,6 @@ internal static partial class CodeWriters
         if (CSharpKeywords.IsKeyword(name)) { writer.Write("@"); }
         writer.Write(name);
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteParameterName(IndentedTextWriter, ParamInfo)"/>.</summary>
-    public static void WriteParameterName(TypeWriter w, ParamInfo p) => WriteParameterName(w.Writer, p);
 
     /// <summary>Writes the parameter's projected type + name (e.g. <c>int @value</c>).</summary>
     /// <param name="writer">The writer to emit to.</param>
@@ -124,9 +114,6 @@ internal static partial class CodeWriters
         writer.Write(" ");
         WriteParameterName(writer, p);
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteProjectionParameter(IndentedTextWriter, ProjectionEmitContext, ParamInfo)"/>.</summary>
-    public static void WriteProjectionParameter(TypeWriter w, ParamInfo p) => WriteProjectionParameter(w.Writer, w.Context, p);
 
     /// <summary>Writes the projected return type of <paramref name="sig"/> (or <c>"void"</c>).</summary>
     /// <param name="writer">The writer to emit to.</param>
@@ -143,9 +130,6 @@ internal static partial class CodeWriters
         WriteProjectedSignature(writer, context, rt, false);
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteProjectionReturnType(IndentedTextWriter, ProjectionEmitContext, MethodSig)"/>.</summary>
-    public static void WriteProjectionReturnType(TypeWriter w, MethodSig sig) => WriteProjectionReturnType(w.Writer, w.Context, sig);
-
     /// <summary>Writes a comma-separated parameter list.</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
@@ -158,9 +142,6 @@ internal static partial class CodeWriters
             WriteProjectionParameter(writer, context, sig.Params[i]);
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteParameterList(IndentedTextWriter, ProjectionEmitContext, MethodSig)"/>.</summary>
-    public static void WriteParameterList(TypeWriter w, MethodSig sig) => WriteParameterList(w.Writer, w.Context, sig);
 
     /// <summary>Returns the C# literal text for a constant field's value (or empty when no constant).</summary>
     /// <param name="field">The field definition.</param>

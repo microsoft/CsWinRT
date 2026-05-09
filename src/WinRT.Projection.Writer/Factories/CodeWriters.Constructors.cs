@@ -14,7 +14,6 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static partial class CodeWriters
 {
-    /// <summary>Primary <see cref="IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> overload of <see cref="WriteAttributedTypes(TypeWriter, TypeDefinition)"/>.</summary>
     /// <summary>
     /// Emits the activator and composer constructor wrappers for the given runtime class.
     /// </summary>

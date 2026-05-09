@@ -382,15 +382,9 @@ internal static class InterfaceIIDs
 ");
     }
 
-    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteInterfaceIidsBegin(TextWriter w) => WriteInterfaceIidsBegin(w.Writer);
-
     /// <summary>Writes the InterfaceIIDs file footer.</summary>
     public static void WriteInterfaceIidsEnd(IndentedTextWriter writer)
     {
         writer.Write("}\n\n");
     }
-
-    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteInterfaceIidsEnd(TextWriter w) => WriteInterfaceIidsEnd(w.Writer);
 }

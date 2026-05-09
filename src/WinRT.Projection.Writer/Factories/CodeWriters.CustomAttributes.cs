@@ -264,10 +264,6 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WritePlatformAttribute(IndentedTextWriter, ProjectionEmitContext, IHasCustomAttribute)"/>.</summary>
-    public static void WritePlatformAttribute(TypeWriter w, IHasCustomAttribute member)
-        => WritePlatformAttribute(w.Writer, w.Context, member);
-
     /// <summary>
     /// Writes any custom attributes (e.g. <c>[Obsolete]</c>, <c>[Deprecated]</c>,
     /// <c>[SupportedOSPlatform]</c>) carried over from <paramref name="member"/> to the projection.
@@ -358,10 +354,6 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteCustomAttributes(IndentedTextWriter, ProjectionEmitContext, IHasCustomAttribute, bool)"/>.</summary>
-    public static void WriteCustomAttributes(TypeWriter w, IHasCustomAttribute member, bool enablePlatformAttrib)
-        => WriteCustomAttributes(w.Writer, w.Context, member, enablePlatformAttrib);
-
     /// <summary>Writes the type-level custom attributes for <paramref name="type"/>.</summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
@@ -372,7 +364,4 @@ internal static partial class CodeWriters
         WriteCustomAttributes(writer, context, type, enablePlatformAttrib);
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteTypeCustomAttributes(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, bool)"/>.</summary>
-    public static void WriteTypeCustomAttributes(TypeWriter w, TypeDefinition type, bool enablePlatformAttrib)
-        => WriteTypeCustomAttributes(w.Writer, w.Context, type, enablePlatformAttrib);
 }
