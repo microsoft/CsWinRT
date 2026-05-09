@@ -73,7 +73,7 @@ internal static class AbiDelegateFactory
 
         writer.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
         writer.Write("private static int Invoke(");
-        CodeWriters.WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
+        AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
         writer.Write(")");
 
         // Reuse the interface Do_Abi body emitter: delegates dispatch via __target.Invoke(...),
@@ -108,7 +108,7 @@ internal static class AbiDelegateFactory
         writer.Write("    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;\n");
         writer.Write("    public delegate* unmanaged[MemberFunction]<void*, uint> Release;\n");
         writer.Write("    public delegate* unmanaged[MemberFunction]<");
-        CodeWriters.WriteAbiParameterTypesPointer(writer, context, sig);
+        AbiInterfaceFactory.WriteAbiParameterTypesPointer(writer, context, sig);
         writer.Write(", int> Invoke;\n");
         writer.Write("}\n");
     }

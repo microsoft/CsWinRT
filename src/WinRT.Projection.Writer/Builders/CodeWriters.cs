@@ -67,7 +67,7 @@ internal static partial class CodeWriters
                 AbiEnumFactory.Write(writer, context, type);
                 break;
             case TypeCategory.Interface:
-                WriteAbiInterface(writer, context, type);
+                AbiInterfaceFactory.WriteAbiInterface(writer, context, type);
                 break;
             case TypeCategory.Struct:
                 AbiStructFactory.Write(writer, context, type);
