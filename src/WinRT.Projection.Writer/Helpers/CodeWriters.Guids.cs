@@ -6,14 +6,16 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// GUID/IID-related code writers, mirroring functions in <c>code_writers.h</c>.
+/// GUID/IID-related code writers.
 /// </summary>
 internal static partial class CodeWriters
 {
+    /// <summary>Returns the GUID-signature character code for a fundamental WinRT type.</summary>
     public static string GetFundamentalTypeGuidSignature(FundamentalType t) => t switch
     {
         FundamentalType.Boolean => "b1",
@@ -33,10 +35,11 @@ internal static partial class CodeWriters
     };
 
     private static readonly Regex s_typeNameEscapeRe = new(@"[ :<>`,.]", RegexOptions.Compiled);
+
+    /// <summary>Escapes a type name into a C# identifier-safe form.</summary>
     public static string EscapeTypeNameForIdentifier(string typeName, bool stripGlobal = false, bool stripGlobalABI = false)
     {
-        // Match C++ behavior: escape special chars first, then strip ONLY the prefix (not all
-        // occurrences). C++ uses rfind(prefix, 0) + erase(0, len) which only removes the prefix.
+        // Escape special chars first, then strip ONLY the prefix (not all occurrences).
         string result = s_typeNameEscapeRe.Replace(typeName, "_");
         if (stripGlobalABI && typeName.StartsWith("global::ABI.", StringComparison.Ordinal))
         {
@@ -90,92 +93,117 @@ internal static partial class CodeWriters
             _ => 0
         };
     }
-    public static void WriteGuid(TextWriter w, TypeDefinition type, bool lowerCase)
+
+    /// <summary>Writes the GUID for <paramref name="type"/> in canonical hyphenated string form.</summary>
+    public static void WriteGuid(IndentedTextWriter writer, TypeDefinition type, bool lowerCase)
     {
         var fields = GetGuidFields(type) ?? throw new InvalidOperationException(
             $"'Windows.Foundation.Metadata.GuidAttribute' attribute for type '{type.Namespace}.{type.Name}' not found");
         string fmt = lowerCase ? "x" : "X";
         // Format: %08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x
-        w.Write(fields.Data1.ToString(fmt + "8", CultureInfo.InvariantCulture));
-        w.Write("-");
-        w.Write(fields.Data2.ToString(fmt + "4", CultureInfo.InvariantCulture));
-        w.Write("-");
-        w.Write(fields.Data3.ToString(fmt + "4", CultureInfo.InvariantCulture));
-        w.Write("-");
-        for (int i = 0; i < 2; i++) { w.Write(fields.Data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
-        w.Write("-");
-        for (int i = 2; i < 8; i++) { w.Write(fields.Data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
+        writer.Write(fields.Data1.ToString(fmt + "8", CultureInfo.InvariantCulture));
+        writer.Write("-");
+        writer.Write(fields.Data2.ToString(fmt + "4", CultureInfo.InvariantCulture));
+        writer.Write("-");
+        writer.Write(fields.Data3.ToString(fmt + "4", CultureInfo.InvariantCulture));
+        writer.Write("-");
+        for (int i = 0; i < 2; i++) { writer.Write(fields.Data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
+        writer.Write("-");
+        for (int i = 2; i < 8; i++) { writer.Write(fields.Data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
     }
-    public static void WriteGuidBytes(TextWriter w, TypeDefinition type)
+
+    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteGuid(TextWriter w, TypeDefinition type, bool lowerCase)
+        => WriteGuid(w.Writer, type, lowerCase);
+
+    /// <summary>Writes the GUID bytes for <paramref name="type"/> as a hex byte list.</summary>
+    public static void WriteGuidBytes(IndentedTextWriter writer, TypeDefinition type)
     {
         var fields = GetGuidFields(type) ?? throw new InvalidOperationException(
             $"'Windows.Foundation.Metadata.GuidAttribute' attribute for type '{type.Namespace}.{type.Name}' not found");
-        WriteByte(w, (fields.Data1 >> 0) & 0xFF, true);
-        WriteByte(w, (fields.Data1 >> 8) & 0xFF, false);
-        WriteByte(w, (fields.Data1 >> 16) & 0xFF, false);
-        WriteByte(w, (fields.Data1 >> 24) & 0xFF, false);
-        WriteByte(w, (uint)((fields.Data2 >> 0) & 0xFF), false);
-        WriteByte(w, (uint)((fields.Data2 >> 8) & 0xFF), false);
-        WriteByte(w, (uint)((fields.Data3 >> 0) & 0xFF), false);
-        WriteByte(w, (uint)((fields.Data3 >> 8) & 0xFF), false);
-        for (int i = 0; i < 8; i++) { WriteByte(w, fields.Data4[i], false); }
+        WriteByte(writer, (fields.Data1 >> 0) & 0xFF, true);
+        WriteByte(writer, (fields.Data1 >> 8) & 0xFF, false);
+        WriteByte(writer, (fields.Data1 >> 16) & 0xFF, false);
+        WriteByte(writer, (fields.Data1 >> 24) & 0xFF, false);
+        WriteByte(writer, (uint)((fields.Data2 >> 0) & 0xFF), false);
+        WriteByte(writer, (uint)((fields.Data2 >> 8) & 0xFF), false);
+        WriteByte(writer, (uint)((fields.Data3 >> 0) & 0xFF), false);
+        WriteByte(writer, (uint)((fields.Data3 >> 8) & 0xFF), false);
+        for (int i = 0; i < 8; i++) { WriteByte(writer, fields.Data4[i], false); }
     }
 
-    private static void WriteByte(TextWriter w, uint b, bool first)
+    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteGuidBytes(TextWriter w, TypeDefinition type)
+        => WriteGuidBytes(w.Writer, type);
+
+    private static void WriteByte(IndentedTextWriter writer, uint b, bool first)
     {
-        if (!first) { w.Write(", "); }
-        w.Write("0x");
-        w.Write((b & 0xFF).ToString("X", CultureInfo.InvariantCulture));
+        if (!first) { writer.Write(", "); }
+        writer.Write("0x");
+        writer.Write((b & 0xFF).ToString("X", CultureInfo.InvariantCulture));
     }
+
+    /// <summary>Writes the property name <c>IID_X</c> for the IID property of <paramref name="type"/>.</summary>
+    public static void WriteIidGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    {
+        IndentedTextWriter scratch = new();
+        WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
+        WriteTypeParams(scratch, type);
+        string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
+        writer.Write("IID_");
+        writer.Write(name);
+    }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
     public static void WriteIidGuidPropertyName(TypeWriter w, TypeDefinition type)
+        => WriteIidGuidPropertyName(w.Writer, w.Context, type);
+
+    /// <summary>Writes the property name <c>IID_XReference</c> for the reference IID property.</summary>
+    public static void WriteIidReferenceGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string name = w.WriteTemp("%", new Action<TextWriter>(_ =>
-        {
-            WriteTypedefName(w, type, TypedefNameType.ABI, true);
-            WriteTypeParams(w, type);
-        }));
-        name = EscapeTypeNameForIdentifier(name, true, true);
-        w.Write("IID_");
-        w.Write(name);
-    }
-    public static void WriteIidReferenceGuidPropertyName(TypeWriter w, TypeDefinition type)
-    {
-        string name = w.WriteTemp("%", new Action<TextWriter>(_ =>
-        {
-            WriteTypedefName(w, type, TypedefNameType.ABI, true);
-            WriteTypeParams(w, type);
-        }));
-        name = EscapeTypeNameForIdentifier(name, true, true);
-        w.Write("IID_");
-        w.Write(name);
-        w.Write("Reference");
-    }
-    public static void WriteIidGuidPropertyFromType(TypeWriter w, TypeDefinition type)
-    {
-        w.Write("public static ref readonly Guid ");
-        WriteIidGuidPropertyName(w, type);
-        w.Write("\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get\n    {\n        ReadOnlySpan<byte> data =\n        [\n            ");
-        WriteGuidBytes(w, type);
-        w.Write("\n        ];\n        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));\n    }\n}\n\n");
+        IndentedTextWriter scratch = new();
+        WriteTypedefName(scratch, context, type, TypedefNameType.ABI, true);
+        WriteTypeParams(scratch, type);
+        string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
+        writer.Write("IID_");
+        writer.Write(name);
+        writer.Write("Reference");
     }
 
-    /// <summary>
-    /// </summary>
-    public static void WriteGuidSignature(TypeWriter w, TypeSemantics semantics)
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteIidReferenceGuidPropertyName(TypeWriter w, TypeDefinition type)
+        => WriteIidReferenceGuidPropertyName(w.Writer, w.Context, type);
+
+    /// <summary>Writes a static IID property whose body is built from the [Guid] attribute bytes.</summary>
+    public static void WriteIidGuidPropertyFromType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    {
+        writer.Write("public static ref readonly Guid ");
+        WriteIidGuidPropertyName(writer, context, type);
+        writer.Write("\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get\n    {\n        ReadOnlySpan<byte> data =\n        [\n            ");
+        WriteGuidBytes(writer, type);
+        writer.Write("\n        ];\n        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));\n    }\n}\n\n");
+    }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteIidGuidPropertyFromType(TypeWriter w, TypeDefinition type)
+        => WriteIidGuidPropertyFromType(w.Writer, w.Context, type);
+
+    /// <summary>Writes the WinRT GUID parametric signature string for a type semantics.</summary>
+    public static void WriteGuidSignature(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics)
     {
         switch (semantics)
         {
             case TypeSemantics.Guid_:
-                w.Write("g16");
+                writer.Write("g16");
                 break;
             case TypeSemantics.Object_:
-                w.Write("cinterface(IInspectable)");
+                writer.Write("cinterface(IInspectable)");
                 break;
             case TypeSemantics.Fundamental f:
-                w.Write(GetFundamentalTypeGuidSignature(f.Type));
+                writer.Write(GetFundamentalTypeGuidSignature(f.Type));
                 break;
             case TypeSemantics.Definition d:
-                WriteGuidSignatureForType(w, d.Type);
+                WriteGuidSignatureForType(writer, context, d.Type);
                 break;
             case TypeSemantics.Reference r:
                 {
@@ -190,20 +218,20 @@ internal static partial class CodeWriters
                     }
                     if (resolved is not null)
                     {
-                        WriteGuidSignatureForType(w, resolved);
+                        WriteGuidSignatureForType(writer, context, resolved);
                     }
                 }
                 break;
             case TypeSemantics.GenericInstance gi:
-                w.Write("pinterface({");
-                WriteGuid(w, gi.GenericType, true);
-                w.Write("};");
+                writer.Write("pinterface({");
+                WriteGuid(writer, gi.GenericType, true);
+                writer.Write("};");
                 for (int i = 0; i < gi.GenericArgs.Count; i++)
                 {
-                    if (i > 0) { w.Write(";"); }
-                    WriteGuidSignature(w, gi.GenericArgs[i]);
+                    if (i > 0) { writer.Write(";"); }
+                    WriteGuidSignature(writer, context, gi.GenericArgs[i]);
                 }
-                w.Write(")");
+                writer.Write(")");
                 break;
             case TypeSemantics.GenericInstanceRef gir:
                 {
@@ -220,107 +248,118 @@ internal static partial class CodeWriters
                     }
                     if (resolved is not null)
                     {
-                        w.Write("pinterface({");
-                        WriteGuid(w, resolved, true);
-                        w.Write("};");
+                        writer.Write("pinterface({");
+                        WriteGuid(writer, resolved, true);
+                        writer.Write("};");
                         for (int i = 0; i < gir.GenericArgs.Count; i++)
                         {
-                            if (i > 0) { w.Write(";"); }
-                            WriteGuidSignature(w, gir.GenericArgs[i]);
+                            if (i > 0) { writer.Write(";"); }
+                            WriteGuidSignature(writer, context, gir.GenericArgs[i]);
                         }
-                        w.Write(")");
+                        writer.Write(")");
                     }
                 }
                 break;
         }
     }
 
-    private static void WriteGuidSignatureForType(TypeWriter w, TypeDefinition type)
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteGuidSignature(TypeWriter w, TypeSemantics semantics)
+        => WriteGuidSignature(w.Writer, w.Context, semantics);
+
+    private static void WriteGuidSignatureForType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         TypeCategory cat = TypeCategorization.GetCategory(type);
         switch (cat)
         {
             case TypeCategory.Enum:
-                w.Write("enum(");
-                WriteTypedefName(w, type, TypedefNameType.NonProjected, true);
-                WriteTypeParams(w, type);
-                w.Write(";");
-                w.Write(TypeCategorization.IsFlagsEnum(type) ? "u4" : "i4");
-                w.Write(")");
+                writer.Write("enum(");
+                WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
+                WriteTypeParams(writer, type);
+                writer.Write(";");
+                writer.Write(TypeCategorization.IsFlagsEnum(type) ? "u4" : "i4");
+                writer.Write(")");
                 break;
             case TypeCategory.Struct:
-                w.Write("struct(");
-                WriteTypedefName(w, type, TypedefNameType.NonProjected, true);
-                WriteTypeParams(w, type);
-                w.Write(";");
+                writer.Write("struct(");
+                WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
+                WriteTypeParams(writer, type);
+                writer.Write(";");
                 bool first = true;
                 foreach (FieldDefinition field in type.Fields)
                 {
                     if (field.IsStatic) { continue; }
                     if (field.Signature is null) { continue; }
-                    if (!first) { w.Write(";"); }
+                    if (!first) { writer.Write(";"); }
                     first = false;
-                    WriteGuidSignature(w, TypeSemanticsFactory.Get(field.Signature.FieldType));
+                    WriteGuidSignature(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
                 }
-                w.Write(")");
+                writer.Write(")");
                 break;
             case TypeCategory.Delegate:
-                w.Write("delegate({");
-                WriteGuid(w, type, true);
-                w.Write("})");
+                writer.Write("delegate({");
+                WriteGuid(writer, type, true);
+                writer.Write("})");
                 break;
             case TypeCategory.Interface:
-                w.Write("{");
-                WriteGuid(w, type, true);
-                w.Write("}");
+                writer.Write("{");
+                WriteGuid(writer, type, true);
+                writer.Write("}");
                 break;
             case TypeCategory.Class:
                 ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
                 if (defaultIface is TypeDefinition di)
                 {
-                    w.Write("rc(");
-                    WriteTypedefName(w, type, TypedefNameType.NonProjected, true);
-                    WriteTypeParams(w, type);
-                    w.Write(";");
-                    WriteGuidSignature(w, new TypeSemantics.Definition(di));
-                    w.Write(")");
+                    writer.Write("rc(");
+                    WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
+                    WriteTypeParams(writer, type);
+                    writer.Write(";");
+                    WriteGuidSignature(writer, context, new TypeSemantics.Definition(di));
+                    writer.Write(")");
                 }
                 else
                 {
-                    w.Write("{");
-                    WriteGuid(w, type, true);
-                    w.Write("}");
+                    writer.Write("{");
+                    WriteGuid(writer, type, true);
+                    writer.Write("}");
                 }
                 break;
         }
     }
-    public static void WriteIidGuidPropertyFromSignature(TypeWriter w, TypeDefinition type)
+
+    /// <summary>Writes a static IID property whose body is built from the parametric GUID signature.</summary>
+    public static void WriteIidGuidPropertyFromSignature(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string guidSig = w.WriteTemp("%", new Action<TextWriter>(_ =>
-        {
-            WriteGuidSignature(w, new TypeSemantics.Definition(type));
-        }));
+        IndentedTextWriter scratch = new();
+        WriteGuidSignature(scratch, context, new TypeSemantics.Definition(type));
+        string guidSig = scratch.ToString();
         string ireferenceGuidSig = "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};" + guidSig + ")";
         Guid guidValue = GuidGenerator.Generate(ireferenceGuidSig);
         byte[] bytes = guidValue.ToByteArray();
 
-        w.Write("public static ref readonly Guid ");
-        WriteIidReferenceGuidPropertyName(w, type);
-        w.Write("\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get\n    {\n        ReadOnlySpan<byte> data =\n        [\n            ");
+        writer.Write("public static ref readonly Guid ");
+        WriteIidReferenceGuidPropertyName(writer, context, type);
+        writer.Write("\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get\n    {\n        ReadOnlySpan<byte> data =\n        [\n            ");
         for (int i = 0; i < 16; i++)
         {
-            if (i > 0) { w.Write(", "); }
-            w.Write("0x");
-            w.Write(bytes[i].ToString("X", CultureInfo.InvariantCulture));
+            if (i > 0) { writer.Write(", "); }
+            writer.Write("0x");
+            writer.Write(bytes[i].ToString("X", CultureInfo.InvariantCulture));
         }
-        w.Write("\n        ];\n        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));\n    }\n}\n\n");
+        writer.Write("\n        ];\n        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));\n    }\n}\n\n");
     }
-    public static void WriteIidGuidPropertyForClassInterfaces(TypeWriter w, TypeDefinition type, System.Collections.Generic.HashSet<TypeDefinition> interfacesEmitted)
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteIidGuidPropertyFromSignature(TypeWriter w, TypeDefinition type)
+        => WriteIidGuidPropertyFromSignature(w.Writer, w.Context, type);
+
+    /// <summary>Emits IID properties for any not-included interfaces transitively implemented by a class.</summary>
+    public static void WriteIidGuidPropertyForClassInterfaces(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, System.Collections.Generic.HashSet<TypeDefinition> interfacesEmitted)
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            // Resolve TypeRef → TypeDefinition via metadata cache (so we pick up cross-module
+            // Resolve TypeRef -> TypeDefinition via metadata cache (so we pick up cross-module
             // inherited interfaces, e.g. Windows.UI.Composition.IAnimationObject from a XAML class).
             TypeDefinition? ifaceType = impl.Interface as TypeDefinition;
             if (ifaceType is null && impl.Interface is TypeReference tr)
@@ -338,13 +377,17 @@ internal static partial class CodeWriters
             // Skip already-emitted
             if (interfacesEmitted.Contains(ifaceType)) { continue; }
             // Only emit if the interface is not in the projection (otherwise it'll be emitted naturally)
-            if (!w.Settings.Filter.Includes(ifaceType))
+            if (!context.Settings.Filter.Includes(ifaceType))
             {
-                WriteIidGuidPropertyFromType(w, ifaceType);
+                WriteIidGuidPropertyFromType(writer, context, ifaceType);
                 _ = interfacesEmitted.Add(ifaceType);
             }
         }
     }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteIidGuidPropertyForClassInterfaces(TypeWriter w, TypeDefinition type, System.Collections.Generic.HashSet<TypeDefinition> interfacesEmitted)
+        => WriteIidGuidPropertyForClassInterfaces(w.Writer, w.Context, type, interfacesEmitted);
 
     private static TypeDefinition? ResolveCrossModuleType(string ns, string name)
     {
@@ -352,21 +395,21 @@ internal static partial class CodeWriters
         return _cacheRef.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
     }
 
-    /// <summary>Writes the InterfaceIIDs file header (mirrors C++ <c>write_begin_interface_iids</c> in type_writers.h).</summary>
-    public static void WriteInterfaceIidsBegin(TextWriter w)
+    /// <summary>Writes the InterfaceIIDs file header.</summary>
+    public static void WriteInterfaceIidsBegin(IndentedTextWriter writer)
     {
-        w.Write("\n");
-        w.Write("//------------------------------------------------------------------------------\n");
-        w.Write("// <auto-generated>\n");
-        w.Write("//     This file was generated by cswinrt.exe version ");
-        w.Write(GetVersionString());
-        w.Write("\n");
-        w.Write("//\n");
-        w.Write("//     Changes to this file may cause incorrect behavior and will be lost if\n");
-        w.Write("//     the code is regenerated.\n");
-        w.Write("// </auto-generated>\n");
-        w.Write("//------------------------------------------------------------------------------\n");
-        w.Write(@"
+        writer.Write("\n");
+        writer.Write("//------------------------------------------------------------------------------\n");
+        writer.Write("// <auto-generated>\n");
+        writer.Write("//     This file was generated by cswinrt.exe version ");
+        writer.Write(GetVersionString());
+        writer.Write("\n");
+        writer.Write("//\n");
+        writer.Write("//     Changes to this file may cause incorrect behavior and will be lost if\n");
+        writer.Write("//     the code is regenerated.\n");
+        writer.Write("// </auto-generated>\n");
+        writer.Write("//------------------------------------------------------------------------------\n");
+        writer.Write(@"
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -379,9 +422,15 @@ internal static class InterfaceIIDs
 ");
     }
 
+    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteInterfaceIidsBegin(TextWriter w) => WriteInterfaceIidsBegin(w.Writer);
+
     /// <summary>Writes the InterfaceIIDs file footer.</summary>
-    public static void WriteInterfaceIidsEnd(TextWriter w)
+    public static void WriteInterfaceIidsEnd(IndentedTextWriter writer)
     {
-        w.Write("}\n\n");
+        writer.Write("}\n\n");
     }
+
+    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteInterfaceIidsEnd(TextWriter w) => WriteInterfaceIidsEnd(w.Writer);
 }

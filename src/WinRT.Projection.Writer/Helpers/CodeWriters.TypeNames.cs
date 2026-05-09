@@ -274,16 +274,24 @@ internal static partial class CodeWriters
         WriteEventType(w, evt, null);
     }
 
+    /// <summary>Primary overload of <see cref="WriteEventType(TypeWriter, EventDefinition)"/>.</summary>
+    public static void WriteEventType(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt)
+        => WriteEventType(writer, context, evt, null);
+
     /// <summary>
     /// Same as <see cref="WriteEventType(TypeWriter, EventDefinition)"/> but applies the supplied
     /// generic context for substitution (e.g., <c>T0</c>/<c>T1</c> -&gt; concrete type arguments
     /// when emitting members for an instantiated parent generic interface).
     /// </summary>
     public static void WriteEventType(TypeWriter w, EventDefinition evt, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance)
+        => WriteEventType(w.Writer, w.Context, evt, currentInstance);
+
+    /// <summary>Primary overload of <see cref="WriteEventType(TypeWriter, EventDefinition, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature?)"/>.</summary>
+    public static void WriteEventType(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance)
     {
         if (evt.EventType is null)
         {
-            w.Write("global::Windows.Foundation.EventHandler");
+            writer.Write("global::Windows.Foundation.EventHandler");
             return;
         }
         AsmResolver.DotNet.Signatures.TypeSignature sig = evt.EventType.ToTypeSignature(false);
@@ -292,9 +300,7 @@ internal static partial class CodeWriters
             sig = sig.InstantiateGenericTypes(new AsmResolver.DotNet.Signatures.GenericContext(currentInstance, null));
         }
         // Special case for Microsoft.UI.Xaml.Input.ICommand.CanExecuteChanged: the WinRT event
-        // handler is EventHandler<object> but C# expects non-generic EventHandler. Mirrors C++:
-        //   if (event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
-        //       check parent_type_name == ICommand and override event_type
+        // handler is EventHandler<object> but C# expects non-generic EventHandler.
         if (evt.Name?.Value == "CanExecuteChanged"
             && evt.DeclaringType is { } declaringType
             && (declaringType.FullName == "Microsoft.UI.Xaml.Input.ICommand"
@@ -308,12 +314,12 @@ internal static partial class CodeWriters
                 && gi.TypeArguments[0] is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib
                 && corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object)
             {
-                w.Write("global::System.EventHandler");
+                writer.Write("global::System.EventHandler");
                 return;
             }
         }
         // The outer EventHandler still gets 'global::System.' from being in a different namespace,
         // but type args in the same namespace stay unqualified.
-        WriteTypeName(w, TypeSemanticsFactory.Get(sig), TypedefNameType.Projected, false);
+        WriteTypeName(writer, context, TypeSemanticsFactory.Get(sig), TypedefNameType.Projected, false);
     }
 }

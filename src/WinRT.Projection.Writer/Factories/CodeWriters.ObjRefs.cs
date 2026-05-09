@@ -68,7 +68,7 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Like <see cref="WriteInterfaceTypeName"/> but always emits a fully qualified name with
+    /// Like <see cref="WriteInterfaceTypeName(TypeWriter, ITypeDefOrRef)"/> but always emits a fully qualified name with
     /// <c>global::</c> prefix on every type (even same-namespace ones). Used for objref name
     /// computation where uniqueness across namespaces matters.
     /// </summary>
