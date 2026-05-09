@@ -8,7 +8,7 @@ using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionGenerator.Errors;
-using WindowsRuntime.ProjectionGenerator.Writer;
+using WindowsRuntime.ProjectionWriter;
 
 #pragma warning disable IDE0270
 
@@ -68,7 +68,7 @@ internal partial class ProjectionGenerator
         // to be replaced/extended without needing to re-publish a separate executable.
         try
         {
-            ProjectionWriter.Run(processingState.WriterOptions);
+            global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run(processingState.WriterOptions);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {

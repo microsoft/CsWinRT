@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using WindowsRuntime.ProjectionWriter;
+
 namespace WindowsRuntime.ProjectionGenerator.Generation;
 
 /// <summary>
@@ -9,13 +11,13 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 /// <param name="sourcesFolder">The path to the folder where sources will be generated.</param>
 /// <param name="rspFilePath">The path to the response file (kept as a debug artifact).</param>
 /// <param name="referencesWithoutProjections">The reference assembly paths excluding projection assemblies.</param>
-/// <param name="writerOptions">The options to pass to <see cref="Writer.ProjectionWriter.Run"/>.</param>
+/// <param name="writerOptions">The options to pass to <see cref="global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run"/>.</param>
 /// <param name="hasTypesToProject">Whether any types were found to project.</param>
 internal sealed class ProjectionGeneratorProcessingState(
     string sourcesFolder,
     string rspFilePath,
     string[] referencesWithoutProjections,
-    Writer.ProjectionWriterOptions writerOptions,
+    ProjectionWriterOptions writerOptions,
     bool hasTypesToProject = true)
 {
     /// <summary>
@@ -34,9 +36,9 @@ internal sealed class ProjectionGeneratorProcessingState(
     public string[] ReferencesWithoutProjections { get; } = referencesWithoutProjections;
 
     /// <summary>
-    /// Gets the options used to invoke <see cref="Writer.ProjectionWriter.Run"/>.
+    /// Gets the options used to invoke <see cref="global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run"/>.
     /// </summary>
-    public Writer.ProjectionWriterOptions WriterOptions { get; } = writerOptions;
+    public ProjectionWriterOptions WriterOptions { get; } = writerOptions;
 
     /// <summary>
     /// Gets whether any types were found to project. When <c>false</c>, the source generation
