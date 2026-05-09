@@ -871,23 +871,28 @@ internal static partial class CodeWriters
     /// <summary>
     /// Writes a parameter name prefixed with its modifier (in/out/ref) for use as a call argument.
     /// </summary>
-    private static void WriteParameterNameWithModifier(TypeWriter w, ParamInfo p)
+    private static void WriteParameterNameWithModifier(IndentedTextWriter writer, ProjectionEmitContext context, ParamInfo p)
     {
+        _ = context;
         ParamCategory cat = ParamHelpers.GetParamCategory(p);
         switch (cat)
         {
             case ParamCategory.Out:
-                w.Write("out ");
+                writer.Write("out ");
                 break;
             case ParamCategory.Ref:
-                w.Write("in ");
+                writer.Write("in ");
                 break;
             case ParamCategory.ReceiveArray:
-                w.Write("out ");
+                writer.Write("out ");
                 break;
         }
-        WriteParameterName(w, p);
+        WriteParameterName(writer, p);
     }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    private static void WriteParameterNameWithModifier(TypeWriter w, ParamInfo p)
+        => WriteParameterNameWithModifier(w.Writer, w.Context, p);
 
     /// <summary>
     /// Writes the projected name for an interface reference (TypeDefinition, TypeReference, or

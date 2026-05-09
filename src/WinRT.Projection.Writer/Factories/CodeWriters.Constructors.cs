@@ -94,7 +94,7 @@ internal static partial class CodeWriters
             // Emit the factory objref property (lazy-initialized).
             string factoryRuntimeClassFullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
             string factoryObjRefName = GetObjRefName(w, factoryType);
-            WriteStaticFactoryObjRef(w, factoryType, factoryRuntimeClassFullName, factoryObjRefName);
+            WriteStaticFactoryObjRef(w.Writer, w.Context, factoryType, factoryRuntimeClassFullName, factoryObjRefName);
 
             string defaultIfaceIid = GetDefaultInterfaceIid(w, classType);
             string marshalingType = GetMarshalingTypeName(classType);
@@ -880,7 +880,7 @@ internal static partial class CodeWriters
         {
             string runtimeClassFullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
             string factoryObjRefName = GetObjRefName(w, composableType);
-            WriteStaticFactoryObjRef(w, composableType, runtimeClassFullName, factoryObjRefName);
+            WriteStaticFactoryObjRef(w.Writer, w.Context, composableType, runtimeClassFullName, factoryObjRefName);
         }
 
         string defaultIfaceIid = GetDefaultInterfaceIid(w, classType);

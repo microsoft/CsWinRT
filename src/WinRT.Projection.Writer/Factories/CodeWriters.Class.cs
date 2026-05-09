@@ -190,42 +190,42 @@ internal static partial class CodeWriters
         };
     }
 
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteStaticClass(TypeWriter w, TypeDefinition type)
+        => WriteStaticClass(w.Writer, w.Context, type);
+
     /// <summary>Writes a static class declaration with [ContractVersion]-derived platform suppression.</summary>
     public static void WriteStaticClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteStaticClass(new TypeWriter(writer, context), type);
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload (the primary impl).</summary>
-    public static void WriteStaticClass(TypeWriter w, TypeDefinition type)
     {
-        bool prevCheckPlatform = w.CheckPlatform;
-        string prevPlatform = w.Platform;
-        w.CheckPlatform = true;
-        w.Platform = string.Empty;
+        bool prevCheckPlatform = context.CheckPlatform;
+        string prevPlatform = context.Platform;
+        context.CheckPlatform = true;
+        context.Platform = string.Empty;
         try
         {
-            WriteWinRTMetadataAttribute(w, type, _cacheRef!);
-            WriteTypeCustomAttributes(w, type, true);
-            w.Write(AccessibilityHelper.InternalAccessibility(w.Settings));
-            w.Write(" static class ");
-            WriteTypedefName(w, type, TypedefNameType.Projected, false);
-            WriteTypeParams(w, type);
-            w.Write("\n{\n");
-            WriteStaticClassMembers(w, type);
-            w.Write("}\n");
+            WriteWinRTMetadataAttribute(writer, type, _cacheRef!);
+            WriteTypeCustomAttributes(writer, context, type, true);
+            writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
+            writer.Write(" static class ");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+            WriteTypeParams(writer, type);
+            writer.Write("\n{\n");
+            WriteStaticClassMembers(writer, context, type);
+            writer.Write("}\n");
         }
         finally
         {
-            w.CheckPlatform = prevCheckPlatform;
-            w.Platform = prevPlatform;
+            context.CheckPlatform = prevCheckPlatform;
+            context.Platform = prevPlatform;
         }
     }
 
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteStaticClassMembers(TypeWriter w, TypeDefinition type)
+        => WriteStaticClassMembers(w.Writer, w.Context, type);
+
     /// <summary>Emits static members from [Static] factory interfaces.</summary>
     public static void WriteStaticClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteStaticClassMembers(new TypeWriter(writer, context), type);
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload (the primary impl).</summary>
-    public static void WriteStaticClassMembers(TypeWriter w, TypeDefinition type)
     {
         if (_cacheRef is null) { return; }
         // Per-property accessor state (origin tracking for getter/setter)
@@ -242,12 +242,11 @@ internal static partial class CodeWriters
             TypeDefinition staticIface = factory.Type;
 
             // Compute the objref name for this static factory interface.
-            string objRef = GetObjRefName(w, staticIface);
+            string objRef = GetObjRefName(context, staticIface);
             // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.System.ILauncherStaticsMethods")
-            string abiClass = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
-            {
-                WriteTypedefName(w, staticIface, TypedefNameType.StaticAbiClass, true);
-            }));
+            IndentedTextWriter __scratchAbiClass = new();
+            WriteTypedefName(__scratchAbiClass, context, staticIface, TypedefNameType.StaticAbiClass, true);
+            string abiClass = __scratchAbiClass.ToString();
             if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal))
             {
                 abiClass = "global::" + abiClass;
@@ -256,14 +255,16 @@ internal static partial class CodeWriters
             // Emit the lazy static objref field (mirrors truth's pattern) once per static iface.
             if (emittedObjRefs.Add(objRef))
             {
-                WriteStaticFactoryObjRef(w, staticIface, runtimeClassFullName, objRef);
+                WriteStaticFactoryObjRef(writer, context, staticIface, runtimeClassFullName, objRef);
             }
 
             // Compute the platform attribute string from the static factory interface's
             // [ContractVersion] attribute. Mirrors C++
             // 'auto platform_attribute = write_platform_attribute_temp(w, factory.type);'
             // and the per-static-method/event/property emission at lines 3316-3349.
-            string platformAttribute = w.WriteTemp("%", new System.Action<TextWriter>(_ => WritePlatformAttribute(w, staticIface)));
+            IndentedTextWriter __scratchPlatform = new();
+            WritePlatformAttribute(__scratchPlatform, context, staticIface);
+            string platformAttribute = __scratchPlatform.ToString();
 
             // Methods
             foreach (MethodDefinition method in staticIface.Methods)
@@ -271,81 +272,81 @@ internal static partial class CodeWriters
                 if (method.IsSpecial()) { continue; }
                 MethodSig sig = new(method);
                 string mname = method.Name?.Value ?? string.Empty;
-                w.Write("\n");
-                if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
-                w.Write("public static ");
-                WriteProjectionReturnType(w, sig);
-                w.Write(" ");
-                w.Write(mname);
-                w.Write("(");
-                WriteParameterList(w, sig);
-                if (w.Settings.ReferenceProjection)
+                writer.Write("\n");
+                if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+                writer.Write("public static ");
+                WriteProjectionReturnType(writer, context, sig);
+                writer.Write(" ");
+                writer.Write(mname);
+                writer.Write("(");
+                WriteParameterList(writer, context, sig);
+                if (context.Settings.ReferenceProjection)
                 {
                     // method bodies become 'throw null' in reference projection mode.
-                    w.Write(") => throw null;\n");
+                    writer.Write(") => throw null;\n");
                 }
                 else
                 {
-                    w.Write(") => ");
-                    w.Write(abiClass);
-                    w.Write(".");
-                    w.Write(mname);
-                    w.Write("(");
-                    w.Write(objRef);
+                    writer.Write(") => ");
+                    writer.Write(abiClass);
+                    writer.Write(".");
+                    writer.Write(mname);
+                    writer.Write("(");
+                    writer.Write(objRef);
                     for (int i = 0; i < sig.Params.Count; i++)
                     {
-                        w.Write(", ");
-                        WriteParameterNameWithModifier(w, sig.Params[i]);
+                        writer.Write(", ");
+                        WriteParameterNameWithModifier(writer, context, sig.Params[i]);
                     }
-                    w.Write(");\n");
+                    writer.Write(");\n");
                 }
             }
             // Events: dispatch via static ABI class which returns an event source.
             foreach (EventDefinition evt in staticIface.Events)
             {
                 string evtName = evt.Name?.Value ?? string.Empty;
-                w.Write("\n");
-                if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
-                w.Write("public static event ");
-                WriteEventType(w, evt);
-                w.Write(" ");
-                w.Write(evtName);
-                w.Write("\n{\n");
-                if (w.Settings.ReferenceProjection)
+                writer.Write("\n");
+                if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+                writer.Write("public static event ");
+                WriteEventType(writer, context, evt);
+                writer.Write(" ");
+                writer.Write(evtName);
+                writer.Write("\n{\n");
+                if (context.Settings.ReferenceProjection)
                 {
                     // event accessor bodies become 'throw null' in reference projection mode.
-                    w.Write("    add => throw null;\n");
-                    w.Write("    remove => throw null;\n");
+                    writer.Write("    add => throw null;\n");
+                    writer.Write("    remove => throw null;\n");
                 }
                 else
                 {
-                    w.Write("    add => ");
-                    w.Write(abiClass);
-                    w.Write(".");
-                    w.Write(evtName);
-                    w.Write("(");
-                    w.Write(objRef);
-                    w.Write(", ");
-                    w.Write(objRef);
-                    w.Write(").Subscribe(value);\n");
-                    w.Write("    remove => ");
-                    w.Write(abiClass);
-                    w.Write(".");
-                    w.Write(evtName);
-                    w.Write("(");
-                    w.Write(objRef);
-                    w.Write(", ");
-                    w.Write(objRef);
-                    w.Write(").Unsubscribe(value);\n");
+                    writer.Write("    add => ");
+                    writer.Write(abiClass);
+                    writer.Write(".");
+                    writer.Write(evtName);
+                    writer.Write("(");
+                    writer.Write(objRef);
+                    writer.Write(", ");
+                    writer.Write(objRef);
+                    writer.Write(").Subscribe(value);\n");
+                    writer.Write("    remove => ");
+                    writer.Write(abiClass);
+                    writer.Write(".");
+                    writer.Write(evtName);
+                    writer.Write("(");
+                    writer.Write(objRef);
+                    writer.Write(", ");
+                    writer.Write(objRef);
+                    writer.Write(").Unsubscribe(value);\n");
                 }
-                w.Write("}\n");
+                writer.Write("}\n");
             }
             // Properties (merge getter/setter across interfaces, tracking origin per accessor)
             foreach (PropertyDefinition prop in staticIface.Properties)
             {
                 string propName = prop.Name?.Value ?? string.Empty;
                 (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
-                string propType = WritePropType(w, prop);
+                string propType = WritePropType(context, prop);
                 if (!properties.TryGetValue(propName, out StaticPropertyAccessorState? state))
                 {
                     state = new StaticPropertyAccessorState
@@ -375,7 +376,7 @@ internal static partial class CodeWriters
         foreach (KeyValuePair<string, StaticPropertyAccessorState> kv in properties)
         {
             StaticPropertyAccessorState s = kv.Value;
-            w.Write("\n");
+            writer.Write("\n");
             // Mirrors C++: collapse to property-level platform attribute
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
@@ -388,72 +389,72 @@ internal static partial class CodeWriters
                 getterPlat = string.Empty;
                 setterPlat = string.Empty;
             }
-            if (!string.IsNullOrEmpty(propertyPlat)) { w.Write(propertyPlat); }
-            w.Write("public static ");
-            w.Write(s.PropTypeText);
-            w.Write(" ");
-            w.Write(kv.Key);
+            if (!string.IsNullOrEmpty(propertyPlat)) { writer.Write(propertyPlat); }
+            writer.Write("public static ");
+            writer.Write(s.PropTypeText);
+            writer.Write(" ");
+            writer.Write(kv.Key);
             // Getter-only -> expression body; otherwise -> accessor block (matches truth).
             // In ref mode, all accessor bodies emit '=> throw null;' (mirrors C++
             // write_abi_get/set_property_static_method_call,).
             bool getterOnly = s.HasGetter && !s.HasSetter;
             if (getterOnly)
             {
-                if (w.Settings.ReferenceProjection)
+                if (context.Settings.ReferenceProjection)
                 {
-                    w.Write(" => throw null;\n");
+                    writer.Write(" => throw null;\n");
                 }
                 else
                 {
-                    w.Write(" => ");
-                    w.Write(s.GetterAbiClass);
-                    w.Write(".");
-                    w.Write(kv.Key);
-                    w.Write("(");
-                    w.Write(s.GetterObjRef);
-                    w.Write(");\n");
+                    writer.Write(" => ");
+                    writer.Write(s.GetterAbiClass);
+                    writer.Write(".");
+                    writer.Write(kv.Key);
+                    writer.Write("(");
+                    writer.Write(s.GetterObjRef);
+                    writer.Write(");\n");
                 }
             }
             else
             {
-                w.Write("\n{\n");
+                writer.Write("\n{\n");
                 if (s.HasGetter)
                 {
-                    if (!string.IsNullOrEmpty(getterPlat)) { w.Write(getterPlat); }
-                    if (w.Settings.ReferenceProjection)
+                    if (!string.IsNullOrEmpty(getterPlat)) { writer.Write(getterPlat); }
+                    if (context.Settings.ReferenceProjection)
                     {
-                        w.Write("get => throw null;\n");
+                        writer.Write("get => throw null;\n");
                     }
                     else
                     {
-                        w.Write("get => ");
-                        w.Write(s.GetterAbiClass);
-                        w.Write(".");
-                        w.Write(kv.Key);
-                        w.Write("(");
-                        w.Write(s.GetterObjRef);
-                        w.Write(");\n");
+                        writer.Write("get => ");
+                        writer.Write(s.GetterAbiClass);
+                        writer.Write(".");
+                        writer.Write(kv.Key);
+                        writer.Write("(");
+                        writer.Write(s.GetterObjRef);
+                        writer.Write(");\n");
                     }
                 }
                 if (s.HasSetter)
                 {
-                    if (!string.IsNullOrEmpty(setterPlat)) { w.Write(setterPlat); }
-                    if (w.Settings.ReferenceProjection)
+                    if (!string.IsNullOrEmpty(setterPlat)) { writer.Write(setterPlat); }
+                    if (context.Settings.ReferenceProjection)
                     {
-                        w.Write("set => throw null;\n");
+                        writer.Write("set => throw null;\n");
                     }
                     else
                     {
-                        w.Write("set => ");
-                        w.Write(s.SetterAbiClass);
-                        w.Write(".");
-                        w.Write(kv.Key);
-                        w.Write("(");
-                        w.Write(s.SetterObjRef);
-                        w.Write(", value);\n");
+                        writer.Write("set => ");
+                        writer.Write(s.SetterAbiClass);
+                        writer.Write(".");
+                        writer.Write(kv.Key);
+                        writer.Write("(");
+                        writer.Write(s.SetterObjRef);
+                        writer.Write(", value);\n");
                     }
                 }
-                w.Write("}\n");
+                writer.Write("}\n");
             }
         }
     }
@@ -462,101 +463,101 @@ internal static partial class CodeWriters
     /// Emits the static lazy objref property for a static factory interface (mirrors truth's
     /// pattern: lazy <c>WindowsRuntimeObjectReference.GetActivationFactory(...)</c>).
     /// </summary>
-    private static void WriteStaticFactoryObjRef(TypeWriter w, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
+    private static void WriteStaticFactoryObjRef(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
     {
-        w.Write("\nprivate static WindowsRuntimeObjectReference ");
-        w.Write(objRefName);
-        w.Write("\n{\n");
-        if (w.Settings.ReferenceProjection)
+        writer.Write("\nprivate static WindowsRuntimeObjectReference ");
+        writer.Write(objRefName);
+        writer.Write("\n{\n");
+        if (context.Settings.ReferenceProjection)
         {
             // the static factory objref getter body is just 'throw null;'.
-            w.Write("    get\n    {\n        throw null;\n    }\n}\n");
+            writer.Write("    get\n    {\n        throw null;\n    }\n}\n");
             return;
         }
-        w.Write("    get\n    {\n");
-        w.Write("        var __");
-        w.Write(objRefName);
-        w.Write(" = field;\n");
-        w.Write("        if (__");
-        w.Write(objRefName);
-        w.Write(" != null && __");
-        w.Write(objRefName);
-        w.Write(".IsInCurrentContext)\n        {\n");
-        w.Write("            return __");
-        w.Write(objRefName);
-        w.Write(";\n        }\n");
-        w.Write("        return field = WindowsRuntimeObjectReference.GetActivationFactory(\"");
-        w.Write(runtimeClassFullName);
-        w.Write("\", ");
-        WriteIidExpression(w, staticIface);
-        w.Write(");\n    }\n}\n");
+        writer.Write("    get\n    {\n");
+        writer.Write("        var __");
+        writer.Write(objRefName);
+        writer.Write(" = field;\n");
+        writer.Write("        if (__");
+        writer.Write(objRefName);
+        writer.Write(" != null && __");
+        writer.Write(objRefName);
+        writer.Write(".IsInCurrentContext)\n        {\n");
+        writer.Write("            return __");
+        writer.Write(objRefName);
+        writer.Write(";\n        }\n");
+        writer.Write("        return field = WindowsRuntimeObjectReference.GetActivationFactory(\"");
+        writer.Write(runtimeClassFullName);
+        writer.Write("\", ");
+        WriteIidExpression(writer, context, staticIface);
+        writer.Write(");\n    }\n}\n");
     }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteClass(TypeWriter w, TypeDefinition type)
+        => WriteClass(w.Writer, w.Context, type);
 
     /// <summary>Writes a projected runtime class.</summary>
     public static void WriteClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteClass(new TypeWriter(writer, context), type);
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload (the primary impl).</summary>
-    public static void WriteClass(TypeWriter w, TypeDefinition type)
     {
-        if (w.Settings.Component) { return; }
+        if (context.Settings.Component) { return; }
 
         if (TypeCategorization.IsStatic(type))
         {
-            WriteStaticClass(w, type);
+            WriteStaticClass(writer, context, type);
             return;
         }
         // Tracks the highest platform seen within this class to suppress redundant
         // [SupportedOSPlatform(...)] emissions across interface boundaries.
-        bool prevCheckPlatform = w.CheckPlatform;
-        string prevPlatform = w.Platform;
-        w.CheckPlatform = true;
-        w.Platform = string.Empty;
+        bool prevCheckPlatform = context.CheckPlatform;
+        string prevPlatform = context.Platform;
+        context.CheckPlatform = true;
+        context.Platform = string.Empty;
         try
         {
-            WriteClassCore(w, type);
+            WriteClassCore(writer, context, type);
         }
         finally
         {
-            w.CheckPlatform = prevCheckPlatform;
-            w.Platform = prevPlatform;
+            context.CheckPlatform = prevCheckPlatform;
+            context.Platform = prevPlatform;
         }
     }
 
-    private static void WriteClassCore(TypeWriter w, TypeDefinition type)
+    private static void WriteClassCore(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string typeName = type.Name?.Value ?? string.Empty;
         int gcPressure = GetGcPressureAmount(type);
 
         // Header attributes
-        w.Write("\n");
-        WriteWinRTMetadataAttribute(w, type, _cacheRef!);
-        WriteTypeCustomAttributes(w, type, true);
-        WriteComWrapperMarshallerAttribute(w, type);
-        w.Write(w.Settings.Internal ? "internal" : "public");
-        w.Write(" ");
-        WriteClassModifiers(w, type);
+        writer.Write("\n");
+        WriteWinRTMetadataAttribute(writer, type, _cacheRef!);
+        WriteTypeCustomAttributes(writer, context, type, true);
+        WriteComWrapperMarshallerAttribute(writer, context, type);
+        writer.Write(context.Settings.Internal ? "internal" : "public");
+        writer.Write(" ");
+        WriteClassModifiers(writer, type);
         // are emitted as plain (non-partial) classes.
-        w.Write("class ");
-        WriteTypedefName(w, type, TypedefNameType.Projected, false);
-        WriteTypeParams(w, type);
-        WriteTypeInheritance(w, type, false, true);
-        w.Write("\n{\n");
+        writer.Write("class ");
+        WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        WriteTypeParams(writer, type);
+        WriteTypeInheritance(writer, context, type, false, true);
+        writer.Write("\n{\n");
 
         // ObjRef field definitions for each implemented interface (mirrors C++ write_class_objrefs_definition).
         // These back the per-interface dispatch in instance methods/properties and the
         // IWindowsRuntimeInterface<T>.GetInterface() implementations.
-        WriteClassObjRefDefinitions(w, type);
+        WriteClassObjRefDefinitions(writer, context, type);
 
         // Constructor: WindowsRuntimeObjectReference-based constructor (RCW-like)
-        if (!w.Settings.ReferenceProjection)
+        if (!context.Settings.ReferenceProjection)
         {
             string ctorAccess = type.IsSealed ? "internal" : "protected internal";
-            w.Write("\n");
-            w.Write(ctorAccess);
-            w.Write(" ");
-            w.Write(typeName);
-            w.Write("(WindowsRuntimeObjectReference nativeObjectReference)\n: base(nativeObjectReference)\n{\n");
+            writer.Write("\n");
+            writer.Write(ctorAccess);
+            writer.Write(" ");
+            writer.Write(typeName);
+            writer.Write("(WindowsRuntimeObjectReference nativeObjectReference)\n: base(nativeObjectReference)\n{\n");
             if (!type.IsSealed)
             {
                 // For unsealed classes, the default interface objref needs to be initialized only
@@ -565,22 +566,22 @@ internal static partial class CodeWriters
                 ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
                 if (defaultIface is not null)
                 {
-                    string defaultObjRefName = GetObjRefName(w, defaultIface);
-                    w.Write("if (GetType() == typeof(");
-                    w.Write(typeName);
-                    w.Write("))\n{\n");
-                    w.Write(defaultObjRefName);
-                    w.Write(" = NativeObjectReference;\n");
-                    w.Write("}\n");
+                    string defaultObjRefName = GetObjRefName(context, defaultIface);
+                    writer.Write("if (GetType() == typeof(");
+                    writer.Write(typeName);
+                    writer.Write("))\n{\n");
+                    writer.Write(defaultObjRefName);
+                    writer.Write(" = NativeObjectReference;\n");
+                    writer.Write("}\n");
                 }
             }
             if (gcPressure > 0)
             {
-                w.Write("GC.AddMemoryPressure(");
-                w.Write(gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                w.Write(");\n");
+                writer.Write("GC.AddMemoryPressure(");
+                writer.Write(gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                writer.Write(");\n");
             }
-            w.Write("}\n");
+            writer.Write("}\n");
         }
         else if (_cacheRef is not null)
         {
@@ -609,62 +610,62 @@ internal static partial class CodeWriters
             }
             if (!hasRefModeCtors)
             {
-                EmitSyntheticPrivateCtor(w.Writer, typeName);
+                EmitSyntheticPrivateCtor(writer, typeName);
             }
         }
 
         // Activator/composer constructors from [Activatable]/[Composable] factory interfaces.
         // write_static_members) BEFORE the override hooks and instance members.
-        WriteAttributedTypes(w, type);
+        WriteAttributedTypes(writer, context, type);
 
         // Static members from [Static] factory interfaces (e.g. GetForCurrentView).
         // C++ emits these inside write_attributed_types -> write_static_members; emit them
         // here right after to preserve the same overall ordering.
-        WriteStaticClassMembers(w, type);
+        WriteStaticClassMembers(writer, context, type);
 
         // Conditional finalizer
         if (gcPressure > 0)
         {
-            w.Write("~");
-            w.Write(typeName);
-            w.Write("()\n{\nGC.RemoveMemoryPressure(");
-            w.Write(gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            w.Write(");\n}\n");
+            writer.Write("~");
+            writer.Write(typeName);
+            writer.Write("()\n{\nGC.RemoveMemoryPressure(");
+            writer.Write(gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            writer.Write(");\n}\n");
         }
 
         // Class members from interfaces (instance methods, properties, events)
         // Override hooks must be emitted BEFORE the public members to match the C++
         // ordering (write_class line 9591/9600/9601: hooks first, then write_class_members).
         // HasUnwrappableNativeObjectReference and IsOverridableInterface overrides.
-        if (!w.Settings.ReferenceProjection)
+        if (!context.Settings.ReferenceProjection)
         {
-            w.Write("\nprotected override bool HasUnwrappableNativeObjectReference => ");
+            writer.Write("\nprotected override bool HasUnwrappableNativeObjectReference => ");
             if (!type.IsSealed)
             {
-                w.Write("GetType() == typeof(");
-                w.Write(typeName);
-                w.Write(");");
+                writer.Write("GetType() == typeof(");
+                writer.Write(typeName);
+                writer.Write(");");
             }
             else
             {
-                w.Write("true;");
+                writer.Write("true;");
             }
-            w.Write("\n");
+            writer.Write("\n");
 
             // IsOverridableInterface override (mirrors C++ write_custom_query_interface_impl).
             // Emit '|| <iidExpr> == iid' for each [Overridable] interface impl, then '|| base.IsOverridableInterface(in iid)'
             // if the type has a base class, finally fall back to 'false' if no entries.
-            w.Write("\nprotected override bool IsOverridableInterface(in Guid iid) => ");
+            writer.Write("\nprotected override bool IsOverridableInterface(in Guid iid) => ");
             bool firstClause = true;
             foreach (InterfaceImplementation impl in type.Interfaces)
             {
                 if (!impl.IsOverridable()) { continue; }
                 ITypeDefOrRef? implRef = impl.Interface;
                 if (implRef is null) { continue; }
-                if (!firstClause) { w.Write(" || "); }
+                if (!firstClause) { writer.Write(" || "); }
                 firstClause = false;
-                WriteIidExpression(w, implRef);
-                w.Write(" == iid");
+                WriteIidExpression(writer, context, implRef);
+                writer.Write(" == iid");
             }
             // base call when type has a non-object base class
             bool hasBaseClass = type.BaseType is not null
@@ -672,16 +673,16 @@ internal static partial class CodeWriters
                 && !(type.BaseType.Namespace?.Value == "WindowsRuntime" && type.BaseType.Name?.Value == "WindowsRuntimeObject");
             if (hasBaseClass)
             {
-                if (!firstClause) { w.Write(" || "); }
-                w.Write("base.IsOverridableInterface(in iid)");
+                if (!firstClause) { writer.Write(" || "); }
+                writer.Write("base.IsOverridableInterface(in iid)");
                 firstClause = false;
             }
-            if (firstClause) { w.Write("false"); }
-            w.Write(";\n");
+            if (firstClause) { writer.Write("false"); }
+            writer.Write(";\n");
         }
 
-        WriteClassMembers(w, type);
+        WriteClassMembers(writer, context, type);
 
-        w.Write("}\n");
+        writer.Write("}\n");
     }
 }
