@@ -270,7 +270,7 @@ internal static partial class CodeWriters
     /// (typeNamespace prefix outside the brackets, and the element inside the brackets uses just the
     /// type name without its namespace because depth=0 in the interop generator's AppendRawTypeName).
     /// </summary>
-    private static string GetArrayMarshallerInteropPath(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature elementType, string encodedElement)
+    private static string GetArrayMarshallerInteropPath(AsmResolver.DotNet.Signatures.TypeSignature elementType)
     {
         // The 'encodedElement' passed in uses the depth>0 form (assembly + hyphenated namespace + name),
         // but inside the array brackets the interop generator uses the depth=0 form (assembly + just name).
@@ -1090,7 +1090,7 @@ internal static partial class CodeWriters
             // before the Do_Abi method (mirrors C++ ordering).
             if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt) && evt.AddMethod == method)
             {
-                EmitEventTableField(w, evt, type, ifaceFullName);
+                EmitEventTableField(w, evt, ifaceFullName);
             }
 
             w.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
@@ -1161,7 +1161,7 @@ internal static partial class CodeWriters
     /// the caller in EmitDoAbiBodyIfSimple) — for instance events on authored classes this is
     /// the runtime class type, NOT the ABI.Impl interface.
     /// </summary>
-    private static void EmitEventTableField(TypeWriter w, EventDefinition evt, TypeDefinition iface, string ifaceFullName)
+    private static void EmitEventTableField(TypeWriter w, EventDefinition evt, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
         string evtType = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteEventType(w, evt)));
@@ -1380,7 +1380,7 @@ internal static partial class CodeWriters
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
             string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sza.BaseType))));
             string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
-            string marshallerPath = GetArrayMarshallerInteropPath(w, sza.BaseType, elementInteropArg);
+            string marshallerPath = GetArrayMarshallerInteropPath(sza.BaseType);
             string elementAbi = sza.BaseType.IsString() || IsRuntimeClassOrInterface(sza.BaseType) || sza.BaseType.IsObject()
                 ? "void*"
                 : IsComplexStruct(sza.BaseType)
@@ -1410,7 +1410,7 @@ internal static partial class CodeWriters
                         ? GetBlittableStructAbiType(w, retSzHoist.BaseType)
                         : GetAbiPrimitiveType(retSzHoist.BaseType);
             string elementInteropArg = EncodeInteropTypeName(retSzHoist.BaseType, TypedefNameType.Projected);
-            string marshallerPath = GetArrayMarshallerInteropPath(w, retSzHoist.BaseType, elementInteropArg);
+            string marshallerPath = GetArrayMarshallerInteropPath(retSzHoist.BaseType);
             w.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
             w.Write("    static extern void ConvertToUnmanaged_");
             w.Write(retParamName);
@@ -1631,7 +1631,7 @@ internal static partial class CodeWriters
             w.Write("        static extern void CopyToManaged_");
             w.Write(raw);
             w.Write("([UnsafeAccessorType(\"");
-            w.Write(GetArrayMarshallerInteropPath(w, szArr.BaseType, elementInteropArg));
+            w.Write(GetArrayMarshallerInteropPath(szArr.BaseType));
             w.Write("\")] object _, uint length, ");
             w.Write(dataParamType);
             w.Write(", Span<");
@@ -1989,7 +1989,7 @@ internal static partial class CodeWriters
             w.Write("        static extern void CopyToUnmanaged_");
             w.Write(raw);
             w.Write("([UnsafeAccessorType(\"");
-            w.Write(GetArrayMarshallerInteropPath(w, szFA.BaseType, elementInteropArg));
+            w.Write(GetArrayMarshallerInteropPath(szFA.BaseType));
             w.Write("\")] object _, ReadOnlySpan<");
             w.Write(elementProjected);
             w.Write("> span, uint length, ");
@@ -2289,7 +2289,7 @@ internal static partial class CodeWriters
     private static void WriteInterfaceIdicImplMembers(TypeWriter w, TypeDefinition type)
     {
         HashSet<TypeDefinition> visited = new();
-        WriteInterfaceIdicImplMembersForInterface(w, type, visited);
+        WriteInterfaceIdicImplMembersForInterface(w, type);
 
         // Also walk required (inherited) interfaces and emit members for each one.
         WriteInterfaceIdicImplMembersForRequiredInterfaces(w, type, visited);
@@ -2612,7 +2612,7 @@ internal static partial class CodeWriters
         }
     }
 
-    private static void WriteInterfaceIdicImplMembersForInterface(TypeWriter w, TypeDefinition type, HashSet<TypeDefinition> visited)
+    private static void WriteInterfaceIdicImplMembersForInterface(TypeWriter w, TypeDefinition type)
     {
         // The CCW interface name (the projected interface name with global:: prefix).
         string ccwIfaceName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
@@ -4620,7 +4620,7 @@ internal static partial class CodeWriters
                 w.Write("static extern void CopyToUnmanaged_");
                 w.Write(localName);
                 w.Write("([UnsafeAccessorType(\"");
-                w.Write(GetArrayMarshallerInteropPath(w, szArr.BaseType, elementInteropArg));
+                w.Write(GetArrayMarshallerInteropPath(szArr.BaseType));
                 w.Write("\")] object _, ReadOnlySpan<");
                 w.Write(elementProjected);
                 w.Write("> span, uint length, ");
@@ -4815,7 +4815,7 @@ internal static partial class CodeWriters
             w.Write("static extern void CopyToManaged_");
             w.Write(localName);
             w.Write("([UnsafeAccessorType(\"");
-            w.Write(GetArrayMarshallerInteropPath(w, szFA.BaseType, elementInteropArg));
+            w.Write(GetArrayMarshallerInteropPath(szFA.BaseType));
             w.Write("\")] object _, uint length, ");
             w.Write(dataParamType);
             w.Write(", Span<");
@@ -4958,7 +4958,7 @@ internal static partial class CodeWriters
                         ? GetBlittableStructAbiType(w, sza.BaseType)
                         : GetAbiPrimitiveType(sza.BaseType);
             string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
-            string marshallerPath = GetArrayMarshallerInteropPath(w, sza.BaseType, elementInteropArg);
+            string marshallerPath = GetArrayMarshallerInteropPath(sza.BaseType);
             w.Write(callIndent);
             w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
             w.Write(callIndent);
@@ -5005,7 +5005,7 @@ internal static partial class CodeWriters
                 w.Write("static extern ");
                 w.Write(elementProjected);
                 w.Write("[] ConvertToManaged_retval([UnsafeAccessorType(\"");
-                w.Write(GetArrayMarshallerInteropPath(w, retSz.BaseType, elementInteropArg));
+                w.Write(GetArrayMarshallerInteropPath(retSz.BaseType));
                 w.Write("\")] object _, uint length, ");
                 w.Write(elementAbi);
                 w.Write("* data);\n");
@@ -5231,7 +5231,7 @@ internal static partial class CodeWriters
                     w.Write("            static extern void Dispose_");
                     w.Write(localName);
                     w.Write("([UnsafeAccessorType(\"");
-                    w.Write(GetArrayMarshallerInteropPath(w, szArr.BaseType, elementInteropArg));
+                    w.Write(GetArrayMarshallerInteropPath(szArr.BaseType));
                     w.Write("\")] object _, uint length, ");
                     w.Write(disposeDataParamType);
                     if (!disposeDataParamType.EndsWith("data", System.StringComparison.Ordinal)) { w.Write(" data"); }
@@ -5324,7 +5324,7 @@ internal static partial class CodeWriters
                             ? GetBlittableStructAbiType(w, sza.BaseType)
                             : GetAbiPrimitiveType(sza.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
-                string marshallerPath = GetArrayMarshallerInteropPath(w, sza.BaseType, elementInteropArg);
+                string marshallerPath = GetArrayMarshallerInteropPath(sza.BaseType);
                 w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
                 w.Write("            static extern void Free_");
                 w.Write(localName);
@@ -5379,7 +5379,7 @@ internal static partial class CodeWriters
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
                 w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
                 w.Write("            static extern void Free_retval([UnsafeAccessorType(\"");
-                w.Write(GetArrayMarshallerInteropPath(w, retSz.BaseType, elementInteropArg));
+                w.Write(GetArrayMarshallerInteropPath(retSz.BaseType));
                 w.Write("\")] object _, uint length, ");
                 w.Write(elementAbi);
                 w.Write("* data);\n");

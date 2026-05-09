@@ -15,7 +15,7 @@ namespace WindowsRuntime.ProjectionWriter;
 internal static partial class CodeWriters
 {
     /// <summary>Writes the <c>[Guid("...")]</c> attribute for a type.</summary>
-    public static void WriteGuidAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteGuidAttribute(IndentedTextWriter writer, TypeDefinition type)
     {
         bool fullyQualify = type.Namespace == "Windows.Foundation.Metadata";
         writer.Write("[");
@@ -27,7 +27,7 @@ internal static partial class CodeWriters
 
     /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
     public static void WriteGuidAttribute(TypeWriter w, TypeDefinition type)
-        => WriteGuidAttribute(w.Writer, w.Context, type);
+        => WriteGuidAttribute(w.Writer, type);
 
     /// <summary>Writes a class or interface inheritance clause: " : Base, Iface1, Iface2&lt;T&gt;".</summary>
     public static void WriteTypeInheritance(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool includeExclusiveInterface, bool includeWindowsRuntimeObject)
@@ -394,7 +394,7 @@ internal static partial class CodeWriters
 
         writer.Write("\n");
         WriteWinRTMetadataAttribute(writer, type, _cacheRef!);
-        WriteGuidAttribute(writer, context, type);
+        WriteGuidAttribute(writer, type);
         writer.Write("\n");
         WriteTypeCustomAttributes(writer, context, type, false);
 

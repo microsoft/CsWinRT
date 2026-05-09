@@ -51,10 +51,6 @@ internal static partial class CodeWriters
         }
     }
 
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteType(TypeWriter w, TypeDefinition type, TypeCategory category, Settings settings, MetadataCache cache)
-        => WriteType(w.Writer, w.Context, type, category);
-
     /// <summary>Dispatches ABI emission based on the type category.</summary>
     public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeCategory category)
     {
@@ -78,10 +74,6 @@ internal static partial class CodeWriters
                 break;
         }
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    public static void WriteAbiType(TypeWriter w, TypeDefinition type, TypeCategory category, Settings settings)
-        => WriteAbiType(w.Writer, w.Context, type, category);
 
     /// <summary>Writes a projected enum (with [Flags] when applicable).</summary>
     public static void WriteEnum(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)

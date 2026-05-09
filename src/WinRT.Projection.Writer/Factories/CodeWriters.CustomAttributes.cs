@@ -19,10 +19,9 @@ internal static partial class CodeWriters
     /// <summary>
     /// Returns the formatted argument list for emitting <paramref name="attribute"/> as a C# attribute.
     /// </summary>
-    /// <param name="context">The active emit context.</param>
     /// <param name="attribute">The custom attribute to format.</param>
     /// <returns>A list of pre-formatted positional + named argument strings (in order).</returns>
-    public static List<string> WriteCustomAttributeArgs(ProjectionEmitContext context, CustomAttribute attribute)
+    public static List<string> WriteCustomAttributeArgs(CustomAttribute attribute)
     {
         List<string> result = new();
         if (attribute.Signature is null) { return result; }
@@ -57,10 +56,6 @@ internal static partial class CodeWriters
         }
         return result;
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteCustomAttributeArgs(ProjectionEmitContext, CustomAttribute)"/>.</summary>
-    public static List<string> WriteCustomAttributeArgs(TypeWriter w, CustomAttribute attribute)
-        => WriteCustomAttributeArgs(w.Context, attribute);
 
     /// <summary>
     /// Formats an AttributeTargets uint value as a bitwise OR of <c>global::System.AttributeTargets.X</c>.
@@ -303,7 +298,7 @@ internal static partial class CodeWriters
                 ? "System.AttributeUsage"
                 : ns + "." + strippedName;
 
-            List<string> args = WriteCustomAttributeArgs(context, attr);
+            List<string> args = WriteCustomAttributeArgs(attr);
 
             if (context.Settings.ReferenceProjection && enablePlatformAttrib && strippedName == "ContractVersion" && attr.Signature?.FixedArguments.Count == 2)
             {
