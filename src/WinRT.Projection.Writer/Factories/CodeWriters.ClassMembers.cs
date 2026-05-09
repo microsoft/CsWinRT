@@ -892,15 +892,6 @@ internal static partial class CodeWriters
         }
         WriteParameterName(writer, p);
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    private static void WriteParameterNameWithModifier(TypeWriter w, ParamInfo p)
-        => WriteParameterNameWithModifier(w.Writer, w.Context, p);
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    private static void WriteInterfaceTypeNameForCcw(TypeWriter w, ITypeDefOrRef ifaceType)
-        => WriteInterfaceTypeNameForCcw(w.Writer, w.Context, ifaceType);
-
     /// <summary>
     /// Writes the projected name for an interface reference (TypeDefinition, TypeReference, or
     /// generic instance), applying mapped-type remapping. Used inside <c>IWindowsRuntimeInterface&lt;T&gt;</c>.

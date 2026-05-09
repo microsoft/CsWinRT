@@ -107,19 +107,17 @@ internal static partial class CodeWriters
     }
     public static void WriteAbiEnum(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
-        WriteStructEnumMarshallerClass(w, type);
-        WriteReferenceImpl(w, type);
+        WriteStructEnumMarshallerClass(writer, context, type);
+        WriteReferenceImpl(writer, context, type);
 
         // In component mode, also emit the authoring metadata wrapper for enums.
-        if (w.Settings.Component)
+        if (context.Settings.Component)
         {
-            WriteAuthoringMetadataType(w, type);
+            WriteAuthoringMetadataType(writer, context, type);
         }
     }
     public static void WriteAbiStruct(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
 
         // Emit the underlying ABI struct only when not blittable AND not a mapped struct
         // (mapped structs like Duration/KeyTime/RepeatBehavior have addition files that
@@ -132,67 +130,66 @@ internal static partial class CodeWriters
         {
             // type attribute; otherwise emit the ComWrappers attribute. Both branches then
             // emit [WindowsRuntimeClassName] + the struct definition with public ABI fields.
-            if (w.Settings.Component)
+            if (context.Settings.Component)
             {
-                WriteWinRTMetadataTypeNameAttribute(w, type);
-                WriteWinRTMappedTypeAttribute(w, type);
+                WriteWinRTMetadataTypeNameAttribute(writer, context, type);
+                WriteWinRTMappedTypeAttribute(writer, context, type);
             }
             else
             {
-                WriteComWrapperMarshallerAttribute(w, type);
+                WriteComWrapperMarshallerAttribute(writer, context, type);
             }
-            WriteValueTypeWinRTClassNameAttribute(w, type);
-            w.Write(AccessibilityHelper.InternalAccessibility(w.Settings));
-            w.Write(" unsafe struct ");
-            WriteTypedefName(w, type, TypedefNameType.ABI, false);
-            w.Write("\n{\n");
+            WriteValueTypeWinRTClassNameAttribute(writer, context, type);
+            writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
+            writer.Write(" unsafe struct ");
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+            writer.Write("\n{\n");
             foreach (FieldDefinition field in type.Fields)
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                w.Write("public ");
+                writer.Write("public ");
                 // Truth uses void* for string and Nullable<T> fields, the ABI struct for
                 // mapped value types (DateTime/TimeSpan), and the projected type for everything
                 // else (including enums and bool — their C# layout matches the WinRT ABI directly).
                 if (ft.IsString() || TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
-                    w.Write("void*");
+                    writer.Write("void*");
                 }
                 else if (IsMappedAbiValueType(ft))
                 {
-                    w.Write(GetMappedAbiTypeName(ft));
+                    writer.Write(GetMappedAbiTypeName(ft));
                 }
                 else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr
                          && TryResolveStructTypeDef(tdr) is TypeDefinition fieldTd
                          && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
                          && !IsTypeBlittable(fieldTd))
                 {
-                    WriteTypedefName(w, fieldTd, TypedefNameType.ABI, false);
+                    WriteTypedefName(writer, context, fieldTd, TypedefNameType.ABI, false);
                 }
                 else
                 {
-                    WriteProjectedSignature(w, ft, false);
+                    WriteProjectedSignature(writer, context, ft, false);
                 }
-                w.Write(" ");
-                w.Write(field.Name?.Value ?? string.Empty);
-                w.Write(";\n");
+                writer.Write(" ");
+                writer.Write(field.Name?.Value ?? string.Empty);
+                writer.Write(";\n");
             }
-            w.Write("}\n\n");
+            writer.Write("}\n\n");
         }
-        else if (blittable && w.Settings.Component)
+        else if (blittable && context.Settings.Component)
         {
             // For blittable component structs, the C++ tool emits the authoring metadata wrapper
             // (a 'file static class T {}' with [WindowsRuntimeMetadataTypeName]/[WindowsRuntimeMappedType]/
             // [WindowsRuntimeReferenceType]/[ComWrappersMarshaller]/[WindowsRuntimeClassName]).
-            WriteAuthoringMetadataType(w, type);
+            WriteAuthoringMetadataType(writer, context, type);
         }
 
-        WriteStructEnumMarshallerClass(w, type);
-        WriteReferenceImpl(w, type);
+        WriteStructEnumMarshallerClass(writer, context, type);
+        WriteReferenceImpl(writer, context, type);
     }
     public static void WriteAbiDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
         // Mirror the C++ tool's ordering exactly:
         //   write_delegate_marshaller
         //   write_delegate_vtbl
@@ -203,24 +200,24 @@ internal static partial class CodeWriters
         //   write_delegate_impl
         //   write_reference_impl
         //   (component) write_authoring_metadata_type
-        WriteDelegateMarshallerOnly(w, type);
-        WriteDelegateVftbl(w, type);
-        WriteNativeDelegate(w, type);
-        WriteDelegateComWrappersCallback(w, type);
-        WriteDelegateInterfaceEntriesImpl(w, type);
-        WriteDelegateComWrappersMarshallerAttribute(w, type);
-        WriteDelegateImpl(w, type);
-        WriteReferenceImpl(w, type);
+        WriteDelegateMarshallerOnly(writer, context, type);
+        WriteDelegateVftbl(writer, context, type);
+        WriteNativeDelegate(writer, context, type);
+        WriteDelegateComWrappersCallback(writer, context, type);
+        WriteDelegateInterfaceEntriesImpl(writer, context, type);
+        WriteDelegateComWrappersMarshallerAttribute(writer, context, type);
+        WriteDelegateImpl(writer, context, type);
+        WriteReferenceImpl(writer, context, type);
 
         // In component mode, the C++ tool also emits the authoring metadata wrapper for delegates.
-        if (w.Settings.Component)
+        if (context.Settings.Component)
         {
-            WriteAuthoringMetadataType(w, type);
+            WriteAuthoringMetadataType(writer, context, type);
         }
     }
 
     /// <summary>Emits the <c>&lt;DelegateName&gt;Impl</c> static class providing the CCW vtable for a delegate.</summary>
-    private static void WriteDelegateImpl(TypeWriter w, TypeDefinition type)
+    private static void WriteDelegateImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (type.GenericParameters.Count > 0) { return; }
         MethodDefinition? invoke = type.GetDelegateInvoke();
@@ -228,39 +225,43 @@ internal static partial class CodeWriters
         MethodSig sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
+        IndentedTextWriter __scratchIidExpr = new();
+        WriteIidExpression(__scratchIidExpr, context, type);
+        string iidExpr = __scratchIidExpr.ToString();
 
-        w.Write("\ninternal static unsafe class ");
-        w.Write(nameStripped);
-        w.Write("Impl\n{\n");
-        w.Write("    [FixedAddressValueType]\n");
-        w.Write("    private static readonly ");
-        w.Write(nameStripped);
-        w.Write("Vftbl Vftbl;\n\n");
-        w.Write("    static ");
-        w.Write(nameStripped);
-        w.Write("Impl()\n    {\n");
-        w.Write("        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;\n");
-        w.Write("        Vftbl.Invoke = &Invoke;\n");
-        w.Write("    }\n\n");
-        w.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
+        writer.Write("\ninternal static unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("Impl\n{\n");
+        writer.Write("    [FixedAddressValueType]\n");
+        writer.Write("    private static readonly ");
+        writer.Write(nameStripped);
+        writer.Write("Vftbl Vftbl;\n\n");
+        writer.Write("    static ");
+        writer.Write(nameStripped);
+        writer.Write("Impl()\n    {\n");
+        writer.Write("        *(IUnknownVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IUnknownVftbl*)IUnknownImpl.Vtable;\n");
+        writer.Write("        Vftbl.Invoke = &Invoke;\n");
+        writer.Write("    }\n\n");
+        writer.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
 
-        w.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
-        w.Write("private static int Invoke(");
-        WriteAbiParameterTypesPointer(w, sig, includeParamNames: true);
-        w.Write(")");
+        writer.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
+        writer.Write("private static int Invoke(");
+        WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
+        writer.Write(")");
 
         // Reuse the interface Do_Abi body emitter: delegates dispatch via __target.Invoke(...),
         // which is exactly the same shape as interface CCW dispatch. Pass the delegate's
         // projected name as 'ifaceFullName' and "Invoke" as 'methodName'.
-        string projectedDelegateForBody = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
+        IndentedTextWriter __scratchProjectedDelegateForBody = new();
+        WriteTypedefName(__scratchProjectedDelegateForBody, context, type, TypedefNameType.Projected, true);
+        string projectedDelegateForBody = __scratchProjectedDelegateForBody.ToString();
         if (!projectedDelegateForBody.StartsWith("global::", System.StringComparison.Ordinal)) { projectedDelegateForBody = "global::" + projectedDelegateForBody; }
-        EmitDoAbiBodyIfSimple(w, sig, projectedDelegateForBody, "Invoke");
-        w.Write("\n");
+        EmitDoAbiBodyIfSimple(writer, context, sig, projectedDelegateForBody, "Invoke");
+        writer.Write("\n");
 
-        w.Write("    public static ref readonly Guid IID\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => ref ");
-        w.Write(iidExpr);
-        w.Write(";\n    }\n}\n");
+        writer.Write("    public static ref readonly Guid IID\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => ref ");
+        writer.Write(iidExpr);
+        writer.Write(";\n    }\n}\n");
     }
 
 
@@ -372,7 +373,7 @@ internal static partial class CodeWriters
             sb.Append('>');
         }
     }
-    private static void WriteDelegateVftbl(TypeWriter w, TypeDefinition type)
+    private static void WriteDelegateVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (type.GenericParameters.Count > 0) { return; }
         MethodDefinition? invoke = type.GetDelegateInvoke();
@@ -381,19 +382,19 @@ internal static partial class CodeWriters
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        w.Write("\n[StructLayout(LayoutKind.Sequential)]\n");
-        w.Write("internal unsafe struct ");
-        w.Write(nameStripped);
-        w.Write("Vftbl\n{\n");
-        w.Write("    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;\n");
-        w.Write("    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;\n");
-        w.Write("    public delegate* unmanaged[MemberFunction]<void*, uint> Release;\n");
-        w.Write("    public delegate* unmanaged[MemberFunction]<");
-        WriteAbiParameterTypesPointer(w, sig);
-        w.Write(", int> Invoke;\n");
-        w.Write("}\n");
+        writer.Write("\n[StructLayout(LayoutKind.Sequential)]\n");
+        writer.Write("internal unsafe struct ");
+        writer.Write(nameStripped);
+        writer.Write("Vftbl\n{\n");
+        writer.Write("    public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;\n");
+        writer.Write("    public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;\n");
+        writer.Write("    public delegate* unmanaged[MemberFunction]<void*, uint> Release;\n");
+        writer.Write("    public delegate* unmanaged[MemberFunction]<");
+        WriteAbiParameterTypesPointer(writer, context, sig);
+        writer.Write(", int> Invoke;\n");
+        writer.Write("}\n");
     }
-    private static void WriteNativeDelegate(TypeWriter w, TypeDefinition type)
+    private static void WriteNativeDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (type.GenericParameters.Count > 0) { return; }
         MethodDefinition? invoke = type.GetDelegateInvoke();
@@ -402,74 +403,77 @@ internal static partial class CodeWriters
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        w.Write("\npublic static unsafe class ");
-        w.Write(nameStripped);
-        w.Write("NativeDelegate\n{\n");
+        writer.Write("\npublic static unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("NativeDelegate\n{\n");
 
-        w.Write("    public static unsafe ");
-        WriteProjectionReturnType(w, sig);
-        w.Write(" ");
-        w.Write(nameStripped);
-        w.Write("Invoke(this WindowsRuntimeObjectReference thisReference");
-        if (sig.Params.Count > 0) { w.Write(", "); }
-        WriteParameterList(w, sig);
-        w.Write(")");
+        writer.Write("    public static unsafe ");
+        WriteProjectionReturnType(writer, context, sig);
+        writer.Write(" ");
+        writer.Write(nameStripped);
+        writer.Write("Invoke(this WindowsRuntimeObjectReference thisReference");
+        if (sig.Params.Count > 0) { writer.Write(", "); }
+        WriteParameterList(writer, context, sig);
+        writer.Write(")");
 
         // Reuse the interface caller body emitter. Delegate Invoke is at vtable slot 3
         // (after QI/AddRef/Release). Functionally equivalent to the truth's
         // 'var abiInvoke = ((<Name>Vftbl*)*(void***)ThisPtr)->Invoke;' form, just routed
         // through the slot-indexed dispatch shared with interface CCW callers.
-        EmitAbiMethodBodyIfSimple(w, sig, slot: 3, isNoExcept: invoke.IsNoExcept());
+        EmitAbiMethodBodyIfSimple(writer, context, sig, slot: 3, isNoExcept: invoke.IsNoExcept());
 
-        w.Write("}\n");
+        writer.Write("}\n");
     }
-    private static void WriteDelegateInterfaceEntriesImpl(TypeWriter w, TypeDefinition type)
+    private static void WriteDelegateInterfaceEntriesImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
-        string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
+        IndentedTextWriter __scratchIidExpr = new();
+        WriteIidExpression(__scratchIidExpr, context, type);
+        string iidExpr = __scratchIidExpr.ToString();
+        IndentedTextWriter __scratchIidRefExpr = new();
+        WriteIidReferenceExpression(__scratchIidRefExpr, type);
+        string iidRefExpr = __scratchIidRefExpr.ToString();
 
-        w.Write("\nfile static class ");
-        w.Write(nameStripped);
-        w.Write("InterfaceEntriesImpl\n{\n");
-        w.Write("    [FixedAddressValueType]\n");
-        w.Write("    public static readonly DelegateReferenceInterfaceEntries Entries;\n\n");
-        w.Write("    static ");
-        w.Write(nameStripped);
-        w.Write("InterfaceEntriesImpl()\n    {\n");
-        w.Write("        Entries.Delegate.IID = ");
-        w.Write(iidExpr);
-        w.Write(";\n");
-        w.Write("        Entries.Delegate.Vtable = ");
-        w.Write(nameStripped);
-        w.Write("Impl.Vtable;\n");
-        w.Write("        Entries.DelegateReference.IID = ");
-        w.Write(iidRefExpr);
-        w.Write(";\n");
-        w.Write("        Entries.DelegateReference.Vtable = ");
-        w.Write(nameStripped);
-        w.Write("ReferenceImpl.Vtable;\n");
-        w.Write("        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;\n");
-        w.Write("        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;\n");
-        w.Write("        Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;\n");
-        w.Write("        Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;\n");
-        w.Write("        Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;\n");
-        w.Write("        Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;\n");
-        w.Write("        Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;\n");
-        w.Write("        Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;\n");
-        w.Write("        Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;\n");
-        w.Write("        Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;\n");
-        w.Write("        Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;\n");
-        w.Write("        Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;\n");
-        w.Write("        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;\n");
-        w.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
-        w.Write("    }\n}\n");
+        writer.Write("\nfile static class ");
+        writer.Write(nameStripped);
+        writer.Write("InterfaceEntriesImpl\n{\n");
+        writer.Write("    [FixedAddressValueType]\n");
+        writer.Write("    public static readonly DelegateReferenceInterfaceEntries Entries;\n\n");
+        writer.Write("    static ");
+        writer.Write(nameStripped);
+        writer.Write("InterfaceEntriesImpl()\n    {\n");
+        writer.Write("        Entries.Delegate.IID = ");
+        writer.Write(iidExpr);
+        writer.Write(";\n");
+        writer.Write("        Entries.Delegate.Vtable = ");
+        writer.Write(nameStripped);
+        writer.Write("Impl.Vtable;\n");
+        writer.Write("        Entries.DelegateReference.IID = ");
+        writer.Write(iidRefExpr);
+        writer.Write(";\n");
+        writer.Write("        Entries.DelegateReference.Vtable = ");
+        writer.Write(nameStripped);
+        writer.Write("ReferenceImpl.Vtable;\n");
+        writer.Write("        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;\n");
+        writer.Write("        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;\n");
+        writer.Write("        Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;\n");
+        writer.Write("        Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;\n");
+        writer.Write("        Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;\n");
+        writer.Write("        Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;\n");
+        writer.Write("        Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;\n");
+        writer.Write("        Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;\n");
+        writer.Write("        Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;\n");
+        writer.Write("        Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;\n");
+        writer.Write("        Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;\n");
+        writer.Write("        Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;\n");
+        writer.Write("        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;\n");
+        writer.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
+        writer.Write("    }\n}\n");
     }
     public static void WriteTempDelegateEventSourceSubclass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
         // Skip generic delegates: only non-generic delegates get a per-delegate EventSource subclass.
         // Generic delegates (e.g. EventHandler<T>) use the generic EventHandlerEventSource<T> directly.
         if (type.GenericParameters.Count > 0) { return; }
@@ -481,90 +485,91 @@ internal static partial class CodeWriters
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         // Compute the projected type name (with global::) used as the generic argument.
-        string projectedName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
+        IndentedTextWriter __scratchProjectedName = new();
+        WriteTypedefName(__scratchProjectedName, context, type, TypedefNameType.Projected, true);
+        string projectedName = __scratchProjectedName.ToString();
         if (!projectedName.StartsWith("global::", System.StringComparison.Ordinal))
         {
             projectedName = "global::" + projectedName;
         }
 
-        w.Write("\npublic sealed unsafe class ");
-        w.Write(nameStripped);
-        w.Write("EventSource : EventSource<");
-        w.Write(projectedName);
-        w.Write(">\n{\n");
-        w.Write("    /// <inheritdoc cref=\"EventSource{T}.EventSource\"/>\n");
-        w.Write("    public ");
-        w.Write(nameStripped);
-        w.Write("EventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)\n        : base(nativeObjectReference, index)\n    {\n    }\n\n");
-        w.Write("    /// <inheritdoc/>\n");
-        w.Write("    protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
-        w.Write(projectedName);
-        w.Write(" value)\n    {\n        return ");
-        w.Write(nameStripped);
-        w.Write("Marshaller.ConvertToUnmanaged(value);\n    }\n\n");
-        w.Write("    /// <inheritdoc/>\n");
-        w.Write("    protected override EventSourceState<");
-        w.Write(projectedName);
-        w.Write("> CreateEventSourceState()\n    {\n        return new EventState(GetNativeObjectReferenceThisPtrUnsafe(), Index);\n    }\n\n");
-        w.Write("    private sealed class EventState : EventSourceState<");
-        w.Write(projectedName);
-        w.Write(">\n    {\n");
-        w.Write("        /// <inheritdoc cref=\"EventSourceState{T}.EventSourceState\"/>\n");
-        w.Write("        public EventState(void* thisPtr, int index)\n            : base(thisPtr, index)\n        {\n        }\n\n");
-        w.Write("        /// <inheritdoc/>\n");
-        w.Write("        protected override ");
-        w.Write(projectedName);
-        w.Write(" GetEventInvoke()\n        {\n");
+        writer.Write("\npublic sealed unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("EventSource : EventSource<");
+        writer.Write(projectedName);
+        writer.Write(">\n{\n");
+        writer.Write("    /// <inheritdoc cref=\"EventSource{T}.EventSource\"/>\n");
+        writer.Write("    public ");
+        writer.Write(nameStripped);
+        writer.Write("EventSource(WindowsRuntimeObjectReference nativeObjectReference, int index)\n        : base(nativeObjectReference, index)\n    {\n    }\n\n");
+        writer.Write("    /// <inheritdoc/>\n");
+        writer.Write("    protected override WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
+        writer.Write(projectedName);
+        writer.Write(" value)\n    {\n        return ");
+        writer.Write(nameStripped);
+        writer.Write("Marshaller.ConvertToUnmanaged(value);\n    }\n\n");
+        writer.Write("    /// <inheritdoc/>\n");
+        writer.Write("    protected override EventSourceState<");
+        writer.Write(projectedName);
+        writer.Write("> CreateEventSourceState()\n    {\n        return new EventState(GetNativeObjectReferenceThisPtrUnsafe(), Index);\n    }\n\n");
+        writer.Write("    private sealed class EventState : EventSourceState<");
+        writer.Write(projectedName);
+        writer.Write(">\n    {\n");
+        writer.Write("        /// <inheritdoc cref=\"EventSourceState{T}.EventSourceState\"/>\n");
+        writer.Write("        public EventState(void* thisPtr, int index)\n            : base(thisPtr, index)\n        {\n        }\n\n");
+        writer.Write("        /// <inheritdoc/>\n");
+        writer.Write("        protected override ");
+        writer.Write(projectedName);
+        writer.Write(" GetEventInvoke()\n        {\n");
         // Build parameter name list for the lambda. Lambda's parameter list MUST match the
         // delegate's signature exactly, including in/out/ref modifiers - otherwise CS1676 fires
         // when calling TargetDelegate.Invoke. Mirror C++ write_parmaeters.
-        w.Write("            return (");
+        writer.Write("            return (");
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (i > 0) { w.Write(", "); }
+            if (i > 0) { writer.Write(", "); }
             ParamCategory pc = ParamHelpers.GetParamCategory(sig.Params[i]);
-            if (pc == ParamCategory.Ref) { w.Write("in "); }
-            else if (pc == ParamCategory.Out || pc == ParamCategory.ReceiveArray) { w.Write("out "); }
+            if (pc == ParamCategory.Ref) { writer.Write("in "); }
+            else if (pc == ParamCategory.Out || pc == ParamCategory.ReceiveArray) { writer.Write("out "); }
             string raw = sig.Params[i].Parameter.Name ?? "p";
-            w.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
+            writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
-        w.Write(") => TargetDelegate.Invoke(");
+        writer.Write(") => TargetDelegate.Invoke(");
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (i > 0) { w.Write(", "); }
+            if (i > 0) { writer.Write(", "); }
             ParamCategory pc = ParamHelpers.GetParamCategory(sig.Params[i]);
-            if (pc == ParamCategory.Ref) { w.Write("in "); }
-            else if (pc == ParamCategory.Out || pc == ParamCategory.ReceiveArray) { w.Write("out "); }
+            if (pc == ParamCategory.Ref) { writer.Write("in "); }
+            else if (pc == ParamCategory.Out || pc == ParamCategory.ReceiveArray) { writer.Write("out "); }
             string raw = sig.Params[i].Parameter.Name ?? "p";
-            w.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
+            writer.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
-        w.Write(");\n");
-        w.Write("        }\n    }\n}\n");
+        writer.Write(");\n");
+        writer.Write("        }\n    }\n}\n");
     }
     public static void WriteAbiClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
         // Static classes don't get a *Marshaller (no instances).
         if (TypeCategorization.IsStatic(type)) { return; }
-        w.Write("#nullable enable\n");
-        if (w.Settings.Component)
+        writer.Write("#nullable enable\n");
+        if (context.Settings.Component)
         {
-            WriteComponentClassMarshaller(w, type);
-            WriteAuthoringMetadataType(w, type);
+            WriteComponentClassMarshaller(writer, context, type);
+            WriteAuthoringMetadataType(writer, context, type);
         }
         else
         {
             // Emit a ComWrappers marshaller class so the attribute reference resolves
-            WriteClassMarshallerStub(w, type);
+            WriteClassMarshallerStub(writer, context, type);
         }
-        w.Write("#nullable disable\n");
+        writer.Write("#nullable disable\n");
     }
 
     /// <summary>
     /// Emits the simpler component-mode class marshaller. Mirrors C++
     /// <c>write_component_class_marshaller</c>.
     /// </summary>
-    private static void WriteComponentClassMarshaller(TypeWriter w, TypeDefinition type)
+    private static void WriteComponentClassMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
         string typeNs = type.Namespace?.Value ?? string.Empty;
@@ -586,47 +591,56 @@ internal static partial class CodeWriters
         if (defaultGenericInst is not null)
         {
             // Call the accessor: '<IID_<EscapedName>>(null)'.
-            string accessorName = BuildIidPropertyNameForGenericInterface(w, defaultGenericInst);
+            string accessorName = BuildIidPropertyNameForGenericInterface(context, defaultGenericInst);
             defaultIfaceIid = accessorName + "(null)";
         }
         else
         {
-            defaultIfaceIid = defaultIface is not null
-                ? w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, defaultIface)))
-                : "default(global::System.Guid)";
+            if (defaultIface is not null)
+            {
+                IndentedTextWriter __scratchDefaultIid = new();
+                        WriteIidExpression(__scratchDefaultIid, context, defaultIface);
+                        defaultIfaceIid = __scratchDefaultIid.ToString();
+            }
+            else
+            {
+                defaultIfaceIid = "default(global::System.Guid)";
+            }
         }
 
-        w.Write("\npublic static unsafe class ");
-        w.Write(nameStripped);
-        w.Write("Marshaller\n{\n");
-        w.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
-        w.Write(projectedType);
-        w.Write(" value)\n    {\n");
+        writer.Write("\npublic static unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("Marshaller\n{\n");
+        writer.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
+        writer.Write(projectedType);
+        writer.Write(" value)\n    {\n");
         if (defaultGenericInst is not null)
         {
             // Emit the UnsafeAccessor declaration (uses 'object?' since component-mode
             // marshallers run inside #nullable enable).
-            string accessorBlock = w.WriteTemp("%", new System.Action<TextWriter>(_ => EmitUnsafeAccessorForIid(w, defaultGenericInst, isInNullableContext: true)));
+            IndentedTextWriter __scratchAccessor = new();
+                EmitUnsafeAccessorForIid(__scratchAccessor, context, defaultGenericInst, isInNullableContext: true);
+                string accessorBlock = __scratchAccessor.ToString();
             // Re-emit each line indented by 8 spaces.
             string[] accessorLines = accessorBlock.TrimEnd('\n').Split('\n');
             foreach (string accessorLine in accessorLines)
             {
-                w.Write("        ");
-                w.Write(accessorLine);
-                w.Write("\n");
+                writer.Write("        ");
+                writer.Write(accessorLine);
+                writer.Write("\n");
             }
         }
-        w.Write("        return WindowsRuntimeInterfaceMarshaller<");
-        w.Write(projectedType);
-        w.Write(">.ConvertToUnmanaged(value, ");
-        w.Write(defaultIfaceIid);
-        w.Write(");\n    }\n\n");
-        w.Write("    public static ");
-        w.Write(projectedType);
-        w.Write("? ConvertToManaged(void* value)\n    {\n");
-        w.Write("        return (");
-        w.Write(projectedType);
-        w.Write("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n");
+        writer.Write("        return WindowsRuntimeInterfaceMarshaller<");
+        writer.Write(projectedType);
+        writer.Write(">.ConvertToUnmanaged(value, ");
+        writer.Write(defaultIfaceIid);
+        writer.Write(");\n    }\n\n");
+        writer.Write("    public static ");
+        writer.Write(projectedType);
+        writer.Write("? ConvertToManaged(void* value)\n    {\n");
+        writer.Write("        return (");
+        writer.Write(projectedType);
+        writer.Write("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n");
     }
 
     /// <summary>
@@ -634,7 +648,7 @@ internal static partial class CodeWriters
     /// set of attributes required for the type's category. Mirrors C++
     /// <c>write_authoring_metadata_type</c>.
     /// </summary>
-    private static void WriteAuthoringMetadataType(TypeWriter w, TypeDefinition type)
+    private static void WriteAuthoringMetadataType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
         string typeNs = type.Namespace?.Value ?? string.Empty;
@@ -646,62 +660,60 @@ internal static partial class CodeWriters
         // (i.e. enums, structs, interfaces).
         if (category != TypeCategory.Delegate && category != TypeCategory.Class)
         {
-            w.Write("[WindowsRuntimeReferenceType(typeof(");
-            w.Write(projectedType);
-            w.Write("?))]\n");
+            writer.Write("[WindowsRuntimeReferenceType(typeof(");
+            writer.Write(projectedType);
+            writer.Write("?))]\n");
         }
 
         // [ABI.<ns>.<name>ComWrappersMarshaller] for non-struct, non-class types
         // (delegates, enums, interfaces).
         if (category != TypeCategory.Struct && category != TypeCategory.Class)
         {
-            w.Write("[ABI.");
-            w.Write(typeNs);
-            w.Write(".");
-            w.Write(nameStripped);
-            w.Write("ComWrappersMarshaller]\n");
+            writer.Write("[ABI.");
+            writer.Write(typeNs);
+            writer.Write(".");
+            writer.Write(nameStripped);
+            writer.Write("ComWrappersMarshaller]\n");
         }
 
         // [WindowsRuntimeClassName("Windows.Foundation.IReference`1<<ns>.<name>>")] for non-class types.
         if (category != TypeCategory.Class)
         {
-            w.Write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<");
-            w.Write(fullName);
-            w.Write(">\")]\n");
+            writer.Write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<");
+            writer.Write(fullName);
+            writer.Write(">\")]\n");
         }
 
-        w.Write("[WindowsRuntimeMetadataTypeName(\"");
-        w.Write(fullName);
-        w.Write("\")]\n");
-        w.Write("[WindowsRuntimeMappedType(typeof(");
-        w.Write(projectedType);
-        w.Write("))]\n");
-        w.Write("file static class ");
-        w.Write(nameStripped);
-        w.Write(" {}\n");
+        writer.Write("[WindowsRuntimeMetadataTypeName(\"");
+        writer.Write(fullName);
+        writer.Write("\")]\n");
+        writer.Write("[WindowsRuntimeMappedType(typeof(");
+        writer.Write(projectedType);
+        writer.Write("))]\n");
+        writer.Write("file static class ");
+        writer.Write(nameStripped);
+        writer.Write(" {}\n");
     }
     public static void WriteAbiInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
         // Generic interfaces are handled by interopgen
         if (type.GenericParameters.Count > 0) { return; }
 
         // The C++ also emits write_static_abi_classes here - we emit a basic stub for now
-        WriteInterfaceMarshallerStub(w, type);
+        WriteInterfaceMarshallerStub(writer, context, type);
 
         // For internal projections, just the static ABI methods class is enough.
         if (TypeCategorization.IsProjectionInternal(type)) { return; }
 
-        WriteInterfaceVftbl(w, type);
-        WriteInterfaceImpl(w, type);
-        WriteInterfaceIdicImpl(w, type);
-        WriteInterfaceMarshaller(w, type);
+        WriteInterfaceVftbl(writer, context, type);
+        WriteInterfaceImpl(writer, context, type);
+        WriteInterfaceIdicImpl(writer, context, type);
+        WriteInterfaceMarshaller(writer, context, type);
     }
     public static bool EmitImplType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
-        if (w.Settings.Component) { return true; }
-        if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
+        if (context.Settings.Component) { return true; }
+        if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
         {
             // one interface impl on the exclusive_to class is marked [Overridable] and matches
             // this interface. Otherwise the Impl wouldn't be reachable as a CCW.
@@ -786,8 +798,7 @@ internal static partial class CodeWriters
     }
     public static void WriteAbiParameterTypesPointer(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig)
     {
-        TypeWriter w = new(writer, context);
-        WriteAbiParameterTypesPointer(w, sig, includeParamNames: false);
+        WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: false);
     }
 
     /// <summary>
@@ -796,13 +807,12 @@ internal static partial class CodeWriters
     /// </summary>
     public static void WriteAbiParameterTypesPointer(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, bool includeParamNames)
     {
-        TypeWriter w = new(writer, context);
         // void* thisPtr, then each param's ABI type, then return type pointer
-        w.Write("void*");
-        if (includeParamNames) { w.Write(" thisPtr"); }
+        writer.Write("void*");
+        if (includeParamNames) { writer.Write(" thisPtr"); }
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            w.Write(", ");
+            writer.Write(", ");
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
@@ -812,15 +822,15 @@ internal static partial class CodeWriters
                 // regardless of element type.
                 if (includeParamNames)
                 {
-                    w.Write("uint ");
-                    w.Write("__");
-                    w.Write(p.Parameter.Name ?? "param");
-                    w.Write("Size, void* ");
-                    IdentifierEscaping.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                    writer.Write("uint ");
+                    writer.Write("__");
+                    writer.Write(p.Parameter.Name ?? "param");
+                    writer.Write("Size, void* ");
+                    IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
                 }
                 else
                 {
-                    w.Write("uint, void*");
+                    writer.Write("uint, void*");
                 }
                 _ = sz;
             }
@@ -832,54 +842,54 @@ internal static partial class CodeWriters
                     bool isRefElemBr = brSz.BaseType.IsString() || IsRuntimeClassOrInterface(brSz.BaseType) || brSz.BaseType.IsObject() || brSz.BaseType.IsGenericInstance();
                     if (includeParamNames)
                     {
-                        w.Write("uint* __");
-                        w.Write(p.Parameter.Name ?? "param");
-                        w.Write("Size, ");
-                        if (isRefElemBr) { w.Write("void*** "); }
+                        writer.Write("uint* __");
+                        writer.Write(p.Parameter.Name ?? "param");
+                        writer.Write("Size, ");
+                        if (isRefElemBr) { writer.Write("void*** "); }
                         else
                         {
-                            WriteAbiType(w, TypeSemanticsFactory.Get(brSz.BaseType));
-                            w.Write("** ");
+                            WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
+                            writer.Write("** ");
                         }
-                        IdentifierEscaping.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                        IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
                     }
                     else
                     {
-                        w.Write("uint*, ");
-                        if (isRefElemBr) { w.Write("void***"); }
+                        writer.Write("uint*, ");
+                        if (isRefElemBr) { writer.Write("void***"); }
                         else
                         {
-                            WriteAbiType(w, TypeSemanticsFactory.Get(brSz.BaseType));
-                            w.Write("**");
+                            WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
+                            writer.Write("**");
                         }
                     }
                 }
                 else
                 {
-                    WriteAbiType(w, TypeSemanticsFactory.Get(br.BaseType));
-                    w.Write("*");
+                    WriteAbiType(writer, context, TypeSemanticsFactory.Get(br.BaseType));
+                    writer.Write("*");
                     if (includeParamNames)
                     {
-                        w.Write(" ");
-                        IdentifierEscaping.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                        writer.Write(" ");
+                        IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
                     }
                 }
             }
             else
             {
-                WriteAbiType(w, TypeSemanticsFactory.Get(p.Type));
-                if (cat is ParamCategory.Out or ParamCategory.Ref) { w.Write("*"); }
+                WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
+                if (cat is ParamCategory.Out or ParamCategory.Ref) { writer.Write("*"); }
                 if (includeParamNames)
                 {
-                    w.Write(" ");
-                    IdentifierEscaping.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                    writer.Write(" ");
+                    IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
                 }
             }
         }
         // Return parameter
         if (sig.ReturnType is not null)
         {
-            w.Write(", ");
+            writer.Write(", ");
             string retName = GetReturnParamName(sig);
             string retSizeName = GetReturnSizeParamName(sig);
             // Special handling for SzArray return types: WinRT projects them as a (uint*, T**) pair.
@@ -887,25 +897,25 @@ internal static partial class CodeWriters
             {
                 if (includeParamNames)
                 {
-                    w.Write("uint* ");
-                    w.Write(retSizeName);
-                    w.Write(", ");
-                    WriteAbiType(w, TypeSemanticsFactory.Get(retSz.BaseType));
-                    w.Write("** ");
-                    w.Write(retName);
+                    writer.Write("uint* ");
+                    writer.Write(retSizeName);
+                    writer.Write(", ");
+                    WriteAbiType(writer, context, TypeSemanticsFactory.Get(retSz.BaseType));
+                    writer.Write("** ");
+                    writer.Write(retName);
                 }
                 else
                 {
-                    w.Write("uint*, ");
-                    WriteAbiType(w, TypeSemanticsFactory.Get(retSz.BaseType));
-                    w.Write("**");
+                    writer.Write("uint*, ");
+                    WriteAbiType(writer, context, TypeSemanticsFactory.Get(retSz.BaseType));
+                    writer.Write("**");
                 }
             }
             else
             {
-                WriteAbiType(w, TypeSemanticsFactory.Get(sig.ReturnType));
-                w.Write("*");
-                if (includeParamNames) { w.Write(' '); w.Write(retName); }
+                WriteAbiType(writer, context, TypeSemanticsFactory.Get(sig.ReturnType));
+                writer.Write("*");
+                if (includeParamNames) { writer.Write(" "); writer.Write(retName); }
             }
         }
     }
@@ -937,73 +947,71 @@ internal static partial class CodeWriters
     }
     public static void WriteInterfaceVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
-        if (!EmitImplType(w, type)) { return; }
+        if (!EmitImplType(writer, context, type)) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        w.Write("\n[StructLayout(LayoutKind.Sequential)]\n");
-        w.Write("internal unsafe struct ");
-        w.Write(nameStripped);
-        w.Write("Vftbl\n{\n");
-        w.Write("public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;\n");
-        w.Write("public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;\n");
-        w.Write("public delegate* unmanaged[MemberFunction]<void*, uint> Release;\n");
-        w.Write("public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;\n");
-        w.Write("public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;\n");
-        w.Write("public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;\n");
+        writer.Write("\n[StructLayout(LayoutKind.Sequential)]\n");
+        writer.Write("internal unsafe struct ");
+        writer.Write(nameStripped);
+        writer.Write("Vftbl\n{\n");
+        writer.Write("public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;\n");
+        writer.Write("public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;\n");
+        writer.Write("public delegate* unmanaged[MemberFunction]<void*, uint> Release;\n");
+        writer.Write("public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;\n");
+        writer.Write("public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;\n");
+        writer.Write("public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;\n");
 
         foreach (MethodDefinition method in type.Methods)
         {
             string vm = GetVMethodName(type, method);
             MethodSig sig = new(method);
-            w.Write("public delegate* unmanaged[MemberFunction]<");
-            WriteAbiParameterTypesPointer(w, sig);
-            w.Write(", int> ");
-            w.Write(vm);
-            w.Write(";\n");
+            writer.Write("public delegate* unmanaged[MemberFunction]<");
+            WriteAbiParameterTypesPointer(writer, context, sig);
+            writer.Write(", int> ");
+            writer.Write(vm);
+            writer.Write(";\n");
         }
-        w.Write("}\n");
+        writer.Write("}\n");
     }
 
     /// <summary>Mirrors C++ <c>write_interface_impl</c> (simplified).</summary>
     public static void WriteInterfaceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
-        if (!EmitImplType(w, type)) { return; }
+        if (!EmitImplType(writer, context, type)) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        w.Write("\npublic static unsafe class ");
-        w.Write(nameStripped);
-        w.Write("Impl\n{\n");
-        w.Write("[FixedAddressValueType]\n");
-        w.Write("private static readonly ");
-        w.Write(nameStripped);
-        w.Write("Vftbl Vftbl;\n\n");
+        writer.Write("\npublic static unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("Impl\n{\n");
+        writer.Write("[FixedAddressValueType]\n");
+        writer.Write("private static readonly ");
+        writer.Write(nameStripped);
+        writer.Write("Vftbl Vftbl;\n\n");
 
-        w.Write("static ");
-        w.Write(nameStripped);
-        w.Write("Impl()\n{\n");
-        w.Write("    *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;\n");
+        writer.Write("static ");
+        writer.Write(nameStripped);
+        writer.Write("Impl()\n{\n");
+        writer.Write("    *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;\n");
         foreach (MethodDefinition method in type.Methods)
         {
             string vm = GetVMethodName(type, method);
-            w.Write("    Vftbl.");
-            w.Write(vm);
-            w.Write(" = &Do_Abi_");
-            w.Write(vm);
-            w.Write(";\n");
+            writer.Write("    Vftbl.");
+            writer.Write(vm);
+            writer.Write(" = &Do_Abi_");
+            writer.Write(vm);
+            writer.Write(";\n");
         }
-        w.Write("}\n\n");
+        writer.Write("}\n\n");
 
-        w.Write("public static ref readonly Guid IID\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => ref ");
-        WriteIidGuidReference(w, type);
-        w.Write(";\n}\n\n");
+        writer.Write("public static ref readonly Guid IID\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => ref ");
+        WriteIidGuidReference(writer, context, type);
+        writer.Write(";\n}\n\n");
 
-        w.Write("public static nint Vtable\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => (nint)Unsafe.AsPointer(in Vftbl);\n}\n\n");
+        writer.Write("public static nint Vtable\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => (nint)Unsafe.AsPointer(in Vftbl);\n}\n\n");
 
         // Do_Abi_* implementations: emit real bodies for simple primitive cases,
         // throw null! for everything else (deferred — needs full per-parameter marshalling).
@@ -1018,7 +1026,7 @@ internal static partial class CodeWriters
         // class. For those, the dispatch target must be 'global::ABI.Impl.<NS>.<InterfaceName>'.
         TypeDefinition? exclusiveToOwner = null;
         bool exclusiveIsFactoryOrStatic = false;
-        if (w.Settings.Component)
+        if (context.Settings.Component)
         {
             MetadataCache? cache = GetMetadataCache();
             if (cache is not null)
@@ -1059,7 +1067,11 @@ internal static partial class CodeWriters
         }
         else
         {
-            ifaceFullName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
+            {
+                IndentedTextWriter __scratchIfaceFullName = new();
+                        WriteTypedefName(__scratchIfaceFullName, context, type, TypedefNameType.Projected, true);
+                        ifaceFullName = __scratchIfaceFullName.ToString();
+            }
             if (!ifaceFullName.StartsWith("global::", System.StringComparison.Ordinal)) { ifaceFullName = "global::" + ifaceFullName; }
         }
 
@@ -1090,30 +1102,30 @@ internal static partial class CodeWriters
             // before the Do_Abi method (mirrors C++ ordering).
             if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt) && evt.AddMethod == method)
             {
-                EmitEventTableField(w, evt, ifaceFullName);
+                EmitEventTableField(writer, context, evt, ifaceFullName);
             }
 
-            w.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
-            w.Write("private static unsafe int Do_Abi_");
-            w.Write(vm);
-            w.Write("(");
-            WriteAbiParameterTypesPointer(w, sig, includeParamNames: true);
-            w.Write(")");
+            writer.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
+            writer.Write("private static unsafe int Do_Abi_");
+            writer.Write(vm);
+            writer.Write("(");
+            WriteAbiParameterTypesPointer(writer, context, sig, includeParamNames: true);
+            writer.Write(")");
 
             if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt2))
             {
                 if (evt2.AddMethod == method)
                 {
-                    EmitDoAbiAddEvent(w, evt2, sig, ifaceFullName);
+                    EmitDoAbiAddEvent(writer, context, evt2, sig, ifaceFullName);
                 }
                 else
                 {
-                    EmitDoAbiRemoveEvent(w, evt2, sig, ifaceFullName);
+                    EmitDoAbiRemoveEvent(writer, context, evt2, sig, ifaceFullName);
                 }
             }
             else
             {
-                EmitDoAbiBodyIfSimple(w, sig, ifaceFullName, mname);
+                EmitDoAbiBodyIfSimple(writer, context, sig, ifaceFullName, mname);
             }
         }
 
@@ -1138,7 +1150,7 @@ internal static partial class CodeWriters
             if (evt.AddMethod is MethodDefinition a) { EmitOneDoAbi(a); }
             if (evt.RemoveMethod is MethodDefinition r) { EmitOneDoAbi(r); }
         }
-        w.Write("}\n");
+        writer.Write("}\n");
     }
 
     /// <summary>Build a method-to-event map for add/remove accessors of a type.</summary>
@@ -1161,37 +1173,39 @@ internal static partial class CodeWriters
     /// the caller in EmitDoAbiBodyIfSimple) — for instance events on authored classes this is
     /// the runtime class type, NOT the ABI.Impl interface.
     /// </summary>
-    private static void EmitEventTableField(TypeWriter w, EventDefinition evt, string ifaceFullName)
+    private static void EmitEventTableField(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
-        string evtType = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteEventType(w, evt)));
+        IndentedTextWriter __scratchEvtType = new();
+        WriteEventType(__scratchEvtType, context, evt);
+        string evtType = __scratchEvtType.ToString();
 
-        w.Write("\nprivate static ConditionalWeakTable<");
-        w.Write(ifaceFullName);
-        w.Write(", EventRegistrationTokenTable<");
-        w.Write(evtType);
-        w.Write(">> _");
-        w.Write(evName);
-        w.Write("\n{\n");
-        w.Write("    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
-        w.Write("    get\n    {\n");
-        w.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
-        w.Write("        static ConditionalWeakTable<");
-        w.Write(ifaceFullName);
-        w.Write(", EventRegistrationTokenTable<");
-        w.Write(evtType);
-        w.Write(">> MakeTable()\n        {\n");
-        w.Write("            _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);\n\n");
-        w.Write("            return global::System.Threading.Volatile.Read(in field);\n");
-        w.Write("        }\n\n");
-        w.Write("        return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n    }\n}\n");
+        writer.Write("\nprivate static ConditionalWeakTable<");
+        writer.Write(ifaceFullName);
+        writer.Write(", EventRegistrationTokenTable<");
+        writer.Write(evtType);
+        writer.Write(">> _");
+        writer.Write(evName);
+        writer.Write("\n{\n");
+        writer.Write("    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
+        writer.Write("    get\n    {\n");
+        writer.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
+        writer.Write("        static ConditionalWeakTable<");
+        writer.Write(ifaceFullName);
+        writer.Write(", EventRegistrationTokenTable<");
+        writer.Write(evtType);
+        writer.Write(">> MakeTable()\n        {\n");
+        writer.Write("            _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);\n\n");
+        writer.Write("            return global::System.Threading.Volatile.Read(in field);\n");
+        writer.Write("        }\n\n");
+        writer.Write("        return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n    }\n}\n");
     }
 
     /// <summary>
     /// Emits the body of the <c>Do_Abi_add_&lt;EventName&gt;_N</c> method. Mirrors the corresponding
     /// branch in C++ <c>write_event_abi_invoke</c>.
     /// </summary>
-    private static void EmitDoAbiAddEvent(TypeWriter w, EventDefinition evt, MethodSig sig, string ifaceFullName)
+    private static void EmitDoAbiAddEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, MethodSig sig, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
         // Handler is the (last) input parameter of the add method. The emitted parameter name in the
@@ -1205,78 +1219,80 @@ internal static partial class CodeWriters
         AsmResolver.DotNet.Signatures.TypeSignature evtTypeSig = evt.EventType!.ToTypeSignature(false);
         bool isGeneric = evtTypeSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
 
-        w.Write("\n{\n");
-        w.Write("    *");
-        w.Write(cookieName);
-        w.Write(" = default;\n");
-        w.Write("    try\n    {\n");
-        w.Write("        var __this = ComInterfaceDispatch.GetInstance<");
-        w.Write(ifaceFullName);
-        w.Write(">((ComInterfaceDispatch*)thisPtr);\n");
+        writer.Write("\n{\n");
+        writer.Write("    *");
+        writer.Write(cookieName);
+        writer.Write(" = default;\n");
+        writer.Write("    try\n    {\n");
+        writer.Write("        var __this = ComInterfaceDispatch.GetInstance<");
+        writer.Write(ifaceFullName);
+        writer.Write(">((ComInterfaceDispatch*)thisPtr);\n");
 
         if (isGeneric)
         {
             string interopTypeName = EncodeInteropTypeName(evtTypeSig, TypedefNameType.ABI) + ", WinRT.Interop";
-            string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, evtTypeSig, false)));
-            w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
-            w.Write("        static extern ");
-            w.Write(projectedTypeName);
-            w.Write(" ConvertToManaged([UnsafeAccessorType(\"");
-            w.Write(interopTypeName);
-            w.Write("\")] object _, void* value);\n");
-            w.Write("        var __handler = ConvertToManaged(null, ");
-            w.Write(handlerRef);
-            w.Write(");\n");
+            IndentedTextWriter __scratchProjectedTypeName = new();
+            WriteProjectedSignature(__scratchProjectedTypeName, context, evtTypeSig, false);
+            string projectedTypeName = __scratchProjectedTypeName.ToString();
+            writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+            writer.Write("        static extern ");
+            writer.Write(projectedTypeName);
+            writer.Write(" ConvertToManaged([UnsafeAccessorType(\"");
+            writer.Write(interopTypeName);
+            writer.Write("\")] object _, void* value);\n");
+            writer.Write("        var __handler = ConvertToManaged(null, ");
+            writer.Write(handlerRef);
+            writer.Write(");\n");
         }
         else
         {
-            w.Write("        var __handler = ");
-            WriteTypeName(w, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
-            w.Write("Marshaller.ConvertToManaged(");
-            w.Write(handlerRef);
-            w.Write(");\n");
+            writer.Write("        var __handler = ");
+            WriteTypeName(writer, context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
+            writer.Write("Marshaller.ConvertToManaged(");
+            writer.Write(handlerRef);
+            writer.Write(");\n");
         }
 
-        w.Write("        *");
-        w.Write(cookieName);
-        w.Write(" = _");
-        w.Write(evName);
-        w.Write(".GetOrCreateValue(__this).AddEventHandler(__handler);\n");
-        w.Write("        __this.");
-        w.Write(evName);
-        w.Write(" += __handler;\n");
-        w.Write("        return 0;\n    }\n");
-        w.Write("    catch (Exception __exception__)\n    {\n");
-        w.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");
+        writer.Write("        *");
+        writer.Write(cookieName);
+        writer.Write(" = _");
+        writer.Write(evName);
+        writer.Write(".GetOrCreateValue(__this).AddEventHandler(__handler);\n");
+        writer.Write("        __this.");
+        writer.Write(evName);
+        writer.Write(" += __handler;\n");
+        writer.Write("        return 0;\n    }\n");
+        writer.Write("    catch (Exception __exception__)\n    {\n");
+        writer.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");
     }
 
     /// <summary>
     /// Emits the body of the <c>Do_Abi_remove_&lt;EventName&gt;_N</c> method. Mirrors the corresponding
     /// branch in C++ <c>write_event_abi_invoke</c>.
     /// </summary>
-    private static void EmitDoAbiRemoveEvent(TypeWriter w, EventDefinition evt, MethodSig sig, string ifaceFullName)
+    private static void EmitDoAbiRemoveEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, MethodSig sig, string ifaceFullName)
     {
         string evName = evt.Name?.Value ?? "Event";
         string tokenRawName = sig.Params.Count > 0 ? (sig.Params[^1].Parameter.Name ?? "token") : "token";
         string tokenRef = CSharpKeywords.IsKeyword(tokenRawName) ? "@" + tokenRawName : tokenRawName;
 
-        w.Write("\n{\n");
-        w.Write("    try\n    {\n");
-        w.Write("        var __this = ComInterfaceDispatch.GetInstance<");
-        w.Write(ifaceFullName);
-        w.Write(">((ComInterfaceDispatch*)thisPtr);\n");
-        w.Write("        if(__this is not null && _");
-        w.Write(evName);
-        w.Write(".TryGetValue(__this, out var __table) && __table.RemoveEventHandler(");
-        w.Write(tokenRef);
-        w.Write(", out var __handler))\n        {\n");
-        w.Write("            __this.");
-        w.Write(evName);
-        w.Write(" -= __handler;\n");
-        w.Write("        }\n");
-        w.Write("        return 0;\n    }\n");
-        w.Write("    catch (Exception __exception__)\n    {\n");
-        w.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");
+        writer.Write("\n{\n");
+        writer.Write("    try\n    {\n");
+        writer.Write("        var __this = ComInterfaceDispatch.GetInstance<");
+        writer.Write(ifaceFullName);
+        writer.Write(">((ComInterfaceDispatch*)thisPtr);\n");
+        writer.Write("        if(__this is not null && _");
+        writer.Write(evName);
+        writer.Write(".TryGetValue(__this, out var __table) && __table.RemoveEventHandler(");
+        writer.Write(tokenRef);
+        writer.Write(", out var __handler))\n        {\n");
+        writer.Write("            __this.");
+        writer.Write(evName);
+        writer.Write(" -= __handler;\n");
+        writer.Write("        }\n");
+        writer.Write("        return 0;\n    }\n");
+        writer.Write("    catch (Exception __exception__)\n    {\n");
+        writer.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");
     }
 
     /// <summary>
@@ -1285,7 +1301,7 @@ internal static partial class CodeWriters
     /// unconditionally emits a real body via the <c>abi_marshaler</c> abstraction
     /// for every WinRT-valid signature.
     /// </summary>
-    private static void EmitDoAbiBodyIfSimple(TypeWriter w, MethodSig sig, string ifaceFullName, string methodName)
+    private static void EmitDoAbiBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, string ifaceFullName, string methodName)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
@@ -1320,7 +1336,7 @@ internal static partial class CodeWriters
                 $"on '{ifaceFullName}'. Events should dispatch through EmitDoAbiAddEvent / EmitDoAbiRemoveEvent.");
         }
 
-        w.Write("\n{\n");
+        writer.Write("\n{\n");
         string retParamName = GetReturnParamName(sig);
         string retSizeParamName = GetReturnSizeParamName(sig);
         // The local name for the unmarshalled return value mirrors C++
@@ -1335,15 +1351,17 @@ internal static partial class CodeWriters
         if (returnIsGenericInstance && !(rt is not null && rt.IsNullableT()))
         {
             string interopTypeName = EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
-            string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
-            w.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
-            w.Write("    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
-            w.Write(retParamName);
-            w.Write("([UnsafeAccessorType(\"");
-            w.Write(interopTypeName);
-            w.Write("\")] object _, ");
-            w.Write(projectedTypeName);
-            w.Write(" value);\n\n");
+            IndentedTextWriter __scratchProjectedTypeName = new();
+            WriteProjectedSignature(__scratchProjectedTypeName, context, rt!, false);
+            string projectedTypeName = __scratchProjectedTypeName.ToString();
+            writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            writer.Write("    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
+            writer.Write(retParamName);
+            writer.Write("([UnsafeAccessorType(\"");
+            writer.Write(interopTypeName);
+            writer.Write("\")] object _, ");
+            writer.Write(projectedTypeName);
+            writer.Write(" value);\n\n");
         }
 
         // Hoist [UnsafeAccessor] declarations for Out generic-instance params:
@@ -1358,15 +1376,17 @@ internal static partial class CodeWriters
             if (!uOut.IsGenericInstance()) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string interopTypeName = EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
-            string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, uOut, false)));
-            w.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
-            w.Write("    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
-            w.Write(raw);
-            w.Write("([UnsafeAccessorType(\"");
-            w.Write(interopTypeName);
-            w.Write("\")] object _, ");
-            w.Write(projectedTypeName);
-            w.Write(" value);\n\n");
+            IndentedTextWriter __scratchProjectedTypeName = new();
+            WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
+            string projectedTypeName = __scratchProjectedTypeName.ToString();
+            writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            writer.Write("    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
+            writer.Write(raw);
+            writer.Write("([UnsafeAccessorType(\"");
+            writer.Write(interopTypeName);
+            writer.Write("\")] object _, ");
+            writer.Write(projectedTypeName);
+            writer.Write(" value);\n\n");
         }
         // ConvertToUnmanaged_<param> and the return-array ConvertToUnmanaged_<retParam> to the
         // top of the method body, before locals and the try block. The actual call sites later
@@ -1378,85 +1398,99 @@ internal static partial class CodeWriters
             if (cat != ParamCategory.ReceiveArray) { continue; }
             string raw = p.Parameter.Name ?? "param";
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
-            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sza.BaseType))));
+            IndentedTextWriter __scratchElementProjected = new();
+            WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
+            string elementProjected = __scratchElementProjected.ToString();
             string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+
+            _ = elementInteropArg;
             string marshallerPath = GetArrayMarshallerInteropPath(sza.BaseType);
             string elementAbi = sza.BaseType.IsString() || IsRuntimeClassOrInterface(sza.BaseType) || sza.BaseType.IsObject()
                 ? "void*"
                 : IsComplexStruct(sza.BaseType)
-                    ? GetAbiStructTypeName(w, sza.BaseType)
+                    ? GetAbiStructTypeName(writer, context, sza.BaseType)
                     : IsAnyStruct(sza.BaseType)
-                        ? GetBlittableStructAbiType(w, sza.BaseType)
+                        ? GetBlittableStructAbiType(writer, context, sza.BaseType)
                         : GetAbiPrimitiveType(sza.BaseType);
-            w.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
-            w.Write("    static extern void ConvertToUnmanaged_");
-            w.Write(raw);
-            w.Write("([UnsafeAccessorType(\"");
-            w.Write(marshallerPath);
-            w.Write("\")] object _, ReadOnlySpan<");
-            w.Write(elementProjected);
-            w.Write("> span, out uint length, out ");
-            w.Write(elementAbi);
-            w.Write("* data);\n\n");
+            writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            writer.Write("    static extern void ConvertToUnmanaged_");
+            writer.Write(raw);
+            writer.Write("([UnsafeAccessorType(\"");
+            writer.Write(marshallerPath);
+            writer.Write("\")] object _, ReadOnlySpan<");
+            writer.Write(elementProjected);
+            writer.Write("> span, out uint length, out ");
+            writer.Write(elementAbi);
+            writer.Write("* data);\n\n");
         }
         if (returnIsReceiveArrayDoAbi && rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzHoist)
         {
-            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSzHoist.BaseType))));
+            IndentedTextWriter __scratchElementProjected = new();
+            WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
+            string elementProjected = __scratchElementProjected.ToString();
             string elementAbi = retSzHoist.BaseType.IsString() || IsRuntimeClassOrInterface(retSzHoist.BaseType) || retSzHoist.BaseType.IsObject()
                 ? "void*"
                 : IsComplexStruct(retSzHoist.BaseType)
-                    ? GetAbiStructTypeName(w, retSzHoist.BaseType)
+                    ? GetAbiStructTypeName(writer, context, retSzHoist.BaseType)
                     : IsAnyStruct(retSzHoist.BaseType)
-                        ? GetBlittableStructAbiType(w, retSzHoist.BaseType)
+                        ? GetBlittableStructAbiType(writer, context, retSzHoist.BaseType)
                         : GetAbiPrimitiveType(retSzHoist.BaseType);
             string elementInteropArg = EncodeInteropTypeName(retSzHoist.BaseType, TypedefNameType.Projected);
+
+            _ = elementInteropArg;
             string marshallerPath = GetArrayMarshallerInteropPath(retSzHoist.BaseType);
-            w.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
-            w.Write("    static extern void ConvertToUnmanaged_");
-            w.Write(retParamName);
-            w.Write("([UnsafeAccessorType(\"");
-            w.Write(marshallerPath);
-            w.Write("\")] object _, ReadOnlySpan<");
-            w.Write(elementProjected);
-            w.Write("> span, out uint length, out ");
-            w.Write(elementAbi);
-            w.Write("* data);\n\n");
+            writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            writer.Write("    static extern void ConvertToUnmanaged_");
+            writer.Write(retParamName);
+            writer.Write("([UnsafeAccessorType(\"");
+            writer.Write(marshallerPath);
+            writer.Write("\")] object _, ReadOnlySpan<");
+            writer.Write(elementProjected);
+            writer.Write("> span, out uint length, out ");
+            writer.Write(elementAbi);
+            writer.Write("* data);\n\n");
         }
         // the OUT pointer(s). The actual assignment happens inside the try block.
         if (rt is not null)
         {
             if (returnIsString)
             {
-                w.Write("    string ");
-                w.Write(retLocalName);
-                w.Write(" = default;\n");
+                writer.Write("    string ");
+                writer.Write(retLocalName);
+                writer.Write(" = default;\n");
             }
             else if (returnIsRefType)
             {
-                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
-                w.Write("    ");
-                w.Write(projected);
-                w.Write(" ");
-                w.Write(retLocalName);
-                w.Write(" = default;\n");
+                IndentedTextWriter __scratchProjected = new();
+                WriteProjectedSignature(__scratchProjected, context, rt, false);
+                string projected = __scratchProjected.ToString();
+                writer.Write("    ");
+                writer.Write(projected);
+                writer.Write(" ");
+                writer.Write(retLocalName);
+                writer.Write(" = default;\n");
             }
             else if (returnIsReceiveArrayDoAbi)
             {
-                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
-                w.Write("    ");
-                w.Write(projected);
-                w.Write(" ");
-                w.Write(retLocalName);
-                w.Write(" = default;\n");
+                IndentedTextWriter __scratchProjected = new();
+                WriteProjectedSignature(__scratchProjected, context, rt, false);
+                string projected = __scratchProjected.ToString();
+                writer.Write("    ");
+                writer.Write(projected);
+                writer.Write(" ");
+                writer.Write(retLocalName);
+                writer.Write(" = default;\n");
             }
             else
             {
-                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
-                w.Write("    ");
-                w.Write(projected);
-                w.Write(" ");
-                w.Write(retLocalName);
-                w.Write(" = default;\n");
+                IndentedTextWriter __scratchProjected = new();
+                WriteProjectedSignature(__scratchProjected, context, rt, false);
+                string projected = __scratchProjected.ToString();
+                writer.Write("    ");
+                writer.Write(projected);
+                writer.Write(" ");
+                writer.Write(retLocalName);
+                writer.Write(" = default;\n");
             }
         }
 
@@ -1464,18 +1498,18 @@ internal static partial class CodeWriters
         {
             if (returnIsReceiveArrayDoAbi)
             {
-                w.Write("    *");
-                w.Write(retParamName);
-                w.Write(" = default;\n");
-                w.Write("    *");
-                w.Write(retSizeParamName);
-                w.Write(" = default;\n");
+                writer.Write("    *");
+                writer.Write(retParamName);
+                writer.Write(" = default;\n");
+                writer.Write("    *");
+                writer.Write(retSizeParamName);
+                writer.Write(" = default;\n");
             }
             else
             {
-                w.Write("    *");
-                w.Write(retParamName);
-                w.Write(" = default;\n");
+                writer.Write("    *");
+                writer.Write(retParamName);
+                writer.Write(" = default;\n");
             }
         }
         // For each out parameter, clear the destination and declare a local.
@@ -1489,9 +1523,9 @@ internal static partial class CodeWriters
             if (cat != ParamCategory.Out) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            w.Write("    *");
-            w.Write(ptr);
-            w.Write(" = default;\n");
+            writer.Write("    *");
+            writer.Write(ptr);
+            writer.Write(" = default;\n");
         }
         for (int i = 0; i < sig.Params.Count; i++)
         {
@@ -1502,12 +1536,14 @@ internal static partial class CodeWriters
             // Use the projected (non-ABI) type for the local variable.
             // Strip ByRef and CustomModifier wrappers to get the underlying base type.
             AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
-            string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, underlying, false)));
-            w.Write("    ");
-            w.Write(projected);
-            w.Write(" __");
-            w.Write(raw);
-            w.Write(" = default;\n");
+            IndentedTextWriter __scratchProjected = new();
+            WriteProjectedSignature(__scratchProjected, context, underlying, false);
+            string projected = __scratchProjected.ToString();
+            writer.Write("    ");
+            writer.Write(projected);
+            writer.Write(" __");
+            writer.Write(raw);
+            writer.Write(" = default;\n");
         }
         // For each ReceiveArray parameter (out T[]), zero the destination + size out pointers
         // and declare a managed array local. The managed call passes 'out __<name>' and after
@@ -1520,18 +1556,20 @@ internal static partial class CodeWriters
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
-            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sza.BaseType))));
-            w.Write("    *");
-            w.Write(ptr);
-            w.Write(" = default;\n");
-            w.Write("    *__");
-            w.Write(raw);
-            w.Write("Size = default;\n");
-            w.Write("    ");
-            w.Write(elementProjected);
-            w.Write("[] __");
-            w.Write(raw);
-            w.Write(" = default;\n");
+            IndentedTextWriter __scratchElementProjected = new();
+            WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
+            string elementProjected = __scratchElementProjected.ToString();
+            writer.Write("    *");
+            writer.Write(ptr);
+            writer.Write(" = default;\n");
+            writer.Write("    *__");
+            writer.Write(raw);
+            writer.Write("Size = default;\n");
+            writer.Write("    ");
+            writer.Write(elementProjected);
+            writer.Write("[] __");
+            writer.Write(raw);
+            writer.Write(" = default;\n");
         }
         // For each blittable array (PassArray / FillArray) parameter, declare a Span<T> local that
         // wraps the (length, pointer) pair from the ABI signature.
@@ -1545,54 +1583,56 @@ internal static partial class CodeWriters
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sz.BaseType))));
+            IndentedTextWriter __scratchElementProjected = new();
+            WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sz.BaseType));
+            string elementProjected = __scratchElementProjected.ToString();
             bool isBlittableElem = IsBlittablePrimitive(sz.BaseType) || IsAnyStruct(sz.BaseType);
             if (isBlittableElem)
             {
-                w.Write("    ");
-                w.Write(cat == ParamCategory.PassArray ? "ReadOnlySpan<" : "Span<");
-                w.Write(elementProjected);
-                w.Write("> __");
-                w.Write(raw);
-                w.Write(" = new(");
-                w.Write(ptr);
-                w.Write(", (int)__");
-                w.Write(raw);
-                w.Write("Size);\n");
+                writer.Write("    ");
+                writer.Write(cat == ParamCategory.PassArray ? "ReadOnlySpan<" : "Span<");
+                writer.Write(elementProjected);
+                writer.Write("> __");
+                writer.Write(raw);
+                writer.Write(" = new(");
+                writer.Write(ptr);
+                writer.Write(", (int)__");
+                writer.Write(raw);
+                writer.Write("Size);\n");
             }
             else
             {
                 // Non-blittable element: InlineArray16<T> + ArrayPool<T> with size from ABI.
-                w.Write("\n    Unsafe.SkipInit(out InlineArray16<");
-                w.Write(elementProjected);
-                w.Write("> __");
-                w.Write(raw);
-                w.Write("_inlineArray);\n");
-                w.Write("    ");
-                w.Write(elementProjected);
-                w.Write("[] __");
-                w.Write(raw);
-                w.Write("_arrayFromPool = null;\n");
-                w.Write("    Span<");
-                w.Write(elementProjected);
-                w.Write("> __");
-                w.Write(raw);
-                w.Write(" = __");
-                w.Write(raw);
-                w.Write("Size <= 16\n        ? __");
-                w.Write(raw);
-                w.Write("_inlineArray[..(int)__");
-                w.Write(raw);
-                w.Write("Size]\n        : (__");
-                w.Write(raw);
-                w.Write("_arrayFromPool = global::System.Buffers.ArrayPool<");
-                w.Write(elementProjected);
-                w.Write(">.Shared.Rent((int)__");
-                w.Write(raw);
-                w.Write("Size));\n");
+                writer.Write("\n    Unsafe.SkipInit(out InlineArray16<");
+                writer.Write(elementProjected);
+                writer.Write("> __");
+                writer.Write(raw);
+                writer.Write("_inlineArray);\n");
+                writer.Write("    ");
+                writer.Write(elementProjected);
+                writer.Write("[] __");
+                writer.Write(raw);
+                writer.Write("_arrayFromPool = null;\n");
+                writer.Write("    Span<");
+                writer.Write(elementProjected);
+                writer.Write("> __");
+                writer.Write(raw);
+                writer.Write(" = __");
+                writer.Write(raw);
+                writer.Write("Size <= 16\n        ? __");
+                writer.Write(raw);
+                writer.Write("_inlineArray[..(int)__");
+                writer.Write(raw);
+                writer.Write("Size]\n        : (__");
+                writer.Write(raw);
+                writer.Write("_arrayFromPool = global::System.Buffers.ArrayPool<");
+                writer.Write(elementProjected);
+                writer.Write(">.Shared.Rent((int)__");
+                writer.Write(raw);
+                writer.Write("Size));\n");
             }
         }
-        w.Write("    try\n    {\n");
+        writer.Write("    try\n    {\n");
 
         // For non-blittable PassArray params (read-only input arrays), emit CopyToManaged_<name>
         // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
@@ -1608,8 +1648,12 @@ internal static partial class CodeWriters
             if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
+            IndentedTextWriter __scratchElementProjected = new();
+            WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
+            string elementProjected = __scratchElementProjected.ToString();
             string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+
+            _ = elementInteropArg;
             // For complex structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
             // The Do_Abi parameter we receive is void* (per V3R3-M8), so the call-site needs an
             // explicit (T*) cast to bridge the type. For ref-types (string/runtime-class/object),
@@ -1618,7 +1662,7 @@ internal static partial class CodeWriters
             string dataCastExpr;
             if (IsComplexStruct(szArr.BaseType))
             {
-                string abiStructName = GetAbiStructTypeName(w, szArr.BaseType);
+                string abiStructName = GetAbiStructTypeName(writer, context, szArr.BaseType);
                 dataParamType = abiStructName + "* data";
                 dataCastExpr = "(" + abiStructName + "*)" + ptr;
             }
@@ -1627,25 +1671,25 @@ internal static partial class CodeWriters
                 dataParamType = "void** data";
                 dataCastExpr = "(void**)" + ptr;
             }
-            w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]\n");
-            w.Write("        static extern void CopyToManaged_");
-            w.Write(raw);
-            w.Write("([UnsafeAccessorType(\"");
-            w.Write(GetArrayMarshallerInteropPath(szArr.BaseType));
-            w.Write("\")] object _, uint length, ");
-            w.Write(dataParamType);
-            w.Write(", Span<");
-            w.Write(elementProjected);
-            w.Write("> span);\n");
-            w.Write("        CopyToManaged_");
-            w.Write(raw);
-            w.Write("(null, __");
-            w.Write(raw);
-            w.Write("Size, ");
-            w.Write(dataCastExpr);
-            w.Write(", __");
-            w.Write(raw);
-            w.Write(");\n");
+            writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]\n");
+            writer.Write("        static extern void CopyToManaged_");
+            writer.Write(raw);
+            writer.Write("([UnsafeAccessorType(\"");
+            writer.Write(GetArrayMarshallerInteropPath(szArr.BaseType));
+            writer.Write("\")] object _, uint length, ");
+            writer.Write(dataParamType);
+            writer.Write(", Span<");
+            writer.Write(elementProjected);
+            writer.Write("> span);\n");
+            writer.Write("        CopyToManaged_");
+            writer.Write(raw);
+            writer.Write("(null, __");
+            writer.Write(raw);
+            writer.Write("Size, ");
+            writer.Write(dataCastExpr);
+            writer.Write(", __");
+            writer.Write(raw);
+            writer.Write(");\n");
         }
 
         // For generic instance ABI input parameters, emit local UnsafeAccessor delegates and locals
@@ -1659,106 +1703,108 @@ internal static partial class CodeWriters
                 string rawName = p.Parameter.Name ?? "param";
                 string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
                 AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
-                string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
-                w.Write("        var __arg_");
-                w.Write(rawName);
-                w.Write(" = ");
-                w.Write(innerMarshaller);
-                w.Write(".UnboxToManaged(");
-                w.Write(callName);
-                w.Write(");\n");
+                string innerMarshaller = GetNullableInnerMarshallerName(writer, context, inner);
+                writer.Write("        var __arg_");
+                writer.Write(rawName);
+                writer.Write(" = ");
+                writer.Write(innerMarshaller);
+                writer.Write(".UnboxToManaged(");
+                writer.Write(callName);
+                writer.Write(");\n");
             }
             else if (p.Type.IsGenericInstance())
             {
                 string rawName = p.Parameter.Name ?? "param";
                 string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
                 string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-                string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
-                w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
-                w.Write("        static extern ");
-                w.Write(projectedTypeName);
-                w.Write(" ConvertToManaged_arg_");
-                w.Write(rawName);
-                w.Write("([UnsafeAccessorType(\"");
-                w.Write(interopTypeName);
-                w.Write("\")] object _, void* value);\n");
-                w.Write("        var __arg_");
-                w.Write(rawName);
-                w.Write(" = ConvertToManaged_arg_");
-                w.Write(rawName);
-                w.Write("(null, ");
-                w.Write(callName);
-                w.Write(");\n");
+                IndentedTextWriter __scratchProjectedTypeName = new();
+                WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
+                string projectedTypeName = __scratchProjectedTypeName.ToString();
+                writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                writer.Write("        static extern ");
+                writer.Write(projectedTypeName);
+                writer.Write(" ConvertToManaged_arg_");
+                writer.Write(rawName);
+                writer.Write("([UnsafeAccessorType(\"");
+                writer.Write(interopTypeName);
+                writer.Write("\")] object _, void* value);\n");
+                writer.Write("        var __arg_");
+                writer.Write(rawName);
+                writer.Write(" = ConvertToManaged_arg_");
+                writer.Write(rawName);
+                writer.Write("(null, ");
+                writer.Write(callName);
+                writer.Write(");\n");
             }
         }
 
         if (returnIsString)
         {
-            w.Write("        ");
-            w.Write(retLocalName);
-            w.Write(" = ");
+            writer.Write("        ");
+            writer.Write(retLocalName);
+            writer.Write(" = ");
         }
         else if (returnIsRefType)
         {
-            w.Write("        ");
-            w.Write(retLocalName);
-            w.Write(" = ");
+            writer.Write("        ");
+            writer.Write(retLocalName);
+            writer.Write(" = ");
         }
         else if (returnIsReceiveArrayDoAbi)
         {
             // For T[] return: assign to existing local.
-            w.Write("        ");
-            w.Write(retLocalName);
-            w.Write(" = ");
+            writer.Write("        ");
+            writer.Write(retLocalName);
+            writer.Write(" = ");
         }
         else if (rt is not null)
         {
-            w.Write("        ");
-            w.Write(retLocalName);
-            w.Write(" = ");
+            writer.Write("        ");
+            writer.Write(retLocalName);
+            writer.Write(" = ");
         }
         else
         {
-            w.Write("        ");
+            writer.Write("        ");
         }
 
         if (isGetter)
         {
             string propName = methodName[4..];
-            w.Write("ComInterfaceDispatch.GetInstance<");
-            w.Write(ifaceFullName);
-            w.Write(">((ComInterfaceDispatch*)thisPtr).");
-            w.Write(propName);
-            w.Write(";\n");
+            writer.Write("ComInterfaceDispatch.GetInstance<");
+            writer.Write(ifaceFullName);
+            writer.Write(">((ComInterfaceDispatch*)thisPtr).");
+            writer.Write(propName);
+            writer.Write(";\n");
         }
         else if (isSetter)
         {
             string propName = methodName[4..];
-            w.Write("ComInterfaceDispatch.GetInstance<");
-            w.Write(ifaceFullName);
-            w.Write(">((ComInterfaceDispatch*)thisPtr).");
-            w.Write(propName);
-            w.Write(" = ");
-            EmitDoAbiParamArgConversion(w, sig.Params[0]);
-            w.Write(";\n");
+            writer.Write("ComInterfaceDispatch.GetInstance<");
+            writer.Write(ifaceFullName);
+            writer.Write(">((ComInterfaceDispatch*)thisPtr).");
+            writer.Write(propName);
+            writer.Write(" = ");
+            EmitDoAbiParamArgConversion(writer, context, sig.Params[0]);
+            writer.Write(";\n");
         }
         else
         {
-            w.Write("ComInterfaceDispatch.GetInstance<");
-            w.Write(ifaceFullName);
-            w.Write(">((ComInterfaceDispatch*)thisPtr).");
-            w.Write(methodName);
-            w.Write("(");
+            writer.Write("ComInterfaceDispatch.GetInstance<");
+            writer.Write(ifaceFullName);
+            writer.Write(">((ComInterfaceDispatch*)thisPtr).");
+            writer.Write(methodName);
+            writer.Write("(");
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                if (i > 0) { w.Write(",\n  "); }
+                if (i > 0) { writer.Write(",\n  "); }
                 ParamInfo p = sig.Params[i];
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
                 if (cat == ParamCategory.Out)
                 {
                     string raw = p.Parameter.Name ?? "param";
-                    w.Write("out __");
-                    w.Write(raw);
+                    writer.Write("out __");
+                    writer.Write(raw);
                 }
                 else if (cat == ParamCategory.Ref)
                 {
@@ -1771,73 +1817,73 @@ internal static partial class CodeWriters
                     AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
                     if (uRef.IsString())
                     {
-                        w.Write("HStringMarshaller.ConvertToManaged(*");
-                        w.Write(ptr);
-                        w.Write(")");
+                        writer.Write("HStringMarshaller.ConvertToManaged(*");
+                        writer.Write(ptr);
+                        writer.Write(")");
                     }
                     else if (uRef.IsObject())
                     {
-                        w.Write("WindowsRuntimeObjectMarshaller.ConvertToManaged(*");
-                        w.Write(ptr);
-                        w.Write(")");
+                        writer.Write("WindowsRuntimeObjectMarshaller.ConvertToManaged(*");
+                        writer.Write(ptr);
+                        writer.Write(")");
                     }
                     else if (IsRuntimeClassOrInterface(uRef))
                     {
-                        w.Write(GetMarshallerFullName(w, uRef));
-                        w.Write(".ConvertToManaged(*");
-                        w.Write(ptr);
-                        w.Write(")");
+                        writer.Write(GetMarshallerFullName(writer, context, uRef));
+                        writer.Write(".ConvertToManaged(*");
+                        writer.Write(ptr);
+                        writer.Write(")");
                     }
                     else if (IsMappedAbiValueType(uRef))
                     {
-                        w.Write(GetMappedMarshallerName(uRef));
-                        w.Write(".ConvertToManaged(*");
-                        w.Write(ptr);
-                        w.Write(")");
+                        writer.Write(GetMappedMarshallerName(uRef));
+                        writer.Write(".ConvertToManaged(*");
+                        writer.Write(ptr);
+                        writer.Write(")");
                     }
                     else if (uRef.IsHResultException())
                     {
-                        w.Write("global::ABI.System.ExceptionMarshaller.ConvertToManaged(*");
-                        w.Write(ptr);
-                        w.Write(")");
+                        writer.Write("global::ABI.System.ExceptionMarshaller.ConvertToManaged(*");
+                        writer.Write(ptr);
+                        writer.Write(")");
                     }
                     else if (IsComplexStruct(uRef))
                     {
-                        w.Write(GetMarshallerFullName(w, uRef));
-                        w.Write(".ConvertToManaged(*");
-                        w.Write(ptr);
-                        w.Write(")");
+                        writer.Write(GetMarshallerFullName(writer, context, uRef));
+                        writer.Write(".ConvertToManaged(*");
+                        writer.Write(ptr);
+                        writer.Write(")");
                     }
                     else if (IsAnyStruct(uRef) || IsBlittablePrimitive(uRef) || IsEnumType(uRef))
                     {
                         // Blittable/almost-blittable: ABI layout matches projected layout.
-                        w.Write("*");
-                        w.Write(ptr);
+                        writer.Write("*");
+                        writer.Write(ptr);
                     }
                     else
                     {
-                        w.Write("*");
-                        w.Write(ptr);
+                        writer.Write("*");
+                        writer.Write(ptr);
                     }
                 }
                 else if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
                 {
                     string raw = p.Parameter.Name ?? "param";
-                    w.Write("__");
-                    w.Write(raw);
+                    writer.Write("__");
+                    writer.Write(raw);
                 }
                 else if (cat == ParamCategory.ReceiveArray)
                 {
                     string raw = p.Parameter.Name ?? "param";
-                    w.Write("out __");
-                    w.Write(raw);
+                    writer.Write("out __");
+                    writer.Write(raw);
                 }
                 else
                 {
-                    EmitDoAbiParamArgConversion(w, p);
+                    EmitDoAbiParamArgConversion(writer, context, p);
                 }
             }
-            w.Write(");\n");
+            writer.Write(");\n");
         }
         // After call: write back out params to caller's pointer.
         // NOTE: Ref params (WinRT 'in T') are read-only inputs — never written back.
@@ -1849,58 +1895,58 @@ internal static partial class CodeWriters
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
-            w.Write("        *");
-            w.Write(ptr);
-            w.Write(" = ");
+            writer.Write("        *");
+            writer.Write(ptr);
+            writer.Write(" = ");
             // String: HStringMarshaller.ConvertToUnmanaged
             if (underlying.IsString())
             {
-                w.Write("HStringMarshaller.ConvertToUnmanaged(__");
-                w.Write(raw);
-                w.Write(")");
+                writer.Write("HStringMarshaller.ConvertToUnmanaged(__");
+                writer.Write(raw);
+                writer.Write(")");
             }
             // Object/runtime class: <Marshaller>.ConvertToUnmanaged(...).DetachThisPtrUnsafe()
             else if (underlying.IsObject())
             {
-                w.Write("WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(__");
-                w.Write(raw);
-                w.Write(").DetachThisPtrUnsafe()");
+                writer.Write("WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(__");
+                writer.Write(raw);
+                writer.Write(").DetachThisPtrUnsafe()");
             }
             else if (IsRuntimeClassOrInterface(underlying))
             {
-                w.Write(GetMarshallerFullName(w, underlying));
-                w.Write(".ConvertToUnmanaged(__");
-                w.Write(raw);
-                w.Write(").DetachThisPtrUnsafe()");
+                writer.Write(GetMarshallerFullName(writer, context, underlying));
+                writer.Write(".ConvertToUnmanaged(__");
+                writer.Write(raw);
+                writer.Write(").DetachThisPtrUnsafe()");
             }
             // Generic instance (e.g. IEnumerable<string>): use the hoisted UnsafeAccessor
             // 'ConvertToUnmanaged_<name>' declared at the top of the method body.
             else if (underlying.IsGenericInstance())
             {
-                w.Write("ConvertToUnmanaged_");
-                w.Write(raw);
-                w.Write("(null, __");
-                w.Write(raw);
-                w.Write(").DetachThisPtrUnsafe()");
+                writer.Write("ConvertToUnmanaged_");
+                writer.Write(raw);
+                writer.Write("(null, __");
+                writer.Write(raw);
+                writer.Write(").DetachThisPtrUnsafe()");
             }
             // For enums, function pointer signature uses the projected enum type, no cast needed.
             // For bool, cast to byte. For char, cast to ushort.
             else if (IsEnumType(underlying))
             {
-                w.Write("__");
-                w.Write(raw);
+                writer.Write("__");
+                writer.Write(raw);
             }
             else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool &&
                      corlibBool.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
             {
-                w.Write("__");
-                w.Write(raw);
+                writer.Write("__");
+                writer.Write(raw);
             }
             else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar &&
                      corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
             {
-                w.Write("__");
-                w.Write(raw);
+                writer.Write("__");
+                writer.Write(raw);
             }
             // Non-blittable struct (e.g. authored BasicStruct with string fields): marshal
             // the local managed value through <Type>Marshaller.ConvertToUnmanaged before
@@ -1908,17 +1954,17 @@ internal static partial class CodeWriters
             //: "Marshaller.ConvertToUnmanaged(local)".
             else if (IsComplexStruct(underlying))
             {
-                w.Write(GetMarshallerFullName(w, underlying));
-                w.Write(".ConvertToUnmanaged(__");
-                w.Write(raw);
-                w.Write(")");
+                writer.Write(GetMarshallerFullName(writer, context, underlying));
+                writer.Write(".ConvertToUnmanaged(__");
+                writer.Write(raw);
+                writer.Write(")");
             }
             else
             {
-                w.Write("__");
-                w.Write(raw);
+                writer.Write("__");
+                writer.Write(raw);
             }
-            w.Write(";\n");
+            writer.Write(";\n");
         }
         // After call: for ReceiveArray params, emit ConvertToUnmanaged_<name> call (the
         // [UnsafeAccessor] declaration was hoisted to the top of the method body).
@@ -1929,15 +1975,15 @@ internal static partial class CodeWriters
             if (cat != ParamCategory.ReceiveArray) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            w.Write("        ConvertToUnmanaged_");
-            w.Write(raw);
-            w.Write("(null, __");
-            w.Write(raw);
-            w.Write(", out *__");
-            w.Write(raw);
-            w.Write("Size, out *");
-            w.Write(ptr);
-            w.Write(");\n");
+            writer.Write("        ConvertToUnmanaged_");
+            writer.Write(raw);
+            writer.Write("(null, __");
+            writer.Write(raw);
+            writer.Write(", out *__");
+            writer.Write(raw);
+            writer.Write("Size, out *");
+            writer.Write(ptr);
+            writer.Write(");\n");
         }
         // After call: for non-blittable FillArray params (Span<T> where T is string/runtime
         // class/object/non-blittable struct), copy the managed delegate's writes back into the
@@ -1954,8 +2000,12 @@ internal static partial class CodeWriters
             if (IsBlittablePrimitive(szFA.BaseType) || IsAnyStruct(szFA.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szFA.BaseType))));
+            IndentedTextWriter __scratchElementProjected = new();
+            WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
+            string elementProjected = __scratchElementProjected.ToString();
             string elementInteropArg = EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
+
+            _ = elementInteropArg;
             // Determine the ABI element type for the data pointer cast.
             // - Strings / runtime classes / objects: void**
             // - HResult exception: global::ABI.System.Exception*
@@ -1981,48 +2031,48 @@ internal static partial class CodeWriters
             }
             else
             {
-                string abiStructName = GetAbiStructTypeName(w, szFA.BaseType);
+                string abiStructName = GetAbiStructTypeName(writer, context, szFA.BaseType);
                 dataParamType = abiStructName + "* data";
                 dataCastType = "(" + abiStructName + "*)";
             }
-            w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
-            w.Write("        static extern void CopyToUnmanaged_");
-            w.Write(raw);
-            w.Write("([UnsafeAccessorType(\"");
-            w.Write(GetArrayMarshallerInteropPath(szFA.BaseType));
-            w.Write("\")] object _, ReadOnlySpan<");
-            w.Write(elementProjected);
-            w.Write("> span, uint length, ");
-            w.Write(dataParamType);
-            w.Write(");\n");
-            w.Write("        CopyToUnmanaged_");
-            w.Write(raw);
-            w.Write("(null, __");
-            w.Write(raw);
-            w.Write(", __");
-            w.Write(raw);
-            w.Write("Size, ");
-            w.Write(dataCastType);
-            w.Write(ptr);
-            w.Write(");\n");
+            writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
+            writer.Write("        static extern void CopyToUnmanaged_");
+            writer.Write(raw);
+            writer.Write("([UnsafeAccessorType(\"");
+            writer.Write(GetArrayMarshallerInteropPath(szFA.BaseType));
+            writer.Write("\")] object _, ReadOnlySpan<");
+            writer.Write(elementProjected);
+            writer.Write("> span, uint length, ");
+            writer.Write(dataParamType);
+            writer.Write(");\n");
+            writer.Write("        CopyToUnmanaged_");
+            writer.Write(raw);
+            writer.Write("(null, __");
+            writer.Write(raw);
+            writer.Write(", __");
+            writer.Write(raw);
+            writer.Write("Size, ");
+            writer.Write(dataCastType);
+            writer.Write(ptr);
+            writer.Write(");\n");
         }
         if (rt is not null)
         {
             if (returnIsHResultExceptionDoAbi)
             {
-                w.Write("        *");
-                w.Write(retParamName);
-                w.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(");
-                w.Write(retLocalName);
-                w.Write(");\n");
+                writer.Write("        *");
+                writer.Write(retParamName);
+                writer.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(");
+                writer.Write(retLocalName);
+                writer.Write(");\n");
             }
             else if (returnIsString)
             {
-                w.Write("        *");
-                w.Write(retParamName);
-                w.Write(" = HStringMarshaller.ConvertToUnmanaged(");
-                w.Write(retLocalName);
-                w.Write(");\n");
+                writer.Write("        *");
+                writer.Write(retParamName);
+                writer.Write(" = HStringMarshaller.ConvertToUnmanaged(");
+                writer.Write(retLocalName);
+                writer.Write(");\n");
             }
             else if (returnIsRefType)
             {
@@ -2030,123 +2080,123 @@ internal static partial class CodeWriters
                 {
                     // Nullable<T> return (server-side): use <T>Marshaller.BoxToUnmanaged.
                     AsmResolver.DotNet.Signatures.TypeSignature inner = rt.GetNullableInnerType()!;
-                    string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
-                    w.Write("        *");
-                    w.Write(retParamName);
-                    w.Write(" = ");
-                    w.Write(innerMarshaller);
-                    w.Write(".BoxToUnmanaged(");
-                    w.Write(retLocalName);
-                    w.Write(").DetachThisPtrUnsafe();\n");
+                    string innerMarshaller = GetNullableInnerMarshallerName(writer, context, inner);
+                    writer.Write("        *");
+                    writer.Write(retParamName);
+                    writer.Write(" = ");
+                    writer.Write(innerMarshaller);
+                    writer.Write(".BoxToUnmanaged(");
+                    writer.Write(retLocalName);
+                    writer.Write(").DetachThisPtrUnsafe();\n");
                 }
                 else if (returnIsGenericInstance)
                 {
                     // Generic instance return: use the UnsafeAccessor static local function declared at
                     // the top of the method body via the M12 hoisting pass; just emit the call here.
-                    w.Write("        *");
-                    w.Write(retParamName);
-                    w.Write(" = ConvertToUnmanaged_");
-                    w.Write(retParamName);
-                    w.Write("(null, ");
-                    w.Write(retLocalName);
-                    w.Write(").DetachThisPtrUnsafe();\n");
+                    writer.Write("        *");
+                    writer.Write(retParamName);
+                    writer.Write(" = ConvertToUnmanaged_");
+                    writer.Write(retParamName);
+                    writer.Write("(null, ");
+                    writer.Write(retLocalName);
+                    writer.Write(").DetachThisPtrUnsafe();\n");
                 }
                 else
                 {
-                    w.Write("        *");
-                    w.Write(retParamName);
-                    w.Write(" = ");
-                    EmitMarshallerConvertToUnmanaged(w, rt!, retLocalName);
-                    w.Write(".DetachThisPtrUnsafe();\n");
+                    writer.Write("        *");
+                    writer.Write(retParamName);
+                    writer.Write(" = ");
+                    EmitMarshallerConvertToUnmanaged(writer, context, rt!, retLocalName);
+                    writer.Write(".DetachThisPtrUnsafe();\n");
                 }
             }
             else if (returnIsReceiveArrayDoAbi)
             {
                 // Return-receive-array: emit ConvertToUnmanaged_<retParam> call (declaration
                 // was hoisted to the top of the method body).
-                w.Write("        ConvertToUnmanaged_");
-                w.Write(retParamName);
-                w.Write("(null, ");
-                w.Write(retLocalName);
-                w.Write(", out *");
-                w.Write(retSizeParamName);
-                w.Write(", out *");
-                w.Write(retParamName);
-                w.Write(");\n");
+                writer.Write("        ConvertToUnmanaged_");
+                writer.Write(retParamName);
+                writer.Write("(null, ");
+                writer.Write(retLocalName);
+                writer.Write(", out *");
+                writer.Write(retSizeParamName);
+                writer.Write(", out *");
+                writer.Write(retParamName);
+                writer.Write(");\n");
             }
             else if (IsMappedAbiValueType(rt))
             {
                 // Mapped value type return (DateTime/TimeSpan): convert via marshaller.
-                w.Write("        *");
-                w.Write(retParamName);
-                w.Write(" = ");
-                w.Write(GetMappedMarshallerName(rt));
-                w.Write(".ConvertToUnmanaged(");
-                w.Write(retLocalName);
-                w.Write(");\n");
+                writer.Write("        *");
+                writer.Write(retParamName);
+                writer.Write(" = ");
+                writer.Write(GetMappedMarshallerName(rt));
+                writer.Write(".ConvertToUnmanaged(");
+                writer.Write(retLocalName);
+                writer.Write(");\n");
             }
             else if (rt.IsSystemType())
             {
                 // System.Type return (server-side): convert managed System.Type to ABI Type struct.
-                w.Write("        *");
-                w.Write(retParamName);
-                w.Write(" = global::ABI.System.TypeMarshaller.ConvertToUnmanaged(");
-                w.Write(retLocalName);
-                w.Write(");\n");
+                writer.Write("        *");
+                writer.Write(retParamName);
+                writer.Write(" = global::ABI.System.TypeMarshaller.ConvertToUnmanaged(");
+                writer.Write(retLocalName);
+                writer.Write(");\n");
             }
             else if (IsComplexStruct(rt))
             {
                 // Complex struct return (server-side): convert managed struct to ABI struct via marshaller.
-                w.Write("        *");
-                w.Write(retParamName);
-                w.Write(" = ");
-                w.Write(GetMarshallerFullName(w, rt));
-                w.Write(".ConvertToUnmanaged(");
-                w.Write(retLocalName);
-                w.Write(");\n");
+                writer.Write("        *");
+                writer.Write(retParamName);
+                writer.Write(" = ");
+                writer.Write(GetMarshallerFullName(writer, context, rt));
+                writer.Write(".ConvertToUnmanaged(");
+                writer.Write(retLocalName);
+                writer.Write(");\n");
             }
             else if (returnIsBlittableStruct)
             {
-                w.Write("        *");
-                w.Write(retParamName);
-                w.Write(" = ");
-                w.Write(retLocalName);
-                w.Write(";\n");
+                writer.Write("        *");
+                writer.Write(retParamName);
+                writer.Write(" = ");
+                writer.Write(retLocalName);
+                writer.Write(";\n");
             }
             else
             {
                 string abiType = GetAbiPrimitiveType(rt);
-                w.Write("        *");
-                w.Write(retParamName);
-                w.Write(" = ");
+                writer.Write("        *");
+                writer.Write(retParamName);
+                writer.Write(" = ");
                 if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
                     corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
                 {
-                    w.Write(retLocalName);
-                    w.Write(";\n");
+                    writer.Write(retLocalName);
+                    writer.Write(";\n");
                 }
                 else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
                          corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
                 {
-                    w.Write(retLocalName);
-                    w.Write(";\n");
+                    writer.Write(retLocalName);
+                    writer.Write(";\n");
                 }
                 else if (IsEnumType(rt))
                 {
                     // Enum: function pointer signature uses the projected enum type, no cast needed.
-                    w.Write(retLocalName);
-                    w.Write(";\n");
+                    writer.Write(retLocalName);
+                    writer.Write(";\n");
                 }
                 else
                 {
-                    w.Write(retLocalName);
-                    w.Write(";\n");
+                    writer.Write(retLocalName);
+                    writer.Write(";\n");
                 }
             }
         }
-        w.Write("        return 0;\n    }\n");
-        w.Write("    catch (Exception __exception__)\n    {\n");
-        w.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n");
+        writer.Write("        return 0;\n    }\n");
+        writer.Write("    catch (Exception __exception__)\n    {\n");
+        writer.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n");
 
         // For non-blittable PassArray params, emit finally block with ArrayPool<T>.Shared.Return.
         bool hasNonBlittableArrayDoAbi = false;
@@ -2162,7 +2212,7 @@ internal static partial class CodeWriters
         }
         if (hasNonBlittableArrayDoAbi)
         {
-            w.Write("    finally\n    {\n");
+            writer.Write("    finally\n    {\n");
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 ParamInfo p = sig.Params[i];
@@ -2171,132 +2221,133 @@ internal static partial class CodeWriters
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
                 if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
-                string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
-                w.Write("\n        if (__");
-                w.Write(raw);
-                w.Write("_arrayFromPool is not null)\n        {\n");
-                w.Write("            global::System.Buffers.ArrayPool<");
-                w.Write(elementProjected);
-                w.Write(">.Shared.Return(__");
-                w.Write(raw);
-                w.Write("_arrayFromPool);\n        }\n");
+                IndentedTextWriter __scratchElementProjected = new();
+                WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
+                string elementProjected = __scratchElementProjected.ToString();
+                writer.Write("\n        if (__");
+                writer.Write(raw);
+                writer.Write("_arrayFromPool is not null)\n        {\n");
+                writer.Write("            global::System.Buffers.ArrayPool<");
+                writer.Write(elementProjected);
+                writer.Write(">.Shared.Return(__");
+                writer.Write(raw);
+                writer.Write("_arrayFromPool);\n        }\n");
             }
-            w.Write("    }\n");
+            writer.Write("    }\n");
         }
 
-        w.Write("}\n\n");
+        writer.Write("}\n\n");
         _ = hasStringParams;
     }
 
     /// <summary>Converts an ABI parameter to its projected (managed) form for the Do_Abi call.</summary>
-    private static void EmitDoAbiParamArgConversion(TypeWriter w, ParamInfo p)
+    private static void EmitDoAbiParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParamInfo p)
     {
         string rawName = p.Parameter.Name ?? "param";
         string pname = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
         if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
             corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
         {
-            w.Write(pname);
+            writer.Write(pname);
         }
         else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
                  corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
         {
-            w.Write(pname);
+            writer.Write(pname);
         }
         else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibStr &&
                  corlibStr.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String)
         {
-            w.Write("HStringMarshaller.ConvertToManaged(");
-            w.Write(pname);
-            w.Write(")");
+            writer.Write("HStringMarshaller.ConvertToManaged(");
+            writer.Write(pname);
+            writer.Write(")");
         }
         else if (p.Type.IsGenericInstance())
         {
             // Generic instance ABI parameter: caller already declared a local UnsafeAccessor +
             // local var __arg_<name> that holds the converted value.
-            w.Write("__arg_");
-            w.Write(rawName);
+            writer.Write("__arg_");
+            writer.Write(rawName);
         }
         else if (IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject())
         {
-            EmitMarshallerConvertToManaged(w, p.Type, pname);
+            EmitMarshallerConvertToManaged(writer, context, p.Type, pname);
         }
         else if (IsMappedAbiValueType(p.Type))
         {
             // Mapped value type input (DateTime/TimeSpan): the parameter is the ABI type;
             // convert to the projected managed type via the marshaller.
-            w.Write(GetMappedMarshallerName(p.Type));
-            w.Write(".ConvertToManaged(");
-            w.Write(pname);
-            w.Write(")");
+            writer.Write(GetMappedMarshallerName(p.Type));
+            writer.Write(".ConvertToManaged(");
+            writer.Write(pname);
+            writer.Write(")");
         }
         else if (p.Type.IsSystemType())
         {
             // System.Type input (server-side): convert ABI Type struct to System.Type.
-            w.Write("global::ABI.System.TypeMarshaller.ConvertToManaged(");
-            w.Write(pname);
-            w.Write(")");
+            writer.Write("global::ABI.System.TypeMarshaller.ConvertToManaged(");
+            writer.Write(pname);
+            writer.Write(")");
         }
         else if (IsComplexStruct(p.Type))
         {
             // Complex struct input (server-side): convert ABI struct to managed via marshaller.
-            w.Write(GetMarshallerFullName(w, p.Type));
-            w.Write(".ConvertToManaged(");
-            w.Write(pname);
-            w.Write(")");
+            writer.Write(GetMarshallerFullName(writer, context, p.Type));
+            writer.Write(".ConvertToManaged(");
+            writer.Write(pname);
+            writer.Write(")");
         }
         else if (IsAnyStruct(p.Type))
         {
             // Blittable / almost-blittable struct: pass directly (projected type == ABI type).
-            w.Write(pname);
+            writer.Write(pname);
         }
         else if (IsEnumType(p.Type))
         {
             // Enum: param signature is already the projected enum type, no cast needed.
-            w.Write(pname);
+            writer.Write(pname);
         }
         else
         {
-            w.Write(pname);
+            writer.Write(pname);
         }
     }
     public static void WriteInterfaceIdicImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
-        if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.IdicExclusiveTo) { return; }
+        if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.IdicExclusiveTo) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        w.Write("\n[DynamicInterfaceCastableImplementation]\n");
-        WriteGuidAttribute(w, type);
-        w.Write("\n");
-        w.Write("file interface ");
-        w.Write(nameStripped);
-        w.Write(" : ");
-        WriteTypedefName(w, type, TypedefNameType.Projected, false);
-        WriteTypeParams(w, type);
-        w.Write("\n{\n");
+        writer.Write("\n[DynamicInterfaceCastableImplementation]\n");
+        WriteGuidAttribute(writer, type);
+        writer.Write("\n");
+        writer.Write("file interface ");
+        writer.Write(nameStripped);
+        writer.Write(" : ");
+        WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        WriteTypeParams(writer, type);
+        writer.Write("\n{\n");
         // Emit DIM bodies that dispatch through the static ABI Methods class.
-        WriteInterfaceIdicImplMembers(w, type);
-        w.Write("\n}\n");
+        WriteInterfaceIdicImplMembers(writer, context, type);
+        writer.Write("\n}\n");
     }
 
     /// <summary>
     /// Emits explicit-interface DIM (default interface method) implementations for the IDIC
     /// file interface. Mirrors C++ <c>write_interface_members</c>.
     /// </summary>
-    private static void WriteInterfaceIdicImplMembers(TypeWriter w, TypeDefinition type)
+    private static void WriteInterfaceIdicImplMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         HashSet<TypeDefinition> visited = new();
-        WriteInterfaceIdicImplMembersForInterface(w, type);
+        WriteInterfaceIdicImplMembersForInterface(writer, context, type);
 
         // Also walk required (inherited) interfaces and emit members for each one.
-        WriteInterfaceIdicImplMembersForRequiredInterfaces(w, type, visited);
+        WriteInterfaceIdicImplMembersForRequiredInterfaces(writer, context, type, visited);
     }
 
     private static void WriteInterfaceIdicImplMembersForRequiredInterfaces(
-        TypeWriter w, TypeDefinition type, HashSet<TypeDefinition> visited)
+        IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, HashSet<TypeDefinition> visited)
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
@@ -2311,7 +2362,7 @@ internal static partial class CodeWriters
                 // Mapped to a BCL interface (IBindableVector -> IList, IBindableIterable -> IEnumerable, etc.).
                 // Emit explicit-interface DIM forwarders for the BCL members so the DIC shim
                 // satisfies them when queried via casts like '((IList)(WindowsRuntimeObject)this)'.
-                EmitDicShimMappedBclForwarders(w, rName);
+                EmitDicShimMappedBclForwarders(writer, context, rName);
                 // IBindableVector's IList forwarders already include the IEnumerable.GetEnumerator
                 // forwarder (since IList : IEnumerable). Pre-add IBindableIterable to the visited
                 // set so we don't emit a second GetEnumerator forwarder for it. We also walk the
@@ -2336,9 +2387,13 @@ internal static partial class CodeWriters
             {
                 if (impl.Interface is TypeSpecification tsMap && tsMap.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature giMap && giMap.TypeArguments.Count == 2)
                 {
-                    string keyText = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true)));
-                    string valueText = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true)));
-                    EmitDicShimIObservableMapForwarders(w, keyText, valueText);
+                    IndentedTextWriter __scratchKeyText = new();
+                    WriteTypeName(__scratchKeyText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[0]), TypedefNameType.Projected, true);
+                    string keyText = __scratchKeyText.ToString();
+                                IndentedTextWriter __scratchValueText = new();
+                    WriteTypeName(__scratchValueText, context, TypeSemanticsFactory.Get(giMap.TypeArguments[1]), TypedefNameType.Projected, true);
+                    string valueText = __scratchValueText.ToString();
+                    EmitDicShimIObservableMapForwarders(writer, context, keyText, valueText);
                     // Mark the inherited IMap`2 / IIterable`1 as visited so they aren't re-emitted.
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
                     {
@@ -2353,8 +2408,10 @@ internal static partial class CodeWriters
             {
                 if (impl.Interface is TypeSpecification tsVec && tsVec.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature giVec && giVec.TypeArguments.Count == 1)
                 {
-                    string elementText = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true)));
-                    EmitDicShimIObservableVectorForwarders(w, elementText);
+                    IndentedTextWriter __scratchElementText = new();
+                    WriteTypeName(__scratchElementText, context, TypeSemanticsFactory.Get(giVec.TypeArguments[0]), TypedefNameType.Projected, true);
+                    string elementText = __scratchElementText.ToString();
+                    EmitDicShimIObservableVectorForwarders(writer, context, elementText);
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
                     {
                         if (impl2.Interface is null) { continue; }
@@ -2367,8 +2424,8 @@ internal static partial class CodeWriters
             // Skip generic interfaces with unbound params (we can't substitute T at this layer).
             if (required.GenericParameters.Count > 0) { continue; }
             // Recurse first so deepest-base is emitted before nearer-base (matches deduplication).
-            WriteInterfaceIdicImplMembersForRequiredInterfaces(w, required, visited);
-            WriteInterfaceIdicImplMembersForInheritedInterface(w, required);
+            WriteInterfaceIdicImplMembersForRequiredInterfaces(writer, context, required, visited);
+            WriteInterfaceIdicImplMembersForInheritedInterface(writer, context, required);
         }
     }
 
@@ -2378,43 +2435,43 @@ internal static partial class CodeWriters
     /// from <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c>. Mirrors C++
     /// <c>write_dictionary_members_using_idic(true)</c> + the IObservableMap event forwarder.
     /// </summary>
-    private static void EmitDicShimIObservableMapForwarders(TypeWriter w, string keyText, string valueText)
+    private static void EmitDicShimIObservableMapForwarders(IndentedTextWriter writer, ProjectionEmitContext context, string keyText, string valueText)
     {
         string target = $"((global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
         string self = $"global::System.Collections.Generic.IDictionary<{keyText}, {valueText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<{keyText}, {valueText}>>.";
-        w.Write("\n");
-        w.Write($"ICollection<{keyText}> {self}Keys => {target}.Keys;\n");
-        w.Write($"ICollection<{valueText}> {self}Values => {target}.Values;\n");
-        w.Write($"int {icoll}Count => {target}.Count;\n");
-        w.Write($"bool {icoll}IsReadOnly => {target}.IsReadOnly;\n");
-        w.Write($"{valueText} {self}this[{keyText} key] \n");
-        w.Write("{\n");
-        w.Write($"get => {target}[key];\n");
-        w.Write($"set => {target}[key] = value;\n");
-        w.Write("}\n");
-        w.Write($"void {self}Add({keyText} key, {valueText} value) => {target}.Add(key, value);\n");
-        w.Write($"bool {self}ContainsKey({keyText} key) => {target}.ContainsKey(key);\n");
-        w.Write($"bool {self}Remove({keyText} key) => {target}.Remove(key);\n");
-        w.Write($"bool {self}TryGetValue({keyText} key, out {valueText} value) => {target}.TryGetValue(key, out value);\n");
-        w.Write($"void {icoll}Add(KeyValuePair<{keyText}, {valueText}> item) => {target}.Add(item);\n");
-        w.Write($"void {icoll}Clear() => {target}.Clear();\n");
-        w.Write($"bool {icoll}Contains(KeyValuePair<{keyText}, {valueText}> item) => {target}.Contains(item);\n");
-        w.Write($"void {icoll}CopyTo(KeyValuePair<{keyText}, {valueText}>[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n");
-        w.Write($"bool ICollection<KeyValuePair<{keyText}, {valueText}>>.Remove(KeyValuePair<{keyText}, {valueText}> item) => {target}.Remove(item);\n");
+        writer.Write("\n");
+        writer.Write($"ICollection<{keyText}> {self}Keys => {target}.Keys;\n");
+        writer.Write($"ICollection<{valueText}> {self}Values => {target}.Values;\n");
+        writer.Write($"int {icoll}Count => {target}.Count;\n");
+        writer.Write($"bool {icoll}IsReadOnly => {target}.IsReadOnly;\n");
+        writer.Write($"{valueText} {self}this[{keyText} key] \n");
+        writer.Write("{\n");
+        writer.Write($"get => {target}[key];\n");
+        writer.Write($"set => {target}[key] = value;\n");
+        writer.Write("}\n");
+        writer.Write($"void {self}Add({keyText} key, {valueText} value) => {target}.Add(key, value);\n");
+        writer.Write($"bool {self}ContainsKey({keyText} key) => {target}.ContainsKey(key);\n");
+        writer.Write($"bool {self}Remove({keyText} key) => {target}.Remove(key);\n");
+        writer.Write($"bool {self}TryGetValue({keyText} key, out {valueText} value) => {target}.TryGetValue(key, out value);\n");
+        writer.Write($"void {icoll}Add(KeyValuePair<{keyText}, {valueText}> item) => {target}.Add(item);\n");
+        writer.Write($"void {icoll}Clear() => {target}.Clear();\n");
+        writer.Write($"bool {icoll}Contains(KeyValuePair<{keyText}, {valueText}> item) => {target}.Contains(item);\n");
+        writer.Write($"void {icoll}CopyTo(KeyValuePair<{keyText}, {valueText}>[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n");
+        writer.Write($"bool ICollection<KeyValuePair<{keyText}, {valueText}>>.Remove(KeyValuePair<{keyText}, {valueText}> item) => {target}.Remove(item);\n");
         // Enumerable forwarders.
-        w.Write("\n");
-        w.Write($"IEnumerator<KeyValuePair<{keyText}, {valueText}>> IEnumerable<KeyValuePair<{keyText}, {valueText}>>.GetEnumerator() => {target}.GetEnumerator();\n");
-        w.Write("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();\n");
+        writer.Write("\n");
+        writer.Write($"IEnumerator<KeyValuePair<{keyText}, {valueText}>> IEnumerable<KeyValuePair<{keyText}, {valueText}>>.GetEnumerator() => {target}.GetEnumerator();\n");
+        writer.Write("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();\n");
         // IObservableMap.MapChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>.";
-        w.Write("\n");
-        w.Write($"event global::Windows.Foundation.Collections.MapChangedEventHandler<{keyText}, {valueText}> {obsSelf}MapChanged\n");
-        w.Write("{\n");
-        w.Write($"add => {obsTarget}.MapChanged += value;\n");
-        w.Write($"remove => {obsTarget}.MapChanged -= value;\n");
-        w.Write("}\n");
+        writer.Write("\n");
+        writer.Write($"event global::Windows.Foundation.Collections.MapChangedEventHandler<{keyText}, {valueText}> {obsSelf}MapChanged\n");
+        writer.Write("{\n");
+        writer.Write($"add => {obsTarget}.MapChanged += value;\n");
+        writer.Write($"remove => {obsTarget}.MapChanged -= value;\n");
+        writer.Write("}\n");
     }
 
     /// <summary>
@@ -2423,39 +2480,39 @@ internal static partial class CodeWriters
     /// from <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c>. Mirrors C++
     /// <c>write_list_members_using_idic(true)</c> + the IObservableVector event forwarder.
     /// </summary>
-    private static void EmitDicShimIObservableVectorForwarders(TypeWriter w, string elementText)
+    private static void EmitDicShimIObservableVectorForwarders(IndentedTextWriter writer, ProjectionEmitContext context, string elementText)
     {
         string target = $"((global::System.Collections.Generic.IList<{elementText}>)(WindowsRuntimeObject)this)";
         string self = $"global::System.Collections.Generic.IList<{elementText}>.";
         string icoll = $"global::System.Collections.Generic.ICollection<{elementText}>.";
-        w.Write("\n");
-        w.Write($"int {icoll}Count => {target}.Count;\n");
-        w.Write($"bool {icoll}IsReadOnly => {target}.IsReadOnly;\n");
-        w.Write($"{elementText} {self}this[int index]\n");
-        w.Write("{\n");
-        w.Write($"get => {target}[index];\n");
-        w.Write($"set => {target}[index] = value;\n");
-        w.Write("}\n");
-        w.Write($"int {self}IndexOf({elementText} item) => {target}.IndexOf(item);\n");
-        w.Write($"void {self}Insert(int index, {elementText} item) => {target}.Insert(index, item);\n");
-        w.Write($"void {self}RemoveAt(int index) => {target}.RemoveAt(index);\n");
-        w.Write($"void {icoll}Add({elementText} item) => {target}.Add(item);\n");
-        w.Write($"void {icoll}Clear() => {target}.Clear();\n");
-        w.Write($"bool {icoll}Contains({elementText} item) => {target}.Contains(item);\n");
-        w.Write($"void {icoll}CopyTo({elementText}[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n");
-        w.Write($"bool {icoll}Remove({elementText} item) => {target}.Remove(item);\n");
-        w.Write("\n");
-        w.Write($"IEnumerator<{elementText}> IEnumerable<{elementText}>.GetEnumerator() => {target}.GetEnumerator();\n");
-        w.Write("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();\n");
+        writer.Write("\n");
+        writer.Write($"int {icoll}Count => {target}.Count;\n");
+        writer.Write($"bool {icoll}IsReadOnly => {target}.IsReadOnly;\n");
+        writer.Write($"{elementText} {self}this[int index]\n");
+        writer.Write("{\n");
+        writer.Write($"get => {target}[index];\n");
+        writer.Write($"set => {target}[index] = value;\n");
+        writer.Write("}\n");
+        writer.Write($"int {self}IndexOf({elementText} item) => {target}.IndexOf(item);\n");
+        writer.Write($"void {self}Insert(int index, {elementText} item) => {target}.Insert(index, item);\n");
+        writer.Write($"void {self}RemoveAt(int index) => {target}.RemoveAt(index);\n");
+        writer.Write($"void {icoll}Add({elementText} item) => {target}.Add(item);\n");
+        writer.Write($"void {icoll}Clear() => {target}.Clear();\n");
+        writer.Write($"bool {icoll}Contains({elementText} item) => {target}.Contains(item);\n");
+        writer.Write($"void {icoll}CopyTo({elementText}[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n");
+        writer.Write($"bool {icoll}Remove({elementText} item) => {target}.Remove(item);\n");
+        writer.Write("\n");
+        writer.Write($"IEnumerator<{elementText}> IEnumerable<{elementText}>.GetEnumerator() => {target}.GetEnumerator();\n");
+        writer.Write("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();\n");
         // IObservableVector.VectorChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableVector<{elementText}>.";
-        w.Write("\n");
-        w.Write($"event global::Windows.Foundation.Collections.VectorChangedEventHandler<{elementText}> {obsSelf}VectorChanged\n");
-        w.Write("{\n");
-        w.Write($"add => {obsTarget}.VectorChanged += value;\n");
-        w.Write($"remove => {obsTarget}.VectorChanged -= value;\n");
-        w.Write("}\n");
+        writer.Write("\n");
+        writer.Write($"event global::Windows.Foundation.Collections.VectorChangedEventHandler<{elementText}> {obsSelf}VectorChanged\n");
+        writer.Write("{\n");
+        writer.Write($"add => {obsTarget}.VectorChanged += value;\n");
+        writer.Write($"remove => {obsTarget}.VectorChanged -= value;\n");
+        writer.Write("}\n");
     }
 
     /// <summary>
@@ -2465,11 +2522,13 @@ internal static partial class CodeWriters
     /// re-dispatches through the parent's own DIC shim. Mirrors the C++ tool's emission for
     /// inherited-interface members in DIC shims.
     /// </summary>
-    private static void WriteInterfaceIdicImplMembersForInheritedInterface(TypeWriter w, TypeDefinition type)
+    private static void WriteInterfaceIdicImplMembersForInheritedInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // The CCW interface name (the projected interface name with global:: prefix). For the
         // delegating thunks we cast through this same projected interface type.
-        string ccwIfaceName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
+        IndentedTextWriter __scratchCcwIfaceName = new();
+        WriteTypedefName(__scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
+        string ccwIfaceName = __scratchCcwIfaceName.ToString();
         if (!ccwIfaceName.StartsWith("global::", System.StringComparison.Ordinal)) { ccwIfaceName = "global::" + ccwIfaceName; }
 
         foreach (MethodDefinition method in type.Methods)
@@ -2478,92 +2537,92 @@ internal static partial class CodeWriters
             MethodSig sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
-            w.Write("\n");
-            WriteProjectionReturnType(w, sig);
-            w.Write(" ");
-            w.Write(ccwIfaceName);
-            w.Write(".");
-            w.Write(mname);
-            w.Write("(");
-            WriteParameterList(w, sig);
-            w.Write(") => ((");
-            w.Write(ccwIfaceName);
-            w.Write(")(WindowsRuntimeObject)this).");
-            w.Write(mname);
-            w.Write("(");
+            writer.Write("\n");
+            WriteProjectionReturnType(writer, context, sig);
+            writer.Write(" ");
+            writer.Write(ccwIfaceName);
+            writer.Write(".");
+            writer.Write(mname);
+            writer.Write("(");
+            WriteParameterList(writer, context, sig);
+            writer.Write(") => ((");
+            writer.Write(ccwIfaceName);
+            writer.Write(")(WindowsRuntimeObject)this).");
+            writer.Write(mname);
+            writer.Write("(");
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                if (i > 0) { w.Write(", "); }
-                WriteParameterNameWithModifier(w, sig.Params[i]);
+                if (i > 0) { writer.Write(", "); }
+                WriteParameterNameWithModifier(writer, context, sig.Params[i]);
             }
-            w.Write(");\n");
+            writer.Write(");\n");
         }
 
         foreach (PropertyDefinition prop in type.Properties)
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
             string pname = prop.Name?.Value ?? string.Empty;
-            string propType = WritePropType(w, prop);
+            string propType = WritePropType(context, prop);
 
-            w.Write("\n");
-            w.Write(propType);
-            w.Write(" ");
-            w.Write(ccwIfaceName);
-            w.Write(".");
-            w.Write(pname);
+            writer.Write("\n");
+            writer.Write(propType);
+            writer.Write(" ");
+            writer.Write(ccwIfaceName);
+            writer.Write(".");
+            writer.Write(pname);
             if (getter is not null && setter is null)
             {
                 // Read-only: single-line expression body.
-                w.Write(" => ((");
-                w.Write(ccwIfaceName);
-                w.Write(")(WindowsRuntimeObject)this).");
-                w.Write(pname);
-                w.Write(";\n");
+                writer.Write(" => ((");
+                writer.Write(ccwIfaceName);
+                writer.Write(")(WindowsRuntimeObject)this).");
+                writer.Write(pname);
+                writer.Write(";\n");
             }
             else
             {
-                w.Write("\n{\n");
+                writer.Write("\n{\n");
                 if (getter is not null)
                 {
-                    w.Write("    get => ((");
-                    w.Write(ccwIfaceName);
-                    w.Write(")(WindowsRuntimeObject)this).");
-                    w.Write(pname);
-                    w.Write(";\n");
+                    writer.Write("    get => ((");
+                    writer.Write(ccwIfaceName);
+                    writer.Write(")(WindowsRuntimeObject)this).");
+                    writer.Write(pname);
+                    writer.Write(";\n");
                 }
                 if (setter is not null)
                 {
-                    w.Write("    set => ((");
-                    w.Write(ccwIfaceName);
-                    w.Write(")(WindowsRuntimeObject)this).");
-                    w.Write(pname);
-                    w.Write(" = value;\n");
+                    writer.Write("    set => ((");
+                    writer.Write(ccwIfaceName);
+                    writer.Write(")(WindowsRuntimeObject)this).");
+                    writer.Write(pname);
+                    writer.Write(" = value;\n");
                 }
-                w.Write("}\n");
+                writer.Write("}\n");
             }
         }
 
         foreach (EventDefinition evt in type.Events)
         {
             string evtName = evt.Name?.Value ?? string.Empty;
-            w.Write("\nevent ");
-            WriteEventType(w, evt);
-            w.Write(" ");
-            w.Write(ccwIfaceName);
-            w.Write(".");
-            w.Write(evtName);
-            w.Write("\n{\n");
-            w.Write("    add => ((");
-            w.Write(ccwIfaceName);
-            w.Write(")(WindowsRuntimeObject)this).");
-            w.Write(evtName);
-            w.Write(" += value;\n");
-            w.Write("    remove => ((");
-            w.Write(ccwIfaceName);
-            w.Write(")(WindowsRuntimeObject)this).");
-            w.Write(evtName);
-            w.Write(" -= value;\n");
-            w.Write("}\n");
+            writer.Write("\nevent ");
+            WriteEventType(writer, context, evt);
+            writer.Write(" ");
+            writer.Write(ccwIfaceName);
+            writer.Write(".");
+            writer.Write(evtName);
+            writer.Write("\n{\n");
+            writer.Write("    add => ((");
+            writer.Write(ccwIfaceName);
+            writer.Write(")(WindowsRuntimeObject)this).");
+            writer.Write(evtName);
+            writer.Write(" += value;\n");
+            writer.Write("    remove => ((");
+            writer.Write(ccwIfaceName);
+            writer.Write(")(WindowsRuntimeObject)this).");
+            writer.Write(evtName);
+            writer.Write(" -= value;\n");
+            writer.Write("}\n");
         }
     }
 
@@ -2575,50 +2634,54 @@ internal static partial class CodeWriters
     /// re-cast through <c>(WindowsRuntimeObject)this</c> so the DIC machinery can re-dispatch
     /// to the real BCL adapter shim.
     /// </summary>
-    private static void EmitDicShimMappedBclForwarders(TypeWriter w, string mappedWinRTInterfaceName)
+    private static void EmitDicShimMappedBclForwarders(IndentedTextWriter writer, ProjectionEmitContext context, string mappedWinRTInterfaceName)
     {
         switch (mappedWinRTInterfaceName)
         {
             case "IClosable":
                 // IClosable maps to IDisposable. Forward Dispose() to the
                 // WindowsRuntimeObject base which has the actual implementation.
-                w.Write("\nvoid global::System.IDisposable.Dispose() => ((global::System.IDisposable)(WindowsRuntimeObject)this).Dispose();\n");
+                writer.Write("\nvoid global::System.IDisposable.Dispose() => ((global::System.IDisposable)(WindowsRuntimeObject)this).Dispose();\n");
                 break;
             case "IBindableVector":
                 // IList covers IList, ICollection, and IEnumerable members.
-                w.Write("\n");
-                w.Write("int global::System.Collections.ICollection.Count => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Count;\n");
-                w.Write("bool global::System.Collections.ICollection.IsSynchronized => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsSynchronized;\n");
-                w.Write("object global::System.Collections.ICollection.SyncRoot => ((global::System.Collections.IList)(WindowsRuntimeObject)this).SyncRoot;\n");
-                w.Write("void global::System.Collections.ICollection.CopyTo(Array array, int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).CopyTo(array, index);\n\n");
-                w.Write("object global::System.Collections.IList.this[int index]\n{\n");
-                w.Write("get => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index];\n");
-                w.Write("set => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index] = value;\n}\n");
-                w.Write("bool global::System.Collections.IList.IsFixedSize => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsFixedSize;\n");
-                w.Write("bool global::System.Collections.IList.IsReadOnly => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsReadOnly;\n");
-                w.Write("int global::System.Collections.IList.Add(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Add(value);\n");
-                w.Write("void global::System.Collections.IList.Clear() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Clear();\n");
-                w.Write("bool global::System.Collections.IList.Contains(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Contains(value);\n");
-                w.Write("int global::System.Collections.IList.IndexOf(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IndexOf(value);\n");
-                w.Write("void global::System.Collections.IList.Insert(int index, object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Insert(index, value);\n");
-                w.Write("void global::System.Collections.IList.Remove(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Remove(value);\n");
-                w.Write("void global::System.Collections.IList.RemoveAt(int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).RemoveAt(index);\n\n");
-                w.Write("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).GetEnumerator();\n");
+                writer.Write("\n");
+                writer.Write("int global::System.Collections.ICollection.Count => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Count;\n");
+                writer.Write("bool global::System.Collections.ICollection.IsSynchronized => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsSynchronized;\n");
+                writer.Write("object global::System.Collections.ICollection.SyncRoot => ((global::System.Collections.IList)(WindowsRuntimeObject)this).SyncRoot;\n");
+                writer.Write("void global::System.Collections.ICollection.CopyTo(Array array, int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).CopyTo(array, index);\n\n");
+                writer.Write("object global::System.Collections.IList.this[int index]\n{\n");
+                writer.Write("get => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index];\n");
+                writer.Write("set => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index] = value;\n}\n");
+                writer.Write("bool global::System.Collections.IList.IsFixedSize => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsFixedSize;\n");
+                writer.Write("bool global::System.Collections.IList.IsReadOnly => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsReadOnly;\n");
+                writer.Write("int global::System.Collections.IList.Add(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Add(value);\n");
+                writer.Write("void global::System.Collections.IList.Clear() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Clear();\n");
+                writer.Write("bool global::System.Collections.IList.Contains(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Contains(value);\n");
+                writer.Write("int global::System.Collections.IList.IndexOf(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IndexOf(value);\n");
+                writer.Write("void global::System.Collections.IList.Insert(int index, object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Insert(index, value);\n");
+                writer.Write("void global::System.Collections.IList.Remove(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Remove(value);\n");
+                writer.Write("void global::System.Collections.IList.RemoveAt(int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).RemoveAt(index);\n\n");
+                writer.Write("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).GetEnumerator();\n");
                 break;
             case "IBindableIterable":
-                w.Write("\n");
-                w.Write("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IEnumerable)(WindowsRuntimeObject)this).GetEnumerator();\n");
+                writer.Write("\n");
+                writer.Write("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IEnumerable)(WindowsRuntimeObject)this).GetEnumerator();\n");
                 break;
         }
     }
 
-    private static void WriteInterfaceIdicImplMembersForInterface(TypeWriter w, TypeDefinition type)
+    private static void WriteInterfaceIdicImplMembersForInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // The CCW interface name (the projected interface name with global:: prefix).
-        string ccwIfaceName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
+        IndentedTextWriter __scratchCcwIfaceName = new();
+        WriteTypedefName(__scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
+        string ccwIfaceName = __scratchCcwIfaceName.ToString();
         if (!ccwIfaceName.StartsWith("global::", System.StringComparison.Ordinal)) { ccwIfaceName = "global::" + ccwIfaceName; }
         // The static ABI Methods class name.
-        string abiClass = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.StaticAbiClass, true)));
+        IndentedTextWriter __scratchAbiClass = new();
+        WriteTypedefName(__scratchAbiClass, context, type, TypedefNameType.StaticAbiClass, true);
+        string abiClass = __scratchAbiClass.ToString();
         if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal)) { abiClass = "global::" + abiClass; }
 
         foreach (MethodDefinition method in type.Methods)
@@ -2627,55 +2690,55 @@ internal static partial class CodeWriters
             MethodSig sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
-            w.Write("\nunsafe ");
-            WriteProjectionReturnType(w, sig);
-            w.Write(" ");
-            w.Write(ccwIfaceName);
-            w.Write(".");
-            w.Write(mname);
-            w.Write("(");
-            WriteParameterList(w, sig);
-            w.Write(")\n{\n");
-            w.Write("    var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
-            w.Write(ccwIfaceName);
-            w.Write(").TypeHandle);\n    ");
-            if (sig.ReturnType is not null) { w.Write("return "); }
-            w.Write(abiClass);
-            w.Write(".");
-            w.Write(mname);
-            w.Write("(_obj");
+            writer.Write("\nunsafe ");
+            WriteProjectionReturnType(writer, context, sig);
+            writer.Write(" ");
+            writer.Write(ccwIfaceName);
+            writer.Write(".");
+            writer.Write(mname);
+            writer.Write("(");
+            WriteParameterList(writer, context, sig);
+            writer.Write(")\n{\n");
+            writer.Write("    var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+            writer.Write(ccwIfaceName);
+            writer.Write(").TypeHandle);\n    ");
+            if (sig.ReturnType is not null) { writer.Write("return "); }
+            writer.Write(abiClass);
+            writer.Write(".");
+            writer.Write(mname);
+            writer.Write("(_obj");
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                w.Write(", ");
-                WriteParameterNameWithModifier(w, sig.Params[i]);
+                writer.Write(", ");
+                WriteParameterNameWithModifier(writer, context, sig.Params[i]);
             }
-            w.Write(");\n}\n");
+            writer.Write(");\n}\n");
         }
 
         foreach (PropertyDefinition prop in type.Properties)
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
             string pname = prop.Name?.Value ?? string.Empty;
-            string propType = WritePropType(w, prop);
+            string propType = WritePropType(context, prop);
 
-            w.Write("\nunsafe ");
-            w.Write(propType);
-            w.Write(" ");
-            w.Write(ccwIfaceName);
-            w.Write(".");
-            w.Write(pname);
-            w.Write("\n{\n");
+            writer.Write("\nunsafe ");
+            writer.Write(propType);
+            writer.Write(" ");
+            writer.Write(ccwIfaceName);
+            writer.Write(".");
+            writer.Write(pname);
+            writer.Write("\n{\n");
             if (getter is not null)
             {
-                w.Write("    get\n    {\n");
-                w.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
-                w.Write(ccwIfaceName);
-                w.Write(").TypeHandle);\n");
-                w.Write("        return ");
-                w.Write(abiClass);
-                w.Write(".");
-                w.Write(pname);
-                w.Write("(_obj);\n    }\n");
+                writer.Write("    get\n    {\n");
+                writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+                writer.Write(ccwIfaceName);
+                writer.Write(").TypeHandle);\n");
+                writer.Write("        return ");
+                writer.Write(abiClass);
+                writer.Write(".");
+                writer.Write(pname);
+                writer.Write("(_obj);\n    }\n");
             }
             if (setter is not null)
             {
@@ -2689,24 +2752,24 @@ internal static partial class CodeWriters
                     TypeDefinition? baseIfaceWithGetter = FindPropertyInterfaceInBases(type, pname);
                     if (baseIfaceWithGetter is not null)
                     {
-                        w.Write("    get { return ((");
-                        WriteInterfaceTypeNameForCcw(w, baseIfaceWithGetter);
-                        w.Write(")(WindowsRuntimeObject)this).");
-                        w.Write(pname);
-                        w.Write("; }\n");
+                        writer.Write("    get { return ((");
+                        WriteInterfaceTypeNameForCcw(writer, context, baseIfaceWithGetter);
+                        writer.Write(")(WindowsRuntimeObject)this).");
+                        writer.Write(pname);
+                        writer.Write("; }\n");
                     }
                 }
-                w.Write("    set\n    {\n");
-                w.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
-                w.Write(ccwIfaceName);
-                w.Write(").TypeHandle);\n");
-                w.Write("        ");
-                w.Write(abiClass);
-                w.Write(".");
-                w.Write(pname);
-                w.Write("(_obj, value);\n    }\n");
+                writer.Write("    set\n    {\n");
+                writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+                writer.Write(ccwIfaceName);
+                writer.Write(").TypeHandle);\n");
+                writer.Write("        ");
+                writer.Write(abiClass);
+                writer.Write(".");
+                writer.Write(pname);
+                writer.Write("(_obj, value);\n    }\n");
             }
-            w.Write("}\n");
+            writer.Write("}\n");
         }
 
         // Events: emit explicit interface event implementations on the IDIC interface that
@@ -2714,92 +2777,90 @@ internal static partial class CodeWriters
         foreach (EventDefinition evt in type.Events)
         {
             string evtName = evt.Name?.Value ?? string.Empty;
-            w.Write("\nevent ");
-            WriteEventType(w, evt);
-            w.Write(" ");
-            w.Write(ccwIfaceName);
-            w.Write(".");
-            w.Write(evtName);
-            w.Write("\n{\n");
+            writer.Write("\nevent ");
+            WriteEventType(writer, context, evt);
+            writer.Write(" ");
+            writer.Write(ccwIfaceName);
+            writer.Write(".");
+            writer.Write(evtName);
+            writer.Write("\n{\n");
             // add accessor
-            w.Write("    add\n    {\n");
-            w.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
-            w.Write(ccwIfaceName);
-            w.Write(").TypeHandle);\n        ");
-            w.Write(abiClass);
-            w.Write(".");
-            w.Write(evtName);
-            w.Write("((WindowsRuntimeObject)this, _obj).Subscribe(value);\n    }\n");
+            writer.Write("    add\n    {\n");
+            writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+            writer.Write(ccwIfaceName);
+            writer.Write(").TypeHandle);\n        ");
+            writer.Write(abiClass);
+            writer.Write(".");
+            writer.Write(evtName);
+            writer.Write("((WindowsRuntimeObject)this, _obj).Subscribe(value);\n    }\n");
             // remove accessor
-            w.Write("    remove\n    {\n");
-            w.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
-            w.Write(ccwIfaceName);
-            w.Write(").TypeHandle);\n        ");
-            w.Write(abiClass);
-            w.Write(".");
-            w.Write(evtName);
-            w.Write("((WindowsRuntimeObject)this, _obj).Unsubscribe(value);\n    }\n");
-            w.Write("}\n");
+            writer.Write("    remove\n    {\n");
+            writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
+            writer.Write(ccwIfaceName);
+            writer.Write(").TypeHandle);\n        ");
+            writer.Write(abiClass);
+            writer.Write(".");
+            writer.Write(evtName);
+            writer.Write("((WindowsRuntimeObject)this, _obj).Unsubscribe(value);\n    }\n");
+            writer.Write("}\n");
         }
     }
     public static void WriteInterfaceMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
         if (TypeCategorization.IsExclusiveTo(type)) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        w.Write("\n#nullable enable\n");
-        w.Write("public static unsafe class ");
-        w.Write(nameStripped);
-        w.Write("Marshaller\n{\n");
-        w.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
-        WriteTypedefName(w, type, TypedefNameType.Projected, false);
-        WriteTypeParams(w, type);
-        w.Write(" value)\n    {\n");
-        w.Write("        return WindowsRuntimeInterfaceMarshaller<");
-        WriteTypedefName(w, type, TypedefNameType.Projected, false);
-        WriteTypeParams(w, type);
-        w.Write(">.ConvertToUnmanaged(value, ");
-        WriteIidGuidReference(w, type);
-        w.Write(");\n    }\n\n");
-        w.Write("    public static ");
-        WriteTypedefName(w, type, TypedefNameType.Projected, false);
-        WriteTypeParams(w, type);
-        w.Write("? ConvertToManaged(void* value)\n    {\n");
-        w.Write("        return (");
-        WriteTypedefName(w, type, TypedefNameType.Projected, false);
-        WriteTypeParams(w, type);
-        w.Write("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n");
-        w.Write("#nullable disable\n");
+        writer.Write("\n#nullable enable\n");
+        writer.Write("public static unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("Marshaller\n{\n");
+        writer.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
+        WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        WriteTypeParams(writer, type);
+        writer.Write(" value)\n    {\n");
+        writer.Write("        return WindowsRuntimeInterfaceMarshaller<");
+        WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        WriteTypeParams(writer, type);
+        writer.Write(">.ConvertToUnmanaged(value, ");
+        WriteIidGuidReference(writer, context, type);
+        writer.Write(");\n    }\n\n");
+        writer.Write("    public static ");
+        WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        WriteTypeParams(writer, type);
+        writer.Write("? ConvertToManaged(void* value)\n    {\n");
+        writer.Write("        return (");
+        WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        WriteTypeParams(writer, type);
+        writer.Write("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n");
+        writer.Write("#nullable disable\n");
     }
 
     /// <summary>Mirrors C++ <c>write_iid_guid</c> for use by ABI helpers.</summary>
     public static void WriteIidGuidReference(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        TypeWriter w = new(writer, context);
         if (type.GenericParameters.Count != 0)
         {
             // Generic interface IID - call the unsafe accessor
-            WriteIidGuidPropertyName(w, type);
-            w.Write("(null)");
+            WriteIidGuidPropertyName(writer, context, type);
+            writer.Write("(null)");
             return;
         }
         (string ns, string nm) = type.Names();
         if (MappedTypes.Get(ns, nm) is { } m && m.MappedName == "IStringable")
         {
-            w.Write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable");
+            writer.Write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable");
             return;
         }
-        w.Write("global::ABI.InterfaceIIDs.");
-        WriteIidGuidPropertyName(w, type);
+        writer.Write("global::ABI.InterfaceIIDs.");
+        WriteIidGuidPropertyName(writer, context, type);
     }
 
     /// <summary>
     /// Writes a marshaller class for a struct or enum (mirrors C++ write_struct_and_enum_marshaller_class).
     /// </summary>
-    private static void WriteStructEnumMarshallerClass(TypeWriter w, TypeDefinition type)
+    private static void WriteStructEnumMarshallerClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
@@ -2835,51 +2896,51 @@ internal static partial class CodeWriters
         bool isMappedStruct = isComplexStruct && MappedTypes.Get(typeNs, typeNm) is not null;
         if (isMappedStruct) { isComplexStruct = false; }
 
-        w.Write("public static unsafe class ");
-        w.Write(nameStripped);
-        w.Write("Marshaller\n{\n");
+        writer.Write("public static unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("Marshaller\n{\n");
 
         if (isComplexStruct)
         {
             // ConvertToUnmanaged: build ABI struct from projected struct via per-field marshalling.
-            w.Write("    public static ");
-            WriteTypedefName(w, type, TypedefNameType.ABI, false);
-            w.Write(" ConvertToUnmanaged(");
-            WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write(" value)\n    {\n");
-            w.Write("        return new() {\n");
+            writer.Write("    public static ");
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+            writer.Write(" ConvertToUnmanaged(");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            writer.Write(" value)\n    {\n");
+            writer.Write("        return new() {\n");
             bool first = true;
             foreach (FieldDefinition field in type.Fields)
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
                 string fname = field.Name?.Value ?? "";
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                if (!first) { w.Write(",\n"); }
+                if (!first) { writer.Write(",\n"); }
                 first = false;
-                w.Write("            ");
-                w.Write(fname);
-                w.Write(" = ");
+                writer.Write("            ");
+                writer.Write(fname);
+                writer.Write(" = ");
                 if (ft.IsString())
                 {
-                    w.Write("HStringMarshaller.ConvertToUnmanaged(value.");
-                    w.Write(fname);
-                    w.Write(")");
+                    writer.Write("HStringMarshaller.ConvertToUnmanaged(value.");
+                    writer.Write(fname);
+                    writer.Write(")");
                 }
                 else if (IsMappedAbiValueType(ft))
                 {
-                    w.Write(GetMappedMarshallerName(ft));
-                    w.Write(".ConvertToUnmanaged(value.");
-                    w.Write(fname);
-                    w.Write(")");
+                    writer.Write(GetMappedMarshallerName(ft));
+                    writer.Write(".ConvertToUnmanaged(value.");
+                    writer.Write(fname);
+                    writer.Write(")");
                 }
                 else if (ft.IsHResultException())
                 {
                     // Mapped value type 'HResult' (excluded from IsMappedAbiValueType because
                     // it's "treated specially in many places", but for nested struct fields the
                     // marshalling is identical: use ABI.System.ExceptionMarshaller).
-                    w.Write("global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(value.");
-                    w.Write(fname);
-                    w.Write(")");
+                    writer.Write("global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(value.");
+                    writer.Write(fname);
+                    writer.Write(")");
                 }
                 else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd
                          && TryResolveStructTypeDef(ftd) is TypeDefinition fieldStructTd
@@ -2887,75 +2948,75 @@ internal static partial class CodeWriters
                          && !IsTypeBlittable(fieldStructTd))
                 {
                     // Nested non-blittable struct: marshal via its <Name>Marshaller.
-                    w.Write(IdentifierEscaping.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty));
-                    w.Write("Marshaller.ConvertToUnmanaged(value.");
-                    w.Write(fname);
-                    w.Write(")");
+                    writer.Write(IdentifierEscaping.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty));
+                    writer.Write("Marshaller.ConvertToUnmanaged(value.");
+                    writer.Write(fname);
+                    writer.Write(")");
                 }
                 else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                 {
-                    w.Write(nullableMarshaller!);
-                    w.Write(".BoxToUnmanaged(value.");
-                    w.Write(fname);
-                    w.Write(").DetachThisPtrUnsafe()");
+                    writer.Write(nullableMarshaller!);
+                    writer.Write(".BoxToUnmanaged(value.");
+                    writer.Write(fname);
+                    writer.Write(").DetachThisPtrUnsafe()");
                 }
                 else
                 {
-                    w.Write("value.");
-                    w.Write(fname);
+                    writer.Write("value.");
+                    writer.Write(fname);
                 }
             }
-            w.Write("\n        };\n    }\n");
+            writer.Write("\n        };\n    }\n");
 
             // ConvertToManaged: construct projected struct via constructor accepting the marshalled fields.
-            w.Write("    public static ");
-            WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write(" ConvertToManaged(");
-            WriteTypedefName(w, type, TypedefNameType.ABI, false);
+            writer.Write("    public static ");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            writer.Write(" ConvertToManaged(");
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             // - In component mode: emit object initializer with named field assignments
             //   (positional ctor not always available on authored types).
             // - In non-component mode: emit positional constructor (matches the auto-generated
             //   primary constructor on projected struct types).
-            bool useObjectInitializer = w.Settings.Component;
-            w.Write(" value)\n    {\n");
-            w.Write("        return new ");
-            WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write(useObjectInitializer ? "(){\n" : "(\n");
+            bool useObjectInitializer = context.Settings.Component;
+            writer.Write(" value)\n    {\n");
+            writer.Write("        return new ");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            writer.Write(useObjectInitializer ? "(){\n" : "(\n");
             first = true;
             foreach (FieldDefinition field in type.Fields)
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
                 string fname = field.Name?.Value ?? "";
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                if (!first) { w.Write(",\n"); }
+                if (!first) { writer.Write(",\n"); }
                 first = false;
-                w.Write("            ");
+                writer.Write("            ");
                 if (useObjectInitializer)
                 {
-                    w.Write(fname);
-                    w.Write(" = ");
+                    writer.Write(fname);
+                    writer.Write(" = ");
                 }
                 if (ft.IsString())
                 {
-                    w.Write("HStringMarshaller.ConvertToManaged(value.");
-                    w.Write(fname);
-                    w.Write(")");
+                    writer.Write("HStringMarshaller.ConvertToManaged(value.");
+                    writer.Write(fname);
+                    writer.Write(")");
                 }
                 else if (IsMappedAbiValueType(ft))
                 {
-                    w.Write(GetMappedMarshallerName(ft));
-                    w.Write(".ConvertToManaged(value.");
-                    w.Write(fname);
-                    w.Write(")");
+                    writer.Write(GetMappedMarshallerName(ft));
+                    writer.Write(".ConvertToManaged(value.");
+                    writer.Write(fname);
+                    writer.Write(")");
                 }
                 else if (ft.IsHResultException())
                 {
                     // Mapped value type 'HResult' (excluded from IsMappedAbiValueType because
                     // it's "treated specially in many places", but for nested struct fields the
                     // marshalling is identical: use ABI.System.ExceptionMarshaller).
-                    w.Write("global::ABI.System.ExceptionMarshaller.ConvertToManaged(value.");
-                    w.Write(fname);
-                    w.Write(")");
+                    writer.Write("global::ABI.System.ExceptionMarshaller.ConvertToManaged(value.");
+                    writer.Write(fname);
+                    writer.Write(")");
                 }
                 else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd2
                          && TryResolveStructTypeDef(ftd2) is TypeDefinition fieldStructTd2
@@ -2963,30 +3024,30 @@ internal static partial class CodeWriters
                          && !IsTypeBlittable(fieldStructTd2))
                 {
                     // Nested non-blittable struct: convert via its <Name>Marshaller.
-                    w.Write(IdentifierEscaping.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty));
-                    w.Write("Marshaller.ConvertToManaged(value.");
-                    w.Write(fname);
-                    w.Write(")");
+                    writer.Write(IdentifierEscaping.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty));
+                    writer.Write("Marshaller.ConvertToManaged(value.");
+                    writer.Write(fname);
+                    writer.Write(")");
                 }
                 else if (TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                 {
-                    w.Write(nullableMarshaller!);
-                    w.Write(".UnboxToManaged(value.");
-                    w.Write(fname);
-                    w.Write(")");
+                    writer.Write(nullableMarshaller!);
+                    writer.Write(".UnboxToManaged(value.");
+                    writer.Write(fname);
+                    writer.Write(")");
                 }
                 else
                 {
-                    w.Write("value.");
-                    w.Write(fname);
+                    writer.Write("value.");
+                    writer.Write(fname);
                 }
             }
-            w.Write(useObjectInitializer ? "\n        };\n    }\n" : "\n        );\n    }\n");
+            writer.Write(useObjectInitializer ? "\n        };\n    }\n" : "\n        );\n    }\n");
 
             // Dispose: free non-blittable fields.
-            w.Write("    public static void Dispose(");
-            WriteTypedefName(w, type, TypedefNameType.ABI, false);
-            w.Write(" value)\n    {\n");
+            writer.Write("    public static void Dispose(");
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+            writer.Write(" value)\n    {\n");
             foreach (FieldDefinition field in type.Fields)
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
@@ -2994,9 +3055,9 @@ internal static partial class CodeWriters
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
                 if (ft.IsString())
                 {
-                    w.Write("        HStringMarshaller.Free(value.");
-                    w.Write(fname);
-                    w.Write(");\n");
+                    writer.Write("        HStringMarshaller.Free(value.");
+                    writer.Write(fname);
+                    writer.Write(");\n");
                 }
                 else if (ft.IsHResultException())
                 {
@@ -3021,80 +3082,80 @@ internal static partial class CodeWriters
                     // Mirror C++: this site always uses the fully-qualified marshaller name.
                     string nestedNs = fieldStructTd3.Namespace?.Value ?? string.Empty;
                     string nestedNm = IdentifierEscaping.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty);
-                    w.Write("        global::ABI.");
-                    w.Write(nestedNs);
-                    w.Write(".");
-                    w.Write(nestedNm);
-                    w.Write("Marshaller.Dispose(value.");
-                    w.Write(fname);
-                    w.Write(");\n");
+                    writer.Write("        global::ABI.");
+                    writer.Write(nestedNs);
+                    writer.Write(".");
+                    writer.Write(nestedNm);
+                    writer.Write("Marshaller.Dispose(value.");
+                    writer.Write(fname);
+                    writer.Write(");\n");
                 }
                 else if (TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
-                    w.Write("        WindowsRuntimeUnknownMarshaller.Free(value.");
-                    w.Write(fname);
-                    w.Write(");\n");
+                    writer.Write("        WindowsRuntimeUnknownMarshaller.Free(value.");
+                    writer.Write(fname);
+                    writer.Write(");\n");
                 }
             }
-            w.Write("    }\n");
+            writer.Write("    }\n");
         }
 
         // BoxToUnmanaged: same pattern for all (enum, almost-blittable, complex).
         // Truth uses CreateComInterfaceFlags.TrackerSupport when the struct has reference type
         // fields (Nullable<T>, etc.) to avoid GC issues with the boxed managed object reference.
-        w.Write("    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(");
-        WriteTypedefName(w, type, TypedefNameType.Projected, true);
+        writer.Write("    public static WindowsRuntimeObjectReferenceValue BoxToUnmanaged(");
+        WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
         if (isEnum || almostBlittable || isComplexStruct)
         {
-            w.Write("? value)\n    {\n");
-            w.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.");
-            w.Write(hasReferenceFields ? "TrackerSupport" : "None");
-            w.Write(", in ");
-            WriteIidReferenceExpression(w, type);
-            w.Write(");\n    }\n");
+            writer.Write("? value)\n    {\n");
+            writer.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.");
+            writer.Write(hasReferenceFields ? "TrackerSupport" : "None");
+            writer.Write(", in ");
+            WriteIidReferenceExpression(writer, type);
+            writer.Write(");\n    }\n");
         }
         else
         {
             // Mapped struct (Duration/KeyTime/etc.): BoxToUnmanaged is still required because the
             // public projected type still routes through this marshaller (it just lacks per-field
             // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
-            w.Write("? value)\n    {\n");
-            w.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in ");
-            WriteIidReferenceExpression(w, type);
-            w.Write(");\n    }\n");
+            writer.Write("? value)\n    {\n");
+            writer.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in ");
+            WriteIidReferenceExpression(writer, type);
+            writer.Write(");\n    }\n");
         }
 
         // UnboxToManaged: simple for almost-blittable; for complex, unbox to ABI struct then ConvertToManaged.
-        w.Write("    public static ");
-        WriteTypedefName(w, type, TypedefNameType.Projected, true);
+        writer.Write("    public static ");
+        WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
         if (isEnum || almostBlittable)
         {
-            w.Write("? UnboxToManaged(void* value)\n    {\n");
-            w.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
-            WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write(">(value);\n    }\n");
+            writer.Write("? UnboxToManaged(void* value)\n    {\n");
+            writer.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            writer.Write(">(value);\n    }\n");
         }
         else if (isComplexStruct)
         {
-            w.Write("? UnboxToManaged(void* value)\n    {\n");
-            w.Write("        ");
-            WriteTypedefName(w, type, TypedefNameType.ABI, false);
-            w.Write("? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
-            WriteTypedefName(w, type, TypedefNameType.ABI, false);
-            w.Write(">(value);\n");
-            w.Write("        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;\n    }\n");
+            writer.Write("? UnboxToManaged(void* value)\n    {\n");
+            writer.Write("        ");
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+            writer.Write("? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+            writer.Write(">(value);\n");
+            writer.Write("        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;\n    }\n");
         }
         else
         {
             // Mapped struct: unbox directly to projected type (no per-field ConvertToManaged needed
             // because the projected struct's field layout matches the WinMD struct layout).
-            w.Write("? UnboxToManaged(void* value)\n    {\n");
-            w.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
-            WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write(">(value);\n    }\n");
+            writer.Write("? UnboxToManaged(void* value)\n    {\n");
+            writer.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            writer.Write(">(value);\n    }\n");
         }
 
-        w.Write("}\n\n");
+        writer.Write("}\n\n");
 
         // Emit the InterfaceEntriesImpl static class and the proper ComWrappersMarshallerAttribute
         // class derived from WindowsRuntimeComWrappersMarshallerAttribute (matches truth).
@@ -3104,83 +3165,85 @@ internal static partial class CodeWriters
         // unboxing to the ABI struct.
         if (isEnum || almostBlittable || isComplexStruct)
         {
-            string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
+            IndentedTextWriter __scratchIidRefExpr = new();
+            WriteIidReferenceExpression(__scratchIidRefExpr, type);
+            string iidRefExpr = __scratchIidRefExpr.ToString();
 
             // InterfaceEntriesImpl
-            w.Write("file static class ");
-            w.Write(nameStripped);
-            w.Write("InterfaceEntriesImpl\n{\n");
-            w.Write("    [FixedAddressValueType]\n");
-            w.Write("    public static readonly ReferenceInterfaceEntries Entries;\n\n");
-            w.Write("    static ");
-            w.Write(nameStripped);
-            w.Write("InterfaceEntriesImpl()\n    {\n");
-            w.Write("        Entries.IReferenceValue.IID = ");
-            w.Write(iidRefExpr);
-            w.Write(";\n");
-            w.Write("        Entries.IReferenceValue.Vtable = ");
-            w.Write(nameStripped);
-            w.Write("ReferenceImpl.Vtable;\n");
-            w.Write("        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;\n");
-            w.Write("        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;\n");
-            w.Write("        Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;\n");
-            w.Write("        Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;\n");
-            w.Write("        Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;\n");
-            w.Write("        Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;\n");
-            w.Write("        Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;\n");
-            w.Write("        Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;\n");
-            w.Write("        Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;\n");
-            w.Write("        Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;\n");
-            w.Write("        Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;\n");
-            w.Write("        Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;\n");
-            w.Write("        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;\n");
-            w.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
-            w.Write("    }\n}\n\n");
+            writer.Write("file static class ");
+            writer.Write(nameStripped);
+            writer.Write("InterfaceEntriesImpl\n{\n");
+            writer.Write("    [FixedAddressValueType]\n");
+            writer.Write("    public static readonly ReferenceInterfaceEntries Entries;\n\n");
+            writer.Write("    static ");
+            writer.Write(nameStripped);
+            writer.Write("InterfaceEntriesImpl()\n    {\n");
+            writer.Write("        Entries.IReferenceValue.IID = ");
+            writer.Write(iidRefExpr);
+            writer.Write(";\n");
+            writer.Write("        Entries.IReferenceValue.Vtable = ");
+            writer.Write(nameStripped);
+            writer.Write("ReferenceImpl.Vtable;\n");
+            writer.Write("        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;\n");
+            writer.Write("        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;\n");
+            writer.Write("        Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;\n");
+            writer.Write("        Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;\n");
+            writer.Write("        Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;\n");
+            writer.Write("        Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;\n");
+            writer.Write("        Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;\n");
+            writer.Write("        Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;\n");
+            writer.Write("        Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;\n");
+            writer.Write("        Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;\n");
+            writer.Write("        Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;\n");
+            writer.Write("        Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;\n");
+            writer.Write("        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;\n");
+            writer.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
+            writer.Write("    }\n}\n\n");
             // is NOT emitted for STRUCTS (the attribute is supplied by cswinrtgen instead). Enums
             // and other types still emit it from write_abi_enum/etc.
-            if (w.Settings.Component && cat == TypeCategory.Struct) { return; }
+            if (context.Settings.Component && cat == TypeCategory.Struct) { return; }
 
             // ComWrappersMarshallerAttribute (full body)
-            w.Write("internal sealed unsafe class ");
-            w.Write(nameStripped);
-            w.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
-            w.Write("    public override void* GetOrCreateComInterfaceForObject(object value)\n    {\n");
-            w.Write("        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.");
-            w.Write(hasReferenceFields ? "TrackerSupport" : "None");
-            w.Write(");\n    }\n\n");
-            w.Write("    public override ComInterfaceEntry* ComputeVtables(out int count)\n    {\n");
-            w.Write("        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);\n");
-            w.Write("        return (ComInterfaceEntry*)Unsafe.AsPointer(in ");
-            w.Write(nameStripped);
-            w.Write("InterfaceEntriesImpl.Entries);\n    }\n\n");
-            w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
-            w.Write("        wrapperFlags = CreatedWrapperFlags.NonWrapping;\n");
+            writer.Write("internal sealed unsafe class ");
+            writer.Write(nameStripped);
+            writer.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
+            writer.Write("    public override void* GetOrCreateComInterfaceForObject(object value)\n    {\n");
+            writer.Write("        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.");
+            writer.Write(hasReferenceFields ? "TrackerSupport" : "None");
+            writer.Write(");\n    }\n\n");
+            writer.Write("    public override ComInterfaceEntry* ComputeVtables(out int count)\n    {\n");
+            writer.Write("        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);\n");
+            writer.Write("        return (ComInterfaceEntry*)Unsafe.AsPointer(in ");
+            writer.Write(nameStripped);
+            writer.Write("InterfaceEntriesImpl.Entries);\n    }\n\n");
+            writer.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+            writer.Write("        wrapperFlags = CreatedWrapperFlags.NonWrapping;\n");
             if (isComplexStruct)
             {
-                w.Write("        return ");
-                w.Write(nameStripped);
-                w.Write("Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
-                WriteTypedefName(w, type, TypedefNameType.ABI, true);
-                w.Write(">(value, in ");
-                w.Write(iidRefExpr);
-                w.Write("));\n");
+                writer.Write("        return ");
+                writer.Write(nameStripped);
+                writer.Write("Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
+                WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
+                writer.Write(">(value, in ");
+                writer.Write(iidRefExpr);
+                writer.Write("));\n");
             }
             else
             {
-                w.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
-                WriteTypedefName(w, type, TypedefNameType.Projected, true);
-                w.Write(">(value, in ");
-                w.Write(iidRefExpr);
-                w.Write(");\n");
+                writer.Write("        return WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
+                WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+                writer.Write(">(value, in ");
+                writer.Write(iidRefExpr);
+                writer.Write(");\n");
             }
-            w.Write("    }\n}\n");
+            writer.Write("    }\n}\n");
         }
         else
         {
             // Fallback: keep the placeholder class so consumer attribute references resolve.
-            w.Write("internal sealed class ");
-            w.Write(nameStripped);
-            w.Write("ComWrappersMarshallerAttribute : global::System.Attribute\n{\n}\n");
+            writer.Write("internal sealed class ");
+            writer.Write(nameStripped);
+            writer.Write("ComWrappersMarshallerAttribute : global::System.Attribute\n{\n}\n");
         }
     }
 
@@ -3191,34 +3254,36 @@ internal static partial class CodeWriters
     /// Emits just the <c>&lt;Name&gt;Marshaller</c> class for a delegate. Mirrors C++
     /// <c>write_delegate_marshaller</c>.
     /// </summary>
-    private static void WriteDelegateMarshallerOnly(TypeWriter w, TypeDefinition type)
+    private static void WriteDelegateMarshallerOnly(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
-        string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
+        IndentedTextWriter __scratchIidExpr = new();
+        WriteIidExpression(__scratchIidExpr, context, type);
+        string iidExpr = __scratchIidExpr.ToString();
 
-        w.Write("\npublic static unsafe class ");
-        w.Write(nameStripped);
-        w.Write("Marshaller\n{\n");
-        w.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
-        w.Write(fullProjected);
-        w.Write(" value)\n    {\n");
-        w.Write("        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in ");
-        w.Write(iidExpr);
-        w.Write(");\n    }\n\n");
-        w.Write("#nullable enable\n");
-        w.Write("    public static ");
-        w.Write(fullProjected);
-        w.Write("? ConvertToManaged(void* value)\n    {\n");
-        w.Write("        return (");
-        w.Write(fullProjected);
-        w.Write("?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<");
-        w.Write(nameStripped);
-        w.Write("ComWrappersCallback>(value);\n    }\n");
-        w.Write("#nullable disable\n");
-        w.Write("}\n");
+        writer.Write("\npublic static unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("Marshaller\n{\n");
+        writer.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
+        writer.Write(fullProjected);
+        writer.Write(" value)\n    {\n");
+        writer.Write("        return WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(value, in ");
+        writer.Write(iidExpr);
+        writer.Write(");\n    }\n\n");
+        writer.Write("#nullable enable\n");
+        writer.Write("    public static ");
+        writer.Write(fullProjected);
+        writer.Write("? ConvertToManaged(void* value)\n    {\n");
+        writer.Write("        return (");
+        writer.Write(fullProjected);
+        writer.Write("?)WindowsRuntimeDelegateMarshaller.ConvertToManaged<");
+        writer.Write(nameStripped);
+        writer.Write("ComWrappersCallback>(value);\n    }\n");
+        writer.Write("#nullable disable\n");
+        writer.Write("}\n");
     }
 
     /// <summary>
@@ -3229,37 +3294,39 @@ internal static partial class CodeWriters
     /// can't compile this body anyway because the projected type would have unbound generic
     /// parameters.
     /// </summary>
-    private static void WriteDelegateComWrappersCallback(TypeWriter w, TypeDefinition type)
+    private static void WriteDelegateComWrappersCallback(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
-        string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
+        IndentedTextWriter __scratchIidExpr = new();
+        WriteIidExpression(__scratchIidExpr, context, type);
+        string iidExpr = __scratchIidExpr.ToString();
 
         MethodDefinition? invoke = type.GetDelegateInvoke();
         bool nativeSupported = invoke is not null && IsDelegateInvokeNativeSupported(new MethodSig(invoke));
 
-        w.Write("\nfile abstract unsafe class ");
-        w.Write(nameStripped);
-        w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
-        w.Write("    /// <inheritdoc/>\n");
-        w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
-        w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
-        w.Write("            externalComObject: value,\n");
-        w.Write("            iid: in ");
-        w.Write(iidExpr);
-        w.Write(",\n            wrapperFlags: out wrapperFlags);\n\n");
+        writer.Write("\nfile abstract unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
+        writer.Write("    /// <inheritdoc/>\n");
+        writer.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+        writer.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
+        writer.Write("            externalComObject: value,\n");
+        writer.Write("            iid: in ");
+        writer.Write(iidExpr);
+        writer.Write(",\n            wrapperFlags: out wrapperFlags);\n\n");
         // Always emit the body. The 'valueReference.<Name>Invoke' extension method always
         // exists (in NativeDelegate); even when its body is itself a stub, this path compiles
         // and matches the truth, which never emits 'throw null!' for CreateObject.
-        w.Write("        return new ");
-        w.Write(fullProjected);
-        w.Write("(valueReference.");
-        w.Write(nameStripped);
-        w.Write("Invoke);\n");
+        writer.Write("        return new ");
+        writer.Write(fullProjected);
+        writer.Write("(valueReference.");
+        writer.Write(nameStripped);
+        writer.Write("Invoke);\n");
         _ = nativeSupported;
-        w.Write("    }\n}\n");
+        writer.Write("    }\n}\n");
     }
 
     /// <summary>
@@ -3267,34 +3334,36 @@ internal static partial class CodeWriters
     /// <c>write_delegate_com_wrappers_marshaller_attribute_impl</c>. Generic delegates are not
     /// emitted here at all (filtered out in <c>ProjectionGenerator</c>).
     /// </summary>
-    private static void WriteDelegateComWrappersMarshallerAttribute(TypeWriter w, TypeDefinition type)
+    private static void WriteDelegateComWrappersMarshallerAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
+        IndentedTextWriter __scratchIidRefExpr = new();
+        WriteIidReferenceExpression(__scratchIidRefExpr, type);
+        string iidRefExpr = __scratchIidRefExpr.ToString();
 
-        w.Write("\ninternal sealed unsafe class ");
-        w.Write(nameStripped);
-        w.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
-        w.Write("    /// <inheritdoc/>\n");
-        w.Write("    public override void* GetOrCreateComInterfaceForObject(object value)\n    {\n");
-        w.Write("        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);\n");
-        w.Write("    }\n\n");
-        w.Write("    /// <inheritdoc/>\n");
-        w.Write("    public override ComInterfaceEntry* ComputeVtables(out int count)\n    {\n");
-        w.Write("        count = sizeof(DelegateReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);\n\n");
-        w.Write("        return (ComInterfaceEntry*)Unsafe.AsPointer(in ");
-        w.Write(nameStripped);
-        w.Write("InterfaceEntriesImpl.Entries);\n    }\n\n");
-        w.Write("    /// <inheritdoc/>\n");
-        w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
-        w.Write("        wrapperFlags = CreatedWrapperFlags.NonWrapping;\n");
-        w.Write("        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<");
-        w.Write(nameStripped);
-        w.Write("ComWrappersCallback>(value, in ");
-        w.Write(iidRefExpr);
-        w.Write(")!;\n    }\n");
-        w.Write("}\n");
+        writer.Write("\ninternal sealed unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
+        writer.Write("    /// <inheritdoc/>\n");
+        writer.Write("    public override void* GetOrCreateComInterfaceForObject(object value)\n    {\n");
+        writer.Write("        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.TrackerSupport);\n");
+        writer.Write("    }\n\n");
+        writer.Write("    /// <inheritdoc/>\n");
+        writer.Write("    public override ComInterfaceEntry* ComputeVtables(out int count)\n    {\n");
+        writer.Write("        count = sizeof(DelegateReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);\n\n");
+        writer.Write("        return (ComInterfaceEntry*)Unsafe.AsPointer(in ");
+        writer.Write(nameStripped);
+        writer.Write("InterfaceEntriesImpl.Entries);\n    }\n\n");
+        writer.Write("    /// <inheritdoc/>\n");
+        writer.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+        writer.Write("        wrapperFlags = CreatedWrapperFlags.NonWrapping;\n");
+        writer.Write("        return WindowsRuntimeDelegateMarshaller.UnboxToManaged<");
+        writer.Write(nameStripped);
+        writer.Write("ComWrappersCallback>(value, in ");
+        writer.Write(iidRefExpr);
+        writer.Write(")!;\n    }\n");
+        writer.Write("}\n");
     }
 
     /// <summary>True if EmitNativeDelegateBody can emit a real (non-throw) body for this signature.</summary>
@@ -3340,7 +3409,7 @@ internal static partial class CodeWriters
     ///   IWindowsRuntimeUnsealedObjectComWrappersCallback for unsealed)
     /// and <c>write_class_comwrappers_callback</c>.
     /// </summary>
-    private static void WriteClassMarshallerStub(TypeWriter w, TypeDefinition type)
+    private static void WriteClassMarshallerStub(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
@@ -3349,9 +3418,17 @@ internal static partial class CodeWriters
 
         // Get the IID expression for the default interface (used by CreateObject).
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
-        string defaultIfaceIid = defaultIface is not null
-            ? w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, defaultIface)))
-            : "default(global::System.Guid)";
+        string defaultIfaceIid;
+        if (defaultIface is not null)
+        {
+            IndentedTextWriter __scratchIid = new();
+                WriteIidExpression(__scratchIid, context, defaultIface);
+                defaultIfaceIid = __scratchIid.ToString();
+        }
+        else
+        {
+            defaultIfaceIid = "default(global::System.Guid)";
+        }
 
         // Determine the marshalingType expression from the class's [MarshalingBehaviorAttribute]
         // (mirrors C++ get_marshaling_type_name). This is used by both the marshaller attribute and the
@@ -3366,132 +3443,134 @@ internal static partial class CodeWriters
         bool defaultIfaceIsExclusive = defaultIfaceTd is not null && TypeCategorization.IsExclusiveTo(defaultIfaceTd);
 
         // Public *Marshaller class
-        w.Write("public static unsafe class ");
-        w.Write(nameStripped);
-        w.Write("Marshaller\n{\n");
-        w.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
-        w.Write(fullProjected);
-        w.Write(" value)\n    {\n");
+        writer.Write("public static unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("Marshaller\n{\n");
+        writer.Write("    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
+        writer.Write(fullProjected);
+        writer.Write(" value)\n    {\n");
         if (isSealed)
         {
             // For projected sealed runtime classes, the RCW type is always unwrappable.
-            w.Write("        if (value is not null)\n        {\n");
-            w.Write("            return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();\n");
-            w.Write("        }\n");
+            writer.Write("        if (value is not null)\n        {\n");
+            writer.Write("            return WindowsRuntimeComWrappersMarshal.UnwrapObjectReferenceUnsafe(value).AsValue();\n");
+            writer.Write("        }\n");
         }
         else if (!defaultIfaceIsExclusive && defaultIface is not null)
         {
-            string defIfaceTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypeName(w, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false)));
-            w.Write("        if (value is IWindowsRuntimeInterface<");
-            w.Write(defIfaceTypeName);
-            w.Write("> windowsRuntimeInterface)\n        {\n");
-            w.Write("            return windowsRuntimeInterface.GetInterface();\n");
-            w.Write("        }\n");
+            IndentedTextWriter __scratchDefIfaceTypeName = new();
+                WriteTypeName(__scratchDefIfaceTypeName, context, TypeSemanticsFactory.Get(defaultIface.ToTypeSignature(false)), TypedefNameType.Projected, false);
+                string defIfaceTypeName = __scratchDefIfaceTypeName.ToString();
+            writer.Write("        if (value is IWindowsRuntimeInterface<");
+            writer.Write(defIfaceTypeName);
+            writer.Write("> windowsRuntimeInterface)\n        {\n");
+            writer.Write("            return windowsRuntimeInterface.GetInterface();\n");
+            writer.Write("        }\n");
         }
         else
         {
-            w.Write("        if (value is not null)\n        {\n");
-            w.Write("            return value.GetDefaultInterface();\n");
-            w.Write("        }\n");
+            writer.Write("        if (value is not null)\n        {\n");
+            writer.Write("            return value.GetDefaultInterface();\n");
+            writer.Write("        }\n");
         }
-        w.Write("        return default;\n    }\n\n");
-        w.Write("    public static ");
-        w.Write(fullProjected);
-        w.Write("? ConvertToManaged(void* value)\n    {\n");
-        w.Write("        return (");
-        w.Write(fullProjected);
-        w.Write("?)");
-        w.Write(isSealed ? "WindowsRuntimeObjectMarshaller" : "WindowsRuntimeUnsealedObjectMarshaller");
-        w.Write(".ConvertToManaged<");
-        w.Write(nameStripped);
-        w.Write("ComWrappersCallback>(value);\n    }\n}\n\n");
+        writer.Write("        return default;\n    }\n\n");
+        writer.Write("    public static ");
+        writer.Write(fullProjected);
+        writer.Write("? ConvertToManaged(void* value)\n    {\n");
+        writer.Write("        return (");
+        writer.Write(fullProjected);
+        writer.Write("?)");
+        writer.Write(isSealed ? "WindowsRuntimeObjectMarshaller" : "WindowsRuntimeUnsealedObjectMarshaller");
+        writer.Write(".ConvertToManaged<");
+        writer.Write(nameStripped);
+        writer.Write("ComWrappersCallback>(value);\n    }\n}\n\n");
 
         // file-scoped *ComWrappersMarshallerAttribute - implements WindowsRuntimeComWrappersMarshallerAttribute.CreateObject
-        w.Write("file sealed unsafe class ");
-        w.Write(nameStripped);
-        w.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
-        EmitUnsafeAccessorForDefaultIfaceIfGeneric(w, defaultIface);
-        w.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
-        w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(\n");
-        w.Write("            externalComObject: value,\n");
-        w.Write("            iid: ");
-        w.Write(defaultIfaceIid);
-        w.Write(",\n");
-        w.Write("            marshalingType: ");
-        w.Write(marshalingType);
-        w.Write(",\n");
-        w.Write("            wrapperFlags: out wrapperFlags);\n\n");
-        w.Write("        return new ");
-        w.Write(fullProjected);
-        w.Write("(valueReference);\n    }\n}\n\n");
+        writer.Write("file sealed unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute\n{\n");
+        EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
+        writer.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+        writer.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReference(\n");
+        writer.Write("            externalComObject: value,\n");
+        writer.Write("            iid: ");
+        writer.Write(defaultIfaceIid);
+        writer.Write(",\n");
+        writer.Write("            marshalingType: ");
+        writer.Write(marshalingType);
+        writer.Write(",\n");
+        writer.Write("            wrapperFlags: out wrapperFlags);\n\n");
+        writer.Write("        return new ");
+        writer.Write(fullProjected);
+        writer.Write("(valueReference);\n    }\n}\n\n");
 
         if (isSealed)
         {
             // file-scoped *ComWrappersCallback - implements IWindowsRuntimeObjectComWrappersCallback
-            w.Write("file sealed unsafe class ");
-            w.Write(nameStripped);
-            w.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
-            EmitUnsafeAccessorForDefaultIfaceIfGeneric(w, defaultIface);
-            w.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
-            w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
-            w.Write("            externalComObject: value,\n");
-            w.Write("            iid: ");
-            w.Write(defaultIfaceIid);
-            w.Write(",\n");
-            w.Write("            marshalingType: ");
-            w.Write(marshalingType);
-            w.Write(",\n");
-            w.Write("            wrapperFlags: out wrapperFlags);\n\n");
-            w.Write("        return new ");
-            w.Write(fullProjected);
-            w.Write("(valueReference);\n    }\n}\n");
+            writer.Write("file sealed unsafe class ");
+            writer.Write(nameStripped);
+            writer.Write("ComWrappersCallback : IWindowsRuntimeObjectComWrappersCallback\n{\n");
+            EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
+            writer.Write("    public static object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+            writer.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
+            writer.Write("            externalComObject: value,\n");
+            writer.Write("            iid: ");
+            writer.Write(defaultIfaceIid);
+            writer.Write(",\n");
+            writer.Write("            marshalingType: ");
+            writer.Write(marshalingType);
+            writer.Write(",\n");
+            writer.Write("            wrapperFlags: out wrapperFlags);\n\n");
+            writer.Write("        return new ");
+            writer.Write(fullProjected);
+            writer.Write("(valueReference);\n    }\n}\n");
         }
         else
         {
             // file-scoped *ComWrappersCallback - implements IWindowsRuntimeUnsealedObjectComWrappersCallback
             string nonProjectedRcn = $"{typeNs}.{nameStripped}";
-            w.Write("file sealed unsafe class ");
-            w.Write(nameStripped);
-            w.Write("ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback\n{\n");
-            EmitUnsafeAccessorForDefaultIfaceIfGeneric(w, defaultIface);
+            writer.Write("file sealed unsafe class ");
+            writer.Write(nameStripped);
+            writer.Write("ComWrappersCallback : IWindowsRuntimeUnsealedObjectComWrappersCallback\n{\n");
+            EmitUnsafeAccessorForDefaultIfaceIfGeneric(writer, context, defaultIface);
 
             // TryCreateObject (non-projected runtime class name match)
-            w.Write("    public static unsafe bool TryCreateObject(\n");
-            w.Write("        void* value,\n");
-            w.Write("        ReadOnlySpan<char> runtimeClassName,\n");
-            w.Write("        [global::System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out object? wrapperObject,\n");
-            w.Write("        out CreatedWrapperFlags wrapperFlags)\n    {\n");
-            w.Write("        if (runtimeClassName.SequenceEqual(\"");
-            w.Write(nonProjectedRcn);
-            w.Write("\".AsSpan()))\n        {\n");
-            w.Write("            WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
-            w.Write("                externalComObject: value,\n");
-            w.Write("                iid: ");
-            w.Write(defaultIfaceIid);
-            w.Write(",\n");
-            w.Write("                marshalingType: ");
-            w.Write(marshalingType);
-            w.Write(",\n");
-            w.Write("                wrapperFlags: out wrapperFlags);\n\n");
-            w.Write("            wrapperObject = new ");
-            w.Write(fullProjected);
-            w.Write("(valueReference);\n            return true;\n        }\n\n");
-            w.Write("        wrapperObject = null;\n        wrapperFlags = CreatedWrapperFlags.None;\n        return false;\n    }\n\n");
+            writer.Write("    public static unsafe bool TryCreateObject(\n");
+            writer.Write("        void* value,\n");
+            writer.Write("        ReadOnlySpan<char> runtimeClassName,\n");
+            writer.Write("        [global::System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out object? wrapperObject,\n");
+            writer.Write("        out CreatedWrapperFlags wrapperFlags)\n    {\n");
+            writer.Write("        if (runtimeClassName.SequenceEqual(\"");
+            writer.Write(nonProjectedRcn);
+            writer.Write("\".AsSpan()))\n        {\n");
+            writer.Write("            WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
+            writer.Write("                externalComObject: value,\n");
+            writer.Write("                iid: ");
+            writer.Write(defaultIfaceIid);
+            writer.Write(",\n");
+            writer.Write("                marshalingType: ");
+            writer.Write(marshalingType);
+            writer.Write(",\n");
+            writer.Write("                wrapperFlags: out wrapperFlags);\n\n");
+            writer.Write("            wrapperObject = new ");
+            writer.Write(fullProjected);
+            writer.Write("(valueReference);\n            return true;\n        }\n\n");
+            writer.Write("        wrapperObject = null;\n        wrapperFlags = CreatedWrapperFlags.None;\n        return false;\n    }\n\n");
 
             // CreateObject (fallback)
-            w.Write("    public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
-            w.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
-            w.Write("            externalComObject: value,\n");
-            w.Write("            iid: ");
-            w.Write(defaultIfaceIid);
-            w.Write(",\n");
-            w.Write("            marshalingType: ");
-            w.Write(marshalingType);
-            w.Write(",\n");
-            w.Write("            wrapperFlags: out wrapperFlags);\n\n");
-            w.Write("        return new ");
-            w.Write(fullProjected);
-            w.Write("(valueReference);\n    }\n}\n");
+            writer.Write("    public static unsafe object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
+            writer.Write("        WindowsRuntimeObjectReference valueReference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(\n");
+            writer.Write("            externalComObject: value,\n");
+            writer.Write("            iid: ");
+            writer.Write(defaultIfaceIid);
+            writer.Write(",\n");
+            writer.Write("            marshalingType: ");
+            writer.Write(marshalingType);
+            writer.Write(",\n");
+            writer.Write("            wrapperFlags: out wrapperFlags);\n\n");
+            writer.Write("        return new ");
+            writer.Write(fullProjected);
+            writer.Write("(valueReference);\n    }\n}\n");
         }
     }
 
@@ -3500,11 +3579,11 @@ internal static partial class CodeWriters
     /// ComWrappers class. Only emits if the default interface is a generic instantiation.
     /// behavior of inserting <c>write_unsafe_accessor_for_iid</c> at the top of the class body.
     /// </summary>
-    private static void EmitUnsafeAccessorForDefaultIfaceIfGeneric(TypeWriter w, ITypeDefOrRef? defaultIface)
+    private static void EmitUnsafeAccessorForDefaultIfaceIfGeneric(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef? defaultIface)
     {
         if (defaultIface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
-            EmitUnsafeAccessorForIid(w, gi);
+            EmitUnsafeAccessorForIid(writer, context, gi);
         }
     }
 
@@ -3513,13 +3592,13 @@ internal static partial class CodeWriters
     /// blittable-primitive-return/no-args methods get real implementations; everything else
     /// remains as 'throw null!' stubs (deferred — needs full per-parameter marshalling).
     /// </summary>
-    private static void WriteInterfaceMarshallerStub(TypeWriter w, TypeDefinition type)
+    private static void WriteInterfaceMarshallerStub(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         // exclusive to a class (and not opted into PublicExclusiveTo) or if it's marked
         // [ProjectionInternal]; public otherwise.
-        bool useInternal = (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
+        bool useInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
             || TypeCategorization.IsProjectionInternal(type);
 
         // Fast ABI: if this interface is a non-default exclusive-to interface of a fast-abi
@@ -3536,14 +3615,14 @@ internal static partial class CodeWriters
         if (TypeCategorization.IsExclusiveTo(type))
         {
             TypeDefinition? owningClass = GetExclusiveToType(type);
-            if (owningClass is not null && !w.Settings.Filter.Includes(owningClass))
+            if (owningClass is not null && !context.Settings.Filter.Includes(owningClass))
             {
                 return;
             }
         }
         // are inlined in the RCW class, so we skip emitting them in the Methods type.
         bool skipExclusiveEvents = false;
-        if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
+        if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
         {
             TypeDefinition? classType = GetExclusiveToType(type);
             if (classType is not null)
@@ -3595,16 +3674,16 @@ internal static partial class CodeWriters
         }
         if (!hasAnyMember) { return; }
 
-        w.Write(useInternal ? "internal static class " : "public static class ");
-        w.Write(nameStripped);
-        w.Write("Methods\n{\n");
+        writer.Write(useInternal ? "internal static class " : "public static class ");
+        writer.Write(nameStripped);
+        writer.Write("Methods\n{\n");
 
         foreach ((TypeDefinition iface, int startSlot, bool segSkipEvents) in segments)
         {
-            EmitMethodsClassMembersFor(w, iface, startSlot, segSkipEvents);
+            EmitMethodsClassMembersFor(writer, context, iface, startSlot, segSkipEvents);
         }
 
-        w.Write("}\n");
+        writer.Write("}\n");
     }
 
     /// <summary>True if the interface has at least one non-special method, property, or non-skipped event.</summary>
@@ -3658,7 +3737,7 @@ internal static partial class CodeWriters
     /// Emits the per-interface members (methods, properties, events) into an already-open Methods
     /// static class. Used both for the standalone case and for the fast-abi merged emission.
     /// </summary>
-    private static void EmitMethodsClassMembersFor(TypeWriter w, TypeDefinition type, int startSlot, bool skipExclusiveEvents)
+    private static void EmitMethodsClassMembersFor(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, int startSlot, bool skipExclusiveEvents)
     {
         // Build a map from each MethodDefinition to its WinMD vtable slot.
         // In AsmResolver, type.Methods is iterated in MethodDef row order, so the position of each
@@ -3680,18 +3759,18 @@ internal static partial class CodeWriters
             string mname = method.Name?.Value ?? string.Empty;
             MethodSig sig = new(method);
 
-            w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
-            w.Write("    public static unsafe ");
-            WriteProjectionReturnType(w, sig);
-            w.Write(" ");
-            w.Write(mname);
-            w.Write("(WindowsRuntimeObjectReference thisReference");
-            if (sig.Params.Count > 0) { w.Write(", "); }
-            WriteParameterList(w, sig);
-            w.Write(")");
+            writer.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
+            writer.Write("    public static unsafe ");
+            WriteProjectionReturnType(writer, context, sig);
+            writer.Write(" ");
+            writer.Write(mname);
+            writer.Write("(WindowsRuntimeObjectReference thisReference");
+            if (sig.Params.Count > 0) { writer.Write(", "); }
+            WriteParameterList(writer, context, sig);
+            writer.Write(")");
 
             // Emit the body if we can handle this case. Slot comes from the method's WinMD index.
-            EmitAbiMethodBodyIfSimple(w, sig, methodSlot[method], isNoExcept: method.IsNoExcept());
+            EmitAbiMethodBodyIfSimple(writer, context, sig, methodSlot[method], isNoExcept: method.IsNoExcept());
         }
 
         // Emit property accessors. Each getter / setter consumes one vtable slot — looked up from the underlying method.
@@ -3699,7 +3778,7 @@ internal static partial class CodeWriters
         {
             string pname = prop.Name?.Value ?? string.Empty;
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
-            string propType = WritePropType(w, prop);
+            string propType = WritePropType(context, prop);
             (MethodDefinition? gMethod, MethodDefinition? sMethod) = (getter, setter);
             // accessors of the property (the attribute is on the property itself, not on the
             // individual accessors).
@@ -3707,26 +3786,26 @@ internal static partial class CodeWriters
             if (gMethod is not null)
             {
                 MethodSig getSig = new(gMethod);
-                w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
-                w.Write("    public static unsafe ");
-                w.Write(propType);
-                w.Write(" ");
-                w.Write(pname);
-                w.Write("(WindowsRuntimeObjectReference thisReference)");
-                EmitAbiMethodBodyIfSimple(w, getSig, methodSlot[gMethod], isNoExcept: propIsNoExcept);
+                writer.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
+                writer.Write("    public static unsafe ");
+                writer.Write(propType);
+                writer.Write(" ");
+                writer.Write(pname);
+                writer.Write("(WindowsRuntimeObjectReference thisReference)");
+                EmitAbiMethodBodyIfSimple(writer, context, getSig, methodSlot[gMethod], isNoExcept: propIsNoExcept);
             }
             if (sMethod is not null)
             {
                 MethodSig setSig = new(sMethod);
-                w.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
-                w.Write("    public static unsafe void ");
-                w.Write(pname);
-                w.Write("(WindowsRuntimeObjectReference thisReference, ");
+                writer.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
+                writer.Write("    public static unsafe void ");
+                writer.Write(pname);
+                writer.Write("(WindowsRuntimeObjectReference thisReference, ");
                 // form of write_prop_type, which for SZ array types emits ReadOnlySpan<T> instead
                 // of T[] (the getter's return-type form).
-                w.Write(WritePropType(w, prop, isSetProperty: true));
-                w.Write(" value)");
-                EmitAbiMethodBodyIfSimple(w, setSig, methodSlot[sMethod], paramNameOverride: "value", isNoExcept: propIsNoExcept);
+                writer.Write(WritePropType(context, prop, isSetProperty: true));
+                writer.Write(" value)");
+                EmitAbiMethodBodyIfSimple(writer, context, setSig, methodSlot[sMethod], paramNameOverride: "value", isNoExcept: propIsNoExcept);
             }
         }
 
@@ -3751,8 +3830,9 @@ internal static partial class CodeWriters
             string eventSourceProjectedFull;
             if (isGenericEvent)
             {
-                eventSourceProjectedFull = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
-                    WriteTypeName(w, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true)));
+                IndentedTextWriter __scratchEvSrcGeneric = new();
+                        WriteTypeName(__scratchEvSrcGeneric, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
+                        eventSourceProjectedFull = __scratchEvSrcGeneric.ToString();
                 if (!eventSourceProjectedFull.StartsWith("global::", System.StringComparison.Ordinal))
                 {
                     eventSourceProjectedFull = "global::" + eventSourceProjectedFull;
@@ -3775,61 +3855,61 @@ internal static partial class CodeWriters
                 : string.Empty;
 
             // Emit the per-event ConditionalWeakTable static field.
-            w.Write("\n    private static ConditionalWeakTable<object, ");
-            w.Write(eventSourceProjectedFull);
-            w.Write("> _");
-            w.Write(evtName);
-            w.Write("\n    {\n");
-            w.Write("        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
-            w.Write("        get\n        {\n");
-            w.Write("            [MethodImpl(MethodImplOptions.NoInlining)]\n");
-            w.Write("            static ConditionalWeakTable<object, ");
-            w.Write(eventSourceProjectedFull);
-            w.Write("> MakeTable()\n            {\n");
-            w.Write("                _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);\n\n");
-            w.Write("                return global::System.Threading.Volatile.Read(in field);\n");
-            w.Write("            }\n\n");
-            w.Write("            return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n        }\n    }\n");
+            writer.Write("\n    private static ConditionalWeakTable<object, ");
+            writer.Write(eventSourceProjectedFull);
+            writer.Write("> _");
+            writer.Write(evtName);
+            writer.Write("\n    {\n");
+            writer.Write("        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
+            writer.Write("        get\n        {\n");
+            writer.Write("            [MethodImpl(MethodImplOptions.NoInlining)]\n");
+            writer.Write("            static ConditionalWeakTable<object, ");
+            writer.Write(eventSourceProjectedFull);
+            writer.Write("> MakeTable()\n            {\n");
+            writer.Write("                _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);\n\n");
+            writer.Write("                return global::System.Threading.Volatile.Read(in field);\n");
+            writer.Write("            }\n\n");
+            writer.Write("            return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n        }\n    }\n");
 
             // Emit the static method that returns the per-instance event source.
-            w.Write("\n    public static ");
-            w.Write(eventSourceProjectedFull);
-            w.Write(" ");
-            w.Write(evtName);
-            w.Write("(object thisObject, WindowsRuntimeObjectReference thisReference)\n    {\n");
+            writer.Write("\n    public static ");
+            writer.Write(eventSourceProjectedFull);
+            writer.Write(" ");
+            writer.Write(evtName);
+            writer.Write("(object thisObject, WindowsRuntimeObjectReference thisReference)\n    {\n");
             if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
             {
-                w.Write("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]\n");
-                w.Write("        [return: UnsafeAccessorType(\"");
-                w.Write(eventSourceInteropType);
-                w.Write("\")]\n");
-                w.Write("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);\n\n");
-                w.Write("        return _");
-                w.Write(evtName);
-                w.Write(".GetOrAdd(\n");
-                w.Write("            key: thisObject,\n");
-                w.Write("            valueFactory: static (_, thisReference) => Unsafe.As<");
-                w.Write(eventSourceProjectedFull);
-                w.Write(">(ctor(thisReference, ");
-                w.Write(eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                w.Write(")),\n");
-                w.Write("            factoryArgument: thisReference);\n");
+                writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]\n");
+                writer.Write("        [return: UnsafeAccessorType(\"");
+                writer.Write(eventSourceInteropType);
+                writer.Write("\")]\n");
+                writer.Write("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);\n\n");
+                writer.Write("        return _");
+                writer.Write(evtName);
+                writer.Write(".GetOrAdd(\n");
+                writer.Write("            key: thisObject,\n");
+                writer.Write("            valueFactory: static (_, thisReference) => Unsafe.As<");
+                writer.Write(eventSourceProjectedFull);
+                writer.Write(">(ctor(thisReference, ");
+                writer.Write(eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                writer.Write(")),\n");
+                writer.Write("            factoryArgument: thisReference);\n");
             }
             else
             {
                 // Non-generic delegate: directly construct.
-                w.Write("        return _");
-                w.Write(evtName);
-                w.Write(".GetOrAdd(\n");
-                w.Write("            key: thisObject,\n");
-                w.Write("            valueFactory: static (_, thisReference) => new ");
-                w.Write(eventSourceProjectedFull);
-                w.Write("(thisReference, ");
-                w.Write(eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                w.Write("),\n");
-                w.Write("            factoryArgument: thisReference);\n");
+                writer.Write("        return _");
+                writer.Write(evtName);
+                writer.Write(".GetOrAdd(\n");
+                writer.Write("            key: thisObject,\n");
+                writer.Write("            valueFactory: static (_, thisReference) => new ");
+                writer.Write(eventSourceProjectedFull);
+                writer.Write("(thisReference, ");
+                writer.Write(eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                writer.Write("),\n");
+                writer.Write("            factoryArgument: thisReference);\n");
             }
-            w.Write("    }\n");
+            writer.Write("    }\n");
         }
     }
 
@@ -3843,7 +3923,7 @@ internal static partial class CodeWriters
     /// (<c>is_noexcept(MethodDef)</c> / <c>is_noexcept(Property)</c> in <c>helpers.h:41-49</c>):
     /// methods/properties annotated with <c>[Windows.Foundation.Metadata.NoExceptionAttribute]</c>
     /// (or remove-overload methods) contractually return <c>S_OK</c>, so the wrap is omitted.</param>
-    private static void EmitAbiMethodBodyIfSimple(TypeWriter w, MethodSig sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
+    private static void EmitAbiMethodBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
@@ -3876,8 +3956,8 @@ internal static partial class CodeWriters
                 fp.Append(", ");
                 if (uOut.IsString() || IsRuntimeClassOrInterface(uOut) || uOut.IsObject() || uOut.IsGenericInstance()) { fp.Append("void**"); }
                 else if (uOut.IsSystemType()) { fp.Append("global::ABI.System.Type*"); }
-                else if (IsComplexStruct(uOut)) { fp.Append(GetAbiStructTypeName(w, uOut)); fp.Append('*'); }
-                else if (IsAnyStruct(uOut)) { fp.Append(GetBlittableStructAbiType(w, uOut)); fp.Append('*'); }
+                else if (IsComplexStruct(uOut)) { fp.Append(GetAbiStructTypeName(writer, context, uOut)); fp.Append('*'); }
+                else if (IsAnyStruct(uOut)) { fp.Append(GetBlittableStructAbiType(writer, context, uOut)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(uOut)); fp.Append('*'); }
                 continue;
             }
@@ -3885,8 +3965,8 @@ internal static partial class CodeWriters
             {
                 AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", ");
-                if (IsComplexStruct(uRef)) { fp.Append(GetAbiStructTypeName(w, uRef)); fp.Append('*'); }
-                else if (IsAnyStruct(uRef)) { fp.Append(GetBlittableStructAbiType(w, uRef)); fp.Append('*'); }
+                if (IsComplexStruct(uRef)) { fp.Append(GetAbiStructTypeName(writer, context, uRef)); fp.Append('*'); }
+                else if (IsAnyStruct(uRef)) { fp.Append(GetBlittableStructAbiType(writer, context, uRef)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(uRef)); fp.Append('*'); }
                 continue;
             }
@@ -3906,8 +3986,8 @@ internal static partial class CodeWriters
                 {
                     fp.Append(GetMappedAbiTypeName(sza.BaseType));
                 }
-                else if (IsComplexStruct(sza.BaseType)) { fp.Append(GetAbiStructTypeName(w, sza.BaseType)); }
-                else if (IsAnyStruct(sza.BaseType)) { fp.Append(GetBlittableStructAbiType(w, sza.BaseType)); }
+                else if (IsComplexStruct(sza.BaseType)) { fp.Append(GetAbiStructTypeName(writer, context, sza.BaseType)); }
+                else if (IsAnyStruct(sza.BaseType)) { fp.Append(GetBlittableStructAbiType(writer, context, sza.BaseType)); }
                 else { fp.Append(GetAbiPrimitiveType(sza.BaseType)); }
                 fp.Append("**");
                 continue;
@@ -3916,9 +3996,9 @@ internal static partial class CodeWriters
             if (p.Type.IsHResultException()) { fp.Append("global::ABI.System.Exception"); }
             else if (p.Type.IsString() || IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance()) { fp.Append("void*"); }
             else if (p.Type.IsSystemType()) { fp.Append("global::ABI.System.Type"); }
-            else if (IsAnyStruct(p.Type)) { fp.Append(GetBlittableStructAbiType(w, p.Type)); }
+            else if (IsAnyStruct(p.Type)) { fp.Append(GetBlittableStructAbiType(writer, context, p.Type)); }
             else if (IsMappedAbiValueType(p.Type)) { fp.Append(GetMappedAbiTypeName(p.Type)); }
-            else if (IsComplexStruct(p.Type)) { fp.Append(GetAbiStructTypeName(w, p.Type)); }
+            else if (IsComplexStruct(p.Type)) { fp.Append(GetAbiStructTypeName(writer, context, p.Type)); }
             else { fp.Append(GetAbiPrimitiveType(p.Type)); }
         }
         if (rt is not null)
@@ -3933,7 +4013,7 @@ internal static partial class CodeWriters
                 }
                 else if (IsComplexStruct(retSz.BaseType))
                 {
-                    fp.Append(GetAbiStructTypeName(w, retSz.BaseType));
+                    fp.Append(GetAbiStructTypeName(writer, context, retSz.BaseType));
                 }
                 else if (retSz.BaseType.IsHResultException())
                 {
@@ -3945,7 +4025,7 @@ internal static partial class CodeWriters
                 }
                 else if (IsAnyStruct(retSz.BaseType))
                 {
-                    fp.Append(GetBlittableStructAbiType(w, retSz.BaseType));
+                    fp.Append(GetBlittableStructAbiType(writer, context, retSz.BaseType));
                 }
                 else
                 {
@@ -3962,17 +4042,17 @@ internal static partial class CodeWriters
                 fp.Append(", ");
                 if (returnIsString || returnIsRefType) { fp.Append("void**"); }
                 else if (rt is not null && rt.IsSystemType()) { fp.Append("global::ABI.System.Type*"); }
-                else if (returnIsAnyStruct) { fp.Append(GetBlittableStructAbiType(w, rt!)); fp.Append('*'); }
-                else if (returnIsComplexStruct) { fp.Append(GetAbiStructTypeName(w, rt!)); fp.Append('*'); }
+                else if (returnIsAnyStruct) { fp.Append(GetBlittableStructAbiType(writer, context, rt!)); fp.Append('*'); }
+                else if (returnIsComplexStruct) { fp.Append(GetAbiStructTypeName(writer, context, rt!)); fp.Append('*'); }
                 else if (rt is not null && IsMappedAbiValueType(rt)) { fp.Append(GetMappedAbiTypeName(rt)); fp.Append('*'); }
                 else { fp.Append(GetAbiPrimitiveType(rt!)); fp.Append('*'); }
             }
         }
         fp.Append(", int");
 
-        w.Write("\n    {\n");
-        w.Write("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();\n");
-        w.Write("        void* ThisPtr = thisValue.GetThisPtrUnsafe();\n");
+        writer.Write("\n    {\n");
+        writer.Write("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();\n");
+        writer.Write("        void* ThisPtr = thisValue.GetThisPtrUnsafe();\n");
 
         // Declare 'using' marshaller values for ref-type parameters (these need disposing).
         for (int i = 0; i < sig.Params.Count; i++)
@@ -3982,11 +4062,11 @@ internal static partial class CodeWriters
             {
                 string localName = GetParamLocalName(p, paramNameOverride);
                 string callName = GetParamName(p, paramNameOverride);
-                w.Write("        using WindowsRuntimeObjectReferenceValue __");
-                w.Write(localName);
-                w.Write(" = ");
-                EmitMarshallerConvertToUnmanaged(w, p.Type, callName);
-                w.Write(";\n");
+                writer.Write("        using WindowsRuntimeObjectReferenceValue __");
+                writer.Write(localName);
+                writer.Write(" = ");
+                EmitMarshallerConvertToUnmanaged(writer, context, p.Type, callName);
+                writer.Write(";\n");
             }
             else if (p.Type.IsNullableT())
             {
@@ -3994,14 +4074,14 @@ internal static partial class CodeWriters
                 string localName = GetParamLocalName(p, paramNameOverride);
                 string callName = GetParamName(p, paramNameOverride);
                 AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
-                string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
-                w.Write("        using WindowsRuntimeObjectReferenceValue __");
-                w.Write(localName);
-                w.Write(" = ");
-                w.Write(innerMarshaller);
-                w.Write(".BoxToUnmanaged(");
-                w.Write(callName);
-                w.Write(");\n");
+                string innerMarshaller = GetNullableInnerMarshallerName(writer, context, inner);
+                writer.Write("        using WindowsRuntimeObjectReferenceValue __");
+                writer.Write(localName);
+                writer.Write(" = ");
+                writer.Write(innerMarshaller);
+                writer.Write(".BoxToUnmanaged(");
+                writer.Write(callName);
+                writer.Write(");\n");
             }
             else if (p.Type.IsGenericInstance())
             {
@@ -4009,22 +4089,24 @@ internal static partial class CodeWriters
                 string localName = GetParamLocalName(p, paramNameOverride);
                 string callName = GetParamName(p, paramNameOverride);
                 string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-                string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
-                w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
-                w.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
-                w.Write(localName);
-                w.Write("([UnsafeAccessorType(\"");
-                w.Write(interopTypeName);
-                w.Write("\")] object _, ");
-                w.Write(projectedTypeName);
-                w.Write(" value);\n");
-                w.Write("        using WindowsRuntimeObjectReferenceValue __");
-                w.Write(localName);
-                w.Write(" = ConvertToUnmanaged_");
-                w.Write(localName);
-                w.Write("(null, ");
-                w.Write(callName);
-                w.Write(");\n");
+                IndentedTextWriter __scratchProjectedTypeName = new();
+                WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
+                string projectedTypeName = __scratchProjectedTypeName.ToString();
+                writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+                writer.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
+                writer.Write(localName);
+                writer.Write("([UnsafeAccessorType(\"");
+                writer.Write(interopTypeName);
+                writer.Write("\")] object _, ");
+                writer.Write(projectedTypeName);
+                writer.Write(" value);\n");
+                writer.Write("        using WindowsRuntimeObjectReferenceValue __");
+                writer.Write(localName);
+                writer.Write(" = ConvertToUnmanaged_");
+                writer.Write(localName);
+                writer.Write("(null, ");
+                writer.Write(callName);
+                writer.Write(");\n");
             }
         }
         // (String input params are now stack-allocated via the fast-path pinning pattern below;
@@ -4037,11 +4119,11 @@ internal static partial class CodeWriters
             if (!p.Type.IsHResultException()) { continue; }
             string localName = GetParamLocalName(p, paramNameOverride);
             string callName = GetParamName(p, paramNameOverride);
-            w.Write("        global::ABI.System.Exception __");
-            w.Write(localName);
-            w.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(");
-            w.Write(callName);
-            w.Write(");\n");
+            writer.Write("        global::ABI.System.Exception __");
+            writer.Write(localName);
+            writer.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(");
+            writer.Write(callName);
+            writer.Write(");\n");
         }
         // Declare locals for mapped value-type input parameters (DateTime/TimeSpan): convert via marshaller up-front.
         for (int i = 0; i < sig.Params.Count; i++)
@@ -4051,15 +4133,15 @@ internal static partial class CodeWriters
             if (!IsMappedAbiValueType(p.Type)) { continue; }
             string localName = GetParamLocalName(p, paramNameOverride);
             string callName = GetParamName(p, paramNameOverride);
-            w.Write("        ");
-            w.Write(GetMappedAbiTypeName(p.Type));
-            w.Write(" __");
-            w.Write(localName);
-            w.Write(" = ");
-            w.Write(GetMappedMarshallerName(p.Type));
-            w.Write(".ConvertToUnmanaged(");
-            w.Write(callName);
-            w.Write(");\n");
+            writer.Write("        ");
+            writer.Write(GetMappedAbiTypeName(p.Type));
+            writer.Write(" __");
+            writer.Write(localName);
+            writer.Write(" = ");
+            writer.Write(GetMappedMarshallerName(p.Type));
+            writer.Write(".ConvertToUnmanaged(");
+            writer.Write(callName);
+            writer.Write(");\n");
         }
         // Declare locals for complex-struct input parameters (e.g. ProfileUsage with nested
         // string/Nullable fields): default-initialize OUTSIDE try, assign inside try via marshaller,
@@ -4073,11 +4155,11 @@ internal static partial class CodeWriters
             AsmResolver.DotNet.Signatures.TypeSignature pType = StripByRefAndCustomModifiers(p.Type);
             if (!IsComplexStruct(pType)) { continue; }
             string localName = GetParamLocalName(p, paramNameOverride);
-            w.Write("        ");
-            w.Write(GetAbiStructTypeName(w, pType));
-            w.Write(" __");
-            w.Write(localName);
-            w.Write(" = default;\n");
+            writer.Write("        ");
+            writer.Write(GetAbiStructTypeName(writer, context, pType));
+            writer.Write(" __");
+            writer.Write(localName);
+            writer.Write(" = default;\n");
         }
         // Declare locals for Out parameters (need to be passed as &__<name> to the call).
         for (int i = 0; i < sig.Params.Count; i++)
@@ -4087,15 +4169,15 @@ internal static partial class CodeWriters
             if (cat != ParamCategory.Out) { continue; }
             string localName = GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.TypeSignature uOut = StripByRefAndCustomModifiers(p.Type);
-            w.Write("        ");
-            if (uOut.IsString() || IsRuntimeClassOrInterface(uOut) || uOut.IsObject() || uOut.IsGenericInstance()) { w.Write("void*"); }
-            else if (uOut.IsSystemType()) { w.Write("global::ABI.System.Type"); }
-            else if (IsComplexStruct(uOut)) { w.Write(GetAbiStructTypeName(w, uOut)); }
-            else if (IsAnyStruct(uOut)) { w.Write(GetBlittableStructAbiType(w, uOut)); }
-            else { w.Write(GetAbiPrimitiveType(uOut)); }
-            w.Write(" __");
-            w.Write(localName);
-            w.Write(" = default;\n");
+            writer.Write("        ");
+            if (uOut.IsString() || IsRuntimeClassOrInterface(uOut) || uOut.IsObject() || uOut.IsGenericInstance()) { writer.Write("void*"); }
+            else if (uOut.IsSystemType()) { writer.Write("global::ABI.System.Type"); }
+            else if (IsComplexStruct(uOut)) { writer.Write(GetAbiStructTypeName(writer, context, uOut)); }
+            else if (IsAnyStruct(uOut)) { writer.Write(GetBlittableStructAbiType(writer, context, uOut)); }
+            else { writer.Write(GetAbiPrimitiveType(uOut)); }
+            writer.Write(" __");
+            writer.Write(localName);
+            writer.Write(" = default;\n");
         }
         // Declare locals for ReceiveArray params (uint length + element pointer).
         for (int i = 0; i < sig.Params.Count; i++)
@@ -4105,31 +4187,31 @@ internal static partial class CodeWriters
             if (cat != ParamCategory.ReceiveArray) { continue; }
             string localName = GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
-            w.Write("        uint __");
-            w.Write(localName);
-            w.Write("_length = default;\n");
-            w.Write("        ");
+            writer.Write("        uint __");
+            writer.Write(localName);
+            writer.Write("_length = default;\n");
+            writer.Write("        ");
             // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
             // primitive ABI otherwise.
             if (sza.BaseType.IsString() || IsRuntimeClassOrInterface(sza.BaseType) || sza.BaseType.IsObject())
             {
-                w.Write("void*");
+                writer.Write("void*");
             }
             else if (IsComplexStruct(sza.BaseType))
             {
-                w.Write(GetAbiStructTypeName(w, sza.BaseType));
+                writer.Write(GetAbiStructTypeName(writer, context, sza.BaseType));
             }
             else if (IsAnyStruct(sza.BaseType))
             {
-                w.Write(GetBlittableStructAbiType(w, sza.BaseType));
+                writer.Write(GetBlittableStructAbiType(writer, context, sza.BaseType));
             }
             else
             {
-                w.Write(GetAbiPrimitiveType(sza.BaseType));
+                writer.Write(GetAbiPrimitiveType(sza.BaseType));
             }
-            w.Write("* __");
-            w.Write(localName);
-            w.Write("_data = default;\n");
+            writer.Write("* __");
+            writer.Write(localName);
+            writer.Write("_data = default;\n");
         }
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
         // (runtime classes, objects, strings). Runtime class/object: just one InlineArray16<nint>.
@@ -4150,152 +4232,152 @@ internal static partial class CodeWriters
             string storageT = IsMappedAbiValueType(szArr.BaseType)
                 ? GetMappedAbiTypeName(szArr.BaseType)
                 : IsComplexStruct(szArr.BaseType)
-                    ? GetAbiStructTypeName(w, szArr.BaseType)
+                    ? GetAbiStructTypeName(writer, context, szArr.BaseType)
                     : szArr.BaseType.IsHResultException()
                         ? "global::ABI.System.Exception"
                         : "nint";
-            w.Write("\n        Unsafe.SkipInit(out InlineArray16<");
-            w.Write(storageT);
-            w.Write("> __");
-            w.Write(localName);
-            w.Write("_inlineArray);\n");
-            w.Write("        ");
-            w.Write(storageT);
-            w.Write("[] __");
-            w.Write(localName);
-            w.Write("_arrayFromPool = null;\n");
-            w.Write("        Span<");
-            w.Write(storageT);
-            w.Write("> __");
-            w.Write(localName);
-            w.Write("_span = ");
-            w.Write(callName);
-            w.Write(".Length <= 16\n            ? __");
-            w.Write(localName);
-            w.Write("_inlineArray[..");
-            w.Write(callName);
-            w.Write(".Length]\n            : (__");
-            w.Write(localName);
-            w.Write("_arrayFromPool = global::System.Buffers.ArrayPool<");
-            w.Write(storageT);
-            w.Write(">.Shared.Rent(");
-            w.Write(callName);
-            w.Write(".Length));\n");
+            writer.Write("\n        Unsafe.SkipInit(out InlineArray16<");
+            writer.Write(storageT);
+            writer.Write("> __");
+            writer.Write(localName);
+            writer.Write("_inlineArray);\n");
+            writer.Write("        ");
+            writer.Write(storageT);
+            writer.Write("[] __");
+            writer.Write(localName);
+            writer.Write("_arrayFromPool = null;\n");
+            writer.Write("        Span<");
+            writer.Write(storageT);
+            writer.Write("> __");
+            writer.Write(localName);
+            writer.Write("_span = ");
+            writer.Write(callName);
+            writer.Write(".Length <= 16\n            ? __");
+            writer.Write(localName);
+            writer.Write("_inlineArray[..");
+            writer.Write(callName);
+            writer.Write(".Length]\n            : (__");
+            writer.Write(localName);
+            writer.Write("_arrayFromPool = global::System.Buffers.ArrayPool<");
+            writer.Write(storageT);
+            writer.Write(">.Shared.Rent(");
+            writer.Write(callName);
+            writer.Write(".Length));\n");
 
             if (szArr.BaseType.IsString() && cat == ParamCategory.PassArray)
             {
                 // Strings need an additional InlineArray16<HStringHeader> + InlineArray16<nint> (pinned handles).
                 // Only required for PassArray (managed -> HSTRING conversion); FillArray's native side
                 // fills HSTRING handles directly into the nint storage.
-                w.Write("\n        Unsafe.SkipInit(out InlineArray16<HStringHeader> __");
-                w.Write(localName);
-                w.Write("_inlineHeaderArray);\n");
-                w.Write("        HStringHeader[] __");
-                w.Write(localName);
-                w.Write("_headerArrayFromPool = null;\n");
-                w.Write("        Span<HStringHeader> __");
-                w.Write(localName);
-                w.Write("_headerSpan = ");
-                w.Write(callName);
-                w.Write(".Length <= 16\n            ? __");
-                w.Write(localName);
-                w.Write("_inlineHeaderArray[..");
-                w.Write(callName);
-                w.Write(".Length]\n            : (__");
-                w.Write(localName);
-                w.Write("_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent(");
-                w.Write(callName);
-                w.Write(".Length));\n");
+                writer.Write("\n        Unsafe.SkipInit(out InlineArray16<HStringHeader> __");
+                writer.Write(localName);
+                writer.Write("_inlineHeaderArray);\n");
+                writer.Write("        HStringHeader[] __");
+                writer.Write(localName);
+                writer.Write("_headerArrayFromPool = null;\n");
+                writer.Write("        Span<HStringHeader> __");
+                writer.Write(localName);
+                writer.Write("_headerSpan = ");
+                writer.Write(callName);
+                writer.Write(".Length <= 16\n            ? __");
+                writer.Write(localName);
+                writer.Write("_inlineHeaderArray[..");
+                writer.Write(callName);
+                writer.Write(".Length]\n            : (__");
+                writer.Write(localName);
+                writer.Write("_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent(");
+                writer.Write(callName);
+                writer.Write(".Length));\n");
 
-                w.Write("\n        Unsafe.SkipInit(out InlineArray16<nint> __");
-                w.Write(localName);
-                w.Write("_inlinePinnedHandleArray);\n");
-                w.Write("        nint[] __");
-                w.Write(localName);
-                w.Write("_pinnedHandleArrayFromPool = null;\n");
-                w.Write("        Span<nint> __");
-                w.Write(localName);
-                w.Write("_pinnedHandleSpan = ");
-                w.Write(callName);
-                w.Write(".Length <= 16\n            ? __");
-                w.Write(localName);
-                w.Write("_inlinePinnedHandleArray[..");
-                w.Write(callName);
-                w.Write(".Length]\n            : (__");
-                w.Write(localName);
-                w.Write("_pinnedHandleArrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent(");
-                w.Write(callName);
-                w.Write(".Length));\n");
+                writer.Write("\n        Unsafe.SkipInit(out InlineArray16<nint> __");
+                writer.Write(localName);
+                writer.Write("_inlinePinnedHandleArray);\n");
+                writer.Write("        nint[] __");
+                writer.Write(localName);
+                writer.Write("_pinnedHandleArrayFromPool = null;\n");
+                writer.Write("        Span<nint> __");
+                writer.Write(localName);
+                writer.Write("_pinnedHandleSpan = ");
+                writer.Write(callName);
+                writer.Write(".Length <= 16\n            ? __");
+                writer.Write(localName);
+                writer.Write("_inlinePinnedHandleArray[..");
+                writer.Write(callName);
+                writer.Write(".Length]\n            : (__");
+                writer.Write(localName);
+                writer.Write("_pinnedHandleArrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent(");
+                writer.Write(callName);
+                writer.Write(".Length));\n");
             }
         }
         if (returnIsReceiveArray)
         {
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
-            w.Write("        uint __retval_length = default;\n");
-            w.Write("        ");
+            writer.Write("        uint __retval_length = default;\n");
+            writer.Write("        ");
             if (retSz.BaseType.IsString() || IsRuntimeClassOrInterface(retSz.BaseType) || retSz.BaseType.IsObject())
             {
-                w.Write("void*");
+                writer.Write("void*");
             }
             else if (IsComplexStruct(retSz.BaseType))
             {
-                w.Write(GetAbiStructTypeName(w, retSz.BaseType));
+                writer.Write(GetAbiStructTypeName(writer, context, retSz.BaseType));
             }
             else if (retSz.BaseType.IsHResultException())
             {
-                w.Write("global::ABI.System.Exception");
+                writer.Write("global::ABI.System.Exception");
             }
             else if (IsMappedAbiValueType(retSz.BaseType))
             {
-                w.Write(GetMappedAbiTypeName(retSz.BaseType));
+                writer.Write(GetMappedAbiTypeName(retSz.BaseType));
             }
             else if (IsAnyStruct(retSz.BaseType))
             {
-                w.Write(GetBlittableStructAbiType(w, retSz.BaseType));
+                writer.Write(GetBlittableStructAbiType(writer, context, retSz.BaseType));
             }
             else
             {
-                w.Write(GetAbiPrimitiveType(retSz.BaseType));
+                writer.Write(GetAbiPrimitiveType(retSz.BaseType));
             }
-            w.Write("* __retval_data = default;\n");
+            writer.Write("* __retval_data = default;\n");
         }
         else if (returnIsHResultException)
         {
-            w.Write("        global::ABI.System.Exception __retval = default;\n");
+            writer.Write("        global::ABI.System.Exception __retval = default;\n");
         }
         else if (returnIsString || returnIsRefType)
         {
-            w.Write("        void* __retval = default;\n");
+            writer.Write("        void* __retval = default;\n");
         }
         else if (returnIsAnyStruct)
         {
-            w.Write("        ");
-            w.Write(GetBlittableStructAbiType(w, rt!));
-            w.Write(" __retval = default;\n");
+            writer.Write("        ");
+            writer.Write(GetBlittableStructAbiType(writer, context, rt!));
+            writer.Write(" __retval = default;\n");
         }
         else if (returnIsComplexStruct)
         {
-            w.Write("        ");
-            w.Write(GetAbiStructTypeName(w, rt!));
-            w.Write(" __retval = default;\n");
+            writer.Write("        ");
+            writer.Write(GetAbiStructTypeName(writer, context, rt!));
+            writer.Write(" __retval = default;\n");
         }
         else if (rt is not null && IsMappedAbiValueType(rt))
         {
             // Mapped value type return (e.g. DateTime/TimeSpan): use the ABI struct as __retval.
-            w.Write("        ");
-            w.Write(GetMappedAbiTypeName(rt));
-            w.Write(" __retval = default;\n");
+            writer.Write("        ");
+            writer.Write(GetMappedAbiTypeName(rt));
+            writer.Write(" __retval = default;\n");
         }
         else if (rt is not null && rt.IsSystemType())
         {
             // System.Type return: use ABI Type struct as __retval.
-            w.Write("        global::ABI.System.Type __retval = default;\n");
+            writer.Write("        global::ABI.System.Type __retval = default;\n");
         }
         else if (rt is not null)
         {
-            w.Write("        ");
-            w.Write(GetAbiPrimitiveType(rt));
-            w.Write(" __retval = default;\n");
+            writer.Write("        ");
+            writer.Write(GetAbiPrimitiveType(rt));
+            writer.Write(" __retval = default;\n");
         }
 
         // Determine if we need a try/finally (for cleanup of string/refType return or receive array
@@ -4340,7 +4422,7 @@ internal static partial class CodeWriters
         // C++ abi_marshaler::write_dispose path for is_out + non-empty marshaler_type.
         bool returnIsSystemTypeForCleanup = rt is not null && rt.IsSystemType();
         bool needsTryFinally = returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct || hasNonBlittablePassArray || hasComplexStructInput || returnIsSystemTypeForCleanup;
-        if (needsTryFinally) { w.Write("        try\n        {\n"); }
+        if (needsTryFinally) { writer.Write("        try\n        {\n"); }
 
         string indent = needsTryFinally ? "            " : "        ";
 
@@ -4356,14 +4438,14 @@ internal static partial class CodeWriters
             if (!IsComplexStruct(pType)) { continue; }
             string localName = GetParamLocalName(p, paramNameOverride);
             string callName = GetParamName(p, paramNameOverride);
-            w.Write(indent);
-            w.Write("__");
-            w.Write(localName);
-            w.Write(" = ");
-            w.Write(GetMarshallerFullName(w, pType));
-            w.Write(".ConvertToUnmanaged(");
-            w.Write(callName);
-            w.Write(");\n");
+            writer.Write(indent);
+            writer.Write("__");
+            writer.Write(localName);
+            writer.Write(" = ");
+            writer.Write(GetMarshallerFullName(writer, context, pType));
+            writer.Write(".ConvertToUnmanaged(");
+            writer.Write(callName);
+            writer.Write(");\n");
         }
         // Type input params: set up TypeReference locals before the fixed block. Mirrors truth:
         //   global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(forType, out TypeReference __forType);
@@ -4374,12 +4456,12 @@ internal static partial class CodeWriters
             if (!p.Type.IsSystemType()) { continue; }
             string localName = GetParamLocalName(p, paramNameOverride);
             string callName = GetParamName(p, paramNameOverride);
-            w.Write(indent);
-            w.Write("global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(");
-            w.Write(callName);
-            w.Write(", out TypeReference __");
-            w.Write(localName);
-            w.Write(");\n");
+            writer.Write(indent);
+            writer.Write("global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(");
+            writer.Write(callName);
+            writer.Write(", out TypeReference __");
+            writer.Write(localName);
+            writer.Write(");\n");
         }
         // Open a SINGLE fixed-block for ALL pinnable inputs (mirrors C++ write_abi_invoke):
         //   1. Ref params (typed ptr, separate "fixed(T* _x = &x)\n" lines, no braces)
@@ -4424,16 +4506,16 @@ internal static partial class CodeWriters
                 string callName = GetParamName(p, paramNameOverride);
                 string localName = GetParamLocalName(p, paramNameOverride);
                 AsmResolver.DotNet.Signatures.TypeSignature uRef = uRefSkip;
-                string abiType = IsAnyStruct(uRef) ? GetBlittableStructAbiType(w, uRef) : GetAbiPrimitiveType(uRef);
-                w.Write(indent);
-                w.Write(new string(' ', fixedNesting * 4));
-                w.Write("fixed(");
-                w.Write(abiType);
-                w.Write("* _");
-                w.Write(localName);
-                w.Write(" = &");
-                w.Write(callName);
-                w.Write(")\n");
+                string abiType = IsAnyStruct(uRef) ? GetBlittableStructAbiType(writer, context, uRef) : GetAbiPrimitiveType(uRef);
+                writer.Write(indent);
+                writer.Write(new string(' ', fixedNesting * 4));
+                writer.Write("fixed(");
+                writer.Write(abiType);
+                writer.Write("* _");
+                writer.Write(localName);
+                writer.Write(" = &");
+                writer.Write(callName);
+                writer.Write(")\n");
                 typedFixedCount++;
             }
         }
@@ -4444,9 +4526,9 @@ internal static partial class CodeWriters
         bool stringPinnablesEmitted = false;
         if (hasAnyVoidStarPinnable)
         {
-            w.Write(indent);
-            w.Write(new string(' ', fixedNesting * 4));
-            w.Write("fixed(void* ");
+            writer.Write(indent);
+            writer.Write(new string(' ', fixedNesting * 4));
+            writer.Write("fixed(void* ");
             bool first = true;
             for (int i = 0; i < sig.Params.Count; i++)
             {
@@ -4458,15 +4540,15 @@ internal static partial class CodeWriters
                 if (!isString && !isType && !isPassArray) { continue; }
                 string callName = GetParamName(p, paramNameOverride);
                 string localName = GetParamLocalName(p, paramNameOverride);
-                if (!first) { w.Write(", "); }
+                if (!first) { writer.Write(", "); }
                 first = false;
-                w.Write("_");
-                w.Write(localName);
-                w.Write(" = ");
+                writer.Write("_");
+                writer.Write(localName);
+                writer.Write(" = ");
                 if (isType)
                 {
-                    w.Write("__");
-                    w.Write(localName);
+                    writer.Write("__");
+                    writer.Write(localName);
                 }
                 else if (isPassArray)
                 {
@@ -4475,36 +4557,36 @@ internal static partial class CodeWriters
                     bool isStringElem = elemT.IsString();
                     if (isBlittableElem)
                     {
-                        w.Write(callName);
+                        writer.Write(callName);
                     }
                     else
                     {
-                        w.Write("__");
-                        w.Write(localName);
-                        w.Write("_span");
+                        writer.Write("__");
+                        writer.Write(localName);
+                        writer.Write("_span");
                     }
                     // For string elements: only PassArray needs the additional inlineHeaderArray
                     // pinned alongside the data span. FillArray fills HSTRINGs into the nint
                     // storage directly (no header conversion needed).
                     if (isStringElem && cat == ParamCategory.PassArray)
                     {
-                        w.Write(", _");
-                        w.Write(localName);
-                        w.Write("_inlineHeaderArray = __");
-                        w.Write(localName);
-                        w.Write("_headerSpan");
+                        writer.Write(", _");
+                        writer.Write(localName);
+                        writer.Write("_inlineHeaderArray = __");
+                        writer.Write(localName);
+                        writer.Write("_headerSpan");
                     }
                 }
                 else
                 {
                     // string param
-                    w.Write(callName);
+                    writer.Write(callName);
                 }
             }
-            w.Write(")\n");
-            w.Write(indent);
-            w.Write(new string(' ', fixedNesting * 4));
-            w.Write("{\n");
+            writer.Write(")\n");
+            writer.Write(indent);
+            writer.Write(new string(' ', fixedNesting * 4));
+            writer.Write("{\n");
             fixedNesting++;
             // Inside the body: emit HStringMarshaller calls for input string params.
             for (int i = 0; i < sig.Params.Count; i++)
@@ -4512,15 +4594,15 @@ internal static partial class CodeWriters
                 if (!sig.Params[i].Type.IsString()) { continue; }
                 string callName = GetParamName(sig.Params[i], paramNameOverride);
                 string localName = GetParamLocalName(sig.Params[i], paramNameOverride);
-                w.Write(indent);
-                w.Write(new string(' ', fixedNesting * 4));
-                w.Write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
-                w.Write(localName);
-                w.Write(", ");
-                w.Write(callName);
-                w.Write("?.Length, out HStringReference __");
-                w.Write(localName);
-                w.Write(");\n");
+                writer.Write(indent);
+                writer.Write(new string(' ', fixedNesting * 4));
+                writer.Write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
+                writer.Write(localName);
+                writer.Write(", ");
+                writer.Write(callName);
+                writer.Write("?.Length, out HStringReference __");
+                writer.Write(localName);
+                writer.Write(");\n");
             }
             stringPinnablesEmitted = true;
         }
@@ -4528,9 +4610,9 @@ internal static partial class CodeWriters
         {
             // Typed fixed lines exist but no void* combined block - we need a body block
             // to host them. Open a brace block after the last typed fixed line.
-            w.Write(indent);
-            w.Write(new string(' ', fixedNesting * 4));
-            w.Write("{\n");
+            writer.Write(indent);
+            writer.Write(new string(' ', fixedNesting * 4));
+            writer.Write("{\n");
             fixedNesting++;
         }
         // Suppress unused variable warning when block above doesn't fire.
@@ -4557,24 +4639,24 @@ internal static partial class CodeWriters
                 // Skip pre-call ConvertToUnmanagedUnsafe for FillArray of strings — there's
                 // nothing to convert (native fills the handles). Mirrors C++ truth pattern.
                 if (cat == ParamCategory.FillArray) { continue; }
-                w.Write(callIndent);
-                w.Write("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(\n");
-                w.Write(callIndent);
-                w.Write("    source: ");
-                w.Write(callName);
-                w.Write(",\n");
-                w.Write(callIndent);
-                w.Write("    hstringHeaders: (HStringHeader*) _");
-                w.Write(localName);
-                w.Write("_inlineHeaderArray,\n");
-                w.Write(callIndent);
-                w.Write("    hstrings: __");
-                w.Write(localName);
-                w.Write("_span,\n");
-                w.Write(callIndent);
-                w.Write("    pinnedGCHandles: __");
-                w.Write(localName);
-                w.Write("_pinnedHandleSpan);\n");
+                writer.Write(callIndent);
+                writer.Write("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(\n");
+                writer.Write(callIndent);
+                writer.Write("    source: ");
+                writer.Write(callName);
+                writer.Write(",\n");
+                writer.Write(callIndent);
+                writer.Write("    hstringHeaders: (HStringHeader*) _");
+                writer.Write(localName);
+                writer.Write("_inlineHeaderArray,\n");
+                writer.Write(callIndent);
+                writer.Write("    hstrings: __");
+                writer.Write(localName);
+                writer.Write("_span,\n");
+                writer.Write(callIndent);
+                writer.Write("    pinnedGCHandles: __");
+                writer.Write(localName);
+                writer.Write("_pinnedHandleSpan);\n");
             }
             else
             {
@@ -4585,8 +4667,12 @@ internal static partial class CodeWriters
                 // managed Span<T>. (Mirrors C++ marshaler.write_marshal_to_abi which only emits
                 // CopyToUnmanaged for PassArray, not FillArray.)
                 if (cat == ParamCategory.FillArray) { continue; }
-                string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
+                IndentedTextWriter __scratchElementProjected = new();
+                WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
+                string elementProjected = __scratchElementProjected.ToString();
                 string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+
+                _ = elementInteropArg;
                 // For mapped value types (DateTime/TimeSpan) and complex structs, the storage
                 // element is the ABI struct type; the data pointer parameter type uses that
                 // ABI struct. The fixed() opens with void* (per truth's pattern), so a cast
@@ -4605,7 +4691,7 @@ internal static partial class CodeWriters
                 }
                 else if (IsComplexStruct(szArr.BaseType))
                 {
-                    string abiStructName = GetAbiStructTypeName(w, szArr.BaseType);
+                    string abiStructName = GetAbiStructTypeName(writer, context, szArr.BaseType);
                     dataParamType = abiStructName + "*";
                     dataCastType = "(" + abiStructName + "*)";
                 }
@@ -4614,47 +4700,47 @@ internal static partial class CodeWriters
                     dataParamType = "void**";
                     dataCastType = "(void**)";
                 }
-                w.Write(callIndent);
-                w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
-                w.Write(callIndent);
-                w.Write("static extern void CopyToUnmanaged_");
-                w.Write(localName);
-                w.Write("([UnsafeAccessorType(\"");
-                w.Write(GetArrayMarshallerInteropPath(szArr.BaseType));
-                w.Write("\")] object _, ReadOnlySpan<");
-                w.Write(elementProjected);
-                w.Write("> span, uint length, ");
-                w.Write(dataParamType);
-                w.Write(" data);\n");
-                w.Write(callIndent);
-                w.Write("CopyToUnmanaged_");
-                w.Write(localName);
-                w.Write("(null, ");
-                w.Write(callName);
-                w.Write(", (uint)");
-                w.Write(callName);
-                w.Write(".Length, ");
-                w.Write(dataCastType);
-                w.Write("_");
-                w.Write(localName);
-                w.Write(");\n");
+                writer.Write(callIndent);
+                writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
+                writer.Write(callIndent);
+                writer.Write("static extern void CopyToUnmanaged_");
+                writer.Write(localName);
+                writer.Write("([UnsafeAccessorType(\"");
+                writer.Write(GetArrayMarshallerInteropPath(szArr.BaseType));
+                writer.Write("\")] object _, ReadOnlySpan<");
+                writer.Write(elementProjected);
+                writer.Write("> span, uint length, ");
+                writer.Write(dataParamType);
+                writer.Write(" data);\n");
+                writer.Write(callIndent);
+                writer.Write("CopyToUnmanaged_");
+                writer.Write(localName);
+                writer.Write("(null, ");
+                writer.Write(callName);
+                writer.Write(", (uint)");
+                writer.Write(callName);
+                writer.Write(".Length, ");
+                writer.Write(dataCastType);
+                writer.Write("_");
+                writer.Write(localName);
+                writer.Write(");\n");
             }
         }
 
-        w.Write(callIndent);
+        writer.Write(callIndent);
         // method/property is [NoException] (its HRESULT is contractually S_OK).
         if (!isNoExcept)
         {
-            w.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
+            writer.Write("RestrictedErrorInfo.ThrowExceptionForHR((*(delegate* unmanaged[MemberFunction]<");
         }
         else
         {
-            w.Write("(*(delegate* unmanaged[MemberFunction]<");
+            writer.Write("(*(delegate* unmanaged[MemberFunction]<");
         }
-        w.Write(fp.ToString());
-        w.Write(">**)ThisPtr)[");
-        w.Write(slot);
-        w.Write("](ThisPtr");
+        writer.Write(fp.ToString());
+        writer.Write(">**)ThisPtr)[");
+        writer.Write(slot.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        writer.Write("](ThisPtr");
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
@@ -4663,27 +4749,27 @@ internal static partial class CodeWriters
             {
                 string callName = GetParamName(p, paramNameOverride);
                 string localName = GetParamLocalName(p, paramNameOverride);
-                w.Write(",\n  (uint)");
-                w.Write(callName);
-                w.Write(".Length, _");
-                w.Write(localName);
+                writer.Write(",\n  (uint)");
+                writer.Write(callName);
+                writer.Write(".Length, _");
+                writer.Write(localName);
                 continue;
             }
             if (cat == ParamCategory.Out)
             {
                 string localName = GetParamLocalName(p, paramNameOverride);
-                w.Write(",\n  &__");
-                w.Write(localName);
+                writer.Write(",\n  &__");
+                writer.Write(localName);
                 continue;
             }
             if (cat == ParamCategory.ReceiveArray)
             {
                 string localName = GetParamLocalName(p, paramNameOverride);
-                w.Write(",\n  &__");
-                w.Write(localName);
-                w.Write("_length, &__");
-                w.Write(localName);
-                w.Write("_data");
+                writer.Write(",\n  &__");
+                writer.Write(localName);
+                writer.Write("_length, &__");
+                writer.Write(localName);
+                writer.Write("_data");
                 continue;
             }
             if (cat == ParamCategory.Ref)
@@ -4693,73 +4779,73 @@ internal static partial class CodeWriters
                 if (IsComplexStruct(uRefArg))
                 {
                     // Complex struct 'in' (Ref) param: pass &__local (the marshaled ABI struct).
-                    w.Write(",\n  &__");
-                    w.Write(localName);
+                    writer.Write(",\n  &__");
+                    writer.Write(localName);
                 }
                 else
                 {
                     // 'in T' projected param: pass the pinned pointer.
-                    w.Write(",\n  _");
-                    w.Write(localName);
+                    writer.Write(",\n  _");
+                    writer.Write(localName);
                 }
                 continue;
             }
-            w.Write(",\n  ");
+            writer.Write(",\n  ");
             if (p.Type.IsHResultException())
             {
-                w.Write("__");
-                w.Write(GetParamLocalName(p, paramNameOverride));
+                writer.Write("__");
+                writer.Write(GetParamLocalName(p, paramNameOverride));
             }
             else if (p.Type.IsString())
             {
-                w.Write("__");
-                w.Write(GetParamLocalName(p, paramNameOverride));
-                w.Write(".HString");
+                writer.Write("__");
+                writer.Write(GetParamLocalName(p, paramNameOverride));
+                writer.Write(".HString");
             }
             else if (IsRuntimeClassOrInterface(p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
             {
-                w.Write("__");
-                w.Write(GetParamLocalName(p, paramNameOverride));
-                w.Write(".GetThisPtrUnsafe()");
+                writer.Write("__");
+                writer.Write(GetParamLocalName(p, paramNameOverride));
+                writer.Write(".GetThisPtrUnsafe()");
             }
             else if (p.Type.IsSystemType())
             {
                 // System.Type input: pass the pre-converted ABI Type struct (via the local set up before the call).
-                w.Write("__");
-                w.Write(GetParamLocalName(p, paramNameOverride));
-                w.Write(".ConvertToUnmanagedUnsafe()");
+                writer.Write("__");
+                writer.Write(GetParamLocalName(p, paramNameOverride));
+                writer.Write(".ConvertToUnmanagedUnsafe()");
             }
             else if (IsMappedAbiValueType(p.Type))
             {
                 // Mapped value-type input: pass the pre-converted ABI local.
-                w.Write("__");
-                w.Write(GetParamLocalName(p, paramNameOverride));
+                writer.Write("__");
+                writer.Write(GetParamLocalName(p, paramNameOverride));
             }
             else if (IsComplexStruct(p.Type))
             {
                 // Complex struct input: pass the pre-converted ABI struct local.
-                w.Write("__");
-                w.Write(GetParamLocalName(p, paramNameOverride));
+                writer.Write("__");
+                writer.Write(GetParamLocalName(p, paramNameOverride));
             }
             else if (IsAnyStruct(p.Type))
             {
-                w.Write(GetParamName(p, paramNameOverride));
+                writer.Write(GetParamName(p, paramNameOverride));
             }
             else
             {
-                EmitParamArgConversion(w, p, paramNameOverride);
+                EmitParamArgConversion(writer, context, p, paramNameOverride);
             }
         }
         if (returnIsReceiveArray)
         {
-            w.Write(",\n  &__retval_length, &__retval_data");
+            writer.Write(",\n  &__retval_length, &__retval_data");
         }
         else if (rt is not null)
         {
-            w.Write(",\n  &__retval");
+            writer.Write(",\n  &__retval");
         }
         // Close the vtable call. One less ')' when noexcept (no ThrowExceptionForHR wrap).
-        w.Write(isNoExcept ? ");\n" : "));\n");
+        writer.Write(isNoExcept ? ");\n" : "));\n");
 
         // After call: copy native-filled values back into the user's managed Span<T> for
         // FillArray of non-blittable element types. The native callee wrote into our
@@ -4778,8 +4864,12 @@ internal static partial class CodeWriters
             if (IsBlittablePrimitive(szFA.BaseType) || IsAnyStruct(szFA.BaseType)) { continue; }
             string callName = GetParamName(p, paramNameOverride);
             string localName = GetParamLocalName(p, paramNameOverride);
-            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szFA.BaseType))));
+            IndentedTextWriter __scratchElementProjected = new();
+            WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
+            string elementProjected = __scratchElementProjected.ToString();
             string elementInteropArg = EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
+
+            _ = elementInteropArg;
             // Determine the ABI element type for the data pointer parameter.
             // - Strings / runtime classes / objects: void**
             // - HResult exception: global::ABI.System.Exception*
@@ -4805,34 +4895,34 @@ internal static partial class CodeWriters
             }
             else
             {
-                string abiStructName = GetAbiStructTypeName(w, szFA.BaseType);
+                string abiStructName = GetAbiStructTypeName(writer, context, szFA.BaseType);
                 dataParamType = abiStructName + "* data";
                 dataCastType = "(" + abiStructName + "*)";
             }
-            w.Write(callIndent);
-            w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]\n");
-            w.Write(callIndent);
-            w.Write("static extern void CopyToManaged_");
-            w.Write(localName);
-            w.Write("([UnsafeAccessorType(\"");
-            w.Write(GetArrayMarshallerInteropPath(szFA.BaseType));
-            w.Write("\")] object _, uint length, ");
-            w.Write(dataParamType);
-            w.Write(", Span<");
-            w.Write(elementProjected);
-            w.Write("> span);\n");
-            w.Write(callIndent);
-            w.Write("CopyToManaged_");
-            w.Write(localName);
-            w.Write("(null, (uint)__");
-            w.Write(localName);
-            w.Write("_span.Length, ");
-            w.Write(dataCastType);
-            w.Write("_");
-            w.Write(localName);
-            w.Write(", ");
-            w.Write(callName);
-            w.Write(");\n");
+            writer.Write(callIndent);
+            writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]\n");
+            writer.Write(callIndent);
+            writer.Write("static extern void CopyToManaged_");
+            writer.Write(localName);
+            writer.Write("([UnsafeAccessorType(\"");
+            writer.Write(GetArrayMarshallerInteropPath(szFA.BaseType));
+            writer.Write("\")] object _, uint length, ");
+            writer.Write(dataParamType);
+            writer.Write(", Span<");
+            writer.Write(elementProjected);
+            writer.Write("> span);\n");
+            writer.Write(callIndent);
+            writer.Write("CopyToManaged_");
+            writer.Write(localName);
+            writer.Write("(null, (uint)__");
+            writer.Write(localName);
+            writer.Write("_span.Length, ");
+            writer.Write(dataCastType);
+            writer.Write("_");
+            writer.Write(localName);
+            writer.Write(", ");
+            writer.Write(callName);
+            writer.Write(");\n");
         }
 
         // After call: write back Out params to caller's 'out' var.
@@ -4851,90 +4941,92 @@ internal static partial class CodeWriters
             if (uOut.IsGenericInstance())
             {
                 string interopTypeName = EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
-                string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, uOut, false)));
-                w.Write(callIndent);
-                w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
-                w.Write(callIndent);
-                w.Write("static extern ");
-                w.Write(projectedTypeName);
-                w.Write(" ConvertToManaged_");
-                w.Write(localName);
-                w.Write("([UnsafeAccessorType(\"");
-                w.Write(interopTypeName);
-                w.Write("\")] object _, void* value);\n");
-                w.Write(callIndent);
-                w.Write(callName);
-                w.Write(" = ConvertToManaged_");
-                w.Write(localName);
-                w.Write("(null, __");
-                w.Write(localName);
-                w.Write(");\n");
+                IndentedTextWriter __scratchProjectedTypeName = new();
+                WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
+                string projectedTypeName = __scratchProjectedTypeName.ToString();
+                writer.Write(callIndent);
+                writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                writer.Write(callIndent);
+                writer.Write("static extern ");
+                writer.Write(projectedTypeName);
+                writer.Write(" ConvertToManaged_");
+                writer.Write(localName);
+                writer.Write("([UnsafeAccessorType(\"");
+                writer.Write(interopTypeName);
+                writer.Write("\")] object _, void* value);\n");
+                writer.Write(callIndent);
+                writer.Write(callName);
+                writer.Write(" = ConvertToManaged_");
+                writer.Write(localName);
+                writer.Write("(null, __");
+                writer.Write(localName);
+                writer.Write(");\n");
                 continue;
             }
 
-            w.Write(callIndent);
-            w.Write(callName);
-            w.Write(" = ");
+            writer.Write(callIndent);
+            writer.Write(callName);
+            writer.Write(" = ");
             if (uOut.IsString())
             {
-                w.Write("HStringMarshaller.ConvertToManaged(__");
-                w.Write(localName);
-                w.Write(")");
+                writer.Write("HStringMarshaller.ConvertToManaged(__");
+                writer.Write(localName);
+                writer.Write(")");
             }
             else if (uOut.IsObject())
             {
-                w.Write("WindowsRuntimeObjectMarshaller.ConvertToManaged(__");
-                w.Write(localName);
-                w.Write(")");
+                writer.Write("WindowsRuntimeObjectMarshaller.ConvertToManaged(__");
+                writer.Write(localName);
+                writer.Write(")");
             }
             else if (IsRuntimeClassOrInterface(uOut))
             {
-                w.Write(GetMarshallerFullName(w, uOut));
-                w.Write(".ConvertToManaged(__");
-                w.Write(localName);
-                w.Write(")");
+                writer.Write(GetMarshallerFullName(writer, context, uOut));
+                writer.Write(".ConvertToManaged(__");
+                writer.Write(localName);
+                writer.Write(")");
             }
             else if (uOut.IsSystemType())
             {
-                w.Write("global::ABI.System.TypeMarshaller.ConvertToManaged(__");
-                w.Write(localName);
-                w.Write(")");
+                writer.Write("global::ABI.System.TypeMarshaller.ConvertToManaged(__");
+                writer.Write(localName);
+                writer.Write(")");
             }
             else if (IsComplexStruct(uOut))
             {
-                w.Write(GetMarshallerFullName(w, uOut));
-                w.Write(".ConvertToManaged(__");
-                w.Write(localName);
-                w.Write(")");
+                writer.Write(GetMarshallerFullName(writer, context, uOut));
+                writer.Write(".ConvertToManaged(__");
+                writer.Write(localName);
+                writer.Write(")");
             }
             else if (IsAnyStruct(uOut))
             {
-                w.Write("__");
-                w.Write(localName);
+                writer.Write("__");
+                writer.Write(localName);
             }
             else if (uOut is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool && corlibBool.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
             {
-                w.Write("__");
-                w.Write(localName);
+                writer.Write("__");
+                writer.Write(localName);
             }
             else if (uOut is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar && corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
             {
-                w.Write("__");
-                w.Write(localName);
+                writer.Write("__");
+                writer.Write(localName);
             }
             else if (IsEnumType(uOut))
             {
                 // Enum out param: __<name> local is already the projected enum type (since the
                 // function pointer signature uses the projected type). No cast needed.
-                w.Write("__");
-                w.Write(localName);
+                writer.Write("__");
+                writer.Write(localName);
             }
             else
             {
-                w.Write("__");
-                w.Write(localName);
+                writer.Write("__");
+                writer.Write(localName);
             }
-            w.Write(";\n");
+            writer.Write(";\n");
         }
 
         // Writeback for ReceiveArray params: emit a UnsafeAccessor + assign to the out param.
@@ -4946,81 +5038,89 @@ internal static partial class CodeWriters
             string callName = GetParamName(p, paramNameOverride);
             string localName = GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
-            string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sza.BaseType))));
+            IndentedTextWriter __scratchElementProjected = new();
+            WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
+            string elementProjected = __scratchElementProjected.ToString();
             // Element ABI type: void* for ref types (string/runtime class/object); ABI struct
             // type for complex structs (e.g. authored BasicStruct); blittable struct ABI for
             // blittable structs; primitive ABI otherwise.
             string elementAbi = sza.BaseType.IsString() || IsRuntimeClassOrInterface(sza.BaseType) || sza.BaseType.IsObject()
                 ? "void*"
                 : IsComplexStruct(sza.BaseType)
-                    ? GetAbiStructTypeName(w, sza.BaseType)
+                    ? GetAbiStructTypeName(writer, context, sza.BaseType)
                     : IsAnyStruct(sza.BaseType)
-                        ? GetBlittableStructAbiType(w, sza.BaseType)
+                        ? GetBlittableStructAbiType(writer, context, sza.BaseType)
                         : GetAbiPrimitiveType(sza.BaseType);
             string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+
+            _ = elementInteropArg;
             string marshallerPath = GetArrayMarshallerInteropPath(sza.BaseType);
-            w.Write(callIndent);
-            w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
-            w.Write(callIndent);
-            w.Write("static extern ");
-            w.Write(elementProjected);
-            w.Write("[] ConvertToManaged_");
-            w.Write(localName);
-            w.Write("([UnsafeAccessorType(\"");
-            w.Write(marshallerPath);
-            w.Write("\")] object _, uint length, ");
-            w.Write(elementAbi);
-            w.Write("* data);\n");
-            w.Write(callIndent);
-            w.Write(callName);
-            w.Write(" = ConvertToManaged_");
-            w.Write(localName);
-            w.Write("(null, __");
-            w.Write(localName);
-            w.Write("_length, __");
-            w.Write(localName);
-            w.Write("_data);\n");
+            writer.Write(callIndent);
+            writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+            writer.Write(callIndent);
+            writer.Write("static extern ");
+            writer.Write(elementProjected);
+            writer.Write("[] ConvertToManaged_");
+            writer.Write(localName);
+            writer.Write("([UnsafeAccessorType(\"");
+            writer.Write(marshallerPath);
+            writer.Write("\")] object _, uint length, ");
+            writer.Write(elementAbi);
+            writer.Write("* data);\n");
+            writer.Write(callIndent);
+            writer.Write(callName);
+            writer.Write(" = ConvertToManaged_");
+            writer.Write(localName);
+            writer.Write("(null, __");
+            writer.Write(localName);
+            writer.Write("_length, __");
+            writer.Write(localName);
+            writer.Write("_data);\n");
         }
         if (rt is not null)
         {
             if (returnIsReceiveArray)
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
-                string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(retSz.BaseType))));
+                IndentedTextWriter __scratchElementProjected = new();
+                WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSz.BaseType));
+                string elementProjected = __scratchElementProjected.ToString();
                 string elementAbi = retSz.BaseType.IsString() || IsRuntimeClassOrInterface(retSz.BaseType) || retSz.BaseType.IsObject()
                     ? "void*"
                     : IsComplexStruct(retSz.BaseType)
-                        ? GetAbiStructTypeName(w, retSz.BaseType)
+                        ? GetAbiStructTypeName(writer, context, retSz.BaseType)
                         : retSz.BaseType.IsHResultException()
                             ? "global::ABI.System.Exception"
                             : IsMappedAbiValueType(retSz.BaseType)
                                 ? GetMappedAbiTypeName(retSz.BaseType)
                                 : IsAnyStruct(retSz.BaseType)
-                                    ? GetBlittableStructAbiType(w, retSz.BaseType)
+                                    ? GetBlittableStructAbiType(writer, context, retSz.BaseType)
                                     : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
-                w.Write(callIndent);
-                w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
-                w.Write(callIndent);
-                w.Write("static extern ");
-                w.Write(elementProjected);
-                w.Write("[] ConvertToManaged_retval([UnsafeAccessorType(\"");
-                w.Write(GetArrayMarshallerInteropPath(retSz.BaseType));
-                w.Write("\")] object _, uint length, ");
-                w.Write(elementAbi);
-                w.Write("* data);\n");
-                w.Write(callIndent);
-                w.Write("return ConvertToManaged_retval(null, __retval_length, __retval_data);\n");
+
+                _ = elementInteropArg;
+                writer.Write(callIndent);
+                writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                writer.Write(callIndent);
+                writer.Write("static extern ");
+                writer.Write(elementProjected);
+                writer.Write("[] ConvertToManaged_retval([UnsafeAccessorType(\"");
+                writer.Write(GetArrayMarshallerInteropPath(retSz.BaseType));
+                writer.Write("\")] object _, uint length, ");
+                writer.Write(elementAbi);
+                writer.Write("* data);\n");
+                writer.Write(callIndent);
+                writer.Write("return ConvertToManaged_retval(null, __retval_length, __retval_data);\n");
             }
             else if (returnIsHResultException)
             {
-                w.Write(callIndent);
-                w.Write("return global::ABI.System.ExceptionMarshaller.ConvertToManaged(__retval);\n");
+                writer.Write(callIndent);
+                writer.Write("return global::ABI.System.ExceptionMarshaller.ConvertToManaged(__retval);\n");
             }
             else if (returnIsString)
             {
-                w.Write(callIndent);
-                w.Write("return HStringMarshaller.ConvertToManaged(__retval);\n");
+                writer.Write(callIndent);
+                writer.Write("return HStringMarshaller.ConvertToManaged(__retval);\n");
             }
             else if (returnIsRefType)
             {
@@ -5029,83 +5129,87 @@ internal static partial class CodeWriters
                     // Nullable<T> return: use <T>Marshaller.UnboxToManaged. Mirrors truth pattern;
                     // there is no Nullable<T>Marshaller, the inner-T marshaller has UnboxToManaged.
                     AsmResolver.DotNet.Signatures.TypeSignature inner = rt.GetNullableInnerType()!;
-                    string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
-                    w.Write(callIndent);
-                    w.Write("return ");
-                    w.Write(innerMarshaller);
-                    w.Write(".UnboxToManaged(__retval);\n");
+                    string innerMarshaller = GetNullableInnerMarshallerName(writer, context, inner);
+                    writer.Write(callIndent);
+                    writer.Write("return ");
+                    writer.Write(innerMarshaller);
+                    writer.Write(".UnboxToManaged(__retval);\n");
                 }
                 else if (rt.IsGenericInstance())
                 {
                     string interopTypeName = EncodeInteropTypeName(rt, TypedefNameType.ABI) + ", WinRT.Interop";
-                    string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt, false)));
-                    w.Write(callIndent);
-                    w.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
-                    w.Write(callIndent);
-                    w.Write("static extern ");
-                    w.Write(projectedTypeName);
-                    w.Write(" ConvertToManaged_retval([UnsafeAccessorType(\"");
-                    w.Write(interopTypeName);
-                    w.Write("\")] object _, void* value);\n");
-                    w.Write(callIndent);
-                    w.Write("return ConvertToManaged_retval(null, __retval);\n");
+                    IndentedTextWriter __scratchProjectedTypeName = new();
+                    WriteProjectedSignature(__scratchProjectedTypeName, context, rt, false);
+                    string projectedTypeName = __scratchProjectedTypeName.ToString();
+                    writer.Write(callIndent);
+                    writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                    writer.Write(callIndent);
+                    writer.Write("static extern ");
+                    writer.Write(projectedTypeName);
+                    writer.Write(" ConvertToManaged_retval([UnsafeAccessorType(\"");
+                    writer.Write(interopTypeName);
+                    writer.Write("\")] object _, void* value);\n");
+                    writer.Write(callIndent);
+                    writer.Write("return ConvertToManaged_retval(null, __retval);\n");
                 }
                 else
                 {
-                    w.Write(callIndent);
-                    w.Write("return ");
-                    EmitMarshallerConvertToManaged(w, rt, "__retval");
-                    w.Write(";\n");
+                    writer.Write(callIndent);
+                    writer.Write("return ");
+                    EmitMarshallerConvertToManaged(writer, context, rt, "__retval");
+                    writer.Write(";\n");
                 }
             }
             else if (rt is not null && IsMappedAbiValueType(rt))
             {
                 // Mapped value type return (e.g. DateTime/TimeSpan): convert ABI struct back via marshaller.
-                w.Write(callIndent);
-                w.Write("return ");
-                w.Write(GetMappedMarshallerName(rt));
-                w.Write(".ConvertToManaged(__retval);\n");
+                writer.Write(callIndent);
+                writer.Write("return ");
+                writer.Write(GetMappedMarshallerName(rt));
+                writer.Write(".ConvertToManaged(__retval);\n");
             }
             else if (rt is not null && rt.IsSystemType())
             {
                 // System.Type return: convert ABI Type struct back to System.Type via TypeMarshaller.
-                w.Write(callIndent);
-                w.Write("return global::ABI.System.TypeMarshaller.ConvertToManaged(__retval);\n");
+                writer.Write(callIndent);
+                writer.Write("return global::ABI.System.TypeMarshaller.ConvertToManaged(__retval);\n");
             }
             else if (returnIsAnyStruct)
             {
-                w.Write(callIndent);
+                writer.Write(callIndent);
                 if (rt is not null && IsMappedAbiValueType(rt))
                 {
                     // Mapped value type return: convert ABI struct back to projected via marshaller.
-                    w.Write("return ");
-                    w.Write(GetMappedMarshallerName(rt));
-                    w.Write(".ConvertToManaged(__retval);\n");
+                    writer.Write("return ");
+                    writer.Write(GetMappedMarshallerName(rt));
+                    writer.Write(".ConvertToManaged(__retval);\n");
                 }
                 else
                 {
-                    w.Write("return __retval;\n");
+                    writer.Write("return __retval;\n");
                 }
             }
             else if (returnIsComplexStruct)
             {
-                w.Write(callIndent);
-                w.Write("return ");
-                w.Write(GetMarshallerFullName(w, rt!));
-                w.Write(".ConvertToManaged(__retval);\n");
+                writer.Write(callIndent);
+                writer.Write("return ");
+                writer.Write(GetMarshallerFullName(writer, context, rt!));
+                writer.Write(".ConvertToManaged(__retval);\n");
             }
             else
             {
-                w.Write(callIndent);
-                w.Write("return ");
-                string projected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, rt!, false)));
+                writer.Write(callIndent);
+                writer.Write("return ");
+                IndentedTextWriter __scratchProjected = new();
+                WriteProjectedSignature(__scratchProjected, context, rt!, false);
+                string projected = __scratchProjected.ToString();
                 string abiType = GetAbiPrimitiveType(rt!);
-                if (projected == abiType) { w.Write("__retval;\n"); }
+                if (projected == abiType) { writer.Write("__retval;\n"); }
                 else
                 {
-                    w.Write("(");
-                    w.Write(projected);
-                    w.Write(")__retval;\n");
+                    writer.Write("(");
+                    writer.Write(projected);
+                    writer.Write(")__retval;\n");
                 }
             }
         }
@@ -5113,14 +5217,14 @@ internal static partial class CodeWriters
         // Close fixed blocks (innermost first).
         for (int i = fixedNesting - 1; i >= 0; i--)
         {
-            w.Write(indent);
-            w.Write(new string(' ', i * 4));
-            w.Write("}\n");
+            writer.Write(indent);
+            writer.Write(new string(' ', i * 4));
+            writer.Write("}\n");
         }
 
         if (needsTryFinally)
         {
-            w.Write("        }\n        finally\n        {\n");
+            writer.Write("        }\n        finally\n        {\n");
 
             // Order matches truth (mirrors C++ disposer iteration order):
             // 0. Complex-struct input param Dispose (e.g. ProfileUsageMarshaller.Dispose(__value))
@@ -5138,11 +5242,11 @@ internal static partial class CodeWriters
                 AsmResolver.DotNet.Signatures.TypeSignature pType = StripByRefAndCustomModifiers(p.Type);
                 if (!IsComplexStruct(pType)) { continue; }
                 string localName = GetParamLocalName(p, paramNameOverride);
-                w.Write("            ");
-                w.Write(GetMarshallerFullName(w, pType));
-                w.Write(".Dispose(__");
-                w.Write(localName);
-                w.Write(");\n");
+                writer.Write("            ");
+                writer.Write(GetMarshallerFullName(writer, context, pType));
+                writer.Write(".Dispose(__");
+                writer.Write(localName);
+                writer.Write(");\n");
             }
             // 1. Cleanup non-blittable PassArray/FillArray params:
             // For strings: HStringArrayMarshaller.Dispose + return ArrayPools (3 of them).
@@ -5163,12 +5267,12 @@ internal static partial class CodeWriters
                     // the truth: no Dispose_<name> emitted). Just return the inline-array's pool
                     // using the correct element type (ABI.System.Exception, not nint).
                     string localNameH = GetParamLocalName(p, paramNameOverride);
-                    w.Write("\n            if (__");
-                    w.Write(localNameH);
-                    w.Write("_arrayFromPool is not null)\n            {\n");
-                    w.Write("                global::System.Buffers.ArrayPool<global::ABI.System.Exception>.Shared.Return(__");
-                    w.Write(localNameH);
-                    w.Write("_arrayFromPool);\n            }\n");
+                    writer.Write("\n            if (__");
+                    writer.Write(localNameH);
+                    writer.Write("_arrayFromPool is not null)\n            {\n");
+                    writer.Write("                global::System.Buffers.ArrayPool<global::ABI.System.Exception>.Shared.Return(__");
+                    writer.Write(localNameH);
+                    writer.Write("_arrayFromPool);\n            }\n");
                     continue;
                 }
                 string localName = GetParamLocalName(p, paramNameOverride);
@@ -5180,29 +5284,29 @@ internal static partial class CodeWriters
                     // array directly, with no per-element pinned handle / header to release.
                     if (cat == ParamCategory.PassArray)
                     {
-                        w.Write("            HStringArrayMarshaller.Dispose(__");
-                        w.Write(localName);
-                        w.Write("_pinnedHandleSpan);\n\n");
-                        w.Write("            if (__");
-                        w.Write(localName);
-                        w.Write("_pinnedHandleArrayFromPool is not null)\n            {\n");
-                        w.Write("                global::System.Buffers.ArrayPool<nint>.Shared.Return(__");
-                        w.Write(localName);
-                        w.Write("_pinnedHandleArrayFromPool);\n            }\n\n");
-                        w.Write("            if (__");
-                        w.Write(localName);
-                        w.Write("_headerArrayFromPool is not null)\n            {\n");
-                        w.Write("                global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__");
-                        w.Write(localName);
-                        w.Write("_headerArrayFromPool);\n            }\n");
+                        writer.Write("            HStringArrayMarshaller.Dispose(__");
+                        writer.Write(localName);
+                        writer.Write("_pinnedHandleSpan);\n\n");
+                        writer.Write("            if (__");
+                        writer.Write(localName);
+                        writer.Write("_pinnedHandleArrayFromPool is not null)\n            {\n");
+                        writer.Write("                global::System.Buffers.ArrayPool<nint>.Shared.Return(__");
+                        writer.Write(localName);
+                        writer.Write("_pinnedHandleArrayFromPool);\n            }\n\n");
+                        writer.Write("            if (__");
+                        writer.Write(localName);
+                        writer.Write("_headerArrayFromPool is not null)\n            {\n");
+                        writer.Write("                global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__");
+                        writer.Write(localName);
+                        writer.Write("_headerArrayFromPool);\n            }\n");
                     }
                     // Both PassArray and FillArray need the inline-array's nint pool returned.
-                    w.Write("\n            if (__");
-                    w.Write(localName);
-                    w.Write("_arrayFromPool is not null)\n            {\n");
-                    w.Write("                global::System.Buffers.ArrayPool<nint>.Shared.Return(__");
-                    w.Write(localName);
-                    w.Write("_arrayFromPool);\n            }\n");
+                    writer.Write("\n            if (__");
+                    writer.Write(localName);
+                    writer.Write("_arrayFromPool is not null)\n            {\n");
+                    writer.Write("                global::System.Buffers.ArrayPool<nint>.Shared.Return(__");
+                    writer.Write(localName);
+                    writer.Write("_arrayFromPool);\n            }\n");
                 }
                 else
                 {
@@ -5215,7 +5319,7 @@ internal static partial class CodeWriters
                     string disposeCastType;
                     if (IsComplexStruct(szArr.BaseType))
                     {
-                        string abiStructName = GetAbiStructTypeName(w, szArr.BaseType);
+                        string abiStructName = GetAbiStructTypeName(writer, context, szArr.BaseType);
                         disposeDataParamType = abiStructName + "*";
                         fixedPtrType = abiStructName + "*";
                         disposeCastType = string.Empty;
@@ -5227,47 +5331,49 @@ internal static partial class CodeWriters
                         disposeCastType = "(void**)";
                     }
                     string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-                    w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]\n");
-                    w.Write("            static extern void Dispose_");
-                    w.Write(localName);
-                    w.Write("([UnsafeAccessorType(\"");
-                    w.Write(GetArrayMarshallerInteropPath(szArr.BaseType));
-                    w.Write("\")] object _, uint length, ");
-                    w.Write(disposeDataParamType);
-                    if (!disposeDataParamType.EndsWith("data", System.StringComparison.Ordinal)) { w.Write(" data"); }
-                    w.Write(");\n\n");
-                    w.Write("            fixed(");
-                    w.Write(fixedPtrType);
-                    w.Write(" _");
-                    w.Write(localName);
-                    w.Write(" = __");
-                    w.Write(localName);
-                    w.Write("_span)\n            {\n");
-                    w.Write("                Dispose_");
-                    w.Write(localName);
-                    w.Write("(null, (uint) __");
-                    w.Write(localName);
-                    w.Write("_span.Length, ");
-                    w.Write(disposeCastType);
-                    w.Write("_");
-                    w.Write(localName);
-                    w.Write(");\n            }\n");
+
+                    _ = elementInteropArg;
+                    writer.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]\n");
+                    writer.Write("            static extern void Dispose_");
+                    writer.Write(localName);
+                    writer.Write("([UnsafeAccessorType(\"");
+                    writer.Write(GetArrayMarshallerInteropPath(szArr.BaseType));
+                    writer.Write("\")] object _, uint length, ");
+                    writer.Write(disposeDataParamType);
+                    if (!disposeDataParamType.EndsWith("data", System.StringComparison.Ordinal)) { writer.Write(" data"); }
+                    writer.Write(");\n\n");
+                    writer.Write("            fixed(");
+                    writer.Write(fixedPtrType);
+                    writer.Write(" _");
+                    writer.Write(localName);
+                    writer.Write(" = __");
+                    writer.Write(localName);
+                    writer.Write("_span)\n            {\n");
+                    writer.Write("                Dispose_");
+                    writer.Write(localName);
+                    writer.Write("(null, (uint) __");
+                    writer.Write(localName);
+                    writer.Write("_span.Length, ");
+                    writer.Write(disposeCastType);
+                    writer.Write("_");
+                    writer.Write(localName);
+                    writer.Write(");\n            }\n");
                 }
                 // ArrayPool storage type matches the InlineArray storage (mapped ABI value type
                 // for DateTime/TimeSpan; ABI struct for complex structs; nint otherwise).
                 string poolStorageT = IsMappedAbiValueType(szArr.BaseType)
                     ? GetMappedAbiTypeName(szArr.BaseType)
                     : IsComplexStruct(szArr.BaseType)
-                        ? GetAbiStructTypeName(w, szArr.BaseType)
+                        ? GetAbiStructTypeName(writer, context, szArr.BaseType)
                         : "nint";
-                w.Write("\n            if (__");
-                w.Write(localName);
-                w.Write("_arrayFromPool is not null)\n            {\n");
-                w.Write("                global::System.Buffers.ArrayPool<");
-                w.Write(poolStorageT);
-                w.Write(">.Shared.Return(__");
-                w.Write(localName);
-                w.Write("_arrayFromPool);\n            }\n");
+                writer.Write("\n            if (__");
+                writer.Write(localName);
+                writer.Write("_arrayFromPool is not null)\n            {\n");
+                writer.Write("                global::System.Buffers.ArrayPool<");
+                writer.Write(poolStorageT);
+                writer.Write(">.Shared.Return(__");
+                writer.Write(localName);
+                writer.Write("_arrayFromPool);\n            }\n");
             }
 
             // 2. Free Out string/object/runtime-class params.
@@ -5280,29 +5386,29 @@ internal static partial class CodeWriters
                 string localName = GetParamLocalName(p, paramNameOverride);
                 if (uOut.IsString())
                 {
-                    w.Write("            HStringMarshaller.Free(__");
-                    w.Write(localName);
-                    w.Write(");\n");
+                    writer.Write("            HStringMarshaller.Free(__");
+                    writer.Write(localName);
+                    writer.Write(");\n");
                 }
                 else if (uOut.IsObject() || IsRuntimeClassOrInterface(uOut) || uOut.IsGenericInstance())
                 {
-                    w.Write("            WindowsRuntimeUnknownMarshaller.Free(__");
-                    w.Write(localName);
-                    w.Write(");\n");
+                    writer.Write("            WindowsRuntimeUnknownMarshaller.Free(__");
+                    writer.Write(localName);
+                    writer.Write(");\n");
                 }
                 else if (uOut.IsSystemType())
                 {
-                    w.Write("            global::ABI.System.TypeMarshaller.Dispose(__");
-                    w.Write(localName);
-                    w.Write(");\n");
+                    writer.Write("            global::ABI.System.TypeMarshaller.Dispose(__");
+                    writer.Write(localName);
+                    writer.Write(");\n");
                 }
                 else if (IsComplexStruct(uOut))
                 {
-                    w.Write("            ");
-                    w.Write(GetMarshallerFullName(w, uOut));
-                    w.Write(".Dispose(__");
-                    w.Write(localName);
-                    w.Write(");\n");
+                    writer.Write("            ");
+                    writer.Write(GetMarshallerFullName(writer, context, uOut));
+                    writer.Write(".Dispose(__");
+                    writer.Write(localName);
+                    writer.Write(");\n");
                 }
             }
 
@@ -5319,48 +5425,50 @@ internal static partial class CodeWriters
                 string elementAbi = sza.BaseType.IsString() || IsRuntimeClassOrInterface(sza.BaseType) || sza.BaseType.IsObject()
                     ? "void*"
                     : IsComplexStruct(sza.BaseType)
-                        ? GetAbiStructTypeName(w, sza.BaseType)
+                        ? GetAbiStructTypeName(writer, context, sza.BaseType)
                         : IsAnyStruct(sza.BaseType)
-                            ? GetBlittableStructAbiType(w, sza.BaseType)
+                            ? GetBlittableStructAbiType(writer, context, sza.BaseType)
                             : GetAbiPrimitiveType(sza.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+
+                _ = elementInteropArg;
                 string marshallerPath = GetArrayMarshallerInteropPath(sza.BaseType);
-                w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
-                w.Write("            static extern void Free_");
-                w.Write(localName);
-                w.Write("([UnsafeAccessorType(\"");
-                w.Write(marshallerPath);
-                w.Write("\")] object _, uint length, ");
-                w.Write(elementAbi);
-                w.Write("* data);\n\n");
-                w.Write("            Free_");
-                w.Write(localName);
-                w.Write("(null, __");
-                w.Write(localName);
-                w.Write("_length, __");
-                w.Write(localName);
-                w.Write("_data);\n");
+                writer.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
+                writer.Write("            static extern void Free_");
+                writer.Write(localName);
+                writer.Write("([UnsafeAccessorType(\"");
+                writer.Write(marshallerPath);
+                writer.Write("\")] object _, uint length, ");
+                writer.Write(elementAbi);
+                writer.Write("* data);\n\n");
+                writer.Write("            Free_");
+                writer.Write(localName);
+                writer.Write("(null, __");
+                writer.Write(localName);
+                writer.Write("_length, __");
+                writer.Write(localName);
+                writer.Write("_data);\n");
             }
 
             // 4. Free return value (__retval) — emitted last to match truth ordering.
             if (returnIsString)
             {
-                w.Write("            HStringMarshaller.Free(__retval);\n");
+                writer.Write("            HStringMarshaller.Free(__retval);\n");
             }
             else if (returnIsRefType)
             {
-                w.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
+                writer.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
             }
             else if (returnIsComplexStruct)
             {
-                w.Write("            ");
-                w.Write(GetMarshallerFullName(w, rt!));
-                w.Write(".Dispose(__retval);\n");
+                writer.Write("            ");
+                writer.Write(GetMarshallerFullName(writer, context, rt!));
+                writer.Write(".Dispose(__retval);\n");
             }
             else if (returnIsSystemTypeForCleanup)
             {
                 // System.Type return: dispose the ABI.System.Type's HSTRING fields.
-                w.Write("            global::ABI.System.TypeMarshaller.Dispose(__retval);\n");
+                writer.Write("            global::ABI.System.TypeMarshaller.Dispose(__retval);\n");
             }
             else if (returnIsReceiveArray)
             {
@@ -5368,28 +5476,30 @@ internal static partial class CodeWriters
                 string elementAbi = retSz.BaseType.IsString() || IsRuntimeClassOrInterface(retSz.BaseType) || retSz.BaseType.IsObject()
                     ? "void*"
                     : IsComplexStruct(retSz.BaseType)
-                        ? GetAbiStructTypeName(w, retSz.BaseType)
+                        ? GetAbiStructTypeName(writer, context, retSz.BaseType)
                         : retSz.BaseType.IsHResultException()
                             ? "global::ABI.System.Exception"
                             : IsMappedAbiValueType(retSz.BaseType)
                                 ? GetMappedAbiTypeName(retSz.BaseType)
                                 : IsAnyStruct(retSz.BaseType)
-                                    ? GetBlittableStructAbiType(w, retSz.BaseType)
+                                    ? GetBlittableStructAbiType(writer, context, retSz.BaseType)
                                     : GetAbiPrimitiveType(retSz.BaseType);
                 string elementInteropArg = EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
-                w.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
-                w.Write("            static extern void Free_retval([UnsafeAccessorType(\"");
-                w.Write(GetArrayMarshallerInteropPath(retSz.BaseType));
-                w.Write("\")] object _, uint length, ");
-                w.Write(elementAbi);
-                w.Write("* data);\n");
-                w.Write("            Free_retval(null, __retval_length, __retval_data);\n");
+
+                _ = elementInteropArg;
+                writer.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
+                writer.Write("            static extern void Free_retval([UnsafeAccessorType(\"");
+                writer.Write(GetArrayMarshallerInteropPath(retSz.BaseType));
+                writer.Write("\")] object _, uint length, ");
+                writer.Write(elementAbi);
+                writer.Write("* data);\n");
+                writer.Write("            Free_retval(null, __retval_length, __retval_data);\n");
             }
 
-            w.Write("        }\n");
+            writer.Write("        }\n");
         }
 
-        w.Write("    }\n");
+        writer.Write("    }\n");
     }
 
     /// <summary>True if the type signature is a Nullable&lt;T&gt; where T is a primitive
@@ -5505,7 +5615,7 @@ internal static partial class CodeWriters
     /// Mirrors the truth pattern: e.g. for <c>Nullable&lt;DateTimeOffset&gt;</c> returns
     /// <c>global::ABI.System.DateTimeOffsetMarshaller</c>; for primitives like <c>Nullable&lt;int&gt;</c>
     /// returns <c>global::ABI.System.Int32Marshaller</c>.</summary>
-    private static string GetNullableInnerMarshallerName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature innerType)
+    private static string GetNullableInnerMarshallerName(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature innerType)
     {
         // Primitives (Int32, Int64, Boolean, etc.) live in ABI.System with the canonical .NET name.
         if (innerType is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
@@ -5532,7 +5642,7 @@ internal static partial class CodeWriters
             }
         }
         // For non-primitive types (DateTimeOffset, TimeSpan, struct/enum types), use GetMarshallerFullName.
-        return GetMarshallerFullName(w, innerType);
+        return GetMarshallerFullName(writer, context, innerType);
     }
 
     /// <summary>Strips <c>ByReferenceTypeSignature</c> and <c>CustomModifierTypeSignature</c> wrappers
@@ -5592,43 +5702,43 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Emits the call to the appropriate marshaller's ConvertToUnmanaged for a runtime class / object input parameter.</summary>
-    private static void EmitMarshallerConvertToUnmanaged(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig, string argName)
+    private static void EmitMarshallerConvertToUnmanaged(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature sig, string argName)
     {
         if (sig.IsObject())
         {
-            w.Write("WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(");
-            w.Write(argName);
-            w.Write(")");
+            writer.Write("WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(");
+            writer.Write(argName);
+            writer.Write(")");
             return;
         }
         // Runtime class / interface: use ABI.<NS>.<Name>Marshaller
-        w.Write(GetMarshallerFullName(w, sig));
-        w.Write(".ConvertToUnmanaged(");
-        w.Write(argName);
-        w.Write(")");
+        writer.Write(GetMarshallerFullName(writer, context, sig));
+        writer.Write(".ConvertToUnmanaged(");
+        writer.Write(argName);
+        writer.Write(")");
     }
 
     /// <summary>Emits the call to the appropriate marshaller's ConvertToManaged for a runtime class / object return value.</summary>
-    private static void EmitMarshallerConvertToManaged(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig, string argName)
+    private static void EmitMarshallerConvertToManaged(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature sig, string argName)
     {
         if (sig.IsObject())
         {
-            w.Write("WindowsRuntimeObjectMarshaller.ConvertToManaged(");
-            w.Write(argName);
-            w.Write(")");
+            writer.Write("WindowsRuntimeObjectMarshaller.ConvertToManaged(");
+            writer.Write(argName);
+            writer.Write(")");
             return;
         }
-        w.Write(GetMarshallerFullName(w, sig));
-        w.Write(".ConvertToManaged(");
-        w.Write(argName);
-        w.Write(")");
+        writer.Write(GetMarshallerFullName(writer, context, sig));
+        writer.Write(".ConvertToManaged(");
+        writer.Write(argName);
+        writer.Write(")");
     }
 
     /// <summary>Returns the full marshaller name (e.g. <c>global::ABI.Windows.Foundation.UriMarshaller</c>).
     /// When the marshaller would land in the writer's current ABI namespace, returns just the
     /// short marshaller class name (e.g. <c>BasicStructMarshaller</c>) — mirrors C++ which
     /// elides the qualifier in same-namespace contexts.</summary>
-    private static string GetMarshallerFullName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    private static string GetMarshallerFullName(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
         {
@@ -5643,7 +5753,7 @@ internal static partial class CodeWriters
             }
             string nameStripped = IdentifierEscaping.StripBackticks(name);
             // If the writer is currently in the matching ABI namespace, drop the qualifier.
-            if (w.InAbiNamespace && string.Equals(w.CurrentNamespace, ns, System.StringComparison.Ordinal))
+            if (context.InAbiNamespace && string.Equals(context.CurrentNamespace, ns, System.StringComparison.Ordinal))
             {
                 return nameStripped + "Marshaller";
             }
@@ -5665,29 +5775,29 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Emits the conversion of a parameter from its projected (managed) form to the ABI argument form.</summary>
-    private static void EmitParamArgConversion(TypeWriter w, ParamInfo p, string? paramNameOverride = null)
+    private static void EmitParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParamInfo p, string? paramNameOverride = null)
     {
         string pname = paramNameOverride ?? p.Parameter.Name ?? "param";
         // bool: ABI is 'bool' directly; pass as-is.
         if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
             corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
         {
-            w.Write(pname);
+            writer.Write(pname);
         }
         // char: ABI is 'char' directly; pass as-is.
         else if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
                  corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
         {
-            w.Write(pname);
+            writer.Write(pname);
         }
         // Enums: function pointer signature uses the projected enum type, so pass directly.
         else if (IsEnumType(p.Type))
         {
-            w.Write(pname);
+            writer.Write(pname);
         }
         else
         {
-            w.Write(pname);
+            writer.Write(pname);
         }
     }
 
@@ -5818,18 +5928,21 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Returns the ABI type name for a blittable struct (the projected type name).</summary>
-    private static string GetBlittableStructAbiType(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    private static string GetBlittableStructAbiType(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
+        _ = writer;
         // Mapped value types (DateTime/TimeSpan) use the ABI type, not the projected type.
         if (IsMappedAbiValueType(sig)) { return GetMappedAbiTypeName(sig); }
-        return w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, sig, false)));
+        IndentedTextWriter __scratchProj = new();
+        WriteProjectedSignature(__scratchProj, context, sig, false);
+        return __scratchProj.ToString();
     }
 
     /// <summary>Returns the ABI struct type name for a complex struct (e.g. global::ABI.Windows.Web.Http.HttpProgress).
     /// When the writer is currently in the matching ABI namespace, returns just the
     /// short type name (e.g. <c>HttpProgress</c>) to mirror the C++ tool which uses the
     /// unqualified name in same-namespace contexts.</summary>
-    private static string GetAbiStructTypeName(TypeWriter w, AsmResolver.DotNet.Signatures.TypeSignature sig)
+    private static string GetAbiStructTypeName(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
         {
@@ -5846,7 +5959,7 @@ internal static partial class CodeWriters
             }
             string nameStripped = IdentifierEscaping.StripBackticks(name);
             // If the writer is currently in the matching ABI namespace, drop the qualifier.
-            if (w.InAbiNamespace && string.Equals(w.CurrentNamespace, ns, System.StringComparison.Ordinal))
+            if (context.InAbiNamespace && string.Equals(context.CurrentNamespace, ns, System.StringComparison.Ordinal))
             {
                 return nameStripped;
             }
@@ -5921,28 +6034,28 @@ internal static partial class CodeWriters
     /// Writes the IReference&lt;T&gt; implementation for a struct/enum/delegate
     /// (mirrors C++ <c>write_reference_impl</c>).
     /// </summary>
-    private static void WriteReferenceImpl(TypeWriter w, TypeDefinition type)
+    private static void WriteReferenceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string visibility = w.Settings.Component ? "public" : "file";
+        string visibility = context.Settings.Component ? "public" : "file";
         bool blittable = IsTypeBlittable(type);
 
-        w.Write("\n");
-        w.Write(visibility);
-        w.Write(" static unsafe class ");
-        w.Write(nameStripped);
-        w.Write("ReferenceImpl\n{\n");
-        w.Write("    [FixedAddressValueType]\n");
-        w.Write("    private static readonly ReferenceVftbl Vftbl;\n\n");
-        w.Write("    static ");
-        w.Write(nameStripped);
-        w.Write("ReferenceImpl()\n    {\n");
-        w.Write("        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;\n");
-        w.Write("        Vftbl.get_Value = &get_Value;\n");
-        w.Write("    }\n\n");
-        w.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
-        w.Write("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
+        writer.Write("\n");
+        writer.Write(visibility);
+        writer.Write(" static unsafe class ");
+        writer.Write(nameStripped);
+        writer.Write("ReferenceImpl\n{\n");
+        writer.Write("    [FixedAddressValueType]\n");
+        writer.Write("    private static readonly ReferenceVftbl Vftbl;\n\n");
+        writer.Write("    static ");
+        writer.Write(nameStripped);
+        writer.Write("ReferenceImpl()\n    {\n");
+        writer.Write("        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;\n");
+        writer.Write("        Vftbl.get_Value = &get_Value;\n");
+        writer.Write("    }\n\n");
+        writer.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
+        writer.Write("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
         bool isBlittableStructType = blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
         bool isNonBlittableStructType = !blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
         if ((blittable && TypeCategorization.GetCategory(type) != TypeCategory.Struct)
@@ -5951,20 +6064,20 @@ internal static partial class CodeWriters
             // For blittable types and blittable structs: direct memcpy via C# struct assignment.
             // Even bool/char fields work because their managed layout (1 byte / 2 bytes) matches
             // the WinRT ABI.
-            w.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
-            w.Write("        if (result is null)\n        {\n");
-            w.Write("            return unchecked((int)0x80004003);\n        }\n\n");
-            w.Write("        try\n        {\n");
-            w.Write("            var value = (");
-            WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write(")(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));\n");
-            w.Write("            *(");
-            WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write("*)result = value;\n");
-            w.Write("            return 0;\n        }\n");
-            w.Write("        catch (Exception e)\n        {\n");
-            w.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
-            w.Write("    }\n");
+            writer.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
+            writer.Write("        if (result is null)\n        {\n");
+            writer.Write("            return unchecked((int)0x80004003);\n        }\n\n");
+            writer.Write("        try\n        {\n");
+            writer.Write("            var value = (");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            writer.Write(")(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));\n");
+            writer.Write("            *(");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            writer.Write("*)result = value;\n");
+            writer.Write("            return 0;\n        }\n");
+            writer.Write("        catch (Exception e)\n        {\n");
+            writer.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
+            writer.Write("    }\n");
         }
         else if (isNonBlittableStructType)
         {
@@ -5972,49 +6085,49 @@ internal static partial class CodeWriters
             // (ABI) struct value into the result pointer. Mirrors C++ write_reference_impl which
             // emits 'unboxedValue = (T)...; value = TMarshaller.ConvertToUnmanaged(unboxedValue);
             // *(ABIT*)result = value;'.
-            w.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
-            w.Write("        if (result is null)\n        {\n");
-            w.Write("            return unchecked((int)0x80004003);\n        }\n\n");
-            w.Write("        try\n        {\n");
-            w.Write("            ");
-            WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write(" unboxedValue = (");
-            WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);\n");
-            w.Write("            ");
-            WriteTypedefName(w, type, TypedefNameType.ABI, false);
-            w.Write(" value = ");
-            w.Write(nameStripped);
-            w.Write("Marshaller.ConvertToUnmanaged(unboxedValue);\n");
-            w.Write("            *(");
-            WriteTypedefName(w, type, TypedefNameType.ABI, false);
-            w.Write("*)result = value;\n");
-            w.Write("            return 0;\n        }\n");
-            w.Write("        catch (Exception e)\n        {\n");
-            w.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
-            w.Write("    }\n");
+            writer.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
+            writer.Write("        if (result is null)\n        {\n");
+            writer.Write("            return unchecked((int)0x80004003);\n        }\n\n");
+            writer.Write("        try\n        {\n");
+            writer.Write("            ");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            writer.Write(" unboxedValue = (");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            writer.Write(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);\n");
+            writer.Write("            ");
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+            writer.Write(" value = ");
+            writer.Write(nameStripped);
+            writer.Write("Marshaller.ConvertToUnmanaged(unboxedValue);\n");
+            writer.Write("            *(");
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
+            writer.Write("*)result = value;\n");
+            writer.Write("            return 0;\n        }\n");
+            writer.Write("        catch (Exception e)\n        {\n");
+            writer.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
+            writer.Write("    }\n");
         }
         else if (TypeCategorization.GetCategory(type) is TypeCategory.Class or TypeCategory.Delegate)
         {
             // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
-            w.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
-            w.Write("        if (result is null)\n        {\n");
-            w.Write("            return unchecked((int)0x80004003);\n        }\n\n");
-            w.Write("        try\n        {\n");
-            w.Write("            ");
-            WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write(" unboxedValue = (");
-            WriteTypedefName(w, type, TypedefNameType.Projected, true);
-            w.Write(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);\n");
-            w.Write("            void* value = ");
+            writer.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
+            writer.Write("        if (result is null)\n        {\n");
+            writer.Write("            return unchecked((int)0x80004003);\n        }\n\n");
+            writer.Write("        try\n        {\n");
+            writer.Write("            ");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            writer.Write(" unboxedValue = (");
+            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+            writer.Write(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);\n");
+            writer.Write("            void* value = ");
             // Use the same-namespace short marshaller name (we're in the ABI namespace).
-            w.Write(nameStripped);
-            w.Write("Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();\n");
-            w.Write("            *(void**)result = value;\n");
-            w.Write("            return 0;\n        }\n");
-            w.Write("        catch (Exception e)\n        {\n");
-            w.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
-            w.Write("    }\n");
+            writer.Write(nameStripped);
+            writer.Write("Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();\n");
+            writer.Write("            *(void**)result = value;\n");
+            writer.Write("            return 0;\n        }\n");
+            writer.Write("        catch (Exception e)\n        {\n");
+            writer.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
+            writer.Write("    }\n");
         }
         else
         {
@@ -6029,38 +6142,37 @@ internal static partial class CodeWriters
         }
         // IID property: matches C++ write_reference_impl, which appends a 'public static ref readonly Guid IID'
         // property pointing at the reference type's IID (e.g. IID_Windows_AI_Actions_ActionEntityKindReference).
-        w.Write("\n    public static ref readonly Guid IID\n    {\n");
-        w.Write("        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
-        w.Write("        get => ref global::ABI.InterfaceIIDs.");
-        WriteIidReferenceGuidPropertyName(w, type);
-        w.Write(";\n    }\n");
-        w.Write("}\n\n");
+        writer.Write("\n    public static ref readonly Guid IID\n    {\n");
+        writer.Write("        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
+        writer.Write("        get => ref global::ABI.InterfaceIIDs.");
+        WriteIidReferenceGuidPropertyName(writer, context, type);
+        writer.Write(";\n    }\n");
+        writer.Write("}\n\n");
     }
 
     /// <summary>Mirrors C++ <c>write_abi_type</c>: writes the ABI type for a type semantics.</summary>
     public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics)
     {
-        TypeWriter w = new(writer, context);
         switch (semantics)
         {
             case TypeSemantics.Fundamental f:
-                w.Write(GetAbiFundamentalType(f.Type));
+                writer.Write(GetAbiFundamentalType(f.Type));
                 break;
             case TypeSemantics.Object_:
-                w.Write("void*");
+                writer.Write("void*");
                 break;
             case TypeSemantics.Guid_:
-                w.Write("Guid");
+                writer.Write("Guid");
                 break;
             case TypeSemantics.Type_:
-                w.Write("global::WindowsRuntime.InteropServices.WindowsRuntimeTypeName");
+                writer.Write("global::WindowsRuntime.InteropServices.WindowsRuntimeTypeName");
                 break;
             case TypeSemantics.Definition d:
                 if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Enum)
                 {
                     // Enums in WinRT ABI use the projected enum type directly (since their C#
                     // layout matches their underlying integer ABI representation 1:1).
-                    WriteTypedefName(w, d.Type, TypedefNameType.Projected, true);
+                    WriteTypedefName(writer, context, d.Type, TypedefNameType.Projected, true);
                 }
                 else if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Struct)
                 {
@@ -6069,24 +6181,24 @@ internal static partial class CodeWriters
                     // (DateTime/TimeSpan -> ABI.System.DateTimeOffset/TimeSpan).
                     if (dNs == "Windows.Foundation" && dName == "DateTime")
                     {
-                        w.Write("global::ABI.System.DateTimeOffset");
+                        writer.Write("global::ABI.System.DateTimeOffset");
                         break;
                     }
                     if (dNs == "Windows.Foundation" && dName == "TimeSpan")
                     {
-                        w.Write("global::ABI.System.TimeSpan");
+                        writer.Write("global::ABI.System.TimeSpan");
                         break;
                     }
                     if (dNs == "Windows.Foundation" && dName == "HResult")
                     {
-                        w.Write("global::ABI.System.Exception");
+                        writer.Write("global::ABI.System.Exception");
                         break;
                     }
                     if (dNs == "Windows.UI.Xaml.Interop" && dName == "TypeName")
                     {
                         // System.Type ABI struct: maps to global::ABI.System.Type, not the
                         // ABI.Windows.UI.Xaml.Interop.TypeName form.
-                        w.Write("global::ABI.System.Type");
+                        writer.Write("global::ABI.System.Type");
                         break;
                     }
                     AsmResolver.DotNet.Signatures.TypeSignature dts = d.Type.ToTypeSignature();
@@ -6096,16 +6208,16 @@ internal static partial class CodeWriters
                     // Nullable<T> fields) need the ABI struct.
                     if (IsAnyStruct(dts))
                     {
-                        WriteTypedefName(w, d.Type, TypedefNameType.Projected, true);
+                        WriteTypedefName(writer, context, d.Type, TypedefNameType.Projected, true);
                     }
                     else
                     {
-                        WriteTypedefName(w, d.Type, TypedefNameType.ABI, true);
+                        WriteTypedefName(writer, context, d.Type, TypedefNameType.ABI, true);
                     }
                 }
                 else
                 {
-                    w.Write("void*");
+                    writer.Write("void*");
                 }
                 break;
             case TypeSemantics.Reference r:
@@ -6117,17 +6229,17 @@ internal static partial class CodeWriters
                     // Special case: mapped value types that require ABI marshalling.
                     if (rns == "Windows.Foundation" && rname == "DateTime")
                     {
-                        w.Write("global::ABI.System.DateTimeOffset");
+                        writer.Write("global::ABI.System.DateTimeOffset");
                         break;
                     }
                     if (rns == "Windows.Foundation" && rname == "TimeSpan")
                     {
-                        w.Write("global::ABI.System.TimeSpan");
+                        writer.Write("global::ABI.System.TimeSpan");
                         break;
                     }
                     if (rns == "Windows.Foundation" && rname == "HResult")
                     {
-                        w.Write("global::ABI.System.Exception");
+                        writer.Write("global::ABI.System.Exception");
                         break;
                     }
                     // Look up the type by its ORIGINAL (unmapped) name in the cache.
@@ -6147,7 +6259,7 @@ internal static partial class CodeWriters
                         if (cat == TypeCategory.Enum)
                         {
                             // Enums use the projected enum type directly (C# layout == ABI layout).
-                            WriteTypedefName(w, rd, TypedefNameType.Projected, true);
+                            WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
                             break;
                         }
                         if (cat == TypeCategory.Struct)
@@ -6158,16 +6270,16 @@ internal static partial class CodeWriters
                             (string rdNs, string rdName) = rd.Names();
                             if (rdNs == "Windows.Foundation" && rdName == "HResult")
                             {
-                                w.Write("global::ABI.System.Exception");
+                                writer.Write("global::ABI.System.Exception");
                                 break;
                             }
                             if (IsAnyStruct(rd.ToTypeSignature()))
                             {
-                                WriteTypedefName(w, rd, TypedefNameType.Projected, true);
+                                WriteTypedefName(writer, context, rd, TypedefNameType.Projected, true);
                             }
                             else
                             {
-                                WriteTypedefName(w, rd, TypedefNameType.ABI, true);
+                                WriteTypedefName(writer, context, rd, TypedefNameType.ABI, true);
                             }
                             break;
                         }
@@ -6181,18 +6293,18 @@ internal static partial class CodeWriters
                 if (r.IsValueType)
                 {
                     (string rns, string rname) = r.Reference_.Names();
-                    w.Write("global::");
-                    if (!string.IsNullOrEmpty(rns)) { w.Write(rns); w.Write("."); }
-                    w.Write(IdentifierEscaping.StripBackticks(rname));
+                    writer.Write("global::");
+                    if (!string.IsNullOrEmpty(rns)) { writer.Write(rns); writer.Write("."); }
+                    writer.Write(IdentifierEscaping.StripBackticks(rname));
                     break;
                 }
-                w.Write("void*");
+                writer.Write("void*");
                 break;
             case TypeSemantics.GenericInstance:
-                w.Write("void*");
+                writer.Write("void*");
                 break;
             default:
-                w.Write("void*");
+                writer.Write("void*");
                 break;
         }
     }

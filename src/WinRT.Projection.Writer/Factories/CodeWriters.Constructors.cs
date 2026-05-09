@@ -352,7 +352,7 @@ internal static partial class CodeWriters
             if (p.Type.IsNullableT())
             {
                 AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
-                string innerMarshaller = GetNullableInnerMarshallerName(new TypeWriter(writer, context), inner);
+                string innerMarshaller = GetNullableInnerMarshallerName(writer, context, inner);
                 writer.Write("        using WindowsRuntimeObjectReferenceValue __");
                 writer.Write(raw);
                 writer.Write(" = ");
@@ -394,7 +394,7 @@ internal static partial class CodeWriters
             writer.Write("        using WindowsRuntimeObjectReferenceValue __");
             writer.Write(raw);
             writer.Write(" = ");
-            EmitMarshallerConvertToUnmanaged(new TypeWriter(writer, context), p.Type, pname);
+            EmitMarshallerConvertToUnmanaged(writer, context, p.Type, pname);
             writer.Write(";\n");
         }
 

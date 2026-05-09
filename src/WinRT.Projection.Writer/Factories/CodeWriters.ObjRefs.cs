@@ -192,11 +192,6 @@ internal static partial class CodeWriters
         WriteTypeName(scratch, context, sem, TypedefNameType.ABI, forceWriteNamespace: true);
         return "IID_" + EscapeTypeNameForIdentifier(scratch.ToString(), stripGlobal: true, stripGlobalABI: true);
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    private static string BuildIidPropertyNameForGenericInterface(TypeWriter w, GenericInstanceTypeSignature gi)
-        => BuildIidPropertyNameForGenericInterface(w.Context, gi);
-
     /// <summary>
     /// Emits the [UnsafeAccessor] extern method declaration that exposes the IID for a generic
     /// interface instantiation.
@@ -216,11 +211,6 @@ internal static partial class CodeWriters
         if (isInNullableContext) { writer.Write("?"); }
         writer.Write(" _);\n");
     }
-
-    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
-    private static void EmitUnsafeAccessorForIid(TypeWriter w, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
-        => EmitUnsafeAccessorForIid(w.Writer, w.Context, gi, isInNullableContext);
-
     private static string EscapeIdentifier(string s)
     {
         System.Text.StringBuilder sb = new(s.Length);
