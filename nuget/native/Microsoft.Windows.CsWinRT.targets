@@ -211,14 +211,14 @@ Properties consumers may set on the vcxproj:
     ============================================================
             _CsWinRTReplaceArchSelectedHostingAssets
 
-    Standard ProjectReference / package transitive flow may have brought a wrong-arch
-    WinRT.Host.dll / WinRT.Host.dll.mui into ReferenceCopyLocalPaths (e.g. when the
-    referenced component csproj was built AnyCPU and its bin captured a single arch's
-    host dll). Replace any such items with the arch-correct copies from the CsWinRT
-    package's hosting/$(_CsWinRTNormalizedPlatform)/native/ folder.
+    If the standard reference flow brought a WinRT.Host.dll / WinRT.Host.dll.mui into
+    ReferenceCopyLocalPaths (e.g. via a JIT-built component's <None CopyToOutputDirectory>
+    items), replace it with the arch-correct copy from the CsWinRT package's
+    hosting/$(_CsWinRTNormalizedPlatform)/native/ folder. If nothing contributes one
+    (e.g. AOT-published component, or the consumer manages its own host bundle), this
+    target does nothing - we only correct what would already be copied.
 
-    Skipped if the package-layout host dll is not found on disk (e.g. in-repo simulation
-    that doesn't stage hosting/$arch/native/), so existing in-repo workarounds keep working.
+    Skipped if the package-layout host dll is not found on disk (in-repo simulation).
     Skipped if the consumer sets CsWinRTSkipNativeHostingAssetsOverride=true.
     ============================================================
   -->
@@ -232,11 +232,13 @@ Properties consumers may set on the vcxproj:
     </PropertyGroup>
 
     <ItemGroup Condition="Exists('$(_CsWinRTHostDllPath)')">
-      <_CsWinRTWrongArchHostingItems Include="@(ReferenceCopyLocalPaths)"
+      <_CsWinRTHostingItemsToReplace Include="@(ReferenceCopyLocalPaths)"
                                      Condition="'%(Filename)%(Extension)' == 'WinRT.Host.dll' or '%(Filename)%(Extension)' == 'WinRT.Host.dll.mui'" />
-      <ReferenceCopyLocalPaths Remove="@(_CsWinRTWrongArchHostingItems)" />
-      <ReferenceCopyLocalPaths Include="$(_CsWinRTHostDllPath)" />
-      <ReferenceCopyLocalPaths Include="$(_CsWinRTHostMuiPath)" Condition="Exists('$(_CsWinRTHostMuiPath)')" />
+      <ReferenceCopyLocalPaths Remove="@(_CsWinRTHostingItemsToReplace)" />
+      <ReferenceCopyLocalPaths Include="$(_CsWinRTHostDllPath)"
+                               Condition="'@(_CsWinRTHostingItemsToReplace)' != ''" />
+      <ReferenceCopyLocalPaths Include="$(_CsWinRTHostMuiPath)"
+                               Condition="'@(_CsWinRTHostingItemsToReplace)' != '' and Exists('$(_CsWinRTHostMuiPath)')" />
     </ItemGroup>
 
   </Target>
