@@ -84,7 +84,7 @@ internal static class AbiInterfaceFactory
                         if (isRefElemBr) { writer.Write("void*** "); }
                         else
                         {
-                            CodeWriters.WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
+                            AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
                             writer.Write("** ");
                         }
                         IdentifierEscaping.WriteEscapedIdentifier(writer, p.Parameter.Name ?? "param");
@@ -95,14 +95,14 @@ internal static class AbiInterfaceFactory
                         if (isRefElemBr) { writer.Write("void***"); }
                         else
                         {
-                            CodeWriters.WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
+                            AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(brSz.BaseType));
                             writer.Write("**");
                         }
                     }
                 }
                 else
                 {
-                    CodeWriters.WriteAbiType(writer, context, TypeSemanticsFactory.Get(br.BaseType));
+                    AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(br.BaseType));
                     writer.Write("*");
                     if (includeParamNames)
                     {
@@ -113,7 +113,7 @@ internal static class AbiInterfaceFactory
             }
             else
             {
-                CodeWriters.WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
+                AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
                 if (cat is ParamCategory.Out or ParamCategory.Ref) { writer.Write("*"); }
                 if (includeParamNames)
                 {
@@ -136,20 +136,20 @@ internal static class AbiInterfaceFactory
                     writer.Write("uint* ");
                     writer.Write(retSizeName);
                     writer.Write(", ");
-                    CodeWriters.WriteAbiType(writer, context, TypeSemanticsFactory.Get(retSz.BaseType));
+                    AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(retSz.BaseType));
                     writer.Write("** ");
                     writer.Write(retName);
                 }
                 else
                 {
                     writer.Write("uint*, ");
-                    CodeWriters.WriteAbiType(writer, context, TypeSemanticsFactory.Get(retSz.BaseType));
+                    AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(retSz.BaseType));
                     writer.Write("**");
                 }
             }
             else
             {
-                CodeWriters.WriteAbiType(writer, context, TypeSemanticsFactory.Get(sig.ReturnType));
+                AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(sig.ReturnType));
                 writer.Write("*");
                 if (includeParamNames) { writer.Write(" "); writer.Write(retName); }
             }

@@ -686,7 +686,7 @@ internal static partial class CodeWriters
                 writer.Write("uint, void*, ");
                 continue;
             }
-            WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
+            AbiTypeWriter.WriteAbiType(writer, context, TypeSemanticsFactory.Get(p.Type));
             writer.Write(", ");
         }
         if (isComposable)
