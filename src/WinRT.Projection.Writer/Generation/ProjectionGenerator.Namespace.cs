@@ -19,8 +19,11 @@ internal sealed partial class ProjectionGenerator
         ConcurrentDictionary<string, string> defaultInterfaceEntries, ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries,
         ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap)
     {
-        TypeWriter w = new(_settings, ns);
-        w.WriteFileHeader();
+        ProjectionEmitContext context = new(_settings, _cache, ns);
+        TypeWriter w = new(context);
+        Writers.IndentedTextWriter writer = w.Writer;
+
+        writer.WriteFileHeader(context);
 
         bool written = false;
 
@@ -77,7 +80,7 @@ internal sealed partial class ProjectionGenerator
         }
 
         // Phase 2: Projected types
-        w.WriteBeginProjectedNamespace();
+        writer.WriteBeginProjectedNamespace(context);
 
         foreach (TypeDefinition type in members.Types)
         {
@@ -116,7 +119,7 @@ internal sealed partial class ProjectionGenerator
             written = true;
         }
 
-        w.WriteEndProjectedNamespace();
+        writer.WriteEndProjectedNamespace();
 
         if (!written)
         {
@@ -129,8 +132,7 @@ internal sealed partial class ProjectionGenerator
             // Collect factory interfaces (Static/Activatable/Composable) referenced by classes
             // included in this namespace. These must have their ABI Methods classes emitted even
             // when the filter excludes them, because the projected static class members dispatch
-            // through them. Mirrors C++ behavior of always emitting factory interface ABI for
-            // included classes.
+            // through them.
             HashSet<TypeDefinition> factoryInterfacesInThisNs = new();
             foreach (TypeDefinition type in members.Types)
             {
@@ -148,7 +150,7 @@ internal sealed partial class ProjectionGenerator
                 }
             }
 
-            w.WriteBeginAbiNamespace();
+            writer.WriteBeginAbiNamespace(context);
             foreach (TypeDefinition type in members.Types)
             {
                 bool isFactoryInterface = factoryInterfacesInThisNs.Contains(type);
@@ -163,7 +165,7 @@ internal sealed partial class ProjectionGenerator
                 TypeCategory category = TypeCategorization.GetCategory(type);
                 CodeWriters.WriteAbiType(w, type, category, _settings);
             }
-            w.WriteEndAbiNamespace();
+            writer.WriteEndAbiNamespace();
         }
 
         // Phase 4: Custom additions to namespaces (mirrors C++ main.cpp)
@@ -175,14 +177,14 @@ internal sealed partial class ProjectionGenerator
                 if (stream is null) { continue; }
                 using System.IO.StreamReader reader = new(stream);
                 string content = reader.ReadToEnd();
-                w.Write(content);
+                writer.Write(content);
             }
         }
 
         // Output to file
         string filename = ns + ".cs";
         string fullPath = Path.Combine(_settings.OutputFolder, filename);
-        w.FlushToFile(fullPath);
+        writer.FlushToFile(fullPath);
         return true;
     }
 }

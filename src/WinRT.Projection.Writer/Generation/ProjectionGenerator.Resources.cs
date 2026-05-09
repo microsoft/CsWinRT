@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -44,7 +45,7 @@ internal sealed partial class ProjectionGenerator
 
             // Mirror the C++ tool: every emitted .cs file gets the auto-generated header.
             // See main.cpp where 'write_file_header(ws);' is called before each base string is written.
-            TextWriter headerWriter = new();
+            IndentedTextWriter headerWriter = new();
             CodeWriters.WriteFileHeader(headerWriter);
             string header = headerWriter.FlushToString();
 

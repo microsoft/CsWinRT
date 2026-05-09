@@ -64,7 +64,11 @@ internal sealed partial class ProjectionGenerator
     private void WriteComponentModuleFile(Dictionary<string, HashSet<TypeDefinition>> componentByModule)
     {
         TextWriter wm = new();
-        CodeWriters.WriteFileHeader(wm);
+        // CodeWriters.WriteFileHeader writes only the auto-generated banner (no usings/pragmas).
+        // Keep delegating through the legacy static helper for now -- the variant on
+        // IndentedTextWriter adds the full prelude (usings + pragmas) which is the wrong shape
+        // for the WinRT_Module.cs / GeneratedInterfaceIIDs.cs / Resources/Base/*.cs outputs.
+        CodeWriters.WriteFileHeader(wm.Writer);
         CodeWriters.WriteModuleActivationFactory(wm, componentByModule);
         wm.FlushToFile(Path.Combine(_settings.OutputFolder, "WinRT_Module.cs"));
     }

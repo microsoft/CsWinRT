@@ -53,7 +53,9 @@ internal sealed partial class ProjectionGenerator
 
         bool iidWritten = false;
         HashSet<TypeDefinition> interfacesFromClassesEmitted = new();
-        TypeWriter guidWriter = new(_settings, "ABI");
+        ProjectionEmitContext guidContext = new(_settings, _cache, "ABI");
+        TypeWriter guidWriter = new(guidContext);
+        Writers.IndentedTextWriter guidIndented = guidWriter.Writer;
         CodeWriters.WriteInterfaceIidsBegin(guidWriter);
         // Iterate namespaces in sorted order (mirrors C++ std::map<std::string, namespace_members>
         // iteration). Within each namespace, types are already sorted by SortMembersByName.
@@ -96,7 +98,7 @@ internal sealed partial class ProjectionGenerator
         CodeWriters.WriteInterfaceIidsEnd(guidWriter);
         if (iidWritten)
         {
-            guidWriter.FlushToFile(Path.Combine(_settings.OutputFolder, "GeneratedInterfaceIIDs.cs"));
+            guidIndented.FlushToFile(Path.Combine(_settings.OutputFolder, "GeneratedInterfaceIIDs.cs"));
         }
     }
 }
