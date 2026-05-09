@@ -373,13 +373,13 @@ internal static partial class CodeWriters
             (string ifaceNs, string ifaceName) = ifaceType.Names();
             if (MappedTypes.Get(ifaceNs, ifaceName) is { HasCustomMembersOutput: true })
             {
-                if (IsMappedInterfaceRequiringStubs(ifaceNs, ifaceName))
+                if (MappedInterfaceStubFactory.IsMappedInterfaceRequiringStubs(ifaceNs, ifaceName))
                 {
                     // For generic interfaces, use the substituted nextInstance to compute the
                     // objref name so type arguments are concrete (matches the field name emitted
                     // by WriteClassObjRefDefinitions). For non-generic, fall back to impl.Interface.
                     string objRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
-                    WriteMappedInterfaceStubs(writer, context, nextInstance, ifaceName, objRefName);
+                    MappedInterfaceStubFactory.WriteMappedInterfaceStubs(writer, context, nextInstance, ifaceName, objRefName);
                 }
                 continue;
             }

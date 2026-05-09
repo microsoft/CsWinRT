@@ -13,7 +13,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// runtime adapter actually services these at runtime via IDynamicInterfaceCastable, but the
 /// C# compiler still requires the class to declare the members.
 /// </summary>
-internal static partial class CodeWriters
+internal static class MappedInterfaceStubFactory
 {
     /// <summary>
     /// Returns true if the WinRT interface (by namespace+name) is a mapped interface that
