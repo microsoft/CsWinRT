@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using WindowsRuntime.ProjectionWriter.Writers;
+
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
@@ -24,9 +26,9 @@ internal static class IdentifierEscaping
     /// Writes <paramref name="identifier"/> to <paramref name="writer"/>, prefixed with <c>@</c>
     /// if it is a reserved C# keyword.
     /// </summary>
-    /// <param name="writer">The text writer to emit to.</param>
+    /// <param name="writer">The writer to emit to.</param>
     /// <param name="identifier">The identifier to write.</param>
-    public static void WriteEscapedIdentifier(TextWriter writer, string identifier)
+    public static void WriteEscapedIdentifier(IndentedTextWriter writer, string identifier)
     {
         if (CSharpKeywords.IsKeyword(identifier))
         {
@@ -34,4 +36,10 @@ internal static class IdentifierEscaping
         }
         writer.Write(identifier);
     }
+
+    /// <summary>Legacy <see cref="TextWriter"/> overload that delegates to <see cref="WriteEscapedIdentifier(IndentedTextWriter, string)"/>.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="identifier">The identifier to write.</param>
+    public static void WriteEscapedIdentifier(TextWriter writer, string identifier)
+        => WriteEscapedIdentifier(writer.Writer, identifier);
 }
