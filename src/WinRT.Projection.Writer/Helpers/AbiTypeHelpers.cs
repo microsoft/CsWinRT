@@ -13,7 +13,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// Mirrors the C++ <c>write_abi_*</c> family. Initial port: emits the foundational
 /// ABI scaffolding only; full marshaller/vtable emission to be filled in later.
 /// </summary>
-internal static partial class CodeWriters
+internal static class AbiTypeHelpers
 {
     /// <summary>Mirrors C++ <c>is_type_blittable</c> partially.</summary>
     public static bool IsTypeBlittable(MetadataCache cache, TypeDefinition type)

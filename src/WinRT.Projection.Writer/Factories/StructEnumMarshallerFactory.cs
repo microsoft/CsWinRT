@@ -20,11 +20,11 @@ internal static class StructEnumMarshallerFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         TypeCategory cat = TypeCategorization.GetCategory(type);
-        bool blittable = CodeWriters.IsTypeBlittable(context.Cache, type);
+        bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
         // "Almost-blittable" includes blittable + bool/char fields. Excludes string/object fields.
         // Use the same predicate as IsAnyStruct (which is now scoped to almost-blittable).
         AsmResolver.DotNet.Signatures.TypeDefOrRefSignature sig = type.ToTypeSignature(false) is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td2 ? td2 : null!;
-        bool almostBlittable = cat == TypeCategory.Struct && (sig is null || CodeWriters.IsAnyStruct(context.Cache, sig));
+        bool almostBlittable = cat == TypeCategory.Struct && (sig is null || AbiTypeHelpers.IsAnyStruct(context.Cache, sig));
         bool isEnum = cat == TypeCategory.Enum;
         // Complex structs are non-almost-blittable structs with reference fields (string, object, etc.).
         bool isComplexStruct = cat == TypeCategory.Struct && !almostBlittable;
@@ -38,7 +38,7 @@ internal static class StructEnumMarshallerFactory
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                if (CodeWriters.TryGetNullablePrimitiveMarshallerName(ft, out _)) { hasReferenceFields = true; }
+                if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _)) { hasReferenceFields = true; }
             }
         }
 
@@ -81,9 +81,9 @@ internal static class StructEnumMarshallerFactory
                     writer.Write(fname);
                     writer.Write(")");
                 }
-                else if (CodeWriters.IsMappedAbiValueType(ft))
+                else if (AbiTypeHelpers.IsMappedAbiValueType(ft))
                 {
-                    writer.Write(CodeWriters.GetMappedMarshallerName(ft));
+                    writer.Write(AbiTypeHelpers.GetMappedMarshallerName(ft));
                     writer.Write(".ConvertToUnmanaged(value.");
                     writer.Write(fname);
                     writer.Write(")");
@@ -98,9 +98,9 @@ internal static class StructEnumMarshallerFactory
                     writer.Write(")");
                 }
                 else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd
-                         && CodeWriters.TryResolveStructTypeDef(context.Cache, ftd) is TypeDefinition fieldStructTd
+                         && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd) is TypeDefinition fieldStructTd
                          && TypeCategorization.GetCategory(fieldStructTd) == TypeCategory.Struct
-                         && !CodeWriters.IsTypeBlittable(context.Cache, fieldStructTd))
+                         && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd))
                 {
                     // Nested non-blittable struct: marshal via its <Name>Marshaller.
                     writer.Write(IdentifierEscaping.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty));
@@ -108,7 +108,7 @@ internal static class StructEnumMarshallerFactory
                     writer.Write(fname);
                     writer.Write(")");
                 }
-                else if (CodeWriters.TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
+                else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                 {
                     writer.Write(nullableMarshaller!);
                     writer.Write(".BoxToUnmanaged(value.");
@@ -157,9 +157,9 @@ internal static class StructEnumMarshallerFactory
                     writer.Write(fname);
                     writer.Write(")");
                 }
-                else if (CodeWriters.IsMappedAbiValueType(ft))
+                else if (AbiTypeHelpers.IsMappedAbiValueType(ft))
                 {
-                    writer.Write(CodeWriters.GetMappedMarshallerName(ft));
+                    writer.Write(AbiTypeHelpers.GetMappedMarshallerName(ft));
                     writer.Write(".ConvertToManaged(value.");
                     writer.Write(fname);
                     writer.Write(")");
@@ -174,9 +174,9 @@ internal static class StructEnumMarshallerFactory
                     writer.Write(")");
                 }
                 else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd2
-                         && CodeWriters.TryResolveStructTypeDef(context.Cache, ftd2) is TypeDefinition fieldStructTd2
+                         && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd2) is TypeDefinition fieldStructTd2
                          && TypeCategorization.GetCategory(fieldStructTd2) == TypeCategory.Struct
-                         && !CodeWriters.IsTypeBlittable(context.Cache, fieldStructTd2))
+                         && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd2))
                 {
                     // Nested non-blittable struct: convert via its <Name>Marshaller.
                     writer.Write(IdentifierEscaping.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty));
@@ -184,7 +184,7 @@ internal static class StructEnumMarshallerFactory
                     writer.Write(fname);
                     writer.Write(")");
                 }
-                else if (CodeWriters.TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
+                else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out string? nullableMarshaller))
                 {
                     writer.Write(nullableMarshaller!);
                     writer.Write(".UnboxToManaged(value.");
@@ -220,7 +220,7 @@ internal static class StructEnumMarshallerFactory
                     // (the ABI representation is just an int HRESULT). Skip Dispose entirely.
                     continue;
                 }
-                else if (CodeWriters.IsMappedAbiValueType(ft))
+                else if (AbiTypeHelpers.IsMappedAbiValueType(ft))
                 {
                     // Mapped value types (DateTime/TimeSpan) have no per-value resources to
                     // release — the ABI representation is just an int64. Mirror C++
@@ -229,9 +229,9 @@ internal static class StructEnumMarshallerFactory
                     continue;
                 }
                 else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd3
-                         && CodeWriters.TryResolveStructTypeDef(context.Cache, ftd3) is TypeDefinition fieldStructTd3
+                         && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, ftd3) is TypeDefinition fieldStructTd3
                          && TypeCategorization.GetCategory(fieldStructTd3) == TypeCategory.Struct
-                         && !CodeWriters.IsTypeBlittable(context.Cache, fieldStructTd3))
+                         && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd3))
                 {
                     // Nested non-blittable struct: dispose via its <Name>Marshaller.
                     // Mirror C++: this site always uses the fully-qualified marshaller name.
@@ -245,7 +245,7 @@ internal static class StructEnumMarshallerFactory
                     writer.Write(fname);
                     writer.Write(");\n");
                 }
-                else if (CodeWriters.TryGetNullablePrimitiveMarshallerName(ft, out _))
+                else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
                     writer.Write("        WindowsRuntimeUnknownMarshaller.Free(value.");
                     writer.Write(fname);

@@ -32,14 +32,14 @@ internal static class AbiMethodBodyFactory
             if (p.Type.IsString()) { hasStringParams = true; break; }
         }
         bool returnIsReceiveArrayDoAbi = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzAbi
-            && (CodeWriters.IsBlittablePrimitive(context.Cache, retSzAbi.BaseType) || CodeWriters.IsAnyStruct(context.Cache, retSzAbi.BaseType)
-                || retSzAbi.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, retSzAbi.BaseType) || retSzAbi.BaseType.IsObject()
-                || CodeWriters.IsComplexStruct(context.Cache, retSzAbi.BaseType));
+            && (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, retSzAbi.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, retSzAbi.BaseType)
+                || retSzAbi.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSzAbi.BaseType) || retSzAbi.BaseType.IsObject()
+                || AbiTypeHelpers.IsComplexStruct(context.Cache, retSzAbi.BaseType));
         bool returnIsHResultExceptionDoAbi = rt is not null && rt.IsHResultException();
         bool returnIsString = rt is not null && rt.IsString();
-        bool returnIsRefType = rt is not null && (CodeWriters.IsRuntimeClassOrInterface(context.Cache, rt) || rt.IsObject() || rt.IsGenericInstance());
+        bool returnIsRefType = rt is not null && (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, rt) || rt.IsObject() || rt.IsGenericInstance());
         bool returnIsGenericInstance = rt is not null && rt.IsGenericInstance();
-        bool returnIsBlittableStruct = rt is not null && CodeWriters.IsAnyStruct(context.Cache, rt);
+        bool returnIsBlittableStruct = rt is not null && AbiTypeHelpers.IsAnyStruct(context.Cache, rt);
 
         bool isGetter = methodName.StartsWith("get_", System.StringComparison.Ordinal);
         bool isSetter = methodName.StartsWith("put_", System.StringComparison.Ordinal);
@@ -57,8 +57,8 @@ internal static class AbiMethodBodyFactory
         }
 
         writer.Write("\n{\n");
-        string retParamName = CodeWriters.GetReturnParamName(sig);
-        string retSizeParamName = CodeWriters.GetReturnSizeParamName(sig);
+        string retParamName = AbiTypeHelpers.GetReturnParamName(sig);
+        string retSizeParamName = AbiTypeHelpers.GetReturnSizeParamName(sig);
         // The local name for the unmarshalled return value mirrors C++
         // 'abi_marshaler::get_marshaler_local()' which prefixes '__' to the param name.
         // For the default '__return_value__' param this becomes '____return_value__'.
@@ -92,7 +92,7 @@ internal static class AbiMethodBodyFactory
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.Out) { continue; }
-            AsmResolver.DotNet.Signatures.TypeSignature uOut = CodeWriters.StripByRefAndCustomModifiers(p.Type);
+            AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             if (!uOut.IsGenericInstance()) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
@@ -117,7 +117,7 @@ internal static class AbiMethodBodyFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.ReceiveArray) { continue; }
             string raw = p.Parameter.Name ?? "param";
-            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)CodeWriters.StripByRefAndCustomModifiers(p.Type);
+            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             IndentedTextWriter __scratchElementProjected = new();
             TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
@@ -125,13 +125,13 @@ internal static class AbiMethodBodyFactory
 
             _ = elementInteropArg;
             string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
-            string elementAbi = sza.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject()
+            string elementAbi = sza.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject()
                 ? "void*"
-                : CodeWriters.IsComplexStruct(context.Cache, sza.BaseType)
-                    ? CodeWriters.GetAbiStructTypeName(writer, context, sza.BaseType)
-                    : CodeWriters.IsAnyStruct(context.Cache, sza.BaseType)
-                        ? CodeWriters.GetBlittableStructAbiType(writer, context, sza.BaseType)
-                        : CodeWriters.GetAbiPrimitiveType(context.Cache, sza.BaseType);
+                : AbiTypeHelpers.IsComplexStruct(context.Cache, sza.BaseType)
+                    ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType)
+                    : AbiTypeHelpers.IsAnyStruct(context.Cache, sza.BaseType)
+                        ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)
+                        : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType);
             writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
             writer.Write("    static extern void ConvertToUnmanaged_");
             writer.Write(raw);
@@ -148,13 +148,13 @@ internal static class AbiMethodBodyFactory
             IndentedTextWriter __scratchElementProjected = new();
             TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
-            string elementAbi = retSzHoist.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, retSzHoist.BaseType) || retSzHoist.BaseType.IsObject()
+            string elementAbi = retSzHoist.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSzHoist.BaseType) || retSzHoist.BaseType.IsObject()
                 ? "void*"
-                : CodeWriters.IsComplexStruct(context.Cache, retSzHoist.BaseType)
-                    ? CodeWriters.GetAbiStructTypeName(writer, context, retSzHoist.BaseType)
-                    : CodeWriters.IsAnyStruct(context.Cache, retSzHoist.BaseType)
-                        ? CodeWriters.GetBlittableStructAbiType(writer, context, retSzHoist.BaseType)
-                        : CodeWriters.GetAbiPrimitiveType(context.Cache, retSzHoist.BaseType);
+                : AbiTypeHelpers.IsComplexStruct(context.Cache, retSzHoist.BaseType)
+                    ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSzHoist.BaseType)
+                    : AbiTypeHelpers.IsAnyStruct(context.Cache, retSzHoist.BaseType)
+                        ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSzHoist.BaseType)
+                        : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSzHoist.BaseType);
             string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSzHoist.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
@@ -255,7 +255,7 @@ internal static class AbiMethodBodyFactory
             string raw = p.Parameter.Name ?? "param";
             // Use the projected (non-ABI) type for the local variable.
             // Strip ByRef and CustomModifier wrappers to get the underlying base type.
-            AsmResolver.DotNet.Signatures.TypeSignature underlying = CodeWriters.StripByRefAndCustomModifiers(p.Type);
+            AsmResolver.DotNet.Signatures.TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             IndentedTextWriter __scratchProjected = new();
             MethodFactory.WriteProjectedSignature(__scratchProjected, context, underlying, false);
             string projected = __scratchProjected.ToString();
@@ -275,7 +275,7 @@ internal static class AbiMethodBodyFactory
             if (cat != ParamCategory.ReceiveArray) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)CodeWriters.StripByRefAndCustomModifiers(p.Type);
+            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             IndentedTextWriter __scratchElementProjected = new();
             TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
@@ -306,7 +306,7 @@ internal static class AbiMethodBodyFactory
             IndentedTextWriter __scratchElementProjected = new();
             TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sz.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
-            bool isBlittableElem = CodeWriters.IsBlittablePrimitive(context.Cache, sz.BaseType) || CodeWriters.IsAnyStruct(context.Cache, sz.BaseType);
+            bool isBlittableElem = AbiTypeHelpers.IsBlittablePrimitive(context.Cache, sz.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, sz.BaseType);
             if (isBlittableElem)
             {
                 writer.Write("    ");
@@ -365,7 +365,7 @@ internal static class AbiMethodBodyFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.PassArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-            if (CodeWriters.IsBlittablePrimitive(context.Cache, szArr.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
+            if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             IndentedTextWriter __scratchElementProjected = new();
@@ -380,9 +380,9 @@ internal static class AbiMethodBodyFactory
             // the data param is void** and the cast is (void**).
             string dataParamType;
             string dataCastExpr;
-            if (CodeWriters.IsComplexStruct(context.Cache, szArr.BaseType))
+            if (AbiTypeHelpers.IsComplexStruct(context.Cache, szArr.BaseType))
             {
-                string abiStructName = CodeWriters.GetAbiStructTypeName(writer, context, szArr.BaseType);
+                string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType);
                 dataParamType = abiStructName + "* data";
                 dataCastExpr = "(" + abiStructName + "*)" + ptr;
             }
@@ -423,7 +423,7 @@ internal static class AbiMethodBodyFactory
                 string rawName = p.Parameter.Name ?? "param";
                 string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
                 AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
-                string innerMarshaller = CodeWriters.GetNullableInnerMarshallerName(writer, context, inner);
+                string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
                 writer.Write("        var __arg_");
                 writer.Write(rawName);
                 writer.Write(" = ");
@@ -534,7 +534,7 @@ internal static class AbiMethodBodyFactory
                     // marshaller — DO NOT zero or write back.
                     string raw = p.Parameter.Name ?? "param";
                     string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                    AsmResolver.DotNet.Signatures.TypeSignature uRef = CodeWriters.StripByRefAndCustomModifiers(p.Type);
+                    AsmResolver.DotNet.Signatures.TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                     if (uRef.IsString())
                     {
                         writer.Write("HStringMarshaller.ConvertToManaged(*");
@@ -547,16 +547,16 @@ internal static class AbiMethodBodyFactory
                         writer.Write(ptr);
                         writer.Write(")");
                     }
-                    else if (CodeWriters.IsRuntimeClassOrInterface(context.Cache, uRef))
+                    else if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uRef))
                     {
-                        writer.Write(CodeWriters.GetMarshallerFullName(writer, context, uRef));
+                        writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, uRef));
                         writer.Write(".ConvertToManaged(*");
                         writer.Write(ptr);
                         writer.Write(")");
                     }
-                    else if (CodeWriters.IsMappedAbiValueType(uRef))
+                    else if (AbiTypeHelpers.IsMappedAbiValueType(uRef))
                     {
-                        writer.Write(CodeWriters.GetMappedMarshallerName(uRef));
+                        writer.Write(AbiTypeHelpers.GetMappedMarshallerName(uRef));
                         writer.Write(".ConvertToManaged(*");
                         writer.Write(ptr);
                         writer.Write(")");
@@ -567,14 +567,14 @@ internal static class AbiMethodBodyFactory
                         writer.Write(ptr);
                         writer.Write(")");
                     }
-                    else if (CodeWriters.IsComplexStruct(context.Cache, uRef))
+                    else if (AbiTypeHelpers.IsComplexStruct(context.Cache, uRef))
                     {
-                        writer.Write(CodeWriters.GetMarshallerFullName(writer, context, uRef));
+                        writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, uRef));
                         writer.Write(".ConvertToManaged(*");
                         writer.Write(ptr);
                         writer.Write(")");
                     }
-                    else if (CodeWriters.IsAnyStruct(context.Cache, uRef) || CodeWriters.IsBlittablePrimitive(context.Cache, uRef) || CodeWriters.IsEnumType(context.Cache, uRef))
+                    else if (AbiTypeHelpers.IsAnyStruct(context.Cache, uRef) || AbiTypeHelpers.IsBlittablePrimitive(context.Cache, uRef) || AbiTypeHelpers.IsEnumType(context.Cache, uRef))
                     {
                         // Blittable/almost-blittable: ABI layout matches projected layout.
                         writer.Write("*");
@@ -614,7 +614,7 @@ internal static class AbiMethodBodyFactory
             if (cat != ParamCategory.Out) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            AsmResolver.DotNet.Signatures.TypeSignature underlying = CodeWriters.StripByRefAndCustomModifiers(p.Type);
+            AsmResolver.DotNet.Signatures.TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             writer.Write("        *");
             writer.Write(ptr);
             writer.Write(" = ");
@@ -632,9 +632,9 @@ internal static class AbiMethodBodyFactory
                 writer.Write(raw);
                 writer.Write(").DetachThisPtrUnsafe()");
             }
-            else if (CodeWriters.IsRuntimeClassOrInterface(context.Cache, underlying))
+            else if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, underlying))
             {
-                writer.Write(CodeWriters.GetMarshallerFullName(writer, context, underlying));
+                writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying));
                 writer.Write(".ConvertToUnmanaged(__");
                 writer.Write(raw);
                 writer.Write(").DetachThisPtrUnsafe()");
@@ -651,7 +651,7 @@ internal static class AbiMethodBodyFactory
             }
             // For enums, function pointer signature uses the projected enum type, no cast needed.
             // For bool, cast to byte. For char, cast to ushort.
-            else if (CodeWriters.IsEnumType(context.Cache, underlying))
+            else if (AbiTypeHelpers.IsEnumType(context.Cache, underlying))
             {
                 writer.Write("__");
                 writer.Write(raw);
@@ -672,9 +672,9 @@ internal static class AbiMethodBodyFactory
             // the local managed value through <Type>Marshaller.ConvertToUnmanaged before
             // writing it into the *out ABI struct slot. Mirrors C++ marshaler.write_marshal_from_managed
             //: "Marshaller.ConvertToUnmanaged(local)".
-            else if (CodeWriters.IsComplexStruct(context.Cache, underlying))
+            else if (AbiTypeHelpers.IsComplexStruct(context.Cache, underlying))
             {
-                writer.Write(CodeWriters.GetMarshallerFullName(writer, context, underlying));
+                writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying));
                 writer.Write(".ConvertToUnmanaged(__");
                 writer.Write(raw);
                 writer.Write(")");
@@ -717,7 +717,7 @@ internal static class AbiMethodBodyFactory
             if (cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szFA) { continue; }
             // Blittable element types: Span wraps the native buffer; no copy-back needed.
-            if (CodeWriters.IsBlittablePrimitive(context.Cache, szFA.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szFA.BaseType)) { continue; }
+            if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szFA.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szFA.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             IndentedTextWriter __scratchElementProjected = new();
@@ -733,7 +733,7 @@ internal static class AbiMethodBodyFactory
             // - Complex structs: <ABI struct>*
             string dataParamType;
             string dataCastType;
-            if (szFA.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, szFA.BaseType) || szFA.BaseType.IsObject())
+            if (szFA.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, szFA.BaseType) || szFA.BaseType.IsObject())
             {
                 dataParamType = "void** data";
                 dataCastType = "(void**)";
@@ -743,15 +743,15 @@ internal static class AbiMethodBodyFactory
                 dataParamType = "global::ABI.System.Exception* data";
                 dataCastType = "(global::ABI.System.Exception*)";
             }
-            else if (CodeWriters.IsMappedAbiValueType(szFA.BaseType))
+            else if (AbiTypeHelpers.IsMappedAbiValueType(szFA.BaseType))
             {
-                string abiName = CodeWriters.GetMappedAbiTypeName(szFA.BaseType);
+                string abiName = AbiTypeHelpers.GetMappedAbiTypeName(szFA.BaseType);
                 dataParamType = abiName + "* data";
                 dataCastType = "(" + abiName + "*)";
             }
             else
             {
-                string abiStructName = CodeWriters.GetAbiStructTypeName(writer, context, szFA.BaseType);
+                string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szFA.BaseType);
                 dataParamType = abiStructName + "* data";
                 dataCastType = "(" + abiStructName + "*)";
             }
@@ -800,7 +800,7 @@ internal static class AbiMethodBodyFactory
                 {
                     // Nullable<T> return (server-side): use <T>Marshaller.BoxToUnmanaged.
                     AsmResolver.DotNet.Signatures.TypeSignature inner = rt.GetNullableInnerType()!;
-                    string innerMarshaller = CodeWriters.GetNullableInnerMarshallerName(writer, context, inner);
+                    string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
                     writer.Write("        *");
                     writer.Write(retParamName);
                     writer.Write(" = ");
@@ -844,13 +844,13 @@ internal static class AbiMethodBodyFactory
                 writer.Write(retParamName);
                 writer.Write(");\n");
             }
-            else if (CodeWriters.IsMappedAbiValueType(rt))
+            else if (AbiTypeHelpers.IsMappedAbiValueType(rt))
             {
                 // Mapped value type return (DateTime/TimeSpan): convert via marshaller.
                 writer.Write("        *");
                 writer.Write(retParamName);
                 writer.Write(" = ");
-                writer.Write(CodeWriters.GetMappedMarshallerName(rt));
+                writer.Write(AbiTypeHelpers.GetMappedMarshallerName(rt));
                 writer.Write(".ConvertToUnmanaged(");
                 writer.Write(retLocalName);
                 writer.Write(");\n");
@@ -864,13 +864,13 @@ internal static class AbiMethodBodyFactory
                 writer.Write(retLocalName);
                 writer.Write(");\n");
             }
-            else if (CodeWriters.IsComplexStruct(context.Cache, rt))
+            else if (AbiTypeHelpers.IsComplexStruct(context.Cache, rt))
             {
                 // Complex struct return (server-side): convert managed struct to ABI struct via marshaller.
                 writer.Write("        *");
                 writer.Write(retParamName);
                 writer.Write(" = ");
-                writer.Write(CodeWriters.GetMarshallerFullName(writer, context, rt));
+                writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, rt));
                 writer.Write(".ConvertToUnmanaged(");
                 writer.Write(retLocalName);
                 writer.Write(");\n");
@@ -885,7 +885,7 @@ internal static class AbiMethodBodyFactory
             }
             else
             {
-                string abiType = CodeWriters.GetAbiPrimitiveType(context.Cache, rt);
+                string abiType = AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt);
                 writer.Write("        *");
                 writer.Write(retParamName);
                 writer.Write(" = ");
@@ -901,7 +901,7 @@ internal static class AbiMethodBodyFactory
                     writer.Write(retLocalName);
                     writer.Write(";\n");
                 }
-                else if (CodeWriters.IsEnumType(context.Cache, rt))
+                else if (AbiTypeHelpers.IsEnumType(context.Cache, rt))
                 {
                     // Enum: function pointer signature uses the projected enum type, no cast needed.
                     writer.Write(retLocalName);
@@ -926,7 +926,7 @@ internal static class AbiMethodBodyFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-            if (CodeWriters.IsBlittablePrimitive(context.Cache, szArr.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
+            if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             hasNonBlittableArrayDoAbi = true;
             break;
         }
@@ -939,7 +939,7 @@ internal static class AbiMethodBodyFactory
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
                 if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-                if (CodeWriters.IsBlittablePrimitive(context.Cache, szArr.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
+                if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 IndentedTextWriter __scratchElementProjected = new();
                 TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
@@ -989,15 +989,15 @@ internal static class AbiMethodBodyFactory
             writer.Write("__arg_");
             writer.Write(rawName);
         }
-        else if (CodeWriters.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject())
+        else if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject())
         {
             EmitMarshallerConvertToManaged(writer, context, p.Type, pname);
         }
-        else if (CodeWriters.IsMappedAbiValueType(p.Type))
+        else if (AbiTypeHelpers.IsMappedAbiValueType(p.Type))
         {
             // Mapped value type input (DateTime/TimeSpan): the parameter is the ABI type;
             // convert to the projected managed type via the marshaller.
-            writer.Write(CodeWriters.GetMappedMarshallerName(p.Type));
+            writer.Write(AbiTypeHelpers.GetMappedMarshallerName(p.Type));
             writer.Write(".ConvertToManaged(");
             writer.Write(pname);
             writer.Write(")");
@@ -1009,20 +1009,20 @@ internal static class AbiMethodBodyFactory
             writer.Write(pname);
             writer.Write(")");
         }
-        else if (CodeWriters.IsComplexStruct(context.Cache, p.Type))
+        else if (AbiTypeHelpers.IsComplexStruct(context.Cache, p.Type))
         {
             // Complex struct input (server-side): convert ABI struct to managed via marshaller.
-            writer.Write(CodeWriters.GetMarshallerFullName(writer, context, p.Type));
+            writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, p.Type));
             writer.Write(".ConvertToManaged(");
             writer.Write(pname);
             writer.Write(")");
         }
-        else if (CodeWriters.IsAnyStruct(context.Cache, p.Type))
+        else if (AbiTypeHelpers.IsAnyStruct(context.Cache, p.Type))
         {
             // Blittable / almost-blittable struct: pass directly (projected type == ABI type).
             writer.Write(pname);
         }
-        else if (CodeWriters.IsEnumType(context.Cache, p.Type))
+        else if (AbiTypeHelpers.IsEnumType(context.Cache, p.Type))
         {
             // Enum: param signature is already the projected enum type, no cast needed.
             writer.Write(pname);
@@ -1241,15 +1241,15 @@ internal static class AbiMethodBodyFactory
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
 
         bool returnIsString = rt is not null && rt.IsString();
-        bool returnIsRefType = rt is not null && (CodeWriters.IsRuntimeClassOrInterface(context.Cache, rt) || rt.IsObject() || rt.IsGenericInstance());
-        bool returnIsAnyStruct = rt is not null && CodeWriters.IsAnyStruct(context.Cache, rt);
-        bool returnIsComplexStruct = rt is not null && CodeWriters.IsComplexStruct(context.Cache, rt);
+        bool returnIsRefType = rt is not null && (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, rt) || rt.IsObject() || rt.IsGenericInstance());
+        bool returnIsAnyStruct = rt is not null && AbiTypeHelpers.IsAnyStruct(context.Cache, rt);
+        bool returnIsComplexStruct = rt is not null && AbiTypeHelpers.IsComplexStruct(context.Cache, rt);
         bool returnIsReceiveArray = rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzCheck
-            && (CodeWriters.IsBlittablePrimitive(context.Cache, retSzCheck.BaseType) || CodeWriters.IsAnyStruct(context.Cache, retSzCheck.BaseType)
-                || retSzCheck.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, retSzCheck.BaseType) || retSzCheck.BaseType.IsObject()
-                || CodeWriters.IsComplexStruct(context.Cache, retSzCheck.BaseType)
+            && (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, retSzCheck.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, retSzCheck.BaseType)
+                || retSzCheck.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSzCheck.BaseType) || retSzCheck.BaseType.IsObject()
+                || AbiTypeHelpers.IsComplexStruct(context.Cache, retSzCheck.BaseType)
                 || retSzCheck.BaseType.IsHResultException()
-                || CodeWriters.IsMappedAbiValueType(retSzCheck.BaseType));
+                || AbiTypeHelpers.IsMappedAbiValueType(retSzCheck.BaseType));
         bool returnIsHResultException = rt is not null && rt.IsHResultException();
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
@@ -1265,29 +1265,29 @@ internal static class AbiMethodBodyFactory
             }
             if (cat == ParamCategory.Out)
             {
-                AsmResolver.DotNet.Signatures.TypeSignature uOut = CodeWriters.StripByRefAndCustomModifiers(p.Type);
+                AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", ");
-                if (uOut.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsObject() || uOut.IsGenericInstance()) { fp.Append("void**"); }
+                if (uOut.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsObject() || uOut.IsGenericInstance()) { fp.Append("void**"); }
                 else if (uOut.IsSystemType()) { fp.Append("global::ABI.System.Type*"); }
-                else if (CodeWriters.IsComplexStruct(context.Cache, uOut)) { fp.Append(CodeWriters.GetAbiStructTypeName(writer, context, uOut)); fp.Append('*'); }
-                else if (CodeWriters.IsAnyStruct(context.Cache, uOut)) { fp.Append(CodeWriters.GetBlittableStructAbiType(writer, context, uOut)); fp.Append('*'); }
-                else { fp.Append(CodeWriters.GetAbiPrimitiveType(context.Cache, uOut)); fp.Append('*'); }
+                else if (AbiTypeHelpers.IsComplexStruct(context.Cache, uOut)) { fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, uOut)); fp.Append('*'); }
+                else if (AbiTypeHelpers.IsAnyStruct(context.Cache, uOut)) { fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, uOut)); fp.Append('*'); }
+                else { fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uOut)); fp.Append('*'); }
                 continue;
             }
             if (cat == ParamCategory.Ref)
             {
-                AsmResolver.DotNet.Signatures.TypeSignature uRef = CodeWriters.StripByRefAndCustomModifiers(p.Type);
+                AsmResolver.DotNet.Signatures.TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", ");
-                if (CodeWriters.IsComplexStruct(context.Cache, uRef)) { fp.Append(CodeWriters.GetAbiStructTypeName(writer, context, uRef)); fp.Append('*'); }
-                else if (CodeWriters.IsAnyStruct(context.Cache, uRef)) { fp.Append(CodeWriters.GetBlittableStructAbiType(writer, context, uRef)); fp.Append('*'); }
-                else { fp.Append(CodeWriters.GetAbiPrimitiveType(context.Cache, uRef)); fp.Append('*'); }
+                if (AbiTypeHelpers.IsComplexStruct(context.Cache, uRef)) { fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, uRef)); fp.Append('*'); }
+                else if (AbiTypeHelpers.IsAnyStruct(context.Cache, uRef)) { fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, uRef)); fp.Append('*'); }
+                else { fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uRef)); fp.Append('*'); }
                 continue;
             }
             if (cat == ParamCategory.ReceiveArray)
             {
-                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)CodeWriters.StripByRefAndCustomModifiers(p.Type);
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 fp.Append(", uint*, ");
-                if (sza.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject())
+                if (sza.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject())
                 {
                     fp.Append("void*");
                 }
@@ -1295,24 +1295,24 @@ internal static class AbiMethodBodyFactory
                 {
                     fp.Append("global::ABI.System.Exception");
                 }
-                else if (CodeWriters.IsMappedAbiValueType(sza.BaseType))
+                else if (AbiTypeHelpers.IsMappedAbiValueType(sza.BaseType))
                 {
-                    fp.Append(CodeWriters.GetMappedAbiTypeName(sza.BaseType));
+                    fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(sza.BaseType));
                 }
-                else if (CodeWriters.IsComplexStruct(context.Cache, sza.BaseType)) { fp.Append(CodeWriters.GetAbiStructTypeName(writer, context, sza.BaseType)); }
-                else if (CodeWriters.IsAnyStruct(context.Cache, sza.BaseType)) { fp.Append(CodeWriters.GetBlittableStructAbiType(writer, context, sza.BaseType)); }
-                else { fp.Append(CodeWriters.GetAbiPrimitiveType(context.Cache, sza.BaseType)); }
+                else if (AbiTypeHelpers.IsComplexStruct(context.Cache, sza.BaseType)) { fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType)); }
+                else if (AbiTypeHelpers.IsAnyStruct(context.Cache, sza.BaseType)) { fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)); }
+                else { fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType)); }
                 fp.Append("**");
                 continue;
             }
             fp.Append(", ");
             if (p.Type.IsHResultException()) { fp.Append("global::ABI.System.Exception"); }
-            else if (p.Type.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance()) { fp.Append("void*"); }
+            else if (p.Type.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance()) { fp.Append("void*"); }
             else if (p.Type.IsSystemType()) { fp.Append("global::ABI.System.Type"); }
-            else if (CodeWriters.IsAnyStruct(context.Cache, p.Type)) { fp.Append(CodeWriters.GetBlittableStructAbiType(writer, context, p.Type)); }
-            else if (CodeWriters.IsMappedAbiValueType(p.Type)) { fp.Append(CodeWriters.GetMappedAbiTypeName(p.Type)); }
-            else if (CodeWriters.IsComplexStruct(context.Cache, p.Type)) { fp.Append(CodeWriters.GetAbiStructTypeName(writer, context, p.Type)); }
-            else { fp.Append(CodeWriters.GetAbiPrimitiveType(context.Cache, p.Type)); }
+            else if (AbiTypeHelpers.IsAnyStruct(context.Cache, p.Type)) { fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, p.Type)); }
+            else if (AbiTypeHelpers.IsMappedAbiValueType(p.Type)) { fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(p.Type)); }
+            else if (AbiTypeHelpers.IsComplexStruct(context.Cache, p.Type)) { fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, p.Type)); }
+            else { fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, p.Type)); }
         }
         if (rt is not null)
         {
@@ -1320,29 +1320,29 @@ internal static class AbiMethodBodyFactory
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
                 fp.Append(", uint*, ");
-                if (retSz.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject())
+                if (retSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject())
                 {
                     fp.Append("void*");
                 }
-                else if (CodeWriters.IsComplexStruct(context.Cache, retSz.BaseType))
+                else if (AbiTypeHelpers.IsComplexStruct(context.Cache, retSz.BaseType))
                 {
-                    fp.Append(CodeWriters.GetAbiStructTypeName(writer, context, retSz.BaseType));
+                    fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType));
                 }
                 else if (retSz.BaseType.IsHResultException())
                 {
                     fp.Append("global::ABI.System.Exception");
                 }
-                else if (CodeWriters.IsMappedAbiValueType(retSz.BaseType))
+                else if (AbiTypeHelpers.IsMappedAbiValueType(retSz.BaseType))
                 {
-                    fp.Append(CodeWriters.GetMappedAbiTypeName(retSz.BaseType));
+                    fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(retSz.BaseType));
                 }
-                else if (CodeWriters.IsAnyStruct(context.Cache, retSz.BaseType))
+                else if (AbiTypeHelpers.IsAnyStruct(context.Cache, retSz.BaseType))
                 {
-                    fp.Append(CodeWriters.GetBlittableStructAbiType(writer, context, retSz.BaseType));
+                    fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSz.BaseType));
                 }
                 else
                 {
-                    fp.Append(CodeWriters.GetAbiPrimitiveType(context.Cache, retSz.BaseType));
+                    fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType));
                 }
                 fp.Append("**");
             }
@@ -1355,10 +1355,10 @@ internal static class AbiMethodBodyFactory
                 fp.Append(", ");
                 if (returnIsString || returnIsRefType) { fp.Append("void**"); }
                 else if (rt is not null && rt.IsSystemType()) { fp.Append("global::ABI.System.Type*"); }
-                else if (returnIsAnyStruct) { fp.Append(CodeWriters.GetBlittableStructAbiType(writer, context, rt!)); fp.Append('*'); }
-                else if (returnIsComplexStruct) { fp.Append(CodeWriters.GetAbiStructTypeName(writer, context, rt!)); fp.Append('*'); }
-                else if (rt is not null && CodeWriters.IsMappedAbiValueType(rt)) { fp.Append(CodeWriters.GetMappedAbiTypeName(rt)); fp.Append('*'); }
-                else { fp.Append(CodeWriters.GetAbiPrimitiveType(context.Cache, rt!)); fp.Append('*'); }
+                else if (returnIsAnyStruct) { fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, rt!)); fp.Append('*'); }
+                else if (returnIsComplexStruct) { fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, rt!)); fp.Append('*'); }
+                else if (rt is not null && AbiTypeHelpers.IsMappedAbiValueType(rt)) { fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(rt)); fp.Append('*'); }
+                else { fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt!)); fp.Append('*'); }
             }
         }
         fp.Append(", int");
@@ -1371,10 +1371,10 @@ internal static class AbiMethodBodyFactory
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
-            if (CodeWriters.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject())
+            if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject())
             {
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-                string callName = CodeWriters.GetParamName(p, paramNameOverride);
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 writer.Write("        using WindowsRuntimeObjectReferenceValue __");
                 writer.Write(localName);
                 writer.Write(" = ");
@@ -1384,10 +1384,10 @@ internal static class AbiMethodBodyFactory
             else if (p.Type.IsNullableT())
             {
                 // Nullable<T> param: use <T>Marshaller.BoxToUnmanaged. Mirrors truth pattern.
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-                string callName = CodeWriters.GetParamName(p, paramNameOverride);
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
-                string innerMarshaller = CodeWriters.GetNullableInnerMarshallerName(writer, context, inner);
+                string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
                 writer.Write("        using WindowsRuntimeObjectReferenceValue __");
                 writer.Write(localName);
                 writer.Write(" = ");
@@ -1399,8 +1399,8 @@ internal static class AbiMethodBodyFactory
             else if (p.Type.IsGenericInstance())
             {
                 // Generic instance param: emit a local UnsafeAccessor delegate to get the marshaller method.
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-                string callName = CodeWriters.GetParamName(p, paramNameOverride);
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
                 IndentedTextWriter __scratchProjectedTypeName = new();
                 MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
@@ -1430,8 +1430,8 @@ internal static class AbiMethodBodyFactory
             ParamInfo p = sig.Params[i];
             if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
             if (!p.Type.IsHResultException()) { continue; }
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-            string callName = CodeWriters.GetParamName(p, paramNameOverride);
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             writer.Write("        global::ABI.System.Exception __");
             writer.Write(localName);
             writer.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(");
@@ -1443,15 +1443,15 @@ internal static class AbiMethodBodyFactory
         {
             ParamInfo p = sig.Params[i];
             if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
-            if (!CodeWriters.IsMappedAbiValueType(p.Type)) { continue; }
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-            string callName = CodeWriters.GetParamName(p, paramNameOverride);
+            if (!AbiTypeHelpers.IsMappedAbiValueType(p.Type)) { continue; }
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             writer.Write("        ");
-            writer.Write(CodeWriters.GetMappedAbiTypeName(p.Type));
+            writer.Write(AbiTypeHelpers.GetMappedAbiTypeName(p.Type));
             writer.Write(" __");
             writer.Write(localName);
             writer.Write(" = ");
-            writer.Write(CodeWriters.GetMappedMarshallerName(p.Type));
+            writer.Write(AbiTypeHelpers.GetMappedMarshallerName(p.Type));
             writer.Write(".ConvertToUnmanaged(");
             writer.Write(callName);
             writer.Write(");\n");
@@ -1465,11 +1465,11 @@ internal static class AbiMethodBodyFactory
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.In && cat != ParamCategory.Ref) { continue; }
-            AsmResolver.DotNet.Signatures.TypeSignature pType = CodeWriters.StripByRefAndCustomModifiers(p.Type);
-            if (!CodeWriters.IsComplexStruct(context.Cache, pType)) { continue; }
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
+            AsmResolver.DotNet.Signatures.TypeSignature pType = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+            if (!AbiTypeHelpers.IsComplexStruct(context.Cache, pType)) { continue; }
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             writer.Write("        ");
-            writer.Write(CodeWriters.GetAbiStructTypeName(writer, context, pType));
+            writer.Write(AbiTypeHelpers.GetAbiStructTypeName(writer, context, pType));
             writer.Write(" __");
             writer.Write(localName);
             writer.Write(" = default;\n");
@@ -1480,14 +1480,14 @@ internal static class AbiMethodBodyFactory
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.Out) { continue; }
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-            AsmResolver.DotNet.Signatures.TypeSignature uOut = CodeWriters.StripByRefAndCustomModifiers(p.Type);
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             writer.Write("        ");
-            if (uOut.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsObject() || uOut.IsGenericInstance()) { writer.Write("void*"); }
+            if (uOut.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsObject() || uOut.IsGenericInstance()) { writer.Write("void*"); }
             else if (uOut.IsSystemType()) { writer.Write("global::ABI.System.Type"); }
-            else if (CodeWriters.IsComplexStruct(context.Cache, uOut)) { writer.Write(CodeWriters.GetAbiStructTypeName(writer, context, uOut)); }
-            else if (CodeWriters.IsAnyStruct(context.Cache, uOut)) { writer.Write(CodeWriters.GetBlittableStructAbiType(writer, context, uOut)); }
-            else { writer.Write(CodeWriters.GetAbiPrimitiveType(context.Cache, uOut)); }
+            else if (AbiTypeHelpers.IsComplexStruct(context.Cache, uOut)) { writer.Write(AbiTypeHelpers.GetAbiStructTypeName(writer, context, uOut)); }
+            else if (AbiTypeHelpers.IsAnyStruct(context.Cache, uOut)) { writer.Write(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, uOut)); }
+            else { writer.Write(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uOut)); }
             writer.Write(" __");
             writer.Write(localName);
             writer.Write(" = default;\n");
@@ -1498,29 +1498,29 @@ internal static class AbiMethodBodyFactory
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.ReceiveArray) { continue; }
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)CodeWriters.StripByRefAndCustomModifiers(p.Type);
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             writer.Write("        uint __");
             writer.Write(localName);
             writer.Write("_length = default;\n");
             writer.Write("        ");
             // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
             // primitive ABI otherwise.
-            if (sza.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject())
+            if (sza.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject())
             {
                 writer.Write("void*");
             }
-            else if (CodeWriters.IsComplexStruct(context.Cache, sza.BaseType))
+            else if (AbiTypeHelpers.IsComplexStruct(context.Cache, sza.BaseType))
             {
-                writer.Write(CodeWriters.GetAbiStructTypeName(writer, context, sza.BaseType));
+                writer.Write(AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType));
             }
-            else if (CodeWriters.IsAnyStruct(context.Cache, sza.BaseType))
+            else if (AbiTypeHelpers.IsAnyStruct(context.Cache, sza.BaseType))
             {
-                writer.Write(CodeWriters.GetBlittableStructAbiType(writer, context, sza.BaseType));
+                writer.Write(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType));
             }
             else
             {
-                writer.Write(CodeWriters.GetAbiPrimitiveType(context.Cache, sza.BaseType));
+                writer.Write(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType));
             }
             writer.Write("* __");
             writer.Write(localName);
@@ -1535,17 +1535,17 @@ internal static class AbiMethodBodyFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-            if (CodeWriters.IsBlittablePrimitive(context.Cache, szArr.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
+            if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             // Non-blittable element type: emit InlineArray16<storageT> + ArrayPool<storageT>.
             // For mapped value types (DateTime/TimeSpan), use the ABI struct type.
             // For complex structs (e.g. authored BasicStruct with reference fields), use the ABI
             // struct type. For everything else (runtime classes, objects, strings), use nint.
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-            string callName = CodeWriters.GetParamName(p, paramNameOverride);
-            string storageT = CodeWriters.IsMappedAbiValueType(szArr.BaseType)
-                ? CodeWriters.GetMappedAbiTypeName(szArr.BaseType)
-                : CodeWriters.IsComplexStruct(context.Cache, szArr.BaseType)
-                    ? CodeWriters.GetAbiStructTypeName(writer, context, szArr.BaseType)
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+            string storageT = AbiTypeHelpers.IsMappedAbiValueType(szArr.BaseType)
+                ? AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType)
+                : AbiTypeHelpers.IsComplexStruct(context.Cache, szArr.BaseType)
+                    ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType)
                     : szArr.BaseType.IsHResultException()
                         ? "global::ABI.System.Exception"
                         : "nint";
@@ -1628,29 +1628,29 @@ internal static class AbiMethodBodyFactory
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
             writer.Write("        uint __retval_length = default;\n");
             writer.Write("        ");
-            if (retSz.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject())
+            if (retSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject())
             {
                 writer.Write("void*");
             }
-            else if (CodeWriters.IsComplexStruct(context.Cache, retSz.BaseType))
+            else if (AbiTypeHelpers.IsComplexStruct(context.Cache, retSz.BaseType))
             {
-                writer.Write(CodeWriters.GetAbiStructTypeName(writer, context, retSz.BaseType));
+                writer.Write(AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType));
             }
             else if (retSz.BaseType.IsHResultException())
             {
                 writer.Write("global::ABI.System.Exception");
             }
-            else if (CodeWriters.IsMappedAbiValueType(retSz.BaseType))
+            else if (AbiTypeHelpers.IsMappedAbiValueType(retSz.BaseType))
             {
-                writer.Write(CodeWriters.GetMappedAbiTypeName(retSz.BaseType));
+                writer.Write(AbiTypeHelpers.GetMappedAbiTypeName(retSz.BaseType));
             }
-            else if (CodeWriters.IsAnyStruct(context.Cache, retSz.BaseType))
+            else if (AbiTypeHelpers.IsAnyStruct(context.Cache, retSz.BaseType))
             {
-                writer.Write(CodeWriters.GetBlittableStructAbiType(writer, context, retSz.BaseType));
+                writer.Write(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSz.BaseType));
             }
             else
             {
-                writer.Write(CodeWriters.GetAbiPrimitiveType(context.Cache, retSz.BaseType));
+                writer.Write(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType));
             }
             writer.Write("* __retval_data = default;\n");
         }
@@ -1665,20 +1665,20 @@ internal static class AbiMethodBodyFactory
         else if (returnIsAnyStruct)
         {
             writer.Write("        ");
-            writer.Write(CodeWriters.GetBlittableStructAbiType(writer, context, rt!));
+            writer.Write(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, rt!));
             writer.Write(" __retval = default;\n");
         }
         else if (returnIsComplexStruct)
         {
             writer.Write("        ");
-            writer.Write(CodeWriters.GetAbiStructTypeName(writer, context, rt!));
+            writer.Write(AbiTypeHelpers.GetAbiStructTypeName(writer, context, rt!));
             writer.Write(" __retval = default;\n");
         }
-        else if (rt is not null && CodeWriters.IsMappedAbiValueType(rt))
+        else if (rt is not null && AbiTypeHelpers.IsMappedAbiValueType(rt))
         {
             // Mapped value type return (e.g. DateTime/TimeSpan): use the ABI struct as __retval.
             writer.Write("        ");
-            writer.Write(CodeWriters.GetMappedAbiTypeName(rt));
+            writer.Write(AbiTypeHelpers.GetMappedAbiTypeName(rt));
             writer.Write(" __retval = default;\n");
         }
         else if (rt is not null && rt.IsSystemType())
@@ -1689,7 +1689,7 @@ internal static class AbiMethodBodyFactory
         else if (rt is not null)
         {
             writer.Write("        ");
-            writer.Write(CodeWriters.GetAbiPrimitiveType(context.Cache, rt));
+            writer.Write(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt));
             writer.Write(" __retval = default;\n");
         }
 
@@ -1702,8 +1702,8 @@ internal static class AbiMethodBodyFactory
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.Out) { continue; }
-            AsmResolver.DotNet.Signatures.TypeSignature uOut = CodeWriters.StripByRefAndCustomModifiers(p.Type);
-            if (uOut.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsObject() || uOut.IsSystemType() || CodeWriters.IsComplexStruct(context.Cache, uOut) || uOut.IsGenericInstance()) { hasOutNeedsCleanup = true; break; }
+            AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+            if (uOut.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsObject() || uOut.IsSystemType() || AbiTypeHelpers.IsComplexStruct(context.Cache, uOut) || uOut.IsGenericInstance()) { hasOutNeedsCleanup = true; break; }
         }
         bool hasReceiveArray = false;
         for (int i = 0; i < sig.Params.Count; i++)
@@ -1717,8 +1717,8 @@ internal static class AbiMethodBodyFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if ((cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
                 && p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArrCheck
-                && !CodeWriters.IsBlittablePrimitive(context.Cache, szArrCheck.BaseType) && !CodeWriters.IsAnyStruct(context.Cache, szArrCheck.BaseType)
-                && !CodeWriters.IsMappedAbiValueType(szArrCheck.BaseType))
+                && !AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArrCheck.BaseType) && !AbiTypeHelpers.IsAnyStruct(context.Cache, szArrCheck.BaseType)
+                && !AbiTypeHelpers.IsMappedAbiValueType(szArrCheck.BaseType))
             {
                 hasNonBlittablePassArray = true; break;
             }
@@ -1728,7 +1728,7 @@ internal static class AbiMethodBodyFactory
         {
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if ((cat == ParamCategory.In || cat == ParamCategory.Ref) && CodeWriters.IsComplexStruct(context.Cache, CodeWriters.StripByRefAndCustomModifiers(p.Type))) { hasComplexStructInput = true; break; }
+            if ((cat == ParamCategory.In || cat == ParamCategory.Ref) && AbiTypeHelpers.IsComplexStruct(context.Cache, AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type))) { hasComplexStructInput = true; break; }
         }
         // System.Type return: ABI.System.Type contains an HSTRING that must be disposed
         // after marshalling to managed System.Type, otherwise the HSTRING leaks. Mirrors
@@ -1747,15 +1747,15 @@ internal static class AbiMethodBodyFactory
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.In && cat != ParamCategory.Ref) { continue; }
-            AsmResolver.DotNet.Signatures.TypeSignature pType = CodeWriters.StripByRefAndCustomModifiers(p.Type);
-            if (!CodeWriters.IsComplexStruct(context.Cache, pType)) { continue; }
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-            string callName = CodeWriters.GetParamName(p, paramNameOverride);
+            AsmResolver.DotNet.Signatures.TypeSignature pType = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+            if (!AbiTypeHelpers.IsComplexStruct(context.Cache, pType)) { continue; }
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             writer.Write(indent);
             writer.Write("__");
             writer.Write(localName);
             writer.Write(" = ");
-            writer.Write(CodeWriters.GetMarshallerFullName(writer, context, pType));
+            writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, pType));
             writer.Write(".ConvertToUnmanaged(");
             writer.Write(callName);
             writer.Write(");\n");
@@ -1767,8 +1767,8 @@ internal static class AbiMethodBodyFactory
             ParamInfo p = sig.Params[i];
             if (ParamHelpers.GetParamCategory(p) != ParamCategory.In) { continue; }
             if (!p.Type.IsSystemType()) { continue; }
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-            string callName = CodeWriters.GetParamName(p, paramNameOverride);
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             writer.Write(indent);
             writer.Write("global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(");
             writer.Write(callName);
@@ -1814,12 +1814,12 @@ internal static class AbiMethodBodyFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat == ParamCategory.Ref)
             {
-                AsmResolver.DotNet.Signatures.TypeSignature uRefSkip = CodeWriters.StripByRefAndCustomModifiers(p.Type);
-                if (CodeWriters.IsComplexStruct(context.Cache, uRefSkip)) { continue; }
-                string callName = CodeWriters.GetParamName(p, paramNameOverride);
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
+                AsmResolver.DotNet.Signatures.TypeSignature uRefSkip = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                if (AbiTypeHelpers.IsComplexStruct(context.Cache, uRefSkip)) { continue; }
+                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 AsmResolver.DotNet.Signatures.TypeSignature uRef = uRefSkip;
-                string abiType = CodeWriters.IsAnyStruct(context.Cache, uRef) ? CodeWriters.GetBlittableStructAbiType(writer, context, uRef) : CodeWriters.GetAbiPrimitiveType(context.Cache, uRef);
+                string abiType = AbiTypeHelpers.IsAnyStruct(context.Cache, uRef) ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, uRef) : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uRef);
                 writer.Write(indent);
                 writer.Write(new string(' ', fixedNesting * 4));
                 writer.Write("fixed(");
@@ -1851,8 +1851,8 @@ internal static class AbiMethodBodyFactory
                 bool isType = p.Type.IsSystemType();
                 bool isPassArray = cat == ParamCategory.PassArray || cat == ParamCategory.FillArray;
                 if (!isString && !isType && !isPassArray) { continue; }
-                string callName = CodeWriters.GetParamName(p, paramNameOverride);
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
+                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 if (!first) { writer.Write(", "); }
                 first = false;
                 writer.Write("_");
@@ -1866,7 +1866,7 @@ internal static class AbiMethodBodyFactory
                 else if (isPassArray)
                 {
                     AsmResolver.DotNet.Signatures.TypeSignature elemT = ((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType;
-                    bool isBlittableElem = CodeWriters.IsBlittablePrimitive(context.Cache, elemT) || CodeWriters.IsAnyStruct(context.Cache, elemT);
+                    bool isBlittableElem = AbiTypeHelpers.IsBlittablePrimitive(context.Cache, elemT) || AbiTypeHelpers.IsAnyStruct(context.Cache, elemT);
                     bool isStringElem = elemT.IsString();
                     if (isBlittableElem)
                     {
@@ -1905,8 +1905,8 @@ internal static class AbiMethodBodyFactory
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 if (!sig.Params[i].Type.IsString()) { continue; }
-                string callName = CodeWriters.GetParamName(sig.Params[i], paramNameOverride);
-                string localName = CodeWriters.GetParamLocalName(sig.Params[i], paramNameOverride);
+                string callName = AbiTypeHelpers.GetParamName(sig.Params[i], paramNameOverride);
+                string localName = AbiTypeHelpers.GetParamLocalName(sig.Params[i], paramNameOverride);
                 writer.Write(indent);
                 writer.Write(new string(' ', fixedNesting * 4));
                 writer.Write("HStringMarshaller.ConvertToUnmanagedUnsafe((char*)_");
@@ -1944,9 +1944,9 @@ internal static class AbiMethodBodyFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-            if (CodeWriters.IsBlittablePrimitive(context.Cache, szArr.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
-            string callName = CodeWriters.GetParamName(p, paramNameOverride);
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
+            if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
+            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             if (szArr.BaseType.IsString())
             {
                 // Skip pre-call ConvertToUnmanagedUnsafe for FillArray of strings — there's
@@ -1992,19 +1992,19 @@ internal static class AbiMethodBodyFactory
                 // is required at the call site. For runtime classes/objects, use void**.
                 string dataParamType;
                 string dataCastType;
-                if (CodeWriters.IsMappedAbiValueType(szArr.BaseType))
+                if (AbiTypeHelpers.IsMappedAbiValueType(szArr.BaseType))
                 {
-                    dataParamType = CodeWriters.GetMappedAbiTypeName(szArr.BaseType) + "*";
-                    dataCastType = "(" + CodeWriters.GetMappedAbiTypeName(szArr.BaseType) + "*)";
+                    dataParamType = AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType) + "*";
+                    dataCastType = "(" + AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType) + "*)";
                 }
                 else if (szArr.BaseType.IsHResultException())
                 {
                     dataParamType = "global::ABI.System.Exception*";
                     dataCastType = "(global::ABI.System.Exception*)";
                 }
-                else if (CodeWriters.IsComplexStruct(context.Cache, szArr.BaseType))
+                else if (AbiTypeHelpers.IsComplexStruct(context.Cache, szArr.BaseType))
                 {
-                    string abiStructName = CodeWriters.GetAbiStructTypeName(writer, context, szArr.BaseType);
+                    string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType);
                     dataParamType = abiStructName + "*";
                     dataCastType = "(" + abiStructName + "*)";
                 }
@@ -2060,8 +2060,8 @@ internal static class AbiMethodBodyFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat == ParamCategory.PassArray || cat == ParamCategory.FillArray)
             {
-                string callName = CodeWriters.GetParamName(p, paramNameOverride);
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
+                string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 writer.Write(",\n  (uint)");
                 writer.Write(callName);
                 writer.Write(".Length, _");
@@ -2070,14 +2070,14 @@ internal static class AbiMethodBodyFactory
             }
             if (cat == ParamCategory.Out)
             {
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 writer.Write(",\n  &__");
                 writer.Write(localName);
                 continue;
             }
             if (cat == ParamCategory.ReceiveArray)
             {
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 writer.Write(",\n  &__");
                 writer.Write(localName);
                 writer.Write("_length, &__");
@@ -2087,9 +2087,9 @@ internal static class AbiMethodBodyFactory
             }
             if (cat == ParamCategory.Ref)
             {
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-                AsmResolver.DotNet.Signatures.TypeSignature uRefArg = CodeWriters.StripByRefAndCustomModifiers(p.Type);
-                if (CodeWriters.IsComplexStruct(context.Cache, uRefArg))
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                AsmResolver.DotNet.Signatures.TypeSignature uRefArg = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                if (AbiTypeHelpers.IsComplexStruct(context.Cache, uRefArg))
                 {
                     // Complex struct 'in' (Ref) param: pass &__local (the marshaled ABI struct).
                     writer.Write(",\n  &__");
@@ -2107,42 +2107,42 @@ internal static class AbiMethodBodyFactory
             if (p.Type.IsHResultException())
             {
                 writer.Write("__");
-                writer.Write(CodeWriters.GetParamLocalName(p, paramNameOverride));
+                writer.Write(AbiTypeHelpers.GetParamLocalName(p, paramNameOverride));
             }
             else if (p.Type.IsString())
             {
                 writer.Write("__");
-                writer.Write(CodeWriters.GetParamLocalName(p, paramNameOverride));
+                writer.Write(AbiTypeHelpers.GetParamLocalName(p, paramNameOverride));
                 writer.Write(".HString");
             }
-            else if (CodeWriters.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
+            else if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
             {
                 writer.Write("__");
-                writer.Write(CodeWriters.GetParamLocalName(p, paramNameOverride));
+                writer.Write(AbiTypeHelpers.GetParamLocalName(p, paramNameOverride));
                 writer.Write(".GetThisPtrUnsafe()");
             }
             else if (p.Type.IsSystemType())
             {
                 // System.Type input: pass the pre-converted ABI Type struct (via the local set up before the call).
                 writer.Write("__");
-                writer.Write(CodeWriters.GetParamLocalName(p, paramNameOverride));
+                writer.Write(AbiTypeHelpers.GetParamLocalName(p, paramNameOverride));
                 writer.Write(".ConvertToUnmanagedUnsafe()");
             }
-            else if (CodeWriters.IsMappedAbiValueType(p.Type))
+            else if (AbiTypeHelpers.IsMappedAbiValueType(p.Type))
             {
                 // Mapped value-type input: pass the pre-converted ABI local.
                 writer.Write("__");
-                writer.Write(CodeWriters.GetParamLocalName(p, paramNameOverride));
+                writer.Write(AbiTypeHelpers.GetParamLocalName(p, paramNameOverride));
             }
-            else if (CodeWriters.IsComplexStruct(context.Cache, p.Type))
+            else if (AbiTypeHelpers.IsComplexStruct(context.Cache, p.Type))
             {
                 // Complex struct input: pass the pre-converted ABI struct local.
                 writer.Write("__");
-                writer.Write(CodeWriters.GetParamLocalName(p, paramNameOverride));
+                writer.Write(AbiTypeHelpers.GetParamLocalName(p, paramNameOverride));
             }
-            else if (CodeWriters.IsAnyStruct(context.Cache, p.Type))
+            else if (AbiTypeHelpers.IsAnyStruct(context.Cache, p.Type))
             {
-                writer.Write(CodeWriters.GetParamName(p, paramNameOverride));
+                writer.Write(AbiTypeHelpers.GetParamName(p, paramNameOverride));
             }
             else
             {
@@ -2174,9 +2174,9 @@ internal static class AbiMethodBodyFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szFA) { continue; }
-            if (CodeWriters.IsBlittablePrimitive(context.Cache, szFA.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szFA.BaseType)) { continue; }
-            string callName = CodeWriters.GetParamName(p, paramNameOverride);
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
+            if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szFA.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szFA.BaseType)) { continue; }
+            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             IndentedTextWriter __scratchElementProjected = new();
             TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
@@ -2190,7 +2190,7 @@ internal static class AbiMethodBodyFactory
             // - Complex structs: <ABI struct>*
             string dataParamType;
             string dataCastType;
-            if (szFA.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, szFA.BaseType) || szFA.BaseType.IsObject())
+            if (szFA.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, szFA.BaseType) || szFA.BaseType.IsObject())
             {
                 dataParamType = "void** data";
                 dataCastType = "(void**)";
@@ -2200,15 +2200,15 @@ internal static class AbiMethodBodyFactory
                 dataParamType = "global::ABI.System.Exception* data";
                 dataCastType = "(global::ABI.System.Exception*)";
             }
-            else if (CodeWriters.IsMappedAbiValueType(szFA.BaseType))
+            else if (AbiTypeHelpers.IsMappedAbiValueType(szFA.BaseType))
             {
-                string abiName = CodeWriters.GetMappedAbiTypeName(szFA.BaseType);
+                string abiName = AbiTypeHelpers.GetMappedAbiTypeName(szFA.BaseType);
                 dataParamType = abiName + "* data";
                 dataCastType = "(" + abiName + "*)";
             }
             else
             {
-                string abiStructName = CodeWriters.GetAbiStructTypeName(writer, context, szFA.BaseType);
+                string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szFA.BaseType);
                 dataParamType = abiStructName + "* data";
                 dataCastType = "(" + abiStructName + "*)";
             }
@@ -2244,9 +2244,9 @@ internal static class AbiMethodBodyFactory
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.Out) { continue; }
-            string callName = CodeWriters.GetParamName(p, paramNameOverride);
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-            AsmResolver.DotNet.Signatures.TypeSignature uOut = CodeWriters.StripByRefAndCustomModifiers(p.Type);
+            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
 
             // For Out generic instance: emit inline UnsafeAccessor to ConvertToManaged_<name>
             // before the writeback. Mirrors the truth pattern (e.g. Collection1HandlerInvoke
@@ -2292,9 +2292,9 @@ internal static class AbiMethodBodyFactory
                 writer.Write(localName);
                 writer.Write(")");
             }
-            else if (CodeWriters.IsRuntimeClassOrInterface(context.Cache, uOut))
+            else if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uOut))
             {
-                writer.Write(CodeWriters.GetMarshallerFullName(writer, context, uOut));
+                writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, uOut));
                 writer.Write(".ConvertToManaged(__");
                 writer.Write(localName);
                 writer.Write(")");
@@ -2305,14 +2305,14 @@ internal static class AbiMethodBodyFactory
                 writer.Write(localName);
                 writer.Write(")");
             }
-            else if (CodeWriters.IsComplexStruct(context.Cache, uOut))
+            else if (AbiTypeHelpers.IsComplexStruct(context.Cache, uOut))
             {
-                writer.Write(CodeWriters.GetMarshallerFullName(writer, context, uOut));
+                writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, uOut));
                 writer.Write(".ConvertToManaged(__");
                 writer.Write(localName);
                 writer.Write(")");
             }
-            else if (CodeWriters.IsAnyStruct(context.Cache, uOut))
+            else if (AbiTypeHelpers.IsAnyStruct(context.Cache, uOut))
             {
                 writer.Write("__");
                 writer.Write(localName);
@@ -2327,7 +2327,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write("__");
                 writer.Write(localName);
             }
-            else if (CodeWriters.IsEnumType(context.Cache, uOut))
+            else if (AbiTypeHelpers.IsEnumType(context.Cache, uOut))
             {
                 // Enum out param: __<name> local is already the projected enum type (since the
                 // function pointer signature uses the projected type). No cast needed.
@@ -2348,22 +2348,22 @@ internal static class AbiMethodBodyFactory
             ParamInfo p = sig.Params[i];
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.ReceiveArray) { continue; }
-            string callName = CodeWriters.GetParamName(p, paramNameOverride);
-            string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)CodeWriters.StripByRefAndCustomModifiers(p.Type);
+            string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
+            string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             IndentedTextWriter __scratchElementProjected = new();
             TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
             string elementProjected = __scratchElementProjected.ToString();
             // Element ABI type: void* for ref types (string/runtime class/object); ABI struct
             // type for complex structs (e.g. authored BasicStruct); blittable struct ABI for
             // blittable structs; primitive ABI otherwise.
-            string elementAbi = sza.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject()
+            string elementAbi = sza.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject()
                 ? "void*"
-                : CodeWriters.IsComplexStruct(context.Cache, sza.BaseType)
-                    ? CodeWriters.GetAbiStructTypeName(writer, context, sza.BaseType)
-                    : CodeWriters.IsAnyStruct(context.Cache, sza.BaseType)
-                        ? CodeWriters.GetBlittableStructAbiType(writer, context, sza.BaseType)
-                        : CodeWriters.GetAbiPrimitiveType(context.Cache, sza.BaseType);
+                : AbiTypeHelpers.IsComplexStruct(context.Cache, sza.BaseType)
+                    ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType)
+                    : AbiTypeHelpers.IsAnyStruct(context.Cache, sza.BaseType)
+                        ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)
+                        : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType);
             string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
             _ = elementInteropArg;
@@ -2398,17 +2398,17 @@ internal static class AbiMethodBodyFactory
                 IndentedTextWriter __scratchElementProjected = new();
                 TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSz.BaseType));
                 string elementProjected = __scratchElementProjected.ToString();
-                string elementAbi = retSz.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject()
+                string elementAbi = retSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject()
                     ? "void*"
-                    : CodeWriters.IsComplexStruct(context.Cache, retSz.BaseType)
-                        ? CodeWriters.GetAbiStructTypeName(writer, context, retSz.BaseType)
+                    : AbiTypeHelpers.IsComplexStruct(context.Cache, retSz.BaseType)
+                        ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType)
                         : retSz.BaseType.IsHResultException()
                             ? "global::ABI.System.Exception"
-                            : CodeWriters.IsMappedAbiValueType(retSz.BaseType)
-                                ? CodeWriters.GetMappedAbiTypeName(retSz.BaseType)
-                                : CodeWriters.IsAnyStruct(context.Cache, retSz.BaseType)
-                                    ? CodeWriters.GetBlittableStructAbiType(writer, context, retSz.BaseType)
-                                    : CodeWriters.GetAbiPrimitiveType(context.Cache, retSz.BaseType);
+                            : AbiTypeHelpers.IsMappedAbiValueType(retSz.BaseType)
+                                ? AbiTypeHelpers.GetMappedAbiTypeName(retSz.BaseType)
+                                : AbiTypeHelpers.IsAnyStruct(context.Cache, retSz.BaseType)
+                                    ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSz.BaseType)
+                                    : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType);
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
@@ -2442,7 +2442,7 @@ internal static class AbiMethodBodyFactory
                     // Nullable<T> return: use <T>Marshaller.UnboxToManaged. Mirrors truth pattern;
                     // there is no Nullable<T>Marshaller, the inner-T marshaller has UnboxToManaged.
                     AsmResolver.DotNet.Signatures.TypeSignature inner = rt.GetNullableInnerType()!;
-                    string innerMarshaller = CodeWriters.GetNullableInnerMarshallerName(writer, context, inner);
+                    string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
                     writer.Write(callIndent);
                     writer.Write("return ");
                     writer.Write(innerMarshaller);
@@ -2473,12 +2473,12 @@ internal static class AbiMethodBodyFactory
                     writer.Write(";\n");
                 }
             }
-            else if (rt is not null && CodeWriters.IsMappedAbiValueType(rt))
+            else if (rt is not null && AbiTypeHelpers.IsMappedAbiValueType(rt))
             {
                 // Mapped value type return (e.g. DateTime/TimeSpan): convert ABI struct back via marshaller.
                 writer.Write(callIndent);
                 writer.Write("return ");
-                writer.Write(CodeWriters.GetMappedMarshallerName(rt));
+                writer.Write(AbiTypeHelpers.GetMappedMarshallerName(rt));
                 writer.Write(".ConvertToManaged(__retval);\n");
             }
             else if (rt is not null && rt.IsSystemType())
@@ -2490,11 +2490,11 @@ internal static class AbiMethodBodyFactory
             else if (returnIsAnyStruct)
             {
                 writer.Write(callIndent);
-                if (rt is not null && CodeWriters.IsMappedAbiValueType(rt))
+                if (rt is not null && AbiTypeHelpers.IsMappedAbiValueType(rt))
                 {
                     // Mapped value type return: convert ABI struct back to projected via marshaller.
                     writer.Write("return ");
-                    writer.Write(CodeWriters.GetMappedMarshallerName(rt));
+                    writer.Write(AbiTypeHelpers.GetMappedMarshallerName(rt));
                     writer.Write(".ConvertToManaged(__retval);\n");
                 }
                 else
@@ -2506,7 +2506,7 @@ internal static class AbiMethodBodyFactory
             {
                 writer.Write(callIndent);
                 writer.Write("return ");
-                writer.Write(CodeWriters.GetMarshallerFullName(writer, context, rt!));
+                writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, rt!));
                 writer.Write(".ConvertToManaged(__retval);\n");
             }
             else
@@ -2516,7 +2516,7 @@ internal static class AbiMethodBodyFactory
                 IndentedTextWriter __scratchProjected = new();
                 MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt!, false);
                 string projected = __scratchProjected.ToString();
-                string abiType = CodeWriters.GetAbiPrimitiveType(context.Cache, rt!);
+                string abiType = AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt!);
                 if (projected == abiType) { writer.Write("__retval;\n"); }
                 else
                 {
@@ -2552,11 +2552,11 @@ internal static class AbiMethodBodyFactory
                 ParamInfo p = sig.Params[i];
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
                 if (cat != ParamCategory.In && cat != ParamCategory.Ref) { continue; }
-                AsmResolver.DotNet.Signatures.TypeSignature pType = CodeWriters.StripByRefAndCustomModifiers(p.Type);
-                if (!CodeWriters.IsComplexStruct(context.Cache, pType)) { continue; }
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
+                AsmResolver.DotNet.Signatures.TypeSignature pType = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                if (!AbiTypeHelpers.IsComplexStruct(context.Cache, pType)) { continue; }
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 writer.Write("            ");
-                writer.Write(CodeWriters.GetMarshallerFullName(writer, context, pType));
+                writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, pType));
                 writer.Write(".Dispose(__");
                 writer.Write(localName);
                 writer.Write(");\n");
@@ -2572,14 +2572,14 @@ internal static class AbiMethodBodyFactory
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
                 if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-                if (CodeWriters.IsBlittablePrimitive(context.Cache, szArr.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
-                if (CodeWriters.IsMappedAbiValueType(szArr.BaseType)) { continue; }
+                if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
+                if (AbiTypeHelpers.IsMappedAbiValueType(szArr.BaseType)) { continue; }
                 if (szArr.BaseType.IsHResultException())
                 {
                     // HResultException ABI is just an int; per-element Dispose is a no-op (mirror
                     // the truth: no Dispose_<name> emitted). Just return the inline-array's pool
                     // using the correct element type (ABI.System.Exception, not nint).
-                    string localNameH = CodeWriters.GetParamLocalName(p, paramNameOverride);
+                    string localNameH = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                     writer.Write("\n            if (__");
                     writer.Write(localNameH);
                     writer.Write("_arrayFromPool is not null)\n            {\n");
@@ -2588,7 +2588,7 @@ internal static class AbiMethodBodyFactory
                     writer.Write("_arrayFromPool);\n            }\n");
                     continue;
                 }
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 if (szArr.BaseType.IsString())
                 {
                     // The HStringArrayMarshaller.Dispose + ArrayPool returns for strings only
@@ -2630,9 +2630,9 @@ internal static class AbiMethodBodyFactory
                     string disposeDataParamType;
                     string fixedPtrType;
                     string disposeCastType;
-                    if (CodeWriters.IsComplexStruct(context.Cache, szArr.BaseType))
+                    if (AbiTypeHelpers.IsComplexStruct(context.Cache, szArr.BaseType))
                     {
-                        string abiStructName = CodeWriters.GetAbiStructTypeName(writer, context, szArr.BaseType);
+                        string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType);
                         disposeDataParamType = abiStructName + "*";
                         fixedPtrType = abiStructName + "*";
                         disposeCastType = string.Empty;
@@ -2674,10 +2674,10 @@ internal static class AbiMethodBodyFactory
                 }
                 // ArrayPool storage type matches the InlineArray storage (mapped ABI value type
                 // for DateTime/TimeSpan; ABI struct for complex structs; nint otherwise).
-                string poolStorageT = CodeWriters.IsMappedAbiValueType(szArr.BaseType)
-                    ? CodeWriters.GetMappedAbiTypeName(szArr.BaseType)
-                    : CodeWriters.IsComplexStruct(context.Cache, szArr.BaseType)
-                        ? CodeWriters.GetAbiStructTypeName(writer, context, szArr.BaseType)
+                string poolStorageT = AbiTypeHelpers.IsMappedAbiValueType(szArr.BaseType)
+                    ? AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType)
+                    : AbiTypeHelpers.IsComplexStruct(context.Cache, szArr.BaseType)
+                        ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType)
                         : "nint";
                 writer.Write("\n            if (__");
                 writer.Write(localName);
@@ -2695,15 +2695,15 @@ internal static class AbiMethodBodyFactory
                 ParamInfo p = sig.Params[i];
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
                 if (cat != ParamCategory.Out) { continue; }
-                AsmResolver.DotNet.Signatures.TypeSignature uOut = CodeWriters.StripByRefAndCustomModifiers(p.Type);
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
+                AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
                 if (uOut.IsString())
                 {
                     writer.Write("            HStringMarshaller.Free(__");
                     writer.Write(localName);
                     writer.Write(");\n");
                 }
-                else if (uOut.IsObject() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsGenericInstance())
+                else if (uOut.IsObject() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsGenericInstance())
                 {
                     writer.Write("            WindowsRuntimeUnknownMarshaller.Free(__");
                     writer.Write(localName);
@@ -2715,10 +2715,10 @@ internal static class AbiMethodBodyFactory
                     writer.Write(localName);
                     writer.Write(");\n");
                 }
-                else if (CodeWriters.IsComplexStruct(context.Cache, uOut))
+                else if (AbiTypeHelpers.IsComplexStruct(context.Cache, uOut))
                 {
                     writer.Write("            ");
-                    writer.Write(CodeWriters.GetMarshallerFullName(writer, context, uOut));
+                    writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, uOut));
                     writer.Write(".Dispose(__");
                     writer.Write(localName);
                     writer.Write(");\n");
@@ -2731,17 +2731,17 @@ internal static class AbiMethodBodyFactory
                 ParamInfo p = sig.Params[i];
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
                 if (cat != ParamCategory.ReceiveArray) { continue; }
-                string localName = CodeWriters.GetParamLocalName(p, paramNameOverride);
-                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)CodeWriters.StripByRefAndCustomModifiers(p.Type);
+                string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
                 // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
                 // primitive ABI otherwise. (Same categorization as the ConvertToManaged_<name> path.)
-                string elementAbi = sza.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject()
+                string elementAbi = sza.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject()
                     ? "void*"
-                    : CodeWriters.IsComplexStruct(context.Cache, sza.BaseType)
-                        ? CodeWriters.GetAbiStructTypeName(writer, context, sza.BaseType)
-                        : CodeWriters.IsAnyStruct(context.Cache, sza.BaseType)
-                            ? CodeWriters.GetBlittableStructAbiType(writer, context, sza.BaseType)
-                            : CodeWriters.GetAbiPrimitiveType(context.Cache, sza.BaseType);
+                    : AbiTypeHelpers.IsComplexStruct(context.Cache, sza.BaseType)
+                        ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType)
+                        : AbiTypeHelpers.IsAnyStruct(context.Cache, sza.BaseType)
+                            ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)
+                            : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType);
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
@@ -2775,7 +2775,7 @@ internal static class AbiMethodBodyFactory
             else if (returnIsComplexStruct)
             {
                 writer.Write("            ");
-                writer.Write(CodeWriters.GetMarshallerFullName(writer, context, rt!));
+                writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, rt!));
                 writer.Write(".Dispose(__retval);\n");
             }
             else if (returnIsSystemTypeForCleanup)
@@ -2786,17 +2786,17 @@ internal static class AbiMethodBodyFactory
             else if (returnIsReceiveArray)
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
-                string elementAbi = retSz.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject()
+                string elementAbi = retSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject()
                     ? "void*"
-                    : CodeWriters.IsComplexStruct(context.Cache, retSz.BaseType)
-                        ? CodeWriters.GetAbiStructTypeName(writer, context, retSz.BaseType)
+                    : AbiTypeHelpers.IsComplexStruct(context.Cache, retSz.BaseType)
+                        ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType)
                         : retSz.BaseType.IsHResultException()
                             ? "global::ABI.System.Exception"
-                            : CodeWriters.IsMappedAbiValueType(retSz.BaseType)
-                                ? CodeWriters.GetMappedAbiTypeName(retSz.BaseType)
-                                : CodeWriters.IsAnyStruct(context.Cache, retSz.BaseType)
-                                    ? CodeWriters.GetBlittableStructAbiType(writer, context, retSz.BaseType)
-                                    : CodeWriters.GetAbiPrimitiveType(context.Cache, retSz.BaseType);
+                            : AbiTypeHelpers.IsMappedAbiValueType(retSz.BaseType)
+                                ? AbiTypeHelpers.GetMappedAbiTypeName(retSz.BaseType)
+                                : AbiTypeHelpers.IsAnyStruct(context.Cache, retSz.BaseType)
+                                    ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSz.BaseType)
+                                    : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType);
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
@@ -2826,7 +2826,7 @@ internal static class AbiMethodBodyFactory
             return;
         }
         // Runtime class / interface: use ABI.<NS>.<Name>Marshaller
-        writer.Write(CodeWriters.GetMarshallerFullName(writer, context, sig));
+        writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, sig));
         writer.Write(".ConvertToUnmanaged(");
         writer.Write(argName);
         writer.Write(")");
@@ -2842,7 +2842,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(")");
             return;
         }
-        writer.Write(CodeWriters.GetMarshallerFullName(writer, context, sig));
+        writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, sig));
         writer.Write(".ConvertToManaged(");
         writer.Write(argName);
         writer.Write(")");
@@ -2865,7 +2865,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(pname);
         }
         // Enums: function pointer signature uses the projected enum type, so pass directly.
-        else if (CodeWriters.IsEnumType(context.Cache, p.Type))
+        else if (AbiTypeHelpers.IsEnumType(context.Cache, p.Type))
         {
             writer.Write(pname);
         }

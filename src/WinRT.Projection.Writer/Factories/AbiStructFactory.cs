@@ -23,7 +23,7 @@ internal static class AbiStructFactory
         // (mapped structs like Duration/KeyTime/RepeatBehavior have addition files that
         // replace the public struct's field layout, so a per-field ABI struct can't be
         // built directly from the projected type).
-        bool blittable = CodeWriters.IsTypeBlittable(context.Cache, type);
+        bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
         (string typeNs, string typeNm) = type.Names();
         bool isMappedStruct = MappedTypes.Get(typeNs, typeNm) is not null;
         if (!blittable && !isMappedStruct)
@@ -53,18 +53,18 @@ internal static class AbiStructFactory
                 // Truth uses void* for string and Nullable<T> fields, the ABI type for mapped value
                 // types (DateTime/TimeSpan), and the projected type for everything else (including
                 // enums and bool — their C# layout matches the WinRT ABI directly).
-                if (ft.IsString() || CodeWriters.TryGetNullablePrimitiveMarshallerName(ft, out _))
+                if (ft.IsString() || AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
                     writer.Write("void*");
                 }
-                else if (CodeWriters.IsMappedAbiValueType(ft))
+                else if (AbiTypeHelpers.IsMappedAbiValueType(ft))
                 {
-                    writer.Write(CodeWriters.GetMappedAbiTypeName(ft));
+                    writer.Write(AbiTypeHelpers.GetMappedAbiTypeName(ft));
                 }
                 else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr
-                         && CodeWriters.TryResolveStructTypeDef(context.Cache, tdr) is TypeDefinition fieldTd
+                         && AbiTypeHelpers.TryResolveStructTypeDef(context.Cache, tdr) is TypeDefinition fieldTd
                          && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
-                         && !CodeWriters.IsTypeBlittable(context.Cache, fieldTd))
+                         && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldTd))
                 {
                     TypedefNameWriter.WriteTypedefName(writer, context, fieldTd, TypedefNameType.ABI, false);
                 }

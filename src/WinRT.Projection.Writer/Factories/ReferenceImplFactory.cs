@@ -21,7 +21,7 @@ internal static class ReferenceImplFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         string visibility = context.Settings.Component ? "public" : "file";
-        bool blittable = CodeWriters.IsTypeBlittable(context.Cache, type);
+        bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
 
         writer.Write("\n");
         writer.Write(visibility);

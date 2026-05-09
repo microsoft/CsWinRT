@@ -168,13 +168,13 @@ internal static class AbiClassFactory
         {
             // one interface impl on the exclusive_to class is marked [Overridable] and matches
             // this interface. Otherwise the Impl wouldn't be reachable as a CCW.
-            TypeDefinition? exclusiveToType = CodeWriters.GetExclusiveToType(context.Cache, type);
+            TypeDefinition? exclusiveToType = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
             if (exclusiveToType is null) { return true; }
             bool hasOverridable = false;
             foreach (InterfaceImplementation impl in exclusiveToType.Interfaces)
             {
                 if (impl.Interface is null) { continue; }
-                TypeDefinition? ifaceTd = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+                TypeDefinition? ifaceTd = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
                 if (ifaceTd == type && impl.IsOverridable()) { hasOverridable = true; break; }
             }
             return hasOverridable;
@@ -220,7 +220,7 @@ internal static class AbiClassFactory
 
         // For unsealed classes, the ConvertToUnmanaged path needs to know whether the default interface is
         // exclusive-to (mirrors C++ logic).
-        TypeDefinition? defaultIfaceTd = defaultIface is null ? null : CodeWriters.ResolveInterfaceTypeDef(context.Cache, defaultIface);
+        TypeDefinition? defaultIfaceTd = defaultIface is null ? null : AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, defaultIface);
         bool defaultIfaceIsExclusive = defaultIfaceTd is not null && TypeCategorization.IsExclusiveTo(defaultIfaceTd);
 
         // Public *Marshaller class

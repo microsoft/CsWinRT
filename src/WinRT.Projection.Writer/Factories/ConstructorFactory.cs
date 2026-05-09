@@ -342,7 +342,7 @@ internal static class ConstructorFactory
             if (p.Type.IsNullableT())
             {
                 AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
-                string innerMarshaller = CodeWriters.GetNullableInnerMarshallerName(writer, context, inner);
+                string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
                 writer.Write("        using WindowsRuntimeObjectReferenceValue __");
                 writer.Write(raw);
                 writer.Write(" = ");
@@ -378,7 +378,7 @@ internal static class ConstructorFactory
         {
             ParamInfo p = sig.Params[i];
             if (p.Type.IsGenericInstance()) { continue; } // already handled above
-            if (!CodeWriters.IsRuntimeClassOrInterface(context.Cache, p.Type) && !p.Type.IsObject()) { continue; }
+            if (!AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, p.Type) && !p.Type.IsObject()) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             writer.Write("        using WindowsRuntimeObjectReferenceValue __");
@@ -401,11 +401,11 @@ internal static class ConstructorFactory
         for (int i = 0; i < paramCount; i++)
         {
             ParamInfo p = sig.Params[i];
-            if (!CodeWriters.IsMappedAbiValueType(p.Type)) { continue; }
+            if (!AbiTypeHelpers.IsMappedAbiValueType(p.Type)) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            string abiType = CodeWriters.GetMappedAbiTypeName(p.Type);
-            string marshaller = CodeWriters.GetMappedMarshallerName(p.Type);
+            string abiType = AbiTypeHelpers.GetMappedAbiTypeName(p.Type);
+            string marshaller = AbiTypeHelpers.GetMappedMarshallerName(p.Type);
             writer.Write("        ");
             writer.Write(abiType);
             writer.Write(" __");
@@ -442,7 +442,7 @@ internal static class ConstructorFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-            if (CodeWriters.IsBlittablePrimitive(context.Cache, szArr.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
+            if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             hasNonBlittableArray = true;
             string raw = p.Parameter.Name ?? "param";
             string callName = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
@@ -567,7 +567,7 @@ internal static class ConstructorFactory
                 else if (isArr)
                 {
                     AsmResolver.DotNet.Signatures.TypeSignature elemT = ((AsmResolver.DotNet.Signatures.SzArrayTypeSignature)p.Type).BaseType;
-                    bool isBlittableElem = CodeWriters.IsBlittablePrimitive(context.Cache, elemT) || CodeWriters.IsAnyStruct(context.Cache, elemT);
+                    bool isBlittableElem = AbiTypeHelpers.IsBlittablePrimitive(context.Cache, elemT) || AbiTypeHelpers.IsAnyStruct(context.Cache, elemT);
                     bool isStringElem = elemT.IsString();
                     if (isBlittableElem) { writer.Write(pname); }
                     else { writer.Write("__"); writer.Write(raw); writer.Write("_span"); }
@@ -619,7 +619,7 @@ internal static class ConstructorFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-            if (CodeWriters.IsBlittablePrimitive(context.Cache, szArr.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
+            if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
             string pname = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             if (szArr.BaseType.IsString())
@@ -715,7 +715,7 @@ internal static class ConstructorFactory
             // For enums, cast to underlying type. For bool, cast to byte. For char, cast to ushort.
             // For string params, use the marshalled HString from the fixed block.
             // For runtime class / object / generic instance params, use __<name>.GetThisPtrUnsafe().
-            if (CodeWriters.IsEnumType(context.Cache, p.Type))
+            if (AbiTypeHelpers.IsEnumType(context.Cache, p.Type))
             {
                 // No cast needed: function pointer signature uses the projected enum type.
                 writer.Write(pname);
@@ -742,13 +742,13 @@ internal static class ConstructorFactory
                 writer.Write(raw);
                 writer.Write(".ConvertToUnmanagedUnsafe()");
             }
-            else if (CodeWriters.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
+            else if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance())
             {
                 writer.Write("__");
                 writer.Write(raw);
                 writer.Write(".GetThisPtrUnsafe()");
             }
-            else if (CodeWriters.IsMappedAbiValueType(p.Type))
+            else if (AbiTypeHelpers.IsMappedAbiValueType(p.Type))
             {
                 writer.Write("__");
                 writer.Write(raw);
@@ -795,7 +795,7 @@ internal static class ConstructorFactory
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
                 if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-                if (CodeWriters.IsBlittablePrimitive(context.Cache, szArr.BaseType) || CodeWriters.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
+                if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
                 string raw = p.Parameter.Name ?? "param";
                 if (szArr.BaseType.IsString())
                 {

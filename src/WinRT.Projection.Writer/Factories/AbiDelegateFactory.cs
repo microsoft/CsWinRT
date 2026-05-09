@@ -327,7 +327,7 @@ internal static class AbiDelegateFactory
         string iidExpr = __scratchIidExpr.ToString();
 
         MethodDefinition? invoke = type.GetDelegateInvoke();
-        bool nativeSupported = invoke is not null && CodeWriters.IsDelegateInvokeNativeSupported(context.Cache, new MethodSig(invoke));
+        bool nativeSupported = invoke is not null && AbiTypeHelpers.IsDelegateInvokeNativeSupported(context.Cache, new MethodSig(invoke));
 
         writer.Write("\nfile abstract unsafe class ");
         writer.Write(nameStripped);

@@ -259,7 +259,7 @@ internal static class ObjRefNameGenerator
             bool isDefault = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
             if (!isDefault && ClassFactory.IsFastAbiClass(type))
             {
-                TypeDefinition? implTypeDef = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+                TypeDefinition? implTypeDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
                 {
                     continue;
@@ -280,7 +280,7 @@ internal static class ObjRefNameGenerator
             bool isDefault2 = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
             if (!isDefault2 && ClassFactory.IsFastAbiClass(type))
             {
-                TypeDefinition? implTypeDef = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+                TypeDefinition? implTypeDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
                 {
                     continue;
@@ -350,7 +350,7 @@ internal static class ObjRefNameGenerator
     private static void EmitTransitiveInterfaceObjRefs(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceRef, HashSet<string> emitted)
     {
         // Resolve the interface to its TypeDefinition; if cross-module, look it up in the cache.
-        TypeDefinition? ifaceTd = CodeWriters.ResolveInterfaceTypeDef(context.Cache, ifaceRef);
+        TypeDefinition? ifaceTd = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, ifaceRef);
         if (ifaceTd is null) { return; }
 
         // Compute a substitution context if the parent is a closed generic instance.

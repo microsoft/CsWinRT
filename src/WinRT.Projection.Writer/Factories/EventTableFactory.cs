@@ -60,7 +60,7 @@ internal static class EventTableFactory
         string handlerRef = CSharpKeywords.IsKeyword(handlerRawName) ? "@" + handlerRawName : handlerRawName;
 
         // The cookie/token return parameter takes the metadata return param name (matches truth).
-        string cookieName = CodeWriters.GetReturnParamName(sig);
+        string cookieName = AbiTypeHelpers.GetReturnParamName(sig);
 
         AsmResolver.DotNet.Signatures.TypeSignature evtTypeSig = evt.EventType!.ToTypeSignature(false);
         bool isGeneric = evtTypeSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;

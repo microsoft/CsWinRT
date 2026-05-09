@@ -23,7 +23,7 @@ internal static class ArrayElementEncoder
         // Re-encode the element with the top-level form for accurate matching.
         string topLevelElement = EncodeArrayElementName(elementType);
         // Resolve the element's namespace to determine the path prefix.
-        string ns = CodeWriters.GetMappedNamespace(elementType);
+        string ns = AbiTypeHelpers.GetMappedNamespace(elementType);
         if (string.IsNullOrEmpty(ns))
         {
             return "ABI.<" + topLevelElement + ">ArrayMarshaller, WinRT.Interop";

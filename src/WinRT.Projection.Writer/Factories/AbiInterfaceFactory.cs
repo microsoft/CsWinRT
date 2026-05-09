@@ -75,7 +75,7 @@ internal static class AbiInterfaceFactory
                 // Special case: 'out T[]' is a ReceiveArray ABI signature: (uint* size, T** data).
                 if (br.BaseType is AsmResolver.DotNet.Signatures.SzArrayTypeSignature brSz && cat == ParamCategory.ReceiveArray)
                 {
-                    bool isRefElemBr = brSz.BaseType.IsString() || CodeWriters.IsRuntimeClassOrInterface(context.Cache, brSz.BaseType) || brSz.BaseType.IsObject() || brSz.BaseType.IsGenericInstance();
+                    bool isRefElemBr = brSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, brSz.BaseType) || brSz.BaseType.IsObject() || brSz.BaseType.IsGenericInstance();
                     if (includeParamNames)
                     {
                         writer.Write("uint* __");
@@ -126,8 +126,8 @@ internal static class AbiInterfaceFactory
         if (sig.ReturnType is not null)
         {
             writer.Write(", ");
-            string retName = CodeWriters.GetReturnParamName(sig);
-            string retSizeName = CodeWriters.GetReturnSizeParamName(sig);
+            string retName = AbiTypeHelpers.GetReturnParamName(sig);
+            string retSizeName = AbiTypeHelpers.GetReturnSizeParamName(sig);
             // Special handling for SzArray return types: WinRT projects them as a (uint*, T**) pair.
             if (sig.ReturnType is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz)
             {
@@ -176,7 +176,7 @@ internal static class AbiInterfaceFactory
 
         foreach (MethodDefinition method in type.Methods)
         {
-            string vm = CodeWriters.GetVMethodName(type, method);
+            string vm = AbiTypeHelpers.GetVMethodName(type, method);
             MethodSig sig = new(method);
             writer.Write("public delegate* unmanaged[MemberFunction]<");
             WriteAbiParameterTypesPointer(writer, context, sig);
@@ -209,7 +209,7 @@ internal static class AbiInterfaceFactory
         writer.Write("    *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;\n");
         foreach (MethodDefinition method in type.Methods)
         {
-            string vm = CodeWriters.GetVMethodName(type, method);
+            string vm = AbiTypeHelpers.GetVMethodName(type, method);
             writer.Write("    Vftbl.");
             writer.Write(vm);
             writer.Write(" = &Do_Abi_");
@@ -219,7 +219,7 @@ internal static class AbiInterfaceFactory
         writer.Write("}\n\n");
 
         writer.Write("public static ref readonly Guid IID\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => ref ");
-        CodeWriters.WriteIidGuidReference(writer, context, type);
+        AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
         writer.Write(";\n}\n\n");
 
         writer.Write("public static nint Vtable\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => (nint)Unsafe.AsPointer(in Vftbl);\n}\n\n");
@@ -285,7 +285,7 @@ internal static class AbiInterfaceFactory
 
         // Build a map of event add/remove methods to their event so we can emit the table field
         // and the proper Do_Abi_add_*/Do_Abi_remove_* bodies (mirrors C++ write_event_abi_invoke).
-        System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition>? eventMap = CodeWriters.BuildEventMethodMap(type);
+        System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition>? eventMap = AbiTypeHelpers.BuildEventMethodMap(type);
 
         // Build sets of property accessors and event accessors so the first loop below can
         // iterate "regular" methods (non-property, non-event) only. C++ emits Do_Abi bodies in
@@ -302,7 +302,7 @@ internal static class AbiInterfaceFactory
         // Local helper to emit a single Do_Abi method body for a given MethodDefinition.
         void EmitOneDoAbi(MethodDefinition method)
         {
-            string vm = CodeWriters.GetVMethodName(type, method);
+            string vm = AbiTypeHelpers.GetVMethodName(type, method);
             MethodSig sig = new(method);
             string mname = method.Name?.Value ?? string.Empty;
 
@@ -380,7 +380,7 @@ internal static class AbiInterfaceFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write(">.ConvertToUnmanaged(value, ");
-        CodeWriters.WriteIidGuidReference(writer, context, type);
+        AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
         writer.Write(");\n    }\n\n");
         writer.Write("    public static ");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
@@ -420,7 +420,7 @@ internal static class AbiInterfaceFactory
         // omits these because their owning class is not projected.
         if (TypeCategorization.IsExclusiveTo(type))
         {
-            TypeDefinition? owningClass = CodeWriters.GetExclusiveToType(context.Cache, type);
+            TypeDefinition? owningClass = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
             if (owningClass is not null && !context.Settings.Filter.Includes(owningClass))
             {
                 return;
@@ -430,12 +430,12 @@ internal static class AbiInterfaceFactory
         bool skipExclusiveEvents = false;
         if (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo)
         {
-            TypeDefinition? classType = CodeWriters.GetExclusiveToType(context.Cache, type);
+            TypeDefinition? classType = AbiTypeHelpers.GetExclusiveToType(context.Cache, type);
             if (classType is not null)
             {
                 foreach (InterfaceImplementation impl in classType.Interfaces)
                 {
-                    TypeDefinition? implDef = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl.Interface!);
+                    TypeDefinition? implDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface!);
                     if (implDef is not null && implDef == type)
                     {
                         skipExclusiveEvents = true;
@@ -454,17 +454,17 @@ internal static class AbiInterfaceFactory
         List<(TypeDefinition Iface, int StartSlot, bool SkipEvents)> segments = new();
         (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = ClassFactory.GetFastAbiClassForInterface(context.Cache, type);
         bool isFastAbiDefault = fastAbi is not null && fastAbi.Value.Default is not null
-            && CodeWriters.InterfacesEqualByName(fastAbi.Value.Default, type);
+            && AbiTypeHelpers.InterfacesEqualByName(fastAbi.Value.Default, type);
         if (isFastAbiDefault)
         {
             int slot = InspectableMethodCount;
             // Default interface: skip its events (they're inlined in the RCW class).
             segments.Add((type, slot, true));
-            slot += CodeWriters.CountMethods(type) + CodeWriters.GetClassHierarchyIndex(context.Cache, fastAbi!.Value.Class);
+            slot += AbiTypeHelpers.CountMethods(type) + AbiTypeHelpers.GetClassHierarchyIndex(context.Cache, fastAbi!.Value.Class);
             foreach (TypeDefinition other in fastAbi.Value.Others)
             {
                 segments.Add((other, slot, false));
-                slot += CodeWriters.CountMethods(other);
+                slot += AbiTypeHelpers.CountMethods(other);
             }
         }
         else
@@ -476,7 +476,7 @@ internal static class AbiInterfaceFactory
         bool hasAnyMember = false;
         foreach ((TypeDefinition seg, int _, bool segSkipEvents) in segments)
         {
-            if (CodeWriters.HasEmittableMembers(seg, segSkipEvents)) { hasAnyMember = true; break; }
+            if (AbiTypeHelpers.HasEmittableMembers(seg, segSkipEvents)) { hasAnyMember = true; break; }
         }
         if (!hasAnyMember) { return; }
 

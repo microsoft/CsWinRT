@@ -56,7 +56,7 @@ internal static class AbiInterfaceIDicFactory
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            TypeDefinition? required = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+            TypeDefinition? required = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
             if (required is null) { continue; }
             if (!visited.Add(required)) { continue; }
             (string rNs, string rName) = required.Names();
@@ -76,7 +76,7 @@ internal static class AbiInterfaceIDicFactory
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
                     {
                         if (impl2.Interface is null) { continue; }
-                        TypeDefinition? r2 = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
+                        TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
                         if (r2 is not null) { visited.Add(r2); }
                     }
                 }
@@ -102,7 +102,7 @@ internal static class AbiInterfaceIDicFactory
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
                     {
                         if (impl2.Interface is null) { continue; }
-                        TypeDefinition? r2 = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
+                        TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
                         if (r2 is not null) { visited.Add(r2); }
                     }
                 }
@@ -119,7 +119,7 @@ internal static class AbiInterfaceIDicFactory
                     foreach (InterfaceImplementation impl2 in required.Interfaces)
                     {
                         if (impl2.Interface is null) { continue; }
-                        TypeDefinition? r2 = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
+                        TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
                         if (r2 is not null) { visited.Add(r2); }
                     }
                 }
