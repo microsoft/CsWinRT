@@ -18,7 +18,7 @@ internal static class AbiEnumFactory
     public static void Write(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         CodeWriters.WriteStructEnumMarshallerClass(writer, context, type);
-        CodeWriters.WriteReferenceImpl(writer, context, type);
+        ReferenceImplFactory.Write(writer, context, type);
 
         // In component mode, also emit the authoring metadata wrapper for enums.
         if (context.Settings.Component)

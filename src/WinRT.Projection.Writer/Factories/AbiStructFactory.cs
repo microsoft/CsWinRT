@@ -86,6 +86,6 @@ internal static class AbiStructFactory
         }
 
         CodeWriters.WriteStructEnumMarshallerClass(writer, context, type);
-        CodeWriters.WriteReferenceImpl(writer, context, type);
+        ReferenceImplFactory.Write(writer, context, type);
     }
 }

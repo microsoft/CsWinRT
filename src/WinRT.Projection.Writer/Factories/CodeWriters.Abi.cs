@@ -123,7 +123,7 @@ internal static partial class CodeWriters
         WriteDelegateInterfaceEntriesImpl(writer, context, type);
         WriteDelegateComWrappersMarshallerAttribute(writer, context, type);
         WriteDelegateImpl(writer, context, type);
-        WriteReferenceImpl(writer, context, type);
+        ReferenceImplFactory.Write(writer, context, type);
 
         // In component mode, the C++ tool also emits the authoring metadata wrapper for delegates.
         if (context.Settings.Component)
@@ -5941,126 +5941,6 @@ internal static partial class CodeWriters
             AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8 => "double",
             _ => "int",
         };
-    }
-
-    /// <summary>
-    /// Writes the IReference&lt;T&gt; implementation for a struct/enum/delegate
-    /// (mirrors C++ <c>write_reference_impl</c>).
-    /// </summary>
-    internal static void WriteReferenceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-    {
-        string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = IdentifierEscaping.StripBackticks(name);
-        string visibility = context.Settings.Component ? "public" : "file";
-        bool blittable = IsTypeBlittable(context.Cache, type);
-
-        writer.Write("\n");
-        writer.Write(visibility);
-        writer.Write(" static unsafe class ");
-        writer.Write(nameStripped);
-        writer.Write("ReferenceImpl\n{\n");
-        writer.Write("    [FixedAddressValueType]\n");
-        writer.Write("    private static readonly ReferenceVftbl Vftbl;\n\n");
-        writer.Write("    static ");
-        writer.Write(nameStripped);
-        writer.Write("ReferenceImpl()\n    {\n");
-        writer.Write("        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;\n");
-        writer.Write("        Vftbl.get_Value = &get_Value;\n");
-        writer.Write("    }\n\n");
-        writer.Write("    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n");
-        writer.Write("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
-        bool isBlittableStructType = blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
-        bool isNonBlittableStructType = !blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
-        if ((blittable && TypeCategorization.GetCategory(type) != TypeCategory.Struct)
-            || isBlittableStructType)
-        {
-            // For blittable types and blittable structs: direct memcpy via C# struct assignment.
-            // Even bool/char fields work because their managed layout (1 byte / 2 bytes) matches
-            // the WinRT ABI.
-            writer.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
-            writer.Write("        if (result is null)\n        {\n");
-            writer.Write("            return unchecked((int)0x80004003);\n        }\n\n");
-            writer.Write("        try\n        {\n");
-            writer.Write("            var value = (");
-            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(")(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));\n");
-            writer.Write("            *(");
-            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write("*)result = value;\n");
-            writer.Write("            return 0;\n        }\n");
-            writer.Write("        catch (Exception e)\n        {\n");
-            writer.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
-            writer.Write("    }\n");
-        }
-        else if (isNonBlittableStructType)
-        {
-            // Non-blittable struct: marshal via <Name>Marshaller.ConvertToUnmanaged then write the
-            // (ABI) struct value into the result pointer. Mirrors C++ write_reference_impl which
-            // emits 'unboxedValue = (T)...; value = TMarshaller.ConvertToUnmanaged(unboxedValue);
-            // *(ABIT*)result = value;'.
-            writer.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
-            writer.Write("        if (result is null)\n        {\n");
-            writer.Write("            return unchecked((int)0x80004003);\n        }\n\n");
-            writer.Write("        try\n        {\n");
-            writer.Write("            ");
-            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(" unboxedValue = (");
-            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);\n");
-            writer.Write("            ");
-            WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write(" value = ");
-            writer.Write(nameStripped);
-            writer.Write("Marshaller.ConvertToUnmanaged(unboxedValue);\n");
-            writer.Write("            *(");
-            WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write("*)result = value;\n");
-            writer.Write("            return 0;\n        }\n");
-            writer.Write("        catch (Exception e)\n        {\n");
-            writer.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
-            writer.Write("    }\n");
-        }
-        else if (TypeCategorization.GetCategory(type) is TypeCategory.Class or TypeCategory.Delegate)
-        {
-            // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
-            writer.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n");
-            writer.Write("        if (result is null)\n        {\n");
-            writer.Write("            return unchecked((int)0x80004003);\n        }\n\n");
-            writer.Write("        try\n        {\n");
-            writer.Write("            ");
-            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(" unboxedValue = (");
-            WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.Write(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);\n");
-            writer.Write("            void* value = ");
-            // Use the same-namespace short marshaller name (we're in the ABI namespace).
-            writer.Write(nameStripped);
-            writer.Write("Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();\n");
-            writer.Write("            *(void**)result = value;\n");
-            writer.Write("            return 0;\n        }\n");
-            writer.Write("        catch (Exception e)\n        {\n");
-            writer.Write("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n");
-            writer.Write("    }\n");
-        }
-        else
-        {
-            // Unreachable: WriteReferenceImpl is only called for enum/struct/delegate types
-            // (WriteAbiEnum / WriteAbiStruct / WriteAbiDelegate dispatchers). Enums are blittable
-            // (handled by the first branch), structs by the first/second branches, delegates by
-            // the third. Defensive: emit a runtime assertion in case a future caller dispatches
-            // for an unsupported category.
-            throw new System.InvalidOperationException(
-                $"WriteReferenceImpl: unsupported type category {TypeCategorization.GetCategory(type)} " +
-                $"for type '{type.FullName}'. Expected enum/struct/delegate.");
-        }
-        // IID property: matches C++ write_reference_impl, which appends a 'public static ref readonly Guid IID'
-        // property pointing at the reference type's IID (e.g. IID_Windows_AI_Actions_ActionEntityKindReference).
-        writer.Write("\n    public static ref readonly Guid IID\n    {\n");
-        writer.Write("        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
-        writer.Write("        get => ref global::ABI.InterfaceIIDs.");
-        WriteIidReferenceGuidPropertyName(writer, context, type);
-        writer.Write(";\n    }\n");
-        writer.Write("}\n\n");
     }
 
     /// <summary>Mirrors C++ <c>write_abi_type</c>: writes the ABI type for a type semantics.</summary>
