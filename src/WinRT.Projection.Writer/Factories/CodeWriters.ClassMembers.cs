@@ -869,7 +869,7 @@ internal static partial class CodeWriters
     /// <summary>
     /// Writes a parameter name prefixed with its modifier (in/out/ref) for use as a call argument.
     /// </summary>
-    private static void WriteParameterNameWithModifier(IndentedTextWriter writer, ProjectionEmitContext context, ParamInfo p)
+    internal static void WriteParameterNameWithModifier(IndentedTextWriter writer, ProjectionEmitContext context, ParamInfo p)
     {
         _ = context;
         ParamCategory cat = ParamHelpers.GetParamCategory(p);
@@ -891,7 +891,7 @@ internal static partial class CodeWriters
     /// Writes the projected name for an interface reference (TypeDefinition, TypeReference, or
     /// generic instance), applying mapped-type remapping. Used inside <c>IWindowsRuntimeInterface&lt;T&gt;</c>.
     /// </summary>
-    private static void WriteInterfaceTypeNameForCcw(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceType)
+    internal static void WriteInterfaceTypeNameForCcw(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
         // If the reference is to a type in the same module, resolve to TypeDefinition so
         // WriteTypedefName can drop the 'global::<NS>.' prefix when the namespace matches.

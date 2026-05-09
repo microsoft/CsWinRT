@@ -269,7 +269,7 @@ internal static partial class CodeWriters
     /// Like <see cref="FindPropertyInBaseInterfaces"/> but returns the base interface where the
     /// property was found (or <c>null</c> if not found).
     /// </summary>
-    public static TypeDefinition? FindPropertyInterfaceInBases(MetadataCache cache, TypeDefinition type, string propName)
+    internal static TypeDefinition? FindPropertyInterfaceInBases(MetadataCache cache, TypeDefinition type, string propName)
     {
         if (string.IsNullOrEmpty(propName)) { return null; }
         System.Collections.Generic.HashSet<TypeDefinition> visited = new();

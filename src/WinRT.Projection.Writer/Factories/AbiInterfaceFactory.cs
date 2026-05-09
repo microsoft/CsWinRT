@@ -28,7 +28,7 @@ internal static class AbiInterfaceFactory
 
         WriteInterfaceVftbl(writer, context, type);
         WriteInterfaceImpl(writer, context, type);
-        CodeWriters.WriteInterfaceIdicImpl(writer, context, type);
+        AbiInterfaceIDicFactory.WriteInterfaceIdicImpl(writer, context, type);
         WriteInterfaceMarshaller(writer, context, type);
     }
 
