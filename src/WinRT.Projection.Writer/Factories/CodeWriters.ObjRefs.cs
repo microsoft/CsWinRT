@@ -287,7 +287,7 @@ internal static partial class CodeWriters
             // Mirrors C++ write_class_objrefs_definition (code_writers.h:2960): for fast-abi
             // classes, skip non-default exclusive interfaces — their methods dispatch through
             // the default interface's vtable so a separate objref is unnecessary.
-            bool isDefault = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute");
+            bool isDefault = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
             if (!isDefault && IsFastAbiClass(type))
             {
                 TypeDefinition? implTypeDef = ResolveInterfaceTypeDef(impl.Interface);
@@ -308,7 +308,7 @@ internal static partial class CodeWriters
                 continue;
             }
             // Same fast-abi guard as the first pass.
-            bool isDefault2 = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute");
+            bool isDefault2 = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
             if (!isDefault2 && IsFastAbiClass(type))
             {
                 TypeDefinition? implTypeDef = ResolveInterfaceTypeDef(impl.Interface);

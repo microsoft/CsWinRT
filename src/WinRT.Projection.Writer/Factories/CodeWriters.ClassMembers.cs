@@ -292,7 +292,7 @@ internal static partial class CodeWriters
             _ = writtenInterfaces.Add(ifaceType);
 
             bool isOverridable = Helpers.IsOverridable(impl);
-            bool isProtected = TypeCategorization.HasAttribute(impl, "Windows.Foundation.Metadata", "ProtectedAttribute");
+            bool isProtected = impl.HasAttribute("Windows.Foundation.Metadata", "ProtectedAttribute");
 
             // Substitute generic type arguments using the current generic context BEFORE emitting
             // any references to this interface. This is critical for nested recursion: e.g. when

@@ -57,7 +57,7 @@ internal static partial class CodeWriters
     /// </summary>
     public static (uint Data1, ushort Data2, ushort Data3, byte[] Data4)? GetGuidFields(TypeDefinition type)
     {
-        CustomAttribute? attr = TypeCategorization.GetAttribute(type, "Windows.Foundation.Metadata", "GuidAttribute");
+        CustomAttribute? attr = type.GetAttribute("Windows.Foundation.Metadata", "GuidAttribute");
         if (attr is null || attr.Signature is null) { return null; }
         var args = attr.Signature.FixedArguments;
         if (args.Count < 11) { return null; }

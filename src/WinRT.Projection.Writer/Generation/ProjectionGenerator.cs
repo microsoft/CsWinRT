@@ -45,8 +45,8 @@ internal sealed class ProjectionGenerator
                 foreach (TypeDefinition type in members.Classes)
                 {
                     if (!_settings.Filter.Includes(type)) { continue; }
-                    if (TypeCategorization.HasAttribute(type, "Windows.Foundation.Metadata", "ActivatableAttribute") ||
-                        TypeCategorization.HasAttribute(type, "Windows.Foundation.Metadata", "StaticAttribute"))
+                    if (type.HasAttribute("Windows.Foundation.Metadata", "ActivatableAttribute") ||
+                        type.HasAttribute("Windows.Foundation.Metadata", "StaticAttribute"))
                     {
                         _ = componentActivatable.Add(type);
                         string moduleName = Path.GetFileNameWithoutExtension(_cache.GetSourcePath(type));

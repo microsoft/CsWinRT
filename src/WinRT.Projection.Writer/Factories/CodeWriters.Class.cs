@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -17,7 +18,7 @@ internal static partial class CodeWriters
     {
         // Fast ABI is enabled when the type is marked [FastAbi]. (CsWinRT 3.0 has no
         // netstandard_compat gate -- it was always false in the C# port.)
-        return TypeCategorization.HasAttribute(type, "Windows.Foundation.Metadata", "FastAbiAttribute");
+        return type.HasAttribute("Windows.Foundation.Metadata", "FastAbiAttribute");
     }
 
     /// <summary>Mirrors C++ <c>write_class_modifiers</c>.</summary>
@@ -170,7 +171,7 @@ internal static partial class CodeWriters
     public static int GetGcPressureAmount(TypeDefinition type)
     {
         if (!type.IsSealed) { return 0; }
-        CustomAttribute? attr = TypeCategorization.GetAttribute(type, "Windows.Foundation.Metadata", "GCPressureAttribute");
+        CustomAttribute? attr = type.GetAttribute("Windows.Foundation.Metadata", "GCPressureAttribute");
         if (attr is null || attr.Signature is null) { return 0; }
         // The attribute has a single named arg "Amount" of an enum type. Defaults: 0=Low, 1=Medium, 2=High.
         // We try both fixed args and named args.
