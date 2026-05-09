@@ -28,8 +28,7 @@ internal static class StructEnumMarshallerFactory
         // Complex structs are non-almost-blittable structs with reference fields (string, object, etc.).
         bool isComplexStruct = cat == TypeCategory.Struct && !almostBlittable;
         // Detect Nullable<T> reference fields to determine whether the struct's BoxToUnmanaged
-        // call needs CreateComInterfaceFlags.TrackerSupport (mirrors C++ use_tracker_object_support
-        // which returns true for IReference`1 generic instances).
+        // call needs CreateComInterfaceFlags.TrackerSupport .
         bool hasReferenceFields = false;
         if (isComplexStruct)
         {

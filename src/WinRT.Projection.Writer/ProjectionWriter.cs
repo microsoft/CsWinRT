@@ -8,7 +8,7 @@ namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// Public API for generating C# Windows Runtime projections from <c>.winmd</c> metadata.
-/// This is the C# port of the C++ <c>cswinrt.exe</c> tool from <c>src/cswinrt/</c>.
+/// 
 /// <para>
 /// Usage: call <see cref="Run"/> with the desired options. The tool will generate
 /// <c>.cs</c> files in the specified output folder, one per Windows Runtime namespace.
@@ -17,7 +17,7 @@ namespace WindowsRuntime.ProjectionWriter;
 public static class ProjectionWriter
 {
     /// <summary>
-    /// Runs projection generation. Mirrors the orchestration in the C++ <c>cswinrt::run</c> in <c>main.cpp</c>.
+    /// Runs projection generation. Generates C# projections for the input WinRT metadata and writes them to the configured output folder.
     /// </summary>
     /// <param name="options">The generation options (input metadata, output folder, filters).</param>
     public static void Run(ProjectionWriterOptions options)

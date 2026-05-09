@@ -293,8 +293,7 @@ internal static class AbiDelegateFactory
     /// <summary>
     /// Emits the <c>&lt;Name&gt;ComWrappersCallback</c> file-scoped class for a delegate.
     /// here at all — the higher-level dispatch in <c>ProjectionGenerator</c> filters out generic
-    /// types from ABI emission (mirrors C++ <c>main.cpp:412</c>:
-    /// <c>if (distance(type.GenericParam()) != 0) { continue; }</c>). Open generic delegates
+    /// types from ABI emission . Open generic delegates
     /// can't compile this body anyway because the projected type would have unbound generic
     /// parameters.
     /// </summary>

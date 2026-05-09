@@ -276,8 +276,7 @@ internal static class AbiMethodBodyFactory
         // For non-blittable PassArray params (read-only input arrays), emit CopyToManaged_<name>
         // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
         // delegate sees. For FillArray params, the buffer is fresh storage the user delegate
-        // fills — the post-call writeback loop handles that. (Mirrors C++ which only emits the
-        // pre-call CopyToManaged for PassArray, see write_copy_to_managed.)
+        // fills — the post-call writeback loop handles that.
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
@@ -1588,8 +1587,7 @@ internal static class AbiMethodBodyFactory
                 // CopyToUnmanaged. The buffer the native side gets (_<name>) is uninitialized
                 // ABI-format storage; the native callee fills it. The post-call writeback loop
                 // emits CopyToManaged_<name> to propagate the native fills into the user's
-                // managed Span<T>. (Mirrors C++ marshaler.write_marshal_to_abi which only emits
-                // CopyToUnmanaged for PassArray, not FillArray.)
+                // managed Span<T>.
                 if (cat == ParamCategory.FillArray) { continue; }
                 IndentedTextWriter __scratchElementProjected = new();
                 TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));

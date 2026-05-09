@@ -10,7 +10,7 @@ using AsmResolver.DotNet;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Orchestrates the projection generation. Mirrors the body of <c>cswinrt::run</c> in <c>main.cpp</c>.
+/// Orchestrates the projection generation.
 /// </summary>
 internal sealed partial class ProjectionGenerator
 {
