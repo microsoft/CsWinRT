@@ -60,8 +60,8 @@ internal static partial class CodeWriters
                 WriteAbiClass(writer, context, type);
                 break;
             case TypeCategory.Delegate:
-                WriteAbiDelegate(writer, context, type);
-                WriteTempDelegateEventSourceSubclass(writer, context, type);
+                AbiDelegateFactory.WriteAbiDelegate(writer, context, type);
+                AbiDelegateFactory.WriteTempDelegateEventSourceSubclass(writer, context, type);
                 break;
             case TypeCategory.Enum:
                 AbiEnumFactory.Write(writer, context, type);
