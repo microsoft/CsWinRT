@@ -226,7 +226,7 @@ internal static partial class CodeWriters
             TypeDefinition staticIface = factory.Type;
 
             // Compute the objref name for this static factory interface.
-            string objRef = GetObjRefName(context, staticIface);
+            string objRef = ObjRefNameGenerator.GetObjRefName(context, staticIface);
             // Compute the ABI Methods static class name (e.g. "global::ABI.Windows.System.ILauncherStaticsMethods")
             IndentedTextWriter __scratchAbiClass = new();
             WriteTypedefName(__scratchAbiClass, context, staticIface, TypedefNameType.StaticAbiClass, true);
@@ -473,7 +473,7 @@ internal static partial class CodeWriters
         writer.Write("        return field = WindowsRuntimeObjectReference.GetActivationFactory(\"");
         writer.Write(runtimeClassFullName);
         writer.Write("\", ");
-        WriteIidExpression(writer, context, staticIface);
+        ObjRefNameGenerator.WriteIidExpression(writer, context, staticIface);
         writer.Write(");\n    }\n}\n");
     }
     /// <summary>Writes a projected runtime class.</summary>
@@ -526,7 +526,7 @@ internal static partial class CodeWriters
         // ObjRef field definitions for each implemented interface (mirrors C++ write_class_objrefs_definition).
         // These back the per-interface dispatch in instance methods/properties and the
         // IWindowsRuntimeInterface<T>.GetInterface() implementations.
-        WriteClassObjRefDefinitions(writer, context, type);
+        ObjRefNameGenerator.WriteClassObjRefDefinitions(writer, context, type);
 
         // Constructor: WindowsRuntimeObjectReference-based constructor (RCW-like)
         if (!context.Settings.ReferenceProjection)
@@ -545,7 +545,7 @@ internal static partial class CodeWriters
                 ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
                 if (defaultIface is not null)
                 {
-                    string defaultObjRefName = GetObjRefName(context, defaultIface);
+                    string defaultObjRefName = ObjRefNameGenerator.GetObjRefName(context, defaultIface);
                     writer.Write("if (GetType() == typeof(");
                     writer.Write(typeName);
                     writer.Write("))\n{\n");
@@ -643,7 +643,7 @@ internal static partial class CodeWriters
                 if (implRef is null) { continue; }
                 if (!firstClause) { writer.Write(" || "); }
                 firstClause = false;
-                WriteIidExpression(writer, context, implRef);
+                ObjRefNameGenerator.WriteIidExpression(writer, context, implRef);
                 writer.Write(" == iid");
             }
             // base call when type has a non-object base class

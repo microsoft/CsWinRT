@@ -53,7 +53,7 @@ internal static class AbiDelegateFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         IndentedTextWriter __scratchIidExpr = new();
-        CodeWriters.WriteIidExpression(__scratchIidExpr, context, type);
+        ObjRefNameGenerator.WriteIidExpression(__scratchIidExpr, context, type);
         string iidExpr = __scratchIidExpr.ToString();
 
         writer.Write("\ninternal static unsafe class ");
@@ -150,10 +150,10 @@ internal static class AbiDelegateFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         IndentedTextWriter __scratchIidExpr = new();
-        CodeWriters.WriteIidExpression(__scratchIidExpr, context, type);
+        ObjRefNameGenerator.WriteIidExpression(__scratchIidExpr, context, type);
         string iidExpr = __scratchIidExpr.ToString();
         IndentedTextWriter __scratchIidRefExpr = new();
-        CodeWriters.WriteIidReferenceExpression(__scratchIidRefExpr, type);
+        ObjRefNameGenerator.WriteIidReferenceExpression(__scratchIidRefExpr, type);
         string iidRefExpr = __scratchIidRefExpr.ToString();
 
         writer.Write("\nfile static class ");
@@ -283,7 +283,7 @@ internal static class AbiDelegateFactory
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
         IndentedTextWriter __scratchIidExpr = new();
-        CodeWriters.WriteIidExpression(__scratchIidExpr, context, type);
+        ObjRefNameGenerator.WriteIidExpression(__scratchIidExpr, context, type);
         string iidExpr = __scratchIidExpr.ToString();
 
         writer.Write("\npublic static unsafe class ");
@@ -323,7 +323,7 @@ internal static class AbiDelegateFactory
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
         IndentedTextWriter __scratchIidExpr = new();
-        CodeWriters.WriteIidExpression(__scratchIidExpr, context, type);
+        ObjRefNameGenerator.WriteIidExpression(__scratchIidExpr, context, type);
         string iidExpr = __scratchIidExpr.ToString();
 
         MethodDefinition? invoke = type.GetDelegateInvoke();
@@ -361,7 +361,7 @@ internal static class AbiDelegateFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         IndentedTextWriter __scratchIidRefExpr = new();
-        CodeWriters.WriteIidReferenceExpression(__scratchIidRefExpr, type);
+        ObjRefNameGenerator.WriteIidReferenceExpression(__scratchIidRefExpr, type);
         string iidRefExpr = __scratchIidRefExpr.ToString();
 
         writer.Write("\ninternal sealed unsafe class ");

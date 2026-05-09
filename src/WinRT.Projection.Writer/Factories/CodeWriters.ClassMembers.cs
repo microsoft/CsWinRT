@@ -262,7 +262,7 @@ internal static partial class CodeWriters
     /// Returns true if the given interface implementation should appear in the class's inheritance list
     /// (i.e., it has [Overridable], or is not [ExclusiveTo], or includeExclusiveInterface is set).
     /// </summary>
-    private static bool IsInterfaceInInheritanceList(MetadataCache cache, InterfaceImplementation impl, bool includeExclusiveInterface)
+    internal static bool IsInterfaceInInheritanceList(MetadataCache cache, InterfaceImplementation impl, bool includeExclusiveInterface)
     {
         if (impl.Interface is null) { return false; }
         if (impl.IsOverridable()) { return true; }
@@ -335,7 +335,7 @@ internal static partial class CodeWriters
             // it's referenced by overrides on derived classes.
             if (IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false) && !context.Settings.ReferenceProjection)
             {
-                string giObjRefName = GetObjRefName(context, substitutedInterface);
+                string giObjRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
                 writer.Write("\nWindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
                 WriteInterfaceTypeNameForCcw(writer, context, substitutedInterface);
                 writer.Write(">.GetInterface()\n{\nreturn ");
@@ -352,7 +352,7 @@ internal static partial class CodeWriters
                 // In non-ref mode this branch is only reached when the prior branch's
                 // IsInterfaceInInheritanceList check fails (i.e., ExclusiveTo default interfaces),
                 // because non-exclusive default interfaces are routed to the prior branch.
-                string giObjRefName = GetObjRefName(context, substitutedInterface);
+                string giObjRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
                 bool hasBaseType = false;
                 if (classType.BaseType is not null)
                 {
@@ -378,7 +378,7 @@ internal static partial class CodeWriters
                     // For generic interfaces, use the substituted nextInstance to compute the
                     // objref name so type arguments are concrete (matches the field name emitted
                     // by WriteClassObjRefDefinitions). For non-generic, fall back to impl.Interface.
-                    string objRefName = GetObjRefName(context, substitutedInterface);
+                    string objRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
                     WriteMappedInterfaceStubs(writer, context, nextInstance, ifaceName, objRefName);
                 }
                 continue;
@@ -484,7 +484,7 @@ internal static partial class CodeWriters
         {
             abiClass = "global::" + abiClass;
         }
-        string objRef = GetObjRefName(context, abiInterfaceRef);
+        string objRef = ObjRefNameGenerator.GetObjRefName(context, abiInterfaceRef);
 
         // For generic interfaces, also compute the encoded parent type name (used in UnsafeAccessor
         // function names) and the WinRT.Interop accessor type string (passed to UnsafeAccessorType).

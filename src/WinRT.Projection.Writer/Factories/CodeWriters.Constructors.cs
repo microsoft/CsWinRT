@@ -84,7 +84,7 @@ internal static partial class CodeWriters
         {
             // Emit the factory objref property (lazy-initialized).
             string factoryRuntimeClassFullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
-            string factoryObjRefName = GetObjRefName(context, factoryType);
+            string factoryObjRefName = ObjRefNameGenerator.GetObjRefName(context, factoryType);
             WriteStaticFactoryObjRef(writer, context, factoryType, factoryRuntimeClassFullName, factoryObjRefName);
 
             string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);
@@ -857,7 +857,7 @@ internal static partial class CodeWriters
         ITypeDefOrRef? defaultIface = classType.GetDefaultInterface();
         if (defaultIface is null) { return "default(global::System.Guid)"; }
         IndentedTextWriter __scratchIid = new();
-        WriteIidExpression(__scratchIid, context, defaultIface);
+        ObjRefNameGenerator.WriteIidExpression(__scratchIid, context, defaultIface);
         return __scratchIid.ToString();
     }
     /// <summary>
@@ -875,7 +875,7 @@ internal static partial class CodeWriters
         if (composableType.Methods.Count > 0)
         {
             string runtimeClassFullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
-            string factoryObjRefName = GetObjRefName(context, composableType);
+            string factoryObjRefName = ObjRefNameGenerator.GetObjRefName(context, composableType);
             WriteStaticFactoryObjRef(writer, context, composableType, runtimeClassFullName, factoryObjRefName);
         }
 
@@ -883,7 +883,7 @@ internal static partial class CodeWriters
         string marshalingType = GetMarshalingTypeName(classType);
         string defaultIfaceObjRef;
         ITypeDefOrRef? defaultIface = classType.GetDefaultInterface();
-        defaultIfaceObjRef = defaultIface is not null ? GetObjRefName(context, defaultIface) : string.Empty;
+        defaultIfaceObjRef = defaultIface is not null ? ObjRefNameGenerator.GetObjRefName(context, defaultIface) : string.Empty;
         int gcPressure = GetGcPressureAmount(classType);
         // Compute the platform attribute string from the composable factory interface's
         // [ContractVersion] attribute. Mirrors C++
@@ -925,7 +925,7 @@ internal static partial class CodeWriters
             if (isParameterless)
             {
                 // base(default(WindowsRuntimeActivationTypes.DerivedComposed), <factoryObjRef>, <iid>, <marshalingType>)
-                string factoryObjRef = GetObjRefName(context, composableType);
+                string factoryObjRef = ObjRefNameGenerator.GetObjRefName(context, composableType);
                 writer.Write("default(WindowsRuntimeActivationTypes.DerivedComposed), ");
                 writer.Write(factoryObjRef);
                 writer.Write(", ");
@@ -976,7 +976,7 @@ internal static partial class CodeWriters
             if (!isParameterless && !context.Settings.ReferenceProjection)
             {
                 EmitFactoryArgsStruct(writer, context, sig, argsName, userParamCount);
-                string factoryObjRefName = GetObjRefName(context, composableType);
+                string factoryObjRefName = ObjRefNameGenerator.GetObjRefName(context, composableType);
                 EmitFactoryCallbackClass(writer, context, sig, callbackName, argsName, factoryObjRefName, methodIndex, isComposable: true, userParamCount: userParamCount);
             }
 

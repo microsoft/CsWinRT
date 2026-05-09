@@ -12,7 +12,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <summary>
 /// ObjRef field emission for runtime classes.
 /// </summary>
-internal static partial class CodeWriters
+internal static class ObjRefNameGenerator
 {
     /// <summary>
     /// Returns the field name for the given interface impl (e.g. <c>_objRef_System_IDisposable</c>).
@@ -52,7 +52,7 @@ internal static partial class CodeWriters
             WriteFullyQualifiedInterfaceName(scratch, context, ifaceType);
             projected = scratch.ToString();
         }
-        return "_objRef_" + EscapeTypeNameForIdentifier(projected, stripGlobal: true);
+        return "_objRef_" + CodeWriters.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
     /// <summary>
     /// Like <see cref="WriteInterfaceTypeName(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
@@ -106,7 +106,7 @@ internal static partial class CodeWriters
             {
                 if (i > 0) { writer.Write(", "); }
                 // forceWriteNamespace=true so generic args also get global:: prefix.
-                WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
+                CodeWriters.WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
             }
             writer.Write(">");
         }
@@ -166,7 +166,7 @@ internal static partial class CodeWriters
         {
             // Non-mapped, non-generic: ABI.InterfaceIIDs.IID_<EscapedABIName>.
             string abiQualified = "global::ABI." + ns + "." + IdentifierEscaping.StripBackticks(name);
-            string id = EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
+            string id = CodeWriters.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
             writer.Write("global::ABI.InterfaceIIDs.IID_");
             writer.Write(id);
         }
@@ -179,8 +179,8 @@ internal static partial class CodeWriters
     {
         TypeSemantics sem = TypeSemanticsFactory.Get(gi);
         IndentedTextWriter scratch = new();
-        WriteTypeName(scratch, context, sem, TypedefNameType.ABI, forceWriteNamespace: true);
-        return "IID_" + EscapeTypeNameForIdentifier(scratch.ToString(), stripGlobal: true, stripGlobalABI: true);
+        CodeWriters.WriteTypeName(scratch, context, sem, TypedefNameType.ABI, forceWriteNamespace: true);
+        return "IID_" + CodeWriters.EscapeTypeNameForIdentifier(scratch.ToString(), stripGlobal: true, stripGlobalABI: true);
     }
     /// <summary>
     /// Emits the [UnsafeAccessor] extern method declaration that exposes the IID for a generic
@@ -191,7 +191,7 @@ internal static partial class CodeWriters
     internal static void EmitUnsafeAccessorForIid(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
     {
         string propName = BuildIidPropertyNameForGenericInterface(context, gi);
-        string interopName = EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
+        string interopName = CodeWriters.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
         writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"get_IID_");
         writer.Write(interopName);
         writer.Write("\")]\n");
@@ -218,7 +218,7 @@ internal static partial class CodeWriters
     {
         (string ns, string name) = type.Names();
         string abiQualified = "global::ABI." + ns + "." + IdentifierEscaping.StripBackticks(name);
-        string id = EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
+        string id = CodeWriters.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
         writer.Write("global::ABI.InterfaceIIDs.IID_");
         writer.Write(id);
         writer.Write("Reference");
@@ -249,7 +249,7 @@ internal static partial class CodeWriters
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            if (!IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
+            if (!CodeWriters.IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
                 && !IsInterfaceForObjRef(impl))
             {
                 continue;
@@ -257,9 +257,9 @@ internal static partial class CodeWriters
             // For FastAbi classes, skip non-default exclusive interfaces -- their methods
             // dispatch through the default interface's vtable so a separate objref is unnecessary.
             bool isDefault = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
-            if (!isDefault && IsFastAbiClass(type))
+            if (!isDefault && CodeWriters.IsFastAbiClass(type))
             {
-                TypeDefinition? implTypeDef = ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+                TypeDefinition? implTypeDef = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
                 {
                     continue;
@@ -271,16 +271,16 @@ internal static partial class CodeWriters
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            if (!IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
+            if (!CodeWriters.IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
                 && !IsInterfaceForObjRef(impl))
             {
                 continue;
             }
             // Same fast-abi guard as the first pass.
             bool isDefault2 = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
-            if (!isDefault2 && IsFastAbiClass(type))
+            if (!isDefault2 && CodeWriters.IsFastAbiClass(type))
             {
-                TypeDefinition? implTypeDef = ResolveInterfaceTypeDef(context.Cache, impl.Interface);
+                TypeDefinition? implTypeDef = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
                 {
                     continue;
@@ -350,7 +350,7 @@ internal static partial class CodeWriters
     private static void EmitTransitiveInterfaceObjRefs(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceRef, HashSet<string> emitted)
     {
         // Resolve the interface to its TypeDefinition; if cross-module, look it up in the cache.
-        TypeDefinition? ifaceTd = ResolveInterfaceTypeDef(context.Cache, ifaceRef);
+        TypeDefinition? ifaceTd = CodeWriters.ResolveInterfaceTypeDef(context.Cache, ifaceRef);
         if (ifaceTd is null) { return; }
 
         // Compute a substitution context if the parent is a closed generic instance.

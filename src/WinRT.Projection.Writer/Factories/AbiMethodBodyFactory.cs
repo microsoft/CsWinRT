@@ -1042,7 +1042,7 @@ internal static class AbiMethodBodyFactory
     {
         if (defaultIface is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
-            CodeWriters.EmitUnsafeAccessorForIid(writer, context, gi);
+            ObjRefNameGenerator.EmitUnsafeAccessorForIid(writer, context, gi);
         }
     }
 

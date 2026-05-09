@@ -57,7 +57,7 @@ internal static class AbiClassFactory
         if (defaultGenericInst is not null)
         {
             // Call the accessor: '<IID_<EscapedName>>(null)'.
-            string accessorName = CodeWriters.BuildIidPropertyNameForGenericInterface(context, defaultGenericInst);
+            string accessorName = ObjRefNameGenerator.BuildIidPropertyNameForGenericInterface(context, defaultGenericInst);
             defaultIfaceIid = accessorName + "(null)";
         }
         else
@@ -65,7 +65,7 @@ internal static class AbiClassFactory
             if (defaultIface is not null)
             {
                 IndentedTextWriter __scratchDefaultIid = new();
-                CodeWriters.WriteIidExpression(__scratchDefaultIid, context, defaultIface);
+                ObjRefNameGenerator.WriteIidExpression(__scratchDefaultIid, context, defaultIface);
                 defaultIfaceIid = __scratchDefaultIid.ToString();
             }
             else
@@ -85,7 +85,7 @@ internal static class AbiClassFactory
             // Emit the UnsafeAccessor declaration (uses 'object?' since component-mode
             // marshallers run inside #nullable enable).
             IndentedTextWriter __scratchAccessor = new();
-            CodeWriters.EmitUnsafeAccessorForIid(__scratchAccessor, context, defaultGenericInst, isInNullableContext: true);
+            ObjRefNameGenerator.EmitUnsafeAccessorForIid(__scratchAccessor, context, defaultGenericInst, isInNullableContext: true);
             string accessorBlock = __scratchAccessor.ToString();
             // Re-emit each line indented by 8 spaces.
             string[] accessorLines = accessorBlock.TrimEnd('\n').Split('\n');
@@ -203,7 +203,7 @@ internal static class AbiClassFactory
         if (defaultIface is not null)
         {
             IndentedTextWriter __scratchIid = new();
-            CodeWriters.WriteIidExpression(__scratchIid, context, defaultIface);
+            ObjRefNameGenerator.WriteIidExpression(__scratchIid, context, defaultIface);
             defaultIfaceIid = __scratchIid.ToString();
         }
         else

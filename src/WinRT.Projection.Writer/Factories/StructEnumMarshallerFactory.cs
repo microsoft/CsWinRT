@@ -266,7 +266,7 @@ internal static class StructEnumMarshallerFactory
             writer.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.");
             writer.Write(hasReferenceFields ? "TrackerSupport" : "None");
             writer.Write(", in ");
-            CodeWriters.WriteIidReferenceExpression(writer, type);
+            ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
             writer.Write(");\n    }\n");
         }
         else
@@ -276,7 +276,7 @@ internal static class StructEnumMarshallerFactory
             // ConvertToUnmanaged/ConvertToManaged because the field layout doesn't match).
             writer.Write("? value)\n    {\n");
             writer.Write("        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.None, in ");
-            CodeWriters.WriteIidReferenceExpression(writer, type);
+            ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
             writer.Write(");\n    }\n");
         }
 
@@ -321,7 +321,7 @@ internal static class StructEnumMarshallerFactory
         if (isEnum || almostBlittable || isComplexStruct)
         {
             IndentedTextWriter __scratchIidRefExpr = new();
-            CodeWriters.WriteIidReferenceExpression(__scratchIidRefExpr, type);
+            ObjRefNameGenerator.WriteIidReferenceExpression(__scratchIidRefExpr, type);
             string iidRefExpr = __scratchIidRefExpr.ToString();
 
             // InterfaceEntriesImpl
