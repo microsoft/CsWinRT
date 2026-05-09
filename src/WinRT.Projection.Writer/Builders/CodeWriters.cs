@@ -58,27 +58,23 @@ internal static partial class CodeWriters
     /// <summary>Dispatches ABI emission based on the type category.</summary>
     public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeCategory category)
     {
-        // The Abi family is being migrated incrementally (it's the largest single file). For
-        // not-yet-migrated entries, wrap the writer+context in a transient TypeWriter so the
-        // underlying buffer + state are shared.
-        TypeWriter w = new(writer, context);
         switch (category)
         {
             case TypeCategory.Class:
-                WriteAbiClass(w, type);
+                WriteAbiClass(writer, context, type);
                 break;
             case TypeCategory.Delegate:
-                WriteAbiDelegate(w, type);
-                WriteTempDelegateEventSourceSubclass(w, type);
+                WriteAbiDelegate(writer, context, type);
+                WriteTempDelegateEventSourceSubclass(writer, context, type);
                 break;
             case TypeCategory.Enum:
-                WriteAbiEnum(w, type);
+                WriteAbiEnum(writer, context, type);
                 break;
             case TypeCategory.Interface:
-                WriteAbiInterface(w, type);
+                WriteAbiInterface(writer, context, type);
                 break;
             case TypeCategory.Struct:
-                WriteAbiStruct(w, type);
+                WriteAbiStruct(writer, context, type);
                 break;
         }
     }

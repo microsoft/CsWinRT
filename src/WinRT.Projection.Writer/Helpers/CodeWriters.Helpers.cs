@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using AsmResolver.DotNet;
@@ -316,19 +315,17 @@ internal static partial class CodeWriters
     public static void WriteWinRTIdicTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type)
         => WriteWinRTIdicTypeMapGroupAssemblyAttribute(w.Writer, w.Context, type);
 
-    /// <summary>
-    /// Adds an entry to the default-interface map for a class type.
-    /// </summary>
-    public static void AddDefaultInterfaceEntry(TypeWriter w, TypeDefinition type, System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
+    /// <summary>Adds an entry to the default-interface map for a class type.</summary>
+    public static void AddDefaultInterfaceEntry(ProjectionEmitContext context, TypeDefinition type, System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
     {
-        if (w.Settings.ReferenceProjection) { return; }
+        if (context.Settings.ReferenceProjection) { return; }
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
         if (defaultIface is null) { return; }
 
         (string typeNs, string typeName) = type.Names();
         string className = $"global::{typeNs}.{IdentifierEscaping.StripBackticks(typeName)}";
 
-        // Resolve TypeReference → TypeDefinition so WriteTypeName goes through the Definition
+        // Resolve TypeReference -> TypeDefinition so WriteTypeName goes through the Definition
         // branch which knows about authored-type CCW namespacing (ABI.Impl. prefix).
         ITypeDefOrRef capturedIface = defaultIface;
         if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && _cacheRef is not null)
@@ -343,21 +340,22 @@ internal static partial class CodeWriters
 
         // Build the interface display name via TypeSemantics so generic instantiations
         // (e.g. IDictionary<string, BasicStruct>), TypeRefs and TypeDefs are all handled correctly.
-        string interfaceName = w.WriteTemp("%", new Action<TextWriter>(tw =>
-        {
-            TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
-            WriteTypeName(w, semantics, TypedefNameType.CCW, true);
-        }));
+        WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
+        TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
+        WriteTypeName(scratch, context, semantics, TypedefNameType.CCW, true);
+        string interfaceName = scratch.ToString();
 
         _ = entries.TryAdd(className, interfaceName);
     }
 
-    /// <summary>
-    /// Adds entries for [ExclusiveTo] interfaces of the class type.
-    /// </summary>
-    public static void AddExclusiveToInterfaceEntries(TypeWriter w, TypeDefinition type, System.Collections.Concurrent.ConcurrentBag<KeyValuePair<string, string>> entries)
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void AddDefaultInterfaceEntry(TypeWriter w, TypeDefinition type, System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
+        => AddDefaultInterfaceEntry(w.Context, type, entries);
+
+    /// <summary>Adds entries for [ExclusiveTo] interfaces of the class type.</summary>
+    public static void AddExclusiveToInterfaceEntries(ProjectionEmitContext context, TypeDefinition type, System.Collections.Concurrent.ConcurrentBag<KeyValuePair<string, string>> entries)
     {
-        if (!w.Settings.Component || w.Settings.ReferenceProjection) { return; }
+        if (!context.Settings.Component || context.Settings.ReferenceProjection) { return; }
         (string typeNs, string typeName) = type.Names();
         string className = $"global::{typeNs}.{IdentifierEscaping.StripBackticks(typeName)}";
 
@@ -386,9 +384,8 @@ internal static partial class CodeWriters
 
             if (TypeCategorization.IsExclusiveTo(ifaceDef))
             {
-                // Resolve TypeReference → TypeDefinition (or TypeSpecification with resolved generic
-                // type) so WriteTypeName goes through the Definition branch which knows about
-                // authored-type CCW namespacing (ABI.Impl. prefix).
+                // Resolve TypeReference -> TypeDefinition so WriteTypeName goes through the
+                // Definition branch which knows about authored-type CCW namespacing.
                 ITypeDefOrRef capturedIface = impl.Interface;
                 if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && _cacheRef is not null)
                 {
@@ -399,15 +396,18 @@ internal static partial class CodeWriters
                     }
                     catch { /* leave as TypeReference */ }
                 }
-                string interfaceName = w.WriteTemp("%", new Action<TextWriter>(tw =>
-                {
-                    TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
-                    WriteTypeName(w, semantics, TypedefNameType.CCW, true);
-                }));
+                WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
+                TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
+                WriteTypeName(scratch, context, semantics, TypedefNameType.CCW, true);
+                string interfaceName = scratch.ToString();
                 entries.Add(new KeyValuePair<string, string>(className, interfaceName));
             }
         }
     }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void AddExclusiveToInterfaceEntries(TypeWriter w, TypeDefinition type, System.Collections.Concurrent.ConcurrentBag<KeyValuePair<string, string>> entries)
+        => AddExclusiveToInterfaceEntries(w.Context, type, entries);
 
     /// <summary>Writes the generated WindowsRuntimeDefaultInterfaces.cs file (mirrors C++ <c>write_default_interfaces_class</c>).</summary>
     public static void WriteDefaultInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)

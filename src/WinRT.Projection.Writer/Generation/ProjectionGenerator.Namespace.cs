@@ -47,31 +47,31 @@ internal sealed partial class ProjectionGenerator
                         {
                             if (_settings.Component)
                             {
-                                CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w, type);
+                                CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                             }
                             else
                             {
-                                CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(w, type, false);
+                                CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, false);
                             }
                         }
                         break;
                     case TypeCategory.Delegate:
-                        CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(w, type, true);
-                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w, type);
+                        CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
+                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         break;
                     case TypeCategory.Enum:
-                        CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(w, type, true);
-                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w, type);
+                        CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
+                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         break;
                     case TypeCategory.Interface:
-                        CodeWriters.WriteWinRTIdicTypeMapGroupAssemblyAttribute(w, type);
-                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w, type);
+                        CodeWriters.WriteWinRTIdicTypeMapGroupAssemblyAttribute(writer, context, type);
+                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         break;
                     case TypeCategory.Struct:
                         if (!TypeCategorization.IsApiContractType(type))
                         {
-                            CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(w, type, true);
-                            CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w, type);
+                            CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
+                            CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         }
                         break;
                 }
@@ -95,25 +95,25 @@ internal sealed partial class ProjectionGenerator
 
             // Write the projected type per category
             TypeCategory category = TypeCategorization.GetCategory(type);
-            CodeWriters.WriteType(w, type, category, _settings, _cache);
+            CodeWriters.WriteType(writer, context, type, category);
 
             if (category == TypeCategory.Class && !TypeCategorization.IsAttributeType(type))
             {
-                CodeWriters.AddDefaultInterfaceEntry(w, type, defaultInterfaceEntries);
-                CodeWriters.AddExclusiveToInterfaceEntries(w, type, exclusiveToInterfaceEntries);
-                CodeWriters.AddMetadataTypeEntry(w, type, authoredTypeNameToMetadataMap);
+                CodeWriters.AddDefaultInterfaceEntry(context, type, defaultInterfaceEntries);
+                CodeWriters.AddExclusiveToInterfaceEntries(context, type, exclusiveToInterfaceEntries);
+                CodeWriters.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
                 if (_settings.Component && componentActivatable.Contains(type))
                 {
-                    CodeWriters.WriteFactoryClass(w, type);
+                    CodeWriters.WriteFactoryClass(writer, context, type);
                 }
             }
             else if (category is TypeCategory.Delegate or TypeCategory.Enum or TypeCategory.Interface)
             {
-                CodeWriters.AddMetadataTypeEntry(w, type, authoredTypeNameToMetadataMap);
+                CodeWriters.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
             }
             else if (category == TypeCategory.Struct && !TypeCategorization.IsApiContractType(type))
             {
-                CodeWriters.AddMetadataTypeEntry(w, type, authoredTypeNameToMetadataMap);
+                CodeWriters.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
             }
 
             written = true;
@@ -163,7 +163,7 @@ internal sealed partial class ProjectionGenerator
                 if (TypeCategorization.IsAttributeType(type)) { continue; }
 
                 TypeCategory category = TypeCategorization.GetCategory(type);
-                CodeWriters.WriteAbiType(w, type, category, _settings);
+                CodeWriters.WriteAbiType(writer, context, type, category);
             }
             writer.WriteEndAbiNamespace();
         }
