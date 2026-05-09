@@ -87,6 +87,19 @@ internal sealed class TypeWriter : TextWriter
     }
 
     /// <summary>
+    /// Initializes a new <see cref="TypeWriter"/> wrapping the given underlying <paramref name="writer"/>
+    /// and <paramref name="context"/>. Used during the Pass 10c transition by migrated methods that
+    /// need to call into not-yet-migrated legacy methods on the same emit buffer without losing state.
+    /// </summary>
+    public TypeWriter(IndentedTextWriter writer, ProjectionEmitContext context)
+        : base(writer)
+    {
+        Settings = context.Settings;
+        CurrentNamespace = context.CurrentNamespace;
+        Context = context;
+    }
+
+    /// <summary>
     /// Writes the standard auto-generated file header (banner + canonical <c>using</c> imports
     /// + suppression pragmas). Delegates to
     /// <see cref="IndentedTextWriterExtensions.WriteFileHeader(IndentedTextWriter, ProjectionEmitContext)"/>.
