@@ -257,7 +257,7 @@ internal static class ObjRefNameGenerator
             // For FastAbi classes, skip non-default exclusive interfaces -- their methods
             // dispatch through the default interface's vtable so a separate objref is unnecessary.
             bool isDefault = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
-            if (!isDefault && CodeWriters.IsFastAbiClass(type))
+            if (!isDefault && ClassFactory.IsFastAbiClass(type))
             {
                 TypeDefinition? implTypeDef = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))
@@ -278,7 +278,7 @@ internal static class ObjRefNameGenerator
             }
             // Same fast-abi guard as the first pass.
             bool isDefault2 = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
-            if (!isDefault2 && CodeWriters.IsFastAbiClass(type))
+            if (!isDefault2 && ClassFactory.IsFastAbiClass(type))
             {
                 TypeDefinition? implTypeDef = CodeWriters.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
                 if (implTypeDef is not null && TypeCategorization.IsExclusiveTo(implTypeDef))

@@ -26,7 +26,7 @@ internal static partial class CodeWriters
                 }
                 else
                 {
-                    WriteClass(writer, context, type);
+                    ClassFactory.WriteClass(writer, context, type);
                 }
                 break;
             case TypeCategory.Delegate:

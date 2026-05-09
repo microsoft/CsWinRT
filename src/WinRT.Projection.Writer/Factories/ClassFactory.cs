@@ -12,7 +12,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <summary>
 /// Class emission helpers, mirroring functions in <c>code_writers.h</c>.
 /// </summary>
-internal static partial class CodeWriters
+internal static class ClassFactory
 {
     public static bool IsFastAbiClass(TypeDefinition type)
     {
@@ -280,7 +280,7 @@ internal static partial class CodeWriters
                     for (int i = 0; i < sig.Params.Count; i++)
                     {
                         writer.Write(", ");
-                        WriteParameterNameWithModifier(writer, context, sig.Params[i]);
+                        CodeWriters.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
                     }
                     writer.Write(");\n");
                 }
@@ -447,7 +447,7 @@ internal static partial class CodeWriters
     /// Emits the static lazy objref property for a static factory interface (mirrors truth's
     /// pattern: lazy <c>WindowsRuntimeObjectReference.GetActivationFactory(...)</c>).
     /// </summary>
-    private static void WriteStaticFactoryObjRef(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
+    internal static void WriteStaticFactoryObjRef(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
     {
         writer.Write("\nprivate static WindowsRuntimeObjectReference ");
         writer.Write(objRefName);
@@ -595,7 +595,7 @@ internal static partial class CodeWriters
 
         // Activator/composer constructors from [Activatable]/[Composable] factory interfaces.
         // write_static_members) BEFORE the override hooks and instance members.
-        WriteAttributedTypes(writer, context, type);
+        CodeWriters.WriteAttributedTypes(writer, context, type);
 
         // Static members from [Static] factory interfaces (e.g. GetForCurrentView).
         // C++ emits these inside write_attributed_types -> write_static_members; emit them
@@ -660,7 +660,7 @@ internal static partial class CodeWriters
             writer.Write(";\n");
         }
 
-        WriteClassMembers(writer, context, type);
+        CodeWriters.WriteClassMembers(writer, context, type);
 
         writer.Write("}\n");
     }

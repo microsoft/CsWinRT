@@ -452,11 +452,11 @@ internal static partial class CodeWriters
         // static_iface_target and the objref to the default interface for fast-abi cases.
         TypeDefinition abiInterface = ifaceType;
         ITypeDefOrRef abiInterfaceRef = originalInterface;
-        bool isFastAbiExclusive = IsFastAbiClass(classType) && TypeCategorization.IsExclusiveTo(ifaceType);
+        bool isFastAbiExclusive = ClassFactory.IsFastAbiClass(classType) && TypeCategorization.IsExclusiveTo(ifaceType);
         bool isDefaultInterface = false;
         if (isFastAbiExclusive)
         {
-            (TypeDefinition? defaultIface, _) = GetFastAbiInterfaces(context.Cache, classType);
+            (TypeDefinition? defaultIface, _) = ClassFactory.GetFastAbiInterfaces(context.Cache, classType);
             if (defaultIface is not null)
             {
                 abiInterface = defaultIface;

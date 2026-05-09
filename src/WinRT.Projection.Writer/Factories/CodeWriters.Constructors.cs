@@ -79,13 +79,13 @@ internal static partial class CodeWriters
     public static void WriteFactoryConstructors(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition? factoryType, TypeDefinition classType)
     {
         string typeName = classType.Name?.Value ?? string.Empty;
-        int gcPressure = GetGcPressureAmount(classType);
+        int gcPressure = ClassFactory.GetGcPressureAmount(classType);
         if (factoryType is not null)
         {
             // Emit the factory objref property (lazy-initialized).
             string factoryRuntimeClassFullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
             string factoryObjRefName = ObjRefNameGenerator.GetObjRefName(context, factoryType);
-            WriteStaticFactoryObjRef(writer, context, factoryType, factoryRuntimeClassFullName, factoryObjRefName);
+            ClassFactory.WriteStaticFactoryObjRef(writer, context, factoryType, factoryRuntimeClassFullName, factoryObjRefName);
 
             string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);
             string marshalingType = GetMarshalingTypeName(classType);
@@ -876,7 +876,7 @@ internal static partial class CodeWriters
         {
             string runtimeClassFullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
             string factoryObjRefName = ObjRefNameGenerator.GetObjRefName(context, composableType);
-            WriteStaticFactoryObjRef(writer, context, composableType, runtimeClassFullName, factoryObjRefName);
+            ClassFactory.WriteStaticFactoryObjRef(writer, context, composableType, runtimeClassFullName, factoryObjRefName);
         }
 
         string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);
@@ -884,7 +884,7 @@ internal static partial class CodeWriters
         string defaultIfaceObjRef;
         ITypeDefOrRef? defaultIface = classType.GetDefaultInterface();
         defaultIfaceObjRef = defaultIface is not null ? ObjRefNameGenerator.GetObjRefName(context, defaultIface) : string.Empty;
-        int gcPressure = GetGcPressureAmount(classType);
+        int gcPressure = ClassFactory.GetGcPressureAmount(classType);
         // Compute the platform attribute string from the composable factory interface's
         // [ContractVersion] attribute. Mirrors C++
         // 'auto platform_attribute = write_platform_attribute_temp(w, composable_type);'
