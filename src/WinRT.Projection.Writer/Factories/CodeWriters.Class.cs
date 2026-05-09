@@ -330,7 +330,7 @@ internal static partial class CodeWriters
             {
                 string propName = prop.Name?.Value ?? string.Empty;
                 (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
-                string propType = WritePropType(context, prop);
+                string propType = InterfaceFactory.WritePropType(context, prop);
                 if (!properties.TryGetValue(propName, out StaticPropertyAccessorState? state))
                 {
                     state = new StaticPropertyAccessorState
@@ -520,7 +520,7 @@ internal static partial class CodeWriters
         writer.Write("class ");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        WriteTypeInheritance(writer, context, type, false, true);
+        InterfaceFactory.WriteTypeInheritance(writer, context, type, false, true);
         writer.Write("\n{\n");
 
         // ObjRef field definitions for each implemented interface (mirrors C++ write_class_objrefs_definition).

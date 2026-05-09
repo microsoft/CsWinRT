@@ -1091,7 +1091,7 @@ internal static class AbiMethodBodyFactory
         {
             string pname = prop.Name?.Value ?? string.Empty;
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
-            string propType = CodeWriters.WritePropType(context, prop);
+            string propType = InterfaceFactory.WritePropType(context, prop);
             (MethodDefinition? gMethod, MethodDefinition? sMethod) = (getter, setter);
             // accessors of the property (the attribute is on the property itself, not on the
             // individual accessors).
@@ -1116,7 +1116,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write("(WindowsRuntimeObjectReference thisReference, ");
                 // form of write_prop_type, which for SZ array types emits ReadOnlySpan<T> instead
                 // of T[] (the getter's return-type form).
-                writer.Write(CodeWriters.WritePropType(context, prop, isSetProperty: true));
+                writer.Write(InterfaceFactory.WritePropType(context, prop, isSetProperty: true));
                 writer.Write(" value)");
                 EmitAbiMethodBodyIfSimple(writer, context, setSig, methodSlot[sMethod], paramNameOverride: "value", isNoExcept: propIsNoExcept);
             }

@@ -24,7 +24,7 @@ internal static class AbiInterfaceIDicFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         writer.Write("\n[DynamicInterfaceCastableImplementation]\n");
-        CodeWriters.WriteGuidAttribute(writer, type);
+        InterfaceFactory.WriteGuidAttribute(writer, type);
         writer.Write("\n");
         writer.Write("file interface ");
         writer.Write(nameStripped);
@@ -266,7 +266,7 @@ internal static class AbiInterfaceIDicFactory
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
             string pname = prop.Name?.Value ?? string.Empty;
-            string propType = CodeWriters.WritePropType(context, prop);
+            string propType = InterfaceFactory.WritePropType(context, prop);
 
             writer.Write("\n");
             writer.Write(propType);
@@ -423,7 +423,7 @@ internal static class AbiInterfaceIDicFactory
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
             string pname = prop.Name?.Value ?? string.Empty;
-            string propType = CodeWriters.WritePropType(context, prop);
+            string propType = InterfaceFactory.WritePropType(context, prop);
 
             writer.Write("\nunsafe ");
             writer.Write(propType);
@@ -453,7 +453,7 @@ internal static class AbiInterfaceIDicFactory
                 //.
                 if (getter is null)
                 {
-                    TypeDefinition? baseIfaceWithGetter = CodeWriters.FindPropertyInterfaceInBases(context.Cache, type, pname);
+                    TypeDefinition? baseIfaceWithGetter = InterfaceFactory.FindPropertyInterfaceInBases(context.Cache, type, pname);
                     if (baseIfaceWithGetter is not null)
                     {
                         writer.Write("    get { return ((");

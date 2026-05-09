@@ -36,7 +36,7 @@ internal static partial class CodeWriters
                 WriteEnum(writer, context, type);
                 break;
             case TypeCategory.Interface:
-                WriteInterface(writer, context, type);
+                InterfaceFactory.WriteInterface(writer, context, type);
                 break;
             case TypeCategory.Struct:
                 if (TypeCategorization.IsApiContractType(type))

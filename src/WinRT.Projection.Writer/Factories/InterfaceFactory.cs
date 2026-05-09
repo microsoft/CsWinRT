@@ -12,7 +12,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <summary>
 /// Interface, class, and ABI emission helpers.
 /// </summary>
-internal static partial class CodeWriters
+internal static class InterfaceFactory
 {
     /// <summary>Writes the <c>[Guid("...")]</c> attribute for a type.</summary>
     public static void WriteGuidAttribute(IndentedTextWriter writer, TypeDefinition type)
@@ -85,7 +85,7 @@ internal static partial class CodeWriters
             }
             else
             {
-                TypeDefinition? resolved = ResolveInterface(context.Cache, impl.Interface);
+                TypeDefinition? resolved = CodeWriters.ResolveInterface(context.Cache, impl.Interface);
                 if (resolved is not null)
                 {
                     isExclusive = TypeCategorization.IsExclusiveTo(resolved);
@@ -251,7 +251,7 @@ internal static partial class CodeWriters
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            TypeDefinition? baseIface = ResolveInterface(cache, impl.Interface);
+            TypeDefinition? baseIface = CodeWriters.ResolveInterface(cache, impl.Interface);
             if (baseIface is null) { continue; }
             // Skip the original setter-defining interface itself. Also dedupe via the visited set.
             if (baseIface == type) { continue; }
@@ -281,7 +281,7 @@ internal static partial class CodeWriters
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            TypeDefinition? baseIface = ResolveInterface(cache, impl.Interface);
+            TypeDefinition? baseIface = CodeWriters.ResolveInterface(cache, impl.Interface);
             if (baseIface is null) { continue; }
             if (baseIface == type) { continue; }
             if (!visited.Add(baseIface)) { continue; }

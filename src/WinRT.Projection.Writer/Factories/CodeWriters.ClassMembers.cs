@@ -392,7 +392,7 @@ internal static partial class CodeWriters
         }
     }
 
-    private static TypeDefinition? ResolveInterface(MetadataCache cache, ITypeDefOrRef typeRef)
+    internal static TypeDefinition? ResolveInterface(MetadataCache cache, ITypeDefOrRef typeRef)
     {
         if (typeRef is TypeDefinition td) { return td; }
         // Try the runtime context resolver first (handles cross-module references via the resolver)
@@ -673,7 +673,7 @@ internal static partial class CodeWriters
             {
                 state = new PropertyAccessorState
                 {
-                    PropTypeText = WritePropType(context, prop, genCtx),
+                    PropTypeText = InterfaceFactory.WritePropType(context, prop, genCtx),
                     Access = access,
                     MethodSpec = methodSpec,
                     IsOverridable = isOverridable,
@@ -689,7 +689,7 @@ internal static partial class CodeWriters
                 state.GetterIsGeneric = isGenericInterface;
                 state.GetterGenericInteropType = genericInteropType;
                 state.GetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
-                state.GetterPropTypeText = WritePropType(context, prop, genCtx);
+                state.GetterPropTypeText = InterfaceFactory.WritePropType(context, prop, genCtx);
                 state.GetterPlatformAttribute = platformAttribute;
             }
             if (setter is not null && !state.HasSetter)
@@ -700,7 +700,7 @@ internal static partial class CodeWriters
                 state.SetterIsGeneric = isGenericInterface;
                 state.SetterGenericInteropType = genericInteropType;
                 state.SetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
-                state.SetterPropTypeText = WritePropType(context, prop, genCtx);
+                state.SetterPropTypeText = InterfaceFactory.WritePropType(context, prop, genCtx);
                 state.SetterPlatformAttribute = platformAttribute;
             }
         }

@@ -55,7 +55,7 @@ internal static class ObjRefNameGenerator
         return "_objRef_" + IIDExpressionWriter.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
     /// <summary>
-    /// Like <see cref="WriteInterfaceTypeName(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
+    /// Like <see cref="InterfaceFactory.WriteInterfaceTypeName(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
     /// but always emits a fully qualified name with <c>global::</c> prefix on every type
     /// (even same-namespace ones). Used for objref name computation where uniqueness across
     /// namespaces matters.
