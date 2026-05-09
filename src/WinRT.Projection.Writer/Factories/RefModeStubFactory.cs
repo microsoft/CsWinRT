@@ -11,7 +11,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// factory objref getters, and the synthetic private ctor for classes without explicit
 /// constructors) collapse to <c>throw null</c>.
 /// </summary>
-internal static partial class CodeWriters
+internal static class RefModeStubFactory
 {
     /// <summary>
     /// Emits the body of an <c>_objRef_*</c> property getter in reference projection mode.
