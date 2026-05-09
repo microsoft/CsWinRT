@@ -456,7 +456,7 @@ internal static partial class CodeWriters
         bool isDefaultInterface = false;
         if (isFastAbiExclusive)
         {
-            (TypeDefinition? defaultIface, _) = GetFastAbiInterfaces(classType);
+            (TypeDefinition? defaultIface, _) = GetFastAbiInterfaces(context.Cache, classType);
             if (defaultIface is not null)
             {
                 abiInterface = defaultIface;

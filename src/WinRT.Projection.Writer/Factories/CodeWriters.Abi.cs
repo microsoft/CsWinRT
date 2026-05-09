@@ -3604,7 +3604,7 @@ internal static partial class CodeWriters
         // class, skip emitting it entirely — its members are merged into the default
         // interface's Methods class. Mirrors C++
         // (write_static_abi_classes early return on contains_other_interface(iface)).
-        if (IsFastAbiOtherInterface(type)) { return; }
+        if (IsFastAbiOtherInterface(context.Cache, type)) { return; }
 
         // If the interface is exclusive-to a class that's been excluded from the projection,
         // skip emitting the entire *Methods class — it would be dead code (the owning class
@@ -3645,7 +3645,7 @@ internal static partial class CodeWriters
         // For non-fast-abi interfaces, the segment list is just [(type, INSPECTABLE_METHOD_COUNT, skipExclusiveEvents)].
         const int InspectableMethodCount = 6;
         List<(TypeDefinition Iface, int StartSlot, bool SkipEvents)> segments = new();
-        (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(type);
+        (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(context.Cache, type);
         bool isFastAbiDefault = fastAbi is not null && fastAbi.Value.Default is not null
             && InterfacesEqualByName(fastAbi.Value.Default, type);
         if (isFastAbiDefault)

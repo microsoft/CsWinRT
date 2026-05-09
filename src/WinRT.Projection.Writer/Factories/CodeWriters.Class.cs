@@ -38,10 +38,9 @@ internal static partial class CodeWriters
     /// exclusive_to a class marked <c>[FastAbi]</c>; otherwise <c>null</c>. Mirrors C++
     /// <c>find_fast_abi_class_type</c> in <c>helpers.h</c>.
     /// </summary>
-    public static TypeDefinition? FindFastAbiClassType(TypeDefinition iface)
+    public static TypeDefinition? FindFastAbiClassType(MetadataCache cache, TypeDefinition iface)
     {
-        if (_cacheRef is null) { return null; }
-        TypeDefinition? exclusiveToClass = GetExclusiveToType(iface);
+        TypeDefinition? exclusiveToClass = Helpers.GetExclusiveToType(iface, cache);
         if (exclusiveToClass is null) { return null; }
         if (!IsFastAbiClass(exclusiveToClass)) { return null; }
         return exclusiveToClass;
@@ -52,11 +51,11 @@ internal static partial class CodeWriters
     /// interfaces) for <paramref name="iface"/>, if the interface is exclusive_to a fast-abi
     /// class; otherwise <c>null</c>. Mirrors C++ <c>get_fast_abi_class_for_interface</c>.
     /// </summary>
-    public static (TypeDefinition Class, TypeDefinition? Default, System.Collections.Generic.List<TypeDefinition> Others)? GetFastAbiClassForInterface(TypeDefinition iface)
+    public static (TypeDefinition Class, TypeDefinition? Default, System.Collections.Generic.List<TypeDefinition> Others)? GetFastAbiClassForInterface(MetadataCache cache, TypeDefinition iface)
     {
-        TypeDefinition? cls = FindFastAbiClassType(iface);
+        TypeDefinition? cls = FindFastAbiClassType(cache, iface);
         if (cls is null) { return null; }
-        (TypeDefinition? def, System.Collections.Generic.List<TypeDefinition> others) = GetFastAbiInterfaces(cls);
+        (TypeDefinition? def, System.Collections.Generic.List<TypeDefinition> others) = GetFastAbiInterfaces(cache, cls);
         return (cls, def, others);
     }
 
@@ -65,9 +64,9 @@ internal static partial class CodeWriters
     /// (i.e. its members are merged into the default interface's vtable and dispatched through
     /// the default interface's ABI <c>Methods</c> class). Mirrors C++ <c>fast_abi_class::contains_other_interface</c>.
     /// </summary>
-    public static bool IsFastAbiOtherInterface(TypeDefinition iface)
+    public static bool IsFastAbiOtherInterface(MetadataCache cache, TypeDefinition iface)
     {
-        (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(iface);
+        (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(cache, iface);
         if (fastAbi is null) { return false; }
         if (fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface)) { return false; }
         foreach (TypeDefinition other in fastAbi.Value.Others)
@@ -80,9 +79,9 @@ internal static partial class CodeWriters
     /// <summary>
     /// Returns true if <paramref name="iface"/> is the default interface of a fast-abi class.
     /// </summary>
-    public static bool IsFastAbiDefaultInterface(TypeDefinition iface)
+    public static bool IsFastAbiDefaultInterface(MetadataCache cache, TypeDefinition iface)
     {
-        (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(iface);
+        (TypeDefinition Class, TypeDefinition? Default, List<TypeDefinition> Others)? fastAbi = GetFastAbiClassForInterface(cache, iface);
         if (fastAbi is null) { return false; }
         return fastAbi.Value.Default is not null && InterfacesEqual(fastAbi.Value.Default, iface);
     }
@@ -101,7 +100,7 @@ internal static partial class CodeWriters
     /// <summary>
     /// Returns the [Default] interface and the [ExclusiveTo] interfaces (sorted) for fast ABI.
     /// </summary>
-    public static (TypeDefinition? DefaultInterface, System.Collections.Generic.List<TypeDefinition> OtherInterfaces) GetFastAbiInterfaces(TypeDefinition classType)
+    public static (TypeDefinition? DefaultInterface, System.Collections.Generic.List<TypeDefinition> OtherInterfaces) GetFastAbiInterfaces(MetadataCache cache, TypeDefinition classType)
     {
         TypeDefinition? defaultIface = null;
         System.Collections.Generic.List<TypeDefinition> exclusiveIfaces = new();
