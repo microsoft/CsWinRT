@@ -52,6 +52,16 @@ internal sealed class ProjectionEmitContext
     public bool InAbiImplNamespace { get; private set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether platform-attribute computation should suppress
+    /// platforms that are less than or equal to <see cref="Platform"/>. Mirrors the historical
+    /// C++ writer's class-scope platform suppression mode.
+    /// </summary>
+    public bool CheckPlatform { get; set; }
+
+    /// <summary>Gets or sets the active platform string for the platform-attribute suppression mode.</summary>
+    public string Platform { get; set; } = string.Empty;
+
+    /// <summary>
     /// Enters the ABI namespace mode. Returns an <see cref="IDisposable"/> token that resets the
     /// mode on dispose. Use as <c>using (context.EnterAbiNamespace()) { ... }</c>.
     /// </summary>

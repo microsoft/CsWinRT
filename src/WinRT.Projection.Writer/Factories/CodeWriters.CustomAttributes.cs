@@ -7,19 +7,22 @@ using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Custom attribute carry-over and platform attribute helpers. Mirrors C++ functions
-/// in <c>code_writers.h</c> for <c>write_custom_attributes</c>, <c>write_custom_attribute_args</c>,
-/// <c>write_platform_attribute</c>, <c>get_platform</c>, etc.
+/// Custom attribute carry-over and platform attribute helpers.
 /// </summary>
 internal static partial class CodeWriters
 {
     /// <summary>
+    /// Returns the formatted argument list for emitting <paramref name="attribute"/> as a C# attribute.
     /// </summary>
-    public static List<string> WriteCustomAttributeArgs(TypeWriter w, CustomAttribute attribute)
+    /// <param name="context">The active emit context.</param>
+    /// <param name="attribute">The custom attribute to format.</param>
+    /// <returns>A list of pre-formatted positional + named argument strings (in order).</returns>
+    public static List<string> WriteCustomAttributeArgs(ProjectionEmitContext context, CustomAttribute attribute)
     {
         List<string> result = new();
         if (attribute.Signature is null) { return result; }
@@ -44,20 +47,23 @@ internal static partial class CodeWriters
             }
             else
             {
-                result.Add(FormatCustomAttributeArg(w, arg));
+                result.Add(FormatCustomAttributeArg(arg));
             }
         }
         for (int i = 0; i < attribute.Signature.NamedArguments.Count; i++)
         {
             CustomAttributeNamedArgument named = attribute.Signature.NamedArguments[i];
-            result.Add(named.MemberName?.Value + " = " + FormatCustomAttributeArg(w, named.Argument));
+            result.Add(named.MemberName?.Value + " = " + FormatCustomAttributeArg(named.Argument));
         }
         return result;
     }
 
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteCustomAttributeArgs(ProjectionEmitContext, CustomAttribute)"/>.</summary>
+    public static List<string> WriteCustomAttributeArgs(TypeWriter w, CustomAttribute attribute)
+        => WriteCustomAttributeArgs(w.Context, attribute);
+
     /// <summary>
     /// Formats an AttributeTargets uint value as a bitwise OR of <c>global::System.AttributeTargets.X</c>.
-    /// Mirrors the C++ AttributeTargets handling in <c>write_custom_attribute_args</c>.
     /// </summary>
     private static string FormatAttributeTargets(uint value)
     {
@@ -97,7 +103,7 @@ internal static partial class CodeWriters
         return string.Join(" | ", values);
     }
 
-    private static string FormatCustomAttributeArg(TypeWriter w, CustomAttributeArgument arg)
+    private static string FormatCustomAttributeArg(CustomAttributeArgument arg)
     {
         // The arg can hold scalar, type, enum or string values.
         object? element = arg.Element;
@@ -131,7 +137,9 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Escapes a string for use inside a C# verbatim string literal (<c>@"..."</c>).
-    /// the WinMD attribute string value carries source-level escape sequences (e.g. <c>\"</c>
+    /// </summary>
+    /// <remarks>
+    /// The WinMD attribute string value carries source-level escape sequences (e.g. <c>\"</c>
     /// for an embedded quote). The C++ tool un-escapes these before emitting a verbatim string,
     /// so a WinMD value of <c>\"quotes\"</c> becomes the verbatim source text <c>""quotes""</c>
     /// (which decodes to <c>"quotes"</c> at runtime).
@@ -139,7 +147,7 @@ internal static partial class CodeWriters
     /// - <c>\</c> followed by <c>\</c> / <c>'</c> / <c>"</c>: drop the backslash, keep the char.
     /// - <c>\</c> followed by anything else: keep both <c>\</c> and the char.
     /// - Each emitted <c>"</c> is doubled (<c>""</c>) per verbatim-string escape rules.
-    /// </summary>
+    /// </remarks>
     private static string EscapeVerbatimString(string s)
     {
         StringBuilder sb = new(s.Length);
@@ -164,12 +172,15 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// SupportedOSPlatform string ("WindowsX.Y.Z.0") for a [ContractVersion] attribute,
-    /// or empty if no platform mapping exists. Honors writer's <see cref="TypeWriter.CheckPlatform"/>
-    /// state to deduplicate platforms within a single class scope (mirrors C++
-    /// _check_platform / _platform behavior in).
+    /// Returns the <c>SupportedOSPlatform</c> string (<c>"WindowsX.Y.Z.0"</c>) for a
+    /// <c>[ContractVersion]</c> attribute, or empty if no platform mapping exists. Honors the
+    /// active context's <see cref="ProjectionEmitContext.CheckPlatform"/> mode flag to deduplicate
+    /// platforms within a single class scope.
     /// </summary>
-    private static string GetPlatform(TypeWriter w, CustomAttribute attribute)
+    /// <param name="context">The active emit context.</param>
+    /// <param name="attribute">The <c>[ContractVersion]</c> attribute to inspect.</param>
+    /// <returns>The platform string (with surrounding quotes), or an empty string.</returns>
+    private static string GetPlatform(ProjectionEmitContext context, CustomAttribute attribute)
     {
         if (attribute.Signature is null || attribute.Signature.FixedArguments.Count < 2)
         {
@@ -208,58 +219,69 @@ internal static partial class CodeWriters
 
         string platform = ContractPlatforms.GetPlatform(contractName, contractVersion);
         if (string.IsNullOrEmpty(platform)) { return string.Empty; }
-        if (w.CheckPlatform)
+        if (context.CheckPlatform)
         {
             // Suppress when this platform is <= the previously seen platform for the class.
-            if (string.CompareOrdinal(platform, w.Platform) <= 0)
+            if (string.CompareOrdinal(platform, context.Platform) <= 0)
             {
                 return string.Empty;
             }
-            // Only seed _platform on first non-empty observation (matches C++ behavior:
-            // higher platforms emit but don't update _platform).
-            if (w.Platform.Length == 0)
+            // Only seed Platform on first non-empty observation: higher platforms emit but don't update Platform.
+            if (context.Platform.Length == 0)
             {
-                w.Platform = platform;
+                context.Platform = platform;
             }
         }
         return "\"Windows" + platform + "\"";
     }
 
     /// <summary>
-    /// for a [ContractVersion] attribute. Only writes for reference projection.
+    /// Writes the <c>[SupportedOSPlatform]</c> attribute for a <c>[ContractVersion]</c> attribute
+    /// on <paramref name="member"/>. Only writes for reference projection.
     /// </summary>
-    public static void WritePlatformAttribute(TypeWriter w, IHasCustomAttribute member)
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="member">The member to inspect for <c>[ContractVersion]</c>.</param>
+    public static void WritePlatformAttribute(IndentedTextWriter writer, ProjectionEmitContext context, IHasCustomAttribute member)
     {
-        if (!w.Settings.ReferenceProjection) { return; }
+        if (!context.Settings.ReferenceProjection) { return; }
         for (int i = 0; i < member.CustomAttributes.Count; i++)
         {
             CustomAttribute attr = member.CustomAttributes[i];
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
             if (attrType is null) { continue; }
             string name = attrType.Name?.Value ?? string.Empty;
-            // Strip 'Attribute' suffix
             if (name.EndsWith("Attribute", System.StringComparison.Ordinal))
             {
                 name = name.Substring(0, name.Length - "Attribute".Length);
             }
             if (name == "ContractVersion" && attr.Signature?.FixedArguments.Count == 2)
             {
-                string platform = GetPlatform(w, attr);
+                string platform = GetPlatform(context, attr);
                 if (!string.IsNullOrEmpty(platform))
                 {
-                    w.Write("[global::System.Runtime.Versioning.SupportedOSPlatform(");
-                    w.Write(platform);
-                    w.Write(")]\n");
+                    writer.Write("[global::System.Runtime.Versioning.SupportedOSPlatform(");
+                    writer.Write(platform);
+                    writer.Write(")]\n");
                     return;
                 }
             }
         }
     }
 
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WritePlatformAttribute(IndentedTextWriter, ProjectionEmitContext, IHasCustomAttribute)"/>.</summary>
+    public static void WritePlatformAttribute(TypeWriter w, IHasCustomAttribute member)
+        => WritePlatformAttribute(w.Writer, w.Context, member);
+
     /// <summary>
-    /// to the projection (e.g., [Obsolete], [Deprecated], [SupportedOSPlatform]).
+    /// Writes any custom attributes (e.g. <c>[Obsolete]</c>, <c>[Deprecated]</c>,
+    /// <c>[SupportedOSPlatform]</c>) carried over from <paramref name="member"/> to the projection.
     /// </summary>
-    public static void WriteCustomAttributes(TypeWriter w, IHasCustomAttribute member, bool enablePlatformAttrib)
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="member">The metadata member whose custom attributes to emit.</param>
+    /// <param name="enablePlatformAttrib">Whether to also emit a <c>[SupportedOSPlatform]</c> attribute synthesized from any <c>[ContractVersion]</c>.</param>
+    public static void WriteCustomAttributes(IndentedTextWriter writer, ProjectionEmitContext context, IHasCustomAttribute member, bool enablePlatformAttrib)
     {
         Dictionary<string, List<string>> attributes = new(System.StringComparer.Ordinal);
         bool allowMultiple = false;
@@ -270,7 +292,6 @@ internal static partial class CodeWriters
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
             if (attrType is null) { continue; }
             (string ns, string name) = attrType.Names();
-            // Strip 'Attribute' suffix
             string strippedName = name.EndsWith("Attribute", System.StringComparison.Ordinal)
                 ? name.Substring(0, name.Length - "Attribute".Length)
                 : name;
@@ -282,11 +303,11 @@ internal static partial class CodeWriters
                 ? "System.AttributeUsage"
                 : ns + "." + strippedName;
 
-            List<string> args = WriteCustomAttributeArgs(w, attr);
+            List<string> args = WriteCustomAttributeArgs(context, attr);
 
-            if (w.Settings.ReferenceProjection && enablePlatformAttrib && strippedName == "ContractVersion" && attr.Signature?.FixedArguments.Count == 2)
+            if (context.Settings.ReferenceProjection && enablePlatformAttrib && strippedName == "ContractVersion" && attr.Signature?.FixedArguments.Count == 2)
             {
-                string platform = GetPlatform(w, attr);
+                string platform = GetPlatform(context, attr);
                 if (!string.IsNullOrEmpty(platform))
                 {
                     if (!attributes.TryGetValue("System.Runtime.Versioning.SupportedOSPlatform", out List<string>? list))
@@ -307,7 +328,7 @@ internal static partial class CodeWriters
                 }
                 if (strippedName == "ContractVersion")
                 {
-                    if (!w.Settings.ReferenceProjection) { continue; }
+                    if (!context.Settings.ReferenceProjection) { continue; }
                 }
                 else if (strippedName is not ("DefaultOverload" or "Overload" or "AttributeUsage" or "Experimental"))
                 {
@@ -326,23 +347,37 @@ internal static partial class CodeWriters
 
         foreach (KeyValuePair<string, List<string>> kv in attributes)
         {
-            w.Write("[global::");
-            w.Write(kv.Key);
+            writer.Write("[global::");
+            writer.Write(kv.Key);
             if (kv.Value.Count > 0)
             {
-                w.Write("(");
+                writer.Write("(");
                 for (int i = 0; i < kv.Value.Count; i++)
                 {
-                    if (i > 0) { w.Write(", "); }
-                    w.Write(kv.Value[i]);
+                    if (i > 0) { writer.Write(", "); }
+                    writer.Write(kv.Value[i]);
                 }
-                w.Write(")");
+                writer.Write(")");
             }
-            w.Write("]\n");
+            writer.Write("]\n");
         }
     }
-    public static void WriteTypeCustomAttributes(TypeWriter w, TypeDefinition type, bool enablePlatformAttrib)
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteCustomAttributes(IndentedTextWriter, ProjectionEmitContext, IHasCustomAttribute, bool)"/>.</summary>
+    public static void WriteCustomAttributes(TypeWriter w, IHasCustomAttribute member, bool enablePlatformAttrib)
+        => WriteCustomAttributes(w.Writer, w.Context, member, enablePlatformAttrib);
+
+    /// <summary>Writes the type-level custom attributes for <paramref name="type"/>.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The type definition.</param>
+    /// <param name="enablePlatformAttrib">Whether to also emit a <c>[SupportedOSPlatform]</c> attribute synthesized from any <c>[ContractVersion]</c>.</param>
+    public static void WriteTypeCustomAttributes(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool enablePlatformAttrib)
     {
-        WriteCustomAttributes(w, type, enablePlatformAttrib);
+        WriteCustomAttributes(writer, context, type, enablePlatformAttrib);
     }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteTypeCustomAttributes(IndentedTextWriter, ProjectionEmitContext, TypeDefinition, bool)"/>.</summary>
+    public static void WriteTypeCustomAttributes(TypeWriter w, TypeDefinition type, bool enablePlatformAttrib)
+        => WriteTypeCustomAttributes(w.Writer, w.Context, type, enablePlatformAttrib);
 }

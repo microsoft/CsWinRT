@@ -37,12 +37,20 @@ internal sealed class TypeWriter : TextWriter
     /// <summary>
     /// Gets or sets a value indicating whether platform-attribute computation should suppress
     /// platforms that are less than or equal to <see cref="Platform"/>. Mirrors the historical
-    /// C++ writer's class-scope platform suppression mode.
+    /// C++ writer's class-scope platform suppression mode. Forwarded to the bundled <see cref="Context"/>.
     /// </summary>
-    public bool CheckPlatform { get; set; }
+    public bool CheckPlatform
+    {
+        get => Context.CheckPlatform;
+        set => Context.CheckPlatform = value;
+    }
 
-    /// <summary>Gets or sets the active platform string for the platform-attribute suppression mode.</summary>
-    public string Platform { get; set; } = string.Empty;
+    /// <summary>Gets or sets the active platform string for the platform-attribute suppression mode. Forwarded to the bundled <see cref="Context"/>.</summary>
+    public string Platform
+    {
+        get => Context.Platform;
+        set => Context.Platform = value;
+    }
 
     /// <summary>Gets the stack of generic argument lists currently in scope.</summary>
     public List<object[]> GenericArgsStack { get; } = new();
