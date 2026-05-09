@@ -7,6 +7,8 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Extensions;
 
+using WindowsRuntime.ProjectionWriter.Writers;
+
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
@@ -103,8 +105,9 @@ internal static partial class CodeWriters
         }
         return null;
     }
-    public static void WriteAbiEnum(TypeWriter w, TypeDefinition type)
+    public static void WriteAbiEnum(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         // The C++ version emits: write_struct_and_enum_marshaller_class, write_interface_entries_impl,
         // write_struct_and_enum_com_wrappers_marshaller_attribute_impl, write_reference_impl.
         // For now, emit a minimal marshaller class so the ComWrappersMarshaller attribute reference resolves.
@@ -118,8 +121,9 @@ internal static partial class CodeWriters
             WriteAuthoringMetadataType(w, type);
         }
     }
-    public static void WriteAbiStruct(TypeWriter w, TypeDefinition type)
+    public static void WriteAbiStruct(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         string name = type.Name?.Value ?? string.Empty;
 
         // Emit the underlying ABI struct only when not blittable AND not a mapped struct
@@ -191,8 +195,9 @@ internal static partial class CodeWriters
         WriteStructEnumMarshallerClass(w, type);
         WriteReferenceImpl(w, type);
     }
-    public static void WriteAbiDelegate(TypeWriter w, TypeDefinition type)
+    public static void WriteAbiDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         // Mirror the C++ tool's ordering exactly:
         //   write_delegate_marshaller
         //   write_delegate_vtbl
@@ -467,8 +472,9 @@ internal static partial class CodeWriters
         w.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
         w.Write("    }\n}\n");
     }
-    public static void WriteTempDelegateEventSourceSubclass(TypeWriter w, TypeDefinition type)
+    public static void WriteTempDelegateEventSourceSubclass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         // Skip generic delegates: only non-generic delegates get a per-delegate EventSource subclass.
         // Generic delegates (e.g. EventHandler<T>) use the generic EventHandlerEventSource<T> directly.
         if (type.GenericParameters.Count > 0) { return; }
@@ -540,8 +546,9 @@ internal static partial class CodeWriters
         w.Write(");\n");
         w.Write("        }\n    }\n}\n");
     }
-    public static void WriteAbiClass(TypeWriter w, TypeDefinition type)
+    public static void WriteAbiClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         // Static classes don't get a *Marshaller (no instances).
         if (TypeCategorization.IsStatic(type)) { return; }
         w.Write("#nullable enable\n");
@@ -678,8 +685,9 @@ internal static partial class CodeWriters
         w.Write(nameStripped);
         w.Write(" {}\n");
     }
-    public static void WriteAbiInterface(TypeWriter w, TypeDefinition type)
+    public static void WriteAbiInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         // Generic interfaces are handled by interopgen
         if (type.GenericParameters.Count > 0) { return; }
 
@@ -694,8 +702,9 @@ internal static partial class CodeWriters
         WriteInterfaceIdicImpl(w, type);
         WriteInterfaceMarshaller(w, type);
     }
-    public static bool EmitImplType(TypeWriter w, TypeDefinition type)
+    public static bool EmitImplType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         if (w.Settings.Component) { return true; }
         if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
         {
@@ -780,8 +789,9 @@ internal static partial class CodeWriters
         }
         return (method.Name?.Value ?? string.Empty) + "_" + index.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
-    public static void WriteAbiParameterTypesPointer(TypeWriter w, MethodSig sig)
+    public static void WriteAbiParameterTypesPointer(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig)
     {
+        TypeWriter w = new(writer, context);
         WriteAbiParameterTypesPointer(w, sig, includeParamNames: false);
     }
 
@@ -789,8 +799,9 @@ internal static partial class CodeWriters
     /// Writes the ABI parameter types for a vtable function pointer signature, optionally
     /// including parameter names (for method declarations vs. function pointer type lists).
     /// </summary>
-    public static void WriteAbiParameterTypesPointer(TypeWriter w, MethodSig sig, bool includeParamNames)
+    public static void WriteAbiParameterTypesPointer(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, bool includeParamNames)
     {
+        TypeWriter w = new(writer, context);
         // void* thisPtr, then each param's ABI type, then return type pointer
         w.Write("void*");
         if (includeParamNames) { w.Write(" thisPtr"); }
@@ -929,8 +940,9 @@ internal static partial class CodeWriters
     {
         return "__" + GetReturnParamName(sig) + "Size";
     }
-    public static void WriteInterfaceVftbl(TypeWriter w, TypeDefinition type)
+    public static void WriteInterfaceVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         if (!EmitImplType(w, type)) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
@@ -961,8 +973,9 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Mirrors C++ <c>write_interface_impl</c> (simplified).</summary>
-    public static void WriteInterfaceImpl(TypeWriter w, TypeDefinition type)
+    public static void WriteInterfaceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         if (!EmitImplType(w, type)) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
@@ -2252,8 +2265,9 @@ internal static partial class CodeWriters
             w.Write(pname);
         }
     }
-    public static void WriteInterfaceIdicImpl(TypeWriter w, TypeDefinition type)
+    public static void WriteInterfaceIdicImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.IdicExclusiveTo) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
@@ -2733,8 +2747,9 @@ internal static partial class CodeWriters
             w.Write("}\n");
         }
     }
-    public static void WriteInterfaceMarshaller(TypeWriter w, TypeDefinition type)
+    public static void WriteInterfaceMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         if (TypeCategorization.IsExclusiveTo(type)) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
@@ -2766,8 +2781,9 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Mirrors C++ <c>write_iid_guid</c> for use by ABI helpers.</summary>
-    public static void WriteIidGuidReference(TypeWriter w, TypeDefinition type)
+    public static void WriteIidGuidReference(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
+        TypeWriter w = new(writer, context);
         if (type.GenericParameters.Count != 0)
         {
             // Generic interface IID - call the unsafe accessor
@@ -6027,8 +6043,9 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Mirrors C++ <c>write_abi_type</c>: writes the ABI type for a type semantics.</summary>
-    public static void WriteAbiType(TypeWriter w, TypeSemantics semantics)
+    public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics)
     {
+        TypeWriter w = new(writer, context);
         switch (semantics)
         {
             case TypeSemantics.Fundamental f:

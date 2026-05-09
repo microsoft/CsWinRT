@@ -3,76 +3,75 @@
 
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Primary <see cref="IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> overloads for the
-/// large 'CodeWriters.Abi.cs' family. Each overload is a thin wrapper that builds a transient
-/// <see cref="TypeWriter"/> sharing the underlying buffer + context, and delegates to the legacy
-/// <see cref="TypeWriter"/>-based implementation. The per-call-site flattening will follow in a
-/// future mechanical sweep once the surrounding helpers are also migrated.
+/// Legacy <see cref="TypeWriter"/> passthrough overloads for the public methods declared in the
+/// large 'CodeWriters.Abi.cs' file. The primary implementations now take
+/// '(IndentedTextWriter writer, ProjectionEmitContext context, ...)' directly; the wrapper
+/// overloads here exist for backward compatibility while the bodies of the Abi family still use
+/// the legacy 'TypeWriter w' surface internally.
 /// </summary>
 internal static partial class CodeWriters
 {
-    /// <summary>Primary overload of <see cref="WriteAbiEnum(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteAbiEnum(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteAbiEnum(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteAbiEnum(TypeWriter w, TypeDefinition type)
+        => WriteAbiEnum(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="WriteAbiStruct(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteAbiStruct(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteAbiStruct(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteAbiStruct(TypeWriter w, TypeDefinition type)
+        => WriteAbiStruct(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="WriteAbiDelegate(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteAbiDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteAbiDelegate(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteAbiDelegate(TypeWriter w, TypeDefinition type)
+        => WriteAbiDelegate(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="WriteTempDelegateEventSourceSubclass(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteTempDelegateEventSourceSubclass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteTempDelegateEventSourceSubclass(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteTempDelegateEventSourceSubclass(TypeWriter w, TypeDefinition type)
+        => WriteTempDelegateEventSourceSubclass(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="WriteAbiClass(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteAbiClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteAbiClass(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteAbiClass(TypeWriter w, TypeDefinition type)
+        => WriteAbiClass(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="WriteAbiInterface(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteAbiInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteAbiInterface(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteAbiInterface(TypeWriter w, TypeDefinition type)
+        => WriteAbiInterface(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="EmitImplType(TypeWriter, TypeDefinition)"/>.</summary>
-    public static bool EmitImplType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => EmitImplType(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static bool EmitImplType(TypeWriter w, TypeDefinition type)
+        => EmitImplType(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="WriteAbiParameterTypesPointer(TypeWriter, MethodSig)"/>.</summary>
-    public static void WriteAbiParameterTypesPointer(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig)
-        => WriteAbiParameterTypesPointer(new TypeWriter(writer, context), sig);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteAbiParameterTypesPointer(TypeWriter w, MethodSig sig)
+        => WriteAbiParameterTypesPointer(w.Writer, w.Context, sig);
 
-    /// <summary>Primary overload of <see cref="WriteAbiParameterTypesPointer(TypeWriter, MethodSig, bool)"/>.</summary>
-    public static void WriteAbiParameterTypesPointer(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, bool includeParamNames)
-        => WriteAbiParameterTypesPointer(new TypeWriter(writer, context), sig, includeParamNames);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteAbiParameterTypesPointer(TypeWriter w, MethodSig sig, bool includeParamNames)
+        => WriteAbiParameterTypesPointer(w.Writer, w.Context, sig, includeParamNames);
 
-    /// <summary>Primary overload of <see cref="WriteInterfaceVftbl(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteInterfaceVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteInterfaceVftbl(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteInterfaceVftbl(TypeWriter w, TypeDefinition type)
+        => WriteInterfaceVftbl(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="WriteInterfaceImpl(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteInterfaceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteInterfaceImpl(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteInterfaceImpl(TypeWriter w, TypeDefinition type)
+        => WriteInterfaceImpl(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="WriteInterfaceIdicImpl(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteInterfaceIdicImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteInterfaceIdicImpl(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteInterfaceIdicImpl(TypeWriter w, TypeDefinition type)
+        => WriteInterfaceIdicImpl(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="WriteInterfaceMarshaller(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteInterfaceMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteInterfaceMarshaller(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteInterfaceMarshaller(TypeWriter w, TypeDefinition type)
+        => WriteInterfaceMarshaller(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="WriteIidGuidReference(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteIidGuidReference(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteIidGuidReference(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteIidGuidReference(TypeWriter w, TypeDefinition type)
+        => WriteIidGuidReference(w.Writer, w.Context, type);
 
-    /// <summary>Primary overload of <see cref="WriteAbiType(TypeWriter, TypeSemantics)"/>.</summary>
-    public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics)
-        => WriteAbiType(new TypeWriter(writer, context), semantics);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteAbiType(TypeWriter w, TypeSemantics semantics)
+        => WriteAbiType(w.Writer, w.Context, semantics);
 }
