@@ -176,13 +176,19 @@ Properties consumers may set on the vcxproj:
       <_CsWinRTTempProjectLines Include="  &lt;/PropertyGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;ItemGroup&gt;" />
       <!-- Project-supplied components flow as ProjectReferences. -->
-      <_CsWinRTTempProjectLines Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
+      <_CsWinRTTempProjectLines Condition="'@(_CsWinRTComponentProjectPaths)' != ''"
+                                Include="    &lt;ProjectReference Include=&quot;%(_CsWinRTComponentProjectPaths.Identity)&quot; /&gt;" />
       <!-- Package-supplied components flow as <Reference HintPath=...> with CsWinRTComponent=true metadata so they go through the same Authoring pipeline. -->
-      <_CsWinRTTempProjectLines Include="    &lt;Reference Include=&quot;%(CsWinRTNativeComponent.Filename)&quot;&gt;" />
-      <_CsWinRTTempProjectLines Include="      &lt;HintPath&gt;%(CsWinRTNativeComponent.Identity)&lt;/HintPath&gt;" />
-      <_CsWinRTTempProjectLines Include="      &lt;CsWinRTComponent&gt;true&lt;/CsWinRTComponent&gt;" />
-      <_CsWinRTTempProjectLines Include="      &lt;Private&gt;true&lt;/Private&gt;" />
-      <_CsWinRTTempProjectLines Include="    &lt;/Reference&gt;" />
+      <_CsWinRTTempProjectLines Condition="'@(CsWinRTNativeComponent)' != ''"
+                                Include="    &lt;Reference Include=&quot;%(CsWinRTNativeComponent.Filename)&quot;&gt;" />
+      <_CsWinRTTempProjectLines Condition="'@(CsWinRTNativeComponent)' != ''"
+                                Include="      &lt;HintPath&gt;%(CsWinRTNativeComponent.Identity)&lt;/HintPath&gt;" />
+      <_CsWinRTTempProjectLines Condition="'@(CsWinRTNativeComponent)' != ''"
+                                Include="      &lt;CsWinRTComponent&gt;true&lt;/CsWinRTComponent&gt;" />
+      <_CsWinRTTempProjectLines Condition="'@(CsWinRTNativeComponent)' != ''"
+                                Include="      &lt;Private&gt;true&lt;/Private&gt;" />
+      <_CsWinRTTempProjectLines Condition="'@(CsWinRTNativeComponent)' != ''"
+                                Include="    &lt;/Reference&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;/ItemGroup&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;Sdk.targets&quot; Sdk=&quot;Microsoft.NET.Sdk&quot; /&gt;" />
       <_CsWinRTTempProjectLines Include="  &lt;Import Project=&quot;$(_CsWinRTTargetsForAggregator)&quot; /&gt;" />
