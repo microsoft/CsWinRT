@@ -23,7 +23,7 @@ internal static class AbiEnumFactory
         // In component mode, also emit the authoring metadata wrapper for enums.
         if (context.Settings.Component)
         {
-            CodeWriters.WriteAuthoringMetadataType(writer, context, type);
+            AbiClassFactory.WriteAuthoringMetadataType(writer, context, type);
         }
     }
 }

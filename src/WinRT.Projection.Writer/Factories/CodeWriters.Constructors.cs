@@ -187,7 +187,7 @@ internal static partial class CodeWriters
     /// <c>CreateObjectReferenceMarshalingType.*</c> expression. Mirrors C++
     /// <c>get_marshaling_type_name</c>.
     /// </summary>
-    private static string GetMarshalingTypeName(TypeDefinition classType)
+    internal static string GetMarshalingTypeName(TypeDefinition classType)
     {
         for (int i = 0; i < classType.CustomAttributes.Count; i++)
         {

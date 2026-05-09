@@ -82,7 +82,7 @@ internal static class AbiStructFactory
         {
             // For blittable component structs, emit the authoring metadata wrapper
             // (a 'file static class T {}' with the WinRT metadata attributes).
-            CodeWriters.WriteAuthoringMetadataType(writer, context, type);
+            AbiClassFactory.WriteAuthoringMetadataType(writer, context, type);
         }
 
         CodeWriters.WriteStructEnumMarshallerClass(writer, context, type);

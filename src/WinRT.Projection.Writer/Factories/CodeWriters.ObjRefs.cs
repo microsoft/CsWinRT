@@ -175,7 +175,7 @@ internal static partial class CodeWriters
     /// Builds the IID property name for a generic interface instantiation.
     /// E.g. <c>IObservableMap&lt;string, object&gt;</c> -> <c>IID_Windows_Foundation_Collections_IObservableMap_string__object_</c>.
     /// </summary>
-    private static string BuildIidPropertyNameForGenericInterface(ProjectionEmitContext context, GenericInstanceTypeSignature gi)
+    internal static string BuildIidPropertyNameForGenericInterface(ProjectionEmitContext context, GenericInstanceTypeSignature gi)
     {
         TypeSemantics sem = TypeSemanticsFactory.Get(gi);
         IndentedTextWriter scratch = new();
@@ -188,7 +188,7 @@ internal static partial class CodeWriters
     /// </summary>
     /// <param name="isInNullableContext">When <c>true</c>, the accessor's parameter type is
     /// <c>object?</c> (used inside <c>#nullable enable</c> regions); otherwise <c>object</c>.</param>
-    private static void EmitUnsafeAccessorForIid(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
+    internal static void EmitUnsafeAccessorForIid(IndentedTextWriter writer, ProjectionEmitContext context, GenericInstanceTypeSignature gi, bool isInNullableContext = false)
     {
         string propName = BuildIidPropertyNameForGenericInterface(context, gi);
         string interopName = EncodeInteropTypeName(gi, TypedefNameType.InteropIID);

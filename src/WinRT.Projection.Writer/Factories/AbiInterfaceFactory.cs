@@ -158,7 +158,7 @@ internal static class AbiInterfaceFactory
 
     public static void WriteInterfaceVftbl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (!CodeWriters.EmitImplType(writer, context, type)) { return; }
+        if (!AbiClassFactory.EmitImplType(writer, context, type)) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
@@ -190,7 +190,7 @@ internal static class AbiInterfaceFactory
     /// <summary>Mirrors C++ <c>write_interface_impl</c> (simplified).</summary>
     public static void WriteInterfaceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (!CodeWriters.EmitImplType(writer, context, type)) { return; }
+        if (!AbiClassFactory.EmitImplType(writer, context, type)) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);

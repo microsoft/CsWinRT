@@ -57,7 +57,7 @@ internal static partial class CodeWriters
         switch (category)
         {
             case TypeCategory.Class:
-                WriteAbiClass(writer, context, type);
+                AbiClassFactory.WriteAbiClass(writer, context, type);
                 break;
             case TypeCategory.Delegate:
                 AbiDelegateFactory.WriteAbiDelegate(writer, context, type);

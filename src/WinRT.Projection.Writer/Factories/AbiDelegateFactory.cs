@@ -39,7 +39,7 @@ internal static class AbiDelegateFactory
         // In component mode, the C++ tool also emits the authoring metadata wrapper for delegates.
         if (context.Settings.Component)
         {
-            CodeWriters.WriteAuthoringMetadataType(writer, context, type);
+            AbiClassFactory.WriteAuthoringMetadataType(writer, context, type);
         }
     }
 
