@@ -62,7 +62,7 @@ internal static partial class CodeWriters
                 w.Write(ns);
                 w.Write(".");
             }
-            w.Write(Helpers.StripBackticks(name));
+            w.Write(IdentifierEscaping.StripBackticks(name));
             delimiter = ", ";
         }
         else if (includeWindowsRuntimeObject)
@@ -143,7 +143,7 @@ internal static partial class CodeWriters
                 w.Write(ns);
                 w.Write(".");
             }
-            w.WriteCode(Helpers.StripBackticks(name));
+            w.WriteCode(IdentifierEscaping.StripBackticks(name));
         }
         else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
@@ -161,7 +161,7 @@ internal static partial class CodeWriters
                 w.Write(ns);
                 w.Write(".");
             }
-            w.WriteCode(Helpers.StripBackticks(name));
+            w.WriteCode(IdentifierEscaping.StripBackticks(name));
             w.Write("<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
@@ -208,7 +208,7 @@ internal static partial class CodeWriters
 
         foreach (PropertyDefinition prop in type.Properties)
         {
-            (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
             // Mirror C++ code_writers.h:5642 — emit 'new' when the property is setter-only
             // on this interface AND a property of the same name exists in any base interface
             // (typically the getter-only counterpart). This hides the inherited member.

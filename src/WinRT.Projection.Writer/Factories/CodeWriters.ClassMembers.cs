@@ -676,7 +676,7 @@ internal static partial class CodeWriters
         foreach (PropertyDefinition prop in ifaceType.Properties)
         {
             string name = prop.Name?.Value ?? string.Empty;
-            (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
             if (!propertyState.TryGetValue(name, out PropertyAccessorState? state))
             {
                 state = new PropertyAccessorState

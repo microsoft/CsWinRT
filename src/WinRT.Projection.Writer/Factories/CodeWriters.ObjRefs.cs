@@ -34,7 +34,7 @@ internal static partial class CodeWriters
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            projected = "global::" + ns + "." + Helpers.StripBackticks(name);
+            projected = "global::" + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
         else if (ifaceType is TypeReference tr)
         {
@@ -45,7 +45,7 @@ internal static partial class CodeWriters
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            projected = "global::" + ns + "." + Helpers.StripBackticks(name);
+            projected = "global::" + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
         else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
@@ -86,7 +86,7 @@ internal static partial class CodeWriters
             }
             w.Write("global::");
             if (!string.IsNullOrEmpty(ns)) { w.Write(ns); w.Write("."); }
-            w.WriteCode(Helpers.StripBackticks(name));
+            w.WriteCode(IdentifierEscaping.StripBackticks(name));
         }
         else if (ifaceType is TypeReference tr)
         {
@@ -99,7 +99,7 @@ internal static partial class CodeWriters
             }
             w.Write("global::");
             if (!string.IsNullOrEmpty(ns)) { w.Write(ns); w.Write("."); }
-            w.WriteCode(Helpers.StripBackticks(name));
+            w.WriteCode(IdentifierEscaping.StripBackticks(name));
         }
         else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
@@ -113,7 +113,7 @@ internal static partial class CodeWriters
             }
             w.Write("global::");
             if (!string.IsNullOrEmpty(ns)) { w.Write(ns); w.Write("."); }
-            w.WriteCode(Helpers.StripBackticks(name));
+            w.WriteCode(IdentifierEscaping.StripBackticks(name));
             w.Write("<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
@@ -173,7 +173,7 @@ internal static partial class CodeWriters
             }
             // Mapped interface: use WellKnownInterfaceIIDs.IID_<EscapedNonProjectedName>.
             // The non-projected name is the original WinRT interface (e.g. "Windows.Foundation.IClosable").
-            string id = EscapeIdentifier(ns + "." + Helpers.StripBackticks(name));
+            string id = EscapeIdentifier(ns + "." + IdentifierEscaping.StripBackticks(name));
             w.Write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_");
             w.Write(id);
         }
@@ -181,7 +181,7 @@ internal static partial class CodeWriters
         {
             // Non-mapped, non-generic: ABI.InterfaceIIDs.IID_<EscapedABIName>.
             // Uses the "ABI." prefix on the namespace, escaped with stripGlobalABI.
-            string abiQualified = "global::ABI." + ns + "." + Helpers.StripBackticks(name);
+            string abiQualified = "global::ABI." + ns + "." + IdentifierEscaping.StripBackticks(name);
             string id = EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
             w.Write("global::ABI.InterfaceIIDs.IID_");
             w.Write(id);
@@ -240,7 +240,7 @@ internal static partial class CodeWriters
     public static void WriteIidReferenceExpression(TypeWriter w, TypeDefinition type)
     {
         (string ns, string name) = type.Names();
-        string abiQualified = "global::ABI." + ns + "." + Helpers.StripBackticks(name);
+        string abiQualified = "global::ABI." + ns + "." + IdentifierEscaping.StripBackticks(name);
         string id = EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
         w.Write("global::ABI.InterfaceIIDs.IID_");
         w.Write(id);

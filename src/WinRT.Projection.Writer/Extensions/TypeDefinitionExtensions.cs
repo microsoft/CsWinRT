@@ -63,4 +63,45 @@ internal static class TypeDefinitionExtensions
         }
         return false;
     }
+
+    /// <summary>
+    /// Returns the second positional argument (a <see cref="uint"/>) of <c>[Windows.Foundation.Metadata.ContractVersionAttribute]</c>
+    /// on <paramref name="type"/>, or <see langword="null"/> if the attribute is missing or the
+    /// argument cannot be read. Mirrors C++ <c>get_contract_version</c>.
+    /// </summary>
+    /// <param name="type">The type definition.</param>
+    /// <returns>The contract version, or <see langword="null"/>.</returns>
+    public static int? GetContractVersion(this TypeDefinition type)
+    {
+        CustomAttribute? attr = type.GetAttribute("Windows.Foundation.Metadata", "ContractVersionAttribute");
+        if (attr is null) { return null; }
+        // C++ reads index 1 (second positional arg).
+        if (attr.Signature is not null && attr.Signature.FixedArguments.Count > 1)
+        {
+            object? v = attr.Signature.FixedArguments[1].Element;
+            if (v is uint u) { return (int)u; }
+            if (v is int i) { return i; }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Returns the first positional argument (a <see cref="uint"/>) of <c>[Windows.Foundation.Metadata.VersionAttribute]</c>
+    /// on <paramref name="type"/>, or <see langword="null"/> if the attribute is missing or the
+    /// argument cannot be read. Mirrors C++ <c>get_version</c>.
+    /// </summary>
+    /// <param name="type">The type definition.</param>
+    /// <returns>The version, or <see langword="null"/>.</returns>
+    public static int? GetVersion(this TypeDefinition type)
+    {
+        CustomAttribute? attr = type.GetAttribute("Windows.Foundation.Metadata", "VersionAttribute");
+        if (attr is null) { return null; }
+        if (attr.Signature is not null && attr.Signature.FixedArguments.Count > 0)
+        {
+            object? v = attr.Signature.FixedArguments[0].Element;
+            if (v is uint u) { return (int)u; }
+            if (v is int i) { return i; }
+        }
+        return null;
+    }
 }

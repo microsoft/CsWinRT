@@ -120,7 +120,7 @@ internal static partial class CodeWriters
         w.Write("[ABI.");
         w.Write(ns);
         w.Write(".");
-        w.Write(Helpers.StripBackticks(name));
+        w.Write(IdentifierEscaping.StripBackticks(name));
         w.Write("ComWrappersMarshaller]\n");
     }
 
@@ -253,7 +253,7 @@ internal static partial class CodeWriters
         if (defaultIface is null) { return; }
 
         (string typeNs, string typeName) = type.Names();
-        string className = $"global::{typeNs}.{Helpers.StripBackticks(typeName)}";
+        string className = $"global::{typeNs}.{IdentifierEscaping.StripBackticks(typeName)}";
 
         // Resolve TypeReference → TypeDefinition so WriteTypeName goes through the Definition
         // branch which knows about authored-type CCW namespacing (ABI.Impl. prefix).
@@ -288,7 +288,7 @@ internal static partial class CodeWriters
     {
         if (!w.Settings.Component || w.Settings.ReferenceProjection) { return; }
         (string typeNs, string typeName) = type.Names();
-        string className = $"global::{typeNs}.{Helpers.StripBackticks(typeName)}";
+        string className = $"global::{typeNs}.{IdentifierEscaping.StripBackticks(typeName)}";
 
         foreach (InterfaceImplementation impl in type.Interfaces)
         {

@@ -228,7 +228,7 @@ internal static partial class CodeWriters
             if (i > 0) { w.Write(", "); }
             w.Write(fields[i].TypeStr);
             w.Write(" ");
-            Helpers.WriteEscapedIdentifier(w, fields[i].ParamName);
+            IdentifierEscaping.WriteEscapedIdentifier(w, fields[i].ParamName);
         }
         w.Write(")\n{\n");
         foreach (var f in fields)
@@ -240,14 +240,14 @@ internal static partial class CodeWriters
                 w.Write("this.");
                 w.Write(f.Name);
                 w.Write(" = ");
-                Helpers.WriteEscapedIdentifier(w, f.ParamName);
+                IdentifierEscaping.WriteEscapedIdentifier(w, f.ParamName);
                 w.Write("; ");
             }
             else
             {
                 w.Write(f.Name);
                 w.Write(" = ");
-                Helpers.WriteEscapedIdentifier(w, f.ParamName);
+                IdentifierEscaping.WriteEscapedIdentifier(w, f.ParamName);
                 w.Write("; ");
             }
         }
@@ -330,7 +330,7 @@ internal static partial class CodeWriters
 
         string typeName = type.Name?.Value ?? string.Empty;
         WriteTypeCustomAttributes(w, type, false);
-        w.Write(Helpers.InternalAccessibility(w.Settings));
+        w.Write(AccessibilityHelper.InternalAccessibility(w.Settings));
         w.Write(" enum ");
         w.Write(typeName);
         w.Write("\n{\n}\n");
@@ -358,7 +358,7 @@ internal static partial class CodeWriters
             WriteGuid(w, type, false);
             w.Write("\")]\n");
         }
-        w.Write(Helpers.InternalAccessibility(w.Settings));
+        w.Write(AccessibilityHelper.InternalAccessibility(w.Settings));
         w.Write(" delegate ");
         WriteProjectionReturnType(w, sig);
         w.Write(" ");
@@ -378,7 +378,7 @@ internal static partial class CodeWriters
 
         WriteWinRTMetadataAttribute(w, type, _cacheRef!);
         WriteTypeCustomAttributes(w, type, true);
-        w.Write(Helpers.InternalAccessibility(w.Settings));
+        w.Write(AccessibilityHelper.InternalAccessibility(w.Settings));
         w.Write(" sealed class ");
         w.Write(typeName);
         w.Write(": Attribute\n{\n");

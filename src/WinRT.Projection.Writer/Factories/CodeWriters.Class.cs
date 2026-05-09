@@ -139,12 +139,12 @@ internal static partial class CodeWriters
             int bPrev = -CountAttributes(b, "Windows.Foundation.Metadata", "PreviousContractVersionAttribute");
             if (aPrev != bPrev) { return aPrev.CompareTo(bPrev); }
 
-            int? aCV = Helpers.GetContractVersion(a);
-            int? bCV = Helpers.GetContractVersion(b);
+            int? aCV = a.GetContractVersion();
+            int? bCV = b.GetContractVersion();
             if (aCV.HasValue && bCV.HasValue && aCV.Value != bCV.Value) { return aCV.Value.CompareTo(bCV.Value); }
 
-            int? aV = Helpers.GetVersion(a);
-            int? bV = Helpers.GetVersion(b);
+            int? aV = a.GetVersion();
+            int? bV = b.GetVersion();
             if (aV.HasValue && bV.HasValue && aV.Value != bV.Value) { return aV.Value.CompareTo(bV.Value); }
 
             string aNs = a.Namespace?.Value ?? string.Empty;
@@ -203,7 +203,7 @@ internal static partial class CodeWriters
         {
             WriteWinRTMetadataAttribute(w, type, _cacheRef!);
             WriteTypeCustomAttributes(w, type, true);
-            w.Write(Helpers.InternalAccessibility(w.Settings));
+            w.Write(AccessibilityHelper.InternalAccessibility(w.Settings));
             w.Write(" static class ");
             WriteTypedefName(w, type, TypedefNameType.Projected, false);
             WriteTypeParams(w, type);
@@ -342,7 +342,7 @@ internal static partial class CodeWriters
             foreach (PropertyDefinition prop in staticIface.Properties)
             {
                 string propName = prop.Name?.Value ?? string.Empty;
-                (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+                (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
                 string propType = WritePropType(w, prop);
                 if (!properties.TryGetValue(propName, out StaticPropertyAccessorState? state))
                 {

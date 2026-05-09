@@ -43,9 +43,9 @@ internal static partial class CodeWriters
         string typeNs = type.Namespace?.Value ?? string.Empty;
         // Mirror C++ 'write_type_name(type, Projected)' which for an authored type produces 'global::<ns>.<name>'.
         string projectedTypeName = string.IsNullOrEmpty(typeNs)
-            ? $"global::{Helpers.StripBackticks(typeName)}"
-            : $"global::{typeNs}.{Helpers.StripBackticks(typeName)}";
-        string factoryTypeName = $"{Helpers.StripBackticks(typeName)}ServerActivationFactory";
+            ? $"global::{IdentifierEscaping.StripBackticks(typeName)}"
+            : $"global::{typeNs}.{IdentifierEscaping.StripBackticks(typeName)}";
+        string factoryTypeName = $"{IdentifierEscaping.StripBackticks(typeName)}ServerActivationFactory";
         bool isActivatable = !TypeCategorization.IsStatic(type) && type.HasDefaultConstructor();
 
         // Build the inheritance list: factory interfaces ([Activatable]/[Static]) only.
@@ -194,7 +194,7 @@ internal static partial class CodeWriters
     private static void WriteStaticFactoryProperty(TypeWriter w, PropertyDefinition prop, string projectedTypeName)
     {
         string propName = prop.Name?.Value ?? string.Empty;
-        (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+        (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
         // Single-line form when no setter is present (mirrors C++ early-return path).
         if (setter is null)
         {
@@ -333,7 +333,7 @@ internal static partial class CodeWriters
                 w.Write("global::ABI.Impl.");
                 w.Write(ns);
                 w.Write(".");
-                w.Write(Helpers.StripBackticks(name));
+                w.Write(IdentifierEscaping.StripBackticks(name));
                 w.Write("ServerActivationFactory.Make();\n");
             }
             w.Write("default:\n    return null;\n}\n}\n}\n}\n");

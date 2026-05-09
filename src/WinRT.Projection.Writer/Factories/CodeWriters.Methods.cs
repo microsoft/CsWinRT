@@ -92,7 +92,7 @@ internal static partial class CodeWriters
     public static void WriteParameterName(TypeWriter w, ParamInfo p)
     {
         string name = p.Parameter.Name ?? "param";
-        Helpers.WriteEscapedIdentifier(w, name);
+        IdentifierEscaping.WriteEscapedIdentifier(w, name);
     }
 
     /// <summary>Mirrors C++ <c>write_projection_parameter</c>.</summary>

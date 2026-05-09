@@ -150,7 +150,7 @@ internal static partial class CodeWriters
                 WriteComWrapperMarshallerAttribute(w, type);
             }
             WriteValueTypeWinRTClassNameAttribute(w, type);
-            w.Write(Helpers.InternalAccessibility(w.Settings));
+            w.Write(AccessibilityHelper.InternalAccessibility(w.Settings));
             w.Write(" unsafe struct ");
             WriteTypedefName(w, type, TypedefNameType.ABI, false);
             w.Write("\n{\n");
@@ -237,7 +237,7 @@ internal static partial class CodeWriters
         if (invoke is null) { return; }
         MethodSig sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
         string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
 
         w.Write("\ninternal static unsafe class ");
@@ -391,7 +391,7 @@ internal static partial class CodeWriters
         if (invoke is null) { return; }
         MethodSig sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         w.Write("\n[StructLayout(LayoutKind.Sequential)]\n");
         w.Write("internal unsafe struct ");
@@ -414,7 +414,7 @@ internal static partial class CodeWriters
         if (invoke is null) { return; }
         MethodSig sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         w.Write("\npublic static unsafe class ");
         w.Write(nameStripped);
@@ -443,7 +443,7 @@ internal static partial class CodeWriters
     {
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
         string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
         string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
 
@@ -495,7 +495,7 @@ internal static partial class CodeWriters
         if (invoke is null) { return; }
         MethodSig sig = new(invoke);
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         // Compute the projected type name (with global::) used as the generic argument.
         string projectedName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteTypedefName(w, type, TypedefNameType.Projected, true)));
@@ -543,7 +543,7 @@ internal static partial class CodeWriters
             if (pc == ParamCategory.Ref) { w.Write("in "); }
             else if (pc == ParamCategory.Out || pc == ParamCategory.ReceiveArray) { w.Write("out "); }
             string raw = sig.Params[i].Parameter.Name ?? "p";
-            w.Write(Helpers.IsKeyword(raw) ? "@" + raw : raw);
+            w.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
         w.Write(") => TargetDelegate.Invoke(");
         for (int i = 0; i < sig.Params.Count; i++)
@@ -553,7 +553,7 @@ internal static partial class CodeWriters
             if (pc == ParamCategory.Ref) { w.Write("in "); }
             else if (pc == ParamCategory.Out || pc == ParamCategory.ReceiveArray) { w.Write("out "); }
             string raw = sig.Params[i].Parameter.Name ?? "p";
-            w.Write(Helpers.IsKeyword(raw) ? "@" + raw : raw);
+            w.Write(CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw);
         }
         w.Write(");\n");
         w.Write("        }\n    }\n}\n");
@@ -586,7 +586,7 @@ internal static partial class CodeWriters
     /// </summary>
     private static void WriteComponentClassMarshaller(TypeWriter w, TypeDefinition type)
     {
-        string nameStripped = Helpers.StripBackticks(type.Name?.Value ?? string.Empty);
+        string nameStripped = IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string projectedType = $"global::{typeNs}.{nameStripped}";
 
@@ -658,7 +658,7 @@ internal static partial class CodeWriters
     /// </summary>
     private static void WriteAuthoringMetadataType(TypeWriter w, TypeDefinition type)
     {
-        string nameStripped = Helpers.StripBackticks(type.Name?.Value ?? string.Empty);
+        string nameStripped = IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string projectedType = string.IsNullOrEmpty(typeNs) ? $"global::{nameStripped}" : $"global::{typeNs}.{nameStripped}";
         string fullName = string.IsNullOrEmpty(typeNs) ? nameStripped : $"{typeNs}.{nameStripped}";
@@ -844,7 +844,7 @@ internal static partial class CodeWriters
                     w.Write("__");
                     w.Write(p.Parameter.Name ?? "param");
                     w.Write("Size, void* ");
-                    Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                    IdentifierEscaping.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
                 }
                 else
                 {
@@ -869,7 +869,7 @@ internal static partial class CodeWriters
                             WriteAbiType(w, TypeSemanticsFactory.Get(brSz.BaseType));
                             w.Write("** ");
                         }
-                        Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                        IdentifierEscaping.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
                     }
                     else
                     {
@@ -889,7 +889,7 @@ internal static partial class CodeWriters
                     if (includeParamNames)
                     {
                         w.Write(" ");
-                        Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                        IdentifierEscaping.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
                     }
                 }
             }
@@ -900,7 +900,7 @@ internal static partial class CodeWriters
                 if (includeParamNames)
                 {
                     w.Write(" ");
-                    Helpers.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
+                    IdentifierEscaping.WriteEscapedIdentifier(w, p.Parameter.Name ?? "param");
                 }
             }
         }
@@ -946,7 +946,7 @@ internal static partial class CodeWriters
     {
         string? n = sig.ReturnParam?.Name?.Value;
         if (string.IsNullOrEmpty(n)) { return "__return_value__"; }
-        return Helpers.IsKeyword(n) ? "@" + n : n;
+        return CSharpKeywords.IsKeyword(n) ? "@" + n : n;
     }
 
     /// <summary>
@@ -971,7 +971,7 @@ internal static partial class CodeWriters
         if (!EmitImplType(w, type)) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         w.Write("\n[StructLayout(LayoutKind.Sequential)]\n");
         w.Write("internal unsafe struct ");
@@ -1003,7 +1003,7 @@ internal static partial class CodeWriters
         if (!EmitImplType(w, type)) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         w.Write("\npublic static unsafe class ");
         w.Write(nameStripped);
@@ -1071,7 +1071,7 @@ internal static partial class CodeWriters
         if (exclusiveToOwner is not null && !exclusiveIsFactoryOrStatic)
         {
             string ownerNs = exclusiveToOwner.Namespace?.Value ?? string.Empty;
-            string ownerNm = Helpers.StripBackticks(exclusiveToOwner.Name?.Value ?? string.Empty);
+            string ownerNm = IdentifierEscaping.StripBackticks(exclusiveToOwner.Name?.Value ?? string.Empty);
             ifaceFullName = string.IsNullOrEmpty(ownerNs)
                 ? "global::" + ownerNm
                 : "global::" + ownerNs + "." + ownerNm;
@@ -1081,7 +1081,7 @@ internal static partial class CodeWriters
             // Factory/static interfaces in authoring mode are implemented by the generated
             // 'global::ABI.Impl.<NS>.<InterfaceName>' type that the activation factory CCW exposes.
             string ifaceNs = type.Namespace?.Value ?? string.Empty;
-            string ifaceNm = Helpers.StripBackticks(type.Name?.Value ?? string.Empty);
+            string ifaceNm = IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
             ifaceFullName = string.IsNullOrEmpty(ifaceNs)
                 ? "global::ABI.Impl." + ifaceNm
                 : "global::ABI.Impl." + ifaceNs + "." + ifaceNm;
@@ -1226,7 +1226,7 @@ internal static partial class CodeWriters
         // Handler is the (last) input parameter of the add method. The emitted parameter name in the
         // signature comes from WriteAbiParameterTypesPointer which uses the metadata name verbatim.
         string handlerRawName = sig.Params.Count > 0 ? (sig.Params[^1].Parameter.Name ?? "handler") : "handler";
-        string handlerRef = Helpers.IsKeyword(handlerRawName) ? "@" + handlerRawName : handlerRawName;
+        string handlerRef = CSharpKeywords.IsKeyword(handlerRawName) ? "@" + handlerRawName : handlerRawName;
 
         // The cookie/token return parameter takes the metadata return param name (matches truth).
         string cookieName = GetReturnParamName(sig);
@@ -1287,7 +1287,7 @@ internal static partial class CodeWriters
     {
         string evName = evt.Name?.Value ?? "Event";
         string tokenRawName = sig.Params.Count > 0 ? (sig.Params[^1].Parameter.Name ?? "token") : "token";
-        string tokenRef = Helpers.IsKeyword(tokenRawName) ? "@" + tokenRawName : tokenRawName;
+        string tokenRef = CSharpKeywords.IsKeyword(tokenRawName) ? "@" + tokenRawName : tokenRawName;
 
         w.Write("\n{\n");
         w.Write("    try\n    {\n");
@@ -1523,7 +1523,7 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.Out) { continue; }
             string raw = p.Parameter.Name ?? "param";
-            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             w.Write("    *");
             w.Write(ptr);
             w.Write(" = default;\n");
@@ -1553,7 +1553,7 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.ReceiveArray) { continue; }
             string raw = p.Parameter.Name ?? "param";
-            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)StripByRefAndCustomModifiers(p.Type);
             string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sza.BaseType))));
             w.Write("    *");
@@ -1579,7 +1579,7 @@ internal static partial class CodeWriters
             if (cat != ParamCategory.PassArray && cat != ParamCategory.FillArray) { continue; }
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz) { continue; }
             string raw = p.Parameter.Name ?? "param";
-            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(sz.BaseType))));
             bool isBlittableElem = IsBlittablePrimitive(sz.BaseType) || IsAnyStruct(sz.BaseType);
             if (isBlittableElem)
@@ -1642,7 +1642,7 @@ internal static partial class CodeWriters
             if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
             if (IsBlittablePrimitive(szArr.BaseType) || IsAnyStruct(szArr.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
-            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szArr.BaseType))));
             string elementInteropArg = EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
             // For complex structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
@@ -1692,7 +1692,7 @@ internal static partial class CodeWriters
             {
                 // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged. Mirrors truth pattern.
                 string rawName = p.Parameter.Name ?? "param";
-                string callName = Helpers.IsKeyword(rawName) ? "@" + rawName : rawName;
+                string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
                 AsmResolver.DotNet.Signatures.TypeSignature inner = GetNullableInnerType(p.Type)!;
                 string innerMarshaller = GetNullableInnerMarshallerName(w, inner);
                 w.Write("        var __arg_");
@@ -1706,7 +1706,7 @@ internal static partial class CodeWriters
             else if (IsGenericInstance(p.Type))
             {
                 string rawName = p.Parameter.Name ?? "param";
-                string callName = Helpers.IsKeyword(rawName) ? "@" + rawName : rawName;
+                string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
                 string interopTypeName = EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
                 string projectedTypeName = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, p.Type, false)));
                 w.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
@@ -1802,7 +1802,7 @@ internal static partial class CodeWriters
                     // side it's projected as 'in T'. Read directly from *<name> via the appropriate
                     // marshaller — DO NOT zero or write back.
                     string raw = p.Parameter.Name ?? "param";
-                    string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+                    string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
                     AsmResolver.DotNet.Signatures.TypeSignature uRef = StripByRefAndCustomModifiers(p.Type);
                     if (IsString(uRef))
                     {
@@ -1882,7 +1882,7 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.Out) { continue; }
             string raw = p.Parameter.Name ?? "param";
-            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             AsmResolver.DotNet.Signatures.TypeSignature underlying = StripByRefAndCustomModifiers(p.Type);
             w.Write("        *");
             w.Write(ptr);
@@ -1963,7 +1963,7 @@ internal static partial class CodeWriters
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat != ParamCategory.ReceiveArray) { continue; }
             string raw = p.Parameter.Name ?? "param";
-            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             w.Write("        ConvertToUnmanaged_");
             w.Write(raw);
             w.Write("(null, __");
@@ -1988,7 +1988,7 @@ internal static partial class CodeWriters
             // Blittable element types: Span wraps the native buffer; no copy-back needed.
             if (IsBlittablePrimitive(szFA.BaseType) || IsAnyStruct(szFA.BaseType)) { continue; }
             string raw = p.Parameter.Name ?? "param";
-            string ptr = Helpers.IsKeyword(raw) ? "@" + raw : raw;
+            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             string elementProjected = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectionType(w, TypeSemanticsFactory.Get(szFA.BaseType))));
             string elementInteropArg = EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
             // Determine the ABI element type for the data pointer cast.
@@ -2227,7 +2227,7 @@ internal static partial class CodeWriters
     private static void EmitDoAbiParamArgConversion(TypeWriter w, ParamInfo p)
     {
         string rawName = p.Parameter.Name ?? "param";
-        string pname = Helpers.IsKeyword(rawName) ? "@" + rawName : rawName;
+        string pname = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
         if (p.Type is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
             corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
         {
@@ -2302,7 +2302,7 @@ internal static partial class CodeWriters
         if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.IdicExclusiveTo) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         w.Write("\n[DynamicInterfaceCastableImplementation]\n");
         WriteGuidAttribute(w, type);
@@ -2538,7 +2538,7 @@ internal static partial class CodeWriters
 
         foreach (PropertyDefinition prop in type.Properties)
         {
-            (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
             string pname = prop.Name?.Value ?? string.Empty;
             string propType = WritePropType(w, prop);
 
@@ -2691,7 +2691,7 @@ internal static partial class CodeWriters
 
         foreach (PropertyDefinition prop in type.Properties)
         {
-            (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
             string pname = prop.Name?.Value ?? string.Empty;
             string propType = WritePropType(w, prop);
 
@@ -2787,7 +2787,7 @@ internal static partial class CodeWriters
         if (TypeCategorization.IsExclusiveTo(type)) { return; }
         if (type.GenericParameters.Count > 0) { return; }
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         w.Write("\n#nullable enable\n");
         w.Write("public static unsafe class ");
@@ -2840,7 +2840,7 @@ internal static partial class CodeWriters
     private static void WriteStructEnumMarshallerClass(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
         TypeCategory cat = TypeCategorization.GetCategory(type);
         bool blittable = IsTypeBlittable(type);
         // "Almost-blittable" includes blittable + bool/char fields. Excludes string/object fields.
@@ -2925,7 +2925,7 @@ internal static partial class CodeWriters
                          && !IsTypeBlittable(fieldStructTd))
                 {
                     // Nested non-blittable struct: marshal via its <Name>Marshaller.
-                    w.Write(Helpers.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty));
+                    w.Write(IdentifierEscaping.StripBackticks(fieldStructTd.Name?.Value ?? string.Empty));
                     w.Write("Marshaller.ConvertToUnmanaged(value.");
                     w.Write(fname);
                     w.Write(")");
@@ -3002,7 +3002,7 @@ internal static partial class CodeWriters
                          && !IsTypeBlittable(fieldStructTd2))
                 {
                     // Nested non-blittable struct: convert via its <Name>Marshaller.
-                    w.Write(Helpers.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty));
+                    w.Write(IdentifierEscaping.StripBackticks(fieldStructTd2.Name?.Value ?? string.Empty));
                     w.Write("Marshaller.ConvertToManaged(value.");
                     w.Write(fname);
                     w.Write(")");
@@ -3059,7 +3059,7 @@ internal static partial class CodeWriters
                     // Nested non-blittable struct: dispose via its <Name>Marshaller.
                     // Mirror C++: this site always uses the fully-qualified marshaller name.
                     string nestedNs = fieldStructTd3.Namespace?.Value ?? string.Empty;
-                    string nestedNm = Helpers.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty);
+                    string nestedNm = IdentifierEscaping.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty);
                     w.Write("        global::ABI.");
                     w.Write(nestedNs);
                     w.Write(".");
@@ -3235,7 +3235,7 @@ internal static partial class CodeWriters
     private static void WriteDelegateMarshallerOnly(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
         string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
@@ -3274,7 +3274,7 @@ internal static partial class CodeWriters
     private static void WriteDelegateComWrappersCallback(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
         string iidExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidExpression(w, type)));
@@ -3312,7 +3312,7 @@ internal static partial class CodeWriters
     private static void WriteDelegateComWrappersMarshallerAttribute(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
         string iidRefExpr = w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteIidReferenceExpression(w, type)));
 
         w.Write("\ninternal sealed unsafe class ");
@@ -3386,7 +3386,7 @@ internal static partial class CodeWriters
     private static void WriteClassMarshallerStub(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
         string typeNs = type.Namespace?.Value ?? string.Empty;
         string fullProjected = $"global::{typeNs}.{nameStripped}";
 
@@ -3561,7 +3561,7 @@ internal static partial class CodeWriters
     private static void WriteInterfaceMarshallerStub(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
         // Mirrors C++ write_static_abi_classes: visibility is internal if the interface is
         // exclusive to a class (and not opted into PublicExclusiveTo) or if it's marked
         // [ProjectionInternal]; public otherwise.
@@ -3747,7 +3747,7 @@ internal static partial class CodeWriters
         foreach (PropertyDefinition prop in type.Properties)
         {
             string pname = prop.Name?.Value ?? string.Empty;
-            (MethodDefinition? getter, MethodDefinition? setter) = Helpers.GetPropertyMethods(prop);
+            (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
             string propType = WritePropType(w, prop);
             (MethodDefinition? gMethod, MethodDefinition? sMethod) = (getter, setter);
             // Mirrors C++ helpers.h:46-49: the [NoException] check on properties applies to BOTH
@@ -3792,7 +3792,7 @@ internal static partial class CodeWriters
             bool isGenericEvent = evtSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
 
             // Use the add method's WinMD slot. Mirrors C++: events use the add_X method's vmethod_index.
-            (MethodDefinition? addMethod, MethodDefinition? _) = Helpers.GetEventMethods(evt);
+            (MethodDefinition? addMethod, MethodDefinition? _) = evt.GetEventMethods();
             int eventSlot = addMethod is not null && methodSlot.TryGetValue(addMethod, out int es) ? es : 0;
 
             // Build the projected event source type name. For non-generic delegate handlers, the
@@ -3817,7 +3817,7 @@ internal static partial class CodeWriters
                 if (evtSig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td)
                 {
                     delegateName = td.Type?.Name?.Value ?? string.Empty;
-                    delegateName = Helpers.StripBackticks(delegateName);
+                    delegateName = IdentifierEscaping.StripBackticks(delegateName);
                 }
                 eventSourceProjectedFull = delegateName + "EventSource";
             }
@@ -5738,7 +5738,7 @@ internal static partial class CodeWriters
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            string nameStripped = Helpers.StripBackticks(name);
+            string nameStripped = IdentifierEscaping.StripBackticks(name);
             // If the writer is currently in the matching ABI namespace, drop the qualifier.
             if (w.InAbiNamespace && string.Equals(w.CurrentNamespace, ns, System.StringComparison.Ordinal))
             {
@@ -5752,7 +5752,7 @@ internal static partial class CodeWriters
     private static string GetParamName(ParamInfo p, string? paramNameOverride)
     {
         string name = paramNameOverride ?? p.Parameter.Name ?? "param";
-        return Helpers.IsKeyword(name) ? "@" + name : name;
+        return CSharpKeywords.IsKeyword(name) ? "@" + name : name;
     }
 
     private static string GetParamLocalName(ParamInfo p, string? paramNameOverride)
@@ -5963,7 +5963,7 @@ internal static partial class CodeWriters
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            string nameStripped = Helpers.StripBackticks(name);
+            string nameStripped = IdentifierEscaping.StripBackticks(name);
             // If the writer is currently in the matching ABI namespace, drop the qualifier.
             if (w.InAbiNamespace && string.Equals(w.CurrentNamespace, ns, System.StringComparison.Ordinal))
             {
@@ -6043,7 +6043,7 @@ internal static partial class CodeWriters
     private static void WriteReferenceImpl(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
-        string nameStripped = Helpers.StripBackticks(name);
+        string nameStripped = IdentifierEscaping.StripBackticks(name);
         string visibility = w.Settings.Component ? "public" : "file";
         bool blittable = IsTypeBlittable(type);
 
@@ -6301,7 +6301,7 @@ internal static partial class CodeWriters
                     (string rns, string rname) = r.Reference_.Names();
                     w.Write("global::");
                     if (!string.IsNullOrEmpty(rns)) { w.Write(rns); w.Write("."); }
-                    w.Write(Helpers.StripBackticks(rname));
+                    w.Write(IdentifierEscaping.StripBackticks(rname));
                     break;
                 }
                 w.Write("void*");
