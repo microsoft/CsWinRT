@@ -362,7 +362,6 @@ internal static class IIDExpressionWriter
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace ABI;
 
