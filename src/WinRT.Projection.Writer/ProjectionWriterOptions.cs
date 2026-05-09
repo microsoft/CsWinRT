@@ -7,7 +7,7 @@ using System.Threading;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Input parameters for <see cref="ProjectionWriter"/>. Mirrors the C++ <c>cswinrt.exe</c> CLI options
+/// Input parameters for <see cref="ProjectionWriter"/>. CLI options
 /// from <c>main.cpp</c>'s <c>process_args()</c>.
 /// </summary>
 public sealed class ProjectionWriterOptions

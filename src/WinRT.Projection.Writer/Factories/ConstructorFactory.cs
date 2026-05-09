@@ -244,7 +244,7 @@ internal static class ConstructorFactory
         }
         else
         {
-            // Sealed Invoke signature is multi-line. Mirrors C++ at.
+            // Sealed Invoke signature is multi-line..
             writer.WriteLine("    public override unsafe void Invoke(");
             writer.WriteLine("      WindowsRuntimeActivationArgsReference additionalParameters,");
             writer.Write("      out void* retval)\n    {\n");
@@ -435,7 +435,7 @@ internal static class ConstructorFactory
         }
 
         // Open ONE combined "fixed(void* _a = ..., _b = ..., ...)" block for ALL pinnable
-        // params (string, Type, PassArray). Mirrors C++ write_abi_method_call_marshalers
+        // params (string, Type, PassArray)..
         // which emits a single combined fixed-block for all is_pinnable marshalers.
         int fixedNesting = 0;
         int pinnableCount = 0;

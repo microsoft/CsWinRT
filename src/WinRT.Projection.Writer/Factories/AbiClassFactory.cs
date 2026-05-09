@@ -183,14 +183,14 @@ internal static class AbiClassFactory
         }
 
         // Determine the marshalingType expression from the class's [MarshalingBehaviorAttribute]
-        // (mirrors C++ get_marshaling_type_name). This is used by both the marshaller attribute and the
+        //. This is used by both the marshaller attribute and the
         // callback (the C++ code uses the same value for both).
         string marshalingType = ConstructorFactory.GetMarshalingTypeName(type);
 
         bool isSealed = type.IsSealed;
 
         // For unsealed classes, the ConvertToUnmanaged path needs to know whether the default interface is
-        // exclusive-to (mirrors C++ logic).
+        // exclusive-to.
         TypeDefinition? defaultIfaceTd = defaultIface is null ? null : AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, defaultIface);
         bool defaultIfaceIsExclusive = defaultIfaceTd is not null && TypeCategorization.IsExclusiveTo(defaultIfaceTd);
 

@@ -49,7 +49,7 @@ internal static class ClassFactory
     /// <summary>
     /// Returns the fast-abi class info (class type + default interface + sorted other exclusive
     /// interfaces) for <paramref name="iface"/>, if the interface is exclusive_to a fast-abi
-    /// class; otherwise <c>null</c>. Mirrors C++ <c>get_fast_abi_class_for_interface</c>.
+    /// class; otherwise <c>null</c>.
     /// </summary>
     public static (TypeDefinition Class, TypeDefinition? Default, System.Collections.Generic.List<TypeDefinition> Others)? GetFastAbiClassForInterface(MetadataCache cache, TypeDefinition iface)
     {
@@ -62,7 +62,7 @@ internal static class ClassFactory
     /// <summary>
     /// Whether <paramref name="iface"/> is a non-default exclusive interface of a fast-abi class
     /// (i.e. its members are merged into the default interface's vtable and dispatched through
-    /// the default interface's ABI <c>Methods</c> class). Mirrors C++ <c>fast_abi_class::contains_other_interface</c>.
+    /// the default interface's ABI <c>Methods</c> class).
     /// </summary>
     public static bool IsFastAbiOtherInterface(MetadataCache cache, TypeDefinition iface)
     {
@@ -471,7 +471,7 @@ internal static class ClassFactory
         InterfaceFactory.WriteTypeInheritance(writer, context, type, false, true);
         writer.Write("\n{\n");
 
-        // ObjRef field definitions for each implemented interface (mirrors C++ write_class_objrefs_definition).
+        // ObjRef field definitions for each implemented interface.
         // These back the per-interface dispatch in instance methods/properties and the
         // IWindowsRuntimeInterface<T>.GetInterface() implementations.
         ObjRefNameGenerator.WriteClassObjRefDefinitions(writer, context, type);

@@ -132,7 +132,7 @@ internal static class TypeSemanticsFactory
 }
 
 /// <summary>
-/// Type-name kind, mirrors C++ <c>typedef_name_type</c>.
+/// Type-name kind,.
 /// </summary>
 internal enum TypedefNameType
 {

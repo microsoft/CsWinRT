@@ -11,7 +11,7 @@ internal static class AccessibilityHelper
     /// <summary>
     /// Returns the accessibility modifier (<c>"public"</c> or <c>"internal"</c>) used for
     /// generated types based on the <see cref="Settings.Internal"/> and
-    /// <see cref="Settings.Embedded"/> flags. Mirrors C++ <c>internal_accessibility</c>.
+    /// <see cref="Settings.Embedded"/> flags.
     /// </summary>
     /// <param name="settings">The active projection settings.</param>
     /// <returns><c>"internal"</c> if <see cref="Settings.Internal"/> or <see cref="Settings.Embedded"/> is set; otherwise <c>"public"</c>.</returns>

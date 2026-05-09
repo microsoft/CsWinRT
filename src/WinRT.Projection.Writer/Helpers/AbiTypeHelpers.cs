@@ -67,7 +67,6 @@ internal static class AbiTypeHelpers
                 return true;
             }
             // Mapped struct types: blittable iff the mapping does NOT require marshalling
-            // (mirrors C++ is_type_blittable for mapped struct_type case).
             MappedType? mapped = MappedTypes.Get(fNs, fName);
             if (mapped is not null && mapped.RequiresMarshaling) { return false; }
             if (todr.Type is TypeDefinition td)
@@ -525,7 +524,7 @@ internal static class AbiTypeHelpers
 
     /// <summary>Returns the full marshaller name (e.g. <c>global::ABI.Windows.Foundation.UriMarshaller</c>).
     /// When the marshaller would land in the writer's current ABI namespace, returns just the
-    /// short marshaller class name (e.g. <c>BasicStructMarshaller</c>) — mirrors C++ which
+    /// short marshaller class name (e.g. <c>BasicStructMarshaller</c>) —.
     /// elides the qualifier in same-namespace contexts.</summary>
     internal static string GetMarshallerFullName(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {

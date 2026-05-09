@@ -31,7 +31,6 @@ internal static class MetadataAttributeFactory
     /// <summary>
     /// Returns the version string embedded in the banner comment of generated files.
     /// MSBuild and defaults to <c>0.0.0-private.0</c>).
-    ///
     /// We read the writer assembly's <see cref="System.Reflection.AssemblyInformationalVersionAttribute"/>
     /// (set via <c>$(InformationalVersion)</c>) and strip any SourceLink commit-sha suffix
     /// after a '+' so the banner is reproducible across rebuilds of the same source.

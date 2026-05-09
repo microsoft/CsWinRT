@@ -31,7 +31,7 @@ internal static class MethodDefinitionExtensions
 
     /// <summary>
     /// Returns whether <paramref name="method"/> is the special <c>remove_xxx</c> event remover
-    /// overload (mirrors C++ <c>is_remove_overload</c>).
+    /// overload.
     /// </summary>
     /// <param name="method">The method definition to inspect.</param>
     /// <returns><see langword="true"/> if the method is an event remover; otherwise <see langword="false"/>.</returns>

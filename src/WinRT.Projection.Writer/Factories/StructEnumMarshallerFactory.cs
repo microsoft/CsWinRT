@@ -13,7 +13,7 @@ namespace WindowsRuntime.ProjectionWriter;
 internal static class StructEnumMarshallerFactory
 {
     /// <summary>
-    /// Writes a marshaller class for a struct or enum (mirrors C++ write_struct_and_enum_marshaller_class).
+    /// Writes a marshaller class for a struct or enum.
     /// </summary>
     internal static void WriteStructEnumMarshallerClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {

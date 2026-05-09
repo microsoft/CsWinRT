@@ -85,7 +85,7 @@ internal sealed partial class ProjectionGenerator
         {
             if (!_settings.Filter.Includes(type)) { continue; }
             (string ns2, string nm2) = type.Names();
-            // Skip generic types and mapped types (mirrors C++ logic)
+            // Skip generic types and mapped types
             if (MappedTypes.Get(ns2, nm2) is not null || TypeCategorization.IsGeneric(type))
             {
                 written = true;
@@ -167,7 +167,7 @@ internal sealed partial class ProjectionGenerator
             writer.WriteEndAbiNamespace();
         }
 
-        // Phase 4: Custom additions to namespaces (mirrors C++ main.cpp)
+        // Phase 4: Custom additions to namespaces
         foreach ((string addNs, string resName) in Additions.All)
         {
             if (addNs == ns && _settings.AdditionFilter.Includes(ns))

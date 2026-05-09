@@ -32,7 +32,7 @@ public static class ProjectionWriter
             throw new ArgumentException("Output folder must be provided.", nameof(options));
         }
 
-        // Configure global settings (mirrors C++ settings_type)
+        // Configure global settings
         Settings settings = new()
         {
             Verbose = options.Verbose,

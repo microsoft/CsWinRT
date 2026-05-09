@@ -121,7 +121,7 @@ internal static class ContractPlatforms
 }
 
 /// <summary>
-/// Static lookup for namespaces with addition files. Mirrors C++ <c>has_addition_to_type</c>.
+/// Static lookup for namespaces with addition files.
 /// </summary>
 internal static class AdditionTypes
 {

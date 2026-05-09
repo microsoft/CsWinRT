@@ -36,7 +36,7 @@ internal static class AbiInterfaceIDicFactory
 
     /// <summary>
     /// Emits explicit-interface DIM (default interface method) implementations for the IDIC
-    /// file interface. Mirrors C++ <c>write_interface_members</c>.
+    /// file interface.
     /// </summary>
     internal static void WriteInterfaceIdicImplMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -376,7 +376,6 @@ internal static class AbiInterfaceIDicFactory
                 // the getter (so the C# interface decl emits 'get; set;'), C# requires an explicit
                 // interface impl to provide both accessors. Emit a synthetic getter that delegates
                 // to the base interface where the getter actually lives. Mirrors C++
-                //.
                 if (getter is null)
                 {
                     TypeDefinition? baseIfaceWithGetter = InterfaceFactory.FindPropertyInterfaceInBases(context.Cache, type, pname);

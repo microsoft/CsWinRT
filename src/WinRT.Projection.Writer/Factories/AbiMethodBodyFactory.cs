@@ -538,7 +538,7 @@ internal static class AbiMethodBodyFactory
         }
         // After call: for non-blittable FillArray params (Span<T> where T is string/runtime
         // class/object/non-blittable struct), copy the managed delegate's writes back into the
-        // native ABI buffer. Mirrors C++ write_marshal_from_managed
+        // native ABI buffer..
         // which emits 'CopyToUnmanaged_<name>(null, __<name>, __<name>Size, (T*)<name>)'.
         // Blittable element types don't need this — the Span wraps the native buffer directly.
         for (int i = 0; i < sig.Params.Count; i++)
@@ -857,7 +857,7 @@ internal static class AbiMethodBodyFactory
 
         // Emit event member methods (returns an event source, takes thisObject + thisReference).
         // Skip events on exclusive interfaces used by their class — they're inlined directly in
-        // the RCW class. (Mirrors C++ skip_exclusive_events.)
+        // the RCW class.
         foreach (EventDefinition evt in type.Events)
         {
             if (skipExclusiveEvents) { continue; }
@@ -1422,13 +1422,12 @@ internal static class AbiMethodBodyFactory
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             writer.WriteLine($"{indent}global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe({callName}, out TypeReference __{localName});");
         }
-        // Open a SINGLE fixed-block for ALL pinnable inputs (mirrors C++ write_abi_invoke):
+        // Open a SINGLE fixed-block for ALL pinnable inputs:
         //   1. Ref params (typed ptr, separate "fixed(T* _x = &x)\n" lines, no braces)
         //   2. Complex-struct PassArrays (typed ptr, separate fixed line)
         //   3. All other "void*"-style pinnables (strings, Type[], blittable PassArrays,
         //      reference-type PassArrays via inline-pool span) merged into ONE
         //      "fixed(void* _a = ..., _b = ..., ...) {\n" block.
-        //
         // C# allows multiple chained "fixed(...)" without braces to share the next braced
         // body, which is what the C++ tool emits. This avoids the deep nesting mine had
         // when emitting a separate fixed block per PassArray.
@@ -1744,7 +1743,6 @@ internal static class AbiMethodBodyFactory
         // ABI-format buffer (_<name>) which is separate from the user's Span<T>; we need to
         // CopyToManaged_<name> to convert each ABI element back to the projected form and
         // store it in the user's Span. Mirrors C++ marshaler.write_marshal_from_abi
-        //.
         // Blittable element types (primitives and almost-blittable structs) don't need this
         // because the user's Span wraps the same memory the native side wrote to.
         for (int i = 0; i < sig.Params.Count; i++)
@@ -2052,7 +2050,7 @@ internal static class AbiMethodBodyFactory
         {
             writer.Write("        }\n        finally\n        {\n");
 
-            // Order matches truth (mirrors C++ disposer iteration order):
+            // Order matches truth:
             // 0. Complex-struct input param Dispose (e.g. ProfileUsageMarshaller.Dispose(__value))
             // 1. Non-blittable PassArray/FillArray cleanup (Dispose + ArrayPools)
             // 2. Out param frees (HString / object / runtime class)

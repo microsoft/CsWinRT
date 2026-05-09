@@ -200,7 +200,7 @@ internal static class InteropTypeNameWriter
 
     /// <summary>
     /// Returns the assembly marker (e.g. <c>&lt;#corlib&gt;</c>) for a (possibly remapped)
-    /// type/namespace. Mirrors C++ <c>write_interop_assembly_name</c>.
+    /// type/namespace.
     /// </summary>
     internal static string GetInteropAssemblyMarker(string typeNs, string typeName, MappedType? mapped, ITypeDefOrRef? type = null)
     {
@@ -243,7 +243,7 @@ internal static class InteropTypeNameWriter
             return "<#CsWinRT>";
         }
         // For any other type (e.g. user-authored components in third-party .winmd assemblies),
-        // use the actual assembly name from the type's resolution scope. Mirrors C++ which
+        // use the actual assembly name from the type's resolution scope..
         // uses the .winmd file stem (e.g. "AuthoringTest" for AuthoringTest.winmd).
         if (type is not null)
         {

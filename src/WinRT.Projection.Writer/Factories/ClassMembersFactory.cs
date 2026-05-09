@@ -78,8 +78,6 @@ internal static class ClassMembersFactory
             writer.Write($"{s.Access}{s.MethodSpec}{s.PropTypeText} {kvp.Key}");
             // For getter-only properties, emit expression body: 'public T Prop => Expr;'
             // For getter+setter or setter-only, use accessor block: 'public T Prop { get => ...; set => ...; }'
-            // (mirrors C++ which uses '%' template substitution where get-only collapses to '=> %').
-            //
             // In ref mode, all property bodies emit '=> throw null;' (mirrors C++
             // write_abi_get/set_property_static_method_call + write_unsafe_accessor_property_static_method_call,
             //, 1697).
@@ -270,11 +268,10 @@ internal static class ClassMembersFactory
             }
 
             // Emit GetInterface() / GetDefaultInterface() impl for this interface BEFORE its
-            // members (mirrors C++ write_class_interface at). For
+            // members. For
             // overridable interfaces or non-exclusive direct interfaces, emit
             // IWindowsRuntimeInterface<T>.GetInterface(). For the default interface on an
             // unsealed class with an exclusive default, emit "internal new GetDefaultInterface()".
-            //
             // The IWindowsRuntimeInterface<T> markers are NOT emitted in ref mode (gated by
             // !context.Settings.ReferenceProjection here, mirrors C++
             // '&& !settings.reference_projection' in the corresponding condition). The

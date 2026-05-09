@@ -205,7 +205,6 @@ internal static class AbiInterfaceFactory
         // type (not the interface) since the authored class IS the implementation. This is what
         // 'write_method_abi_invoke' produces because 'method.Parent()' is treated through
         // 'does_abi_interface_implement_ccw_interface' for authoring scenarios.
-        //
         // EXCEPTION: static factory interfaces ([Static] attr on the class) and activation
         // factory interfaces ([Activatable(typeof(IFooFactory))]) are implemented by the
         // generated 'ABI.Impl.<NS>.<IFooStatic>'/<IFooFactory>' types, NOT by the user runtime
@@ -259,7 +258,7 @@ internal static class AbiInterfaceFactory
         }
 
         // Build a map of event add/remove methods to their event so we can emit the table field
-        // and the proper Do_Abi_add_*/Do_Abi_remove_* bodies (mirrors C++ write_event_abi_invoke).
+        // and the proper Do_Abi_add_*/Do_Abi_remove_* bodies.
         System.Collections.Generic.Dictionary<MethodDefinition, EventDefinition>? eventMap = AbiTypeHelpers.BuildEventMethodMap(type);
 
         // Build sets of property accessors and event accessors so the first loop below can
@@ -282,7 +281,7 @@ internal static class AbiInterfaceFactory
             string mname = method.Name?.Value ?? string.Empty;
 
             // If this method is an event add accessor, emit the per-event ConditionalWeakTable
-            // before the Do_Abi method (mirrors C++ ordering).
+            // before the Do_Abi method.
             if (eventMap is not null && eventMap.TryGetValue(method, out EventDefinition? evt) && evt.AddMethod == method)
             {
                 EventTableFactory.EmitEventTableField(writer, context, evt, ifaceFullName);

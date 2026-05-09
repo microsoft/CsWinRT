@@ -21,7 +21,7 @@ internal sealed class AttributedType
 }
 
 /// <summary>
-/// Helpers for activator/static/composable factory enumeration. Mirrors C++ <c>get_attributed_types</c>.
+/// Helpers for activator/static/composable factory enumeration.
 /// </summary>
 internal static class AttributedTypes
 {

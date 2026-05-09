@@ -67,7 +67,7 @@ internal static class TypeDefinitionExtensions
     /// <summary>
     /// Returns the second positional argument (a <see cref="uint"/>) of <c>[Windows.Foundation.Metadata.ContractVersionAttribute]</c>
     /// on <paramref name="type"/>, or <see langword="null"/> if the attribute is missing or the
-    /// argument cannot be read. Mirrors C++ <c>get_contract_version</c>.
+    /// argument cannot be read.
     /// </summary>
     /// <param name="type">The type definition.</param>
     /// <returns>The contract version, or <see langword="null"/>.</returns>
@@ -88,7 +88,7 @@ internal static class TypeDefinitionExtensions
     /// <summary>
     /// Returns the first positional argument (a <see cref="uint"/>) of <c>[Windows.Foundation.Metadata.VersionAttribute]</c>
     /// on <paramref name="type"/>, or <see langword="null"/> if the attribute is missing or the
-    /// argument cannot be read. Mirrors C++ <c>get_version</c>.
+    /// argument cannot be read.
     /// </summary>
     /// <param name="type">The type definition.</param>
     /// <returns>The version, or <see langword="null"/>.</returns>
