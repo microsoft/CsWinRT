@@ -149,6 +149,6 @@ internal static class MethodFactory
     public static string FormatField(FieldDefinition field)
     {
         if (field.Constant is null) { return string.Empty; }
-        return CodeWriters.FormatConstant(field.Constant);
+        return ProjectionFileBuilder.FormatConstant(field.Constant);
     }
 }

@@ -38,7 +38,7 @@ internal static class MetadataAttributeFactory
     /// </summary>
     internal static string GetVersionString()
     {
-        System.Reflection.Assembly asm = typeof(CodeWriters).Assembly;
+        System.Reflection.Assembly asm = typeof(ProjectionFileBuilder).Assembly;
         System.Reflection.AssemblyInformationalVersionAttribute? attr =
             (System.Reflection.AssemblyInformationalVersionAttribute?)System.Attribute.GetCustomAttribute(
                 asm, typeof(System.Reflection.AssemblyInformationalVersionAttribute));

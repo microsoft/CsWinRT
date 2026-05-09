@@ -94,7 +94,7 @@ internal sealed partial class ProjectionGenerator
 
             // Write the projected type per category
             TypeCategory category = TypeCategorization.GetCategory(type);
-            CodeWriters.WriteType(writer, context, type, category);
+            ProjectionFileBuilder.WriteType(writer, context, type, category);
 
             if (category == TypeCategory.Class && !TypeCategorization.IsAttributeType(type))
             {
@@ -162,7 +162,7 @@ internal sealed partial class ProjectionGenerator
                 if (TypeCategorization.IsAttributeType(type)) { continue; }
 
                 TypeCategory category = TypeCategorization.GetCategory(type);
-                CodeWriters.WriteAbiType(writer, context, type, category);
+                ProjectionFileBuilder.WriteAbiType(writer, context, type, category);
             }
             writer.WriteEndAbiNamespace();
         }

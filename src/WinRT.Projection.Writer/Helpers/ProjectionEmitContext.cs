@@ -13,7 +13,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <remarks>
 /// <para>
 /// Replaces the implicit state previously held on <c>TypeWriter</c> (which mixed indented-text
-/// emission with WinRT-specific state) and the hidden static <c>CodeWriters._cacheRef</c>.
+/// emission with WinRT-specific state). (Replaces the static <c>_cacheRef</c> field that the 2.x design used.)
 /// </para>
 /// <para>
 /// The two emission-mode flags (<see cref="InAbiNamespace"/> and <see cref="InAbiImplNamespace"/>)

@@ -12,7 +12,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// Top-level dispatchers and emission for projected enums, structs, contracts, delegates,
 /// and attribute classes.
 /// </summary>
-internal static partial class CodeWriters
+internal static class ProjectionFileBuilder
 {
     /// <summary>Dispatches type emission based on the type category.</summary>
     public static void WriteType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeCategory category)
