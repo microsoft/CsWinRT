@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -371,8 +372,7 @@ internal static partial class CodeWriters
             // For mapped interfaces with custom members output (e.g. IClosable -> IDisposable, IMap`2
             // -> IDictionary<K,V>), emit stubs for the C# interface's required members so the class
             // satisfies its inheritance contract. The runtime's adapter actually services them.
-            string ifaceNs = ifaceType.Namespace?.Value ?? string.Empty;
-            string ifaceName = ifaceType.Name?.Value ?? string.Empty;
+            (string ifaceNs, string ifaceName) = ifaceType.Names();
             if (MappedTypes.Get(ifaceNs, ifaceName) is { HasCustomMembersOutput: true })
             {
                 if (IsMappedInterfaceRequiringStubs(ifaceNs, ifaceName))
@@ -411,8 +411,7 @@ internal static partial class CodeWriters
         // Fall back to local lookup by full name
         if (typeRef is TypeReference tr)
         {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string name = tr.Name?.Value ?? string.Empty;
+            (string ns, string name) = tr.Names();
             string fullName = string.IsNullOrEmpty(ns) ? name : ns + "." + name;
             return _cacheRef.Find(fullName);
         }
@@ -923,8 +922,7 @@ internal static partial class CodeWriters
         }
         else if (ifaceType is TypeReference tr)
         {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string name = tr.Name?.Value ?? string.Empty;
+            (string ns, string name) = tr.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
             if (mapped is not null)
             {
@@ -939,8 +937,7 @@ internal static partial class CodeWriters
         else if (ifaceType is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
         {
             ITypeDefOrRef gt = gi.GenericType;
-            string ns = gt.Namespace?.Value ?? string.Empty;
-            string name = gt.Name?.Value ?? string.Empty;
+            (string ns, string name) = gt.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
             if (mapped is not null)
             {

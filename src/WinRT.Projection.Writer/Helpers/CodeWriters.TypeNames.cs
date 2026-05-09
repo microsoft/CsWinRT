@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -26,8 +27,7 @@ internal static partial class CodeWriters
     public static void WriteTypedefName(TypeWriter w, TypeDefinition type, TypedefNameType nameType = TypedefNameType.Projected, bool forceWriteNamespace = false)
     {
         bool authoredType = w.Settings.Component && w.Settings.Filter.Includes(type);
-        string typeNamespace = type.Namespace?.Value ?? string.Empty;
-        string typeName = type.Name?.Value ?? string.Empty;
+        (string typeNamespace, string typeName) = type.Names();
 
         if (nameType == TypedefNameType.NonProjected)
         {
@@ -156,8 +156,7 @@ internal static partial class CodeWriters
                 // remapping if applicable (e.g., Windows.Foundation.IReference`1<T> -> System.Nullable<T>,
                 // Windows.Foundation.TypedEventHandler`2<S,R> -> System.EventHandler<S,R>).
                 {
-                    string ns = gir.GenericType.Namespace?.Value ?? string.Empty;
-                    string name = gir.GenericType.Name?.Value ?? string.Empty;
+                    (string ns, string name) = gir.GenericType.Names();
                     MappedType? mapped = MappedTypes.Get(ns, name);
                     if (mapped is not null)
                     {
@@ -197,8 +196,7 @@ internal static partial class CodeWriters
                 break;
             case TypeSemantics.Reference r:
                 {
-                    string ns = r.Reference_.Namespace?.Value ?? string.Empty;
-                    string name = r.Reference_.Name?.Value ?? string.Empty;
+                    (string ns, string name) = r.Reference_.Names();
                     MappedType? mapped = MappedTypes.Get(ns, name);
                     if (mapped is not null)
                     {

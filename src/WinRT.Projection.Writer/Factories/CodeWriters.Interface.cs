@@ -4,6 +4,7 @@
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -48,8 +49,7 @@ internal static partial class CodeWriters
             // 'AppointmentActionEntity : ActionEntity') — only emit 'global::' when the base
             // class lives in a different namespace (mirrors C++ write_typedef_name behavior).
             ITypeDefOrRef baseType = type.BaseType!;
-            string ns = baseType.Namespace?.Value ?? string.Empty;
-            string name = baseType.Name?.Value ?? string.Empty;
+            (string ns, string name) = baseType.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
             if (mapped is not null)
             {
@@ -128,8 +128,7 @@ internal static partial class CodeWriters
         }
         else if (ifaceType is TypeReference tr)
         {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string name = tr.Name?.Value ?? string.Empty;
+            (string ns, string name) = tr.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
             if (mapped is not null)
             {
@@ -149,8 +148,7 @@ internal static partial class CodeWriters
         else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
             ITypeDefOrRef gt = gi.GenericType;
-            string ns = gt.Namespace?.Value ?? string.Empty;
-            string name = gt.Name?.Value ?? string.Empty;
+            (string ns, string name) = gt.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
             if (mapped is not null)
             {
@@ -314,8 +312,7 @@ internal static partial class CodeWriters
         {
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
             if (attrType is null) { continue; }
-            string ns = attrType.Namespace?.Value ?? string.Empty;
-            string nm = attrType.Name?.Value ?? string.Empty;
+            (string ns, string nm) = attrType.Names();
             if (ns != "Windows.Foundation.Metadata") { continue; }
             string baseName = nm.EndsWith("Attribute", System.StringComparison.Ordinal) ? nm[..^"Attribute".Length] : nm;
             // Only the attributes the C++ tool considers projected (see code_writers.h).
@@ -420,8 +417,7 @@ internal static partial class CodeWriters
         if (ifaceRef is TypeDefinition td) { return td; }
         if (ifaceRef is TypeReference tr && _cacheRef is not null)
         {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string nm = tr.Name?.Value ?? string.Empty;
+            (string ns, string nm) = tr.Names();
             return _cacheRef.Find(ns + "." + nm);
         }
         if (ifaceRef is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)

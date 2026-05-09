@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -26,8 +27,7 @@ internal static partial class CodeWriters
         string projected;
         if (ifaceType is TypeDefinition td)
         {
-            string ns = td.Namespace?.Value ?? string.Empty;
-            string name = td.Name?.Value ?? string.Empty;
+            (string ns, string name) = td.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
             if (mapped is not null)
             {
@@ -38,8 +38,7 @@ internal static partial class CodeWriters
         }
         else if (ifaceType is TypeReference tr)
         {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string name = tr.Name?.Value ?? string.Empty;
+            (string ns, string name) = tr.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
             if (mapped is not null)
             {
@@ -78,8 +77,7 @@ internal static partial class CodeWriters
     {
         if (ifaceType is TypeDefinition td)
         {
-            string ns = td.Namespace?.Value ?? string.Empty;
-            string name = td.Name?.Value ?? string.Empty;
+            (string ns, string name) = td.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
             if (mapped is not null)
             {
@@ -92,8 +90,7 @@ internal static partial class CodeWriters
         }
         else if (ifaceType is TypeReference tr)
         {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string name = tr.Name?.Value ?? string.Empty;
+            (string ns, string name) = tr.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
             if (mapped is not null)
             {
@@ -107,8 +104,7 @@ internal static partial class CodeWriters
         else if (ifaceType is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature gi)
         {
             ITypeDefOrRef gt = gi.GenericType;
-            string ns = gt.Namespace?.Value ?? string.Empty;
-            string name = gt.Name?.Value ?? string.Empty;
+            (string ns, string name) = gt.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
             if (mapped is not null)
             {
@@ -243,8 +239,7 @@ internal static partial class CodeWriters
     /// </summary>
     public static void WriteIidReferenceExpression(TypeWriter w, TypeDefinition type)
     {
-        string ns = type.Namespace?.Value ?? string.Empty;
-        string name = type.Name?.Value ?? string.Empty;
+        (string ns, string name) = type.Names();
         string abiQualified = "global::ABI." + ns + "." + Helpers.StripBackticks(name);
         string id = EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
         w.Write("global::ABI.InterfaceIIDs.IID_");

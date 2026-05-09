@@ -5,6 +5,7 @@ using System;
 using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -105,8 +106,7 @@ internal static partial class CodeWriters
 
     private static void EncodeForTypeDef(StringBuilder sb, ITypeDefOrRef type, TypedefNameType nameType, System.Collections.Generic.IList<TypeSignature>? generic_args)
     {
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string typeName = type.Name?.Value ?? string.Empty;
+        (string typeNs, string typeName) = type.Names();
 
         bool isAbi = nameType != TypedefNameType.Projected && nameType != TypedefNameType.InteropIID;
         if (isAbi) { sb.Append("ABI."); }

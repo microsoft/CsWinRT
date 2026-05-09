@@ -5,6 +5,7 @@ using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -194,8 +195,7 @@ internal static partial class CodeWriters
                 {
                     // Resolve the reference to a TypeDefinition (cross-module struct field, etc.).
                     // Mirrors C++ for_typedef which always succeeds in resolving here.
-                    string ns = r.Reference_.Namespace?.Value ?? string.Empty;
-                    string name = r.Reference_.Name?.Value ?? string.Empty;
+                    (string ns, string name) = r.Reference_.Names();
                     TypeDefinition? resolved = null;
                     if (_cacheRef is not null)
                     {
@@ -225,8 +225,7 @@ internal static partial class CodeWriters
                     // Cross-module generic instance (e.g. Windows.Foundation.IReference<UInt64>
                     // appearing as a struct field). Resolve the generic type to a TypeDefinition
                     // so we can extract its [Guid]; recurse on each type argument.
-                    string ns = gir.GenericType.Namespace?.Value ?? string.Empty;
-                    string name = gir.GenericType.Name?.Value ?? string.Empty;
+                    (string ns, string name) = gir.GenericType.Names();
                     TypeDefinition? resolved = null;
                     if (_cacheRef is not null)
                     {
@@ -345,14 +344,12 @@ internal static partial class CodeWriters
             TypeDefinition? ifaceType = impl.Interface as TypeDefinition;
             if (ifaceType is null && impl.Interface is TypeReference tr)
             {
-                string trNs = tr.Namespace?.Value ?? string.Empty;
-                string trNm = tr.Name?.Value ?? string.Empty;
+                (string trNs, string trNm) = tr.Names();
                 ifaceType = ResolveCrossModuleType(trNs, trNm);
             }
             if (ifaceType is null) { continue; }
 
-            string ns = ifaceType.Namespace?.Value ?? string.Empty;
-            string nm = ifaceType.Name?.Value ?? string.Empty;
+            (string ns, string nm) = ifaceType.Names();
             // Skip mapped types
             if (MappedTypes.Get(ns, nm) is not null) { continue; }
             // Skip generic interfaces
@@ -392,6 +389,7 @@ internal static partial class CodeWriters
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace ABI;
 

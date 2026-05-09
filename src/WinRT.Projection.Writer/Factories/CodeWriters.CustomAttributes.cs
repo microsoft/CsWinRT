@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -273,8 +274,7 @@ internal static partial class CodeWriters
             CustomAttribute attr = member.CustomAttributes[i];
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
             if (attrType is null) { continue; }
-            string ns = attrType.Namespace?.Value ?? string.Empty;
-            string name = attrType.Name?.Value ?? string.Empty;
+            (string ns, string name) = attrType.Names();
             // Strip 'Attribute' suffix
             string strippedName = name.EndsWith("Attribute", System.StringComparison.Ordinal)
                 ? name.Substring(0, name.Length - "Attribute".Length)

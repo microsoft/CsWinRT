@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -38,8 +39,7 @@ internal static class AttributedTypes
             CustomAttribute attr = type.CustomAttributes[i];
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
             if (attrType is null) { continue; }
-            string ns = attrType.Namespace?.Value ?? string.Empty;
-            string name = attrType.Name?.Value ?? string.Empty;
+            (string ns, string name) = attrType.Names();
             if (ns != "Windows.Foundation.Metadata") { continue; }
 
             AttributedType info = new();

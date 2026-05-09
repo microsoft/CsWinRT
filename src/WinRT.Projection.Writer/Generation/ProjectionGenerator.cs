@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -86,8 +87,7 @@ internal sealed class ProjectionGenerator
                     // 'Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs' maps to
                     // 'System.Collections.Specialized.NotifyCollectionChangedEventArgs' with
                     // EmitAbi=false). Their factory/statics interfaces should also be skipped.
-                    string clsNs = type.Namespace?.Value ?? string.Empty;
-                    string clsNm = type.Name?.Value ?? string.Empty;
+                    (string clsNs, string clsNm) = type.Names();
                     MappedType? clsMapped = MappedTypes.Get(clsNs, clsNm);
                     if (clsMapped is not null && !clsMapped.EmitAbi) { continue; }
                     foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, _cache))
@@ -113,8 +113,7 @@ internal sealed class ProjectionGenerator
                     bool isFactoryInterface = factoryInterfacesGlobal.Contains(type);
                     if (!_settings.Filter.Includes(type) && !isFactoryInterface) { continue; }
                     if (TypeCategorization.IsGeneric(type)) { continue; }
-                    string ns2 = type.Namespace?.Value ?? string.Empty;
-                    string nm2 = type.Name?.Value ?? string.Empty;
+                    (string ns2, string nm2) = type.Names();
                     MappedType? m = MappedTypes.Get(ns2, nm2);
                     if (m is not null && !m.EmitAbi) { continue; }
                     iidWritten = true;
@@ -215,8 +214,7 @@ internal sealed class ProjectionGenerator
             {
                 if (!_settings.Filter.Includes(type)) { continue; }
                 if (TypeCategorization.IsGeneric(type)) { continue; }
-                string ns2 = type.Namespace?.Value ?? string.Empty;
-                string nm2 = type.Name?.Value ?? string.Empty;
+                (string ns2, string nm2) = type.Names();
                 MappedType? m = MappedTypes.Get(ns2, nm2);
                 if (m is not null && !m.EmitAbi) { continue; }
 
@@ -266,8 +264,7 @@ internal sealed class ProjectionGenerator
         foreach (TypeDefinition type in members.Types)
         {
             if (!_settings.Filter.Includes(type)) { continue; }
-            string ns2 = type.Namespace?.Value ?? string.Empty;
-            string nm2 = type.Name?.Value ?? string.Empty;
+            (string ns2, string nm2) = type.Names();
             // Skip generic types and mapped types (mirrors C++ logic)
             if (MappedTypes.Get(ns2, nm2) is not null || TypeCategorization.IsGeneric(type))
             {
@@ -339,8 +336,7 @@ internal sealed class ProjectionGenerator
                 bool isFactoryInterface = factoryInterfacesInThisNs.Contains(type);
                 if (!_settings.Filter.Includes(type) && !isFactoryInterface) { continue; }
                 if (TypeCategorization.IsGeneric(type)) { continue; }
-                string ns2 = type.Namespace?.Value ?? string.Empty;
-                string nm2 = type.Name?.Value ?? string.Empty;
+                (string ns2, string nm2) = type.Names();
                 MappedType? m = MappedTypes.Get(ns2, nm2);
                 if (m is not null && !m.EmitAbi) { continue; }
                 if (TypeCategorization.IsApiContractType(type)) { continue; }

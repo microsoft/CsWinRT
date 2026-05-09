@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -135,8 +136,7 @@ internal sealed class MetadataCache
 
         foreach (TypeDefinition type in module.TopLevelTypes)
         {
-            string ns = type.Namespace?.Value ?? string.Empty;
-            string name = type.Name?.Value ?? string.Empty;
+            (string ns, string name) = type.Names();
 
             // Skip the <Module> pseudo-type
             if (name == "<Module>")

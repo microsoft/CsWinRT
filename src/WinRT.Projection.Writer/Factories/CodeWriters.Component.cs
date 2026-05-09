@@ -4,6 +4,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -321,8 +322,7 @@ internal static partial class CodeWriters
             });
             foreach (TypeDefinition type in orderedTypes)
             {
-                string ns = type.Namespace?.Value ?? string.Empty;
-                string name = type.Name?.Value ?? string.Empty;
+                (string ns, string name) = type.Names();
                 w.Write("case \"");
                 w.Write(ns);
                 w.Write(".");

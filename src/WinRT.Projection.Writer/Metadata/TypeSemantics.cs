@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -78,8 +79,7 @@ internal static class TypeSemanticsFactory
         }
         if (type is TypeReference reference)
         {
-            string ns = reference.Namespace?.Value ?? string.Empty;
-            string name = reference.Name?.Value ?? string.Empty;
+            (string ns, string name) = reference.Names();
             if (ns == "System" && name == "Guid") { return new TypeSemantics.Guid_(); }
             if (ns == "System" && name == "Object") { return new TypeSemantics.Object_(); }
             if (ns == "System" && name == "Type") { return new TypeSemantics.Type_(); }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -93,8 +94,7 @@ internal static partial class CodeWriters
     public static void WriteValueTypeWinRTClassNameAttribute(TypeWriter w, TypeDefinition type)
     {
         if (w.Settings.ReferenceProjection) { return; }
-        string ns = type.Namespace?.Value ?? string.Empty;
-        string name = type.Name?.Value ?? string.Empty;
+        (string ns, string name) = type.Names();
         w.Write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<");
         w.Write(ns);
         w.Write(".");
@@ -116,8 +116,7 @@ internal static partial class CodeWriters
     public static void WriteComWrapperMarshallerAttribute(TypeWriter w, TypeDefinition type)
     {
         if (w.Settings.ReferenceProjection) { return; }
-        string ns = type.Namespace?.Value ?? string.Empty;
-        string name = type.Name?.Value ?? string.Empty;
+        (string ns, string name) = type.Names();
         w.Write("[ABI.");
         w.Write(ns);
         w.Write(".");
@@ -253,8 +252,7 @@ internal static partial class CodeWriters
         ITypeDefOrRef? defaultIface = Helpers.GetDefaultInterface(type);
         if (defaultIface is null) { return; }
 
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string typeName = type.Name?.Value ?? string.Empty;
+        (string typeNs, string typeName) = type.Names();
         string className = $"global::{typeNs}.{Helpers.StripBackticks(typeName)}";
 
         // Resolve TypeReference → TypeDefinition so WriteTypeName goes through the Definition
@@ -289,8 +287,7 @@ internal static partial class CodeWriters
     public static void AddExclusiveToInterfaceEntries(TypeWriter w, TypeDefinition type, System.Collections.Concurrent.ConcurrentBag<KeyValuePair<string, string>> entries)
     {
         if (!w.Settings.Component || w.Settings.ReferenceProjection) { return; }
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string typeName = type.Name?.Value ?? string.Empty;
+        (string typeNs, string typeName) = type.Names();
         string className = $"global::{typeNs}.{Helpers.StripBackticks(typeName)}";
 
         foreach (InterfaceImplementation impl in type.Interfaces)

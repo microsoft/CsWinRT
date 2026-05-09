@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Extensions;
 
 namespace WindowsRuntime.ProjectionWriter;
 
@@ -27,8 +28,7 @@ internal static partial class CodeWriters
         // RepeatBehavior which are self-mapped with RequiresMarshaling=false but have a
         // TimeSpan field (Windows.Foundation.TimeSpan -> System.TimeSpan with RequiresMarshaling=true).
         // Without this check, the field walk would incorrectly classify them as non-blittable.
-        string ns = type.Namespace?.Value ?? string.Empty;
-        string name = type.Name?.Value ?? string.Empty;
+        (string ns, string name) = type.Names();
         if (MappedTypes.Get(ns, name) is { } mapping)
         {
             return !mapping.RequiresMarshaling;
@@ -80,8 +80,7 @@ internal static partial class CodeWriters
             // Cross-module: try metadata cache.
             if (todr.Type is TypeReference tr && _cacheRef is not null)
             {
-                string ns = tr.Namespace?.Value ?? string.Empty;
-                string name = tr.Name?.Value ?? string.Empty;
+                (string ns, string name) = tr.Names();
                 TypeDefinition? resolved = _cacheRef.Find(ns + "." + name);
                 if (resolved is not null) { return IsTypeBlittable(resolved); }
             }
@@ -101,8 +100,7 @@ internal static partial class CodeWriters
         if (tdr.Type is TypeDefinition td) { return td; }
         if (tdr.Type is TypeReference tr && _cacheRef is not null)
         {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string name = tr.Name?.Value ?? string.Empty;
+            (string ns, string name) = tr.Names();
             return _cacheRef.Find(ns + "." + name);
         }
         return null;
@@ -135,8 +133,7 @@ internal static partial class CodeWriters
         // replace the public struct's field layout, so a per-field ABI struct can't be
         // built directly from the projected type).
         bool blittable = IsTypeBlittable(type);
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string typeNm = type.Name?.Value ?? string.Empty;
+        (string typeNs, string typeNm) = type.Names();
         bool isMappedStruct = MappedTypes.Get(typeNs, typeNm) is not null;
         if (!blittable && !isMappedStruct)
         {
@@ -307,8 +304,7 @@ internal static partial class CodeWriters
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tds) { td = tds.Type; }
         else if (sig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi) { td = gi.GenericType; }
         if (td is null) { return string.Empty; }
-        string typeNs = td.Namespace?.Value ?? string.Empty;
-        string typeName = td.Name?.Value ?? string.Empty;
+        (string typeNs, string typeName) = td.Names();
         MappedType? mapped = MappedTypes.Get(typeNs, typeName);
         return mapped is not null ? mapped.MappedNamespace : typeNs;
     }
@@ -356,8 +352,7 @@ internal static partial class CodeWriters
 
     private static void EncodeArrayElementForTypeDef(System.Text.StringBuilder sb, AsmResolver.DotNet.ITypeDefOrRef type, System.Collections.Generic.IList<AsmResolver.DotNet.Signatures.TypeSignature>? generic_args)
     {
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string typeName = type.Name?.Value ?? string.Empty;
+        (string typeNs, string typeName) = type.Names();
         // Apply mapped-type remapping (e.g. Windows.Foundation.IReference -> System.Nullable).
         MappedType? mapped = MappedTypes.Get(typeNs, typeName);
         if (mapped is not null)
@@ -793,15 +788,13 @@ internal static partial class CodeWriters
             if (gen is TypeDefinition gtd) { return gtd; }
             if (gen is TypeReference gtr && _cacheRef is not null)
             {
-                string ns = gtr.Namespace?.Value ?? string.Empty;
-                string nm = gtr.Name?.Value ?? string.Empty;
+                (string ns, string nm) = gtr.Names();
                 return _cacheRef.Find(ns + "." + nm);
             }
         }
         if (ifaceRef is TypeReference tr && _cacheRef is not null)
         {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string nm = tr.Name?.Value ?? string.Empty;
+            (string ns, string nm) = tr.Names();
             return _cacheRef.Find(ns + "." + nm);
         }
         return null;
@@ -2348,8 +2341,7 @@ internal static partial class CodeWriters
             TypeDefinition? required = ResolveInterfaceTypeDef(impl.Interface);
             if (required is null) { continue; }
             if (!visited.Add(required)) { continue; }
-            string rNs = required.Namespace?.Value ?? string.Empty;
-            string rName = required.Name?.Value ?? string.Empty;
+            (string rNs, string rName) = required.Names();
             MappedType? mapped = MappedTypes.Get(rNs, rName);
             if (mapped is not null && mapped.HasCustomMembersOutput)
             {
@@ -2832,8 +2824,7 @@ internal static partial class CodeWriters
             w.Write("(null)");
             return;
         }
-        string ns = type.Namespace?.Value ?? string.Empty;
-        string nm = type.Name?.Value ?? string.Empty;
+        (string ns, string nm) = type.Names();
         if (MappedTypes.Get(ns, nm) is { } m && m.MappedName == "IStringable")
         {
             w.Write("global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable");
@@ -2878,8 +2869,7 @@ internal static partial class CodeWriters
         // the per-field ConvertToUnmanaged/ConvertToManaged because the projected struct's
         // public fields don't match the WinMD field layout. The truth marshaller for these
         // contains only BoxToUnmanaged/UnboxToManaged.
-        string typeNs = type.Namespace?.Value ?? string.Empty;
-        string typeNm = type.Name?.Value ?? string.Empty;
+        (string typeNs, string typeNm) = type.Names();
         bool isMappedStruct = isComplexStruct && MappedTypes.Get(typeNs, typeNm) is not null;
         if (isMappedStruct) { isComplexStruct = false; }
 
@@ -3692,8 +3682,7 @@ internal static partial class CodeWriters
     private static int GetClassHierarchyIndex(TypeDefinition classType)
     {
         if (classType.BaseType is null) { return 0; }
-        string ns = classType.BaseType.Namespace?.Value ?? string.Empty;
-        string nm = classType.BaseType.Name?.Value ?? string.Empty;
+        (string ns, string nm) = classType.BaseType.Names();
         if (ns == "System" && nm == "Object") { return 0; }
         TypeDefinition? baseDef = classType.BaseType as TypeDefinition;
         if (baseDef is null && _cacheRef is not null)
@@ -5532,8 +5521,7 @@ internal static partial class CodeWriters
         AsmResolver.DotNet.ITypeDefOrRef? td = null;
         if (sig is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tds) { td = tds.Type; }
         if (td is null) { return false; }
-        string ns = td.Namespace?.Value ?? string.Empty;
-        string name = td.Name?.Value ?? string.Empty;
+        (string ns, string name) = td.Names();
         // The set of mapped types that use the 'value-type marshaller' pattern (DateTime, TimeSpan, HResult).
         // Uri is also a mapped marshalling type but it's a reference type (handled via UriMarshaller separately).
         if (ns == "Windows.Foundation")
@@ -5577,8 +5565,7 @@ internal static partial class CodeWriters
         }
         if (td.Type is TypeReference tr && _cacheRef is not null)
         {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string name = tr.Name?.Value ?? string.Empty;
+            (string ns, string name) = tr.Names();
             TypeDefinition? resolved = _cacheRef.Find(ns + "." + name);
             return resolved is not null && TypeCategorization.GetCategory(resolved) == TypeCategory.Enum;
         }
@@ -5852,8 +5839,7 @@ internal static partial class CodeWriters
             // Cross-module enum: try to resolve via the metadata cache.
             if (td.Type is TypeReference tr && _cacheRef is not null)
             {
-                string ns = tr.Namespace?.Value ?? string.Empty;
-                string name = tr.Name?.Value ?? string.Empty;
+                (string ns, string name) = tr.Names();
                 TypeDefinition? resolved = _cacheRef.Find(ns + "." + name);
                 if (resolved is not null && TypeCategorization.GetCategory(resolved) == TypeCategory.Enum)
                 {
@@ -5877,8 +5863,7 @@ internal static partial class CodeWriters
         TypeDefinition? def = td.Type as TypeDefinition;
         if (def is null && _cacheRef is not null && td.Type is TypeReference tr)
         {
-            string ns = tr.Namespace?.Value ?? string.Empty;
-            string name = tr.Name?.Value ?? string.Empty;
+            (string ns, string name) = tr.Names();
             if (ns == "System" && name == "Guid") { return false; }
             def = _cacheRef.Find(ns + "." + name);
         }
@@ -5913,8 +5898,7 @@ internal static partial class CodeWriters
         TypeDefinition? def = td.Type as TypeDefinition;
         if (def is null && _cacheRef is not null && td.Type is TypeReference trEarly)
         {
-            string ns = trEarly.Namespace?.Value ?? string.Empty;
-            string name = trEarly.Name?.Value ?? string.Empty;
+            (string ns, string name) = trEarly.Names();
             if (ns == "System" && name == "Guid") { return true; }
             def = _cacheRef.Find(ns + "." + name);
         }
@@ -6007,8 +5991,7 @@ internal static partial class CodeWriters
             TypeDefinition? def = td.Type as TypeDefinition;
             if (def is null && _cacheRef is not null && td.Type is TypeReference tr)
             {
-                string ns = tr.Namespace?.Value ?? string.Empty;
-                string name = tr.Name?.Value ?? string.Empty;
+                (string ns, string name) = tr.Names();
                 def = _cacheRef.Find(ns + "." + name);
             }
             if (def is not null && TypeCategorization.GetCategory(def) == TypeCategory.Enum)
@@ -6021,8 +6004,7 @@ internal static partial class CodeWriters
 
     private static string GetProjectedEnumName(TypeDefinition def)
     {
-        string ns = def.Namespace?.Value ?? string.Empty;
-        string name = def.Name?.Value ?? string.Empty;
+        (string ns, string name) = def.Names();
         // Apply mapped-type translation so consumers see the projected (.NET) enum name
         // (e.g. Windows.UI.Xaml.Interop.NotifyCollectionChangedAction →
         // System.Collections.Specialized.NotifyCollectionChangedAction). Mirrors the same
@@ -6200,8 +6182,7 @@ internal static partial class CodeWriters
                 }
                 else if (TypeCategorization.GetCategory(d.Type) is TypeCategory.Struct)
                 {
-                    string dNs = d.Type.Namespace?.Value ?? string.Empty;
-                    string dName = d.Type.Name?.Value ?? string.Empty;
+                    (string dNs, string dName) = d.Type.Names();
                     // Special case: mapped value types that require ABI marshalling
                     // (DateTime/TimeSpan -> ABI.System.DateTimeOffset/TimeSpan).
                     if (dNs == "Windows.Foundation" && dName == "DateTime")
@@ -6250,8 +6231,7 @@ internal static partial class CodeWriters
                 // for the field/parameter type after resolution.
                 if (_cacheRef is not null)
                 {
-                    string rns = r.Reference_.Namespace?.Value ?? string.Empty;
-                    string rname = r.Reference_.Name?.Value ?? string.Empty;
+                    (string rns, string rname) = r.Reference_.Names();
                     // Special case: mapped value types that require ABI marshalling.
                     if (rns == "Windows.Foundation" && rname == "DateTime")
                     {
@@ -6293,8 +6273,7 @@ internal static partial class CodeWriters
                             // Special case: HResult is mapped to System.Exception (a reference type)
                             // but its ABI representation is the global::ABI.System.Exception struct
                             // (which wraps the underlying HRESULT int).
-                            string rdNs = rd.Namespace?.Value ?? string.Empty;
-                            string rdName = rd.Name?.Value ?? string.Empty;
+                            (string rdNs, string rdName) = rd.Names();
                             if (rdNs == "Windows.Foundation" && rdName == "HResult")
                             {
                                 w.Write("global::ABI.System.Exception");
@@ -6319,8 +6298,7 @@ internal static partial class CodeWriters
                 // void* (it's a runtime class/interface/delegate).
                 if (r.IsValueType)
                 {
-                    string rns = r.Reference_.Namespace?.Value ?? string.Empty;
-                    string rname = r.Reference_.Name?.Value ?? string.Empty;
+                    (string rns, string rname) = r.Reference_.Names();
                     w.Write("global::");
                     if (!string.IsNullOrEmpty(rns)) { w.Write(rns); w.Write("."); }
                     w.Write(Helpers.StripBackticks(rname));
