@@ -46,7 +46,7 @@ internal sealed partial class ProjectionGenerator
             // Mirror the C++ tool: every emitted .cs file gets the auto-generated header.
             // See main.cpp where 'write_file_header(ws);' is called before each base string is written.
             IndentedTextWriter headerWriter = new();
-            CodeWriters.WriteFileHeader(headerWriter);
+            MetadataAttributeFactory.WriteFileHeader(headerWriter);
             string header = headerWriter.FlushToString();
 
             string outPath = Path.Combine(_settings.OutputFolder, fileName);

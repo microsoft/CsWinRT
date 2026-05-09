@@ -29,7 +29,7 @@ internal sealed partial class ProjectionGenerator
         // Phase 1: TypeMapGroup assembly attributes
         if (!_settings.ReferenceProjection)
         {
-            CodeWriters.WritePragmaDisableIL2026(writer);
+            MetadataAttributeFactory.WritePragmaDisableIL2026(writer);
             foreach (TypeDefinition type in members.Types)
             {
                 if (!_settings.Filter.Includes(type)) { continue; }
@@ -46,36 +46,36 @@ internal sealed partial class ProjectionGenerator
                         {
                             if (_settings.Component)
                             {
-                                CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
+                                MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                             }
                             else
                             {
-                                CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, false);
+                                MetadataAttributeFactory.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, false);
                             }
                         }
                         break;
                     case TypeCategory.Delegate:
-                        CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
-                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
+                        MetadataAttributeFactory.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
+                        MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         break;
                     case TypeCategory.Enum:
-                        CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
-                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
+                        MetadataAttributeFactory.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
+                        MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         break;
                     case TypeCategory.Interface:
-                        CodeWriters.WriteWinRTIdicTypeMapGroupAssemblyAttribute(writer, context, type);
-                        CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
+                        MetadataAttributeFactory.WriteWinRTIdicTypeMapGroupAssemblyAttribute(writer, context, type);
+                        MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         break;
                     case TypeCategory.Struct:
                         if (!TypeCategorization.IsApiContractType(type))
                         {
-                            CodeWriters.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
-                            CodeWriters.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
+                            MetadataAttributeFactory.WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(writer, context, type, true);
+                            MetadataAttributeFactory.WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(writer, context, type);
                         }
                         break;
                 }
             }
-            CodeWriters.WritePragmaRestoreIL2026(writer);
+            MetadataAttributeFactory.WritePragmaRestoreIL2026(writer);
         }
 
         // Phase 2: Projected types
@@ -98,8 +98,8 @@ internal sealed partial class ProjectionGenerator
 
             if (category == TypeCategory.Class && !TypeCategorization.IsAttributeType(type))
             {
-                CodeWriters.AddDefaultInterfaceEntry(context, type, defaultInterfaceEntries);
-                CodeWriters.AddExclusiveToInterfaceEntries(context, type, exclusiveToInterfaceEntries);
+                MetadataAttributeFactory.AddDefaultInterfaceEntry(context, type, defaultInterfaceEntries);
+                MetadataAttributeFactory.AddExclusiveToInterfaceEntries(context, type, exclusiveToInterfaceEntries);
                 CodeWriters.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
                 if (_settings.Component && componentActivatable.Contains(type))
                 {

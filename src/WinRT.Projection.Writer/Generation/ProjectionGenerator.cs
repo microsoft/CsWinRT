@@ -71,14 +71,14 @@ internal sealed partial class ProjectionGenerator
         {
             List<KeyValuePair<string, string>> sorted = [.. defaultInterfaceEntries];
             sorted.Sort((a, b) => System.StringComparer.Ordinal.Compare(a.Key, b.Key));
-            CodeWriters.WriteDefaultInterfacesClass(_settings, sorted);
+            MetadataAttributeFactory.WriteDefaultInterfacesClass(_settings, sorted);
         }
 
         if (!exclusiveToInterfaceEntries.IsEmpty && _settings.Component && !_settings.ReferenceProjection)
         {
             List<KeyValuePair<string, string>> sorted = [.. exclusiveToInterfaceEntries];
             sorted.Sort((a, b) => System.StringComparer.Ordinal.Compare(a.Key, b.Key));
-            CodeWriters.WriteExclusiveToInterfacesClass(_settings, sorted);
+            MetadataAttributeFactory.WriteExclusiveToInterfacesClass(_settings, sorted);
         }
 
         // Phase 6: embedded resource files (ComInteropExtensions, InspectableVftbl, etc.).

@@ -365,7 +365,7 @@ internal static partial class CodeWriters
         }
 
         writer.Write("\n");
-        WriteWinRTMetadataAttribute(writer, type, context.Cache);
+        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         WriteGuidAttribute(writer, type);
         writer.Write("\n");
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);

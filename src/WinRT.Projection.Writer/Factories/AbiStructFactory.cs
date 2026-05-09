@@ -33,14 +33,14 @@ internal static class AbiStructFactory
             // then emit [WindowsRuntimeClassName] + the struct definition with public ABI fields.
             if (context.Settings.Component)
             {
-                CodeWriters.WriteWinRTMetadataTypeNameAttribute(writer, context, type);
-                CodeWriters.WriteWinRTMappedTypeAttribute(writer, context, type);
+                MetadataAttributeFactory.WriteWinRTMetadataTypeNameAttribute(writer, context, type);
+                MetadataAttributeFactory.WriteWinRTMappedTypeAttribute(writer, context, type);
             }
             else
             {
-                CodeWriters.WriteComWrapperMarshallerAttribute(writer, context, type);
+                MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
             }
-            CodeWriters.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
+            MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
             writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
             writer.Write(" unsafe struct ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);

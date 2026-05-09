@@ -96,11 +96,11 @@ internal static partial class CodeWriters
         {
             writer.Write("\n");
         }
-        WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        WriteValueTypeWinRTClassNameAttribute(writer, context, type);
+        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
+        MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        WriteComWrapperMarshallerAttribute(writer, context, type);
-        WriteWinRTReferenceTypeAttribute(writer, context, type);
+        MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
+        MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
 
         writer.Write(accessibility);
         writer.Write(" enum ");
@@ -188,11 +188,11 @@ internal static partial class CodeWriters
         bool hasAddition = AdditionTypes.HasAdditionToType(type.Namespace?.Value ?? string.Empty, projectionName);
 
         // Header attributes
-        WriteWinRTMetadataAttribute(writer, type, context.Cache);
-        WriteValueTypeWinRTClassNameAttribute(writer, context, type);
+        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
+        MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        WriteComWrapperMarshallerAttribute(writer, context, type);
-        WriteWinRTReferenceTypeAttribute(writer, context, type);
+        MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
+        MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
         writer.Write("public");
         if (hasAddition) { writer.Write(" partial"); }
         writer.Write(" struct ");
@@ -324,9 +324,9 @@ internal static partial class CodeWriters
         MethodSig sig = new(invoke);
 
         writer.Write("\n");
-        WriteWinRTMetadataAttribute(writer, type, context.Cache);
+        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
-        WriteComWrapperMarshallerAttribute(writer, context, type);
+        MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
         if (!context.Settings.ReferenceProjection)
         {
             // GUID attribute
@@ -349,7 +349,7 @@ internal static partial class CodeWriters
     {
         string typeName = type.Name?.Value ?? string.Empty;
 
-        WriteWinRTMetadataAttribute(writer, type, context.Cache);
+        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
         writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
         writer.Write(" sealed class ");

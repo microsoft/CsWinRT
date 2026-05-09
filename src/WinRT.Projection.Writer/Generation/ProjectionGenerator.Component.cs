@@ -68,7 +68,7 @@ internal sealed partial class ProjectionGenerator
         // Keep delegating through the legacy static helper for now -- the variant on
         // IndentedTextWriter adds the full prelude (usings + pragmas) which is the wrong shape
         // for the WinRT_Module.cs / GeneratedInterfaceIIDs.cs / Resources/Base/*.cs outputs.
-        CodeWriters.WriteFileHeader(wm);
+        MetadataAttributeFactory.WriteFileHeader(wm);
         CodeWriters.WriteModuleActivationFactory(wm, componentByModule);
         wm.FlushToFile(Path.Combine(_settings.OutputFolder, "WinRT_Module.cs"));
     }

@@ -192,7 +192,7 @@ internal static partial class CodeWriters
         context.Platform = string.Empty;
         try
         {
-            WriteWinRTMetadataAttribute(writer, type, context.Cache);
+            MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
             CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
             writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
             writer.Write(" static class ");
@@ -510,9 +510,9 @@ internal static partial class CodeWriters
 
         // Header attributes
         writer.Write("\n");
-        WriteWinRTMetadataAttribute(writer, type, context.Cache);
+        MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        WriteComWrapperMarshallerAttribute(writer, context, type);
+        MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
         writer.Write(context.Settings.Internal ? "internal" : "public");
         writer.Write(" ");
         WriteClassModifiers(writer, type);

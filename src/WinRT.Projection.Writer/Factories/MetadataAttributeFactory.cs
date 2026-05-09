@@ -12,7 +12,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// Helper writers for assembly attributes, metadata attributes, and other infrastructure.
 /// Mirrors various functions in <c>code_writers.h</c>.
 /// </summary>
-internal static partial class CodeWriters
+internal static class MetadataAttributeFactory
 {
     /// <summary>Writes <c>#pragma warning disable IL2026</c>.</summary>
     /// <param name="writer">The writer to emit to.</param>
