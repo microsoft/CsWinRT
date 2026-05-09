@@ -12,13 +12,11 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static partial class CodeWriters
 {
-    /// <summary>Mirrors C++ <c>write_projected_signature</c>.</summary>
     public static void WriteProjectedSignature(TypeWriter w, TypeSignature typeSig, bool isParameter)
     {
         // Detect SZ-array
         if (typeSig is SzArrayTypeSignature sz)
         {
-            // Mirrors C++ write_projected_signature (code_writers.h:822-834): for parameters,
             // SZ arrays project as ReadOnlySpan<T> (matches the property setter parameter
             // convention; pass_array semantics).
             if (isParameter)
@@ -41,8 +39,6 @@ internal static partial class CodeWriters
         }
         WriteProjectionType(w, TypeSemanticsFactory.Get(typeSig));
     }
-
-    /// <summary>Mirrors C++ <c>write_projection_parameter_type</c>.</summary>
     public static void WriteProjectionParameterType(TypeWriter w, ParamInfo p)
     {
         ParamCategory cat = ParamHelpers.GetParamCategory(p);
@@ -87,23 +83,17 @@ internal static partial class CodeWriters
                 break;
         }
     }
-
-    /// <summary>Mirrors C++ <c>write_parameter_name</c>.</summary>
     public static void WriteParameterName(TypeWriter w, ParamInfo p)
     {
         string name = p.Parameter.Name ?? "param";
         IdentifierEscaping.WriteEscapedIdentifier(w, name);
     }
-
-    /// <summary>Mirrors C++ <c>write_projection_parameter</c>.</summary>
     public static void WriteProjectionParameter(TypeWriter w, ParamInfo p)
     {
         WriteProjectionParameterType(w, p);
         w.Write(" ");
         WriteParameterName(w, p);
     }
-
-    /// <summary>Mirrors C++ <c>write_projection_return_type</c>.</summary>
     public static void WriteProjectionReturnType(TypeWriter w, MethodSig sig)
     {
         TypeSignature? rt = sig.ReturnType;

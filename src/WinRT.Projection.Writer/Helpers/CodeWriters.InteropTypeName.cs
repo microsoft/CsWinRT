@@ -206,7 +206,6 @@ internal static partial class CodeWriters
     {
         if (mapped is not null)
         {
-            // Mirrors C++ helpers.h:693-725 + code_writers.h:441-466. The mapped namespace
             // determines the marker.
             if (typeNs.StartsWith("System", StringComparison.Ordinal))
             {
@@ -227,7 +226,6 @@ internal static partial class CodeWriters
             }
             if (typeNs.StartsWith("Windows", StringComparison.Ordinal))
             {
-                // Mirror C++ code_writers.h:464 which writes "<#%Windows>" — the '%' is an
                 // unintended template placeholder in C++ that's unreachable in practice (no
                 // standard mapped type maps to a Windows.* namespace with EmitAbi=true). We
                 // emit the corrected '<#Windows>' so any future addition that hits this

@@ -22,7 +22,6 @@ internal static partial class CodeWriters
         TypeCategory cat = TypeCategorization.GetCategory(type);
         if (cat == TypeCategory.Enum) { return true; }
         if (cat != TypeCategory.Struct) { return false; }
-        // Mirrors C++ is_type_blittable (code_writers.h:81-124, struct_type branch): if the
         // struct itself has a mapped-type entry, return based on its RequiresMarshaling flag
         // BEFORE walking fields. This is critical for XAML structs like Duration / KeyTime /
         // RepeatBehavior which are self-mapped with RequiresMarshaling=false but have a
@@ -46,7 +45,6 @@ internal static partial class CodeWriters
     {
         if (sig is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib)
         {
-            // Mirror C++ is_type_blittable for fundamental_type:
             //   return (type != fundamental_type::String);
             // i.e. ALL fundamentals (including Boolean, Char) are considered blittable here;
             // only String is non-blittable. Object isn't a fundamental in C++; handled below.
@@ -105,8 +103,6 @@ internal static partial class CodeWriters
         }
         return null;
     }
-
-    /// <summary>Mirrors C++ <c>write_abi_enum</c>.</summary>
     public static void WriteAbiEnum(TypeWriter w, TypeDefinition type)
     {
         // The C++ version emits: write_struct_and_enum_marshaller_class, write_interface_entries_impl,
@@ -122,8 +118,6 @@ internal static partial class CodeWriters
             WriteAuthoringMetadataType(w, type);
         }
     }
-
-    /// <summary>Mirrors C++ <c>write_abi_struct</c>.</summary>
     public static void WriteAbiStruct(TypeWriter w, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
@@ -137,7 +131,6 @@ internal static partial class CodeWriters
         bool isMappedStruct = MappedTypes.Get(typeNs, typeNm) is not null;
         if (!blittable && !isMappedStruct)
         {
-            // Mirror C++ write_abi_struct: in component mode emit metadata typename + mapped
             // type attribute; otherwise emit the ComWrappers attribute. Both branches then
             // emit [WindowsRuntimeClassName] + the struct definition with public ABI fields.
             if (w.Settings.Component)
@@ -175,7 +168,6 @@ internal static partial class CodeWriters
                          && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
                          && !IsTypeBlittable(fieldTd))
                 {
-                    // Mirror C++ write_abi_type: non-blittable struct field uses ABI typedef name.
                     WriteTypedefName(w, fieldTd, TypedefNameType.ABI, false);
                 }
                 else
@@ -199,8 +191,6 @@ internal static partial class CodeWriters
         WriteStructEnumMarshallerClass(w, type);
         WriteReferenceImpl(w, type);
     }
-
-    /// <summary>Mirrors C++ <c>write_abi_delegate</c>.</summary>
     public static void WriteAbiDelegate(TypeWriter w, TypeDefinition type)
     {
         // Mirror the C++ tool's ordering exactly:
@@ -382,8 +372,6 @@ internal static partial class CodeWriters
             sb.Append('>');
         }
     }
-
-    /// <summary>Mirrors C++ <c>write_delegate_vtbl</c>.</summary>
     private static void WriteDelegateVftbl(TypeWriter w, TypeDefinition type)
     {
         if (type.GenericParameters.Count > 0) { return; }
@@ -405,8 +393,6 @@ internal static partial class CodeWriters
         w.Write(", int> Invoke;\n");
         w.Write("}\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_native_delegate</c>.</summary>
     private static void WriteNativeDelegate(TypeWriter w, TypeDefinition type)
     {
         if (type.GenericParameters.Count > 0) { return; }
@@ -437,8 +423,6 @@ internal static partial class CodeWriters
 
         w.Write("}\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_delegates_interface_entries_impl</c>.</summary>
     private static void WriteDelegateInterfaceEntriesImpl(TypeWriter w, TypeDefinition type)
     {
         if (type.GenericParameters.Count > 0) { return; }
@@ -483,8 +467,6 @@ internal static partial class CodeWriters
         w.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
         w.Write("    }\n}\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_temp_delegate_event_source_subclass</c>.</summary>
     public static void WriteTempDelegateEventSourceSubclass(TypeWriter w, TypeDefinition type)
     {
         // Skip generic delegates: only non-generic delegates get a per-delegate EventSource subclass.
@@ -558,17 +540,13 @@ internal static partial class CodeWriters
         w.Write(");\n");
         w.Write("        }\n    }\n}\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_abi_class</c>.</summary>
     public static void WriteAbiClass(TypeWriter w, TypeDefinition type)
     {
         // Static classes don't get a *Marshaller (no instances).
         if (TypeCategorization.IsStatic(type)) { return; }
-        // Mirror C++ write_abi_class: wrap class marshaller emission in #nullable enable/disable.
         w.Write("#nullable enable\n");
         if (w.Settings.Component)
         {
-            // Mirror C++ write_component_class_marshaller + write_authoring_metadata_type.
             WriteComponentClassMarshaller(w, type);
             WriteAuthoringMetadataType(w, type);
         }
@@ -591,8 +569,6 @@ internal static partial class CodeWriters
         string projectedType = $"global::{typeNs}.{nameStripped}";
 
         ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
-
-        // Mirror C++ write_component_class_marshaller: if the default interface is a generic
         // instantiation (e.g. IDictionary<K,V>), emit an UnsafeAccessor extern declaration
         // inside ConvertToUnmanaged that fetches the IID via WinRT.Interop's InterfaceIIDs class
         // (since the IID for a generic instantiation is computed at runtime). The IID expression
@@ -702,8 +678,6 @@ internal static partial class CodeWriters
         w.Write(nameStripped);
         w.Write(" {}\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_abi_interface</c>.</summary>
     public static void WriteAbiInterface(TypeWriter w, TypeDefinition type)
     {
         // Generic interfaces are handled by interopgen
@@ -720,14 +694,11 @@ internal static partial class CodeWriters
         WriteInterfaceIdicImpl(w, type);
         WriteInterfaceMarshaller(w, type);
     }
-
-    /// <summary>Mirrors C++ <c>emit_impl_type</c>.</summary>
     public static bool EmitImplType(TypeWriter w, TypeDefinition type)
     {
         if (w.Settings.Component) { return true; }
         if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
         {
-            // Mirror C++ emit_impl_type: only emit Impl for exclusive-to interfaces if at least
             // one interface impl on the exclusive_to class is marked [Overridable] and matches
             // this interface. Otherwise the Impl wouldn't be reachable as a CCW.
             TypeDefinition? exclusiveToType = GetExclusiveToType(type);
@@ -746,7 +717,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Returns the parent class for an interface marked <c>[ExclusiveToAttribute(typeof(T))]</c>.
-    /// Mirrors C++ <c>get_exclusive_to_type</c>.
     /// </summary>
     internal static TypeDefinition? GetExclusiveToType(TypeDefinition iface)
     {
@@ -799,8 +769,6 @@ internal static partial class CodeWriters
         }
         return null;
     }
-
-    /// <summary>Mirrors C++ <c>get_vmethod_name</c>.</summary>
     public static string GetVMethodName(TypeDefinition type, MethodDefinition method)
     {
         // Index of method in the type's method list
@@ -812,8 +780,6 @@ internal static partial class CodeWriters
         }
         return (method.Name?.Value ?? string.Empty) + "_" + index.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
-
-    /// <summary>Mirrors C++ <c>write_abi_parameter_types_pointer</c>.</summary>
     public static void WriteAbiParameterTypesPointer(TypeWriter w, MethodSig sig)
     {
         WriteAbiParameterTypesPointer(w, sig, includeParamNames: false);
@@ -836,7 +802,7 @@ internal static partial class CodeWriters
             if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
             {
                 // length pointer + value pointer. Mirrors C++ write_abi_signature for SzArray
-                // input params (code_writers.h:1305) which always emits "uint __%Size, void* %"
+                // input params which always emits "uint __%Size, void* %"
                 // regardless of element type.
                 if (includeParamNames)
                 {
@@ -961,11 +927,8 @@ internal static partial class CodeWriters
     /// <summary>Returns '__&lt;returnName&gt;Size' (matches C++ '__%Size' convention) — by default '____return_value__Size' for the standard '__return_value__' return param.</summary>
     internal static string GetReturnSizeParamName(MethodSig sig)
     {
-        // Mirrors C++ 'write_abi_parameter_types_pointer' which writes '__%Size' over the return param name.
         return "__" + GetReturnParamName(sig) + "Size";
     }
-
-    /// <summary>Mirrors C++ <c>write_interface_vftbl</c>.</summary>
     public static void WriteInterfaceVftbl(TypeWriter w, TypeDefinition type)
     {
         if (!EmitImplType(w, type)) { return; }
@@ -1099,7 +1062,7 @@ internal static partial class CodeWriters
         // Build sets of property accessors and event accessors so the first loop below can
         // iterate "regular" methods (non-property, non-event) only. C++ emits Do_Abi bodies in
         // this order: methods first, then properties (setter before getter per write_property_abi_invoke
-        // at code_writers.h:8245), then events. Mine previously emitted them in pure metadata
+        // at), then events. Mine previously emitted them in pure metadata
         // (slot) order which matched neither truth nor C++.
         System.Collections.Generic.HashSet<MethodDefinition> propertyAccessors = new();
         foreach (PropertyDefinition prop in type.Properties)
@@ -1356,8 +1319,6 @@ internal static partial class CodeWriters
         // 'abi_marshaler::get_marshaler_local()' which prefixes '__' to the param name.
         // For the default '__return_value__' param this becomes '____return_value__'.
         string retLocalName = "__" + retParamName;
-
-        // Mirror C++ ordering: emit any [UnsafeAccessor] static local function declarations
         // at the TOP of the method body (before local declarations and the try block). The
         // actual call sites later in the body just reference the already-declared accessor.
         // For a generic-instance return type, the accessor is named ConvertToUnmanaged_<retParamName>.
@@ -1399,8 +1360,6 @@ internal static partial class CodeWriters
             w.Write(projectedTypeName);
             w.Write(" value);\n\n");
         }
-
-        // Mirror C++ ordering: hoist [UnsafeAccessor] declarations for ReceiveArray (out T[])
         // ConvertToUnmanaged_<param> and the return-array ConvertToUnmanaged_<retParam> to the
         // top of the method body, before locals and the try block. The actual call sites later
         // in the body reference these already-declared accessors.
@@ -1455,8 +1414,6 @@ internal static partial class CodeWriters
             w.Write(elementAbi);
             w.Write("* data);\n\n");
         }
-
-        // Mirror C++ ordering: declare the return local first with default value, then zero
         // the OUT pointer(s). The actual assignment happens inside the try block.
         if (rt is not null)
         {
@@ -1633,7 +1590,7 @@ internal static partial class CodeWriters
         // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
         // delegate sees. For FillArray params, the buffer is fresh storage the user delegate
         // fills — the post-call writeback loop handles that. (Mirrors C++ which only emits the
-        // pre-call CopyToManaged for PassArray, see code_writers.h:7772 write_copy_to_managed.)
+        // pre-call CopyToManaged for PassArray, see write_copy_to_managed.)
         for (int i = 0; i < sig.Params.Count; i++)
         {
             ParamInfo p = sig.Params[i];
@@ -1940,7 +1897,7 @@ internal static partial class CodeWriters
             // Non-blittable struct (e.g. authored BasicStruct with string fields): marshal
             // the local managed value through <Type>Marshaller.ConvertToUnmanaged before
             // writing it into the *out ABI struct slot. Mirrors C++ marshaler.write_marshal_from_managed
-            // (code_writers.h:7901-7910): "Marshaller.ConvertToUnmanaged(local)".
+            //: "Marshaller.ConvertToUnmanaged(local)".
             else if (IsComplexStruct(underlying))
             {
                 w.Write(GetMarshallerFullName(w, underlying));
@@ -1976,7 +1933,7 @@ internal static partial class CodeWriters
         }
         // After call: for non-blittable FillArray params (Span<T> where T is string/runtime
         // class/object/non-blittable struct), copy the managed delegate's writes back into the
-        // native ABI buffer. Mirrors C++ write_marshal_from_managed (code_writers.h:7852-7869)
+        // native ABI buffer. Mirrors C++ write_marshal_from_managed
         // which emits 'CopyToUnmanaged_<name>(null, __<name>, __<name>Size, (T*)<name>)'.
         // Blittable element types don't need this — the Span wraps the native buffer directly.
         for (int i = 0; i < sig.Params.Count; i++)
@@ -2295,8 +2252,6 @@ internal static partial class CodeWriters
             w.Write(pname);
         }
     }
-
-    /// <summary>Mirrors C++ <c>write_interface_idic_impl</c>.</summary>
     public static void WriteInterfaceIdicImpl(TypeWriter w, TypeDefinition type)
     {
         if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.IdicExclusiveTo) { return; }
@@ -2328,7 +2283,6 @@ internal static partial class CodeWriters
         WriteInterfaceIdicImplMembersForInterface(w, type, visited);
 
         // Also walk required (inherited) interfaces and emit members for each one.
-        // Mirrors C++ write_required_interface_members_for_abi_type.
         WriteInterfaceIdicImplMembersForRequiredInterfaces(w, type, visited);
     }
 
@@ -2720,7 +2674,7 @@ internal static partial class CodeWriters
                 // the getter (so the C# interface decl emits 'get; set;'), C# requires an explicit
                 // interface impl to provide both accessors. Emit a synthetic getter that delegates
                 // to the base interface where the getter actually lives. Mirrors C++
-                // code_writers.h:7052-7062.
+                //.
                 if (getter is null)
                 {
                     TypeDefinition? baseIfaceWithGetter = FindPropertyInterfaceInBases(type, pname);
@@ -2748,7 +2702,6 @@ internal static partial class CodeWriters
 
         // Events: emit explicit interface event implementations on the IDIC interface that
         // dispatch through the static ABI Methods class's event accessor (returns an EventSource).
-        // Mirrors C++ write_interface_members event handling (calls EventName(thisRef, _obj).Subscribe/Unsubscribe).
         foreach (EventDefinition evt in type.Events)
         {
             string evtName = evt.Name?.Value ?? string.Empty;
@@ -2780,8 +2733,6 @@ internal static partial class CodeWriters
             w.Write("}\n");
         }
     }
-
-    /// <summary>Mirrors C++ <c>write_interface_marshaller</c>.</summary>
     public static void WriteInterfaceMarshaller(TypeWriter w, TypeDefinition type)
     {
         if (TypeCategorization.IsExclusiveTo(type)) { return; }
@@ -2950,7 +2901,6 @@ internal static partial class CodeWriters
             WriteTypedefName(w, type, TypedefNameType.Projected, true);
             w.Write(" ConvertToManaged(");
             WriteTypedefName(w, type, TypedefNameType.ABI, false);
-            // Mirror C++ write_convert_to_managed_method_struct (code_writers.h:4536-4540):
             // - In component mode: emit object initializer with named field assignments
             //   (positional ctor not always available on authored types).
             // - In non-component mode: emit positional constructor (matches the auto-generated
@@ -3047,7 +2997,7 @@ internal static partial class CodeWriters
                 {
                     // Mapped value types (DateTime/TimeSpan) have no per-value resources to
                     // release — the ABI representation is just an int64. Mirror C++
-                    // set_skip_disposer_if_needed (code_writers.h:6431-6440) which explicitly
+                    // set_skip_disposer_if_needed which explicitly
                     // skips the disposer for global::ABI.System.{DateTimeOffset,TimeSpan,Exception}.
                     continue;
                 }
@@ -3175,8 +3125,6 @@ internal static partial class CodeWriters
             w.Write("        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;\n");
             w.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
             w.Write("    }\n}\n\n");
-
-            // Mirror C++ write_abi_struct: in component mode the ComWrappers marshaller attribute
             // is NOT emitted for STRUCTS (the attribute is supplied by cswinrtgen instead). Enums
             // and other types still emit it from write_abi_enum/etc.
             if (w.Settings.Component && cat == TypeCategory.Struct) { return; }
@@ -3264,7 +3212,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Emits the <c>&lt;Name&gt;ComWrappersCallback</c> file-scoped class for a delegate.
-    /// Mirrors C++ <c>write_delegate_comwrappers_callback</c>. Generic delegates are not emitted
     /// here at all — the higher-level dispatch in <c>ProjectionGenerator</c> filters out generic
     /// types from ABI emission (mirrors C++ <c>main.cpp:412</c>:
     /// <c>if (distance(type.GenericParam()) != 0) { continue; }</c>). Open generic delegates
@@ -3380,7 +3327,6 @@ internal static partial class CodeWriters
     /// * file-scoped *ComWrappersMarshallerAttribute (CreateObject implementation)
     /// * file-scoped *ComWrappersCallback (IWindowsRuntimeObjectComWrappersCallback for sealed,
     ///   IWindowsRuntimeUnsealedObjectComWrappersCallback for unsealed)
-    /// Mirrors C++ <c>write_class_marshaller</c>, <c>write_class_comwrappers_marshaller_attribute</c>,
     /// and <c>write_class_comwrappers_callback</c>.
     /// </summary>
     private static void WriteClassMarshallerStub(TypeWriter w, TypeDefinition type)
@@ -3541,7 +3487,6 @@ internal static partial class CodeWriters
     /// <summary>
     /// Emits the [UnsafeAccessor] declaration for the default interface IID inside a file-scoped
     /// ComWrappers class. Only emits if the default interface is a generic instantiation.
-    /// Mirrors C++ <c>write_class_comwrappers_marshaller_attribute</c> / <c>write_class_comwrappers_callback</c>
     /// behavior of inserting <c>write_unsafe_accessor_for_iid</c> at the top of the class body.
     /// </summary>
     private static void EmitUnsafeAccessorForDefaultIfaceIfGeneric(TypeWriter w, ITypeDefOrRef? defaultIface)
@@ -3554,7 +3499,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Writes a minimal interface 'Methods' static class with method body emission.
-    /// Mirrors C++ <c>write_static_abi_methods</c>: void/no-args methods and
     /// blittable-primitive-return/no-args methods get real implementations; everything else
     /// remains as 'throw null!' stubs (deferred — needs full per-parameter marshalling).
     /// </summary>
@@ -3562,7 +3506,6 @@ internal static partial class CodeWriters
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
-        // Mirrors C++ write_static_abi_classes: visibility is internal if the interface is
         // exclusive to a class (and not opted into PublicExclusiveTo) or if it's marked
         // [ProjectionInternal]; public otherwise.
         bool useInternal = (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
@@ -3570,7 +3513,7 @@ internal static partial class CodeWriters
 
         // Fast ABI: if this interface is a non-default exclusive-to interface of a fast-abi
         // class, skip emitting it entirely — its members are merged into the default
-        // interface's Methods class. Mirrors C++ code_writers.h:9082-9089
+        // interface's Methods class. Mirrors C++
         // (write_static_abi_classes early return on contains_other_interface(iface)).
         if (IsFastAbiOtherInterface(type)) { return; }
 
@@ -3587,8 +3530,6 @@ internal static partial class CodeWriters
                 return;
             }
         }
-
-        // Mirrors C++ skip_exclusive_events: events on exclusive interfaces (used by the class)
         // are inlined in the RCW class, so we skip emitting them in the Methods type.
         bool skipExclusiveEvents = false;
         if (TypeCategorization.IsExclusiveTo(type) && !w.Settings.PublicExclusiveTo)
@@ -3611,7 +3552,7 @@ internal static partial class CodeWriters
         // Fast ABI: if this interface is the default interface of a fast-abi class, the
         // generated Methods class must include the merged members of the default interface
         // PLUS each [ExclusiveTo] non-default interface in vtable order, with progressively
-        // increasing slot indices. Mirrors C++ code_writers.h:9113-9128.
+        // increasing slot indices. Mirrors C++.
         // For non-fast-abi interfaces, the segment list is just [(type, INSPECTABLE_METHOD_COUNT, skipExclusiveEvents)].
         const int InspectableMethodCount = 6;
         var segments = new List<(TypeDefinition Iface, int StartSlot, bool SkipEvents)>();
@@ -3709,7 +3650,6 @@ internal static partial class CodeWriters
     private static void EmitMethodsClassMembersFor(TypeWriter w, TypeDefinition type, int startSlot, bool skipExclusiveEvents)
     {
         // Build a map from each MethodDefinition to its WinMD vtable slot.
-        // Mirrors C++ get_vmethod_index: slot = (method.index() - vtable_base) + start_slot.
         // In AsmResolver, type.Methods is iterated in MethodDef row order, so the position of each
         // method in type.Methods (relative to the first method of the type) gives us the same value.
         Dictionary<MethodDefinition, int> methodSlot = new();
@@ -3750,7 +3690,6 @@ internal static partial class CodeWriters
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
             string propType = WritePropType(w, prop);
             (MethodDefinition? gMethod, MethodDefinition? sMethod) = (getter, setter);
-            // Mirrors C++ helpers.h:46-49: the [NoException] check on properties applies to BOTH
             // accessors of the property (the attribute is on the property itself, not on the
             // individual accessors).
             bool propIsNoExcept = prop.IsNoExcept();
@@ -3772,7 +3711,6 @@ internal static partial class CodeWriters
                 w.Write("    public static unsafe void ");
                 w.Write(pname);
                 w.Write("(WindowsRuntimeObjectReference thisReference, ");
-                // Mirrors C++ code_writers.h:7193 — setter parameter uses the is_set_property=true
                 // form of write_prop_type, which for SZ array types emits ReadOnlySpan<T> instead
                 // of T[] (the getter's return-type form).
                 w.Write(WritePropType(w, prop, isSetProperty: true));
@@ -4693,7 +4631,6 @@ internal static partial class CodeWriters
         }
 
         w.Write(callIndent);
-        // Mirrors C++ code_writers.h:6725 - omit the ThrowExceptionForHR wrap when the
         // method/property is [NoException] (its HRESULT is contractually S_OK).
         if (!isNoExcept)
         {
@@ -4818,7 +4755,7 @@ internal static partial class CodeWriters
         // ABI-format buffer (_<name>) which is separate from the user's Span<T>; we need to
         // CopyToManaged_<name> to convert each ABI element back to the projected form and
         // store it in the user's Span. Mirrors C++ marshaler.write_marshal_from_abi
-        // (code_writers.h:6268).
+        //.
         // Blittable element types (primitives and almost-blittable structs) don't need this
         // because the user's Span wraps the same memory the native side wrote to.
         for (int i = 0; i < sig.Params.Count; i++)
@@ -5804,7 +5741,6 @@ internal static partial class CodeWriters
         if (def is null) { return false; }
         TypeCategory cat = TypeCategorization.GetCategory(def);
         if (cat != TypeCategory.Struct) { return false; }
-        // Mirror C++ is_type_blittable: mapped struct types short-circuit based on
         // RequiresMarshaling, regardless of inner field layout. So for mapped types like
         // Duration, KeyTime, RepeatBehavior (RequiresMarshaling=false), they're never "complex".
         {

@@ -137,8 +137,6 @@ internal static class AdditionTypes
         { "Windows.UI.Xaml.Media", new(System.StringComparer.Ordinal) { "Matrix" } },
         { "Windows.UI.Xaml.Media.Animation", new(System.StringComparer.Ordinal) { "KeyTime" } },
     };
-
-    /// <summary>Mirrors C++ <c>has_addition_to_type</c>.</summary>
     public static bool HasAdditionToType(string typeNamespace, string typeName)
     {
         if (s_table.TryGetValue(typeNamespace, out HashSet<string>? names) && names.Contains(typeName))

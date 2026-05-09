@@ -183,7 +183,7 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {kv} item");
 
         // Public member emission order matches C++ write_dictionary_members_using_static_abi_methods
-        // (code_writers.h:3677-3694): Keys, Values, Count, IsReadOnly, this[], Add(K,V),
+        //: Keys, Values, Count, IsReadOnly, this[], Add(K,V),
         // ContainsKey, Remove(K), TryGetValue, Add(KVP), Clear, Contains, CopyTo,
         // ICollection<KVP>.Remove. WinRT IMap<K,V> vtable order, NOT alphabetical.
         // GetEnumerator is NOT emitted here — it's handled separately by IIterable<KVP>'s
@@ -298,7 +298,7 @@ internal static partial class CodeWriters
         EmitUnsafeAccessor(w, "Remove", "bool", $"{prefix}Remove", interopType, $", {t} item");
 
         // Public member emission order matches C++ write_list_members_using_static_abi_methods
-        // (code_writers.h:4017-4046): Count, IsReadOnly, this[], IndexOf, Insert, RemoveAt,
+        //: Count, IsReadOnly, this[], IndexOf, Insert, RemoveAt,
         // Add, Clear, Contains, CopyTo, Remove. This is the WinRT IVector<T> vtable order
         // mapped to IList<T>, NOT alphabetical. GetEnumerator is NOT emitted here — it's
         // handled separately by IIterable<T>'s own EmitGenericEnumerable invocation

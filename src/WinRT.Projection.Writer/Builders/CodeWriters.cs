@@ -85,7 +85,6 @@ internal static partial class CodeWriters
     // ABI emission methods are implemented in CodeWriters.Abi.cs
 
     /// <summary>
-    /// Mirrors C++ <c>write_enum</c>. Emits an enum projection.
     /// </summary>
     public static void WriteEnum(TypeWriter w, TypeDefinition type)
     {
@@ -128,8 +127,6 @@ internal static partial class CodeWriters
             }
             string fieldName = field.Name?.Value ?? string.Empty;
             string constantValue = FormatConstant(field.Constant);
-
-            // Mirror C++ code_writers.h:10106 write_platform_attribute(field.CustomAttribute()):
             // emits per-enum-field [SupportedOSPlatform] when the field has a [ContractVersion].
             WritePlatformAttribute(w, field);
             w.Write(fieldName);
@@ -144,7 +141,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Formats a metadata Constant value as a C# literal.
-    /// Mirrors C++ <c>write_constant</c>: I4/U4 are formatted as hex (e.g. <c>0x1</c>) to match
     /// the truth output. Other types fall back to decimal.
     /// </summary>
     private static string FormatConstant(AsmResolver.DotNet.Constant constant)
@@ -175,7 +171,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_struct</c>. Emits a struct projection.
     /// </summary>
     public static void WriteStruct(TypeWriter w, TypeDefinition type)
     {
@@ -322,7 +317,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_contract</c>. Emits a static class for an API contract.
     /// </summary>
     public static void WriteContract(TypeWriter w, TypeDefinition type)
     {
@@ -337,7 +331,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_delegate</c>. Emits a delegate projection.
     /// </summary>
     public static void WriteDelegate(TypeWriter w, TypeDefinition type)
     {
@@ -370,7 +363,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_attribute</c>. Emits an attribute projection.
     /// </summary>
     public static void WriteAttribute(TypeWriter w, TypeDefinition type)
     {
@@ -417,8 +409,6 @@ internal static partial class CodeWriters
 
     /// <summary>Gets the metadata cache previously set via <see cref="SetMetadataCache"/>.</summary>
     internal static MetadataCache? GetMetadataCache() => _cacheRef;
-
-    /// <summary>Mirrors C++ <c>to_camel_case</c>.</summary>
     public static string ToCamelCase(string name)
     {
         if (string.IsNullOrEmpty(name)) { return name; }

@@ -10,7 +10,6 @@ namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
 /// Information about an [Activatable]/[Static]/[Composable] factory interface.
-/// Mirrors C++ <c>attributed_type</c>.
 /// </summary>
 internal sealed class AttributedType
 {
@@ -28,7 +27,6 @@ internal static class AttributedTypes
 {
     /// <summary>
     /// Returns the (interface_name, AttributedType) entries for the given runtime class type.
-    /// Mirrors C++ <c>get_attributed_types</c>.
     /// </summary>
     public static IEnumerable<KeyValuePair<string, AttributedType>> Get(TypeDefinition type, MetadataCache cache)
     {

@@ -14,7 +14,6 @@ internal static partial class CodeWriters
 {
     /// <summary>
     /// Emits the body of an <c>_objRef_*</c> property getter in reference projection mode.
-    /// Mirrors C++ <c>write_static_objref_definition</c> / <c>write_activation_factory_objref_definition</c>
     /// (code_writers.h:2755 and 2796) which emit <c>{ get { throw null; } }</c> in ref mode.
     /// </summary>
     public static void EmitRefModeObjRefGetterBody(TypeWriter w)
@@ -26,7 +25,6 @@ internal static partial class CodeWriters
     /// Emits the synthetic <c>private TypeName() { throw null; }</c> ctor used in reference
     /// projection mode to suppress the C# compiler's implicit public default constructor when
     /// no explicit ctors are emitted by <c>WriteAttributedTypes</c>.
-    /// Mirrors C++ <c>code_writers.h:9536</c>.
     /// </summary>
     public static void EmitSyntheticPrivateCtor(TypeWriter w, string typeName)
     {
@@ -37,7 +35,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Emits the body of a delegate factory <c>Invoke</c> method in reference projection mode.
-    /// Mirrors C++ <c>code_writers.h:6851</c> which emits <c>throw null;</c> for the activator
     /// factory delegate's <c>Invoke</c> body in ref mode.
     /// </summary>
     public static void EmitRefModeInvokeBody(TypeWriter w)

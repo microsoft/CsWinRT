@@ -13,7 +13,6 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static partial class CodeWriters
 {
-    /// <summary>Mirrors C++ <c>write_guid_attribute</c>.</summary>
     public static void WriteGuidAttribute(TypeWriter w, TypeDefinition type)
     {
         bool fullyQualify = type.Namespace == "Windows.Foundation.Metadata";
@@ -172,8 +171,6 @@ internal static partial class CodeWriters
             w.Write(">");
         }
     }
-
-    /// <summary>Mirrors C++ <c>write_prop_type</c>.</summary>
     public static string WritePropType(TypeWriter w, PropertyDefinition prop, bool isSetProperty = false)
     {
         return WritePropType(w, prop, null, isSetProperty);
@@ -186,8 +183,6 @@ internal static partial class CodeWriters
         if (genCtx is not null) { typeSig = typeSig.InstantiateGenericTypes(genCtx.Value); }
         return w.WriteTemp("%", new System.Action<TextWriter>(_ => WriteProjectedSignature(w, typeSig, isSetProperty)));
     }
-
-    /// <summary>Mirrors C++ <c>write_interface_member_signatures</c>.</summary>
     public static void WriteInterfaceMemberSignatures(TypeWriter w, TypeDefinition type)
     {
         foreach (MethodDefinition method in type.Methods)
@@ -195,7 +190,6 @@ internal static partial class CodeWriters
             if (method.IsSpecial()) { continue; }
             MethodSig sig = new(method);
             w.Write("\n");
-            // Mirror C++ write_interface_required which calls write_custom_attributes for method.CustomAttribute().
             // Only emit Windows.Foundation.Metadata attributes that have a projected form (Overload, DefaultOverload, AttributeUsage, Experimental).
             WriteMethodCustomAttributes(w, method);
             WriteProjectionReturnType(w, sig);
@@ -209,7 +203,6 @@ internal static partial class CodeWriters
         foreach (PropertyDefinition prop in type.Properties)
         {
             (MethodDefinition? getter, MethodDefinition? setter) = prop.GetPropertyMethods();
-            // Mirror C++ code_writers.h:5642 — emit 'new' when the property is setter-only
             // on this interface AND a property of the same name exists in any base interface
             // (typically the getter-only counterpart). This hides the inherited member.
             string newKeyword = (getter is null && setter is not null
@@ -240,7 +233,7 @@ internal static partial class CodeWriters
     /// <summary>
     /// Recursively walks the base interfaces of <paramref name="type"/> looking for a property
     /// with the given <paramref name="propName"/>. Mirrors C++ <c>find_property_interface</c>
-    /// at code_writers.h:4154-4185 (returns true if any base interface declares a property
+    /// at (returns true if any base interface declares a property
     /// with that name; used to decide whether a setter-only property in a derived interface
     /// needs the <c>new</c> modifier to hide the base getter).
     /// </summary>
@@ -354,11 +347,9 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_interface</c>. Emits an interface projection.
     /// </summary>
     public static void WriteInterface(TypeWriter w, TypeDefinition type)
     {
-        // Mirrors C++ write_interface skip rule: exclusive interfaces other than the default
         // and overridable one are not used in the projection. Skip them unless public_exclusiveto
         // is set (or in reference projection or component mode).
         if (!w.Settings.ReferenceProjection &&

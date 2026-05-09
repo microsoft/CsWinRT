@@ -18,7 +18,6 @@ namespace WindowsRuntime.ProjectionWriter;
 internal static partial class CodeWriters
 {
     /// <summary>
-    /// Mirrors C++ <c>write_custom_attribute_args</c>. Returns the formatted argument strings.
     /// </summary>
     public static List<string> WriteCustomAttributeArgs(TypeWriter w, CustomAttribute attribute)
     {
@@ -132,7 +131,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Escapes a string for use inside a C# verbatim string literal (<c>@"..."</c>).
-    /// Mirrors C++ <c>write_custom_attribute_args</c> string emission (code_writers.h:2401-2427):
     /// the WinMD attribute string value carries source-level escape sequences (e.g. <c>\"</c>
     /// for an embedded quote). The C++ tool un-escapes these before emitting a verbatim string,
     /// so a WinMD value of <c>\"quotes\"</c> becomes the verbatim source text <c>""quotes""</c>
@@ -166,11 +164,10 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>get_platform(writer&amp;, CustomAttribute)</c>: returns the formatted
     /// SupportedOSPlatform string ("WindowsX.Y.Z.0") for a [ContractVersion] attribute,
     /// or empty if no platform mapping exists. Honors writer's <see cref="TypeWriter.CheckPlatform"/>
     /// state to deduplicate platforms within a single class scope (mirrors C++
-    /// _check_platform / _platform behavior in code_writers.h:2515-2525).
+    /// _check_platform / _platform behavior in).
     /// </summary>
     private static string GetPlatform(TypeWriter w, CustomAttribute attribute)
     {
@@ -229,7 +226,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_platform_attribute</c>: emits [SupportedOSPlatform("WindowsX.Y.Z.0")]
     /// for a [ContractVersion] attribute. Only writes for reference projection.
     /// </summary>
     public static void WritePlatformAttribute(TypeWriter w, IHasCustomAttribute member)
@@ -261,7 +257,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_custom_attributes</c>: carries selected custom attributes
     /// to the projection (e.g., [Obsolete], [Deprecated], [SupportedOSPlatform]).
     /// </summary>
     public static void WriteCustomAttributes(TypeWriter w, IHasCustomAttribute member, bool enablePlatformAttrib)
@@ -346,8 +341,6 @@ internal static partial class CodeWriters
             w.Write("]\n");
         }
     }
-
-    /// <summary>Mirrors C++ <c>write_type_custom_attributes</c>.</summary>
     public static void WriteTypeCustomAttributes(TypeWriter w, TypeDefinition type, bool enablePlatformAttrib)
     {
         WriteCustomAttributes(w, type, enablePlatformAttrib);

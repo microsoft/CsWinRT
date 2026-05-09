@@ -10,7 +10,6 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Mirrors C++ <c>fundamental_type</c> in <c>helpers.h</c>.
 /// </summary>
 internal enum FundamentalType
 {

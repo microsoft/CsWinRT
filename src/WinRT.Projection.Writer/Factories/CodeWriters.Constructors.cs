@@ -15,7 +15,6 @@ namespace WindowsRuntime.ProjectionWriter;
 internal static partial class CodeWriters
 {
     /// <summary>
-    /// Mirrors C++ <c>write_attributed_types</c>: emits constructors and static members
     /// for the given runtime class.
     /// </summary>
     public static void WriteAttributedTypes(TypeWriter w, TypeDefinition classType)
@@ -44,7 +43,6 @@ internal static partial class CodeWriters
             w.Write(objRefName);
             if (w.Settings.ReferenceProjection)
             {
-                // Mirrors C++ write_activation_factory_objref_definition (code_writers.h:2748):
                 // in ref mode the activation factory objref getter body is just 'throw null;'.
                 EmitRefModeObjRefGetterBody(w);
             }
@@ -79,7 +77,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_factory_constructors</c>.
     /// </summary>
     public static void WriteFactoryConstructors(TypeWriter w, TypeDefinition? factoryType, TypeDefinition classType)
     {
@@ -95,7 +92,7 @@ internal static partial class CodeWriters
             string defaultIfaceIid = GetDefaultInterfaceIid(w, classType);
             string marshalingType = GetMarshalingTypeName(classType);
             // Compute the platform attribute string from the activation factory interface's
-            // [ContractVersion] attribute. Mirrors C++ code_writers.h:2861
+            // [ContractVersion] attribute. Mirrors C++
             // 'auto platform_attribute = write_platform_attribute_temp(w, factory_type);'
             // emitted at line 2872 before the public ctor.
             string platformAttribute = w.WriteTemp("%", new System.Action<TextWriter>(_ => WritePlatformAttribute(w, factoryType)));
@@ -280,13 +277,11 @@ internal static partial class CodeWriters
         }
         else
         {
-            // Sealed Invoke signature is multi-line. Mirrors C++ at code_writers.h:6838.
+            // Sealed Invoke signature is multi-line. Mirrors C++ at.
             w.Write("    public override unsafe void Invoke(\n");
             w.Write("      WindowsRuntimeActivationArgsReference additionalParameters,\n");
             w.Write("      out void* retval)\n    {\n");
         }
-
-        // Mirrors C++ at code_writers.h:6849: in reference projection mode, the entire
         // Invoke body is just 'throw null;' (no factory dispatch, no marshalling).
         if (w.Settings.ReferenceProjection)
         {
@@ -859,7 +854,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_composable_constructors</c>.
     /// Emits:
     /// 1. Public/protected constructors for each composable factory method (with proper body).
     /// 2. Static factory callback class (per ctor) for parameterized composable activation.
@@ -885,7 +879,7 @@ internal static partial class CodeWriters
         defaultIfaceObjRef = defaultIface is not null ? GetObjRefName(w, defaultIface) : string.Empty;
         int gcPressure = GetGcPressureAmount(classType);
         // Compute the platform attribute string from the composable factory interface's
-        // [ContractVersion] attribute. Mirrors C++ code_writers.h:3167
+        // [ContractVersion] attribute. Mirrors C++
         // 'auto platform_attribute = write_platform_attribute_temp(w, composable_type);'
         // emitted at line 3179 before the public ctor.
         string platformAttribute = w.WriteTemp("%", new System.Action<TextWriter>(_ => WritePlatformAttribute(w, composableType)));
@@ -899,7 +893,6 @@ internal static partial class CodeWriters
             // For the constructor on the projected class, we exclude the trailing two params.
             MethodSig sig = new(method);
             int userParamCount = sig.Params.Count >= 2 ? sig.Params.Count - 2 : sig.Params.Count;
-            // Mirror C++ write_constructor_callback_method_name (code_writers.h:2635-2643):
             // the callback / args type name suffix is the TOTAL ABI param count
             // (size(method.Signature().Params())), NOT the user-visible param count. Using the
             // total count guarantees uniqueness against other composable factory overloads that
@@ -968,7 +961,6 @@ internal static partial class CodeWriters
             w.Write("}\n");
 
             // Emit args struct + callback class for parameterized composable factories.
-            // Mirrors C++ write_static_composing_factory_method (code_writers.h:6886) which
             // skips both the args struct AND the callback class entirely in ref mode. The
             // public ctor above still references these types, but reference assemblies don't
             // need their bodies' references to resolve (only the public API surface matters).

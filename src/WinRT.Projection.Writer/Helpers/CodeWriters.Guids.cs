@@ -14,7 +14,6 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static partial class CodeWriters
 {
-    /// <summary>Mirrors C++ <c>get_fundamental_type_guid_signature</c>.</summary>
     public static string GetFundamentalTypeGuidSignature(FundamentalType t) => t switch
     {
         FundamentalType.Boolean => "b1",
@@ -34,8 +33,6 @@ internal static partial class CodeWriters
     };
 
     private static readonly Regex s_typeNameEscapeRe = new(@"[ :<>`,.]", RegexOptions.Compiled);
-
-    /// <summary>Mirrors C++ <c>escape_type_name_for_identifier</c>.</summary>
     public static string EscapeTypeNameForIdentifier(string typeName, bool stripGlobal = false, bool stripGlobalABI = false)
     {
         // Match C++ behavior: escape special chars first, then strip ONLY the prefix (not all
@@ -93,8 +90,6 @@ internal static partial class CodeWriters
             _ => (byte)0
         };
     }
-
-    /// <summary>Mirrors C++ <c>write_guid</c>.</summary>
     public static void WriteGuid(TextWriter w, TypeDefinition type, bool lowerCase)
     {
         var fields = GetGuidFields(type) ?? throw new InvalidOperationException(
@@ -111,8 +106,6 @@ internal static partial class CodeWriters
         w.Write("-");
         for (int i = 2; i < 8; i++) { w.Write(fields.Data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
     }
-
-    /// <summary>Mirrors C++ <c>write_guid_bytes</c>.</summary>
     public static void WriteGuidBytes(TextWriter w, TypeDefinition type)
     {
         var fields = GetGuidFields(type) ?? throw new InvalidOperationException(
@@ -134,8 +127,6 @@ internal static partial class CodeWriters
         w.Write("0x");
         w.Write((b & 0xFF).ToString("X", CultureInfo.InvariantCulture));
     }
-
-    /// <summary>Mirrors C++ <c>write_iid_guid_property_name</c>.</summary>
     public static void WriteIidGuidPropertyName(TypeWriter w, TypeDefinition type)
     {
         string name = w.WriteTemp("%", new Action<TextWriter>(_ =>
@@ -147,8 +138,6 @@ internal static partial class CodeWriters
         w.Write("IID_");
         w.Write(name);
     }
-
-    /// <summary>Mirrors C++ <c>write_iid_reference_guid_property_name</c>.</summary>
     public static void WriteIidReferenceGuidPropertyName(TypeWriter w, TypeDefinition type)
     {
         string name = w.WriteTemp("%", new Action<TextWriter>(_ =>
@@ -161,8 +150,6 @@ internal static partial class CodeWriters
         w.Write(name);
         w.Write("Reference");
     }
-
-    /// <summary>Mirrors C++ <c>write_iid_guid_property_from_type</c>.</summary>
     public static void WriteIidGuidPropertyFromType(TypeWriter w, TypeDefinition type)
     {
         w.Write("public static ref readonly Guid ");
@@ -173,7 +160,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_guid_signature</c>.
     /// </summary>
     public static void WriteGuidSignature(TypeWriter w, TypeSemantics semantics)
     {
@@ -194,7 +180,6 @@ internal static partial class CodeWriters
             case TypeSemantics.Reference r:
                 {
                     // Resolve the reference to a TypeDefinition (cross-module struct field, etc.).
-                    // Mirrors C++ for_typedef which always succeeds in resolving here.
                     (string ns, string name) = r.Reference_.Names();
                     TypeDefinition? resolved = null;
                     if (_cacheRef is not null)
@@ -309,8 +294,6 @@ internal static partial class CodeWriters
                 break;
         }
     }
-
-    /// <summary>Mirrors C++ <c>write_iid_guid_property_from_signature</c>.</summary>
     public static void WriteIidGuidPropertyFromSignature(TypeWriter w, TypeDefinition type)
     {
         string guidSig = w.WriteTemp("%", new Action<TextWriter>(_ =>
@@ -332,8 +315,6 @@ internal static partial class CodeWriters
         }
         w.Write("\n        ];\n        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));\n    }\n}\n\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_iid_guid_property_for_class_interfaces</c>.</summary>
     public static void WriteIidGuidPropertyForClassInterfaces(TypeWriter w, TypeDefinition type, System.Collections.Generic.HashSet<TypeDefinition> interfacesEmitted)
     {
         foreach (InterfaceImplementation impl in type.Interfaces)

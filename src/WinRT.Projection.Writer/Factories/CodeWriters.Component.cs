@@ -13,7 +13,6 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static partial class CodeWriters
 {
-    /// <summary>Mirrors C++ <c>add_metadata_type_entry</c>.</summary>
     public static void AddMetadataTypeEntry(TypeWriter w, TypeDefinition type, ConcurrentDictionary<string, string> map)
     {
         if (!w.Settings.Component) { return; }
@@ -41,7 +40,6 @@ internal static partial class CodeWriters
     {
         string typeName = type.Name?.Value ?? string.Empty;
         string typeNs = type.Namespace?.Value ?? string.Empty;
-        // Mirror C++ 'write_type_name(type, Projected)' which for an authored type produces 'global::<ns>.<name>'.
         string projectedTypeName = string.IsNullOrEmpty(typeNs)
             ? $"global::{IdentifierEscaping.StripBackticks(typeName)}"
             : $"global::{typeNs}.{IdentifierEscaping.StripBackticks(typeName)}";
@@ -49,7 +47,6 @@ internal static partial class CodeWriters
         bool isActivatable = !TypeCategorization.IsStatic(type) && type.HasDefaultConstructor();
 
         // Build the inheritance list: factory interfaces ([Activatable]/[Static]) only.
-        // Mirrors C++ write_factory_class_inheritance.
         MetadataCache? cache = GetMetadataCache();
         List<TypeDefinition> factoryInterfaces = new();
         if (cache is not null)
@@ -70,7 +67,6 @@ internal static partial class CodeWriters
         foreach (TypeDefinition iface in factoryInterfaces)
         {
             w.Write(", ");
-            // Mirror C++ 'write_type_name(factory.type, CCW, false)'. For factory interfaces,
             // CCW + non-forced namespace is the user-facing interface name (e.g. 'IButtonUtilsStatic').
             WriteTypedefName(w, iface, TypedefNameType.CCW, false);
             WriteTypeParams(w, iface);
@@ -105,7 +101,6 @@ internal static partial class CodeWriters
 
         // Emit factory-class members: forwarding methods/properties/events for static factory
         // interfaces, and constructor wrappers for activatable factory interfaces.
-        // Mirrors C++ write_factory_class_members.
         if (cache is not null)
         {
             foreach (KeyValuePair<string, AttributedType> kv in AttributedTypes.Get(type, cache))
@@ -145,7 +140,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Writes a factory-class activatable wrapper method: <c>public T MethodName(args) =&gt; new T(args);</c>.
-    /// Mirrors C++ <c>write_factory_activatable_method</c>.
     /// </summary>
     private static void WriteFactoryActivatableMethod(TypeWriter w, MethodDefinition method, string projectedTypeName)
     {
@@ -166,7 +160,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Writes a static-factory forwarding method: <c>public Ret MethodName(args) =&gt; global::Ns.Type.MethodName(args);</c>.
-    /// Mirrors C++ <c>write_static_factory_method</c>.
     /// </summary>
     private static void WriteStaticFactoryMethod(TypeWriter w, MethodDefinition method, string projectedTypeName)
     {
@@ -328,7 +321,6 @@ internal static partial class CodeWriters
                 w.Write(".");
                 w.Write(name);
                 w.Write("\":\n    return ");
-                // Mirror C++ 'write_type_name(type, CCW, true)' which for an authored type
                 // emits 'global::ABI.Impl.<ns>.<name>'.
                 w.Write("global::ABI.Impl.");
                 w.Write(ns);

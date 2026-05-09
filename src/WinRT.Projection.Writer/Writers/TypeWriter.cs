@@ -18,7 +18,6 @@ internal sealed class TypeWriter : TextWriter
     public bool InAbiImplNamespace { get; private set; }
 
     /// <summary>
-    /// Mirrors C++ writer::_check_platform/_platform: when active inside a class scope,
     /// platform-attribute computation suppresses platforms &lt;= the previously seen platform.
     /// </summary>
     public bool CheckPlatform { get; set; }

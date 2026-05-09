@@ -17,7 +17,7 @@ internal sealed class StaticPropertyAccessorState
     public string SetterAbiClass = string.Empty;
     public string SetterObjRef = string.Empty;
     // Per-accessor platform attribute strings. Mirrors C++ getter_platform/setter_platform
-    // tracking in code_writers.h:3328-3349.
+    // tracking in.
     public string GetterPlatformAttribute = string.Empty;
     public string SetterPlatformAttribute = string.Empty;
 }

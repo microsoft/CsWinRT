@@ -13,15 +13,12 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static partial class CodeWriters
 {
-    /// <summary>Mirrors C++ <c>is_fast_abi_class</c>.</summary>
     public static bool IsFastAbiClass(TypeDefinition type)
     {
         // Fast ABI is enabled when the type is marked [FastAbi]. (CsWinRT 3.0 has no
         // netstandard_compat gate -- it was always false in the C# port.)
         return type.HasAttribute("Windows.Foundation.Metadata", "FastAbiAttribute");
     }
-
-    /// <summary>Mirrors C++ <c>write_class_modifiers</c>.</summary>
     public static void WriteClassModifiers(TypeWriter w, TypeDefinition type)
     {
         if (TypeCategorization.IsStatic(type))
@@ -102,7 +99,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Returns the [Default] interface and the [ExclusiveTo] interfaces (sorted) for fast ABI.
-    /// Mirrors C++ <c>get_default_and_exclusive_interfaces</c> + <c>sort_fast_abi_ifaces</c>.
     /// </summary>
     public static (TypeDefinition? DefaultInterface, System.Collections.Generic.List<TypeDefinition> OtherInterfaces) GetFastAbiInterfaces(TypeDefinition classType)
     {
@@ -166,8 +162,6 @@ internal static partial class CodeWriters
         }
         return count;
     }
-
-    /// <summary>Mirrors C++ <c>get_gc_pressure_amount</c>.</summary>
     public static int GetGcPressureAmount(TypeDefinition type)
     {
         if (!type.IsSealed) { return 0; }
@@ -191,7 +185,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_static_class</c>.
     /// </summary>
     public static void WriteStaticClass(TypeWriter w, TypeDefinition type)
     {
@@ -256,7 +249,7 @@ internal static partial class CodeWriters
             }
 
             // Compute the platform attribute string from the static factory interface's
-            // [ContractVersion] attribute. Mirrors C++ code_writers.h:3315
+            // [ContractVersion] attribute. Mirrors C++
             // 'auto platform_attribute = write_platform_attribute_temp(w, factory.type);'
             // and the per-static-method/event/property emission at lines 3316-3349.
             string platformAttribute = w.WriteTemp("%", new System.Action<TextWriter>(_ => WritePlatformAttribute(w, staticIface)));
@@ -277,7 +270,6 @@ internal static partial class CodeWriters
                 WriteParameterList(w, sig);
                 if (w.Settings.ReferenceProjection)
                 {
-                    // Mirrors C++ write_abi_static_method_call (code_writers.h:1637): static
                     // method bodies become 'throw null' in reference projection mode.
                     w.Write(") => throw null;\n");
                 }
@@ -310,7 +302,6 @@ internal static partial class CodeWriters
                 w.Write("\n{\n");
                 if (w.Settings.ReferenceProjection)
                 {
-                    // Mirrors C++ write_abi_event_source_static_method_call (code_writers.h:1711):
                     // event accessor bodies become 'throw null' in reference projection mode.
                     w.Write("    add => throw null;\n");
                     w.Write("    remove => throw null;\n");
@@ -357,7 +348,6 @@ internal static partial class CodeWriters
                     state.HasGetter = true;
                     state.GetterAbiClass = abiClass;
                     state.GetterObjRef = objRef;
-                    // Mirror C++ getter_platform tracking (code_writers.h:3328, 3342).
                     state.GetterPlatformAttribute = platformAttribute;
                 }
                 if (setter is not null && !state.HasSetter)
@@ -365,7 +355,6 @@ internal static partial class CodeWriters
                     state.HasSetter = true;
                     state.SetterAbiClass = abiClass;
                     state.SetterObjRef = objRef;
-                    // Mirror C++ setter_platform tracking (code_writers.h:3330, 3349).
                     state.SetterPlatformAttribute = platformAttribute;
                 }
             }
@@ -376,7 +365,7 @@ internal static partial class CodeWriters
         {
             StaticPropertyAccessorState s = kv.Value;
             w.Write("\n");
-            // Mirrors C++ code_writers.h:2041-2046: collapse to property-level platform attribute
+            // Mirrors C++: collapse to property-level platform attribute
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
             string setterPlat = s.SetterPlatformAttribute;
@@ -395,7 +384,7 @@ internal static partial class CodeWriters
             w.Write(kv.Key);
             // Getter-only -> expression body; otherwise -> accessor block (matches truth).
             // In ref mode, all accessor bodies emit '=> throw null;' (mirrors C++
-            // write_abi_get/set_property_static_method_call, code_writers.h:1669, 1683).
+            // write_abi_get/set_property_static_method_call,).
             bool getterOnly = s.HasGetter && !s.HasSetter;
             if (getterOnly)
             {
@@ -469,7 +458,6 @@ internal static partial class CodeWriters
         w.Write("\n{\n");
         if (w.Settings.ReferenceProjection)
         {
-            // Mirrors C++ write_static_objref_definition (code_writers.h:2789): in ref mode
             // the static factory objref getter body is just 'throw null;'.
             w.Write("    get\n    {\n        throw null;\n    }\n}\n");
             return;
@@ -494,7 +482,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_class</c>. Emits a runtime class projection.
     /// </summary>
     public static void WriteClass(TypeWriter w, TypeDefinition type)
     {
@@ -505,8 +492,6 @@ internal static partial class CodeWriters
             WriteStaticClass(w, type);
             return;
         }
-
-        // Mirror C++ writer::write_platform_guard set at the start of write_class.
         // Tracks the highest platform seen within this class to suppress redundant
         // [SupportedOSPlatform(...)] emissions across interface boundaries.
         bool prevCheckPlatform = w.CheckPlatform;
@@ -537,7 +522,6 @@ internal static partial class CodeWriters
         w.Write(w.Settings.Internal ? "internal" : "public");
         w.Write(" ");
         WriteClassModifiers(w, type);
-        // Mirrors C++ write_class which uses '%class' (no partial) — runtime classes
         // are emitted as plain (non-partial) classes.
         w.Write("class ");
         WriteTypedefName(w, type, TypedefNameType.Projected, false);
@@ -589,7 +573,6 @@ internal static partial class CodeWriters
             // In ref mode, if WriteAttributedTypes will not emit any public constructors,
             // we need a 'private TypeName() { throw null; }' to suppress the C# compiler's
             // implicit public default constructor (which would expose an unintended API).
-            // Mirrors C++ code_writers.h:9519-9538 exactly: a type has constructors when
             // either:
             //  - factory.activatable is true (parameterless or parameterized — Activatable
             //    always emits at least one ctor), OR
@@ -617,7 +600,6 @@ internal static partial class CodeWriters
         }
 
         // Activator/composer constructors from [Activatable]/[Composable] factory interfaces.
-        // Mirror C++ write_attributed_types: emits factory ctors AND static members (via
         // write_static_members) BEFORE the override hooks and instance members.
         WriteAttributedTypes(w, type);
 

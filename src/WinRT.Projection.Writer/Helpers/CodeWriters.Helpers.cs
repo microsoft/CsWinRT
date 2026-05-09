@@ -15,13 +15,10 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static partial class CodeWriters
 {
-    /// <summary>Mirrors C++ <c>write_pragma_disable_IL2026</c>.</summary>
     public static void WritePragmaDisableIL2026(TextWriter w)
     {
         w.Write("\n#pragma warning disable IL2026\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_pragma_restore_IL2026</c>.</summary>
     public static void WritePragmaRestoreIL2026(TextWriter w)
     {
         w.Write("\n#pragma warning restore IL2026\n");
@@ -29,7 +26,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Returns the version string embedded in the banner comment of generated files.
-    /// Mirrors C++ <c>VERSION_STRING</c> (which is set via <c>$(VersionString)</c> from
     /// MSBuild and defaults to <c>0.0.0-private.0</c>).
     ///
     /// We read the writer assembly's <see cref="System.Reflection.AssemblyInformationalVersionAttribute"/>
@@ -46,8 +42,6 @@ internal static partial class CodeWriters
         int plus = version.IndexOf('+');
         return plus >= 0 ? version.Substring(0, plus) : version;
     }
-
-    /// <summary>Mirrors C++ <c>write_file_header</c>.</summary>
     public static void WriteFileHeader(TextWriter w)
     {
         w.Write("//------------------------------------------------------------------------------\n");
@@ -61,8 +55,6 @@ internal static partial class CodeWriters
         w.Write("// </auto-generated>\n");
         w.Write("//------------------------------------------------------------------------------\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_winrt_metadata_attribute</c>.</summary>
     public static void WriteWinRTMetadataAttribute(TypeWriter w, TypeDefinition type, MetadataCache cache)
     {
         string path = cache.GetSourcePath(type);
@@ -71,8 +63,6 @@ internal static partial class CodeWriters
         w.Write(stem);
         w.Write("\")]\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_winrt_metadata_typename_attribute</c>.</summary>
     public static void WriteWinRTMetadataTypeNameAttribute(TypeWriter w, TypeDefinition type)
     {
         w.Write("[WindowsRuntimeMetadataTypeName(\"");
@@ -80,8 +70,6 @@ internal static partial class CodeWriters
         WriteTypeParams(w, type);
         w.Write("\")]\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_winrt_mapped_type_attribute</c>.</summary>
     public static void WriteWinRTMappedTypeAttribute(TypeWriter w, TypeDefinition type)
     {
         w.Write("[WindowsRuntimeMappedType(typeof(");
@@ -89,8 +77,6 @@ internal static partial class CodeWriters
         WriteTypeParams(w, type);
         w.Write("))]\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_value_type_winrt_classname_attribute</c>.</summary>
     public static void WriteValueTypeWinRTClassNameAttribute(TypeWriter w, TypeDefinition type)
     {
         if (w.Settings.ReferenceProjection) { return; }
@@ -101,8 +87,6 @@ internal static partial class CodeWriters
         w.Write(name);
         w.Write(">\")]\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_winrt_reference_type_attribute</c>.</summary>
     public static void WriteWinRTReferenceTypeAttribute(TypeWriter w, TypeDefinition type)
     {
         if (w.Settings.ReferenceProjection) { return; }
@@ -111,8 +95,6 @@ internal static partial class CodeWriters
         WriteTypeParams(w, type);
         w.Write("?))]\n");
     }
-
-    /// <summary>Mirrors C++ <c>write_comwrapper_marshaller_attribute</c>.</summary>
     public static void WriteComWrapperMarshallerAttribute(TypeWriter w, TypeDefinition type)
     {
         if (w.Settings.ReferenceProjection) { return; }
@@ -125,7 +107,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_winrt_windowsmetadata_typemapgroup_assembly_attribute</c>.
     /// </summary>
     public static void WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type)
     {
@@ -171,7 +152,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_winrt_comwrappers_typemapgroup_assembly_attribute</c>.
     /// </summary>
     public static void WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type, bool isValueType)
     {
@@ -220,7 +200,6 @@ internal static partial class CodeWriters
     }
 
     /// <summary>
-    /// Mirrors C++ <c>write_winrt_idic_typemapgroup_assembly_attribute</c>.
     /// </summary>
     public static void WriteWinRTIdicTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type)
     {
@@ -244,7 +223,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Adds an entry to the default-interface map for a class type.
-    /// Mirrors C++ <c>add_default_interface_entry</c>.
     /// </summary>
     public static void AddDefaultInterfaceEntry(TypeWriter w, TypeDefinition type, System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
     {
@@ -270,7 +248,6 @@ internal static partial class CodeWriters
 
         // Build the interface display name via TypeSemantics so generic instantiations
         // (e.g. IDictionary<string, BasicStruct>), TypeRefs and TypeDefs are all handled correctly.
-        // Mirrors C++ 'add_default_interface_entry' which uses 'for_typedef' + 'write_type_name'.
         string interfaceName = w.WriteTemp("%", new Action<TextWriter>(tw =>
         {
             TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
@@ -282,7 +259,6 @@ internal static partial class CodeWriters
 
     /// <summary>
     /// Adds entries for [ExclusiveTo] interfaces of the class type.
-    /// Mirrors C++ <c>add_exclusive_to_interface_entries</c>.
     /// </summary>
     public static void AddExclusiveToInterfaceEntries(TypeWriter w, TypeDefinition type, System.Collections.Concurrent.ConcurrentBag<KeyValuePair<string, string>> entries)
     {
@@ -295,7 +271,6 @@ internal static partial class CodeWriters
             if (impl.Interface is null) { continue; }
 
             // Resolve the interface to a TypeDefinition for the [ExclusiveTo] check.
-            // Mirrors C++ 'for_typedef(get_type_semantics(iface.Interface()))'.
             TypeDefinition? ifaceDef = impl.Interface as TypeDefinition;
             if (ifaceDef is null && _cacheRef is not null)
             {

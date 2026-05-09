@@ -36,7 +36,7 @@ internal sealed class PropertyAccessorState
     public ITypeDefOrRef? OverridableInterface;
     // Per-accessor platform attribute strings from the originating interface's [ContractVersion],
     // emitted before the property in ref mode. Mirrors C++ getter_platform/setter_platform
-    // tracking in code_writers.h:4306-4308 / 4323/4330. When both match, emit at the property
+    // tracking in / 4323/4330. When both match, emit at the property
     // level only; when they differ (getter and setter come from different interfaces with
     // different platforms), emit per-accessor.
     public string GetterPlatformAttribute = string.Empty;

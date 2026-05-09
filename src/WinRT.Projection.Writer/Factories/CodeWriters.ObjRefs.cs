@@ -17,7 +17,6 @@ internal static partial class CodeWriters
 {
     /// <summary>
     /// Returns the field name for the given interface impl (e.g. <c>_objRef_System_IDisposable</c>).
-    /// Mirrors C++ <c>write_objref_type_name</c>: takes the projected interface name (with the
     /// namespace forcibly included), strips the <c>global::</c> prefix and replaces
     /// non-identifier characters with <c>_</c>.
     /// </summary>
@@ -283,8 +282,6 @@ internal static partial class CodeWriters
             {
                 continue;
             }
-
-            // Mirrors C++ write_class_objrefs_definition (code_writers.h:2960): for fast-abi
             // classes, skip non-default exclusive interfaces — their methods dispatch through
             // the default interface's vtable so a separate objref is unnecessary.
             bool isDefault = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
@@ -328,8 +325,6 @@ internal static partial class CodeWriters
     {
         string objRefName = GetObjRefName(w, ifaceRef);
         if (!emitted.Add(objRefName)) { return; }
-
-        // Mirrors C++ write_class_objrefs_definition: for generic interface instantiations, emit
         // the [UnsafeAccessor] extern method declaration (used by the IID expression in both
         // simple and lazy patterns).
         bool isGenericInstance = ifaceRef is TypeSpecification ts && ts.Signature is GenericInstanceTypeSignature;

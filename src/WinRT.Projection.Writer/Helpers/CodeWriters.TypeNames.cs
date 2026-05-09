@@ -11,13 +11,10 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static partial class CodeWriters
 {
-    /// <summary>Mirrors C++ <c>write_fundamental_type</c>.</summary>
     public static void WriteFundamentalType(TextWriter w, FundamentalType t)
     {
         w.Write(FundamentalTypes.ToCSharpType(t));
     }
-
-    /// <summary>Mirrors C++ <c>write_fundamental_non_projected_type</c>.</summary>
     public static void WriteFundamentalNonProjectedType(TextWriter w, FundamentalType t)
     {
         w.Write(FundamentalTypes.ToDotNetType(t));
@@ -145,7 +142,6 @@ internal static partial class CodeWriters
                 {
                     if (i > 0) { w.Write(", "); }
                     // Generic args ALWAYS use Projected, regardless of parent's nameType.
-                    // Mirrors C++ write_type_params -> write_generic_type_name_base -> write_projection_type
                     // (which is hard-coded to typedef_name_type::Projected).
                     WriteTypeName(w, gi.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace);
                 }
@@ -188,7 +184,6 @@ internal static partial class CodeWriters
                     {
                         if (i > 0) { w.Write(", "); }
                         // Generic args ALWAYS use Projected, regardless of parent's nameType.
-                        // Mirrors C++ write_type_params -> write_generic_type_name_base -> write_projection_type.
                         WriteTypeName(w, gir.GenericArgs[i], TypedefNameType.Projected, forceWriteNamespace);
                     }
                     w.Write(">");
@@ -285,7 +280,6 @@ internal static partial class CodeWriters
                 return;
             }
         }
-        // Mirrors C++ write_event: typedef_name_type::Projected, forceWriteNamespace=false.
         // The outer EventHandler still gets 'global::System.' from being in a different namespace,
         // but type args in the same namespace stay unqualified.
         WriteTypeName(w, TypeSemanticsFactory.Get(sig), TypedefNameType.Projected, false);

@@ -10,7 +10,6 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 namespace WindowsRuntime.ProjectionWriter.Models;
 
 /// <summary>
-/// Mirrors C++ <c>method_signature</c>: enumerates parameters and return value of a method.
 /// </summary>
 internal sealed class MethodSig
 {

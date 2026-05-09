@@ -17,7 +17,6 @@ internal static partial class CodeWriters
 {
     /// <summary>
     /// Emits all instance members (methods, properties, events) inherited from implemented interfaces.
-    /// Mirrors C++ <c>write_class_members</c>. In ref-projection mode, this is still called: type
     /// declarations and per-interface objref getters are emitted, but non-mapped instance
     /// method/property/event bodies are emitted as <c>=> throw null;</c> stubs.
     /// </summary>
@@ -30,8 +29,6 @@ internal static partial class CodeWriters
         Dictionary<string, PropertyAccessorState> propertyState = new(System.StringComparer.Ordinal);
         HashSet<string> writtenEvents = new(System.StringComparer.Ordinal);
         HashSet<TypeDefinition> writtenInterfaces = new();
-
-        // Mirror C++ class member ordering: emit GetInterface()/GetDefaultInterface() per
         // interface inside WriteInterfaceMembersRecursive (right before that interface's
         // members), instead of one upfront block. This interleaves the GetInterface() impls
         // with their corresponding interface body, matching truth's per-interface layout.
@@ -72,7 +69,7 @@ internal static partial class CodeWriters
             }
 
             w.Write("\n");
-            // Mirrors C++ code_writers.h:2041-2046: collapse to property-level platform attribute
+            // Mirrors C++: collapse to property-level platform attribute
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
             string setterPlat = s.SetterPlatformAttribute;
@@ -100,7 +97,7 @@ internal static partial class CodeWriters
             //
             // In ref mode, all property bodies emit '=> throw null;' (mirrors C++
             // write_abi_get/set_property_static_method_call + write_unsafe_accessor_property_static_method_call,
-            // code_writers.h:1669, 1683, 1697).
+            //, 1697).
             bool getterOnly = s.HasGetter && !s.HasSetter;
             if (getterOnly)
             {
@@ -325,13 +322,13 @@ internal static partial class CodeWriters
             }
 
             // Emit GetInterface() / GetDefaultInterface() impl for this interface BEFORE its
-            // members (mirrors C++ write_class_interface at code_writers.h:4257-4280). For
+            // members (mirrors C++ write_class_interface at). For
             // overridable interfaces or non-exclusive direct interfaces, emit
             // IWindowsRuntimeInterface<T>.GetInterface(). For the default interface on an
             // unsealed class with an exclusive default, emit "internal new GetDefaultInterface()".
             //
             // The IWindowsRuntimeInterface<T> markers are NOT emitted in ref mode (gated by
-            // !w.Settings.ReferenceProjection here, mirrors C++ code_writers.h:4257
+            // !w.Settings.ReferenceProjection here, mirrors C++
             // '&& !settings.reference_projection' in the corresponding condition). The
             // 'internal new GetDefaultInterface()' helper IS emitted in both modes since
             // it's referenced by overrides on derived classes.
@@ -346,7 +343,7 @@ internal static partial class CodeWriters
             }
             else if (impl.IsDefaultInterface() && !classType.IsSealed)
             {
-                // Mirrors C++ code_writers.h:4263-4280. The C++ source emits the
+                // Mirrors C++. The C++ source emits the
                 // 'internal new GetDefaultInterface()' helper whenever the interface is the
                 // default interface and the class is unsealed -- regardless of exclusive-to
                 // status. In ref-projection mode this is the only branch that emits the helper
@@ -451,7 +448,7 @@ internal static partial class CodeWriters
         // default interface's ABI Methods class and objref instead of through this interface's
         // own ABI Methods class. The native vtable bundles all exclusive interfaces' methods
         // into the default interface's vtable in a fixed order. Mirrors C++
-        // code_writers.h:4250-4251 (semantics_for_abi_call assignment) which redirects both
+        // (semantics_for_abi_call assignment) which redirects both
         // static_iface_target and the objref to the default interface for fast-abi cases.
         TypeDefinition abiInterface = ifaceType;
         ITypeDefOrRef abiInterfaceRef = originalInterface;
@@ -467,8 +464,6 @@ internal static partial class CodeWriters
                 isDefaultInterface = ReferenceEquals(defaultIface, ifaceType);
             }
         }
-
-        // Mirrors C++ code_writers.h:4293 — the 'inline_event_source_field' arg is
         // '!is_fast_abi_iface || is_default_interface'. For events on a fast-abi non-default
         // exclusive interface (e.g. ISimple5.Event0 on the Simple class), the inline
         // _eventSource_X field pattern is WRONG: the slot computed from the interface's own
@@ -508,7 +503,7 @@ internal static partial class CodeWriters
         // attribute. In ref mode, this is prepended to each member emission so the projected
         // class members carry [SupportedOSPlatform("WindowsX.Y.Z.0")] mirroring the interface's
         // contract version. Only emitted in ref mode (WritePlatformAttribute internally returns
-        // immediately if not ref). Mirrors C++ code_writers.h:4290
+        // immediately if not ref). Mirrors C++
         // 'auto platform_attribute = write_platform_attribute_temp(w, interface_type);'.
         string platformAttribute = w.WriteTemp("%", new System.Action<TextWriter>(_ => WritePlatformAttribute(w, ifaceType)));
 
@@ -524,7 +519,7 @@ internal static partial class CodeWriters
             if (!writtenMethods.Add(key)) { continue; }
 
             // Detect a 'string ToString()' that overrides Object.ToString(). C++ uses 'override'
-            // here (and even forces 'string' as the return type). See code_writers.h:1942-1959.
+            // here (and even forces 'string' as the return type). See.
             string methodSpecForThis = methodSpec;
             if (name == "ToString" && sig.Params.Count == 0
                 && sig.ReturnType is AsmResolver.DotNet.Signatures.CorLibTypeSignature crt
@@ -535,7 +530,7 @@ internal static partial class CodeWriters
 
             // Detect 'bool Equals(object obj)' and 'int GetHashCode()' that override their
             // System.Object counterparts. Mirrors C++ helpers.h:566 (is_object_equals_method) and
-            // helpers.h:625 (is_object_hashcode_method) + code_writers.h:1962-1974: matching
+            // helpers.h:625 (is_object_hashcode_method) +: matching
             // signature and return type -> 'override'; matching name only -> 'new'.
             if (name == "Equals" && sig.Params.Count == 1)
             {
@@ -576,8 +571,6 @@ internal static partial class CodeWriters
                     WriteProjectionParameter(w, sig.Params[i]);
                 }
                 w.Write(");\n");
-
-                // Mirrors C++ code_writers.h:4292 — prepend the per-interface platform attribute
                 // string to each public method emission. In ref mode this produces e.g.
                 // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
                 if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
@@ -590,7 +583,6 @@ internal static partial class CodeWriters
                 WriteParameterList(w, sig);
                 if (w.Settings.ReferenceProjection)
                 {
-                    // Mirrors C++ write_unsafe_accessor_static_method_call (code_writers.h:1653)
                     // which emits 'throw null' in reference projection mode.
                     w.Write(") => throw null;\n");
                 }
@@ -621,7 +613,6 @@ internal static partial class CodeWriters
                 WriteParameterList(w, sig);
                 if (w.Settings.ReferenceProjection)
                 {
-                    // Mirrors C++ write_abi_static_method_call (code_writers.h:1637)
                     // which emits 'throw null' in reference projection mode.
                     w.Write(") => throw null;\n");
                 }
@@ -648,7 +639,6 @@ internal static partial class CodeWriters
             //   T InterfaceName.MethodName(args) => MethodName(args);
             if (isOverridable)
             {
-                // Mirror C++ which carries the platform attribute on the explicit interface
                 // impl as well (since it shares the same originating interface).
                 if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
                 WriteProjectionReturnType(w, sig);
@@ -698,7 +688,6 @@ internal static partial class CodeWriters
                 state.GetterGenericInteropType = genericInteropType;
                 state.GetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
                 state.GetterPropTypeText = WritePropType(w, prop, genCtx);
-                // Mirror C++ getter_platform tracking (code_writers.h:4306, 4323).
                 state.GetterPlatformAttribute = platformAttribute;
             }
             if (setter is not null && !state.HasSetter)
@@ -710,7 +699,6 @@ internal static partial class CodeWriters
                 state.SetterGenericInteropType = genericInteropType;
                 state.SetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
                 state.SetterPropTypeText = WritePropType(w, prop, genCtx);
-                // Mirror C++ setter_platform tracking (code_writers.h:4308, 4330).
                 state.SetterPlatformAttribute = platformAttribute;
             }
         }
@@ -772,7 +760,7 @@ internal static partial class CodeWriters
             // Emit the _eventSource_<name> property field — skipped in ref mode (the event
             // accessors below become 'add => throw null;' / 'remove => throw null;' which
             // don't reference the field, mirrors C++ where the inline_event_source_field
-            // path emits 'throw null' at code_writers.h:2215, 2238). Also skipped when the
+            // path emits 'throw null' at). Also skipped when the
             // event must dispatch through the ABI Methods class instead (see
             // 'inlineEventSourceField' computation above for fast-abi non-default exclusive).
             if (!w.Settings.ReferenceProjection && inlineEventSourceField)
@@ -825,7 +813,6 @@ internal static partial class CodeWriters
 
             // Emit the public/protected event with Subscribe/Unsubscribe.
             w.Write("\n");
-            // Mirrors C++ code_writers.h:4293 — prepend the per-interface platform attribute
             // string to each event emission. In ref mode this produces e.g.
             // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
             if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }

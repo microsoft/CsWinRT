@@ -100,8 +100,6 @@ internal readonly struct TypeFilter
         // No rule matched. If we have any include rules, default-exclude; else default-include.
         return _include == null || _include.Count == 0;
     }
-
-    /// <summary>Mirrors C++ <c>filter::match</c>.</summary>
     private static bool Match(string typeNamespace, string typeName, string rule)
     {
         if (rule.Length <= typeNamespace.Length)

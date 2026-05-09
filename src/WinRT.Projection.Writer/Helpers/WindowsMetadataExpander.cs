@@ -113,8 +113,6 @@ public static partial class WindowsMetadataExpander
         result.Add(token);
         return result;
     }
-
-    /// <summary>Mirrors C++ <c>get_sdk_path</c>.</summary>
     private static string TryGetSdkPath()
     {
         if (!OperatingSystem.IsWindows())
@@ -143,8 +141,6 @@ public static partial class WindowsMetadataExpander
         }
         return string.Empty;
     }
-
-    /// <summary>Mirrors C++ <c>get_sdk_version</c>.</summary>
     private static string TryGetCurrentSdkVersion()
     {
         string sdkPath = TryGetSdkPath();
@@ -181,8 +177,6 @@ public static partial class WindowsMetadataExpander
         }
         return bestStr;
     }
-
-    /// <summary>Mirrors C++ <c>add_files_from_xml</c>.</summary>
     private static void AddFilesFromPlatformXml(List<string> result, string sdkVersion, string xmlPath, string sdkPath)
     {
         if (!File.Exists(xmlPath))
