@@ -70,171 +70,251 @@ internal static partial class CodeWriters
         writer.Write("// </auto-generated>\n");
         writer.Write("//------------------------------------------------------------------------------\n");
     }
-    public static void WriteWinRTMetadataAttribute(TypeWriter w, TypeDefinition type, MetadataCache cache)
+
+    /// <summary>Writes a <c>[WindowsRuntimeMetadata]</c> attribute decorating <paramref name="type"/> with its source <c>.winmd</c> module name.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="type">The type definition.</param>
+    /// <param name="cache">The metadata cache used to resolve the source module path.</param>
+    public static void WriteWinRTMetadataAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, TypeDefinition type, MetadataCache cache)
     {
         string path = cache.GetSourcePath(type);
         string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
-        w.Write("[WindowsRuntimeMetadata(\"");
-        w.Write(stem);
-        w.Write("\")]\n");
-    }
-    public static void WriteWinRTMetadataTypeNameAttribute(TypeWriter w, TypeDefinition type)
-    {
-        w.Write("[WindowsRuntimeMetadataTypeName(\"");
-        WriteTypedefName(w, type, TypedefNameType.NonProjected, true);
-        WriteTypeParams(w, type);
-        w.Write("\")]\n");
-    }
-    public static void WriteWinRTMappedTypeAttribute(TypeWriter w, TypeDefinition type)
-    {
-        w.Write("[WindowsRuntimeMappedType(typeof(");
-        WriteTypedefName(w, type, TypedefNameType.Projected, true);
-        WriteTypeParams(w, type);
-        w.Write("))]\n");
-    }
-    public static void WriteValueTypeWinRTClassNameAttribute(TypeWriter w, TypeDefinition type)
-    {
-        if (w.Settings.ReferenceProjection) { return; }
-        (string ns, string name) = type.Names();
-        w.Write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<");
-        w.Write(ns);
-        w.Write(".");
-        w.Write(name);
-        w.Write(">\")]\n");
-    }
-    public static void WriteWinRTReferenceTypeAttribute(TypeWriter w, TypeDefinition type)
-    {
-        if (w.Settings.ReferenceProjection) { return; }
-        w.Write("[WindowsRuntimeReferenceType(typeof(");
-        WriteTypedefName(w, type, TypedefNameType.Projected, false);
-        WriteTypeParams(w, type);
-        w.Write("?))]\n");
-    }
-    public static void WriteComWrapperMarshallerAttribute(TypeWriter w, TypeDefinition type)
-    {
-        if (w.Settings.ReferenceProjection) { return; }
-        (string ns, string name) = type.Names();
-        w.Write("[ABI.");
-        w.Write(ns);
-        w.Write(".");
-        w.Write(IdentifierEscaping.StripBackticks(name));
-        w.Write("ComWrappersMarshaller]\n");
+        writer.Write("[WindowsRuntimeMetadata(\"");
+        writer.Write(stem);
+        writer.Write("\")]\n");
     }
 
-    /// <summary>
-    /// </summary>
-    public static void WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type)
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteWinRTMetadataAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, TypeDefinition, MetadataCache)"/>.</summary>
+    public static void WriteWinRTMetadataAttribute(TypeWriter w, TypeDefinition type, MetadataCache cache)
+        => WriteWinRTMetadataAttribute(w.Writer, type, cache);
+
+    /// <summary>Writes a <c>[WindowsRuntimeMetadataTypeName]</c> attribute carrying the WinRT type name string.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The type definition.</param>
+    public static void WriteWinRTMetadataTypeNameAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        // Skip exclusive interfaces and projection-internal interfaces
+        writer.Write("[WindowsRuntimeMetadataTypeName(\"");
+        WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
+        WriteTypeParams(writer, type);
+        writer.Write("\")]\n");
+    }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteWinRTMetadataTypeNameAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.</summary>
+    public static void WriteWinRTMetadataTypeNameAttribute(TypeWriter w, TypeDefinition type)
+        => WriteWinRTMetadataTypeNameAttribute(w.Writer, w.Context, type);
+
+    /// <summary>Writes a <c>[WindowsRuntimeMappedType]</c> attribute pointing at the projected type.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The type definition.</param>
+    public static void WriteWinRTMappedTypeAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    {
+        writer.Write("[WindowsRuntimeMappedType(typeof(");
+        WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+        WriteTypeParams(writer, type);
+        writer.Write("))]\n");
+    }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteWinRTMappedTypeAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.</summary>
+    public static void WriteWinRTMappedTypeAttribute(TypeWriter w, TypeDefinition type)
+        => WriteWinRTMappedTypeAttribute(w.Writer, w.Context, type);
+
+    /// <summary>Writes a <c>[WindowsRuntimeClassName("Windows.Foundation.IReference`1&lt;NS.Name&gt;")]</c> attribute for a value type.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The value type definition.</param>
+    public static void WriteValueTypeWinRTClassNameAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    {
+        if (context.Settings.ReferenceProjection) { return; }
+        (string ns, string name) = type.Names();
+        writer.Write("[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<");
+        writer.Write(ns);
+        writer.Write(".");
+        writer.Write(name);
+        writer.Write(">\")]\n");
+    }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteValueTypeWinRTClassNameAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.</summary>
+    public static void WriteValueTypeWinRTClassNameAttribute(TypeWriter w, TypeDefinition type)
+        => WriteValueTypeWinRTClassNameAttribute(w.Writer, w.Context, type);
+
+    /// <summary>Writes a <c>[WindowsRuntimeReferenceType(typeof(NullableX))]</c> attribute on a reference type.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The reference type definition.</param>
+    public static void WriteWinRTReferenceTypeAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    {
+        if (context.Settings.ReferenceProjection) { return; }
+        writer.Write("[WindowsRuntimeReferenceType(typeof(");
+        WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
+        WriteTypeParams(writer, type);
+        writer.Write("?))]\n");
+    }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteWinRTReferenceTypeAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.</summary>
+    public static void WriteWinRTReferenceTypeAttribute(TypeWriter w, TypeDefinition type)
+        => WriteWinRTReferenceTypeAttribute(w.Writer, w.Context, type);
+
+    /// <summary>Writes the <c>[ABI.NS.NameComWrappersMarshaller]</c> attribute.</summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The type definition.</param>
+    public static void WriteComWrapperMarshallerAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    {
+        if (context.Settings.ReferenceProjection) { return; }
+        (string ns, string name) = type.Names();
+        writer.Write("[ABI.");
+        writer.Write(ns);
+        writer.Write(".");
+        writer.Write(IdentifierEscaping.StripBackticks(name));
+        writer.Write("ComWrappersMarshaller]\n");
+    }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to <see cref="WriteComWrapperMarshallerAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter, ProjectionEmitContext, TypeDefinition)"/>.</summary>
+    public static void WriteComWrapperMarshallerAttribute(TypeWriter w, TypeDefinition type)
+        => WriteComWrapperMarshallerAttribute(w.Writer, w.Context, type);
+
+    /// <summary>
+    /// Writes the <c>[assembly: TypeMap&lt;WindowsRuntimeMetadataTypeMapGroup&gt;]</c> attribute
+    /// for an authored / projected type.
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The type definition.</param>
+    public static void WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    {
+        // Skip exclusive interfaces and projection-internal interfaces.
         if (TypeCategorization.GetCategory(type) == TypeCategory.Interface &&
             (TypeCategorization.IsExclusiveTo(type) || TypeCategorization.IsProjectionInternal(type)))
         {
             return;
         }
 
-        string projectionName = w.WriteTemp("%", new Action<TextWriter>(tw =>
-        {
-            // Use a temporary TypeWriter for the typedef name with full namespace
-            WriteTypedefName(w, type, TypedefNameType.NonProjected, true);
-            WriteTypeParams(w, type);
-        }));
+        // Capture the projected type name as a string by writing into a scratch writer at indent 0.
+        WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
+        WriteTypedefName(scratch, context, type, TypedefNameType.NonProjected, true);
+        WriteTypeParams(scratch, type);
+        string projectionName = scratch.ToString();
 
-        w.Write("\n[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(\n    value: \"");
-        w.Write(projectionName);
-        w.Write("\",\n    target: typeof(");
-        if (w.Settings.Component)
+        writer.Write("\n[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(\n    value: \"");
+        writer.Write(projectionName);
+        writer.Write("\",\n    target: typeof(");
+        if (context.Settings.Component)
         {
-            WriteTypedefName(w, type, TypedefNameType.ABI, true);
-            WriteTypeParams(w, type);
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
+            WriteTypeParams(writer, type);
         }
         else
         {
-            w.Write(projectionName);
+            writer.Write(projectionName);
         }
-        w.Write("),\n    trimTarget: typeof(");
-        w.Write(projectionName);
-        w.Write("))]\n");
+        writer.Write("),\n    trimTarget: typeof(");
+        writer.Write(projectionName);
+        writer.Write("))]\n");
 
-        if (w.Settings.Component)
+        if (context.Settings.Component)
         {
-            w.Write("\n[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(\n    source: typeof(");
-            w.Write(projectionName);
-            w.Write("),\n    proxy: typeof(");
-            WriteTypedefName(w, type, TypedefNameType.ABI, true);
-            WriteTypeParams(w, type);
-            w.Write("))]\n\n");
+            writer.Write("\n[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(\n    source: typeof(");
+            writer.Write(projectionName);
+            writer.Write("),\n    proxy: typeof(");
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
+            WriteTypeParams(writer, type);
+            writer.Write("))]\n\n");
         }
     }
 
-    /// <summary>
-    /// </summary>
-    public static void WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type, bool isValueType)
-    {
-        string projectionName = w.WriteTemp("%", new Action<TextWriter>(tw =>
-        {
-            WriteTypedefName(w, type, TypedefNameType.NonProjected, true);
-            WriteTypeParams(w, type);
-        }));
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the <see cref="Writers.IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> form.</summary>
+    public static void WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type)
+        => WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(w.Writer, w.Context, type);
 
-        w.Write("\n[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(\n    value: \"");
+    /// <summary>
+    /// Writes the <c>[assembly: TypeMap&lt;WindowsRuntimeComWrappersTypeMapGroup&gt;]</c> attribute
+    /// for the type's ComWrappers marshalling registration.
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The type definition.</param>
+    /// <param name="isValueType">When <see langword="true"/>, wraps the projected type in <c>Windows.Foundation.IReference`1&lt;...&gt;</c>.</param>
+    public static void WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool isValueType)
+    {
+        WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
+        WriteTypedefName(scratch, context, type, TypedefNameType.NonProjected, true);
+        WriteTypeParams(scratch, type);
+        string projectionName = scratch.ToString();
+
+        writer.Write("\n[assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(\n    value: \"");
         if (isValueType)
         {
-            w.Write("Windows.Foundation.IReference`1<");
-            w.Write(projectionName);
-            w.Write(">");
+            writer.Write("Windows.Foundation.IReference`1<");
+            writer.Write(projectionName);
+            writer.Write(">");
         }
         else
         {
-            w.Write(projectionName);
+            writer.Write(projectionName);
         }
-        w.Write("\",\n    target: typeof(");
-        if (w.Settings.Component)
+        writer.Write("\",\n    target: typeof(");
+        if (context.Settings.Component)
         {
-            WriteTypedefName(w, type, TypedefNameType.ABI, true);
-            WriteTypeParams(w, type);
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
+            WriteTypeParams(writer, type);
         }
         else
         {
-            w.Write(projectionName);
+            writer.Write(projectionName);
         }
-        w.Write("),\n    trimTarget: typeof(");
-        w.Write(projectionName);
-        w.Write("))]\n");
+        writer.Write("),\n    trimTarget: typeof(");
+        writer.Write(projectionName);
+        writer.Write("))]\n");
 
         // For non-interface, non-struct authored types, emit proxy association.
         TypeCategory cat = TypeCategorization.GetCategory(type);
-        if (cat != TypeCategory.Interface && cat != TypeCategory.Struct && w.Settings.Component)
+        if (cat != TypeCategory.Interface && cat != TypeCategory.Struct && context.Settings.Component)
         {
-            w.Write("\n[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(\n    source: typeof(");
-            w.Write(projectionName);
-            w.Write("),\n    proxy: typeof(");
-            WriteTypedefName(w, type, TypedefNameType.ABI, true);
-            WriteTypeParams(w, type);
-            w.Write("))]\n\n");
+            writer.Write("\n[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(\n    source: typeof(");
+            writer.Write(projectionName);
+            writer.Write("),\n    proxy: typeof(");
+            WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
+            WriteTypeParams(writer, type);
+            writer.Write("))]\n\n");
         }
     }
 
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the <see cref="Writers.IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> form.</summary>
+    public static void WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type, bool isValueType)
+        => WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(w.Writer, w.Context, type, isValueType);
+
     /// <summary>
+    /// Writes the <c>[assembly: TypeMapAssociation&lt;DynamicInterfaceCastableImplementationTypeMapGroup&gt;]</c>
+    /// attribute for an interface's dynamic-interface-castable implementation registration.
     /// </summary>
-    public static void WriteWinRTIdicTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type)
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The interface type definition.</param>
+    public static void WriteWinRTIdicTypeMapGroupAssemblyAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        // Generic interfaces are handled elsewhere
+        // Generic interfaces are handled elsewhere.
         if (type.GenericParameters.Count != 0) { return; }
-        // Skip exclusive interfaces (unless idic_exclusiveto), and projection-internal
-        if ((TypeCategorization.IsExclusiveTo(type) && !w.Settings.IdicExclusiveTo) ||
+        // Skip exclusive interfaces (unless idic_exclusiveto), and projection-internal types.
+        if ((TypeCategorization.IsExclusiveTo(type) && !context.Settings.IdicExclusiveTo) ||
             TypeCategorization.IsProjectionInternal(type))
         {
             return;
         }
 
-        w.Write("\n[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(\n    source: typeof(");
-        WriteTypedefName(w, type, TypedefNameType.Projected, true);
-        WriteTypeParams(w, type);
-        w.Write("),\n    proxy: typeof(");
-        WriteTypedefName(w, type, TypedefNameType.ABI, true);
-        WriteTypeParams(w, type);
-        w.Write("))]\n\n");
+        writer.Write("\n[assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(\n    source: typeof(");
+        WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
+        WriteTypeParams(writer, type);
+        writer.Write("),\n    proxy: typeof(");
+        WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
+        WriteTypeParams(writer, type);
+        writer.Write("))]\n\n");
     }
+
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the <see cref="Writers.IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> form.</summary>
+    public static void WriteWinRTIdicTypeMapGroupAssemblyAttribute(TypeWriter w, TypeDefinition type)
+        => WriteWinRTIdicTypeMapGroupAssemblyAttribute(w.Writer, w.Context, type);
 
     /// <summary>
     /// Adds an entry to the default-interface map for a class type.
