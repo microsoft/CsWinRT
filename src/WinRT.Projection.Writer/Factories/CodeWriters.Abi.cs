@@ -647,7 +647,7 @@ internal static partial class CodeWriters
     /// set of attributes required for the type's category. Mirrors C++
     /// <c>write_authoring_metadata_type</c>.
     /// </summary>
-    private static void WriteAuthoringMetadataType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    internal static void WriteAuthoringMetadataType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string nameStripped = IdentifierEscaping.StripBackticks(type.Name?.Value ?? string.Empty);
         string typeNs = type.Namespace?.Value ?? string.Empty;
@@ -2856,7 +2856,7 @@ internal static partial class CodeWriters
     /// <summary>
     /// Writes a marshaller class for a struct or enum (mirrors C++ write_struct_and_enum_marshaller_class).
     /// </summary>
-    private static void WriteStructEnumMarshallerClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    internal static void WriteStructEnumMarshallerClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
@@ -6030,7 +6030,7 @@ internal static partial class CodeWriters
     /// Writes the IReference&lt;T&gt; implementation for a struct/enum/delegate
     /// (mirrors C++ <c>write_reference_impl</c>).
     /// </summary>
-    private static void WriteReferenceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    internal static void WriteReferenceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
