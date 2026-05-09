@@ -26,7 +26,7 @@ internal static class ClassMembersFactory
         HashSet<string> writtenMethods = new(System.StringComparer.Ordinal);
         // For properties: track per-name accessor presence so we can merge get/set across interfaces.
         // Use insertion-order Dictionary so the per-class property emission order matches the
-        // .winmd metadata definition order (mirrors C++ which uses type.PropertyList() order).
+        // .winmd metadata definition order order).
         Dictionary<string, PropertyAccessorState> propertyState = new(System.StringComparer.Ordinal);
         HashSet<string> writtenEvents = new(System.StringComparer.Ordinal);
         HashSet<TypeDefinition> writtenInterfaces = new();
@@ -58,7 +58,6 @@ internal static class ClassMembersFactory
             }
 
             writer.Write("\n");
-            // Mirrors C++: collapse to property-level platform attribute
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
             string setterPlat = s.SetterPlatformAttribute;
@@ -186,7 +185,7 @@ internal static class ClassMembersFactory
         }
 
         // GetInterface() / GetDefaultInterface() impls are emitted per-interface inside
-        // WriteInterfaceMembersRecursive (matches the C++ tool's per-interface ordering).
+        // WriteInterfaceMembersRecursive (matches the original code's per-interface ordering).
     }
 
     private static string BuildMethodSignatureKey(string name, MethodSig sig)
@@ -241,7 +240,7 @@ internal static class ClassMembersFactory
             // any references to this interface. This is critical for nested recursion: e.g. when
             // emitting members for IObservableMap<string, object>'s base IMap<!0, !1>, we need to
             // substitute !0/!1 with string/object so the generated code references
-            // IDictionary<string, object> instead of IDictionary<T0, T1>. Mirrors the C++ tool's
+            // IDictionary<string, object> instead of IDictionary<T0, T1>. Mirrors the original code's
             // writer.push_generic_args() stack inside for_typedef().
             ITypeDefOrRef substitutedInterface = impl.Interface;
             AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? nextInstance = null;
@@ -286,7 +285,6 @@ internal static class ClassMembersFactory
             }
             else if (impl.IsDefaultInterface() && !classType.IsSealed)
             {
-                // Mirrors C++. The C++ source emits the
                 // 'internal new GetDefaultInterface()' helper whenever the interface is the
                 // default interface and the class is unsealed -- regardless of exclusive-to
                 // status. In ref-projection mode this is the only branch that emits the helper
@@ -471,7 +469,7 @@ internal static class ClassMembersFactory
             }
 
             // Detect 'bool Equals(object obj)' and 'int GetHashCode()' that override their
-            // System.Object counterparts. Mirrors C++ helpers.h:566 (is_object_equals_method) and
+            // System.Object counterparts.h:566 (is_object_equals_method) and
             // helpers.h:625 (is_object_hashcode_method) +: matching
             // signature and return type -> 'override'; matching name only -> 'new'.
             if (name == "Equals" && sig.Params.Count == 1)
@@ -625,7 +623,7 @@ internal static class ClassMembersFactory
 
         // Events: emit the event with Subscribe/Unsubscribe through a per-event _eventSource_
         // backing property field that lazily constructs an EventHandlerEventSource for the event
-        // handler type. Mirrors C++ write_class_events_using_static_abi_methods + write_event.
+        // handler type.
         foreach (EventDefinition evt in ifaceType.Events)
         {
             string name = evt.Name?.Value ?? string.Empty;
@@ -641,7 +639,7 @@ internal static class ClassMembersFactory
 
             // Special case for ICommand.CanExecuteChanged: the WinRT event handler is
             // EventHandler<object> but C# expects non-generic EventHandler. Use the non-generic
-            // EventHandlerEventSource backing field. Mirrors C++ write_event hard-coded fix.
+            // EventHandlerEventSource backing field.
             bool isICommandCanExecuteChanged = name == "CanExecuteChanged"
                 && (ifaceType.FullName == "Microsoft.UI.Xaml.Input.ICommand"
                     || ifaceType.FullName == "Windows.UI.Xaml.Input.ICommand");
@@ -737,7 +735,7 @@ internal static class ClassMembersFactory
             else
             {
                 // Fast-abi non-default exclusive: dispatch through the default interface's
-                // ABI Methods class helper. Mirrors C++ code_writers.h write_event when
+                // ABI Methods class helper.h write_event when
                 // inline_event_source_field is false (the default helper-based path).
                 // Example: Simple.Event0 (on ISimple5) becomes
                 //   add => global::ABI.test_component_fast.ISimpleMethods.Event0((WindowsRuntimeObject)this, _objRef_test_component_fast_ISimple).Subscribe(value);
@@ -783,7 +781,6 @@ internal static class ClassMembersFactory
     {
         // If the reference is to a type in the same module, resolve to TypeDefinition so
         // WriteTypedefName can drop the 'global::<NS>.' prefix when the namespace matches.
-        // Mirrors the C++ tool's behavior of emitting the bare interface name when in scope.
         if (ifaceType is not TypeDefinition && ifaceType is not TypeSpecification && context.Cache is not null)
         {
             try

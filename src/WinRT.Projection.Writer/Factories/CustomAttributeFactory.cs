@@ -135,7 +135,7 @@ internal static class CustomAttributeFactory
     /// </summary>
     /// <remarks>
     /// The WinMD attribute string value carries source-level escape sequences (e.g. <c>\"</c>
-    /// for an embedded quote). The C++ tool un-escapes these before emitting a verbatim string,
+    /// for an embedded quote). the original code un-escapes these before emitting a verbatim string,
     /// so a WinMD value of <c>\"quotes\"</c> becomes the verbatim source text <c>""quotes""</c>
     /// (which decodes to <c>"quotes"</c> at runtime).
     /// Logic:

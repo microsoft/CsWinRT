@@ -43,7 +43,6 @@ internal sealed partial class ProjectionGenerator
                 content = $"#define UAC_VERSION_{uapContractVersion}\n" + content;
             }
 
-            // Mirror the C++ tool: every emitted .cs file gets the auto-generated header.
             // See main.cpp where 'write_file_header(ws);' is called before each base string is written.
             IndentedTextWriter headerWriter = new();
             MetadataAttributeFactory.WriteFileHeader(headerWriter);

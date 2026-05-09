@@ -103,10 +103,10 @@ internal sealed class MetadataCache
 
     /// <summary>
     /// Sorts each namespace's <see cref="NamespaceMembers.Types"/> list alphabetically by type name.
-    /// Mirrors the C++ tool which uses <c>std::map&lt;std::string_view, TypeDef&gt;</c> for the
+    /// Mirrors the original code which uses <c>std::map&lt;std::string_view, TypeDef&gt;</c> for the
     /// per-namespace types map, which iterates in sorted order. The C# port stores members in
     /// insertion order; we explicitly sort here so all downstream iteration produces deterministic
-    /// output that matches the C++ tool exactly.
+    /// output that matches the original code exactly.
     /// </summary>
     private void SortMembersByName()
     {

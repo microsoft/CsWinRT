@@ -343,7 +343,6 @@ internal static class ClassFactory
         {
             StaticPropertyAccessorState s = kv.Value;
             writer.Write("\n");
-            // Mirrors C++: collapse to property-level platform attribute
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
             string setterPlat = s.SetterPlatformAttribute;

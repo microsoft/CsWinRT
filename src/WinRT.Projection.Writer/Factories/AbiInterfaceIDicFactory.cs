@@ -194,7 +194,7 @@ internal static class AbiInterfaceIDicFactory
     /// Emits explicit-interface DIM thunks for an *inherited* (required) interface on a DIC
     /// <c>file interface</c> shim. Each member becomes a thin
     /// <c>=&gt; ((IParent)(WindowsRuntimeObject)this).Member</c> delegating thunk so that DIC
-    /// re-dispatches through the parent's own DIC shim. Mirrors the C++ tool's emission for
+    /// re-dispatches through the parent's own DIC shim. Mirrors the original code's emission for
     /// inherited-interface members in DIC shims.
     /// </summary>
     internal static void WriteInterfaceIdicImplMembersForInheritedInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)

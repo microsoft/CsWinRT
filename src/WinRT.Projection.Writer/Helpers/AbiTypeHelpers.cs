@@ -515,7 +515,7 @@ internal static class AbiTypeHelpers
             // (encoded as ValueType) from reference types (encoded as Class). If the signature
             // has IsValueType == false, then it MUST be one of class/interface/delegate (since
             // primitives/enums/strings/object are encoded with their own element type). This
-            // mirrors how the C++ tool's abi_marshaler abstraction handles unknown types — it
+            // mirrors how the original code's abi_marshaler abstraction handles unknown types — it
             // dispatches based on the metadata semantics, not on resolution.
             return !td.IsValueType;
         }
@@ -701,7 +701,7 @@ internal static class AbiTypeHelpers
 
     /// <summary>Returns the ABI struct type name for a complex struct (e.g. global::ABI.Windows.Web.Http.HttpProgress).
     /// When the writer is currently in the matching ABI namespace, returns just the
-    /// short type name (e.g. <c>HttpProgress</c>) to mirror the C++ tool which uses the
+    /// short type name (e.g. <c>HttpProgress</c>) to mirror the original code which uses the
     /// unqualified name in same-namespace contexts.</summary>
     internal static string GetAbiStructTypeName(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {

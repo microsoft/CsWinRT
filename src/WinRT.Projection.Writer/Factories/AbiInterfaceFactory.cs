@@ -201,7 +201,6 @@ internal static class AbiInterfaceFactory
 
         // Do_Abi_* implementations: emit real bodies for simple primitive cases,
         // throw null! for everything else (deferred — needs full per-parameter marshalling).
-        // Mirror C++: in component mode, exclusive-to interfaces dispatch to the OWNING class
         // type (not the interface) since the authored class IS the implementation. This is what
         // 'write_method_abi_invoke' produces because 'method.Parent()' is treated through
         // 'does_abi_interface_implement_ccw_interface' for authoring scenarios.
@@ -380,7 +379,7 @@ internal static class AbiInterfaceFactory
         // If the interface is exclusive-to a class that's been excluded from the projection,
         // skip emitting the entire *Methods class — it would be dead code (the owning class
         // is manually projected in WinRT.Runtime, e.g. IColorHelperStatics for ColorHelper,
-        // IColorsStatics for Colors, IFontWeightsStatics for FontWeights). The C++ tool also
+        // IColorsStatics for Colors, IFontWeightsStatics for FontWeights). the original code also
         // omits these because their owning class is not projected.
         if (TypeCategorization.IsExclusiveTo(type))
         {

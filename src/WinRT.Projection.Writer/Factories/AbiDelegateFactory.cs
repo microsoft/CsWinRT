@@ -17,7 +17,6 @@ internal static class AbiDelegateFactory
 {
     public static void WriteAbiDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        // Mirror the C++ tool's ordering exactly:
         //   write_delegate_marshaller
         //   write_delegate_vtbl
         //   write_native_delegate
@@ -36,7 +35,7 @@ internal static class AbiDelegateFactory
         WriteDelegateImpl(writer, context, type);
         ReferenceImplFactory.Write(writer, context, type);
 
-        // In component mode, the C++ tool also emits the authoring metadata wrapper for delegates.
+        // In component mode, the original code also emits the authoring metadata wrapper for delegates.
         if (context.Settings.Component)
         {
             AbiClassFactory.WriteAuthoringMetadataType(writer, context, type);

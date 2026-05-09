@@ -12,7 +12,7 @@ internal static class IdentifierEscaping
 {
     /// <summary>
     /// Strips a generic-arity backtick suffix from a metadata type name (e.g. <c>"IList`1"</c>
-    /// becomes <c>"IList"</c>). Mirrors the C++ tool's <c>write_code</c> behavior for type names.
+    /// becomes <c>"IList"</c>).
     /// </summary>
     /// <param name="typeName">The metadata type name to strip.</param>
     /// <returns>The type name without its backtick suffix.</returns>

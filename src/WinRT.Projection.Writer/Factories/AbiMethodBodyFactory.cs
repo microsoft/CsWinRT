@@ -513,7 +513,7 @@ internal static class AbiMethodBodyFactory
             }
             // Non-blittable struct (e.g. authored BasicStruct with string fields): marshal
             // the local managed value through <Type>Marshaller.ConvertToUnmanaged before
-            // writing it into the *out ABI struct slot. Mirrors C++ marshaler.write_marshal_from_managed
+            // writing it into the *out ABI struct slot.write_marshal_from_managed
             //: "Marshaller.ConvertToUnmanaged(local)".
             else if (AbiTypeHelpers.IsComplexStruct(context.Cache, underlying))
             {
@@ -1160,7 +1160,7 @@ internal static class AbiMethodBodyFactory
         }
         // Declare locals for complex-struct input parameters (e.g. ProfileUsage with nested
         // string/Nullable fields): default-initialize OUTSIDE try, assign inside try via marshaller,
-        // dispose in finally. Mirrors C++ behavior for non-blittable struct input params.
+        // dispose in finally.
         // Includes both 'in' (ParamCategory.In) and 'in T' (ParamCategory.Ref) forms.
         for (int i = 0; i < sig.Params.Count; i++)
         {
@@ -1429,7 +1429,7 @@ internal static class AbiMethodBodyFactory
         //      reference-type PassArrays via inline-pool span) merged into ONE
         //      "fixed(void* _a = ..., _b = ..., ...) {\n" block.
         // C# allows multiple chained "fixed(...)" without braces to share the next braced
-        // body, which is what the C++ tool emits. This avoids the deep nesting mine had
+        // body, which is what the original code emits. This avoids the deep nesting mine had
         // when emitting a separate fixed block per PassArray.
         int fixedNesting = 0;
 
@@ -1564,7 +1564,7 @@ internal static class AbiMethodBodyFactory
             if (szArr.BaseType.IsString())
             {
                 // Skip pre-call ConvertToUnmanagedUnsafe for FillArray of strings — there's
-                // nothing to convert (native fills the handles). Mirrors C++ truth pattern.
+                // nothing to convert (native fills the handles).
                 if (cat == ParamCategory.FillArray) { continue; }
                 writer.Write(callIndent);
                 writer.WriteLine("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(");
@@ -1742,7 +1742,7 @@ internal static class AbiMethodBodyFactory
         // FillArray of non-blittable element types. The native callee wrote into our
         // ABI-format buffer (_<name>) which is separate from the user's Span<T>; we need to
         // CopyToManaged_<name> to convert each ABI element back to the projected form and
-        // store it in the user's Span. Mirrors C++ marshaler.write_marshal_from_abi
+        // store it in the user's Span.write_marshal_from_abi
         // Blittable element types (primitives and almost-blittable structs) don't need this
         // because the user's Span wraps the same memory the native side wrote to.
         for (int i = 0; i < sig.Params.Count; i++)

@@ -6,7 +6,9 @@ using System.Collections.Generic;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Mirrors the C++ <c>settings_type</c> from <c>settings.h</c>.
+/// Configuration bag for a projection-writer invocation: input metadata paths, output
+/// folder, namespace include/exclude filters, and per-emission-mode flags (component,
+/// reference projection, public enums, etc.).
 /// </summary>
 internal sealed class Settings
 {

@@ -190,7 +190,6 @@ internal static class StructEnumMarshallerFactory
                          && !AbiTypeHelpers.IsTypeBlittable(context.Cache, fieldStructTd3))
                 {
                     // Nested non-blittable struct: dispose via its <Name>Marshaller.
-                    // Mirror C++: this site always uses the fully-qualified marshaller name.
                     string nestedNs = fieldStructTd3.Namespace?.Value ?? string.Empty;
                     string nestedNm = IdentifierEscaping.StripBackticks(fieldStructTd3.Name?.Value ?? string.Empty);
                     writer.WriteLine($"        global::ABI.{nestedNs}.{nestedNm}Marshaller.Dispose(value.{fname});");
