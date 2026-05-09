@@ -38,7 +38,7 @@ internal static partial class CodeWriters
         if (needsClassObjRef)
         {
             string fullName = (classType.Namespace?.Value ?? string.Empty) + "." + (classType.Name?.Value ?? string.Empty);
-            string objRefName = "_objRef_" + EscapeTypeNameForIdentifier("global::" + fullName, stripGlobal: true);
+            string objRefName = "_objRef_" + IIDExpressionWriter.EscapeTypeNameForIdentifier("global::" + fullName, stripGlobal: true);
             writer.Write("\nprivate static WindowsRuntimeObjectReference ");
             writer.Write(objRefName);
             if (context.Settings.ReferenceProjection)
@@ -158,7 +158,7 @@ internal static partial class CodeWriters
             // the WindowsRuntimeObject base constructor with the activation factory objref.
             // The default interface IID is needed too.
             string fullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
-            string objRefName = "_objRef_" + EscapeTypeNameForIdentifier("global::" + fullName, stripGlobal: true);
+            string objRefName = "_objRef_" + IIDExpressionWriter.EscapeTypeNameForIdentifier("global::" + fullName, stripGlobal: true);
 
             // Find the default interface IID to use.
             string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);

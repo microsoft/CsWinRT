@@ -21,7 +21,7 @@ internal static partial class CodeWriters
         writer.Write("[");
         writer.Write(fullyQualify ? "global::System.Runtime.InteropServices.Guid" : "Guid");
         writer.Write("(\"");
-        WriteGuid(writer, type, false);
+        IIDExpressionWriter.WriteGuid(writer, type, false);
         writer.Write("\")]");
     }
     /// <summary>Writes a class or interface inheritance clause: " : Base, Iface1, Iface2&lt;T&gt;".</summary>

@@ -52,7 +52,7 @@ internal static class ObjRefNameGenerator
             WriteFullyQualifiedInterfaceName(scratch, context, ifaceType);
             projected = scratch.ToString();
         }
-        return "_objRef_" + CodeWriters.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
+        return "_objRef_" + IIDExpressionWriter.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
     /// <summary>
     /// Like <see cref="WriteInterfaceTypeName(IndentedTextWriter, ProjectionEmitContext, ITypeDefOrRef)"/>
@@ -166,7 +166,7 @@ internal static class ObjRefNameGenerator
         {
             // Non-mapped, non-generic: ABI.InterfaceIIDs.IID_<EscapedABIName>.
             string abiQualified = "global::ABI." + ns + "." + IdentifierEscaping.StripBackticks(name);
-            string id = CodeWriters.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
+            string id = IIDExpressionWriter.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
             writer.Write("global::ABI.InterfaceIIDs.IID_");
             writer.Write(id);
         }
@@ -180,7 +180,7 @@ internal static class ObjRefNameGenerator
         TypeSemantics sem = TypeSemanticsFactory.Get(gi);
         IndentedTextWriter scratch = new();
         CodeWriters.WriteTypeName(scratch, context, sem, TypedefNameType.ABI, forceWriteNamespace: true);
-        return "IID_" + CodeWriters.EscapeTypeNameForIdentifier(scratch.ToString(), stripGlobal: true, stripGlobalABI: true);
+        return "IID_" + IIDExpressionWriter.EscapeTypeNameForIdentifier(scratch.ToString(), stripGlobal: true, stripGlobalABI: true);
     }
     /// <summary>
     /// Emits the [UnsafeAccessor] extern method declaration that exposes the IID for a generic
@@ -218,7 +218,7 @@ internal static class ObjRefNameGenerator
     {
         (string ns, string name) = type.Names();
         string abiQualified = "global::ABI." + ns + "." + IdentifierEscaping.StripBackticks(name);
-        string id = CodeWriters.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
+        string id = IIDExpressionWriter.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
         writer.Write("global::ABI.InterfaceIIDs.IID_");
         writer.Write(id);
         writer.Write("Reference");

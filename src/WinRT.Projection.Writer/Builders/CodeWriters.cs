@@ -331,7 +331,7 @@ internal static partial class CodeWriters
         {
             // GUID attribute
             writer.Write("[Guid(\"");
-            WriteGuid(writer, type, false);
+            IIDExpressionWriter.WriteGuid(writer, type, false);
             writer.Write("\")]\n");
         }
         writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));

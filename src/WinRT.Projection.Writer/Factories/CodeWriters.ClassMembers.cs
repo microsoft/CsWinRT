@@ -495,7 +495,7 @@ internal static partial class CodeWriters
             IndentedTextWriter __scratchProjectedParent = new();
             WriteTypeName(__scratchProjectedParent, context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
             string projectedParent = __scratchProjectedParent.ToString();
-            genericParentEncoded = EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
+            genericParentEncoded = IIDExpressionWriter.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
             genericInteropType = EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
         }
 

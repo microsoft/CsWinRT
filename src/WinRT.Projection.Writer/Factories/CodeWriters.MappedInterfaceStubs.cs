@@ -164,7 +164,7 @@ internal static partial class CodeWriters
         string interopType = "ABI.System.Collections.Generic.<#corlib>IDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
         string prefix = "IDictionaryMethods_" + keyId + "_" + valId + "_";
         // The IEnumerable<KeyValuePair<K,V>> objref name (matches what WriteClassObjRefDefinitions emits transitively).
-        string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + EscapeTypeNameForIdentifier(kvLong, stripGlobal: false) + "_";
+        string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + IIDExpressionWriter.EscapeTypeNameForIdentifier(kvLong, stripGlobal: false) + "_";
 
         writer.Write("\n");
         EmitUnsafeAccessor(writer, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "");
@@ -269,7 +269,7 @@ internal static partial class CodeWriters
     private static string EncodeArgIdentifier(ProjectionEmitContext context, TypeSemantics arg)
     {
         string projected = WriteTypeNameToString(context, arg, TypedefNameType.Projected, false);
-        return EscapeTypeNameForIdentifier(projected, stripGlobal: true);
+        return IIDExpressionWriter.EscapeTypeNameForIdentifier(projected, stripGlobal: true);
     }
 
     private static void EmitList(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)

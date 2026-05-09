@@ -228,7 +228,7 @@ internal static partial class CodeWriters
         if (type.GenericParameters.Count != 0)
         {
             // Generic interface IID - call the unsafe accessor
-            WriteIidGuidPropertyName(writer, context, type);
+            IIDExpressionWriter.WriteIidGuidPropertyName(writer, context, type);
             writer.Write("(null)");
             return;
         }
@@ -239,7 +239,7 @@ internal static partial class CodeWriters
             return;
         }
         writer.Write("global::ABI.InterfaceIIDs.");
-        WriteIidGuidPropertyName(writer, context, type);
+        IIDExpressionWriter.WriteIidGuidPropertyName(writer, context, type);
     }
 
     /// <summary>True if EmitNativeDelegateBody can emit a real (non-throw) body for this signature.</summary>

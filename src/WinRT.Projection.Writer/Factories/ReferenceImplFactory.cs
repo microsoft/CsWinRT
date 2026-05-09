@@ -120,7 +120,7 @@ internal static class ReferenceImplFactory
         writer.Write("\n    public static ref readonly Guid IID\n    {\n");
         writer.Write("        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
         writer.Write("        get => ref global::ABI.InterfaceIIDs.");
-        CodeWriters.WriteIidReferenceGuidPropertyName(writer, context, type);
+        IIDExpressionWriter.WriteIidReferenceGuidPropertyName(writer, context, type);
         writer.Write(";\n    }\n");
         writer.Write("}\n\n");
     }
