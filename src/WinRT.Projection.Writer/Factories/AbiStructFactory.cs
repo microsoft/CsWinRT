@@ -85,7 +85,7 @@ internal static class AbiStructFactory
             AbiClassFactory.WriteAuthoringMetadataType(writer, context, type);
         }
 
-        CodeWriters.WriteStructEnumMarshallerClass(writer, context, type);
+        StructEnumMarshallerFactory.WriteStructEnumMarshallerClass(writer, context, type);
         ReferenceImplFactory.Write(writer, context, type);
     }
 }

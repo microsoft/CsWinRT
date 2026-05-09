@@ -17,7 +17,7 @@ internal static class AbiEnumFactory
     /// <param name="type">The enum type definition.</param>
     public static void Write(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        CodeWriters.WriteStructEnumMarshallerClass(writer, context, type);
+        StructEnumMarshallerFactory.WriteStructEnumMarshallerClass(writer, context, type);
         ReferenceImplFactory.Write(writer, context, type);
 
         // In component mode, also emit the authoring metadata wrapper for enums.
