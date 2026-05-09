@@ -94,7 +94,7 @@ internal static partial class CodeWriters
     /// cross-assembly/TypeRef-row references via the metadata cache. Returns <c>null</c> when
     /// the reference cannot be resolved.
     /// </summary>
-    private static TypeDefinition? TryResolveStructTypeDef(MetadataCache cache, AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr)
+    internal static TypeDefinition? TryResolveStructTypeDef(MetadataCache cache, AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr)
     {
         if (tdr.Type is TypeDefinition td) { return td; }
         if (tdr.Type is TypeReference tr)
@@ -103,89 +103,6 @@ internal static partial class CodeWriters
             return cache.Find(ns + "." + name);
         }
         return null;
-    }
-    public static void WriteAbiEnum(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-    {
-        WriteStructEnumMarshallerClass(writer, context, type);
-        WriteReferenceImpl(writer, context, type);
-
-        // In component mode, also emit the authoring metadata wrapper for enums.
-        if (context.Settings.Component)
-        {
-            WriteAuthoringMetadataType(writer, context, type);
-        }
-    }
-    public static void WriteAbiStruct(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-    {
-
-        // Emit the underlying ABI struct only when not blittable AND not a mapped struct
-        // (mapped structs like Duration/KeyTime/RepeatBehavior have addition files that
-        // replace the public struct's field layout, so a per-field ABI struct can't be
-        // built directly from the projected type).
-        bool blittable = IsTypeBlittable(context.Cache, type);
-        (string typeNs, string typeNm) = type.Names();
-        bool isMappedStruct = MappedTypes.Get(typeNs, typeNm) is not null;
-        if (!blittable && !isMappedStruct)
-        {
-            // type attribute; otherwise emit the ComWrappers attribute. Both branches then
-            // emit [WindowsRuntimeClassName] + the struct definition with public ABI fields.
-            if (context.Settings.Component)
-            {
-                WriteWinRTMetadataTypeNameAttribute(writer, context, type);
-                WriteWinRTMappedTypeAttribute(writer, context, type);
-            }
-            else
-            {
-                WriteComWrapperMarshallerAttribute(writer, context, type);
-            }
-            WriteValueTypeWinRTClassNameAttribute(writer, context, type);
-            writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
-            writer.Write(" unsafe struct ");
-            WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write("\n{\n");
-            foreach (FieldDefinition field in type.Fields)
-            {
-                if (field.IsStatic || field.Signature is null) { continue; }
-                AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                writer.Write("public ");
-                // Truth uses void* for string and Nullable<T> fields, the ABI struct for
-                // mapped value types (DateTime/TimeSpan), and the projected type for everything
-                // else (including enums and bool — their C# layout matches the WinRT ABI directly).
-                if (ft.IsString() || TryGetNullablePrimitiveMarshallerName(ft, out _))
-                {
-                    writer.Write("void*");
-                }
-                else if (IsMappedAbiValueType(ft))
-                {
-                    writer.Write(GetMappedAbiTypeName(ft));
-                }
-                else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature tdr
-                         && TryResolveStructTypeDef(context.Cache, tdr) is TypeDefinition fieldTd
-                         && TypeCategorization.GetCategory(fieldTd) == TypeCategory.Struct
-                         && !IsTypeBlittable(context.Cache, fieldTd))
-                {
-                    WriteTypedefName(writer, context, fieldTd, TypedefNameType.ABI, false);
-                }
-                else
-                {
-                    WriteProjectedSignature(writer, context, ft, false);
-                }
-                writer.Write(" ");
-                writer.Write(field.Name?.Value ?? string.Empty);
-                writer.Write(";\n");
-            }
-            writer.Write("}\n\n");
-        }
-        else if (blittable && context.Settings.Component)
-        {
-            // For blittable component structs, the C++ tool emits the authoring metadata wrapper
-            // (a 'file static class T {}' with [WindowsRuntimeMetadataTypeName]/[WindowsRuntimeMappedType]/
-            // [WindowsRuntimeReferenceType]/[ComWrappersMarshaller]/[WindowsRuntimeClassName]).
-            WriteAuthoringMetadataType(writer, context, type);
-        }
-
-        WriteStructEnumMarshallerClass(writer, context, type);
-        WriteReferenceImpl(writer, context, type);
     }
     public static void WriteAbiDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
@@ -5501,7 +5418,7 @@ internal static partial class CodeWriters
     /// <summary>True if the type signature is a Nullable&lt;T&gt; where T is a primitive
     /// supported by an ABI.System.&lt;T&gt;Marshaller (e.g. UInt64Marshaller, Int32Marshaller, etc.).
     /// Returns the fully-qualified marshaller name in <paramref name="marshallerName"/>.</summary>
-    private static bool TryGetNullablePrimitiveMarshallerName(AsmResolver.DotNet.Signatures.TypeSignature sig, out string? marshallerName)
+    internal static bool TryGetNullablePrimitiveMarshallerName(AsmResolver.DotNet.Signatures.TypeSignature sig, out string? marshallerName)
     {
         marshallerName = null;
         if (sig is not AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi) { return false; }
@@ -5569,7 +5486,7 @@ internal static partial class CodeWriters
     }
 
     /// <summary>True if the type is a mapped value type that needs ABI marshalling (excluding HResult, handled separately).</summary>
-    private static bool IsMappedAbiValueType(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static bool IsMappedAbiValueType(AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         if (!IsMappedMarshalingValueType(sig, out _, out string mappedName)) { return false; }
         // HResult/Exception is treated specially in many places; this helper is for DateTime/TimeSpan only.
@@ -5577,7 +5494,7 @@ internal static partial class CodeWriters
     }
 
     /// <summary>Returns the ABI type name for a mapped value type (e.g. 'global::ABI.System.TimeSpan').</summary>
-    private static string GetMappedAbiTypeName(AsmResolver.DotNet.Signatures.TypeSignature sig)
+    internal static string GetMappedAbiTypeName(AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
         if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
         return "global::ABI." + ns + "." + name;

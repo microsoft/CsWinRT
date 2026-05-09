@@ -70,7 +70,7 @@ internal static partial class CodeWriters
                 WriteAbiInterface(writer, context, type);
                 break;
             case TypeCategory.Struct:
-                WriteAbiStruct(writer, context, type);
+                AbiStructFactory.Write(writer, context, type);
                 break;
         }
     }
