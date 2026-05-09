@@ -80,14 +80,14 @@ internal static partial class CodeWriters
             ushort u => u,
             short s => (ushort)s,
             int i => (ushort)i,
-            _ => (ushort)0
+            _ => 0
         };
         static byte ToByte(object? v) => v switch
         {
             byte b => b,
             sbyte sb => (byte)sb,
             int i => (byte)i,
-            _ => (byte)0
+            _ => 0
         };
     }
     public static void WriteGuid(TextWriter w, TypeDefinition type, bool lowerCase)
