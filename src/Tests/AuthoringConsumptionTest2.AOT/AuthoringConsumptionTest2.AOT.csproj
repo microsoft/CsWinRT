@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+
+    <!-- Source generator emits the merged ABI.{AssemblyName}.ManagedExports.GetActivationFactory
+         dispatcher walking each referenced component's ManagedExports. -->
+    <CsWinRTMergeReferencedActivationFactories>true</CsWinRTMergeReferencedActivationFactories>
+
+    <!-- AOT publish into a single self-contained native dll exporting DllGetActivationFactory. -->
+    <PublishAot>true</PublishAot>
+    <NativeLib>Shared</NativeLib>
+    <SelfContained>true</SelfContained>
+    <OutputType>Exe</OutputType>
+    <CustomNativeMain>true</CustomNativeMain>
+    <IsTrimmable>true</IsTrimmable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="EntryPoint.cs" />
+    <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj" />
+    <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj" />
+    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+  </ItemGroup>
+
+</Project>
