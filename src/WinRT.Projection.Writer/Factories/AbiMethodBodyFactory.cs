@@ -657,7 +657,6 @@ internal static class AbiMethodBodyFactory
             }
             else
             {
-                string abiType = AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt);
                 writer.Write($"        *{retParamName} = ");
                 if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
                     corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)

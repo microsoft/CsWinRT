@@ -20,7 +20,6 @@ internal static class StructEnumMarshallerFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
         TypeCategory cat = TypeCategorization.GetCategory(type);
-        bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
         // "Almost-blittable" includes blittable + bool/char fields. Excludes string/object fields.
         // Use the same predicate as IsAnyStruct (which is now scoped to almost-blittable).
         AsmResolver.DotNet.Signatures.TypeDefOrRefSignature sig = type.ToTypeSignature(false) is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature td2 ? td2 : null!;
