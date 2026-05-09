@@ -167,12 +167,12 @@ internal static class AbiInterfaceFactory
         writer.Write("internal unsafe struct ");
         writer.Write(nameStripped);
         writer.Write("Vftbl\n{\n");
-        writer.Write("public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;\n");
-        writer.Write("public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;\n");
-        writer.Write("public delegate* unmanaged[MemberFunction]<void*, uint> Release;\n");
-        writer.Write("public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;\n");
-        writer.Write("public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;\n");
-        writer.Write("public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;\n");
+        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;");
+        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;");
+        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint> Release;");
+        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;");
+        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;");
+        writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, int*, int> GetTrustLevel;");
 
         foreach (MethodDefinition method in type.Methods)
         {
@@ -182,9 +182,9 @@ internal static class AbiInterfaceFactory
             WriteAbiParameterTypesPointer(writer, context, sig);
             writer.Write(", int> ");
             writer.Write(vm);
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
-        writer.Write("}\n");
+        writer.WriteLine("}");
     }
 
     /// <summary>Mirrors C++ <c>write_interface_impl</c> (simplified).</summary>
@@ -198,7 +198,7 @@ internal static class AbiInterfaceFactory
         writer.Write("\npublic static unsafe class ");
         writer.Write(nameStripped);
         writer.Write("Impl\n{\n");
-        writer.Write("[FixedAddressValueType]\n");
+        writer.WriteLine("[FixedAddressValueType]");
         writer.Write("private static readonly ");
         writer.Write(nameStripped);
         writer.Write("Vftbl Vftbl;\n\n");
@@ -206,7 +206,7 @@ internal static class AbiInterfaceFactory
         writer.Write("static ");
         writer.Write(nameStripped);
         writer.Write("Impl()\n{\n");
-        writer.Write("    *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;\n");
+        writer.WriteLine("    *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;");
         foreach (MethodDefinition method in type.Methods)
         {
             string vm = AbiTypeHelpers.GetVMethodName(type, method);
@@ -214,7 +214,7 @@ internal static class AbiInterfaceFactory
             writer.Write(vm);
             writer.Write(" = &Do_Abi_");
             writer.Write(vm);
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
         writer.Write("}\n\n");
 
@@ -313,7 +313,7 @@ internal static class AbiInterfaceFactory
                 EventTableFactory.EmitEventTableField(writer, context, evt, ifaceFullName);
             }
 
-            writer.Write("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]\n");
+            writer.WriteLine("[UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]");
             writer.Write("private static unsafe int Do_Abi_");
             writer.Write(vm);
             writer.Write("(");
@@ -358,7 +358,7 @@ internal static class AbiInterfaceFactory
             if (evt.AddMethod is MethodDefinition a) { EmitOneDoAbi(a); }
             if (evt.RemoveMethod is MethodDefinition r) { EmitOneDoAbi(r); }
         }
-        writer.Write("}\n");
+        writer.WriteLine("}");
     }
 
     public static void WriteInterfaceMarshaller(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -390,7 +390,7 @@ internal static class AbiInterfaceFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n");
-        writer.Write("#nullable disable\n");
+        writer.WriteLine("#nullable disable");
     }
 
     /// <summary>
@@ -489,7 +489,7 @@ internal static class AbiInterfaceFactory
             AbiMethodBodyFactory.EmitMethodsClassMembersFor(writer, context, iface, startSlot, segSkipEvents);
         }
 
-        writer.Write("}\n");
+        writer.WriteLine("}");
     }
 
 }

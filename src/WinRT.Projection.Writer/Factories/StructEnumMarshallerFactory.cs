@@ -63,14 +63,14 @@ internal static class StructEnumMarshallerFactory
             writer.Write(" ConvertToUnmanaged(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" value)\n    {\n");
-            writer.Write("        return new() {\n");
+            writer.WriteLine("        return new() {");
             bool first = true;
             foreach (FieldDefinition field in type.Fields)
             {
                 if (field.IsStatic || field.Signature is null) { continue; }
                 string fname = field.Name?.Value ?? "";
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                if (!first) { writer.Write(",\n"); }
+                if (!first) { writer.WriteLine(","); }
                 first = false;
                 writer.Write("            ");
                 writer.Write(fname);
@@ -143,7 +143,7 @@ internal static class StructEnumMarshallerFactory
                 if (field.IsStatic || field.Signature is null) { continue; }
                 string fname = field.Name?.Value ?? "";
                 AsmResolver.DotNet.Signatures.TypeSignature ft = field.Signature.FieldType;
-                if (!first) { writer.Write(",\n"); }
+                if (!first) { writer.WriteLine(","); }
                 first = false;
                 writer.Write("            ");
                 if (useObjectInitializer)
@@ -212,7 +212,7 @@ internal static class StructEnumMarshallerFactory
                 {
                     writer.Write("        HStringMarshaller.Free(value.");
                     writer.Write(fname);
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
                 else if (ft.IsHResultException())
                 {
@@ -243,16 +243,16 @@ internal static class StructEnumMarshallerFactory
                     writer.Write(nestedNm);
                     writer.Write("Marshaller.Dispose(value.");
                     writer.Write(fname);
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
                 else if (AbiTypeHelpers.TryGetNullablePrimitiveMarshallerName(ft, out _))
                 {
                     writer.Write("        WindowsRuntimeUnknownMarshaller.Free(value.");
                     writer.Write(fname);
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
             }
-            writer.Write("    }\n");
+            writer.WriteLine("    }");
         }
 
         // BoxToUnmanaged: same pattern for all (enum, almost-blittable, complex).
@@ -297,7 +297,7 @@ internal static class StructEnumMarshallerFactory
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.Write("? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write(">(value);\n");
+            writer.WriteLine(">(value);");
             writer.Write("        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;\n    }\n");
         }
         else
@@ -328,31 +328,31 @@ internal static class StructEnumMarshallerFactory
             writer.Write("file static class ");
             writer.Write(nameStripped);
             writer.Write("InterfaceEntriesImpl\n{\n");
-            writer.Write("    [FixedAddressValueType]\n");
+            writer.WriteLine("    [FixedAddressValueType]");
             writer.Write("    public static readonly ReferenceInterfaceEntries Entries;\n\n");
             writer.Write("    static ");
             writer.Write(nameStripped);
             writer.Write("InterfaceEntriesImpl()\n    {\n");
             writer.Write("        Entries.IReferenceValue.IID = ");
             writer.Write(iidRefExpr);
-            writer.Write(";\n");
+            writer.WriteLine(";");
             writer.Write("        Entries.IReferenceValue.Vtable = ");
             writer.Write(nameStripped);
-            writer.Write("ReferenceImpl.Vtable;\n");
-            writer.Write("        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;\n");
-            writer.Write("        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;\n");
-            writer.Write("        Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;\n");
-            writer.Write("        Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;\n");
-            writer.Write("        Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;\n");
-            writer.Write("        Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;\n");
-            writer.Write("        Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;\n");
-            writer.Write("        Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;\n");
-            writer.Write("        Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;\n");
-            writer.Write("        Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;\n");
-            writer.Write("        Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;\n");
-            writer.Write("        Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;\n");
-            writer.Write("        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;\n");
-            writer.Write("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;\n");
+            writer.WriteLine("ReferenceImpl.Vtable;");
+            writer.WriteLine("        Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;");
+            writer.WriteLine("        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;");
+            writer.WriteLine("        Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;");
+            writer.WriteLine("        Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;");
+            writer.WriteLine("        Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;");
+            writer.WriteLine("        Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;");
+            writer.WriteLine("        Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;");
+            writer.WriteLine("        Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;");
+            writer.WriteLine("        Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;");
+            writer.WriteLine("        Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;");
+            writer.WriteLine("        Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;");
+            writer.WriteLine("        Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;");
+            writer.WriteLine("        Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;");
+            writer.WriteLine("        Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;");
             writer.Write("    }\n}\n\n");
             // is NOT emitted for STRUCTS (the attribute is supplied by cswinrtgen instead). Enums
             // and other types still emit it from write_abi_enum/etc.
@@ -367,12 +367,12 @@ internal static class StructEnumMarshallerFactory
             writer.Write(hasReferenceFields ? "TrackerSupport" : "None");
             writer.Write(");\n    }\n\n");
             writer.Write("    public override ComInterfaceEntry* ComputeVtables(out int count)\n    {\n");
-            writer.Write("        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);\n");
+            writer.WriteLine("        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);");
             writer.Write("        return (ComInterfaceEntry*)Unsafe.AsPointer(in ");
             writer.Write(nameStripped);
             writer.Write("InterfaceEntriesImpl.Entries);\n    }\n\n");
             writer.Write("    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {\n");
-            writer.Write("        wrapperFlags = CreatedWrapperFlags.NonWrapping;\n");
+            writer.WriteLine("        wrapperFlags = CreatedWrapperFlags.NonWrapping;");
             if (isComplexStruct)
             {
                 writer.Write("        return ");
@@ -381,7 +381,7 @@ internal static class StructEnumMarshallerFactory
                 TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
                 writer.Write(">(value, in ");
                 writer.Write(iidRefExpr);
-                writer.Write("));\n");
+                writer.WriteLine("));");
             }
             else
             {
@@ -389,7 +389,7 @@ internal static class StructEnumMarshallerFactory
                 TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
                 writer.Write(">(value, in ");
                 writer.Write(iidRefExpr);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
             writer.Write("    }\n}\n");
         }

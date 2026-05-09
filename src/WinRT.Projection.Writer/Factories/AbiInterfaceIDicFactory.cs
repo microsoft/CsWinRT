@@ -150,10 +150,10 @@ internal static class AbiInterfaceIDicFactory
         writer.Write($"int {icoll}Count => {target}.Count;\n");
         writer.Write($"bool {icoll}IsReadOnly => {target}.IsReadOnly;\n");
         writer.Write($"{valueText} {self}this[{keyText} key] \n");
-        writer.Write("{\n");
+        writer.WriteLine("{");
         writer.Write($"get => {target}[key];\n");
         writer.Write($"set => {target}[key] = value;\n");
-        writer.Write("}\n");
+        writer.WriteLine("}");
         writer.Write($"void {self}Add({keyText} key, {valueText} value) => {target}.Add(key, value);\n");
         writer.Write($"bool {self}ContainsKey({keyText} key) => {target}.ContainsKey(key);\n");
         writer.Write($"bool {self}Remove({keyText} key) => {target}.Remove(key);\n");
@@ -166,16 +166,16 @@ internal static class AbiInterfaceIDicFactory
         // Enumerable forwarders.
         writer.Write("\n");
         writer.Write($"IEnumerator<KeyValuePair<{keyText}, {valueText}>> IEnumerable<KeyValuePair<{keyText}, {valueText}>>.GetEnumerator() => {target}.GetEnumerator();\n");
-        writer.Write("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();\n");
+        writer.WriteLine("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();");
         // IObservableMap.MapChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>.";
         writer.Write("\n");
         writer.Write($"event global::Windows.Foundation.Collections.MapChangedEventHandler<{keyText}, {valueText}> {obsSelf}MapChanged\n");
-        writer.Write("{\n");
+        writer.WriteLine("{");
         writer.Write($"add => {obsTarget}.MapChanged += value;\n");
         writer.Write($"remove => {obsTarget}.MapChanged -= value;\n");
-        writer.Write("}\n");
+        writer.WriteLine("}");
     }
 
     /// <summary>
@@ -193,10 +193,10 @@ internal static class AbiInterfaceIDicFactory
         writer.Write($"int {icoll}Count => {target}.Count;\n");
         writer.Write($"bool {icoll}IsReadOnly => {target}.IsReadOnly;\n");
         writer.Write($"{elementText} {self}this[int index]\n");
-        writer.Write("{\n");
+        writer.WriteLine("{");
         writer.Write($"get => {target}[index];\n");
         writer.Write($"set => {target}[index] = value;\n");
-        writer.Write("}\n");
+        writer.WriteLine("}");
         writer.Write($"int {self}IndexOf({elementText} item) => {target}.IndexOf(item);\n");
         writer.Write($"void {self}Insert(int index, {elementText} item) => {target}.Insert(index, item);\n");
         writer.Write($"void {self}RemoveAt(int index) => {target}.RemoveAt(index);\n");
@@ -207,16 +207,16 @@ internal static class AbiInterfaceIDicFactory
         writer.Write($"bool {icoll}Remove({elementText} item) => {target}.Remove(item);\n");
         writer.Write("\n");
         writer.Write($"IEnumerator<{elementText}> IEnumerable<{elementText}>.GetEnumerator() => {target}.GetEnumerator();\n");
-        writer.Write("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();\n");
+        writer.WriteLine("IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();");
         // IObservableVector.VectorChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
         string obsSelf = $"global::Windows.Foundation.Collections.IObservableVector<{elementText}>.";
         writer.Write("\n");
         writer.Write($"event global::Windows.Foundation.Collections.VectorChangedEventHandler<{elementText}> {obsSelf}VectorChanged\n");
-        writer.Write("{\n");
+        writer.WriteLine("{");
         writer.Write($"add => {obsTarget}.VectorChanged += value;\n");
         writer.Write($"remove => {obsTarget}.VectorChanged -= value;\n");
-        writer.Write("}\n");
+        writer.WriteLine("}");
     }
 
     /// <summary>
@@ -259,7 +259,7 @@ internal static class AbiInterfaceIDicFactory
                 if (i > 0) { writer.Write(", "); }
                 ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
             }
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
 
         foreach (PropertyDefinition prop in type.Properties)
@@ -281,7 +281,7 @@ internal static class AbiInterfaceIDicFactory
                 writer.Write(ccwIfaceName);
                 writer.Write(")(WindowsRuntimeObject)this).");
                 writer.Write(pname);
-                writer.Write(";\n");
+                writer.WriteLine(";");
             }
             else
             {
@@ -292,7 +292,7 @@ internal static class AbiInterfaceIDicFactory
                     writer.Write(ccwIfaceName);
                     writer.Write(")(WindowsRuntimeObject)this).");
                     writer.Write(pname);
-                    writer.Write(";\n");
+                    writer.WriteLine(";");
                 }
                 if (setter is not null)
                 {
@@ -300,9 +300,9 @@ internal static class AbiInterfaceIDicFactory
                     writer.Write(ccwIfaceName);
                     writer.Write(")(WindowsRuntimeObject)this).");
                     writer.Write(pname);
-                    writer.Write(" = value;\n");
+                    writer.WriteLine(" = value;");
                 }
-                writer.Write("}\n");
+                writer.WriteLine("}");
             }
         }
 
@@ -320,13 +320,13 @@ internal static class AbiInterfaceIDicFactory
             writer.Write(ccwIfaceName);
             writer.Write(")(WindowsRuntimeObject)this).");
             writer.Write(evtName);
-            writer.Write(" += value;\n");
+            writer.WriteLine(" += value;");
             writer.Write("    remove => ((");
             writer.Write(ccwIfaceName);
             writer.Write(")(WindowsRuntimeObject)this).");
             writer.Write(evtName);
-            writer.Write(" -= value;\n");
-            writer.Write("}\n");
+            writer.WriteLine(" -= value;");
+            writer.WriteLine("}");
         }
     }
 
@@ -350,27 +350,27 @@ internal static class AbiInterfaceIDicFactory
             case "IBindableVector":
                 // IList covers IList, ICollection, and IEnumerable members.
                 writer.Write("\n");
-                writer.Write("int global::System.Collections.ICollection.Count => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Count;\n");
-                writer.Write("bool global::System.Collections.ICollection.IsSynchronized => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsSynchronized;\n");
-                writer.Write("object global::System.Collections.ICollection.SyncRoot => ((global::System.Collections.IList)(WindowsRuntimeObject)this).SyncRoot;\n");
+                writer.WriteLine("int global::System.Collections.ICollection.Count => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Count;");
+                writer.WriteLine("bool global::System.Collections.ICollection.IsSynchronized => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsSynchronized;");
+                writer.WriteLine("object global::System.Collections.ICollection.SyncRoot => ((global::System.Collections.IList)(WindowsRuntimeObject)this).SyncRoot;");
                 writer.Write("void global::System.Collections.ICollection.CopyTo(Array array, int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).CopyTo(array, index);\n\n");
                 writer.Write("object global::System.Collections.IList.this[int index]\n{\n");
-                writer.Write("get => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index];\n");
+                writer.WriteLine("get => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index];");
                 writer.Write("set => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index] = value;\n}\n");
-                writer.Write("bool global::System.Collections.IList.IsFixedSize => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsFixedSize;\n");
-                writer.Write("bool global::System.Collections.IList.IsReadOnly => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsReadOnly;\n");
-                writer.Write("int global::System.Collections.IList.Add(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Add(value);\n");
-                writer.Write("void global::System.Collections.IList.Clear() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Clear();\n");
-                writer.Write("bool global::System.Collections.IList.Contains(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Contains(value);\n");
-                writer.Write("int global::System.Collections.IList.IndexOf(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IndexOf(value);\n");
-                writer.Write("void global::System.Collections.IList.Insert(int index, object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Insert(index, value);\n");
-                writer.Write("void global::System.Collections.IList.Remove(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Remove(value);\n");
+                writer.WriteLine("bool global::System.Collections.IList.IsFixedSize => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsFixedSize;");
+                writer.WriteLine("bool global::System.Collections.IList.IsReadOnly => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsReadOnly;");
+                writer.WriteLine("int global::System.Collections.IList.Add(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Add(value);");
+                writer.WriteLine("void global::System.Collections.IList.Clear() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Clear();");
+                writer.WriteLine("bool global::System.Collections.IList.Contains(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Contains(value);");
+                writer.WriteLine("int global::System.Collections.IList.IndexOf(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IndexOf(value);");
+                writer.WriteLine("void global::System.Collections.IList.Insert(int index, object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Insert(index, value);");
+                writer.WriteLine("void global::System.Collections.IList.Remove(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Remove(value);");
                 writer.Write("void global::System.Collections.IList.RemoveAt(int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).RemoveAt(index);\n\n");
-                writer.Write("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).GetEnumerator();\n");
+                writer.WriteLine("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).GetEnumerator();");
                 break;
             case "IBindableIterable":
                 writer.Write("\n");
-                writer.Write("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IEnumerable)(WindowsRuntimeObject)this).GetEnumerator();\n");
+                writer.WriteLine("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IEnumerable)(WindowsRuntimeObject)this).GetEnumerator();");
                 break;
         }
     }
@@ -437,7 +437,7 @@ internal static class AbiInterfaceIDicFactory
                 writer.Write("    get\n    {\n");
                 writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
                 writer.Write(ccwIfaceName);
-                writer.Write(").TypeHandle);\n");
+                writer.WriteLine(").TypeHandle);");
                 writer.Write("        return ");
                 writer.Write(abiClass);
                 writer.Write(".");
@@ -460,20 +460,20 @@ internal static class AbiInterfaceIDicFactory
                         ClassMembersFactory.WriteInterfaceTypeNameForCcw(writer, context, baseIfaceWithGetter);
                         writer.Write(")(WindowsRuntimeObject)this).");
                         writer.Write(pname);
-                        writer.Write("; }\n");
+                        writer.WriteLine("; }");
                     }
                 }
                 writer.Write("    set\n    {\n");
                 writer.Write("        var _obj = ((WindowsRuntimeObject)this).GetObjectReferenceForInterface(typeof(");
                 writer.Write(ccwIfaceName);
-                writer.Write(").TypeHandle);\n");
+                writer.WriteLine(").TypeHandle);");
                 writer.Write("        ");
                 writer.Write(abiClass);
                 writer.Write(".");
                 writer.Write(pname);
                 writer.Write("(_obj, value);\n    }\n");
             }
-            writer.Write("}\n");
+            writer.WriteLine("}");
         }
 
         // Events: emit explicit interface event implementations on the IDIC interface that
@@ -506,7 +506,7 @@ internal static class AbiInterfaceIDicFactory
             writer.Write(".");
             writer.Write(evtName);
             writer.Write("((WindowsRuntimeObject)this, _obj).Unsubscribe(value);\n    }\n");
-            writer.Write("}\n");
+            writer.WriteLine("}");
         }
     }
 

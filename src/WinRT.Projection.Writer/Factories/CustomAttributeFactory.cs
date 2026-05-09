@@ -257,7 +257,7 @@ internal static class CustomAttributeFactory
                 {
                     writer.Write("[global::System.Runtime.Versioning.SupportedOSPlatform(");
                     writer.Write(platform);
-                    writer.Write(")]\n");
+                    writer.WriteLine(")]");
                     return;
                 }
             }
@@ -350,7 +350,7 @@ internal static class CustomAttributeFactory
                 }
                 writer.Write(")");
             }
-            writer.Write("]\n");
+            writer.WriteLine("]");
         }
     }
 

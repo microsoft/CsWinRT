@@ -74,7 +74,7 @@ internal static class AbiStructFactory
                 }
                 writer.Write(" ");
                 writer.Write(field.Name?.Value ?? string.Empty);
-                writer.Write(";\n");
+                writer.WriteLine(";");
             }
             writer.Write("}\n\n");
         }

@@ -74,7 +74,7 @@ internal static class AbiMethodBodyFactory
             IndentedTextWriter __scratchProjectedTypeName = new();
             MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, rt!, false);
             string projectedTypeName = __scratchProjectedTypeName.ToString();
-            writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            writer.WriteLine("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
             writer.Write("    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
             writer.Write(retParamName);
             writer.Write("([UnsafeAccessorType(\"");
@@ -99,7 +99,7 @@ internal static class AbiMethodBodyFactory
             IndentedTextWriter __scratchProjectedTypeName = new();
             MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
             string projectedTypeName = __scratchProjectedTypeName.ToString();
-            writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            writer.WriteLine("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
             writer.Write("    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
             writer.Write(raw);
             writer.Write("([UnsafeAccessorType(\"");
@@ -132,7 +132,7 @@ internal static class AbiMethodBodyFactory
                     : AbiTypeHelpers.IsAnyStruct(context.Cache, sza.BaseType)
                         ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)
                         : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType);
-            writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            writer.WriteLine("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
             writer.Write("    static extern void ConvertToUnmanaged_");
             writer.Write(raw);
             writer.Write("([UnsafeAccessorType(\"");
@@ -159,7 +159,7 @@ internal static class AbiMethodBodyFactory
 
             _ = elementInteropArg;
             string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
-            writer.Write("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            writer.WriteLine("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
             writer.Write("    static extern void ConvertToUnmanaged_");
             writer.Write(retParamName);
             writer.Write("([UnsafeAccessorType(\"");
@@ -177,7 +177,7 @@ internal static class AbiMethodBodyFactory
             {
                 writer.Write("    string ");
                 writer.Write(retLocalName);
-                writer.Write(" = default;\n");
+                writer.WriteLine(" = default;");
             }
             else if (returnIsRefType)
             {
@@ -188,7 +188,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(projected);
                 writer.Write(" ");
                 writer.Write(retLocalName);
-                writer.Write(" = default;\n");
+                writer.WriteLine(" = default;");
             }
             else if (returnIsReceiveArrayDoAbi)
             {
@@ -199,7 +199,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(projected);
                 writer.Write(" ");
                 writer.Write(retLocalName);
-                writer.Write(" = default;\n");
+                writer.WriteLine(" = default;");
             }
             else
             {
@@ -210,7 +210,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(projected);
                 writer.Write(" ");
                 writer.Write(retLocalName);
-                writer.Write(" = default;\n");
+                writer.WriteLine(" = default;");
             }
         }
 
@@ -220,16 +220,16 @@ internal static class AbiMethodBodyFactory
             {
                 writer.Write("    *");
                 writer.Write(retParamName);
-                writer.Write(" = default;\n");
+                writer.WriteLine(" = default;");
                 writer.Write("    *");
                 writer.Write(retSizeParamName);
-                writer.Write(" = default;\n");
+                writer.WriteLine(" = default;");
             }
             else
             {
                 writer.Write("    *");
                 writer.Write(retParamName);
-                writer.Write(" = default;\n");
+                writer.WriteLine(" = default;");
             }
         }
         // For each out parameter, clear the destination and declare a local.
@@ -245,7 +245,7 @@ internal static class AbiMethodBodyFactory
             string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             writer.Write("    *");
             writer.Write(ptr);
-            writer.Write(" = default;\n");
+            writer.WriteLine(" = default;");
         }
         for (int i = 0; i < sig.Params.Count; i++)
         {
@@ -263,7 +263,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(projected);
             writer.Write(" __");
             writer.Write(raw);
-            writer.Write(" = default;\n");
+            writer.WriteLine(" = default;");
         }
         // For each ReceiveArray parameter (out T[]), zero the destination + size out pointers
         // and declare a managed array local. The managed call passes 'out __<name>' and after
@@ -281,15 +281,15 @@ internal static class AbiMethodBodyFactory
             string elementProjected = __scratchElementProjected.ToString();
             writer.Write("    *");
             writer.Write(ptr);
-            writer.Write(" = default;\n");
+            writer.WriteLine(" = default;");
             writer.Write("    *__");
             writer.Write(raw);
-            writer.Write("Size = default;\n");
+            writer.WriteLine("Size = default;");
             writer.Write("    ");
             writer.Write(elementProjected);
             writer.Write("[] __");
             writer.Write(raw);
-            writer.Write(" = default;\n");
+            writer.WriteLine(" = default;");
         }
         // For each blittable array (PassArray / FillArray) parameter, declare a Span<T> local that
         // wraps the (length, pointer) pair from the ABI signature.
@@ -318,7 +318,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(ptr);
                 writer.Write(", (int)__");
                 writer.Write(raw);
-                writer.Write("Size);\n");
+                writer.WriteLine("Size);");
             }
             else
             {
@@ -327,12 +327,12 @@ internal static class AbiMethodBodyFactory
                 writer.Write(elementProjected);
                 writer.Write("> __");
                 writer.Write(raw);
-                writer.Write("_inlineArray);\n");
+                writer.WriteLine("_inlineArray);");
                 writer.Write("    ");
                 writer.Write(elementProjected);
                 writer.Write("[] __");
                 writer.Write(raw);
-                writer.Write("_arrayFromPool = null;\n");
+                writer.WriteLine("_arrayFromPool = null;");
                 writer.Write("    Span<");
                 writer.Write(elementProjected);
                 writer.Write("> __");
@@ -349,7 +349,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(elementProjected);
                 writer.Write(">.Shared.Rent((int)__");
                 writer.Write(raw);
-                writer.Write("Size));\n");
+                writer.WriteLine("Size));");
             }
         }
         writer.Write("    try\n    {\n");
@@ -391,7 +391,7 @@ internal static class AbiMethodBodyFactory
                 dataParamType = "void** data";
                 dataCastExpr = "(void**)" + ptr;
             }
-            writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]\n");
+            writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]");
             writer.Write("        static extern void CopyToManaged_");
             writer.Write(raw);
             writer.Write("([UnsafeAccessorType(\"");
@@ -400,7 +400,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(dataParamType);
             writer.Write(", Span<");
             writer.Write(elementProjected);
-            writer.Write("> span);\n");
+            writer.WriteLine("> span);");
             writer.Write("        CopyToManaged_");
             writer.Write(raw);
             writer.Write("(null, __");
@@ -409,7 +409,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(dataCastExpr);
             writer.Write(", __");
             writer.Write(raw);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
 
         // For generic instance ABI input parameters, emit local UnsafeAccessor delegates and locals
@@ -430,7 +430,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(innerMarshaller);
                 writer.Write(".UnboxToManaged(");
                 writer.Write(callName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
             else if (p.Type.IsGenericInstance())
             {
@@ -440,21 +440,21 @@ internal static class AbiMethodBodyFactory
                 IndentedTextWriter __scratchProjectedTypeName = new();
                 MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
                 string projectedTypeName = __scratchProjectedTypeName.ToString();
-                writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
                 writer.Write("        static extern ");
                 writer.Write(projectedTypeName);
                 writer.Write(" ConvertToManaged_arg_");
                 writer.Write(rawName);
                 writer.Write("([UnsafeAccessorType(\"");
                 writer.Write(interopTypeName);
-                writer.Write("\")] object _, void* value);\n");
+                writer.WriteLine("\")] object _, void* value);");
                 writer.Write("        var __arg_");
                 writer.Write(rawName);
                 writer.Write(" = ConvertToManaged_arg_");
                 writer.Write(rawName);
                 writer.Write("(null, ");
                 writer.Write(callName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
         }
 
@@ -495,7 +495,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(ifaceFullName);
             writer.Write(">((ComInterfaceDispatch*)thisPtr).");
             writer.Write(propName);
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
         else if (isSetter)
         {
@@ -506,7 +506,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(propName);
             writer.Write(" = ");
             EmitDoAbiParamArgConversion(writer, context, sig.Params[0]);
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
         else
         {
@@ -603,7 +603,7 @@ internal static class AbiMethodBodyFactory
                     EmitDoAbiParamArgConversion(writer, context, p);
                 }
             }
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
         // After call: write back out params to caller's pointer.
         // NOTE: Ref params (WinRT 'in T') are read-only inputs — never written back.
@@ -684,7 +684,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write("__");
                 writer.Write(raw);
             }
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
         // After call: for ReceiveArray params, emit ConvertToUnmanaged_<name> call (the
         // [UnsafeAccessor] declaration was hoisted to the top of the method body).
@@ -703,7 +703,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(raw);
             writer.Write("Size, out *");
             writer.Write(ptr);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
         // After call: for non-blittable FillArray params (Span<T> where T is string/runtime
         // class/object/non-blittable struct), copy the managed delegate's writes back into the
@@ -755,7 +755,7 @@ internal static class AbiMethodBodyFactory
                 dataParamType = abiStructName + "* data";
                 dataCastType = "(" + abiStructName + "*)";
             }
-            writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
+            writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]");
             writer.Write("        static extern void CopyToUnmanaged_");
             writer.Write(raw);
             writer.Write("([UnsafeAccessorType(\"");
@@ -764,7 +764,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(elementProjected);
             writer.Write("> span, uint length, ");
             writer.Write(dataParamType);
-            writer.Write(");\n");
+            writer.WriteLine(");");
             writer.Write("        CopyToUnmanaged_");
             writer.Write(raw);
             writer.Write("(null, __");
@@ -774,7 +774,7 @@ internal static class AbiMethodBodyFactory
             writer.Write("Size, ");
             writer.Write(dataCastType);
             writer.Write(ptr);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
         if (rt is not null)
         {
@@ -784,7 +784,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(retParamName);
                 writer.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(");
                 writer.Write(retLocalName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
             else if (returnIsString)
             {
@@ -792,7 +792,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(retParamName);
                 writer.Write(" = HStringMarshaller.ConvertToUnmanaged(");
                 writer.Write(retLocalName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
             else if (returnIsRefType)
             {
@@ -807,7 +807,7 @@ internal static class AbiMethodBodyFactory
                     writer.Write(innerMarshaller);
                     writer.Write(".BoxToUnmanaged(");
                     writer.Write(retLocalName);
-                    writer.Write(").DetachThisPtrUnsafe();\n");
+                    writer.WriteLine(").DetachThisPtrUnsafe();");
                 }
                 else if (returnIsGenericInstance)
                 {
@@ -819,7 +819,7 @@ internal static class AbiMethodBodyFactory
                     writer.Write(retParamName);
                     writer.Write("(null, ");
                     writer.Write(retLocalName);
-                    writer.Write(").DetachThisPtrUnsafe();\n");
+                    writer.WriteLine(").DetachThisPtrUnsafe();");
                 }
                 else
                 {
@@ -827,7 +827,7 @@ internal static class AbiMethodBodyFactory
                     writer.Write(retParamName);
                     writer.Write(" = ");
                     EmitMarshallerConvertToUnmanaged(writer, context, rt!, retLocalName);
-                    writer.Write(".DetachThisPtrUnsafe();\n");
+                    writer.WriteLine(".DetachThisPtrUnsafe();");
                 }
             }
             else if (returnIsReceiveArrayDoAbi)
@@ -842,7 +842,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(retSizeParamName);
                 writer.Write(", out *");
                 writer.Write(retParamName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
             else if (AbiTypeHelpers.IsMappedAbiValueType(rt))
             {
@@ -853,7 +853,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(AbiTypeHelpers.GetMappedMarshallerName(rt));
                 writer.Write(".ConvertToUnmanaged(");
                 writer.Write(retLocalName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
             else if (rt.IsSystemType())
             {
@@ -862,7 +862,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(retParamName);
                 writer.Write(" = global::ABI.System.TypeMarshaller.ConvertToUnmanaged(");
                 writer.Write(retLocalName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
             else if (AbiTypeHelpers.IsComplexStruct(context.Cache, rt))
             {
@@ -873,7 +873,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, rt));
                 writer.Write(".ConvertToUnmanaged(");
                 writer.Write(retLocalName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
             else if (returnIsBlittableStruct)
             {
@@ -881,7 +881,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(retParamName);
                 writer.Write(" = ");
                 writer.Write(retLocalName);
-                writer.Write(";\n");
+                writer.WriteLine(";");
             }
             else
             {
@@ -893,24 +893,24 @@ internal static class AbiMethodBodyFactory
                     corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
                 {
                     writer.Write(retLocalName);
-                    writer.Write(";\n");
+                    writer.WriteLine(";");
                 }
                 else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
                          corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
                 {
                     writer.Write(retLocalName);
-                    writer.Write(";\n");
+                    writer.WriteLine(";");
                 }
                 else if (AbiTypeHelpers.IsEnumType(context.Cache, rt))
                 {
                     // Enum: function pointer signature uses the projected enum type, no cast needed.
                     writer.Write(retLocalName);
-                    writer.Write(";\n");
+                    writer.WriteLine(";");
                 }
                 else
                 {
                     writer.Write(retLocalName);
-                    writer.Write(";\n");
+                    writer.WriteLine(";");
                 }
             }
         }
@@ -953,7 +953,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(raw);
                 writer.Write("_arrayFromPool);\n        }\n");
             }
-            writer.Write("    }\n");
+            writer.WriteLine("    }");
         }
 
         writer.Write("}\n\n");
@@ -1072,7 +1072,7 @@ internal static class AbiMethodBodyFactory
             string mname = method.Name?.Value ?? string.Empty;
             MethodSig sig = new(method);
 
-            writer.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
+            writer.WriteLine("    [MethodImpl(MethodImplOptions.NoInlining)]");
             writer.Write("    public static unsafe ");
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write(" ");
@@ -1099,7 +1099,7 @@ internal static class AbiMethodBodyFactory
             if (gMethod is not null)
             {
                 MethodSig getSig = new(gMethod);
-                writer.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
+                writer.WriteLine("    [MethodImpl(MethodImplOptions.NoInlining)]");
                 writer.Write("    public static unsafe ");
                 writer.Write(propType);
                 writer.Write(" ");
@@ -1110,7 +1110,7 @@ internal static class AbiMethodBodyFactory
             if (sMethod is not null)
             {
                 MethodSig setSig = new(sMethod);
-                writer.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
+                writer.WriteLine("    [MethodImpl(MethodImplOptions.NoInlining)]");
                 writer.Write("    public static unsafe void ");
                 writer.Write(pname);
                 writer.Write("(WindowsRuntimeObjectReference thisReference, ");
@@ -1173,14 +1173,14 @@ internal static class AbiMethodBodyFactory
             writer.Write("> _");
             writer.Write(evtName);
             writer.Write("\n    {\n");
-            writer.Write("        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
+            writer.WriteLine("        [MethodImpl(MethodImplOptions.AggressiveInlining)]");
             writer.Write("        get\n        {\n");
-            writer.Write("            [MethodImpl(MethodImplOptions.NoInlining)]\n");
+            writer.WriteLine("            [MethodImpl(MethodImplOptions.NoInlining)]");
             writer.Write("            static ConditionalWeakTable<object, ");
             writer.Write(eventSourceProjectedFull);
             writer.Write("> MakeTable()\n            {\n");
             writer.Write("                _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);\n\n");
-            writer.Write("                return global::System.Threading.Volatile.Read(in field);\n");
+            writer.WriteLine("                return global::System.Threading.Volatile.Read(in field);");
             writer.Write("            }\n\n");
             writer.Write("            return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n        }\n    }\n");
 
@@ -1192,37 +1192,37 @@ internal static class AbiMethodBodyFactory
             writer.Write("(object thisObject, WindowsRuntimeObjectReference thisReference)\n    {\n");
             if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
             {
-                writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]\n");
+                writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]");
                 writer.Write("        [return: UnsafeAccessorType(\"");
                 writer.Write(eventSourceInteropType);
-                writer.Write("\")]\n");
+                writer.WriteLine("\")]");
                 writer.Write("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);\n\n");
                 writer.Write("        return _");
                 writer.Write(evtName);
-                writer.Write(".GetOrAdd(\n");
-                writer.Write("            key: thisObject,\n");
+                writer.WriteLine(".GetOrAdd(");
+                writer.WriteLine("            key: thisObject,");
                 writer.Write("            valueFactory: static (_, thisReference) => Unsafe.As<");
                 writer.Write(eventSourceProjectedFull);
                 writer.Write(">(ctor(thisReference, ");
                 writer.Write(eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                writer.Write(")),\n");
-                writer.Write("            factoryArgument: thisReference);\n");
+                writer.WriteLine(")),");
+                writer.WriteLine("            factoryArgument: thisReference);");
             }
             else
             {
                 // Non-generic delegate: directly construct.
                 writer.Write("        return _");
                 writer.Write(evtName);
-                writer.Write(".GetOrAdd(\n");
-                writer.Write("            key: thisObject,\n");
+                writer.WriteLine(".GetOrAdd(");
+                writer.WriteLine("            key: thisObject,");
                 writer.Write("            valueFactory: static (_, thisReference) => new ");
                 writer.Write(eventSourceProjectedFull);
                 writer.Write("(thisReference, ");
                 writer.Write(eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                writer.Write("),\n");
-                writer.Write("            factoryArgument: thisReference);\n");
+                writer.WriteLine("),");
+                writer.WriteLine("            factoryArgument: thisReference);");
             }
-            writer.Write("    }\n");
+            writer.WriteLine("    }");
         }
     }
 
@@ -1364,8 +1364,8 @@ internal static class AbiMethodBodyFactory
         fp.Append(", int");
 
         writer.Write("\n    {\n");
-        writer.Write("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();\n");
-        writer.Write("        void* ThisPtr = thisValue.GetThisPtrUnsafe();\n");
+        writer.WriteLine("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();");
+        writer.WriteLine("        void* ThisPtr = thisValue.GetThisPtrUnsafe();");
 
         // Declare 'using' marshaller values for ref-type parameters (these need disposing).
         for (int i = 0; i < sig.Params.Count; i++)
@@ -1379,7 +1379,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(localName);
                 writer.Write(" = ");
                 EmitMarshallerConvertToUnmanaged(writer, context, p.Type, callName);
-                writer.Write(";\n");
+                writer.WriteLine(";");
             }
             else if (p.Type.IsNullableT())
             {
@@ -1394,7 +1394,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(innerMarshaller);
                 writer.Write(".BoxToUnmanaged(");
                 writer.Write(callName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
             else if (p.Type.IsGenericInstance())
             {
@@ -1405,21 +1405,21 @@ internal static class AbiMethodBodyFactory
                 IndentedTextWriter __scratchProjectedTypeName = new();
                 MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
                 string projectedTypeName = __scratchProjectedTypeName.ToString();
-                writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+                writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
                 writer.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
                 writer.Write(localName);
                 writer.Write("([UnsafeAccessorType(\"");
                 writer.Write(interopTypeName);
                 writer.Write("\")] object _, ");
                 writer.Write(projectedTypeName);
-                writer.Write(" value);\n");
+                writer.WriteLine(" value);");
                 writer.Write("        using WindowsRuntimeObjectReferenceValue __");
                 writer.Write(localName);
                 writer.Write(" = ConvertToUnmanaged_");
                 writer.Write(localName);
                 writer.Write("(null, ");
                 writer.Write(callName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
         }
         // (String input params are now stack-allocated via the fast-path pinning pattern below;
@@ -1436,7 +1436,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(localName);
             writer.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(");
             writer.Write(callName);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
         // Declare locals for mapped value-type input parameters (DateTime/TimeSpan): convert via marshaller up-front.
         for (int i = 0; i < sig.Params.Count; i++)
@@ -1454,7 +1454,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(AbiTypeHelpers.GetMappedMarshallerName(p.Type));
             writer.Write(".ConvertToUnmanaged(");
             writer.Write(callName);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
         // Declare locals for complex-struct input parameters (e.g. ProfileUsage with nested
         // string/Nullable fields): default-initialize OUTSIDE try, assign inside try via marshaller,
@@ -1472,7 +1472,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(AbiTypeHelpers.GetAbiStructTypeName(writer, context, pType));
             writer.Write(" __");
             writer.Write(localName);
-            writer.Write(" = default;\n");
+            writer.WriteLine(" = default;");
         }
         // Declare locals for Out parameters (need to be passed as &__<name> to the call).
         for (int i = 0; i < sig.Params.Count; i++)
@@ -1490,7 +1490,7 @@ internal static class AbiMethodBodyFactory
             else { writer.Write(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uOut)); }
             writer.Write(" __");
             writer.Write(localName);
-            writer.Write(" = default;\n");
+            writer.WriteLine(" = default;");
         }
         // Declare locals for ReceiveArray params (uint length + element pointer).
         for (int i = 0; i < sig.Params.Count; i++)
@@ -1502,7 +1502,7 @@ internal static class AbiMethodBodyFactory
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
             writer.Write("        uint __");
             writer.Write(localName);
-            writer.Write("_length = default;\n");
+            writer.WriteLine("_length = default;");
             writer.Write("        ");
             // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
             // primitive ABI otherwise.
@@ -1524,7 +1524,7 @@ internal static class AbiMethodBodyFactory
             }
             writer.Write("* __");
             writer.Write(localName);
-            writer.Write("_data = default;\n");
+            writer.WriteLine("_data = default;");
         }
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
         // (runtime classes, objects, strings). Runtime class/object: just one InlineArray16<nint>.
@@ -1553,12 +1553,12 @@ internal static class AbiMethodBodyFactory
             writer.Write(storageT);
             writer.Write("> __");
             writer.Write(localName);
-            writer.Write("_inlineArray);\n");
+            writer.WriteLine("_inlineArray);");
             writer.Write("        ");
             writer.Write(storageT);
             writer.Write("[] __");
             writer.Write(localName);
-            writer.Write("_arrayFromPool = null;\n");
+            writer.WriteLine("_arrayFromPool = null;");
             writer.Write("        Span<");
             writer.Write(storageT);
             writer.Write("> __");
@@ -1575,7 +1575,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(storageT);
             writer.Write(">.Shared.Rent(");
             writer.Write(callName);
-            writer.Write(".Length));\n");
+            writer.WriteLine(".Length));");
 
             if (szArr.BaseType.IsString() && cat == ParamCategory.PassArray)
             {
@@ -1584,10 +1584,10 @@ internal static class AbiMethodBodyFactory
                 // fills HSTRING handles directly into the nint storage.
                 writer.Write("\n        Unsafe.SkipInit(out InlineArray16<HStringHeader> __");
                 writer.Write(localName);
-                writer.Write("_inlineHeaderArray);\n");
+                writer.WriteLine("_inlineHeaderArray);");
                 writer.Write("        HStringHeader[] __");
                 writer.Write(localName);
-                writer.Write("_headerArrayFromPool = null;\n");
+                writer.WriteLine("_headerArrayFromPool = null;");
                 writer.Write("        Span<HStringHeader> __");
                 writer.Write(localName);
                 writer.Write("_headerSpan = ");
@@ -1600,14 +1600,14 @@ internal static class AbiMethodBodyFactory
                 writer.Write(localName);
                 writer.Write("_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent(");
                 writer.Write(callName);
-                writer.Write(".Length));\n");
+                writer.WriteLine(".Length));");
 
                 writer.Write("\n        Unsafe.SkipInit(out InlineArray16<nint> __");
                 writer.Write(localName);
-                writer.Write("_inlinePinnedHandleArray);\n");
+                writer.WriteLine("_inlinePinnedHandleArray);");
                 writer.Write("        nint[] __");
                 writer.Write(localName);
-                writer.Write("_pinnedHandleArrayFromPool = null;\n");
+                writer.WriteLine("_pinnedHandleArrayFromPool = null;");
                 writer.Write("        Span<nint> __");
                 writer.Write(localName);
                 writer.Write("_pinnedHandleSpan = ");
@@ -1620,13 +1620,13 @@ internal static class AbiMethodBodyFactory
                 writer.Write(localName);
                 writer.Write("_pinnedHandleArrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent(");
                 writer.Write(callName);
-                writer.Write(".Length));\n");
+                writer.WriteLine(".Length));");
             }
         }
         if (returnIsReceiveArray)
         {
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
-            writer.Write("        uint __retval_length = default;\n");
+            writer.WriteLine("        uint __retval_length = default;");
             writer.Write("        ");
             if (retSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject())
             {
@@ -1652,45 +1652,45 @@ internal static class AbiMethodBodyFactory
             {
                 writer.Write(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType));
             }
-            writer.Write("* __retval_data = default;\n");
+            writer.WriteLine("* __retval_data = default;");
         }
         else if (returnIsHResultException)
         {
-            writer.Write("        global::ABI.System.Exception __retval = default;\n");
+            writer.WriteLine("        global::ABI.System.Exception __retval = default;");
         }
         else if (returnIsString || returnIsRefType)
         {
-            writer.Write("        void* __retval = default;\n");
+            writer.WriteLine("        void* __retval = default;");
         }
         else if (returnIsAnyStruct)
         {
             writer.Write("        ");
             writer.Write(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, rt!));
-            writer.Write(" __retval = default;\n");
+            writer.WriteLine(" __retval = default;");
         }
         else if (returnIsComplexStruct)
         {
             writer.Write("        ");
             writer.Write(AbiTypeHelpers.GetAbiStructTypeName(writer, context, rt!));
-            writer.Write(" __retval = default;\n");
+            writer.WriteLine(" __retval = default;");
         }
         else if (rt is not null && AbiTypeHelpers.IsMappedAbiValueType(rt))
         {
             // Mapped value type return (e.g. DateTime/TimeSpan): use the ABI struct as __retval.
             writer.Write("        ");
             writer.Write(AbiTypeHelpers.GetMappedAbiTypeName(rt));
-            writer.Write(" __retval = default;\n");
+            writer.WriteLine(" __retval = default;");
         }
         else if (rt is not null && rt.IsSystemType())
         {
             // System.Type return: use ABI Type struct as __retval.
-            writer.Write("        global::ABI.System.Type __retval = default;\n");
+            writer.WriteLine("        global::ABI.System.Type __retval = default;");
         }
         else if (rt is not null)
         {
             writer.Write("        ");
             writer.Write(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt));
-            writer.Write(" __retval = default;\n");
+            writer.WriteLine(" __retval = default;");
         }
 
         // Determine if we need a try/finally (for cleanup of string/refType return or receive array
@@ -1758,7 +1758,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, pType));
             writer.Write(".ConvertToUnmanaged(");
             writer.Write(callName);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
         // Type input params: set up TypeReference locals before the fixed block. Mirrors truth:
         //   global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(forType, out TypeReference __forType);
@@ -1774,7 +1774,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(callName);
             writer.Write(", out TypeReference __");
             writer.Write(localName);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
         // Open a SINGLE fixed-block for ALL pinnable inputs (mirrors C++ write_abi_invoke):
         //   1. Ref params (typed ptr, separate "fixed(T* _x = &x)\n" lines, no braces)
@@ -1828,7 +1828,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(localName);
                 writer.Write(" = &");
                 writer.Write(callName);
-                writer.Write(")\n");
+                writer.WriteLine(")");
                 typedFixedCount++;
             }
         }
@@ -1896,10 +1896,10 @@ internal static class AbiMethodBodyFactory
                     writer.Write(callName);
                 }
             }
-            writer.Write(")\n");
+            writer.WriteLine(")");
             writer.Write(indent);
             writer.Write(new string(' ', fixedNesting * 4));
-            writer.Write("{\n");
+            writer.WriteLine("{");
             fixedNesting++;
             // Inside the body: emit HStringMarshaller calls for input string params.
             for (int i = 0; i < sig.Params.Count; i++)
@@ -1915,7 +1915,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(callName);
                 writer.Write("?.Length, out HStringReference __");
                 writer.Write(localName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
             stringPinnablesEmitted = true;
         }
@@ -1925,7 +1925,7 @@ internal static class AbiMethodBodyFactory
             // to host them. Open a brace block after the last typed fixed line.
             writer.Write(indent);
             writer.Write(new string(' ', fixedNesting * 4));
-            writer.Write("{\n");
+            writer.WriteLine("{");
             fixedNesting++;
         }
         // Suppress unused variable warning when block above doesn't fire.
@@ -1953,23 +1953,23 @@ internal static class AbiMethodBodyFactory
                 // nothing to convert (native fills the handles). Mirrors C++ truth pattern.
                 if (cat == ParamCategory.FillArray) { continue; }
                 writer.Write(callIndent);
-                writer.Write("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(\n");
+                writer.WriteLine("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(");
                 writer.Write(callIndent);
                 writer.Write("    source: ");
                 writer.Write(callName);
-                writer.Write(",\n");
+                writer.WriteLine(",");
                 writer.Write(callIndent);
                 writer.Write("    hstringHeaders: (HStringHeader*) _");
                 writer.Write(localName);
-                writer.Write("_inlineHeaderArray,\n");
+                writer.WriteLine("_inlineHeaderArray,");
                 writer.Write(callIndent);
                 writer.Write("    hstrings: __");
                 writer.Write(localName);
-                writer.Write("_span,\n");
+                writer.WriteLine("_span,");
                 writer.Write(callIndent);
                 writer.Write("    pinnedGCHandles: __");
                 writer.Write(localName);
-                writer.Write("_pinnedHandleSpan);\n");
+                writer.WriteLine("_pinnedHandleSpan);");
             }
             else
             {
@@ -2014,7 +2014,7 @@ internal static class AbiMethodBodyFactory
                     dataCastType = "(void**)";
                 }
                 writer.Write(callIndent);
-                writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
+                writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]");
                 writer.Write(callIndent);
                 writer.Write("static extern void CopyToUnmanaged_");
                 writer.Write(localName);
@@ -2024,7 +2024,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(elementProjected);
                 writer.Write("> span, uint length, ");
                 writer.Write(dataParamType);
-                writer.Write(" data);\n");
+                writer.WriteLine(" data);");
                 writer.Write(callIndent);
                 writer.Write("CopyToUnmanaged_");
                 writer.Write(localName);
@@ -2036,7 +2036,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(dataCastType);
                 writer.Write("_");
                 writer.Write(localName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
         }
 
@@ -2213,7 +2213,7 @@ internal static class AbiMethodBodyFactory
                 dataCastType = "(" + abiStructName + "*)";
             }
             writer.Write(callIndent);
-            writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]\n");
+            writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]");
             writer.Write(callIndent);
             writer.Write("static extern void CopyToManaged_");
             writer.Write(localName);
@@ -2223,7 +2223,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(dataParamType);
             writer.Write(", Span<");
             writer.Write(elementProjected);
-            writer.Write("> span);\n");
+            writer.WriteLine("> span);");
             writer.Write(callIndent);
             writer.Write("CopyToManaged_");
             writer.Write(localName);
@@ -2235,7 +2235,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(localName);
             writer.Write(", ");
             writer.Write(callName);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
 
         // After call: write back Out params to caller's 'out' var.
@@ -2258,7 +2258,7 @@ internal static class AbiMethodBodyFactory
                 MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
                 string projectedTypeName = __scratchProjectedTypeName.ToString();
                 writer.Write(callIndent);
-                writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
                 writer.Write(callIndent);
                 writer.Write("static extern ");
                 writer.Write(projectedTypeName);
@@ -2266,14 +2266,14 @@ internal static class AbiMethodBodyFactory
                 writer.Write(localName);
                 writer.Write("([UnsafeAccessorType(\"");
                 writer.Write(interopTypeName);
-                writer.Write("\")] object _, void* value);\n");
+                writer.WriteLine("\")] object _, void* value);");
                 writer.Write(callIndent);
                 writer.Write(callName);
                 writer.Write(" = ConvertToManaged_");
                 writer.Write(localName);
                 writer.Write("(null, __");
                 writer.Write(localName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
                 continue;
             }
 
@@ -2339,7 +2339,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write("__");
                 writer.Write(localName);
             }
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
 
         // Writeback for ReceiveArray params: emit a UnsafeAccessor + assign to the out param.
@@ -2369,7 +2369,7 @@ internal static class AbiMethodBodyFactory
             _ = elementInteropArg;
             string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
             writer.Write(callIndent);
-            writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+            writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
             writer.Write(callIndent);
             writer.Write("static extern ");
             writer.Write(elementProjected);
@@ -2379,7 +2379,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(marshallerPath);
             writer.Write("\")] object _, uint length, ");
             writer.Write(elementAbi);
-            writer.Write("* data);\n");
+            writer.WriteLine("* data);");
             writer.Write(callIndent);
             writer.Write(callName);
             writer.Write(" = ConvertToManaged_");
@@ -2388,7 +2388,7 @@ internal static class AbiMethodBodyFactory
             writer.Write(localName);
             writer.Write("_length, __");
             writer.Write(localName);
-            writer.Write("_data);\n");
+            writer.WriteLine("_data);");
         }
         if (rt is not null)
         {
@@ -2413,7 +2413,7 @@ internal static class AbiMethodBodyFactory
 
                 _ = elementInteropArg;
                 writer.Write(callIndent);
-                writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
                 writer.Write(callIndent);
                 writer.Write("static extern ");
                 writer.Write(elementProjected);
@@ -2421,19 +2421,19 @@ internal static class AbiMethodBodyFactory
                 writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType));
                 writer.Write("\")] object _, uint length, ");
                 writer.Write(elementAbi);
-                writer.Write("* data);\n");
+                writer.WriteLine("* data);");
                 writer.Write(callIndent);
-                writer.Write("return ConvertToManaged_retval(null, __retval_length, __retval_data);\n");
+                writer.WriteLine("return ConvertToManaged_retval(null, __retval_length, __retval_data);");
             }
             else if (returnIsHResultException)
             {
                 writer.Write(callIndent);
-                writer.Write("return global::ABI.System.ExceptionMarshaller.ConvertToManaged(__retval);\n");
+                writer.WriteLine("return global::ABI.System.ExceptionMarshaller.ConvertToManaged(__retval);");
             }
             else if (returnIsString)
             {
                 writer.Write(callIndent);
-                writer.Write("return HStringMarshaller.ConvertToManaged(__retval);\n");
+                writer.WriteLine("return HStringMarshaller.ConvertToManaged(__retval);");
             }
             else if (returnIsRefType)
             {
@@ -2446,7 +2446,7 @@ internal static class AbiMethodBodyFactory
                     writer.Write(callIndent);
                     writer.Write("return ");
                     writer.Write(innerMarshaller);
-                    writer.Write(".UnboxToManaged(__retval);\n");
+                    writer.WriteLine(".UnboxToManaged(__retval);");
                 }
                 else if (rt.IsGenericInstance())
                 {
@@ -2455,22 +2455,22 @@ internal static class AbiMethodBodyFactory
                     MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, rt, false);
                     string projectedTypeName = __scratchProjectedTypeName.ToString();
                     writer.Write(callIndent);
-                    writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+                    writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
                     writer.Write(callIndent);
                     writer.Write("static extern ");
                     writer.Write(projectedTypeName);
                     writer.Write(" ConvertToManaged_retval([UnsafeAccessorType(\"");
                     writer.Write(interopTypeName);
-                    writer.Write("\")] object _, void* value);\n");
+                    writer.WriteLine("\")] object _, void* value);");
                     writer.Write(callIndent);
-                    writer.Write("return ConvertToManaged_retval(null, __retval);\n");
+                    writer.WriteLine("return ConvertToManaged_retval(null, __retval);");
                 }
                 else
                 {
                     writer.Write(callIndent);
                     writer.Write("return ");
                     EmitMarshallerConvertToManaged(writer, context, rt, "__retval");
-                    writer.Write(";\n");
+                    writer.WriteLine(";");
                 }
             }
             else if (rt is not null && AbiTypeHelpers.IsMappedAbiValueType(rt))
@@ -2479,13 +2479,13 @@ internal static class AbiMethodBodyFactory
                 writer.Write(callIndent);
                 writer.Write("return ");
                 writer.Write(AbiTypeHelpers.GetMappedMarshallerName(rt));
-                writer.Write(".ConvertToManaged(__retval);\n");
+                writer.WriteLine(".ConvertToManaged(__retval);");
             }
             else if (rt is not null && rt.IsSystemType())
             {
                 // System.Type return: convert ABI Type struct back to System.Type via TypeMarshaller.
                 writer.Write(callIndent);
-                writer.Write("return global::ABI.System.TypeMarshaller.ConvertToManaged(__retval);\n");
+                writer.WriteLine("return global::ABI.System.TypeMarshaller.ConvertToManaged(__retval);");
             }
             else if (returnIsAnyStruct)
             {
@@ -2495,11 +2495,11 @@ internal static class AbiMethodBodyFactory
                     // Mapped value type return: convert ABI struct back to projected via marshaller.
                     writer.Write("return ");
                     writer.Write(AbiTypeHelpers.GetMappedMarshallerName(rt));
-                    writer.Write(".ConvertToManaged(__retval);\n");
+                    writer.WriteLine(".ConvertToManaged(__retval);");
                 }
                 else
                 {
-                    writer.Write("return __retval;\n");
+                    writer.WriteLine("return __retval;");
                 }
             }
             else if (returnIsComplexStruct)
@@ -2507,7 +2507,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(callIndent);
                 writer.Write("return ");
                 writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, rt!));
-                writer.Write(".ConvertToManaged(__retval);\n");
+                writer.WriteLine(".ConvertToManaged(__retval);");
             }
             else
             {
@@ -2517,12 +2517,12 @@ internal static class AbiMethodBodyFactory
                 MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt!, false);
                 string projected = __scratchProjected.ToString();
                 string abiType = AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt!);
-                if (projected == abiType) { writer.Write("__retval;\n"); }
+                if (projected == abiType) { writer.WriteLine("__retval;"); }
                 else
                 {
                     writer.Write("(");
                     writer.Write(projected);
-                    writer.Write(")__retval;\n");
+                    writer.WriteLine(")__retval;");
                 }
             }
         }
@@ -2532,7 +2532,7 @@ internal static class AbiMethodBodyFactory
         {
             writer.Write(indent);
             writer.Write(new string(' ', i * 4));
-            writer.Write("}\n");
+            writer.WriteLine("}");
         }
 
         if (needsTryFinally)
@@ -2559,7 +2559,7 @@ internal static class AbiMethodBodyFactory
                 writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, pType));
                 writer.Write(".Dispose(__");
                 writer.Write(localName);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
             // 1. Cleanup non-blittable PassArray/FillArray params:
             // For strings: HStringArrayMarshaller.Dispose + return ArrayPools (3 of them).
@@ -2646,7 +2646,7 @@ internal static class AbiMethodBodyFactory
                     string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
 
                     _ = elementInteropArg;
-                    writer.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]\n");
+                    writer.WriteLine("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]");
                     writer.Write("            static extern void Dispose_");
                     writer.Write(localName);
                     writer.Write("([UnsafeAccessorType(\"");
@@ -2701,19 +2701,19 @@ internal static class AbiMethodBodyFactory
                 {
                     writer.Write("            HStringMarshaller.Free(__");
                     writer.Write(localName);
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
                 else if (uOut.IsObject() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsGenericInstance())
                 {
                     writer.Write("            WindowsRuntimeUnknownMarshaller.Free(__");
                     writer.Write(localName);
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
                 else if (uOut.IsSystemType())
                 {
                     writer.Write("            global::ABI.System.TypeMarshaller.Dispose(__");
                     writer.Write(localName);
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
                 else if (AbiTypeHelpers.IsComplexStruct(context.Cache, uOut))
                 {
@@ -2721,7 +2721,7 @@ internal static class AbiMethodBodyFactory
                     writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, uOut));
                     writer.Write(".Dispose(__");
                     writer.Write(localName);
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
             }
 
@@ -2746,7 +2746,7 @@ internal static class AbiMethodBodyFactory
 
                 _ = elementInteropArg;
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
-                writer.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
+                writer.WriteLine("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]");
                 writer.Write("            static extern void Free_");
                 writer.Write(localName);
                 writer.Write("([UnsafeAccessorType(\"");
@@ -2760,28 +2760,28 @@ internal static class AbiMethodBodyFactory
                 writer.Write(localName);
                 writer.Write("_length, __");
                 writer.Write(localName);
-                writer.Write("_data);\n");
+                writer.WriteLine("_data);");
             }
 
             // 4. Free return value (__retval) — emitted last to match truth ordering.
             if (returnIsString)
             {
-                writer.Write("            HStringMarshaller.Free(__retval);\n");
+                writer.WriteLine("            HStringMarshaller.Free(__retval);");
             }
             else if (returnIsRefType)
             {
-                writer.Write("            WindowsRuntimeUnknownMarshaller.Free(__retval);\n");
+                writer.WriteLine("            WindowsRuntimeUnknownMarshaller.Free(__retval);");
             }
             else if (returnIsComplexStruct)
             {
                 writer.Write("            ");
                 writer.Write(AbiTypeHelpers.GetMarshallerFullName(writer, context, rt!));
-                writer.Write(".Dispose(__retval);\n");
+                writer.WriteLine(".Dispose(__retval);");
             }
             else if (returnIsSystemTypeForCleanup)
             {
                 // System.Type return: dispose the ABI.System.Type's HSTRING fields.
-                writer.Write("            global::ABI.System.TypeMarshaller.Dispose(__retval);\n");
+                writer.WriteLine("            global::ABI.System.TypeMarshaller.Dispose(__retval);");
             }
             else if (returnIsReceiveArray)
             {
@@ -2800,19 +2800,19 @@ internal static class AbiMethodBodyFactory
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
-                writer.Write("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]\n");
+                writer.WriteLine("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]");
                 writer.Write("            static extern void Free_retval([UnsafeAccessorType(\"");
                 writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType));
                 writer.Write("\")] object _, uint length, ");
                 writer.Write(elementAbi);
-                writer.Write("* data);\n");
-                writer.Write("            Free_retval(null, __retval_length, __retval_data);\n");
+                writer.WriteLine("* data);");
+                writer.WriteLine("            Free_retval(null, __retval_length, __retval_data);");
             }
 
-            writer.Write("        }\n");
+            writer.WriteLine("        }");
         }
 
-        writer.Write("    }\n");
+        writer.WriteLine("    }");
     }
 
     /// <summary>Emits the call to the appropriate marshaller's ConvertToUnmanaged for a runtime class / object input parameter.</summary>

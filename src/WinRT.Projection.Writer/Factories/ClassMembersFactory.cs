@@ -46,27 +46,27 @@ internal static class ClassMembersFactory
             {
                 writer.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
                 writer.Write(kvp.Key);
-                writer.Write("\")]\n");
+                writer.WriteLine("\")]");
                 writer.Write("static extern ");
                 writer.Write(s.GetterPropTypeText);
                 writer.Write(" ");
                 writer.Write(s.GetterGenericAccessorName);
                 writer.Write("([UnsafeAccessorType(\"");
                 writer.Write(s.GetterGenericInteropType);
-                writer.Write("\")] object _, WindowsRuntimeObjectReference thisReference);\n");
+                writer.WriteLine("\")] object _, WindowsRuntimeObjectReference thisReference);");
             }
             if (s.HasSetter && s.SetterIsGeneric && !string.IsNullOrEmpty(s.SetterGenericInteropType))
             {
                 writer.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
                 writer.Write(kvp.Key);
-                writer.Write("\")]\n");
+                writer.WriteLine("\")]");
                 writer.Write("static extern void ");
                 writer.Write(s.SetterGenericAccessorName);
                 writer.Write("([UnsafeAccessorType(\"");
                 writer.Write(s.SetterGenericInteropType);
                 writer.Write("\")] object _, WindowsRuntimeObjectReference thisReference, ");
                 writer.Write(s.SetterPropTypeText);
-                writer.Write(" value);\n");
+                writer.WriteLine(" value);");
             }
 
             writer.Write("\n");
@@ -144,7 +144,7 @@ internal static class ClassMembersFactory
                     }
                     if (context.Settings.ReferenceProjection)
                     {
-                        writer.Write("    get => throw null;\n");
+                        writer.WriteLine("    get => throw null;");
                     }
                     else if (s.GetterIsGeneric)
                     {
@@ -154,11 +154,11 @@ internal static class ClassMembersFactory
                             writer.Write(s.GetterGenericAccessorName);
                             writer.Write("(null, ");
                             writer.Write(s.GetterObjRef);
-                            writer.Write(");\n");
+                            writer.WriteLine(");");
                         }
                         else
                         {
-                            writer.Write("    get => throw null!;\n");
+                            writer.WriteLine("    get => throw null!;");
                         }
                     }
                     else
@@ -169,7 +169,7 @@ internal static class ClassMembersFactory
                         writer.Write(kvp.Key);
                         writer.Write("(");
                         writer.Write(s.GetterObjRef);
-                        writer.Write(");\n");
+                        writer.WriteLine(");");
                     }
                 }
                 if (s.HasSetter)
@@ -181,7 +181,7 @@ internal static class ClassMembersFactory
                     }
                     if (context.Settings.ReferenceProjection)
                     {
-                        writer.Write("    set => throw null;\n");
+                        writer.WriteLine("    set => throw null;");
                     }
                     else if (s.SetterIsGeneric)
                     {
@@ -191,11 +191,11 @@ internal static class ClassMembersFactory
                             writer.Write(s.SetterGenericAccessorName);
                             writer.Write("(null, ");
                             writer.Write(s.SetterObjRef);
-                            writer.Write(", value);\n");
+                            writer.WriteLine(", value);");
                         }
                         else
                         {
-                            writer.Write("    set => throw null!;\n");
+                            writer.WriteLine("    set => throw null!;");
                         }
                     }
                     else
@@ -206,10 +206,10 @@ internal static class ClassMembersFactory
                         writer.Write(kvp.Key);
                         writer.Write("(");
                         writer.Write(s.SetterObjRef);
-                        writer.Write(", value);\n");
+                        writer.WriteLine(", value);");
                     }
                 }
-                writer.Write("}\n");
+                writer.WriteLine("}");
             }
 
             // For overridable properties, emit an explicit interface implementation that
@@ -236,7 +236,7 @@ internal static class ClassMembersFactory
                     writer.Write(kvp.Key);
                     writer.Write(" = value; ");
                 }
-                writer.Write("}\n");
+                writer.WriteLine("}");
             }
         }
 
@@ -559,7 +559,7 @@ internal static class ClassMembersFactory
                 string accessorName = genericParentEncoded + "_" + name;
                 writer.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
                 writer.Write(name);
-                writer.Write("\")]\n");
+                writer.WriteLine("\")]");
                 writer.Write("static extern ");
                 MethodFactory.WriteProjectionReturnType(writer, context, sig);
                 writer.Write(" ");
@@ -572,7 +572,7 @@ internal static class ClassMembersFactory
                     writer.Write(", ");
                     MethodFactory.WriteProjectionParameter(writer, context, sig.Params[i]);
                 }
-                writer.Write(");\n");
+                writer.WriteLine(");");
                 // string to each public method emission. In ref mode this produces e.g.
                 // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
                 if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
@@ -586,7 +586,7 @@ internal static class ClassMembersFactory
                 if (context.Settings.ReferenceProjection)
                 {
                     // which emits 'throw null' in reference projection mode.
-                    writer.Write(") => throw null;\n");
+                    writer.WriteLine(") => throw null;");
                 }
                 else
                 {
@@ -599,7 +599,7 @@ internal static class ClassMembersFactory
                         writer.Write(", ");
                         WriteParameterNameWithModifier(writer, context, sig.Params[i]);
                     }
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
             }
             else
@@ -616,7 +616,7 @@ internal static class ClassMembersFactory
                 if (context.Settings.ReferenceProjection)
                 {
                     // which emits 'throw null' in reference projection mode.
-                    writer.Write(") => throw null;\n");
+                    writer.WriteLine(") => throw null;");
                 }
                 else
                 {
@@ -631,7 +631,7 @@ internal static class ClassMembersFactory
                         writer.Write(", ");
                         WriteParameterNameWithModifier(writer, context, sig.Params[i]);
                     }
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
             }
 
@@ -658,7 +658,7 @@ internal static class ClassMembersFactory
                     if (i > 0) { writer.Write(", "); }
                     WriteParameterNameWithModifier(writer, context, sig.Params[i]);
                 }
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
         }
 
@@ -775,18 +775,18 @@ internal static class ClassMembersFactory
                 writer.Write("\n{\n    get\n    {\n");
                 if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
                 {
-                    writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]\n");
+                    writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]");
                     writer.Write("        [return: UnsafeAccessorType(\"");
                     writer.Write(eventSourceInteropType);
-                    writer.Write("\")]\n");
+                    writer.WriteLine("\")]");
                     writer.Write("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);\n\n");
                 }
-                writer.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
+                writer.WriteLine("        [MethodImpl(MethodImplOptions.NoInlining)]");
                 writer.Write("        ");
                 writer.Write(eventSourceTypeFull);
                 writer.Write(" MakeEventSource()\n        {\n");
-                writer.Write("            _ = global::System.Threading.Interlocked.CompareExchange(\n");
-                writer.Write("                location1: ref field,\n");
+                writer.WriteLine("            _ = global::System.Threading.Interlocked.CompareExchange(");
+                writer.WriteLine("                location1: ref field,");
                 writer.Write("                value: ");
                 if (isGenericEvent)
                 {
@@ -808,7 +808,7 @@ internal static class ClassMembersFactory
                     writer.Write(vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
                     writer.Write(")");
                 }
-                writer.Write(",\n");
+                writer.WriteLine(",");
                 writer.Write("                comparand: null);\n\n");
                 writer.Write("            return field;\n        }\n\n");
                 writer.Write("        return field ?? MakeEventSource();\n    }\n}\n");
@@ -828,17 +828,17 @@ internal static class ClassMembersFactory
             writer.Write("\n{\n");
             if (context.Settings.ReferenceProjection)
             {
-                writer.Write("    add => throw null;\n");
-                writer.Write("    remove => throw null;\n");
+                writer.WriteLine("    add => throw null;");
+                writer.WriteLine("    remove => throw null;");
             }
             else if (inlineEventSourceField)
             {
                 writer.Write("    add => _eventSource_");
                 writer.Write(name);
-                writer.Write(".Subscribe(value);\n");
+                writer.WriteLine(".Subscribe(value);");
                 writer.Write("    remove => _eventSource_");
                 writer.Write(name);
-                writer.Write(".Unsubscribe(value);\n");
+                writer.WriteLine(".Unsubscribe(value);");
             }
             else
             {
@@ -853,16 +853,16 @@ internal static class ClassMembersFactory
                 writer.Write(name);
                 writer.Write("((WindowsRuntimeObject)this, ");
                 writer.Write(objRef);
-                writer.Write(").Subscribe(value);\n");
+                writer.WriteLine(").Subscribe(value);");
                 writer.Write("    remove => ");
                 writer.Write(abiClass);
                 writer.Write(".");
                 writer.Write(name);
                 writer.Write("((WindowsRuntimeObject)this, ");
                 writer.Write(objRef);
-                writer.Write(").Unsubscribe(value);\n");
+                writer.WriteLine(").Unsubscribe(value);");
             }
-            writer.Write("}\n");
+            writer.WriteLine("}");
         }
     }
 

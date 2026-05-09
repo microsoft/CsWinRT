@@ -194,12 +194,12 @@ internal static class ObjRefNameGenerator
         string interopName = InteropTypeNameWriter.EncodeInteropTypeName(gi, TypedefNameType.InteropIID);
         writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"get_IID_");
         writer.Write(interopName);
-        writer.Write("\")]\n");
+        writer.WriteLine("\")]");
         writer.Write("static extern ref readonly Guid ");
         writer.Write(propName);
         writer.Write("([UnsafeAccessorType(\"ABI.InterfaceIIDs, WinRT.Interop\")] object");
         if (isInNullableContext) { writer.Write("?"); }
-        writer.Write(" _);\n");
+        writer.WriteLine(" _);");
     }
     private static string EscapeIdentifier(string s)
     {
@@ -308,7 +308,7 @@ internal static class ObjRefNameGenerator
             // Sealed-class default interface: simple expression-bodied property pointing at NativeObjectReference.
             writer.Write("private WindowsRuntimeObjectReference ");
             writer.Write(objRefName);
-            writer.Write(" => NativeObjectReference;\n");
+            writer.WriteLine(" => NativeObjectReference;");
             // Emit the unsafe accessor AFTER the field so it can be used to pass the IID in the
             // constructor for the default interface.
             if (gi is not null)
@@ -329,18 +329,18 @@ internal static class ObjRefNameGenerator
             writer.Write(objRefName);
             writer.Write("\n{\n");
             writer.Write("    get\n    {\n");
-            writer.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
+            writer.WriteLine("        [MethodImpl(MethodImplOptions.NoInlining)]");
             writer.Write("        WindowsRuntimeObjectReference MakeObjectReference()\n        {\n");
-            writer.Write("            _ = global::System.Threading.Interlocked.CompareExchange(\n");
-            writer.Write("                location1: ref field,\n");
+            writer.WriteLine("            _ = global::System.Threading.Interlocked.CompareExchange(");
+            writer.WriteLine("                location1: ref field,");
             writer.Write("                value: NativeObjectReference.As(");
             WriteIidExpression(writer, context, ifaceRef);
-            writer.Write("),\n");
+            writer.WriteLine("),");
             writer.Write("                comparand: null);\n\n");
             writer.Write("            return field;\n        }\n\n");
             writer.Write("        return field ?? MakeObjectReference();\n    }\n");
-            if (isDefault) { writer.Write("    init;\n"); }
-            writer.Write("}\n");
+            if (isDefault) { writer.WriteLine("    init;"); }
+            writer.WriteLine("}");
         }
     }
 

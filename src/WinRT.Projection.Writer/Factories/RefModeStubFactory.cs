@@ -33,7 +33,7 @@ internal static class RefModeStubFactory
     {
         writer.Write("\nprivate ");
         writer.Write(typeName);
-        writer.Write("() { throw null; }\n");
+        writer.WriteLine("() { throw null; }");
     }
 
     /// <summary>

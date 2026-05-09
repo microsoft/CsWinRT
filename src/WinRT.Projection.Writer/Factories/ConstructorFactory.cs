@@ -139,9 +139,9 @@ internal static class ConstructorFactory
                 {
                     writer.Write("GC.AddMemoryPressure(");
                     writer.Write(gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
-                writer.Write("}\n");
+                writer.WriteLine("}");
 
                 if (sig.Params.Count > 0)
                 {
@@ -176,9 +176,9 @@ internal static class ConstructorFactory
             {
                 writer.Write("GC.AddMemoryPressure(");
                 writer.Write(gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
-            writer.Write("}\n");
+            writer.WriteLine("}");
         }
     }
 
@@ -243,9 +243,9 @@ internal static class ConstructorFactory
             writer.Write(pname);
             writer.Write(" = ");
             writer.Write(pname);
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
-        writer.Write("}\n");
+        writer.WriteLine("}");
     }
 
     /// <summary>Emits the <c>private sealed class &lt;Name&gt; : WindowsRuntimeActivationFactoryCallback.DerivedSealed</c>.</summary>
@@ -264,22 +264,22 @@ internal static class ConstructorFactory
         writer.Write("    public static readonly ");
         writer.Write(callbackName);
         writer.Write(" Instance = new();\n\n");
-        writer.Write("    [MethodImpl(MethodImplOptions.NoInlining)]\n");
+        writer.WriteLine("    [MethodImpl(MethodImplOptions.NoInlining)]");
         if (isComposable)
         {
             // Composable Invoke signature is multi-line and includes baseInterface (in) +
             // innerInterface (out). Mirrors truth output exactly.
-            writer.Write("    public override unsafe void Invoke(\n");
-            writer.Write("      WindowsRuntimeActivationArgsReference additionalParameters,\n");
-            writer.Write("      WindowsRuntimeObject baseInterface,\n");
-            writer.Write("      out void* innerInterface,\n");
+            writer.WriteLine("    public override unsafe void Invoke(");
+            writer.WriteLine("      WindowsRuntimeActivationArgsReference additionalParameters,");
+            writer.WriteLine("      WindowsRuntimeObject baseInterface,");
+            writer.WriteLine("      out void* innerInterface,");
             writer.Write("      out void* retval)\n    {\n");
         }
         else
         {
             // Sealed Invoke signature is multi-line. Mirrors C++ at.
-            writer.Write("    public override unsafe void Invoke(\n");
-            writer.Write("      WindowsRuntimeActivationArgsReference additionalParameters,\n");
+            writer.WriteLine("    public override unsafe void Invoke(");
+            writer.WriteLine("      WindowsRuntimeActivationArgsReference additionalParameters,");
             writer.Write("      out void* retval)\n    {\n");
         }
         // Invoke body is just 'throw null;' (no factory dispatch, no marshalling).
@@ -291,13 +291,13 @@ internal static class ConstructorFactory
 
         writer.Write("        using WindowsRuntimeObjectReferenceValue activationFactoryValue = ");
         writer.Write(factoryObjRefName);
-        writer.Write(".AsValue();\n");
-        writer.Write("        void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();\n");
+        writer.WriteLine(".AsValue();");
+        writer.WriteLine("        void* ThisPtr = activationFactoryValue.GetThisPtrUnsafe();");
         writer.Write("        ref readonly ");
         writer.Write(argsName);
         writer.Write(" args = ref additionalParameters.GetValueRefUnsafe<");
         writer.Write(argsName);
-        writer.Write(">();\n");
+        writer.WriteLine(">();");
 
         // Bind each arg from the args struct to a local of its ABI-marshalable input type.
         // Bind arg locals.
@@ -329,7 +329,7 @@ internal static class ConstructorFactory
             writer.Write(pname);
             writer.Write(" = args.");
             writer.Write(pname);
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
 
         // For generic instance params, emit local UnsafeAccessor delegates (or Nullable<T> -> BoxToUnmanaged).
@@ -349,28 +349,28 @@ internal static class ConstructorFactory
                 writer.Write(innerMarshaller);
                 writer.Write(".BoxToUnmanaged(");
                 writer.Write(pname);
-                writer.Write(");\n");
+                writer.WriteLine(");");
                 continue;
             }
             string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
             IndentedTextWriter __scratchProjType = new();
             MethodFactory.WriteProjectedSignature(__scratchProjType, context, p.Type, false);
             string projectedTypeName = __scratchProjType.ToString();
-            writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]\n");
+            writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
             writer.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
             writer.Write(raw);
             writer.Write("([UnsafeAccessorType(\"");
             writer.Write(interopTypeName);
             writer.Write("\")] object _, ");
             writer.Write(projectedTypeName);
-            writer.Write(" value);\n");
+            writer.WriteLine(" value);");
             writer.Write("        using WindowsRuntimeObjectReferenceValue __");
             writer.Write(raw);
             writer.Write(" = ConvertToUnmanaged_");
             writer.Write(raw);
             writer.Write("(null, ");
             writer.Write(pname);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
 
         // For runtime class / object params, emit `using WindowsRuntimeObjectReferenceValue __<name> = ...ConvertToUnmanaged(<name>);`
@@ -385,7 +385,7 @@ internal static class ConstructorFactory
             writer.Write(raw);
             writer.Write(" = ");
             AbiMethodBodyFactory.EmitMarshallerConvertToUnmanaged(writer, context, p.Type, pname);
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
 
         // For composable factories, marshal the additional `baseInterface` (which is a
@@ -393,8 +393,8 @@ internal static class ConstructorFactory
         //   using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);
         if (isComposable)
         {
-            writer.Write("        using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);\n");
-            writer.Write("        void* __innerInterface = default;\n");
+            writer.WriteLine("        using WindowsRuntimeObjectReferenceValue __baseInterface = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(baseInterface);");
+            writer.WriteLine("        void* __innerInterface = default;");
         }
 
         // For mapped value-type params (DateTime, TimeSpan), emit ABI local + marshaller conversion.
@@ -414,7 +414,7 @@ internal static class ConstructorFactory
             writer.Write(marshaller);
             writer.Write(".ConvertToUnmanaged(");
             writer.Write(pname);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
 
         // For HResultException params, emit ABI local + ExceptionMarshaller conversion.
@@ -430,7 +430,7 @@ internal static class ConstructorFactory
             writer.Write(raw);
             writer.Write(" = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged(");
             writer.Write(pname);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
 
         // Declare InlineArray16 + ArrayPool fallback for non-blittable PassArray params
@@ -448,10 +448,10 @@ internal static class ConstructorFactory
             string callName = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
             writer.Write("\n        Unsafe.SkipInit(out InlineArray16<nint> __");
             writer.Write(raw);
-            writer.Write("_inlineArray);\n");
+            writer.WriteLine("_inlineArray);");
             writer.Write("        nint[] __");
             writer.Write(raw);
-            writer.Write("_arrayFromPool = null;\n");
+            writer.WriteLine("_arrayFromPool = null;");
             writer.Write("        Span<nint> __");
             writer.Write(raw);
             writer.Write("_span = ");
@@ -464,16 +464,16 @@ internal static class ConstructorFactory
             writer.Write(raw);
             writer.Write("_arrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent(");
             writer.Write(callName);
-            writer.Write(".Length));\n");
+            writer.WriteLine(".Length));");
 
             if (szArr.BaseType.IsString())
             {
                 writer.Write("\n        Unsafe.SkipInit(out InlineArray16<HStringHeader> __");
                 writer.Write(raw);
-                writer.Write("_inlineHeaderArray);\n");
+                writer.WriteLine("_inlineHeaderArray);");
                 writer.Write("        HStringHeader[] __");
                 writer.Write(raw);
-                writer.Write("_headerArrayFromPool = null;\n");
+                writer.WriteLine("_headerArrayFromPool = null;");
                 writer.Write("        Span<HStringHeader> __");
                 writer.Write(raw);
                 writer.Write("_headerSpan = ");
@@ -486,14 +486,14 @@ internal static class ConstructorFactory
                 writer.Write(raw);
                 writer.Write("_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent(");
                 writer.Write(callName);
-                writer.Write(".Length));\n");
+                writer.WriteLine(".Length));");
 
                 writer.Write("\n        Unsafe.SkipInit(out InlineArray16<nint> __");
                 writer.Write(raw);
-                writer.Write("_inlinePinnedHandleArray);\n");
+                writer.WriteLine("_inlinePinnedHandleArray);");
                 writer.Write("        nint[] __");
                 writer.Write(raw);
-                writer.Write("_pinnedHandleArrayFromPool = null;\n");
+                writer.WriteLine("_pinnedHandleArrayFromPool = null;");
                 writer.Write("        Span<nint> __");
                 writer.Write(raw);
                 writer.Write("_pinnedHandleSpan = ");
@@ -506,11 +506,11 @@ internal static class ConstructorFactory
                 writer.Write(raw);
                 writer.Write("_pinnedHandleArrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent(");
                 writer.Write(callName);
-                writer.Write(".Length));\n");
+                writer.WriteLine(".Length));");
             }
         }
 
-        writer.Write("        void* __retval = default;\n");
+        writer.WriteLine("        void* __retval = default;");
         if (hasNonBlittableArray) { writer.Write("        try\n        {\n"); }
         string baseIndent = hasNonBlittableArray ? "            " : "        ";
 
@@ -527,7 +527,7 @@ internal static class ConstructorFactory
             writer.Write(pname);
             writer.Write(", out TypeReference __");
             writer.Write(raw);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
 
         // Open ONE combined "fixed(void* _a = ..., _b = ..., ...)" block for ALL pinnable
@@ -586,9 +586,9 @@ internal static class ConstructorFactory
                     writer.Write(pname);
                 }
             }
-            writer.Write(")\n");
+            writer.WriteLine(")");
             writer.Write(indent);
-            writer.Write("{\n");
+            writer.WriteLine("{");
             fixedNesting = 1;
             // Inside the block: emit HStringMarshaller.ConvertToUnmanagedUnsafe for each
             // string input. The HStringReference local lives stack-only.
@@ -606,7 +606,7 @@ internal static class ConstructorFactory
                 writer.Write(pname);
                 writer.Write("?.Length, out HStringReference __");
                 writer.Write(raw);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
         }
 
@@ -625,23 +625,23 @@ internal static class ConstructorFactory
             if (szArr.BaseType.IsString())
             {
                 writer.Write(callIndent);
-                writer.Write("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(\n");
+                writer.WriteLine("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(");
                 writer.Write(callIndent);
                 writer.Write("    source: ");
                 writer.Write(pname);
-                writer.Write(",\n");
+                writer.WriteLine(",");
                 writer.Write(callIndent);
                 writer.Write("    hstringHeaders: (HStringHeader*) _");
                 writer.Write(raw);
-                writer.Write("_inlineHeaderArray,\n");
+                writer.WriteLine("_inlineHeaderArray,");
                 writer.Write(callIndent);
                 writer.Write("    hstrings: __");
                 writer.Write(raw);
-                writer.Write("_span,\n");
+                writer.WriteLine("_span,");
                 writer.Write(callIndent);
                 writer.Write("    pinnedGCHandles: __");
                 writer.Write(raw);
-                writer.Write("_pinnedHandleSpan);\n");
+                writer.WriteLine("_pinnedHandleSpan);");
             }
             else
             {
@@ -651,7 +651,7 @@ internal static class ConstructorFactory
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
                 _ = elementInteropArg;
                 writer.Write(callIndent);
-                writer.Write("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]\n");
+                writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]");
                 writer.Write(callIndent);
                 writer.Write("static extern void CopyToUnmanaged_");
                 writer.Write(raw);
@@ -659,7 +659,7 @@ internal static class ConstructorFactory
                 writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType));
                 writer.Write("\")] object _, ReadOnlySpan<");
                 writer.Write(elementProjected);
-                writer.Write("> span, uint length, void** data);\n");
+                writer.WriteLine("> span, uint length, void** data);");
                 writer.Write(callIndent);
                 writer.Write("CopyToUnmanaged_");
                 writer.Write(raw);
@@ -669,7 +669,7 @@ internal static class ConstructorFactory
                 writer.Write(pname);
                 writer.Write(".Length, (void**)_");
                 writer.Write(raw);
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
         }
 
@@ -772,17 +772,17 @@ internal static class ConstructorFactory
         if (isComposable)
         {
             writer.Write(callIndent);
-            writer.Write("innerInterface = __innerInterface;\n");
+            writer.WriteLine("innerInterface = __innerInterface;");
         }
         writer.Write(callIndent);
-        writer.Write("retval = __retval;\n");
+        writer.WriteLine("retval = __retval;");
 
         // Close fixed blocks (innermost first).
         for (int i = fixedNesting - 1; i >= 0; i--)
         {
             string indent = baseIndent + new string(' ', i * 4);
             writer.Write(indent);
-            writer.Write("}\n");
+            writer.WriteLine("}");
         }
 
         // Close try and emit finally with cleanup for non-blittable PassArray params.
@@ -845,7 +845,7 @@ internal static class ConstructorFactory
                 writer.Write(raw);
                 writer.Write("_arrayFromPool);\n            }\n");
             }
-            writer.Write("        }\n");
+            writer.WriteLine("        }");
         }
 
         writer.Write("    }\n}\n");
@@ -958,16 +958,16 @@ internal static class ConstructorFactory
             if (!string.IsNullOrEmpty(defaultIfaceObjRef))
             {
                 writer.Write(defaultIfaceObjRef);
-                writer.Write(" = NativeObjectReference;\n");
+                writer.WriteLine(" = NativeObjectReference;");
             }
-            writer.Write("}\n");
+            writer.WriteLine("}");
             if (gcPressure > 0)
             {
                 writer.Write("GC.AddMemoryPressure(");
                 writer.Write(gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
-            writer.Write("}\n");
+            writer.WriteLine("}");
 
             // Emit args struct + callback class for parameterized composable factories.
             // skips both the args struct AND the callback class entirely in ref mode. The
@@ -993,37 +993,37 @@ internal static class ConstructorFactory
         // 1. WindowsRuntimeActivationTypes.DerivedComposed
         writer.Write("\nprotected ");
         writer.Write(typeName);
-        writer.Write("(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)\n");
-        writer.Write("  :base(_, activationFactoryObjectReference, in iid, marshalingType)\n");
-        writer.Write("{\n");
+        writer.WriteLine("(WindowsRuntimeActivationTypes.DerivedComposed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)");
+        writer.WriteLine("  :base(_, activationFactoryObjectReference, in iid, marshalingType)");
+        writer.WriteLine("{");
         if (!string.IsNullOrEmpty(gcPressureBody)) { writer.Write(gcPressureBody); }
-        writer.Write("}\n");
+        writer.WriteLine("}");
 
         // 2. WindowsRuntimeActivationTypes.DerivedSealed
         writer.Write("\nprotected ");
         writer.Write(typeName);
-        writer.Write("(WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)\n");
-        writer.Write("  :base(_, activationFactoryObjectReference, in iid, marshalingType)\n");
-        writer.Write("{\n");
+        writer.WriteLine("(WindowsRuntimeActivationTypes.DerivedSealed _, WindowsRuntimeObjectReference activationFactoryObjectReference, in Guid iid, CreateObjectReferenceMarshalingType marshalingType)");
+        writer.WriteLine("  :base(_, activationFactoryObjectReference, in iid, marshalingType)");
+        writer.WriteLine("{");
         if (!string.IsNullOrEmpty(gcPressureBody)) { writer.Write(gcPressureBody); }
-        writer.Write("}\n");
+        writer.WriteLine("}");
 
         // 3. WindowsRuntimeActivationFactoryCallback.DerivedComposed
         writer.Write("\nprotected ");
         writer.Write(typeName);
-        writer.Write("(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)\n");
-        writer.Write("  :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)\n");
-        writer.Write("{\n");
+        writer.WriteLine("(WindowsRuntimeActivationFactoryCallback.DerivedComposed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)");
+        writer.WriteLine("  :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)");
+        writer.WriteLine("{");
         if (!string.IsNullOrEmpty(gcPressureBody)) { writer.Write(gcPressureBody); }
-        writer.Write("}\n");
+        writer.WriteLine("}");
 
         // 4. WindowsRuntimeActivationFactoryCallback.DerivedSealed
         writer.Write("\nprotected ");
         writer.Write(typeName);
-        writer.Write("(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)\n");
-        writer.Write("  :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)\n");
-        writer.Write("{\n");
+        writer.WriteLine("(WindowsRuntimeActivationFactoryCallback.DerivedSealed activationFactoryCallback, in Guid iid, CreateObjectReferenceMarshalingType marshalingType, WindowsRuntimeActivationArgsReference additionalParameters)");
+        writer.WriteLine("  :base(activationFactoryCallback, in iid, marshalingType, additionalParameters)");
+        writer.WriteLine("{");
         if (!string.IsNullOrEmpty(gcPressureBody)) { writer.Write(gcPressureBody); }
-        writer.Write("}\n");
+        writer.WriteLine("}");
     }
 }

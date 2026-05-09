@@ -341,7 +341,7 @@ internal static class InterfaceFactory
                 }
                 writer.Write(")");
             }
-            writer.Write("]\n");
+            writer.WriteLine("]");
         }
     }
 

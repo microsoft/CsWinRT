@@ -84,7 +84,7 @@ internal static class ComponentFactory
 
         writer.Write("\nprivate static readonly ");
         writer.Write(factoryTypeName);
-        writer.Write(" _factory = new();\n");
+        writer.WriteLine(" _factory = new();");
 
         writer.Write("\npublic object ActivateInstance()\n{\n");
         if (isActivatable)
@@ -135,7 +135,7 @@ internal static class ComponentFactory
             }
         }
 
-        writer.Write("}\n");
+        writer.WriteLine("}");
     }
     /// <summary>
     /// Writes a factory-class activatable wrapper method:
@@ -155,7 +155,7 @@ internal static class ComponentFactory
         writer.Write(projectedTypeName);
         writer.Write("(");
         WriteFactoryMethodParameters(writer, context, method, includeTypes: false);
-        writer.Write(");\n");
+        writer.WriteLine(");");
     }
 
     /// <summary>
@@ -178,7 +178,7 @@ internal static class ComponentFactory
         writer.Write(methodName);
         writer.Write("(");
         WriteFactoryMethodParameters(writer, context, method, includeTypes: false);
-        writer.Write(");\n");
+        writer.WriteLine(");");
     }
 
     /// <summary>Writes a static-factory forwarding property (single-line getter or full block).</summary>
@@ -197,7 +197,7 @@ internal static class ComponentFactory
             writer.Write(projectedTypeName);
             writer.Write(".");
             writer.Write(propName);
-            writer.Write(";\n");
+            writer.WriteLine(";");
             return;
         }
         writer.Write("\npublic ");
@@ -211,14 +211,14 @@ internal static class ComponentFactory
             writer.Write(projectedTypeName);
             writer.Write(".");
             writer.Write(propName);
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
         writer.Write("set => ");
         writer.Write(projectedTypeName);
         writer.Write(".");
         writer.Write(propName);
-        writer.Write(" = value;\n");
-        writer.Write("}\n");
+        writer.WriteLine(" = value;");
+        writer.WriteLine("}");
     }
 
     /// <summary>Writes a static-factory forwarding event as a multi-line block.</summary>
@@ -238,13 +238,13 @@ internal static class ComponentFactory
         writer.Write(projectedTypeName);
         writer.Write(".");
         writer.Write(evtName);
-        writer.Write(" += value;\n");
+        writer.WriteLine(" += value;");
         writer.Write("remove => ");
         writer.Write(projectedTypeName);
         writer.Write(".");
         writer.Write(evtName);
-        writer.Write(" -= value;\n");
-        writer.Write("}\n");
+        writer.WriteLine(" -= value;");
+        writer.WriteLine("}");
     }
 
     private static void WriteFactoryReturnType(IndentedTextWriter writer, ProjectionEmitContext context, MethodDefinition method)
@@ -320,7 +320,7 @@ internal static class ComponentFactory
                 writer.Write(ns);
                 writer.Write(".");
                 writer.Write(IdentifierEscaping.StripBackticks(name));
-                writer.Write("ServerActivationFactory.Make();\n");
+                writer.WriteLine("ServerActivationFactory.Make();");
             }
             writer.Write("default:\n    return null;\n}\n}\n}\n}\n");
         }

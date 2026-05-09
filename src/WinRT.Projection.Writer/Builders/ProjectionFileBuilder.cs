@@ -124,7 +124,7 @@ internal static class ProjectionFileBuilder
             writer.Write(enumUnderlyingType);
             writer.Write(")");
             writer.Write(constantValue);
-            writer.Write("),\n");
+            writer.WriteLine("),");
         }
         writer.Write("}\n\n");
     }
@@ -266,23 +266,23 @@ internal static class ProjectionFileBuilder
                 writer.Write(fields[i].Name);
             }
         }
-        writer.Write(";\n");
+        writer.WriteLine(";");
 
         // !=
         writer.Write("public static bool operator !=(");
         writer.Write(projectionName);
         writer.Write(" x, ");
         writer.Write(projectionName);
-        writer.Write(" y) => !(x == y);\n");
+        writer.WriteLine(" y) => !(x == y);");
 
         // equals
         writer.Write("public bool Equals(");
         writer.Write(projectionName);
-        writer.Write(" other) => this == other;\n");
+        writer.WriteLine(" other) => this == other;");
 
         writer.Write("public override bool Equals(object obj) => obj is ");
         writer.Write(projectionName);
-        writer.Write(" that && this == that;\n");
+        writer.WriteLine(" that && this == that;");
 
         // hashcode
         writer.Write("public override int GetHashCode() => ");
@@ -299,7 +299,7 @@ internal static class ProjectionFileBuilder
                 writer.Write(".GetHashCode()");
             }
         }
-        writer.Write(";\n");
+        writer.WriteLine(";");
         writer.Write("}\n\n");
     }
     /// <summary>Writes a projected API contract (an empty enum stand-in).</summary>
@@ -332,7 +332,7 @@ internal static class ProjectionFileBuilder
             // GUID attribute
             writer.Write("[Guid(\"");
             IIDExpressionWriter.WriteGuid(writer, type, false);
-            writer.Write("\")]\n");
+            writer.WriteLine("\")]");
         }
         writer.Write(AccessibilityHelper.InternalAccessibility(context.Settings));
         writer.Write(" delegate ");
@@ -342,7 +342,7 @@ internal static class ProjectionFileBuilder
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("(");
         MethodFactory.WriteParameterList(writer, context, sig);
-        writer.Write(");\n");
+        writer.WriteLine(");");
     }
     /// <summary>Writes a projected attribute class.</summary>
     public static void WriteAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -365,7 +365,7 @@ internal static class ProjectionFileBuilder
             writer.Write(typeName);
             writer.Write("(");
             MethodFactory.WriteParameterList(writer, context, sig);
-            writer.Write("){}\n");
+            writer.WriteLine("){}");
         }
         // Fields
         foreach (FieldDefinition field in type.Fields)
@@ -375,9 +375,9 @@ internal static class ProjectionFileBuilder
             TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(field.Signature.FieldType));
             writer.Write(" ");
             writer.Write(field.Name?.Value ?? string.Empty);
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
-        writer.Write("}\n");
+        writer.WriteLine("}");
     }
 
     /// <summary>Returns the camel-case form of <paramref name="name"/>.</summary>

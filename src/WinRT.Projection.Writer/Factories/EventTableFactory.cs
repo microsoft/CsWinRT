@@ -33,16 +33,16 @@ internal static class EventTableFactory
         writer.Write(">> _");
         writer.Write(evName);
         writer.Write("\n{\n");
-        writer.Write("    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n");
+        writer.WriteLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
         writer.Write("    get\n    {\n");
-        writer.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
+        writer.WriteLine("        [MethodImpl(MethodImplOptions.NoInlining)]");
         writer.Write("        static ConditionalWeakTable<");
         writer.Write(ifaceFullName);
         writer.Write(", EventRegistrationTokenTable<");
         writer.Write(evtType);
         writer.Write(">> MakeTable()\n        {\n");
         writer.Write("            _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);\n\n");
-        writer.Write("            return global::System.Threading.Volatile.Read(in field);\n");
+        writer.WriteLine("            return global::System.Threading.Volatile.Read(in field);");
         writer.Write("        }\n\n");
         writer.Write("        return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n    }\n}\n");
     }
@@ -68,11 +68,11 @@ internal static class EventTableFactory
         writer.Write("\n{\n");
         writer.Write("    *");
         writer.Write(cookieName);
-        writer.Write(" = default;\n");
+        writer.WriteLine(" = default;");
         writer.Write("    try\n    {\n");
         writer.Write("        var __this = ComInterfaceDispatch.GetInstance<");
         writer.Write(ifaceFullName);
-        writer.Write(">((ComInterfaceDispatch*)thisPtr);\n");
+        writer.WriteLine(">((ComInterfaceDispatch*)thisPtr);");
 
         if (isGeneric)
         {
@@ -80,15 +80,15 @@ internal static class EventTableFactory
             IndentedTextWriter __scratchProjectedTypeName = new();
             MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, evtTypeSig, false);
             string projectedTypeName = __scratchProjectedTypeName.ToString();
-            writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]\n");
+            writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
             writer.Write("        static extern ");
             writer.Write(projectedTypeName);
             writer.Write(" ConvertToManaged([UnsafeAccessorType(\"");
             writer.Write(interopTypeName);
-            writer.Write("\")] object _, void* value);\n");
+            writer.WriteLine("\")] object _, void* value);");
             writer.Write("        var __handler = ConvertToManaged(null, ");
             writer.Write(handlerRef);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
         else
         {
@@ -96,17 +96,17 @@ internal static class EventTableFactory
             TypedefNameWriter.WriteTypeName(writer, context, TypeSemanticsFactory.Get(evtTypeSig), TypedefNameType.ABI, false);
             writer.Write("Marshaller.ConvertToManaged(");
             writer.Write(handlerRef);
-            writer.Write(");\n");
+            writer.WriteLine(");");
         }
 
         writer.Write("        *");
         writer.Write(cookieName);
         writer.Write(" = _");
         writer.Write(evName);
-        writer.Write(".GetOrCreateValue(__this).AddEventHandler(__handler);\n");
+        writer.WriteLine(".GetOrCreateValue(__this).AddEventHandler(__handler);");
         writer.Write("        __this.");
         writer.Write(evName);
-        writer.Write(" += __handler;\n");
+        writer.WriteLine(" += __handler;");
         writer.Write("        return 0;\n    }\n");
         writer.Write("    catch (Exception __exception__)\n    {\n");
         writer.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");
@@ -126,7 +126,7 @@ internal static class EventTableFactory
         writer.Write("    try\n    {\n");
         writer.Write("        var __this = ComInterfaceDispatch.GetInstance<");
         writer.Write(ifaceFullName);
-        writer.Write(">((ComInterfaceDispatch*)thisPtr);\n");
+        writer.WriteLine(">((ComInterfaceDispatch*)thisPtr);");
         writer.Write("        if(__this is not null && _");
         writer.Write(evName);
         writer.Write(".TryGetValue(__this, out var __table) && __table.RemoveEventHandler(");
@@ -134,8 +134,8 @@ internal static class EventTableFactory
         writer.Write(", out var __handler))\n        {\n");
         writer.Write("            __this.");
         writer.Write(evName);
-        writer.Write(" -= __handler;\n");
-        writer.Write("        }\n");
+        writer.WriteLine(" -= __handler;");
+        writer.WriteLine("        }");
         writer.Write("        return 0;\n    }\n");
         writer.Write("    catch (Exception __exception__)\n    {\n");
         writer.Write("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n}\n");

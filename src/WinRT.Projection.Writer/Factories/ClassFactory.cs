@@ -200,7 +200,7 @@ internal static class ClassFactory
             TypedefNameWriter.WriteTypeParams(writer, type);
             writer.Write("\n{\n");
             WriteStaticClassMembers(writer, context, type);
-            writer.Write("}\n");
+            writer.WriteLine("}");
         }
         finally
         {
@@ -267,7 +267,7 @@ internal static class ClassFactory
                 if (context.Settings.ReferenceProjection)
                 {
                     // method bodies become 'throw null' in reference projection mode.
-                    writer.Write(") => throw null;\n");
+                    writer.WriteLine(") => throw null;");
                 }
                 else
                 {
@@ -282,7 +282,7 @@ internal static class ClassFactory
                         writer.Write(", ");
                         ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
                     }
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
             }
             // Events: dispatch via static ABI class which returns an event source.
@@ -299,8 +299,8 @@ internal static class ClassFactory
                 if (context.Settings.ReferenceProjection)
                 {
                     // event accessor bodies become 'throw null' in reference projection mode.
-                    writer.Write("    add => throw null;\n");
-                    writer.Write("    remove => throw null;\n");
+                    writer.WriteLine("    add => throw null;");
+                    writer.WriteLine("    remove => throw null;");
                 }
                 else
                 {
@@ -312,7 +312,7 @@ internal static class ClassFactory
                     writer.Write(objRef);
                     writer.Write(", ");
                     writer.Write(objRef);
-                    writer.Write(").Subscribe(value);\n");
+                    writer.WriteLine(").Subscribe(value);");
                     writer.Write("    remove => ");
                     writer.Write(abiClass);
                     writer.Write(".");
@@ -321,9 +321,9 @@ internal static class ClassFactory
                     writer.Write(objRef);
                     writer.Write(", ");
                     writer.Write(objRef);
-                    writer.Write(").Unsubscribe(value);\n");
+                    writer.WriteLine(").Unsubscribe(value);");
                 }
-                writer.Write("}\n");
+                writer.WriteLine("}");
             }
             // Properties (merge getter/setter across interfaces, tracking origin per accessor)
             foreach (PropertyDefinition prop in staticIface.Properties)
@@ -386,7 +386,7 @@ internal static class ClassFactory
             {
                 if (context.Settings.ReferenceProjection)
                 {
-                    writer.Write(" => throw null;\n");
+                    writer.WriteLine(" => throw null;");
                 }
                 else
                 {
@@ -396,7 +396,7 @@ internal static class ClassFactory
                     writer.Write(kv.Key);
                     writer.Write("(");
                     writer.Write(s.GetterObjRef);
-                    writer.Write(");\n");
+                    writer.WriteLine(");");
                 }
             }
             else
@@ -407,7 +407,7 @@ internal static class ClassFactory
                     if (!string.IsNullOrEmpty(getterPlat)) { writer.Write(getterPlat); }
                     if (context.Settings.ReferenceProjection)
                     {
-                        writer.Write("get => throw null;\n");
+                        writer.WriteLine("get => throw null;");
                     }
                     else
                     {
@@ -417,7 +417,7 @@ internal static class ClassFactory
                         writer.Write(kv.Key);
                         writer.Write("(");
                         writer.Write(s.GetterObjRef);
-                        writer.Write(");\n");
+                        writer.WriteLine(");");
                     }
                 }
                 if (s.HasSetter)
@@ -425,7 +425,7 @@ internal static class ClassFactory
                     if (!string.IsNullOrEmpty(setterPlat)) { writer.Write(setterPlat); }
                     if (context.Settings.ReferenceProjection)
                     {
-                        writer.Write("set => throw null;\n");
+                        writer.WriteLine("set => throw null;");
                     }
                     else
                     {
@@ -435,10 +435,10 @@ internal static class ClassFactory
                         writer.Write(kv.Key);
                         writer.Write("(");
                         writer.Write(s.SetterObjRef);
-                        writer.Write(", value);\n");
+                        writer.WriteLine(", value);");
                     }
                 }
-                writer.Write("}\n");
+                writer.WriteLine("}");
             }
         }
     }
@@ -461,7 +461,7 @@ internal static class ClassFactory
         writer.Write("    get\n    {\n");
         writer.Write("        var __");
         writer.Write(objRefName);
-        writer.Write(" = field;\n");
+        writer.WriteLine(" = field;");
         writer.Write("        if (__");
         writer.Write(objRefName);
         writer.Write(" != null && __");
@@ -550,17 +550,17 @@ internal static class ClassFactory
                     writer.Write(typeName);
                     writer.Write("))\n{\n");
                     writer.Write(defaultObjRefName);
-                    writer.Write(" = NativeObjectReference;\n");
-                    writer.Write("}\n");
+                    writer.WriteLine(" = NativeObjectReference;");
+                    writer.WriteLine("}");
                 }
             }
             if (gcPressure > 0)
             {
                 writer.Write("GC.AddMemoryPressure(");
                 writer.Write(gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                writer.Write(");\n");
+                writer.WriteLine(");");
             }
-            writer.Write("}\n");
+            writer.WriteLine("}");
         }
         else if (context.Cache is not null)
         {
@@ -657,11 +657,11 @@ internal static class ClassFactory
                 firstClause = false;
             }
             if (firstClause) { writer.Write("false"); }
-            writer.Write(";\n");
+            writer.WriteLine(";");
         }
 
         ClassMembersFactory.WriteClassMembers(writer, context, type);
 
-        writer.Write("}\n");
+        writer.WriteLine("}");
     }
 }
