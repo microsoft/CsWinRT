@@ -12,8 +12,6 @@ namespace WindowsRuntime.ProjectionWriter;
 /// <summary>
 /// Encoder for the WinRT.Interop assembly type name format used in <c>UnsafeAccessor</c>
 /// attributes (e.g. <c>"ABI.System.Collections.Generic.&lt;#corlib&gt;IReadOnlyDictionary'2&lt;string|object&gt;Marshaller, WinRT.Interop"</c>).
-/// Mirrors the C++ helpers <c>write_interop_assembly_name</c>, <c>write_interop_dll_type_name</c>,
-/// and <c>write_interop_dll_type_name_for_typedef</c>.
 /// </summary>
 internal static class InteropTypeNameWriter
 {
@@ -112,9 +110,7 @@ internal static class InteropTypeNameWriter
         if (isAbi) { sb.Append("ABI."); }
 
         // Special case for EventSource on Windows.Foundation event-handler delegate types
-        // (e.g. EventHandler<T>, TypedEventHandler<S,R>). Mirrors C++:
-        //     ABI.WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'<arity>
-        // Note the namespace check uses the ORIGINAL .winmd namespace (before mapping).
+        // (e.g. EventHandler<T>, TypedEventHandler<S,R>).
         if (nameType == TypedefNameType.EventSource && typeNs == "Windows.Foundation")
         {
             // Determine generic arity from the .winmd type name (e.g. "EventHandler`1" => 1).
@@ -258,7 +254,7 @@ internal static class InteropTypeNameWriter
         return "<#Windows>";
     }
 
-    /// <summary>Mirrors C++ <c>helpers.h:693</c> <c>is_mapped_type_in_system_objectmodel</c>.</summary>
+    /// <summary>Returns whether the type lives in <c>System.ObjectModel</c> and is one of the recognized mapped types (used by interop type-name encoding).</summary>
     private static bool IsMappedTypeInSystemObjectModel(string typeNs, string typeName)
     {
         if (typeNs == "System.Collections.Specialized")
@@ -283,7 +279,7 @@ internal static class InteropTypeNameWriter
         return false;
     }
 
-    /// <summary>Mirrors C++ <c>helpers.h:727</c> <c>is_mapped_type_in_system_numerics_vectors</c>.</summary>
+    /// <summary>Returns whether the type lives in <c>System.Numerics.Vectors</c> and is one of the recognized mapped types (used by interop type-name encoding).</summary>
     private static bool IsMappedTypeInSystemNumericsVectors(string typeNs)
     {
         return typeNs == "System.Numerics";

@@ -178,9 +178,7 @@ internal static class StructEnumMarshallerFactory
                 else if (AbiTypeHelpers.IsMappedAbiValueType(ft))
                 {
                     // Mapped value types (DateTime/TimeSpan) have no per-value resources to
-                    // release — the ABI representation is just an int64. Mirror C++
-                    // set_skip_disposer_if_needed which explicitly
-                    // skips the disposer for global::ABI.System.{DateTimeOffset,TimeSpan,Exception}.
+                    // release — the ABI representation is just an int64
                     continue;
                 }
                 else if (ft is AsmResolver.DotNet.Signatures.TypeDefOrRefSignature ftd3

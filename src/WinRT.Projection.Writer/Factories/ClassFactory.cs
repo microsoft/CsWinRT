@@ -10,7 +10,9 @@ using WindowsRuntime.ProjectionWriter.Writers;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Class emission helpers, mirroring functions in <c>code_writers.h</c>.
+/// Emits the projected runtime class type and its members (constructors, properties,
+/// methods, events, and the activation-factory glue), plus the static-only variant
+/// for <c>[Static]</c> classes.
 /// </summary>
 internal static class ClassFactory
 {
@@ -35,7 +37,7 @@ internal static class ClassFactory
     }
     /// <summary>
     /// Returns the fast-abi class type for <paramref name="iface"/> if the interface is
-    /// exclusive_to a class marked <c>[FastAbi]</c>; otherwise <c>null</c>. Mirrors C++
+    /// exclusive_to a class marked <c>[FastAbi]</c>; otherwise <c>null</c>.
     /// <c>find_fast_abi_class_type</c> in <c>helpers.h</c>.
     /// </summary>
     public static TypeDefinition? FindFastAbiClassType(MetadataCache cache, TypeDefinition iface)
@@ -242,9 +244,7 @@ internal static class ClassFactory
             }
 
             // Compute the platform attribute string from the static factory interface's
-            // [ContractVersion] attribute. Mirrors C++
-            // 'auto platform_attribute = write_platform_attribute_temp(w, factory.type);'
-            // and the per-static-method/event/property emission at lines 3316-3349.
+            // [ContractVersion] attribute
             IndentedTextWriter __scratchPlatform = new();
             CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, staticIface);
             string platformAttribute = __scratchPlatform.ToString();
@@ -357,8 +357,7 @@ internal static class ClassFactory
             if (!string.IsNullOrEmpty(propertyPlat)) { writer.Write(propertyPlat); }
             writer.Write($"public static {s.PropTypeText} {kv.Key}");
             // Getter-only -> expression body; otherwise -> accessor block (matches truth).
-            // In ref mode, all accessor bodies emit '=> throw null;' (mirrors C++
-            // write_abi_get/set_property_static_method_call,).
+            // In ref mode, all accessor bodies emit '=> throw null;'
             bool getterOnly = s.HasGetter && !s.HasSetter;
             if (getterOnly)
             {

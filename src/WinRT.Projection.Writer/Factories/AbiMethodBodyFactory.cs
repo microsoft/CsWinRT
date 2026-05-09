@@ -16,10 +16,9 @@ namespace WindowsRuntime.ProjectionWriter;
 internal static class AbiMethodBodyFactory
 {
     /// <summary>
-    /// Emits a real Do_Abi (CCW) body for the cases we can handle. Mirrors C++
-    /// <c>write_abi_method_call_marshalers</c> (<c>code_writers.h:6682</c>) which
-    /// unconditionally emits a real body via the <c>abi_marshaler</c> abstraction
-    /// for every WinRT-valid signature.
+    /// Emits a real Do_Abi (CCW) body for the cases we can handle. This is a partial
+    /// implementation that uses simple per-marshaller patterns inline rather than the
+    /// fully-general <c>abi_marshaler</c> abstraction.
     /// </summary>
     internal static void EmitDoAbiBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, string ifaceFullName, string methodName)
     {
@@ -59,9 +58,9 @@ internal static class AbiMethodBodyFactory
         writer.Write("\n{\n");
         string retParamName = AbiTypeHelpers.GetReturnParamName(sig);
         string retSizeParamName = AbiTypeHelpers.GetReturnSizeParamName(sig);
-        // The local name for the unmarshalled return value mirrors C++
-        // 'abi_marshaler::get_marshaler_local()' which prefixes '__' to the param name.
-        // For the default '__return_value__' param this becomes '____return_value__'.
+        // The local name for the unmarshalled return value uses the standard pattern
+        // of prefixing '__' to the param name. For the default '__return_value__' param
+        // this becomes '____return_value__'.
         string retLocalName = "__" + retParamName;
         // at the TOP of the method body (before local declarations and the try block). The
         // actual call sites later in the body just reference the already-declared accessor.
@@ -864,7 +863,7 @@ internal static class AbiMethodBodyFactory
             AsmResolver.DotNet.Signatures.TypeSignature evtSig = evt.EventType!.ToTypeSignature(false);
             bool isGenericEvent = evtSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
 
-            // Use the add method's WinMD slot. Mirrors C++: events use the add_X method's vmethod_index.
+            // Use the add method's WinMD slot (events project as the add_X method's vmethod_index).
             (MethodDefinition? addMethod, MethodDefinition? _) = evt.GetEventMethods();
             int eventSlot = addMethod is not null && methodSlot.TryGetValue(addMethod, out int es) ? es : 0;
 

@@ -53,9 +53,7 @@ internal static class AbiInterfaceFactory
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (p.Type is AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz)
             {
-                // length pointer + value pointer. Mirrors C++ write_abi_signature for SzArray
-                // input params which always emits "uint __%Size, void* %"
-                // regardless of element type.
+                // length pointer + value pointer.
                 if (includeParamNames)
                 {
                     writer.Write($"uint __{p.Parameter.Name ?? "param"}Size, void* ");
@@ -177,7 +175,7 @@ internal static class AbiInterfaceFactory
         writer.WriteLine("}");
     }
 
-    /// <summary>Mirrors C++ <c>write_interface_impl</c> (simplified).</summary>
+    /// <summary>Emits the ABI implementation for a runtime interface type (vtable struct, IUnknown/IInspectable entries, Methods class, and CCW Do_Abi handlers).</summary>
     public static void WriteInterfaceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (!AbiClassFactory.EmitImplType(writer, context, type)) { return; }
@@ -372,8 +370,7 @@ internal static class AbiInterfaceFactory
 
         // Fast ABI: if this interface is a non-default exclusive-to interface of a fast-abi
         // class, skip emitting it entirely — its members are merged into the default
-        // interface's Methods class. Mirrors C++
-        // (write_static_abi_classes early return on contains_other_interface(iface)).
+        // interface's Methods class
         if (ClassFactory.IsFastAbiOtherInterface(context.Cache, type)) { return; }
 
         // If the interface is exclusive-to a class that's been excluded from the projection,
@@ -411,7 +408,7 @@ internal static class AbiInterfaceFactory
         // Fast ABI: if this interface is the default interface of a fast-abi class, the
         // generated Methods class must include the merged members of the default interface
         // PLUS each [ExclusiveTo] non-default interface in vtable order, with progressively
-        // increasing slot indices. Mirrors C++.
+        // increasing slot indices.
         // For non-fast-abi interfaces, the segment list is just [(type, INSPECTABLE_METHOD_COUNT, skipExclusiveEvents)].
         const int InspectableMethodCount = 6;
         List<(TypeDefinition Iface, int StartSlot, bool SkipEvents)> segments = new();

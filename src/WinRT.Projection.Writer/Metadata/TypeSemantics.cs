@@ -148,7 +148,9 @@ internal enum TypedefNameType
 }
 
 /// <summary>
-/// Type mapping helpers (e.g., <c>to_csharp_type</c>, <c>to_dotnet_type</c>) from C++ <c>code_writers.h</c>.
+/// Maps the abstract <see cref="FundamentalType"/> enum (a closed set of WinRT
+/// fundamental types: bool/char/numeric/string) to its projected C# type name and
+/// .NET reflection name.
 /// </summary>
 internal static class FundamentalTypes
 {

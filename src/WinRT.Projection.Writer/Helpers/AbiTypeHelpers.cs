@@ -15,7 +15,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static class AbiTypeHelpers
 {
-    /// <summary>Mirrors C++ <c>is_type_blittable</c> partially.</summary>
+    /// <summary>Returns whether the given type can be passed across the ABI boundary without per-field marshalling (struct layout matches the ABI representation).</summary>
     public static bool IsTypeBlittable(MetadataCache cache, TypeDefinition type)
     {
         TypeCategory cat = TypeCategorization.GetCategory(type);
@@ -193,7 +193,7 @@ internal static class AbiTypeHelpers
     }
 
     /// <summary>
-    /// Returns the local-variable name for the return parameter on the server side. Mirrors C++
+    /// Returns the local-variable name for the return parameter on the server side.
     /// <c>abi_marshaler::get_marshaler_local()</c> which prefixes <c>__</c> to the param name.
     /// </summary>
     internal static string GetReturnLocalName(MethodSig sig)
@@ -220,7 +220,7 @@ internal static class AbiTypeHelpers
         return map;
     }
 
-    /// <summary>Mirrors C++ <c>write_iid_guid</c> for use by ABI helpers.</summary>
+    /// <summary>Writes the IID GUID literal expression for the given runtime type (used by ABI emission paths).</summary>
     public static void WriteIidGuidReference(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (type.GenericParameters.Count != 0)

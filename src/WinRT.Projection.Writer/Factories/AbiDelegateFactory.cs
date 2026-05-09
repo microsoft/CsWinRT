@@ -323,7 +323,7 @@ internal static class AbiDelegateFactory
     }
 
     /// <summary>
-    /// Emits the <c>&lt;Name&gt;ComWrappersMarshallerAttribute</c> class. Mirrors C++
+    /// Emits the <c>&lt;Name&gt;ComWrappersMarshallerAttribute</c> class.
     /// <c>write_delegate_com_wrappers_marshaller_attribute_impl</c>. Generic delegates are not
     /// emitted here at all (filtered out in <c>ProjectionGenerator</c>).
     /// </summary>

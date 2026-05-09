@@ -79,9 +79,7 @@ internal static class ConstructorFactory
             string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);
             string marshalingType = GetMarshalingTypeName(classType);
             // Compute the platform attribute string from the activation factory interface's
-            // [ContractVersion] attribute. Mirrors C++
-            // 'auto platform_attribute = write_platform_attribute_temp(w, factory_type);'
-            // emitted at line 2872 before the public ctor.
+            // [ContractVersion] attribute
             IndentedTextWriter __scratchPlatform = new();
             CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, factoryType);
             string platformAttribute = __scratchPlatform.ToString();
@@ -708,9 +706,7 @@ internal static class ConstructorFactory
         defaultIfaceObjRef = defaultIface is not null ? ObjRefNameGenerator.GetObjRefName(context, defaultIface) : string.Empty;
         int gcPressure = ClassFactory.GetGcPressureAmount(classType);
         // Compute the platform attribute string from the composable factory interface's
-        // [ContractVersion] attribute. Mirrors C++
-        // 'auto platform_attribute = write_platform_attribute_temp(w, composable_type);'
-        // emitted at line 3179 before the public ctor.
+        // [ContractVersion] attribute
         IndentedTextWriter __scratchPlatform = new();
         CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, composableType);
         string platformAttribute = __scratchPlatform.ToString();

@@ -77,8 +77,7 @@ internal static class ClassMembersFactory
             writer.Write($"{s.Access}{s.MethodSpec}{s.PropTypeText} {kvp.Key}");
             // For getter-only properties, emit expression body: 'public T Prop => Expr;'
             // For getter+setter or setter-only, use accessor block: 'public T Prop { get => ...; set => ...; }'
-            // In ref mode, all property bodies emit '=> throw null;' (mirrors C++
-            // write_abi_get/set_property_static_method_call + write_unsafe_accessor_property_static_method_call,
+            // In ref mode, all property bodies emit '=> throw null;'
             //, 1697).
             bool getterOnly = s.HasGetter && !s.HasSetter;
             if (getterOnly)
@@ -272,10 +271,9 @@ internal static class ClassMembersFactory
             // IWindowsRuntimeInterface<T>.GetInterface(). For the default interface on an
             // unsealed class with an exclusive default, emit "internal new GetDefaultInterface()".
             // The IWindowsRuntimeInterface<T> markers are NOT emitted in ref mode (gated by
-            // !context.Settings.ReferenceProjection here, mirrors C++
-            // '&& !settings.reference_projection' in the corresponding condition). The
-            // 'internal new GetDefaultInterface()' helper IS emitted in both modes since
-            // it's referenced by overrides on derived classes.
+            // !context.Settings.ReferenceProjection here). The 'internal new
+            // GetDefaultInterface()' helper IS emitted in both modes since it's referenced by
+            // overrides on derived classes.
             if (IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false) && !context.Settings.ReferenceProjection)
             {
                 string giObjRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
@@ -385,9 +383,7 @@ internal static class ClassMembersFactory
         // class members, classType is that fast-abi class), dispatch routes through the
         // default interface's ABI Methods class and objref instead of through this interface's
         // own ABI Methods class. The native vtable bundles all exclusive interfaces' methods
-        // into the default interface's vtable in a fixed order. Mirrors C++
-        // (semantics_for_abi_call assignment) which redirects both
-        // static_iface_target and the objref to the default interface for fast-abi cases.
+        // into the default interface's vtable in a fixed order
         TypeDefinition abiInterface = ifaceType;
         ITypeDefOrRef abiInterfaceRef = originalInterface;
         bool isFastAbiExclusive = ClassFactory.IsFastAbiClass(classType) && TypeCategorization.IsExclusiveTo(ifaceType);
@@ -441,8 +437,7 @@ internal static class ClassMembersFactory
         // attribute. In ref mode, this is prepended to each member emission so the projected
         // class members carry [SupportedOSPlatform("WindowsX.Y.Z.0")] mirroring the interface's
         // contract version. Only emitted in ref mode (WritePlatformAttribute internally returns
-        // immediately if not ref). Mirrors C++
-        // 'auto platform_attribute = write_platform_attribute_temp(w, interface_type);'.
+        // immediately if not ref)
         IndentedTextWriter __scratchPlatform = new();
         CustomAttributeFactory.WritePlatformAttribute(__scratchPlatform, context, ifaceType);
         string platformAttribute = __scratchPlatform.ToString();
@@ -556,9 +551,7 @@ internal static class ClassMembersFactory
             }
 
             // For overridable interface methods, emit an explicit interface implementation
-            // that delegates to the protected (and virtual on non-sealed) method. Mirrors C++
-            // overridable interface pattern:
-            //   T InterfaceName.MethodName(args) => MethodName(args);
+            // that delegates to the protected (and virtual on non-sealed) method
             if (isOverridable)
             {
                 // impl as well (since it shares the same originating interface).
@@ -678,10 +671,7 @@ internal static class ClassMembersFactory
 
             // Emit the _eventSource_<name> property field — skipped in ref mode (the event
             // accessors below become 'add => throw null;' / 'remove => throw null;' which
-            // don't reference the field, mirrors C++ where the inline_event_source_field
-            // path emits 'throw null' at). Also skipped when the
-            // event must dispatch through the ABI Methods class instead (see
-            // 'inlineEventSourceField' computation above for fast-abi non-default exclusive).
+            // don't reference the field,
             if (!context.Settings.ReferenceProjection && inlineEventSourceField)
             {
                 writer.Write($"\nprivate {eventSourceTypeFull} _eventSource_{name}\n{{\n    get\n    {{\n");

@@ -12,7 +12,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static class AbiTypeWriter
 {
-    /// <summary>Mirrors C++ <c>write_abi_type</c>: writes the ABI type for a type semantics.</summary>
+    /// <summary>Writes the C# representation of the ABI type for the given <paramref name="semantics"/> (e.g. fundamental primitives, <c>void*</c> for object/interface types, etc.).</summary>
     public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics)
     {
         switch (semantics)

@@ -81,9 +81,7 @@ internal static class AbiInterfaceIDicFactory
             }
             // Special case: IObservableMap`2 and IObservableVector`1 are NOT mapped to BCL
             // interfaces (they retain WinRT names) but they DO need to forward their inherited
-            // IDictionary/IList members for cast-based dispatch. Mirrors C++ which uses
-            // write_dictionary_members_using_idic / write_list_members_using_idic when walking
-            // these interfaces in write_required_interface_members_for_abi_type.
+            // IDictionary/IList members for cast-based dispatch.
             if (rNs == "Windows.Foundation.Collections" && rName == "IObservableMap`2")
             {
                 if (impl.Interface is TypeSpecification tsMap && tsMap.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature giMap && giMap.TypeArguments.Count == 2)
@@ -133,7 +131,7 @@ internal static class AbiInterfaceIDicFactory
     /// <summary>
     /// Emits IDictionary&lt;K,V&gt; / ICollection&lt;KVP&gt; / IEnumerable&lt;KVP&gt; +
     /// IObservableMap&lt;K,V&gt;.MapChanged forwarders for a DIC file interface that inherits
-    /// from <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c>. Mirrors C++
+    /// from <c>Windows.Foundation.Collections.IObservableMap&lt;K,V&gt;</c>.
     /// <c>write_dictionary_members_using_idic(true)</c> + the IObservableMap event forwarder.
     /// </summary>
     internal static void EmitDicShimIObservableMapForwarders(IndentedTextWriter writer, ProjectionEmitContext context, string keyText, string valueText)
@@ -164,7 +162,7 @@ internal static class AbiInterfaceIDicFactory
     /// <summary>
     /// Emits IList&lt;T&gt; / ICollection&lt;T&gt; / IEnumerable&lt;T&gt; +
     /// IObservableVector&lt;T&gt;.VectorChanged forwarders for a DIC file interface that inherits
-    /// from <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c>. Mirrors C++
+    /// from <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c>.
     /// <c>write_list_members_using_idic(true)</c> + the IObservableVector event forwarder.
     /// </summary>
     internal static void EmitDicShimIObservableVectorForwarders(IndentedTextWriter writer, ProjectionEmitContext context, string elementText)
@@ -375,7 +373,7 @@ internal static class AbiInterfaceIDicFactory
                 // If the property has only a setter on this interface BUT a base interface declares
                 // the getter (so the C# interface decl emits 'get; set;'), C# requires an explicit
                 // interface impl to provide both accessors. Emit a synthetic getter that delegates
-                // to the base interface where the getter actually lives. Mirrors C++
+                // to the base interface where the getter actually lives
                 if (getter is null)
                 {
                     TypeDefinition? baseIfaceWithGetter = InterfaceFactory.FindPropertyInterfaceInBases(context.Cache, type, pname);

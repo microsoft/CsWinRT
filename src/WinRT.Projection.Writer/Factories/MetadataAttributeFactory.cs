@@ -9,8 +9,9 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Helper writers for assembly attributes, metadata attributes, and other infrastructure.
-/// Mirrors various functions in <c>code_writers.h</c>.
+/// Helper writers for assembly attributes, metadata attributes, file headers, and
+/// other infrastructure that runs at the top or bottom of every emitted projection
+/// file.
 /// </summary>
 internal static class MetadataAttributeFactory
 {

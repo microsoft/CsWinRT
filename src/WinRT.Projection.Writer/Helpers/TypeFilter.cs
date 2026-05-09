@@ -46,10 +46,7 @@ internal readonly struct TypeFilter
             return true;
         }
 
-        // Split into namespace + typename at the LAST '.'. Mirrors C++:
-        //   auto position = type.find_last_of('.');
-        //   includes(type.substr(0, position), type.substr(position + 1));
-        // When there's no '.', position = npos, and both substrings collapse to the full string.
+        // Split into namespace + typename at the LAST '.'.
         int dot = fullName.LastIndexOf('.');
         string ns;
         string name;
