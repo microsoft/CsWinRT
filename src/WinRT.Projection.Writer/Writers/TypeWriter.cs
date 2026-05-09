@@ -29,10 +29,10 @@ internal sealed class TypeWriter : TextWriter
     public Settings Settings { get; }
 
     /// <summary>Gets a value indicating whether the writer is currently inside an ABI namespace block.</summary>
-    public bool InAbiNamespace { get; private set; }
+    public bool InAbiNamespace => Context.InAbiNamespace;
 
     /// <summary>Gets a value indicating whether the writer is currently inside an ABI.Impl namespace block.</summary>
-    public bool InAbiImplNamespace { get; private set; }
+    public bool InAbiImplNamespace => Context.InAbiImplNamespace;
 
     /// <summary>
     /// Gets or sets a value indicating whether platform-attribute computation should suppress
@@ -90,11 +90,11 @@ internal sealed class TypeWriter : TextWriter
 
     /// <summary>
     /// Writes the <c>namespace ...</c> opening block for the projected namespace. Delegates to
-    /// <see cref="IndentedTextWriterExtensions.WriteBeginProjectedNamespace(IndentedTextWriter, ProjectionEmitContext)"/>.
+    /// <see cref="ProjectionWriterExtensions.WriteBeginProjectedNamespace(Writers.IndentedTextWriter, ProjectionEmitContext)"/>.
     /// </summary>
     public void WriteBeginProjectedNamespace()
     {
-        InAbiImplNamespace = Settings.Component;
+        Context.SetInAbiImplNamespace(Settings.Component);
         Writer.WriteBeginProjectedNamespace(Context);
     }
 
@@ -102,20 +102,20 @@ internal sealed class TypeWriter : TextWriter
     public void WriteEndProjectedNamespace()
     {
         Writer.WriteEndProjectedNamespace();
-        InAbiImplNamespace = false;
+        Context.SetInAbiImplNamespace(false);
     }
 
     /// <summary>Writes the <c>namespace ABI.X</c> opening block plus its <c>CA1416</c> suppression pragma.</summary>
     public void WriteBeginAbiNamespace()
     {
         Writer.WriteBeginAbiNamespace(Context);
-        InAbiNamespace = true;
+        Context.SetInAbiNamespace(true);
     }
 
     /// <summary>Writes the closing <c>}</c> + matching <c>CA1416</c> restore pragma for the ABI namespace.</summary>
     public void WriteEndAbiNamespace()
     {
         Writer.WriteEndAbiNamespace();
-        InAbiNamespace = false;
+        Context.SetInAbiNamespace(false);
     }
 }
