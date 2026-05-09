@@ -9,13 +9,11 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 /// State produced by the processing phase of <see cref="ProjectionGenerator"/>.
 /// </summary>
 /// <param name="sourcesFolder">The path to the folder where sources will be generated.</param>
-/// <param name="rspFilePath">The path to the response file (kept as a debug artifact).</param>
 /// <param name="referencesWithoutProjections">The reference assembly paths excluding projection assemblies.</param>
 /// <param name="writerOptions">The options to pass to <see cref="global::WindowsRuntime.ProjectionWriter.ProjectionWriter.Run"/>.</param>
 /// <param name="hasTypesToProject">Whether any types were found to project.</param>
 internal sealed class ProjectionGeneratorProcessingState(
     string sourcesFolder,
-    string rspFilePath,
     string[] referencesWithoutProjections,
     ProjectionWriterOptions writerOptions,
     bool hasTypesToProject = true)
@@ -24,11 +22,6 @@ internal sealed class ProjectionGeneratorProcessingState(
     /// Gets the path to the folder where sources will be generated.
     /// </summary>
     public string SourcesFolder { get; } = sourcesFolder;
-
-    /// <summary>
-    /// Gets the path to the generated response file (kept as a debug artifact for inspection).
-    /// </summary>
-    public string RspFilePath { get; } = rspFilePath;
 
     /// <summary>
     /// Gets the reference assembly paths excluding projection assemblies.
