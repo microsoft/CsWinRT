@@ -16,16 +16,16 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal static partial class CodeWriters
 {
-    /// <summary>Primary <see cref="IndentedTextWriter"/>+<see cref="ProjectionEmitContext"/> overload of <see cref="WriteClassMembers(TypeWriter, TypeDefinition)"/>.</summary>
-    public static void WriteClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
-        => WriteClassMembers(new TypeWriter(writer, context), type);
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    public static void WriteClassMembers(TypeWriter w, TypeDefinition type)
+        => WriteClassMembers(w.Writer, w.Context, type);
 
     /// <summary>
     /// Emits all instance members (methods, properties, events) inherited from implemented interfaces.
     /// In reference-projection mode, type declarations and per-interface objref getters are
     /// emitted, but non-mapped instance method/property/event bodies are emitted as <c>=> throw null;</c> stubs.
     /// </summary>
-    public static void WriteClassMembers(TypeWriter w, TypeDefinition type)
+    public static void WriteClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         HashSet<string> writtenMethods = new(System.StringComparer.Ordinal);
         // For properties: track per-name accessor presence so we can merge get/set across interfaces.
@@ -37,7 +37,7 @@ internal static partial class CodeWriters
         // interface inside WriteInterfaceMembersRecursive (right before that interface's
         // members), instead of one upfront block. This interleaves the GetInterface() impls
         // with their corresponding interface body, matching truth's per-interface layout.
-        WriteInterfaceMembersRecursive(w, type, type, null, writtenMethods, propertyState, writtenEvents, writtenInterfaces);
+        WriteInterfaceMembersRecursive(writer, context, type, type, null, writtenMethods, propertyState, writtenEvents, writtenInterfaces);
 
         // After collecting all properties (with merged accessors), emit them.
         foreach (KeyValuePair<string, PropertyAccessorState> kvp in propertyState)
@@ -48,32 +48,32 @@ internal static partial class CodeWriters
             // C# allows method overloading on parameter list for the static externs).
             if (s.HasGetter && s.GetterIsGeneric && !string.IsNullOrEmpty(s.GetterGenericInteropType))
             {
-                w.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
-                w.Write(kvp.Key);
-                w.Write("\")]\n");
-                w.Write("static extern ");
-                w.Write(s.GetterPropTypeText);
-                w.Write(" ");
-                w.Write(s.GetterGenericAccessorName);
-                w.Write("([UnsafeAccessorType(\"");
-                w.Write(s.GetterGenericInteropType);
-                w.Write("\")] object _, WindowsRuntimeObjectReference thisReference);\n");
+                writer.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
+                writer.Write(kvp.Key);
+                writer.Write("\")]\n");
+                writer.Write("static extern ");
+                writer.Write(s.GetterPropTypeText);
+                writer.Write(" ");
+                writer.Write(s.GetterGenericAccessorName);
+                writer.Write("([UnsafeAccessorType(\"");
+                writer.Write(s.GetterGenericInteropType);
+                writer.Write("\")] object _, WindowsRuntimeObjectReference thisReference);\n");
             }
             if (s.HasSetter && s.SetterIsGeneric && !string.IsNullOrEmpty(s.SetterGenericInteropType))
             {
-                w.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
-                w.Write(kvp.Key);
-                w.Write("\")]\n");
-                w.Write("static extern void ");
-                w.Write(s.SetterGenericAccessorName);
-                w.Write("([UnsafeAccessorType(\"");
-                w.Write(s.SetterGenericInteropType);
-                w.Write("\")] object _, WindowsRuntimeObjectReference thisReference, ");
-                w.Write(s.SetterPropTypeText);
-                w.Write(" value);\n");
+                writer.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
+                writer.Write(kvp.Key);
+                writer.Write("\")]\n");
+                writer.Write("static extern void ");
+                writer.Write(s.SetterGenericAccessorName);
+                writer.Write("([UnsafeAccessorType(\"");
+                writer.Write(s.SetterGenericInteropType);
+                writer.Write("\")] object _, WindowsRuntimeObjectReference thisReference, ");
+                writer.Write(s.SetterPropTypeText);
+                writer.Write(" value);\n");
             }
 
-            w.Write("\n");
+            writer.Write("\n");
             // Mirrors C++: collapse to property-level platform attribute
             // when getter and setter platforms match; otherwise emit per-accessor.
             string getterPlat = s.GetterPlatformAttribute;
@@ -90,12 +90,12 @@ internal static partial class CodeWriters
                 getterPlat = string.Empty;
                 setterPlat = string.Empty;
             }
-            if (!string.IsNullOrEmpty(propertyPlat)) { w.Write(propertyPlat); }
-            w.Write(s.Access);
-            w.Write(s.MethodSpec);
-            w.Write(s.PropTypeText);
-            w.Write(" ");
-            w.Write(kvp.Key);
+            if (!string.IsNullOrEmpty(propertyPlat)) { writer.Write(propertyPlat); }
+            writer.Write(s.Access);
+            writer.Write(s.MethodSpec);
+            writer.Write(s.PropTypeText);
+            writer.Write(" ");
+            writer.Write(kvp.Key);
             // For getter-only properties, emit expression body: 'public T Prop => Expr;'
             // For getter+setter or setter-only, use accessor block: 'public T Prop { get => ...; set => ...; }'
             // (mirrors C++ which uses '%' template substitution where get-only collapses to '=> %').
@@ -106,114 +106,114 @@ internal static partial class CodeWriters
             bool getterOnly = s.HasGetter && !s.HasSetter;
             if (getterOnly)
             {
-                w.Write(" => ");
-                if (w.Settings.ReferenceProjection)
+                writer.Write(" => ");
+                if (context.Settings.ReferenceProjection)
                 {
-                    w.Write("throw null;");
+                    writer.Write("throw null;");
                 }
                 else if (s.GetterIsGeneric)
                 {
                     if (!string.IsNullOrEmpty(s.GetterGenericInteropType))
                     {
-                        w.Write(s.GetterGenericAccessorName);
-                        w.Write("(null, ");
-                        w.Write(s.GetterObjRef);
-                        w.Write(");");
+                        writer.Write(s.GetterGenericAccessorName);
+                        writer.Write("(null, ");
+                        writer.Write(s.GetterObjRef);
+                        writer.Write(");");
                     }
                     else
                     {
-                        w.Write("throw null!;");
+                        writer.Write("throw null!;");
                     }
                 }
                 else
                 {
-                    w.Write(s.GetterAbiClass);
-                    w.Write(".");
-                    w.Write(kvp.Key);
-                    w.Write("(");
-                    w.Write(s.GetterObjRef);
-                    w.Write(");");
+                    writer.Write(s.GetterAbiClass);
+                    writer.Write(".");
+                    writer.Write(kvp.Key);
+                    writer.Write("(");
+                    writer.Write(s.GetterObjRef);
+                    writer.Write(");");
                 }
-                w.Write("\n");
+                writer.Write("\n");
             }
             else
             {
-                w.Write("\n{\n");
+                writer.Write("\n{\n");
                 if (s.HasGetter)
                 {
                     if (!string.IsNullOrEmpty(getterPlat))
                     {
-                        w.Write("    ");
-                        w.Write(getterPlat);
+                        writer.Write("    ");
+                        writer.Write(getterPlat);
                     }
-                    if (w.Settings.ReferenceProjection)
+                    if (context.Settings.ReferenceProjection)
                     {
-                        w.Write("    get => throw null;\n");
+                        writer.Write("    get => throw null;\n");
                     }
                     else if (s.GetterIsGeneric)
                     {
                         if (!string.IsNullOrEmpty(s.GetterGenericInteropType))
                         {
-                            w.Write("    get => ");
-                            w.Write(s.GetterGenericAccessorName);
-                            w.Write("(null, ");
-                            w.Write(s.GetterObjRef);
-                            w.Write(");\n");
+                            writer.Write("    get => ");
+                            writer.Write(s.GetterGenericAccessorName);
+                            writer.Write("(null, ");
+                            writer.Write(s.GetterObjRef);
+                            writer.Write(");\n");
                         }
                         else
                         {
-                            w.Write("    get => throw null!;\n");
+                            writer.Write("    get => throw null!;\n");
                         }
                     }
                     else
                     {
-                        w.Write("    get => ");
-                        w.Write(s.GetterAbiClass);
-                        w.Write(".");
-                        w.Write(kvp.Key);
-                        w.Write("(");
-                        w.Write(s.GetterObjRef);
-                        w.Write(");\n");
+                        writer.Write("    get => ");
+                        writer.Write(s.GetterAbiClass);
+                        writer.Write(".");
+                        writer.Write(kvp.Key);
+                        writer.Write("(");
+                        writer.Write(s.GetterObjRef);
+                        writer.Write(");\n");
                     }
                 }
                 if (s.HasSetter)
                 {
                     if (!string.IsNullOrEmpty(setterPlat))
                     {
-                        w.Write("    ");
-                        w.Write(setterPlat);
+                        writer.Write("    ");
+                        writer.Write(setterPlat);
                     }
-                    if (w.Settings.ReferenceProjection)
+                    if (context.Settings.ReferenceProjection)
                     {
-                        w.Write("    set => throw null;\n");
+                        writer.Write("    set => throw null;\n");
                     }
                     else if (s.SetterIsGeneric)
                     {
                         if (!string.IsNullOrEmpty(s.SetterGenericInteropType))
                         {
-                            w.Write("    set => ");
-                            w.Write(s.SetterGenericAccessorName);
-                            w.Write("(null, ");
-                            w.Write(s.SetterObjRef);
-                            w.Write(", value);\n");
+                            writer.Write("    set => ");
+                            writer.Write(s.SetterGenericAccessorName);
+                            writer.Write("(null, ");
+                            writer.Write(s.SetterObjRef);
+                            writer.Write(", value);\n");
                         }
                         else
                         {
-                            w.Write("    set => throw null!;\n");
+                            writer.Write("    set => throw null!;\n");
                         }
                     }
                     else
                     {
-                        w.Write("    set => ");
-                        w.Write(s.SetterAbiClass);
-                        w.Write(".");
-                        w.Write(kvp.Key);
-                        w.Write("(");
-                        w.Write(s.SetterObjRef);
-                        w.Write(", value);\n");
+                        writer.Write("    set => ");
+                        writer.Write(s.SetterAbiClass);
+                        writer.Write(".");
+                        writer.Write(kvp.Key);
+                        writer.Write("(");
+                        writer.Write(s.SetterObjRef);
+                        writer.Write(", value);\n");
                     }
                 }
-                w.Write("}\n");
+                writer.Write("}\n");
             }
 
             // For overridable properties, emit an explicit interface implementation that
@@ -222,25 +222,25 @@ internal static partial class CodeWriters
             //   T InterfaceName.PropName { set => PropName = value; }
             if (s.IsOverridable && s.OverridableInterface is not null)
             {
-                w.Write(s.PropTypeText);
-                w.Write(" ");
-                WriteInterfaceTypeNameForCcw(w, s.OverridableInterface);
-                w.Write(".");
-                w.Write(kvp.Key);
-                w.Write(" {");
+                writer.Write(s.PropTypeText);
+                writer.Write(" ");
+                WriteInterfaceTypeNameForCcw(writer, context, s.OverridableInterface);
+                writer.Write(".");
+                writer.Write(kvp.Key);
+                writer.Write(" {");
                 if (s.HasGetter)
                 {
-                    w.Write("get => ");
-                    w.Write(kvp.Key);
-                    w.Write("; ");
+                    writer.Write("get => ");
+                    writer.Write(kvp.Key);
+                    writer.Write("; ");
                 }
                 if (s.HasSetter)
                 {
-                    w.Write("set => ");
-                    w.Write(kvp.Key);
-                    w.Write(" = value; ");
+                    writer.Write("set => ");
+                    writer.Write(kvp.Key);
+                    writer.Write(" = value; ");
                 }
-                w.Write("}\n");
+                writer.Write("}\n");
             }
         }
 
@@ -276,7 +276,7 @@ internal static partial class CodeWriters
         return !TypeCategorization.IsExclusiveTo(td);
     }
 
-    private static void WriteInterfaceMembersRecursive(TypeWriter w, TypeDefinition classType, TypeDefinition declaringType,
+    private static void WriteInterfaceMembersRecursive(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType, TypeDefinition declaringType,
         AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance,
         HashSet<string> writtenMethods, IDictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents, HashSet<TypeDefinition> writtenInterfaces)
     {
@@ -333,18 +333,18 @@ internal static partial class CodeWriters
             // unsealed class with an exclusive default, emit "internal new GetDefaultInterface()".
             //
             // The IWindowsRuntimeInterface<T> markers are NOT emitted in ref mode (gated by
-            // !w.Settings.ReferenceProjection here, mirrors C++
+            // !context.Settings.ReferenceProjection here, mirrors C++
             // '&& !settings.reference_projection' in the corresponding condition). The
             // 'internal new GetDefaultInterface()' helper IS emitted in both modes since
             // it's referenced by overrides on derived classes.
-            if (IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false) && !w.Settings.ReferenceProjection)
+            if (IsInterfaceInInheritanceList(impl, includeExclusiveInterface: false) && !context.Settings.ReferenceProjection)
             {
-                string giObjRefName = GetObjRefName(w, substitutedInterface);
-                w.Write("\nWindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
-                WriteInterfaceTypeNameForCcw(w, substitutedInterface);
-                w.Write(">.GetInterface()\n{\nreturn ");
-                w.Write(giObjRefName);
-                w.Write(".AsValue();\n}\n");
+                string giObjRefName = GetObjRefName(context, substitutedInterface);
+                writer.Write("\nWindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
+                WriteInterfaceTypeNameForCcw(writer, context, substitutedInterface);
+                writer.Write(">.GetInterface()\n{\nreturn ");
+                writer.Write(giObjRefName);
+                writer.Write(".AsValue();\n}\n");
             }
             else if (impl.IsDefaultInterface() && !classType.IsSealed)
             {
@@ -356,7 +356,7 @@ internal static partial class CodeWriters
                 // In non-ref mode this branch is only reached when the prior branch's
                 // IsInterfaceInInheritanceList check fails (i.e., ExclusiveTo default interfaces),
                 // because non-exclusive default interfaces are routed to the prior branch.
-                string giObjRefName = GetObjRefName(w, substitutedInterface);
+                string giObjRefName = GetObjRefName(context, substitutedInterface);
                 bool hasBaseType = false;
                 if (classType.BaseType is not null)
                 {
@@ -364,11 +364,11 @@ internal static partial class CodeWriters
                     string? baseName = classType.BaseType.Name?.Value;
                     hasBaseType = !(baseNs == "System" && baseName == "Object");
                 }
-                w.Write("\ninternal ");
-                if (hasBaseType) { w.Write("new "); }
-                w.Write("WindowsRuntimeObjectReferenceValue GetDefaultInterface()\n{\nreturn ");
-                w.Write(giObjRefName);
-                w.Write(".AsValue();\n}\n");
+                writer.Write("\ninternal ");
+                if (hasBaseType) { writer.Write("new "); }
+                writer.Write("WindowsRuntimeObjectReferenceValue GetDefaultInterface()\n{\nreturn ");
+                writer.Write(giObjRefName);
+                writer.Write(".AsValue();\n}\n");
             }
 
             // For mapped interfaces with custom members output (e.g. IClosable -> IDisposable, IMap`2
@@ -382,17 +382,17 @@ internal static partial class CodeWriters
                     // For generic interfaces, use the substituted nextInstance to compute the
                     // objref name so type arguments are concrete (matches the field name emitted
                     // by WriteClassObjRefDefinitions). For non-generic, fall back to impl.Interface.
-                    string objRefName = GetObjRefName(w, substitutedInterface);
-                    WriteMappedInterfaceStubs(w, nextInstance, ifaceName, objRefName);
+                    string objRefName = GetObjRefName(context, substitutedInterface);
+                    WriteMappedInterfaceStubs(writer, context, nextInstance, ifaceName, objRefName);
                 }
                 continue;
             }
 
-            WriteInterfaceMembers(w, classType, ifaceType, impl.Interface, isOverridable, isProtected, nextInstance,
+            WriteInterfaceMembers(writer, context, classType, ifaceType, impl.Interface, isOverridable, isProtected, nextInstance,
                 writtenMethods, propertyState, writtenEvents);
 
             // Recurse into derived interfaces
-            WriteInterfaceMembersRecursive(w, classType, ifaceType, nextInstance, writtenMethods, propertyState, writtenEvents, writtenInterfaces);
+            WriteInterfaceMembersRecursive(writer, context, classType, ifaceType, nextInstance, writtenMethods, propertyState, writtenEvents, writtenInterfaces);
         }
     }
 
@@ -424,7 +424,7 @@ internal static partial class CodeWriters
         return null;
     }
 
-    private static void WriteInterfaceMembers(TypeWriter w, TypeDefinition classType, TypeDefinition ifaceType,
+    private static void WriteInterfaceMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition classType, TypeDefinition ifaceType,
         ITypeDefOrRef originalInterface,
         bool isOverridable, bool isProtected, AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? currentInstance,
         HashSet<string> writtenMethods, IDictionary<string, PropertyAccessorState> propertyState, HashSet<string> writtenEvents)
@@ -482,15 +482,14 @@ internal static partial class CodeWriters
         // — note this is the ungenerified Methods class for generic interfaces (matches truth output).
         // The _objRef_ field name uses the full instantiated interface name so generic instantiations
         // (e.g. IAsyncOperation<uint>) get a per-instantiation field.
-        string abiClass = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
-        {
-            WriteTypedefName(w, abiInterface, TypedefNameType.StaticAbiClass, true);
-        }));
+        IndentedTextWriter __scratchAbiClass = new();
+        WriteTypedefName(__scratchAbiClass, context, abiInterface, TypedefNameType.StaticAbiClass, true);
+        string abiClass = __scratchAbiClass.ToString();
         if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal))
         {
             abiClass = "global::" + abiClass;
         }
-        string objRef = GetObjRefName(w, abiInterfaceRef);
+        string objRef = GetObjRefName(context, abiInterfaceRef);
 
         // For generic interfaces, also compute the encoded parent type name (used in UnsafeAccessor
         // function names) and the WinRT.Interop accessor type string (passed to UnsafeAccessorType).
@@ -498,8 +497,9 @@ internal static partial class CodeWriters
         string genericInteropType = string.Empty;
         if (isGenericInterface && currentInstance is not null)
         {
-            string projectedParent = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
-                WriteTypeName(w, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true)));
+            IndentedTextWriter __scratchProjectedParent = new();
+            WriteTypeName(__scratchProjectedParent, context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true);
+            string projectedParent = __scratchProjectedParent.ToString();
             genericParentEncoded = EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
             genericInteropType = EncodeInteropTypeName(currentInstance, TypedefNameType.StaticAbiClass) + ", WinRT.Interop";
         }
@@ -510,7 +510,9 @@ internal static partial class CodeWriters
         // contract version. Only emitted in ref mode (WritePlatformAttribute internally returns
         // immediately if not ref). Mirrors C++
         // 'auto platform_attribute = write_platform_attribute_temp(w, interface_type);'.
-        string platformAttribute = w.WriteTemp("%", new System.Action<TextWriter>(_ => WritePlatformAttribute(w, ifaceType)));
+        IndentedTextWriter __scratchPlatform = new();
+        WritePlatformAttribute(__scratchPlatform, context, ifaceType);
+        string platformAttribute = __scratchPlatform.ToString();
 
         // Methods
         foreach (MethodDefinition method in ifaceType.Methods)
@@ -560,81 +562,81 @@ internal static partial class CodeWriters
             {
                 // Emit UnsafeAccessor static extern + body that dispatches through it.
                 string accessorName = genericParentEncoded + "_" + name;
-                w.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
-                w.Write(name);
-                w.Write("\")]\n");
-                w.Write("static extern ");
-                WriteProjectionReturnType(w, sig);
-                w.Write(" ");
-                w.Write(accessorName);
-                w.Write("([UnsafeAccessorType(\"");
-                w.Write(genericInteropType);
-                w.Write("\")] object _, WindowsRuntimeObjectReference thisReference");
+                writer.Write("\n[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"");
+                writer.Write(name);
+                writer.Write("\")]\n");
+                writer.Write("static extern ");
+                WriteProjectionReturnType(writer, context, sig);
+                writer.Write(" ");
+                writer.Write(accessorName);
+                writer.Write("([UnsafeAccessorType(\"");
+                writer.Write(genericInteropType);
+                writer.Write("\")] object _, WindowsRuntimeObjectReference thisReference");
                 for (int i = 0; i < sig.Params.Count; i++)
                 {
-                    w.Write(", ");
-                    WriteProjectionParameter(w, sig.Params[i]);
+                    writer.Write(", ");
+                    WriteProjectionParameter(writer, context, sig.Params[i]);
                 }
-                w.Write(");\n");
+                writer.Write(");\n");
                 // string to each public method emission. In ref mode this produces e.g.
                 // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
-                if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
-                w.Write(access);
-                w.Write(methodSpecForThis);
-                WriteProjectionReturnType(w, sig);
-                w.Write(" ");
-                w.Write(name);
-                w.Write("(");
-                WriteParameterList(w, sig);
-                if (w.Settings.ReferenceProjection)
+                if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+                writer.Write(access);
+                writer.Write(methodSpecForThis);
+                WriteProjectionReturnType(writer, context, sig);
+                writer.Write(" ");
+                writer.Write(name);
+                writer.Write("(");
+                WriteParameterList(writer, context, sig);
+                if (context.Settings.ReferenceProjection)
                 {
                     // which emits 'throw null' in reference projection mode.
-                    w.Write(") => throw null;\n");
+                    writer.Write(") => throw null;\n");
                 }
                 else
                 {
-                    w.Write(") => ");
-                    w.Write(accessorName);
-                    w.Write("(null, ");
-                    w.Write(objRef);
+                    writer.Write(") => ");
+                    writer.Write(accessorName);
+                    writer.Write("(null, ");
+                    writer.Write(objRef);
                     for (int i = 0; i < sig.Params.Count; i++)
                     {
-                        w.Write(", ");
-                        WriteParameterNameWithModifier(w, sig.Params[i]);
+                        writer.Write(", ");
+                        WriteParameterNameWithModifier(writer, context, sig.Params[i]);
                     }
-                    w.Write(");\n");
+                    writer.Write(");\n");
                 }
             }
             else
             {
-                w.Write("\n");
-                if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
-                w.Write(access);
-                w.Write(methodSpecForThis);
-                WriteProjectionReturnType(w, sig);
-                w.Write(" ");
-                w.Write(name);
-                w.Write("(");
-                WriteParameterList(w, sig);
-                if (w.Settings.ReferenceProjection)
+                writer.Write("\n");
+                if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+                writer.Write(access);
+                writer.Write(methodSpecForThis);
+                WriteProjectionReturnType(writer, context, sig);
+                writer.Write(" ");
+                writer.Write(name);
+                writer.Write("(");
+                WriteParameterList(writer, context, sig);
+                if (context.Settings.ReferenceProjection)
                 {
                     // which emits 'throw null' in reference projection mode.
-                    w.Write(") => throw null;\n");
+                    writer.Write(") => throw null;\n");
                 }
                 else
                 {
-                    w.Write(") => ");
-                    w.Write(abiClass);
-                    w.Write(".");
-                    w.Write(name);
-                    w.Write("(");
-                    w.Write(objRef);
+                    writer.Write(") => ");
+                    writer.Write(abiClass);
+                    writer.Write(".");
+                    writer.Write(name);
+                    writer.Write("(");
+                    writer.Write(objRef);
                     for (int i = 0; i < sig.Params.Count; i++)
                     {
-                        w.Write(", ");
-                        WriteParameterNameWithModifier(w, sig.Params[i]);
+                        writer.Write(", ");
+                        WriteParameterNameWithModifier(writer, context, sig.Params[i]);
                     }
-                    w.Write(");\n");
+                    writer.Write(");\n");
                 }
             }
 
@@ -645,23 +647,23 @@ internal static partial class CodeWriters
             if (isOverridable)
             {
                 // impl as well (since it shares the same originating interface).
-                if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
-                WriteProjectionReturnType(w, sig);
-                w.Write(" ");
-                WriteInterfaceTypeNameForCcw(w, originalInterface);
-                w.Write(".");
-                w.Write(name);
-                w.Write("(");
-                WriteParameterList(w, sig);
-                w.Write(") => ");
-                w.Write(name);
-                w.Write("(");
+                if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+                WriteProjectionReturnType(writer, context, sig);
+                writer.Write(" ");
+                WriteInterfaceTypeNameForCcw(writer, context, originalInterface);
+                writer.Write(".");
+                writer.Write(name);
+                writer.Write("(");
+                WriteParameterList(writer, context, sig);
+                writer.Write(") => ");
+                writer.Write(name);
+                writer.Write("(");
                 for (int i = 0; i < sig.Params.Count; i++)
                 {
-                    if (i > 0) { w.Write(", "); }
-                    WriteParameterNameWithModifier(w, sig.Params[i]);
+                    if (i > 0) { writer.Write(", "); }
+                    WriteParameterNameWithModifier(writer, context, sig.Params[i]);
                 }
-                w.Write(");\n");
+                writer.Write(");\n");
             }
         }
 
@@ -676,7 +678,7 @@ internal static partial class CodeWriters
             {
                 state = new PropertyAccessorState
                 {
-                    PropTypeText = WritePropType(w, prop, genCtx),
+                    PropTypeText = WritePropType(context, prop, genCtx),
                     Access = access,
                     MethodSpec = methodSpec,
                     IsOverridable = isOverridable,
@@ -692,7 +694,7 @@ internal static partial class CodeWriters
                 state.GetterIsGeneric = isGenericInterface;
                 state.GetterGenericInteropType = genericInteropType;
                 state.GetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
-                state.GetterPropTypeText = WritePropType(w, prop, genCtx);
+                state.GetterPropTypeText = WritePropType(context, prop, genCtx);
                 state.GetterPlatformAttribute = platformAttribute;
             }
             if (setter is not null && !state.HasSetter)
@@ -703,7 +705,7 @@ internal static partial class CodeWriters
                 state.SetterIsGeneric = isGenericInterface;
                 state.SetterGenericInteropType = genericInteropType;
                 state.SetterGenericAccessorName = isGenericInterface ? (genericParentEncoded + "_" + name) : string.Empty;
-                state.SetterPropTypeText = WritePropType(w, prop, genCtx);
+                state.SetterPropTypeText = WritePropType(context, prop, genCtx);
                 state.SetterPlatformAttribute = platformAttribute;
             }
         }
@@ -739,8 +741,9 @@ internal static partial class CodeWriters
             }
             else
             {
-                eventSourceType = w.WriteTemp("%", new System.Action<TextWriter>(_ =>
-                    WriteTypeName(w, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false)));
+                IndentedTextWriter __scratchEventSource = new();
+                WriteTypeName(__scratchEventSource, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, false);
+                eventSourceType = __scratchEventSource.ToString();
             }
             string eventSourceTypeFull = eventSourceType;
             if (!eventSourceTypeFull.StartsWith("global::", System.StringComparison.Ordinal))
@@ -768,79 +771,79 @@ internal static partial class CodeWriters
             // path emits 'throw null' at). Also skipped when the
             // event must dispatch through the ABI Methods class instead (see
             // 'inlineEventSourceField' computation above for fast-abi non-default exclusive).
-            if (!w.Settings.ReferenceProjection && inlineEventSourceField)
+            if (!context.Settings.ReferenceProjection && inlineEventSourceField)
             {
-                w.Write("\nprivate ");
-                w.Write(eventSourceTypeFull);
-                w.Write(" _eventSource_");
-                w.Write(name);
-                w.Write("\n{\n    get\n    {\n");
+                writer.Write("\nprivate ");
+                writer.Write(eventSourceTypeFull);
+                writer.Write(" _eventSource_");
+                writer.Write(name);
+                writer.Write("\n{\n    get\n    {\n");
                 if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
                 {
-                    w.Write("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]\n");
-                    w.Write("        [return: UnsafeAccessorType(\"");
-                    w.Write(eventSourceInteropType);
-                    w.Write("\")]\n");
-                    w.Write("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);\n\n");
+                    writer.Write("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]\n");
+                    writer.Write("        [return: UnsafeAccessorType(\"");
+                    writer.Write(eventSourceInteropType);
+                    writer.Write("\")]\n");
+                    writer.Write("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);\n\n");
                 }
-                w.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
-                w.Write("        ");
-                w.Write(eventSourceTypeFull);
-                w.Write(" MakeEventSource()\n        {\n");
-                w.Write("            _ = global::System.Threading.Interlocked.CompareExchange(\n");
-                w.Write("                location1: ref field,\n");
-                w.Write("                value: ");
+                writer.Write("        [MethodImpl(MethodImplOptions.NoInlining)]\n");
+                writer.Write("        ");
+                writer.Write(eventSourceTypeFull);
+                writer.Write(" MakeEventSource()\n        {\n");
+                writer.Write("            _ = global::System.Threading.Interlocked.CompareExchange(\n");
+                writer.Write("                location1: ref field,\n");
+                writer.Write("                value: ");
                 if (isGenericEvent)
                 {
-                    w.Write("Unsafe.As<");
-                    w.Write(eventSourceTypeFull);
-                    w.Write(">(ctor(");
-                    w.Write(objRef);
-                    w.Write(", ");
-                    w.Write(vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                    w.Write("))");
+                    writer.Write("Unsafe.As<");
+                    writer.Write(eventSourceTypeFull);
+                    writer.Write(">(ctor(");
+                    writer.Write(objRef);
+                    writer.Write(", ");
+                    writer.Write(vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    writer.Write("))");
                 }
                 else
                 {
-                    w.Write("new ");
-                    w.Write(eventSourceTypeFull);
-                    w.Write("(");
-                    w.Write(objRef);
-                    w.Write(", ");
-                    w.Write(vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                    w.Write(")");
+                    writer.Write("new ");
+                    writer.Write(eventSourceTypeFull);
+                    writer.Write("(");
+                    writer.Write(objRef);
+                    writer.Write(", ");
+                    writer.Write(vtableIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    writer.Write(")");
                 }
-                w.Write(",\n");
-                w.Write("                comparand: null);\n\n");
-                w.Write("            return field;\n        }\n\n");
-                w.Write("        return field ?? MakeEventSource();\n    }\n}\n");
+                writer.Write(",\n");
+                writer.Write("                comparand: null);\n\n");
+                writer.Write("            return field;\n        }\n\n");
+                writer.Write("        return field ?? MakeEventSource();\n    }\n}\n");
             }
 
             // Emit the public/protected event with Subscribe/Unsubscribe.
-            w.Write("\n");
+            writer.Write("\n");
             // string to each event emission. In ref mode this produces e.g.
             // [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.16299.0")].
-            if (!string.IsNullOrEmpty(platformAttribute)) { w.Write(platformAttribute); }
-            w.Write(access);
-            w.Write(methodSpec);
-            w.Write("event ");
-            WriteEventType(w, evt, currentInstance);
-            w.Write(" ");
-            w.Write(name);
-            w.Write("\n{\n");
-            if (w.Settings.ReferenceProjection)
+            if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
+            writer.Write(access);
+            writer.Write(methodSpec);
+            writer.Write("event ");
+            WriteEventType(writer, context, evt, currentInstance);
+            writer.Write(" ");
+            writer.Write(name);
+            writer.Write("\n{\n");
+            if (context.Settings.ReferenceProjection)
             {
-                w.Write("    add => throw null;\n");
-                w.Write("    remove => throw null;\n");
+                writer.Write("    add => throw null;\n");
+                writer.Write("    remove => throw null;\n");
             }
             else if (inlineEventSourceField)
             {
-                w.Write("    add => _eventSource_");
-                w.Write(name);
-                w.Write(".Subscribe(value);\n");
-                w.Write("    remove => _eventSource_");
-                w.Write(name);
-                w.Write(".Unsubscribe(value);\n");
+                writer.Write("    add => _eventSource_");
+                writer.Write(name);
+                writer.Write(".Subscribe(value);\n");
+                writer.Write("    remove => _eventSource_");
+                writer.Write(name);
+                writer.Write(".Unsubscribe(value);\n");
             }
             else
             {
@@ -849,22 +852,22 @@ internal static partial class CodeWriters
                 // inline_event_source_field is false (the default helper-based path).
                 // Example: Simple.Event0 (on ISimple5) becomes
                 //   add => global::ABI.test_component_fast.ISimpleMethods.Event0((WindowsRuntimeObject)this, _objRef_test_component_fast_ISimple).Subscribe(value);
-                w.Write("    add => ");
-                w.Write(abiClass);
-                w.Write(".");
-                w.Write(name);
-                w.Write("((WindowsRuntimeObject)this, ");
-                w.Write(objRef);
-                w.Write(").Subscribe(value);\n");
-                w.Write("    remove => ");
-                w.Write(abiClass);
-                w.Write(".");
-                w.Write(name);
-                w.Write("((WindowsRuntimeObject)this, ");
-                w.Write(objRef);
-                w.Write(").Unsubscribe(value);\n");
+                writer.Write("    add => ");
+                writer.Write(abiClass);
+                writer.Write(".");
+                writer.Write(name);
+                writer.Write("((WindowsRuntimeObject)this, ");
+                writer.Write(objRef);
+                writer.Write(").Subscribe(value);\n");
+                writer.Write("    remove => ");
+                writer.Write(abiClass);
+                writer.Write(".");
+                writer.Write(name);
+                writer.Write("((WindowsRuntimeObject)this, ");
+                writer.Write(objRef);
+                writer.Write(").Unsubscribe(value);\n");
             }
-            w.Write("}\n");
+            writer.Write("}\n");
         }
     }
 
@@ -894,11 +897,15 @@ internal static partial class CodeWriters
     private static void WriteParameterNameWithModifier(TypeWriter w, ParamInfo p)
         => WriteParameterNameWithModifier(w.Writer, w.Context, p);
 
+    /// <summary>Legacy <see cref="TypeWriter"/> overload that delegates to the primary one.</summary>
+    private static void WriteInterfaceTypeNameForCcw(TypeWriter w, ITypeDefOrRef ifaceType)
+        => WriteInterfaceTypeNameForCcw(w.Writer, w.Context, ifaceType);
+
     /// <summary>
     /// Writes the projected name for an interface reference (TypeDefinition, TypeReference, or
     /// generic instance), applying mapped-type remapping. Used inside <c>IWindowsRuntimeInterface&lt;T&gt;</c>.
     /// </summary>
-    private static void WriteInterfaceTypeNameForCcw(TypeWriter w, ITypeDefOrRef ifaceType)
+    private static void WriteInterfaceTypeNameForCcw(IndentedTextWriter writer, ProjectionEmitContext context, ITypeDefOrRef ifaceType)
     {
         // If the reference is to a type in the same module, resolve to TypeDefinition so
         // WriteTypedefName can drop the 'global::<NS>.' prefix when the namespace matches.
@@ -914,8 +921,8 @@ internal static partial class CodeWriters
         }
         if (ifaceType is TypeDefinition td)
         {
-            WriteTypedefName(w, td, TypedefNameType.CCW, false);
-            WriteTypeParams(w, td);
+            WriteTypedefName(writer, context, td, TypedefNameType.CCW, false);
+            WriteTypeParams(writer, td);
         }
         else if (ifaceType is TypeReference tr)
         {
@@ -926,10 +933,10 @@ internal static partial class CodeWriters
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            w.Write("global::");
-            w.Write(ns);
-            w.Write(".");
-            w.WriteCode(name);
+            writer.Write("global::");
+            writer.Write(ns);
+            writer.Write(".");
+            writer.Write(IdentifierEscaping.StripBackticks(name));
         }
         else if (ifaceType is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)
         {
@@ -941,17 +948,17 @@ internal static partial class CodeWriters
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            w.Write("global::");
-            w.Write(ns);
-            w.Write(".");
-            w.WriteCode(name);
-            w.Write("<");
+            writer.Write("global::");
+            writer.Write(ns);
+            writer.Write(".");
+            writer.Write(IdentifierEscaping.StripBackticks(name));
+            writer.Write("<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
             {
-                if (i > 0) { w.Write(", "); }
-                WriteTypeName(w, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
+                if (i > 0) { writer.Write(", "); }
+                WriteTypeName(writer, context, TypeSemanticsFactory.Get(gi.TypeArguments[i]), TypedefNameType.Projected, true);
             }
-            w.Write(">");
+            writer.Write(">");
         }
     }
 }
