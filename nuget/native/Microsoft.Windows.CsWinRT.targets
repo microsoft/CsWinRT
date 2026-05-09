@@ -29,6 +29,10 @@ Properties consumers may set on the vcxproj:
                                             WindowsSdkPackageVersion to pass to the aggregator.
                                             Falls back to a value picked from any component ref
                                             metadata, then to the SDK default.
+  CsWinRTSkipNativeHostingAssetsOverride    Set to 'true' to suppress the arch-correct
+                                            replacement of WinRT.Host.dll/.mui in the consumer's
+                                            ReferenceCopyLocalPaths. Useful when the consumer
+                                            ships its own host bundle.
 ***********************************************************************************************
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -201,6 +205,40 @@ Properties consumers may set on the vcxproj:
     </ItemGroup>
 
     <Copy SourceFiles="@(_CsWinRTGeneratedDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+
+  </Target>
+
+  <!--
+    ============================================================
+            _CsWinRTReplaceArchSelectedHostingAssets
+
+    Standard ProjectReference / package transitive flow may have brought a wrong-arch
+    WinRT.Host.dll / WinRT.Host.dll.mui into ReferenceCopyLocalPaths (e.g. when the
+    referenced component csproj was built AnyCPU and its bin captured a single arch's
+    host dll). Replace any such items with the arch-correct copies from the CsWinRT
+    package's hosting/$(_CsWinRTNormalizedPlatform)/native/ folder.
+
+    Skipped if the package-layout host dll is not found on disk (e.g. in-repo simulation
+    that doesn't stage hosting/$arch/native/), so existing in-repo workarounds keep working.
+    Skipped if the consumer sets CsWinRTSkipNativeHostingAssetsOverride=true.
+    ============================================================
+  -->
+  <Target Name="_CsWinRTReplaceArchSelectedHostingAssets"
+          AfterTargets="ResolveAssemblyReferences"
+          Condition="'$(CsWinRTSkipNativeHostingAssetsOverride)' != 'true'">
+
+    <PropertyGroup>
+      <_CsWinRTHostDllPath>$(MSBuildThisFileDirectory)..\..\hosting\$(_CsWinRTNormalizedPlatform)\native\WinRT.Host.dll</_CsWinRTHostDllPath>
+      <_CsWinRTHostMuiPath>$(MSBuildThisFileDirectory)..\..\hosting\$(_CsWinRTNormalizedPlatform)\native\en-US\WinRT.Host.dll.mui</_CsWinRTHostMuiPath>
+    </PropertyGroup>
+
+    <ItemGroup Condition="Exists('$(_CsWinRTHostDllPath)')">
+      <_CsWinRTWrongArchHostingItems Include="@(ReferenceCopyLocalPaths)"
+                                     Condition="'%(Filename)%(Extension)' == 'WinRT.Host.dll' or '%(Filename)%(Extension)' == 'WinRT.Host.dll.mui'" />
+      <ReferenceCopyLocalPaths Remove="@(_CsWinRTWrongArchHostingItems)" />
+      <ReferenceCopyLocalPaths Include="$(_CsWinRTHostDllPath)" />
+      <ReferenceCopyLocalPaths Include="$(_CsWinRTHostMuiPath)" Condition="Exists('$(_CsWinRTHostMuiPath)')" />
+    </ItemGroup>
 
   </Target>
 
