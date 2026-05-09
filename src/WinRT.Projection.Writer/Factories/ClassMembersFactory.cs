@@ -14,7 +14,7 @@ namespace WindowsRuntime.ProjectionWriter;
 /// Class member emission: walks implemented interfaces and emits the public/protected
 /// instance methods, properties, and events.
 /// </summary>
-internal static partial class CodeWriters
+internal static class ClassMembersFactory
 {
     /// <summary>
     /// Emits all instance members (methods, properties, events) inherited from implemented interfaces.

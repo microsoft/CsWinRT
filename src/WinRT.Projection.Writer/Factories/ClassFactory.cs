@@ -280,7 +280,7 @@ internal static class ClassFactory
                     for (int i = 0; i < sig.Params.Count; i++)
                     {
                         writer.Write(", ");
-                        CodeWriters.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
+                        ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
                     }
                     writer.Write(");\n");
                 }
@@ -660,7 +660,7 @@ internal static class ClassFactory
             writer.Write(";\n");
         }
 
-        CodeWriters.WriteClassMembers(writer, context, type);
+        ClassMembersFactory.WriteClassMembers(writer, context, type);
 
         writer.Write("}\n");
     }

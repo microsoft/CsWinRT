@@ -249,7 +249,7 @@ internal static class ObjRefNameGenerator
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            if (!CodeWriters.IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
+            if (!ClassMembersFactory.IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
                 && !IsInterfaceForObjRef(impl))
             {
                 continue;
@@ -271,7 +271,7 @@ internal static class ObjRefNameGenerator
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            if (!CodeWriters.IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
+            if (!ClassMembersFactory.IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)
                 && !IsInterfaceForObjRef(impl))
             {
                 continue;

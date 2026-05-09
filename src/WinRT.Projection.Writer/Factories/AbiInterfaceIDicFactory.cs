@@ -257,7 +257,7 @@ internal static class AbiInterfaceIDicFactory
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 if (i > 0) { writer.Write(", "); }
-                CodeWriters.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
+                ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
             }
             writer.Write(");\n");
         }
@@ -414,7 +414,7 @@ internal static class AbiInterfaceIDicFactory
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 writer.Write(", ");
-                CodeWriters.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
+                ClassMembersFactory.WriteParameterNameWithModifier(writer, context, sig.Params[i]);
             }
             writer.Write(");\n}\n");
         }
@@ -457,7 +457,7 @@ internal static class AbiInterfaceIDicFactory
                     if (baseIfaceWithGetter is not null)
                     {
                         writer.Write("    get { return ((");
-                        CodeWriters.WriteInterfaceTypeNameForCcw(writer, context, baseIfaceWithGetter);
+                        ClassMembersFactory.WriteInterfaceTypeNameForCcw(writer, context, baseIfaceWithGetter);
                         writer.Write(")(WindowsRuntimeObject)this).");
                         writer.Write(pname);
                         writer.Write("; }\n");

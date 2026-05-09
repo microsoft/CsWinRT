@@ -85,7 +85,7 @@ internal static class InterfaceFactory
             }
             else
             {
-                TypeDefinition? resolved = CodeWriters.ResolveInterface(context.Cache, impl.Interface);
+                TypeDefinition? resolved = ClassMembersFactory.ResolveInterface(context.Cache, impl.Interface);
                 if (resolved is not null)
                 {
                     isExclusive = TypeCategorization.IsExclusiveTo(resolved);
@@ -251,7 +251,7 @@ internal static class InterfaceFactory
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            TypeDefinition? baseIface = CodeWriters.ResolveInterface(cache, impl.Interface);
+            TypeDefinition? baseIface = ClassMembersFactory.ResolveInterface(cache, impl.Interface);
             if (baseIface is null) { continue; }
             // Skip the original setter-defining interface itself. Also dedupe via the visited set.
             if (baseIface == type) { continue; }
@@ -281,7 +281,7 @@ internal static class InterfaceFactory
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            TypeDefinition? baseIface = CodeWriters.ResolveInterface(cache, impl.Interface);
+            TypeDefinition? baseIface = ClassMembersFactory.ResolveInterface(cache, impl.Interface);
             if (baseIface is null) { continue; }
             if (baseIface == type) { continue; }
             if (!visited.Add(baseIface)) { continue; }
