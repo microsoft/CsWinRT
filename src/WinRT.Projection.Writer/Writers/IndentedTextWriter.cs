@@ -48,8 +48,10 @@ internal sealed class IndentedTextWriter
     /// <summary>The underlying buffer that text is written to.</summary>
     private readonly StringBuilder _buffer;
 
+#pragma warning disable IDE0032 // CurrentIndentLevel exposes the field directly via a property.
     /// <summary>The current indentation level (number of <see cref="DefaultIndentation"/> repeats).</summary>
     private int _currentIndentationLevel;
+#pragma warning restore IDE0032
 
     /// <summary>The current indentation string (cached for fast reuse).</summary>
     private string _currentIndentation;
@@ -293,6 +295,73 @@ internal sealed class IndentedTextWriter
 
     /// <summary>Returns the current buffer contents without modifying the buffer.</summary>
     public override string ToString() => _buffer.ToString();
+
+    /// <summary>Gets the current length (in chars) of the underlying buffer.</summary>
+    public int Length => _buffer.Length;
+
+    /// <summary>Returns the last character written to the buffer, or <c>'\0'</c> if the buffer is empty.</summary>
+    public char Back() => _buffer.Length == 0 ? '\0' : _buffer[^1];
+
+    /// <summary>Returns the contents of a substring of the buffer (used for capture-and-restore patterns).</summary>
+    /// <param name="startIndex">The starting position.</param>
+    /// <param name="length">The length of the substring to return.</param>
+    /// <returns>The substring of the buffer at the requested position.</returns>
+    public string GetSubstring(int startIndex, int length) => _buffer.ToString(startIndex, length);
+
+    /// <summary>Removes a range of characters from the buffer.</summary>
+    /// <param name="startIndex">The starting position to remove.</param>
+    /// <param name="length">The number of characters to remove.</param>
+    public void Remove(int startIndex, int length) => _buffer.Remove(startIndex, length);
+
+    /// <summary>Returns the current indent level (number of <see cref="Block"/>-equivalent units of indentation).</summary>
+    public int CurrentIndentLevel => _currentIndentationLevel;
+
+    /// <summary>
+    /// Sets the indent level back to zero (for emergency reset; rarely needed).
+    /// </summary>
+    public void ResetIndent()
+    {
+        _currentIndentationLevel = 0;
+        _currentIndentation = _availableIndentations[0];
+    }
+
+    /// <summary>
+    /// Flushes the current buffer to <paramref name="path"/> (skipping the write if the file
+    /// already exists with identical content), then clears the buffer.
+    /// </summary>
+    /// <param name="path">The destination file path.</param>
+    public void FlushToFile(string path)
+    {
+        string content = _buffer.ToString();
+        if (System.IO.File.Exists(path))
+        {
+            try
+            {
+                if (System.IO.File.ReadAllText(path) == content)
+                {
+                    _buffer.Clear();
+                    return;
+                }
+            }
+            catch
+            {
+                // fall through to overwrite
+            }
+        }
+        System.IO.File.WriteAllText(path, content);
+        _buffer.Clear();
+    }
+
+    /// <summary>
+    /// Flushes the current buffer contents to a string (without trimming) and clears the buffer.
+    /// </summary>
+    /// <returns>The full buffer contents, untrimmed.</returns>
+    public string FlushToString()
+    {
+        string text = _buffer.ToString();
+        _buffer.Clear();
+        return text;
+    }
 
     /// <summary>
     /// Writes raw text to the underlying buffer, prepending current indentation if positioned
