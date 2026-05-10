@@ -197,16 +197,21 @@ internal sealed class IndentedTextWriter
     /// <summary>
     /// Writes a newline to the underlying buffer.
     /// </summary>
-    /// <param name="skipIfPresent">When <see langword="true"/>, skips writing the newline if the buffer already ends with a blank line or with <c>{\n</c> (collapses runs of blank lines to one).</param>
-    public void WriteLine(bool skipIfPresent = false)
+    /// <remarks>
+    /// To prevent runs of blank lines and unnecessary blank lines immediately after an
+    /// opening <c>{</c>, this method is idempotent: a newline is suppressed if the buffer
+    /// already ends with a blank line (<c>\n\n</c>) or with <c>{\n</c>. This makes
+    /// repeated <see cref="WriteLine()"/> calls (and multiline literals containing runs
+    /// of blank lines) collapse to a single blank-line separator automatically.
+    /// </remarks>
+    public void WriteLine()
     {
-        if (skipIfPresent && _buffer.Length > 0)
+        if (_buffer.Length > 0)
         {
-            int len = _buffer.Length;
+            int j = _buffer.Length - 1;
 
-            // Check whether the buffer already ends with "\n\n" or "{\n" (after trimming
-            // trailing spaces from the last line). If so, suppress the additional newline.
-            int j = len - 1;
+            // Skip trailing spaces on the last line so the check ignores indentation
+            // that may have been emitted speculatively for an empty line.
             while (j >= 0 && _buffer[j] == ' ')
             {
                 j--;
@@ -222,6 +227,16 @@ internal sealed class IndentedTextWriter
             }
         }
 
+        _buffer.Append(DefaultNewLine);
+    }
+
+    /// <summary>
+    /// Writes a newline to the underlying buffer unconditionally (no idempotent
+    /// collapsing). Reserved for the rare case where the caller wants to force a
+    /// blank-line emission.
+    /// </summary>
+    public void WriteRawNewLine()
+    {
         _buffer.Append(DefaultNewLine);
     }
 
@@ -248,12 +263,11 @@ internal sealed class IndentedTextWriter
 
     /// <summary>Writes a newline if <paramref name="condition"/> is <see langword="true"/>.</summary>
     /// <param name="condition">When <see langword="true"/>, writes a newline; otherwise this call is a no-op.</param>
-    /// <param name="skipIfPresent">When <see langword="true"/>, suppresses runs of blank lines (see <see cref="WriteLine(bool)"/>).</param>
-    public void WriteLineIf(bool condition, bool skipIfPresent = false)
+    public void WriteLineIf(bool condition)
     {
         if (condition)
         {
-            WriteLine(skipIfPresent);
+            WriteLine();
         }
     }
 
