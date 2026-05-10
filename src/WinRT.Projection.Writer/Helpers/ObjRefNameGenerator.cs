@@ -8,9 +8,7 @@ using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
-
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
-
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;

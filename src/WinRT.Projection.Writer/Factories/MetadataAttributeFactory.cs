@@ -7,7 +7,9 @@ using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Builders;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Writers;
 using AsmResolver.DotNet.Signatures;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -21,7 +23,7 @@ internal static class MetadataAttributeFactory
     /// Writes <c>#pragma warning disable IL2026</c>.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
-    public static void WritePragmaDisableIL2026(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer)
+    public static void WritePragmaDisableIL2026(IndentedTextWriter writer)
     {
         writer.WriteLine("");
         writer.WriteLine("#pragma warning disable IL2026");
@@ -31,7 +33,7 @@ internal static class MetadataAttributeFactory
     /// Writes <c>#pragma warning restore IL2026</c>.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
-    public static void WritePragmaRestoreIL2026(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer)
+    public static void WritePragmaRestoreIL2026(IndentedTextWriter writer)
     {
         writer.WriteLine("");
         writer.WriteLine("#pragma warning restore IL2026");
@@ -62,7 +64,7 @@ internal static class MetadataAttributeFactory
     /// <c>using</c> imports + suppression pragmas.
     /// </summary>
     /// <param name="writer">The writer to emit the banner to.</param>
-    public static void WriteFileHeader(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer)
+    public static void WriteFileHeader(IndentedTextWriter writer)
     {
         writer.Write($$"""
             //------------------------------------------------------------------------------
@@ -82,7 +84,7 @@ internal static class MetadataAttributeFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="type">The type definition.</param>
     /// <param name="cache">The metadata cache used to resolve the source module path.</param>
-    public static void WriteWinRTMetadataAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, TypeDefinition type, MetadataCache cache)
+    public static void WriteWinRTMetadataAttribute(IndentedTextWriter writer, TypeDefinition type, MetadataCache cache)
     {
         string path = cache.GetSourcePath(type);
         string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
@@ -95,7 +97,7 @@ internal static class MetadataAttributeFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>
-    public static void WriteWinRTMetadataTypeNameAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteWinRTMetadataTypeNameAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         writer.Write("[WindowsRuntimeMetadataTypeName(\"");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
@@ -109,7 +111,7 @@ internal static class MetadataAttributeFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>
-    public static void WriteWinRTMappedTypeAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteWinRTMappedTypeAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         writer.Write("[WindowsRuntimeMappedType(typeof(");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
@@ -123,7 +125,7 @@ internal static class MetadataAttributeFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The value type definition.</param>
-    public static void WriteValueTypeWinRTClassNameAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteValueTypeWinRTClassNameAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (context.Settings.ReferenceProjection) { return; }
         (string ns, string name) = type.Names();
@@ -136,7 +138,7 @@ internal static class MetadataAttributeFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The reference type definition.</param>
-    public static void WriteWinRTReferenceTypeAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteWinRTReferenceTypeAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (context.Settings.ReferenceProjection) { return; }
         writer.Write("[WindowsRuntimeReferenceType(typeof(");
@@ -151,7 +153,7 @@ internal static class MetadataAttributeFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>
-    public static void WriteComWrapperMarshallerAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteComWrapperMarshallerAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (context.Settings.ReferenceProjection) { return; }
         (string ns, string name) = type.Names();
@@ -165,7 +167,7 @@ internal static class MetadataAttributeFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>
-    public static void WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteWinRTWindowsMetadataTypeMapGroupAssemblyAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Skip exclusive interfaces and projection-internal interfaces.
         if (TypeCategorization.GetCategory(type) == TypeCategory.Interface &&
@@ -175,7 +177,7 @@ internal static class MetadataAttributeFactory
         }
 
         // Capture the projected type name as a string by writing into a scratch writer at indent 0.
-        WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
+        IndentedTextWriter scratch = new();
         TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.NonProjected, true);
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string projectionName = scratch.ToString();
@@ -223,9 +225,9 @@ internal static class MetadataAttributeFactory
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>
     /// <param name="isValueType">When <see langword="true"/>, wraps the projected type in <c>Windows.Foundation.IReference`1&lt;...&gt;</c>.</param>
-    public static void WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool isValueType)
+    public static void WriteWinRTComWrappersTypeMapGroupAssemblyAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool isValueType)
     {
-        WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
+        IndentedTextWriter scratch = new();
         TypedefNameWriter.WriteTypedefName(scratch, context, type, TypedefNameType.NonProjected, true);
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string projectionName = scratch.ToString();
@@ -285,7 +287,7 @@ internal static class MetadataAttributeFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The interface type definition.</param>
-    public static void WriteWinRTIdicTypeMapGroupAssemblyAttribute(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteWinRTIdicTypeMapGroupAssemblyAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Generic interfaces are handled elsewhere.
         if (type.GenericParameters.Count != 0) { return; }
@@ -336,7 +338,7 @@ internal static class MetadataAttributeFactory
 
         // Build the interface display name via TypeSemantics so generic instantiations
         // (e.g. IDictionary<string, BasicStruct>), TypeRefs and TypeDefs are all handled correctly.
-        WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
+        IndentedTextWriter scratch = new();
         TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
         TypedefNameWriter.WriteTypeName(scratch, context, semantics, TypedefNameType.CCW, true);
         string interfaceName = scratch.ToString();
@@ -383,7 +385,7 @@ internal static class MetadataAttributeFactory
                     TypeDefinition? resolved = capturedIface.TryResolve(context.Cache.RuntimeContext);
                     if (resolved is not null) { capturedIface = resolved; }
                 }
-                WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
+                IndentedTextWriter scratch = new();
                 TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
                 TypedefNameWriter.WriteTypeName(scratch, context, semantics, TypedefNameType.CCW, true);
                 string interfaceName = scratch.ToString();
@@ -397,7 +399,7 @@ internal static class MetadataAttributeFactory
     public static void WriteDefaultInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
         if (sortedEntries.Count == 0) { return; }
-        WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter w = new();
+        IndentedTextWriter w = new();
         WriteFileHeader(w);
         w.Write("""
             using System;
@@ -425,7 +427,7 @@ internal static class MetadataAttributeFactory
     public static void WriteExclusiveToInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
         if (sortedEntries.Count == 0) { return; }
-        WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter w = new();
+        IndentedTextWriter w = new();
         WriteFileHeader(w);
         w.Write("""
             using System;

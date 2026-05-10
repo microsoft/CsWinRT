@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
+
 namespace WindowsRuntime.ProjectionWriter.Generation;
 
 /// <inheritdoc cref="ProjectionGenerator"/>

@@ -3,11 +3,8 @@
 
 using System.Collections.Frozen;
 using System.Collections.Generic;
-
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
-
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
-
 using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;

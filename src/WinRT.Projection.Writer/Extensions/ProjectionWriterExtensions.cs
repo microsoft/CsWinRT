@@ -4,6 +4,7 @@
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Helpers;
+
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>

@@ -4,9 +4,7 @@
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
-
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
-
 using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
 
 namespace WindowsRuntime.ProjectionWriter.Helpers;

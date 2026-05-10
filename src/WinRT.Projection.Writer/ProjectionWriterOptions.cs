@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Threading;
+
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>

@@ -30,12 +30,11 @@
 
     <!--
       The writer enables the strictest analysis posture (AnalysisLevel=latest +
-      AnalysisLevelStyle=latest-all) so every IDE rule fires as a warning. The five entries
-      below are intentional permanent suppressions; each is a documented preference that
-      conflicts with one of the rules promoted by latest-all. By comparison
-      WinRT.Interop.Generator runs only AnalysisLevel=latest (without latest-all), so it never
-      sees these warnings in the first place and has zero suppressions. The writer's stricter
-      posture intentionally errs on the side of more analysis with a small documented opt-out.
+      AnalysisLevelStyle=latest-all), matching WinRT.Interop.Generator. The five entries
+      below are intentional permanent suppressions; each is a documented preference where
+      the writer's emission patterns can't reasonably comply with the IDE rule the analyzer
+      surfaces, and the rule fires noisily across hundreds of sites that genuinely do prefer
+      the suppressed shape.
     -->
     <!-- IDE0010 / IDE0072: Add missing cases to switch over a large enum (ElementType etc.) — too noisy to enumerate every case. -->
     <!-- IDE0022: Use expression body for method — writer prefers expression bodies for one-liners. -->

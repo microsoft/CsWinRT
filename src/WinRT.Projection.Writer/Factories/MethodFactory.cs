@@ -8,6 +8,7 @@ using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Builders;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>

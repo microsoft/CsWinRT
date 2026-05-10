@@ -7,7 +7,6 @@ using System.Globalization;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;

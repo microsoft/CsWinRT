@@ -4,6 +4,7 @@
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>

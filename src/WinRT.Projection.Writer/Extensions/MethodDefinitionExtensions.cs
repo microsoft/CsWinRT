@@ -3,9 +3,7 @@
 
 using AsmResolver.DotNet;
 using System;
-
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
-
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 
 namespace WindowsRuntime.ProjectionWriter;

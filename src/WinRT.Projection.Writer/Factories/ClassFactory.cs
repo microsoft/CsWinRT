@@ -10,9 +10,7 @@ using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
-
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;

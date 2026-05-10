@@ -9,6 +9,7 @@ using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>

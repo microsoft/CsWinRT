@@ -7,6 +7,7 @@ using System.Linq;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+
 namespace WindowsRuntime.ProjectionWriter.Generation;
 
 /// <inheritdoc cref="ProjectionGenerator"/>
