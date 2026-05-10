@@ -20,7 +20,9 @@ internal sealed class MethodSignatureInfo
     public MethodDefinition Method { get; }
 
     /// <summary>Gets the per-parameter info for the method, in declaration order.</summary>
-    public List<ParameterInfo> Params { get; }
+    public IReadOnlyList<ParameterInfo> Params => _params;
+
+    private readonly List<ParameterInfo> _params;
 
     /// <summary>
     /// Gets the parameter definition with sequence 0 (the return parameter), or <see langword="null"/>
@@ -44,7 +46,7 @@ internal sealed class MethodSignatureInfo
     public MethodSignatureInfo(MethodDefinition method, GenericContext? genCtx)
     {
         Method = method;
-        Params = new List<ParameterInfo>(method.Parameters.Count);
+        _params = new List<ParameterInfo>(method.Parameters.Count);
         ReturnParam = null;
         foreach (ParameterDefinition p in method.ParameterDefinitions)
         {
@@ -64,7 +66,7 @@ internal sealed class MethodSignatureInfo
             {
                 TypeSignature pt = sig.ParameterTypes[i];
                 if (genCtx is not null) { pt = pt.InstantiateGenericTypes(genCtx.Value); }
-                Params.Add(new ParameterInfo(method.Parameters[i], pt));
+                _params.Add(new ParameterInfo(method.Parameters[i], pt));
             }
         }
     }

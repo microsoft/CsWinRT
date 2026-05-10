@@ -37,7 +37,7 @@ internal static class AbiDelegateFactory
         WriteDelegateInterfaceEntriesImpl(writer, context, type);
         WriteDelegateComWrappersMarshallerAttribute(writer, context, type);
         WriteDelegateImpl(writer, context, type);
-        ReferenceImplFactory.Write(writer, context, type);
+        ReferenceImplFactory.WriteReferenceImpl(writer, context, type);
 
         // In component mode, the original code also emits the authoring metadata wrapper for delegates.
         if (context.Settings.Component)

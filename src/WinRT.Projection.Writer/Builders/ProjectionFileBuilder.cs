@@ -72,13 +72,13 @@ internal static class ProjectionFileBuilder
                 AbiDelegateFactory.WriteTempDelegateEventSourceSubclass(writer, context, type);
                 break;
             case TypeCategory.Enum:
-                AbiEnumFactory.Write(writer, context, type);
+                AbiEnumFactory.WriteAbiEnum(writer, context, type);
                 break;
             case TypeCategory.Interface:
                 AbiInterfaceFactory.WriteAbiInterface(writer, context, type);
                 break;
             case TypeCategory.Struct:
-                AbiStructFactory.Write(writer, context, type);
+                AbiStructFactory.WriteAbiStruct(writer, context, type);
                 break;
             default:
                 throw WellKnownProjectionWriterExceptions.UnknownTypeCategory(category);

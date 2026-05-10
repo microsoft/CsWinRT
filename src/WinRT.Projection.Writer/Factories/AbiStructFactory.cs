@@ -19,7 +19,7 @@ internal static class AbiStructFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The struct type definition.</param>
-    public static void Write(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteAbiStruct(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // Emit the underlying ABI struct only when not blittable AND not a mapped struct
         // (mapped structs like Duration/KeyTime/RepeatBehavior have addition files that
@@ -88,6 +88,6 @@ internal static class AbiStructFactory
         }
 
         StructEnumMarshallerFactory.WriteStructEnumMarshallerClass(writer, context, type);
-        ReferenceImplFactory.Write(writer, context, type);
+        ReferenceImplFactory.WriteReferenceImpl(writer, context, type);
     }
 }

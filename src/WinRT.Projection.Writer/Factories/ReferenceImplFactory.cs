@@ -19,7 +19,7 @@ internal static class ReferenceImplFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>
-    public static void Write(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteReferenceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);

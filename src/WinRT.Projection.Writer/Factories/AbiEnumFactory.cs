@@ -15,10 +15,10 @@ internal static class AbiEnumFactory
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The enum type definition.</param>
-    public static void Write(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
+    public static void WriteAbiEnum(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         StructEnumMarshallerFactory.WriteStructEnumMarshallerClass(writer, context, type);
-        ReferenceImplFactory.Write(writer, context, type);
+        ReferenceImplFactory.WriteReferenceImpl(writer, context, type);
 
         // In component mode, also emit the authoring metadata wrapper for enums.
         if (context.Settings.Component)
