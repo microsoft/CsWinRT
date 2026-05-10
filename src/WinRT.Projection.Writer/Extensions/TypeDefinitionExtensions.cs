@@ -3,6 +3,10 @@
 
 using AsmResolver.DotNet;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Extensions;
 
 /// <summary>
@@ -70,7 +74,7 @@ internal static class TypeDefinitionExtensions
         /// <returns>The contract version, or <see langword="null"/>.</returns>
         public int? GetContractVersion()
         {
-            CustomAttribute? attr = type.GetAttribute("Windows.Foundation.Metadata", "ContractVersionAttribute");
+            CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, ContractVersionAttribute);
             if (attr is null) { return null; }
             if (attr.Signature is not null && attr.Signature.FixedArguments.Count > 1)
             {
@@ -89,7 +93,7 @@ internal static class TypeDefinitionExtensions
         /// <returns>The version, or <see langword="null"/>.</returns>
         public int? GetVersion()
         {
-            CustomAttribute? attr = type.GetAttribute("Windows.Foundation.Metadata", "VersionAttribute");
+            CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, VersionAttribute);
             if (attr is null) { return null; }
             if (attr.Signature is not null && attr.Signature.FixedArguments.Count > 0)
             {

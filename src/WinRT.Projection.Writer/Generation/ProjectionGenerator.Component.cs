@@ -7,6 +7,10 @@ using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Generation;
 
 /// <inheritdoc cref="ProjectionGenerator"/>
@@ -39,8 +43,8 @@ internal sealed partial class ProjectionGenerator
             foreach (TypeDefinition type in members.Classes)
             {
                 if (!_settings.Filter.Includes(type)) { continue; }
-                if (type.HasAttribute("Windows.Foundation.Metadata", "ActivatableAttribute") ||
-                    type.HasAttribute("Windows.Foundation.Metadata", "StaticAttribute"))
+                if (type.HasAttribute(WindowsFoundationMetadata, ActivatableAttribute) ||
+                    type.HasAttribute(WindowsFoundationMetadata, StaticAttribute))
                 {
                     _ = componentActivatable.Add(type);
                     string moduleName = Path.GetFileNameWithoutExtension(_cache.GetSourcePath(type));

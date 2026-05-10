@@ -6,6 +6,10 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -38,20 +42,20 @@ internal static class AttributedTypes
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
             if (attrType is null) { continue; }
             (string ns, string name) = attrType.Names();
-            if (ns != "Windows.Foundation.Metadata") { continue; }
+            if (ns != WindowsFoundationMetadata) { continue; }
 
             AttributedType info = new();
             switch (name)
             {
-                case "ActivatableAttribute":
+                case ActivatableAttribute:
                     info.Type = GetSystemType(attr, cache);
                     info.Activatable = true;
                     break;
-                case "StaticAttribute":
+                case StaticAttribute:
                     info.Type = GetSystemType(attr, cache);
                     info.Statics = true;
                     break;
-                case "ComposableAttribute":
+                case ComposableAttribute:
                     info.Type = GetSystemType(attr, cache);
                     info.Composable = true;
                     info.Visible = GetVisibility(attr) == 2;

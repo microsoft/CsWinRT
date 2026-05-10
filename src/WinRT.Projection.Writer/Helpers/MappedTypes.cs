@@ -3,6 +3,12 @@
 
 using System.Collections.Generic;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -114,59 +120,59 @@ internal static class MappedTypes
         Add("Microsoft.UI.Xaml.Media.Media3D", new("Matrix3DHelper", "", ""));
 
         // Windows.Foundation
-        Add("Windows.Foundation", new("AsyncActionCompletedHandler", "Windows.Foundation", "AsyncActionCompletedHandler"));
-        Add("Windows.Foundation", new("AsyncActionProgressHandler`1", "Windows.Foundation", "AsyncActionProgressHandler`1"));
-        Add("Windows.Foundation", new("AsyncActionWithProgressCompletedHandler`1", "Windows.Foundation", "AsyncActionWithProgressCompletedHandler`1"));
-        Add("Windows.Foundation", new("AsyncOperationCompletedHandler`1", "Windows.Foundation", "AsyncOperationCompletedHandler`1"));
-        Add("Windows.Foundation", new("AsyncOperationProgressHandler`2", "Windows.Foundation", "AsyncOperationProgressHandler`2"));
-        Add("Windows.Foundation", new("AsyncOperationWithProgressCompletedHandler`2", "Windows.Foundation", "AsyncOperationWithProgressCompletedHandler`2"));
-        Add("Windows.Foundation", new("AsyncStatus", "Windows.Foundation", "AsyncStatus"));
-        Add("Windows.Foundation", new("DateTime", "System", "DateTimeOffset", true));
-        Add("Windows.Foundation", new("EventHandler`1", "System", "EventHandler`1", false));
-        Add("Windows.Foundation", new("EventRegistrationToken", "WindowsRuntime.InteropServices", "EventRegistrationToken", false));
-        Add("Windows.Foundation", new("FoundationContract", "Windows.Foundation", "FoundationContract"));
-        Add("Windows.Foundation", new("HResult", "System", "Exception", true));
-        Add("Windows.Foundation", new("IAsyncAction", "Windows.Foundation", "IAsyncAction"));
-        Add("Windows.Foundation", new("IAsyncActionWithProgress`1", "Windows.Foundation", "IAsyncActionWithProgress`1"));
-        Add("Windows.Foundation", new("IAsyncInfo", "Windows.Foundation", "IAsyncInfo"));
-        Add("Windows.Foundation", new("IAsyncOperationWithProgress`2", "Windows.Foundation", "IAsyncOperationWithProgress`2"));
-        Add("Windows.Foundation", new("IAsyncOperation`1", "Windows.Foundation", "IAsyncOperation`1"));
-        Add("Windows.Foundation", new("IClosable", "System", "IDisposable", true, true));
-        Add("Windows.Foundation", new("IMemoryBufferReference", "Windows.Foundation", "IMemoryBufferReference"));
-        Add("Windows.Foundation", new("IPropertyValue", "Windows.Foundation", "IPropertyValue", true));
-        Add("Windows.Foundation", new("IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true));
-        Add("Windows.Foundation", new("IReference`1", "System", "Nullable`1", true));
-        Add("Windows.Foundation", new("IStringable", "Windows.Foundation", "IStringable"));
-        Add("Windows.Foundation", new("Point", "Windows.Foundation", "Point"));
-        Add("Windows.Foundation", new("PropertyType", "Windows.Foundation", "PropertyType"));
-        Add("Windows.Foundation", new("Rect", "Windows.Foundation", "Rect"));
-        Add("Windows.Foundation", new("Size", "Windows.Foundation", "Size"));
-        Add("Windows.Foundation", new("TimeSpan", "System", "TimeSpan", true));
-        Add("Windows.Foundation", new("TypedEventHandler`2", "System", "EventHandler`2", false));
-        Add("Windows.Foundation", new("UniversalApiContract", "Windows.Foundation", "UniversalApiContract"));
-        Add("Windows.Foundation", new("Uri", "System", "Uri", true));
+        Add(WindowsFoundation, new("AsyncActionCompletedHandler", WindowsFoundation, "AsyncActionCompletedHandler"));
+        Add(WindowsFoundation, new("AsyncActionProgressHandler`1", WindowsFoundation, "AsyncActionProgressHandler`1"));
+        Add(WindowsFoundation, new("AsyncActionWithProgressCompletedHandler`1", WindowsFoundation, "AsyncActionWithProgressCompletedHandler`1"));
+        Add(WindowsFoundation, new("AsyncOperationCompletedHandler`1", WindowsFoundation, "AsyncOperationCompletedHandler`1"));
+        Add(WindowsFoundation, new("AsyncOperationProgressHandler`2", WindowsFoundation, "AsyncOperationProgressHandler`2"));
+        Add(WindowsFoundation, new("AsyncOperationWithProgressCompletedHandler`2", WindowsFoundation, "AsyncOperationWithProgressCompletedHandler`2"));
+        Add(WindowsFoundation, new("AsyncStatus", WindowsFoundation, "AsyncStatus"));
+        Add(WindowsFoundation, new("DateTime", "System", "DateTimeOffset", true));
+        Add(WindowsFoundation, new("EventHandler`1", "System", "EventHandler`1", false));
+        Add(WindowsFoundation, new("EventRegistrationToken", "WindowsRuntime.InteropServices", "EventRegistrationToken", false));
+        Add(WindowsFoundation, new("FoundationContract", WindowsFoundation, "FoundationContract"));
+        Add(WindowsFoundation, new(HResult, "System", "Exception", true));
+        Add(WindowsFoundation, new("IAsyncAction", WindowsFoundation, "IAsyncAction"));
+        Add(WindowsFoundation, new("IAsyncActionWithProgress`1", WindowsFoundation, "IAsyncActionWithProgress`1"));
+        Add(WindowsFoundation, new("IAsyncInfo", WindowsFoundation, "IAsyncInfo"));
+        Add(WindowsFoundation, new("IAsyncOperationWithProgress`2", WindowsFoundation, "IAsyncOperationWithProgress`2"));
+        Add(WindowsFoundation, new("IAsyncOperation`1", WindowsFoundation, "IAsyncOperation`1"));
+        Add(WindowsFoundation, new("IClosable", "System", "IDisposable", true, true));
+        Add(WindowsFoundation, new("IMemoryBufferReference", WindowsFoundation, "IMemoryBufferReference"));
+        Add(WindowsFoundation, new("IPropertyValue", WindowsFoundation, "IPropertyValue", true));
+        Add(WindowsFoundation, new("IReferenceArray`1", WindowsFoundation, "IReferenceArray", true));
+        Add(WindowsFoundation, new(IReferenceGeneric, "System", NullableGeneric, true));
+        Add(WindowsFoundation, new("IStringable", WindowsFoundation, "IStringable"));
+        Add(WindowsFoundation, new("Point", WindowsFoundation, "Point"));
+        Add(WindowsFoundation, new("PropertyType", WindowsFoundation, "PropertyType"));
+        Add(WindowsFoundation, new("Rect", WindowsFoundation, "Rect"));
+        Add(WindowsFoundation, new("Size", WindowsFoundation, "Size"));
+        Add(WindowsFoundation, new("TimeSpan", "System", "TimeSpan", true));
+        Add(WindowsFoundation, new("TypedEventHandler`2", "System", "EventHandler`2", false));
+        Add(WindowsFoundation, new("UniversalApiContract", WindowsFoundation, "UniversalApiContract"));
+        Add(WindowsFoundation, new("Uri", "System", "Uri", true));
 
         // Windows.Foundation.Collections
-        Add("Windows.Foundation.Collections", new("CollectionChange", "Windows.Foundation.Collections", "CollectionChange"));
-        Add("Windows.Foundation.Collections", new("IIterable`1", "System.Collections.Generic", "IEnumerable`1", true, true));
-        Add("Windows.Foundation.Collections", new("IIterator`1", "System.Collections.Generic", "IEnumerator`1", true, true));
-        Add("Windows.Foundation.Collections", new("IKeyValuePair`2", "System.Collections.Generic", "KeyValuePair`2", true));
-        Add("Windows.Foundation.Collections", new("IMapChangedEventArgs`1", "Windows.Foundation.Collections", "IMapChangedEventArgs`1"));
-        Add("Windows.Foundation.Collections", new("IMapView`2", "System.Collections.Generic", "IReadOnlyDictionary`2", true, true));
-        Add("Windows.Foundation.Collections", new("IMap`2", "System.Collections.Generic", "IDictionary`2", true, true));
-        Add("Windows.Foundation.Collections", new("IObservableMap`2", "Windows.Foundation.Collections", "IObservableMap`2"));
-        Add("Windows.Foundation.Collections", new("IObservableVector`1", "Windows.Foundation.Collections", "IObservableVector`1"));
-        Add("Windows.Foundation.Collections", new("IVectorChangedEventArgs", "Windows.Foundation.Collections", "IVectorChangedEventArgs"));
-        Add("Windows.Foundation.Collections", new("IVectorView`1", "System.Collections.Generic", "IReadOnlyList`1", true, true));
-        Add("Windows.Foundation.Collections", new("IVector`1", "System.Collections.Generic", "IList`1", true, true));
-        Add("Windows.Foundation.Collections", new("MapChangedEventHandler`2", "Windows.Foundation.Collections", "MapChangedEventHandler`2"));
-        Add("Windows.Foundation.Collections", new("VectorChangedEventHandler`1", "Windows.Foundation.Collections", "VectorChangedEventHandler`1"));
+        Add(WindowsFoundationCollections, new("CollectionChange", WindowsFoundationCollections, "CollectionChange"));
+        Add(WindowsFoundationCollections, new("IIterable`1", "System.Collections.Generic", "IEnumerable`1", true, true));
+        Add(WindowsFoundationCollections, new("IIterator`1", "System.Collections.Generic", "IEnumerator`1", true, true));
+        Add(WindowsFoundationCollections, new("IKeyValuePair`2", "System.Collections.Generic", "KeyValuePair`2", true));
+        Add(WindowsFoundationCollections, new("IMapChangedEventArgs`1", WindowsFoundationCollections, "IMapChangedEventArgs`1"));
+        Add(WindowsFoundationCollections, new("IMapView`2", "System.Collections.Generic", "IReadOnlyDictionary`2", true, true));
+        Add(WindowsFoundationCollections, new("IMap`2", "System.Collections.Generic", "IDictionary`2", true, true));
+        Add(WindowsFoundationCollections, new("IObservableMap`2", WindowsFoundationCollections, "IObservableMap`2"));
+        Add(WindowsFoundationCollections, new("IObservableVector`1", WindowsFoundationCollections, "IObservableVector`1"));
+        Add(WindowsFoundationCollections, new("IVectorChangedEventArgs", WindowsFoundationCollections, "IVectorChangedEventArgs"));
+        Add(WindowsFoundationCollections, new("IVectorView`1", "System.Collections.Generic", "IReadOnlyList`1", true, true));
+        Add(WindowsFoundationCollections, new("IVector`1", "System.Collections.Generic", "IList`1", true, true));
+        Add(WindowsFoundationCollections, new("MapChangedEventHandler`2", WindowsFoundationCollections, "MapChangedEventHandler`2"));
+        Add(WindowsFoundationCollections, new("VectorChangedEventHandler`1", WindowsFoundationCollections, "VectorChangedEventHandler`1"));
 
         // Windows.Foundation.Metadata
-        Add("Windows.Foundation.Metadata", new("ApiContractAttribute", "Windows.Foundation.Metadata", "ApiContractAttribute"));
-        Add("Windows.Foundation.Metadata", new("AttributeTargets", "System", "AttributeTargets"));
-        Add("Windows.Foundation.Metadata", new("AttributeUsageAttribute", "System", "AttributeUsageAttribute"));
-        Add("Windows.Foundation.Metadata", new("ContractVersionAttribute", "Windows.Foundation.Metadata", "ContractVersionAttribute"));
+        Add(WindowsFoundationMetadata, new("ApiContractAttribute", WindowsFoundationMetadata, "ApiContractAttribute"));
+        Add(WindowsFoundationMetadata, new("AttributeTargets", "System", "AttributeTargets"));
+        Add(WindowsFoundationMetadata, new("AttributeUsageAttribute", "System", "AttributeUsageAttribute"));
+        Add(WindowsFoundationMetadata, new(ContractVersionAttribute, WindowsFoundationMetadata, ContractVersionAttribute));
 
         // Windows.Foundation.Numerics
         Add("Windows.Foundation.Numerics", new("Matrix3x2", "System.Numerics", "Matrix3x2"));
@@ -218,15 +224,15 @@ internal static class MappedTypes
         Add("Windows.UI.Xaml.Input", new("ICommand", "System.Windows.Input", "ICommand", true));
 
         // Windows.UI.Xaml.Interop
-        Add("Windows.UI.Xaml.Interop", new("IBindableIterable", "System.Collections", "IEnumerable", true, true));
-        Add("Windows.UI.Xaml.Interop", new("IBindableIterator", "System.Collections", "IEnumerator", true, true));
-        Add("Windows.UI.Xaml.Interop", new("IBindableVector", "System.Collections", "IList", true, true));
-        Add("Windows.UI.Xaml.Interop", new("INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true));
-        Add("Windows.UI.Xaml.Interop", new("NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction"));
-        Add("Windows.UI.Xaml.Interop", new("NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true));
-        Add("Windows.UI.Xaml.Interop", new("NotifyCollectionChangedEventHandler", "System.Collections.Specialized", "NotifyCollectionChangedEventHandler", true));
-        Add("Windows.UI.Xaml.Interop", new("TypeKind", "Windows.UI.Xaml.Interop", "TypeKind", true));
-        Add("Windows.UI.Xaml.Interop", new("TypeName", "System", "Type", true));
+        Add(WindowsUIXamlInterop, new("IBindableIterable", "System.Collections", "IEnumerable", true, true));
+        Add(WindowsUIXamlInterop, new("IBindableIterator", "System.Collections", "IEnumerator", true, true));
+        Add(WindowsUIXamlInterop, new("IBindableVector", "System.Collections", "IList", true, true));
+        Add(WindowsUIXamlInterop, new("INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true));
+        Add(WindowsUIXamlInterop, new("NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction"));
+        Add(WindowsUIXamlInterop, new("NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true));
+        Add(WindowsUIXamlInterop, new("NotifyCollectionChangedEventHandler", "System.Collections.Specialized", "NotifyCollectionChangedEventHandler", true));
+        Add(WindowsUIXamlInterop, new("TypeKind", WindowsUIXamlInterop, "TypeKind", true));
+        Add(WindowsUIXamlInterop, new(TypeName, "System", "Type", true));
 
         // Windows.UI.Xaml.Media
         Add("Windows.UI.Xaml.Media", new("IMatrixHelper", "", ""));
@@ -250,8 +256,8 @@ internal static class MappedTypes
         Add("Windows.UI.Xaml.Media.Media3D", new("Matrix3DHelper", "", ""));
 
         // WindowsRuntime.Internal
-        Add("WindowsRuntime.Internal", new("HWND", "System", "IntPtr"));
-        Add("WindowsRuntime.Internal", new("ProjectionInternalAttribute", "", ""));
+        Add(WindowsRuntimeInternal, new("HWND", "System", "IntPtr"));
+        Add(WindowsRuntimeInternal, new("ProjectionInternalAttribute", "", ""));
 
         return result;
     }

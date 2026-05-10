@@ -4,6 +4,8 @@
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -31,7 +33,7 @@ internal static partial class ConstructorFactory
             CustomAttribute attr = classType.CustomAttributes[i];
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
             if (attrType is null) { continue; }
-            if (attrType.Namespace?.Value != "Windows.Foundation.Metadata" ||
+            if (attrType.Namespace?.Value != WindowsFoundationMetadata ||
                 attrType.Name?.Value != "MarshalingBehaviorAttribute") { continue; }
             if (attr.Signature is null) { continue; }
             for (int j = 0; j < attr.Signature.FixedArguments.Count; j++)

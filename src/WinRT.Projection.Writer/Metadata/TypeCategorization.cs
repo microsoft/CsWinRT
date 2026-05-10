@@ -4,6 +4,10 @@
 using AsmResolver;
 using AsmResolver.DotNet;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Metadata;
 
 /// <summary>
@@ -84,7 +88,7 @@ internal static class TypeCategorization
     public static bool IsApiContractType(TypeDefinition type)
     {
         return GetCategory(type) == TypeCategory.Struct &&
-               HasAttribute(type, "Windows.Foundation.Metadata", "ApiContractAttribute");
+               HasAttribute(type, WindowsFoundationMetadata, "ApiContractAttribute");
     }
 
     /// <summary>
@@ -101,7 +105,7 @@ internal static class TypeCategorization
     public static bool IsExclusiveTo(TypeDefinition type)
     {
         return GetCategory(type) == TypeCategory.Interface &&
-               HasAttribute(type, "Windows.Foundation.Metadata", "ExclusiveToAttribute");
+               HasAttribute(type, WindowsFoundationMetadata, ExclusiveToAttribute);
     }
 
     /// <summary>
@@ -126,7 +130,7 @@ internal static class TypeCategorization
     /// </summary>
     public static bool IsProjectionInternal(TypeDefinition type)
     {
-        return HasAttribute(type, "WindowsRuntime.Internal", "ProjectionInternalAttribute");
+        return HasAttribute(type, WindowsRuntimeInternal, "ProjectionInternalAttribute");
     }
 
     /// <summary>

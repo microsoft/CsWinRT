@@ -4,6 +4,10 @@
 using AsmResolver.DotNet;
 using System;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Extensions;
 
 /// <summary>
@@ -43,6 +47,6 @@ internal static class MethodDefinitionExtensions
         /// </summary>
         /// <returns><see langword="true"/> if the method is documented to never throw; otherwise <see langword="false"/>.</returns>
         public bool IsNoExcept()
-            => method.IsRemoveOverload() || method.HasAttribute("Windows.Foundation.Metadata", "NoExceptionAttribute");
+            => method.IsRemoveOverload() || method.HasAttribute(WindowsFoundationMetadata, NoExceptionAttribute);
     }
 }

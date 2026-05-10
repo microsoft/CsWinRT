@@ -10,6 +10,10 @@ using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -254,7 +258,7 @@ internal static class ObjRefNameGenerator
             }
             // For FastAbi classes, skip non-default exclusive interfaces -- their methods
             // dispatch through the default interface's vtable so a separate objref is unnecessary.
-            bool isDefault = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
+            bool isDefault = impl.HasAttribute(WindowsFoundationMetadata, DefaultAttribute);
             if (!isDefault && ClassFactory.IsFastAbiClass(type))
             {
                 TypeDefinition? implTypeDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);
@@ -275,7 +279,7 @@ internal static class ObjRefNameGenerator
                 continue;
             }
             // Same fast-abi guard as the first pass.
-            bool isDefault2 = impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
+            bool isDefault2 = impl.HasAttribute(WindowsFoundationMetadata, DefaultAttribute);
             if (!isDefault2 && ClassFactory.IsFastAbiClass(type))
             {
                 TypeDefinition? implTypeDef = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl.Interface);

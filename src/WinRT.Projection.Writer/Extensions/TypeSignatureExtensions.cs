@@ -4,6 +4,10 @@
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Extensions;
 
 /// <summary>
@@ -50,7 +54,7 @@ internal static class TypeSignatureExtensions
             {
                 (string ns, string name) = t.Names();
                 if (ns == "System" && name == "Type") { return true; }
-                if (ns == "Windows.UI.Xaml.Interop" && name == "TypeName") { return true; }
+                if (ns == WindowsUIXamlInterop && name == TypeName) { return true; }
             }
             return false;
         }
@@ -65,8 +69,8 @@ internal static class TypeSignatureExtensions
             if (sig is not GenericInstanceTypeSignature gi) { return false; }
             string ns = gi.GenericType?.Namespace?.Value ?? string.Empty;
             string name = gi.GenericType?.Name?.Value ?? string.Empty;
-            return (ns == "Windows.Foundation" && name == "IReference`1")
-                || (ns == "System" && name == "Nullable`1");
+            return (ns == WindowsFoundation && name == IReferenceGeneric)
+                || (ns == "System" && name == NullableGeneric);
         }
 
         /// <summary>
@@ -105,7 +109,7 @@ internal static class TypeSignatureExtensions
             if (sig is not TypeDefOrRefSignature td || td.Type is null) { return false; }
             (string ns, string name) = td.Type.Names();
             return (ns == "System" && name == "Exception")
-                || (ns == "Windows.Foundation" && name == "HResult");
+                || (ns == WindowsFoundation && name == HResult);
         }
     }
 

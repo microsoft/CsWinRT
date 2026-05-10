@@ -12,6 +12,10 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -25,7 +29,7 @@ internal static class ClassFactory
     {
         // Fast ABI is enabled when the type is marked [FastAbi]. (CsWinRT 3.0 has no
         // netstandard_compat gate -- it was always false in the C# port.)
-        return type.HasAttribute("Windows.Foundation.Metadata", "FastAbiAttribute");
+        return type.HasAttribute(WindowsFoundationMetadata, FastAbiAttribute);
     }
     /// <summary>
     /// Writes the class modifiers ('static '/'sealed ').
@@ -139,8 +143,8 @@ internal static class ClassFactory
         // 4. Type namespace and name (ascending)
         exclusiveIfaces.Sort((a, b) =>
         {
-            int aPrev = -CountAttributes(a, "Windows.Foundation.Metadata", "PreviousContractVersionAttribute");
-            int bPrev = -CountAttributes(b, "Windows.Foundation.Metadata", "PreviousContractVersionAttribute");
+            int aPrev = -CountAttributes(a, WindowsFoundationMetadata, "PreviousContractVersionAttribute");
+            int bPrev = -CountAttributes(b, WindowsFoundationMetadata, "PreviousContractVersionAttribute");
             if (aPrev != bPrev) { return aPrev.CompareTo(bPrev); }
 
             int? aCV = a.GetContractVersion();
@@ -173,7 +177,7 @@ internal static class ClassFactory
     public static int GetGcPressureAmount(TypeDefinition type)
     {
         if (!type.IsSealed) { return 0; }
-        CustomAttribute? attr = type.GetAttribute("Windows.Foundation.Metadata", "GCPressureAttribute");
+        CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, "GCPressureAttribute");
         if (attr is null || attr.Signature is null) { return 0; }
         // The attribute has a single named arg "Amount" of an enum type. Defaults: 0=Low, 1=Medium, 2=High.
         // We try both fixed args and named args.

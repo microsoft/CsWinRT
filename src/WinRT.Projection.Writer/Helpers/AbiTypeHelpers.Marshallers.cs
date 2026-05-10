@@ -8,6 +8,10 @@ using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 using System;
 using WindowsRuntime.ProjectionWriter.Writers;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 internal static partial class AbiTypeHelpers
@@ -24,8 +28,8 @@ internal static partial class AbiTypeHelpers
         string name = gt?.Name?.Value ?? string.Empty;
         // In WinMD metadata, Nullable<T> is encoded as Windows.Foundation.IReference<T>.
         // It only later gets projected to System.Nullable<T> by the projection layer.
-        bool isNullable = (ns == "System" && name == "Nullable`1")
-            || (ns == "Windows.Foundation" && name == "IReference`1");
+        bool isNullable = (ns == "System" && name == NullableGeneric)
+            || (ns == WindowsFoundation && name == IReferenceGeneric);
         if (!isNullable) { return false; }
         if (gi.TypeArguments.Count != 1) { return false; }
         TypeSignature arg = gi.TypeArguments[0];

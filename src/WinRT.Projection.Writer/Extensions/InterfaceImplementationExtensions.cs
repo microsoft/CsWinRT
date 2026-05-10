@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 namespace WindowsRuntime.ProjectionWriter.Extensions;
 
@@ -18,7 +20,7 @@ internal static class InterfaceImplementationExtensions
         /// </summary>
         /// <returns><see langword="true"/> if the interface is the default interface; otherwise <see langword="false"/>.</returns>
         public bool IsDefaultInterface()
-            => impl.HasAttribute("Windows.Foundation.Metadata", "DefaultAttribute");
+            => impl.HasAttribute(WindowsFoundationMetadata, DefaultAttribute);
 
         /// <summary>
         /// Returns whether the implemented interface is marked <c>[Overridable]</c> (i.e. derived
@@ -26,6 +28,6 @@ internal static class InterfaceImplementationExtensions
         /// </summary>
         /// <returns><see langword="true"/> if the interface is overridable; otherwise <see langword="false"/>.</returns>
         public bool IsOverridable()
-            => impl.HasAttribute("Windows.Foundation.Metadata", "OverridableAttribute");
+            => impl.HasAttribute(WindowsFoundationMetadata, OverridableAttribute);
     }
 }

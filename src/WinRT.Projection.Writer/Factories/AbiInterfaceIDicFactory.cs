@@ -12,6 +12,8 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -92,7 +94,7 @@ internal static class AbiInterfaceIDicFactory
             // Special case: IObservableMap`2 and IObservableVector`1 are NOT mapped to BCL
             // interfaces (they retain WinRT names) but they DO need to forward their inherited
             // IDictionary/IList members for cast-based dispatch.
-            if (rNs == "Windows.Foundation.Collections" && rName == "IObservableMap`2")
+            if (rNs == WindowsFoundationCollections && rName == "IObservableMap`2")
             {
                 if (impl.Interface is TypeSpecification tsMap && tsMap.Signature is GenericInstanceTypeSignature giMap && giMap.TypeArguments.Count == 2)
                 {
@@ -113,7 +115,7 @@ internal static class AbiInterfaceIDicFactory
                 }
                 continue;
             }
-            if (rNs == "Windows.Foundation.Collections" && rName == "IObservableVector`1")
+            if (rNs == WindowsFoundationCollections && rName == "IObservableVector`1")
             {
                 if (impl.Interface is TypeSpecification tsVec && tsVec.Signature is GenericInstanceTypeSignature giVec && giVec.TypeArguments.Count == 1)
                 {

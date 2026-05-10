@@ -14,6 +14,8 @@ using WindowsRuntime.ProjectionWriter.Writers;
 
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -69,7 +71,7 @@ internal static class IIDExpressionGenerator
     /// </summary>
     public static (uint Data1, ushort Data2, ushort Data3, byte[] Data4)? GetGuidFields(TypeDefinition type)
     {
-        CustomAttribute? attr = type.GetAttribute("Windows.Foundation.Metadata", "GuidAttribute");
+        CustomAttribute? attr = type.GetAttribute(WindowsFoundationMetadata, "GuidAttribute");
         if (attr is null || attr.Signature is null) { return null; }
         System.Collections.Generic.IList<CustomAttributeArgument> args = attr.Signature.FixedArguments;
         if (args.Count < 11) { return null; }

@@ -8,6 +8,10 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -46,22 +50,22 @@ internal static class AbiTypeWriter
                     (string dNs, string dName) = d.Type.Names();
                     // Special case: mapped value types that require ABI marshalling
                     // (DateTime/TimeSpan -> ABI.System.DateTimeOffset/TimeSpan).
-                    if (dNs == "Windows.Foundation" && dName == "DateTime")
+                    if (dNs == WindowsFoundation && dName == "DateTime")
                     {
                         writer.Write("global::ABI.System.DateTimeOffset");
                         break;
                     }
-                    if (dNs == "Windows.Foundation" && dName == "TimeSpan")
+                    if (dNs == WindowsFoundation && dName == "TimeSpan")
                     {
                         writer.Write("global::ABI.System.TimeSpan");
                         break;
                     }
-                    if (dNs == "Windows.Foundation" && dName == "HResult")
+                    if (dNs == WindowsFoundation && dName == HResult)
                     {
                         writer.Write("global::ABI.System.Exception");
                         break;
                     }
-                    if (dNs == "Windows.UI.Xaml.Interop" && dName == "TypeName")
+                    if (dNs == WindowsUIXamlInterop && dName == TypeName)
                     {
                         // System.Type ABI struct: maps to global::ABI.System.Type, not the
                         // ABI.Windows.UI.Xaml.Interop.TypeName form.
@@ -94,17 +98,17 @@ internal static class AbiTypeWriter
                 {
                     (string rns, string rname) = r.Reference_.Names();
                     // Special case: mapped value types that require ABI marshalling.
-                    if (rns == "Windows.Foundation" && rname == "DateTime")
+                    if (rns == WindowsFoundation && rname == "DateTime")
                     {
                         writer.Write("global::ABI.System.DateTimeOffset");
                         break;
                     }
-                    if (rns == "Windows.Foundation" && rname == "TimeSpan")
+                    if (rns == WindowsFoundation && rname == "TimeSpan")
                     {
                         writer.Write("global::ABI.System.TimeSpan");
                         break;
                     }
-                    if (rns == "Windows.Foundation" && rname == "HResult")
+                    if (rns == WindowsFoundation && rname == HResult)
                     {
                         writer.Write("global::ABI.System.Exception");
                         break;
@@ -135,7 +139,7 @@ internal static class AbiTypeWriter
                             // but its ABI representation is the global::ABI.System.Exception struct
                             // (which wraps the underlying HRESULT int).
                             (string rdNs, string rdName) = rd.Names();
-                            if (rdNs == "Windows.Foundation" && rdName == "HResult")
+                            if (rdNs == WindowsFoundation && rdName == HResult)
                             {
                                 writer.Write("global::ABI.System.Exception");
                                 break;

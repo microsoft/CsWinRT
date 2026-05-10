@@ -10,6 +10,10 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -30,8 +34,8 @@ internal static partial class AbiTypeHelpers
             CustomAttribute attr = iface.CustomAttributes[i];
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
             if (attrType is null) { continue; }
-            if (attrType.Namespace?.Value != "Windows.Foundation.Metadata" ||
-                attrType.Name?.Value != "ExclusiveToAttribute") { continue; }
+            if (attrType.Namespace?.Value != WindowsFoundationMetadata ||
+                attrType.Name?.Value != ExclusiveToAttribute) { continue; }
             if (attr.Signature is null) { continue; }
             for (int j = 0; j < attr.Signature.FixedArguments.Count; j++)
             {

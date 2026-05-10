@@ -11,6 +11,8 @@ using System.Text;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Writers;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -309,7 +311,7 @@ internal static class CustomAttributeFactory
             }
 
             // Skip metadata attributes without a projection
-            if (ns == "Windows.Foundation.Metadata")
+            if (ns == WindowsFoundationMetadata)
             {
                 if (strippedName == "AllowMultiple")
                 {

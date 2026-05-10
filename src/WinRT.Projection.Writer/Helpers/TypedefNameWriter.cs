@@ -9,6 +9,8 @@ using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -286,7 +288,7 @@ internal static class TypedefNameWriter
         {
             // Verify the event type matches EventHandler<object> before applying override.
             if (sig is GenericInstanceTypeSignature gi
-                && gi.GenericType.Namespace?.Value == "Windows.Foundation"
+                && gi.GenericType.Namespace?.Value == WindowsFoundation
                 && gi.GenericType.Name?.Value == "EventHandler`1"
                 && gi.TypeArguments.Count == 1
                 && gi.TypeArguments[0] is CorLibTypeSignature corlib

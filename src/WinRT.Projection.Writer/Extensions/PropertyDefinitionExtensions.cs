@@ -3,6 +3,10 @@
 
 using AsmResolver.DotNet;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Extensions;
 
 /// <summary>
@@ -17,7 +21,7 @@ internal static class PropertyDefinitionExtensions
         /// </summary>
         /// <returns><see langword="true"/> if the property is documented to never throw; otherwise <see langword="false"/>.</returns>
         public bool IsNoExcept()
-            => property.HasAttribute("Windows.Foundation.Metadata", "NoExceptionAttribute");
+            => property.HasAttribute(WindowsFoundationMetadata, NoExceptionAttribute);
 
         /// <summary>
         /// Returns the (getter, setter) accessor pair of the property.

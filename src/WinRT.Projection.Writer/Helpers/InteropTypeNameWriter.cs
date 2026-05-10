@@ -9,6 +9,8 @@ using System.Globalization;
 using System.Text;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -115,7 +117,7 @@ internal static class InteropTypeNameWriter
 
         // Special case for EventSource on Windows.Foundation event-handler delegate types
         // (e.g. EventHandler<T>, TypedEventHandler<S,R>).
-        if (nameType == TypedefNameType.EventSource && typeNs == "Windows.Foundation")
+        if (nameType == TypedefNameType.EventSource && typeNs == WindowsFoundation)
         {
             // Determine generic arity from the .winmd type name (e.g. "EventHandler`1" => 1).
             int arity = 0;

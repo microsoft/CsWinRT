@@ -6,6 +6,10 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
+using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 internal static partial class AbiTypeHelpers
@@ -44,11 +48,11 @@ internal static partial class AbiTypeHelpers
         (string ns, string name) = td.Names();
         // The set of mapped types that use the 'value-type marshaller' pattern (DateTime, TimeSpan, HResult).
         // Uri is also a mapped marshalling type but it's a reference type (handled via UriMarshaller separately).
-        if (ns == "Windows.Foundation")
+        if (ns == WindowsFoundation)
         {
             if (name == "DateTime") { mappedNs = "System"; mappedName = "DateTimeOffset"; return true; }
             if (name == "TimeSpan") { mappedNs = "System"; mappedName = "TimeSpan"; return true; }
-            if (name == "HResult") { mappedNs = "System"; mappedName = "Exception"; return true; }
+            if (name == HResult) { mappedNs = "System"; mappedName = "Exception"; return true; }
         }
         return false;
     }

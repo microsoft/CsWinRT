@@ -11,6 +11,8 @@ using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -23,7 +25,7 @@ internal static class InterfaceFactory
     /// </summary>
     public static void WriteGuidAttribute(IndentedTextWriter writer, TypeDefinition type)
     {
-        bool fullyQualify = type.Namespace == "Windows.Foundation.Metadata";
+        bool fullyQualify = type.Namespace == WindowsFoundationMetadata;
         writer.Write($"[{(fullyQualify ? "global::System.Runtime.InteropServices.Guid" : "Guid")}(\"");
         IIDExpressionGenerator.WriteGuid(writer, type, false);
         writer.Write("\")]");
@@ -303,7 +305,7 @@ internal static class InterfaceFactory
             ITypeDefOrRef? attrType = attr.Constructor?.DeclaringType;
             if (attrType is null) { continue; }
             (string ns, string nm) = attrType.Names();
-            if (ns != "Windows.Foundation.Metadata") { continue; }
+            if (ns != WindowsFoundationMetadata) { continue; }
             string baseName = nm.EndsWith("Attribute", StringComparison.Ordinal) ? nm[..^"Attribute".Length] : nm;
             if (baseName is not ("Overload" or "DefaultOverload" or "Experimental"))
             {
