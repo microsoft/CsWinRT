@@ -36,4 +36,21 @@
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!--
+      AuthoringTest declares <PackageReference Include="Microsoft.Web.WebView2" ExcludeAssets="all"/>
+      which suppresses WebView2 in AuthoringTest's own compile but does NOT block transitive
+      flow to consumers. WebView2's Microsoft.Web.WebView2.Core.Projection.dll embeds an
+      assembly reference to the official signed Microsoft.Windows.SDK.NET (Version=10.0.17763.38,
+      PKT=31bf3856ad364e35), which RAR cannot unify with our locally-built unsigned v1.0.0.0 -
+      manifests as NETSDK1148 here.
+
+      Add the PackageReference at the AOT host with ExcludeAssets="all" so this csproj also
+      excludes the WebView2 assets from its compile/runtime closure.
+    -->
+    <PackageReference Include="Microsoft.Web.WebView2">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
 </Project>
