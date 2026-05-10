@@ -95,6 +95,28 @@
     </ProjectReference>
   </ItemGroup>
   <!--
+    Release|x64: AOT-merged host build. We don't ProjectReference the JIT-side projections /
+    runtime / host shim, but we DO need to build the two component csprojs so their .winmd
+    files are produced for cppwinrt projection generation below. Use ReferenceOutputAssembly=false
+    so we get build ordering without pulling the managed assemblies into this native vcxproj's
+    reference closure (cppwinrt only consumes the explicit IsWinMDFile <Reference> items).
+  -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
+    <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
+      <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
+      <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+      <UndefineProperties>PublishAot</UndefineProperties>
+    </ProjectReference>
+    <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj">
+      <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+      <UndefineProperties>PublishAot</UndefineProperties>
+    </ProjectReference>
+  </ItemGroup>
+  <!--
     Release|x64: AOT-merged host. The .AOT.csproj sibling project bundles AuthoringTest +
     AuthoringTest2 + runtime + projections into one self-contained native dll exporting
     DllGetActivationFactory. CsWinRTLink target below invokes Publish on it; the resulting
