@@ -155,8 +155,17 @@ internal static class AbiInterfaceIDicFactory
             get => {{target}}[key];
             set => {{target}}[key] = value;
             }
-            {{$"void {self}Add({keyText} key, {valueText} value) => {target}.Add(key, value);\n"}}{{$"bool {self}ContainsKey({keyText} key) => {target}.ContainsKey(key);\n"}}{{$"bool {self}Remove({keyText} key) => {target}.Remove(key);\n"}}{{$"bool {self}TryGetValue({keyText} key, out {valueText} value) => {target}.TryGetValue(key, out value);\n"}}{{$"void {icoll}Add(KeyValuePair<{keyText}, {valueText}> item) => {target}.Add(item);\n"}}{{$"void {icoll}Clear() => {target}.Clear();\n"}}{{$"bool {icoll}Contains(KeyValuePair<{keyText}, {valueText}> item) => {target}.Contains(item);\n"}}{{$"void {icoll}CopyTo(KeyValuePair<{keyText}, {valueText}>[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n"}}{{$"bool ICollection<KeyValuePair<{keyText}, {valueText}>>.Remove(KeyValuePair<{keyText}, {valueText}> item) => {target}.Remove(item);\n"}}
-            {{$"IEnumerator<KeyValuePair<{keyText}, {valueText}>> IEnumerable<KeyValuePair<{keyText}, {valueText}>>.GetEnumerator() => {target}.GetEnumerator();\n"}}IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+            void {{self}}Add({{keyText}} key, {{valueText}} value) => {{target}}.Add(key, value);
+            bool {{self}}ContainsKey({{keyText}} key) => {{target}}.ContainsKey(key);
+            bool {{self}}Remove({{keyText}} key) => {{target}}.Remove(key);
+            bool {{self}}TryGetValue({{keyText}} key, out {{valueText}} value) => {{target}}.TryGetValue(key, out value);
+            void {{icoll}}Add(KeyValuePair<{{keyText}}, {{valueText}}> item) => {{target}}.Add(item);
+            void {{icoll}}Clear() => {{target}}.Clear();
+            bool {{icoll}}Contains(KeyValuePair<{{keyText}}, {{valueText}}> item) => {{target}}.Contains(item);
+            void {{icoll}}CopyTo(KeyValuePair<{{keyText}}, {{valueText}}>[] array, int arrayIndex) => {{target}}.CopyTo(array, arrayIndex);
+            bool ICollection<KeyValuePair<{{keyText}}, {{valueText}}>>.Remove(KeyValuePair<{{keyText}}, {{valueText}}> item) => {{target}}.Remove(item);
+            IEnumerator<KeyValuePair<{{keyText}}, {{valueText}}>> IEnumerable<KeyValuePair<{{keyText}}, {{valueText}}>>.GetEnumerator() => {{target}}.GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
             """, isMultiline: true);
         // IObservableMap.MapChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableMap<{keyText}, {valueText}>)(WindowsRuntimeObject)this)";
@@ -165,7 +174,9 @@ internal static class AbiInterfaceIDicFactory
         writer.Write($$"""
             event global::Windows.Foundation.Collections.MapChangedEventHandler<{{keyText}}, {{valueText}}> {{obsSelf}}MapChanged
             {
-            {{$"add => {obsTarget}.MapChanged += value;\n"}}{{$"remove => {obsTarget}.MapChanged -= value;\n"}}}
+            add => {{obsTarget}}.MapChanged += value;
+            remove => {{obsTarget}}.MapChanged -= value;
+            }
             """, isMultiline: true);
     }
 
@@ -189,8 +200,16 @@ internal static class AbiInterfaceIDicFactory
             get => {{target}}[index];
             set => {{target}}[index] = value;
             }
-            {{$"int {self}IndexOf({elementText} item) => {target}.IndexOf(item);\n"}}{{$"void {self}Insert(int index, {elementText} item) => {target}.Insert(index, item);\n"}}{{$"void {self}RemoveAt(int index) => {target}.RemoveAt(index);\n"}}{{$"void {icoll}Add({elementText} item) => {target}.Add(item);\n"}}{{$"void {icoll}Clear() => {target}.Clear();\n"}}{{$"bool {icoll}Contains({elementText} item) => {target}.Contains(item);\n"}}{{$"void {icoll}CopyTo({elementText}[] array, int arrayIndex) => {target}.CopyTo(array, arrayIndex);\n"}}{{$"bool {icoll}Remove({elementText} item) => {target}.Remove(item);\n"}}
-            {{$"IEnumerator<{elementText}> IEnumerable<{elementText}>.GetEnumerator() => {target}.GetEnumerator();\n"}}IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+            int {{self}}IndexOf({{elementText}} item) => {{target}}.IndexOf(item);
+            void {{self}}Insert(int index, {{elementText}} item) => {{target}}.Insert(index, item);
+            void {{self}}RemoveAt(int index) => {{target}}.RemoveAt(index);
+            void {{icoll}}Add({{elementText}} item) => {{target}}.Add(item);
+            void {{icoll}}Clear() => {{target}}.Clear();
+            bool {{icoll}}Contains({{elementText}} item) => {{target}}.Contains(item);
+            void {{icoll}}CopyTo({{elementText}}[] array, int arrayIndex) => {{target}}.CopyTo(array, arrayIndex);
+            bool {{icoll}}Remove({{elementText}} item) => {{target}}.Remove(item);
+            IEnumerator<{{elementText}}> IEnumerable<{{elementText}}>.GetEnumerator() => {{target}}.GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
             """, isMultiline: true);
         // IObservableVector.VectorChanged event forwarder.
         string obsTarget = $"((global::Windows.Foundation.Collections.IObservableVector<{elementText}>)(WindowsRuntimeObject)this)";
@@ -199,7 +218,9 @@ internal static class AbiInterfaceIDicFactory
         writer.Write($$"""
             event global::Windows.Foundation.Collections.VectorChangedEventHandler<{{elementText}}> {{obsSelf}}VectorChanged
             {
-            {{$"add => {obsTarget}.VectorChanged += value;\n"}}{{$"remove => {obsTarget}.VectorChanged -= value;\n"}}}
+            add => {{obsTarget}}.VectorChanged += value;
+            remove => {{obsTarget}}.VectorChanged -= value;
+            }
             """, isMultiline: true);
     }
 
