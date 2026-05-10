@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Publish">
 
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.26100.1</TargetFramework>
@@ -38,8 +38,5 @@
       <ExcludeAssets>all</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
-
-  <!-- slnx invokes Build (not Publish) on top-level projects, so chain Publish onto Build. -->
-  <Target Name="_RunPublishAfterBuild" AfterTargets="Build" DependsOnTargets="Publish" />
 
 </Project>
