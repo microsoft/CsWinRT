@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using Microsoft.Win32;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
 /// Expands a Windows metadata token (e.g. <c>"sdk"</c>, <c>"sdk+"</c>, <c>"local"</c>,

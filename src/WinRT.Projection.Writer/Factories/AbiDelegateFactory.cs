@@ -5,8 +5,9 @@ using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-
-namespace WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
+namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
 /// Emits the full ABI surface for a projected delegate type:

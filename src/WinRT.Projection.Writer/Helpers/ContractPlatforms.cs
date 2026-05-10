@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
 /// Maps Windows Runtime API contracts to their first available Windows SDK platform version.

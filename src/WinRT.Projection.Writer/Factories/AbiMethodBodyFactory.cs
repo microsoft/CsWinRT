@@ -7,8 +7,9 @@ using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
-
-namespace WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
+namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
 /// Emits the ABI method body shapes for runtime interface vtable invocations: simple/forwarding bodies, parameter conversion glue, and per-method UnsafeAccessor accessors for generic vtables.

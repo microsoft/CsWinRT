@@ -4,8 +4,9 @@
 using System.Collections.Generic;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Writers;
-
-namespace WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
+namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
 /// Emits stub members ('=> throw null!') for well-known C# interfaces that come from mapped

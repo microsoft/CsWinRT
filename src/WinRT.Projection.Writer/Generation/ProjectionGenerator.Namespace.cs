@@ -6,8 +6,11 @@ using System.Collections.Generic;
 using System.IO;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Extensions;
-
-namespace WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Builders;
+using WindowsRuntime.ProjectionWriter.Factories;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
+namespace WindowsRuntime.ProjectionWriter.Generation;
 
 /// <inheritdoc cref="ProjectionGenerator"/>
 internal sealed partial class ProjectionGenerator

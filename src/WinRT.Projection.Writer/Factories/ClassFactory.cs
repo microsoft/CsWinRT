@@ -6,8 +6,9 @@ using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
-
-namespace WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
+namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
 /// Emits the projected runtime class type and its members (constructors, properties,

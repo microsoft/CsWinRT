@@ -4,7 +4,7 @@
 using AsmResolver;
 using AsmResolver.DotNet;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.ProjectionWriter.Metadata;
 
 /// <summary>
 /// Categorization of a Windows Runtime type definition.

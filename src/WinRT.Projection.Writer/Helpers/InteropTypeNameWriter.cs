@@ -6,8 +6,8 @@ using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Extensions;
-
-namespace WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Metadata;
+namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
 /// Encoder for the WinRT.Interop assembly type name format used in <c>UnsafeAccessor</c>

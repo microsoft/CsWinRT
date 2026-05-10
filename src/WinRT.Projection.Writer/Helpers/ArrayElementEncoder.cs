@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using WindowsRuntime.ProjectionWriter.Extensions;
-
-namespace WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Metadata;
+namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
 /// Encodes WinRT array element type names for use in ABI marshaller paths (e.g. 'Int32', 'NullableUInt32', 'Single_RGB_BlueGreenRed_Iface').

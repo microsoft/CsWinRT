@@ -3,8 +3,8 @@
 
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Writers;
-
-namespace WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Helpers;
+namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
 /// Emits the ABI marshaller class and the IReference&lt;T&gt; impl for a projected enum type.

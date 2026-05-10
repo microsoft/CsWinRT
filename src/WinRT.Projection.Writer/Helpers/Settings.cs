@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
 /// Configuration bag for a projection-writer invocation: input metadata paths, output

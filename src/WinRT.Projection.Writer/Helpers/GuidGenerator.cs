@@ -5,7 +5,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
 /// Generates Windows Runtime parameterized GUIDs (PIIDs) using the WinRT-defined namespace GUID

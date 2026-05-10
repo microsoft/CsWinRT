@@ -3,7 +3,7 @@
 
 using WindowsRuntime.ProjectionWriter.Writers;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
 /// Reference-projection stub emission helpers. In reference projection mode, all method/property/

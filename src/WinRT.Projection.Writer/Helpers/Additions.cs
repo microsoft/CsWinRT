@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
 /// Registry of namespace addition files. array.

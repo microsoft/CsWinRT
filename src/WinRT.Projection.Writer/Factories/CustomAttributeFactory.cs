@@ -8,8 +8,8 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
-
-namespace WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Helpers;
+namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
 /// Custom attribute carry-over and platform attribute helpers.

@@ -3,7 +3,9 @@
 
 using System;
 using System.IO;
-
+using WindowsRuntime.ProjectionWriter.Generation;
+using WindowsRuntime.ProjectionWriter.Helpers;
+using WindowsRuntime.ProjectionWriter.Metadata;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>

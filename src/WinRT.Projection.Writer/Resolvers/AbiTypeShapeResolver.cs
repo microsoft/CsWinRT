@@ -4,7 +4,7 @@
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Models;
-
+using WindowsRuntime.ProjectionWriter.Metadata;
 namespace WindowsRuntime.ProjectionWriter.Resolvers;
 
 /// <summary>

@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
 /// Maps a Windows Runtime type to the corresponding .NET type.

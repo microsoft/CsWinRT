@@ -5,8 +5,8 @@ using System;
 using System.IO;
 using System.Reflection;
 using WindowsRuntime.ProjectionWriter.Writers;
-
-namespace WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Factories;
+namespace WindowsRuntime.ProjectionWriter.Generation;
 
 /// <inheritdoc cref="ProjectionGenerator"/>
 internal sealed partial class ProjectionGenerator

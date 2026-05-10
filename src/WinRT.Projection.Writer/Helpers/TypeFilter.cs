@@ -7,7 +7,7 @@ using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
 /// Include/exclude type filter using longest-prefix-match semantics: type/namespace is checked

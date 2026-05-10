@@ -8,7 +8,7 @@ using System.Linq;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Extensions;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.ProjectionWriter.Metadata;
 
 /// <summary>
 /// Loads one or more <c>.winmd</c> files and exposes types organized by namespace.

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
-
-namespace WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Metadata;
+namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
 /// Per-emission context bundling all state that is shared by the projection writers when

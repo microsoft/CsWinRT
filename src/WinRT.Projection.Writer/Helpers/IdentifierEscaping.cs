@@ -3,7 +3,7 @@
 
 using WindowsRuntime.ProjectionWriter.Writers;
 
-namespace WindowsRuntime.ProjectionWriter;
+namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
 /// Helpers for converting raw metadata names into valid C# identifiers.
