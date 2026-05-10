@@ -231,8 +231,7 @@ internal static partial class AbiTypeHelpers
         TypeDefinition? baseDef = classType.BaseType as TypeDefinition;
         if (baseDef is null)
         {
-            try { baseDef = classType.BaseType.Resolve(cache.RuntimeContext); }
-            catch { baseDef = null; }
+            baseDef = classType.BaseType.TryResolve(cache.RuntimeContext);
             baseDef ??= cache.Find(string.IsNullOrEmpty(ns) ? nm : (ns + "." + nm));
         }
         if (baseDef is null) { return 0; }

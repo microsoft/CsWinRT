@@ -119,12 +119,8 @@ internal static class ClassFactory
         foreach (InterfaceImplementation impl in classType.Interfaces)
         {
             if (impl.Interface is null) { continue; }
-            TypeDefinition? ifaceTd = impl.Interface as TypeDefinition;
-            if (ifaceTd is null)
-            {
-                try { ifaceTd = impl.Interface.Resolve(cache.RuntimeContext); }
-                catch { ifaceTd = null; }
-            }
+            TypeDefinition? ifaceTd = impl.Interface as TypeDefinition
+                ?? impl.Interface.TryResolve(cache.RuntimeContext);
             if (ifaceTd is null) { continue; }
 
             if (impl.IsDefaultInterface())

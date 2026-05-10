@@ -93,12 +93,8 @@ internal static partial class ClassMembersFactory
         // WriteTypedefName can drop the 'global::<NS>.' prefix when the namespace matches.
         if (ifaceType is not TypeDefinition && ifaceType is not TypeSpecification && context.Cache is not null)
         {
-            try
-            {
-                TypeDefinition? resolved = ifaceType.Resolve(context.Cache.RuntimeContext);
-                if (resolved is not null) { ifaceType = resolved; }
-            }
-            catch { /* leave as TypeReference */ }
+            TypeDefinition? resolved = ifaceType.TryResolve(context.Cache.RuntimeContext);
+            if (resolved is not null) { ifaceType = resolved; }
         }
         if (ifaceType is TypeDefinition td)
         {

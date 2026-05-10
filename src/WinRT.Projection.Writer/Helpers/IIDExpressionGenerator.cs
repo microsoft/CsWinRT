@@ -218,9 +218,8 @@ internal static class IIDExpressionGenerator
                     TypeDefinition? resolved = null;
                     if (context.Cache is not null)
                     {
-                        try { resolved = r.Reference_.Resolve(context.Cache.RuntimeContext); }
-                        catch { resolved = null; }
-                        resolved ??= context.Cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
+                        resolved = r.Reference_.TryResolve(context.Cache.RuntimeContext)
+                            ?? context.Cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
                     }
                     if (resolved is not null)
                     {
@@ -248,9 +247,8 @@ internal static class IIDExpressionGenerator
                     TypeDefinition? resolved = null;
                     if (context.Cache is not null)
                     {
-                        try { resolved = gir.GenericType.Resolve(context.Cache.RuntimeContext); }
-                        catch { resolved = null; }
-                        resolved ??= context.Cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
+                        resolved = gir.GenericType.TryResolve(context.Cache.RuntimeContext)
+                            ?? context.Cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
                     }
                     if (resolved is not null)
                     {

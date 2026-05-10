@@ -331,12 +331,8 @@ internal static class MetadataAttributeFactory
         ITypeDefOrRef capturedIface = defaultIface;
         if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && context.Cache is not null)
         {
-            try
-            {
-                TypeDefinition? resolved = capturedIface.Resolve(context.Cache.RuntimeContext);
-                if (resolved is not null) { capturedIface = resolved; }
-            }
-            catch { /* leave as TypeReference */ }
+            TypeDefinition? resolved = capturedIface.TryResolve(context.Cache.RuntimeContext);
+            if (resolved is not null) { capturedIface = resolved; }
         }
 
         // Build the interface display name via TypeSemantics so generic instantiations
@@ -365,8 +361,7 @@ internal static class MetadataAttributeFactory
             TypeDefinition? ifaceDef = impl.Interface as TypeDefinition;
             if (ifaceDef is null && context.Cache is not null)
             {
-                try { ifaceDef = impl.Interface.Resolve(context.Cache.RuntimeContext); }
-                catch { ifaceDef = null; }
+                ifaceDef = impl.Interface.TryResolve(context.Cache.RuntimeContext);
             }
             if (ifaceDef is null && impl.Interface is TypeSpecification spec
                 && spec.Signature is GenericInstanceTypeSignature gi)
@@ -374,8 +369,7 @@ internal static class MetadataAttributeFactory
                 ifaceDef = gi.GenericType as TypeDefinition;
                 if (ifaceDef is null && context.Cache is not null)
                 {
-                    try { ifaceDef = gi.GenericType.Resolve(context.Cache.RuntimeContext); }
-                    catch { ifaceDef = null; }
+                    ifaceDef = gi.GenericType.TryResolve(context.Cache.RuntimeContext);
                 }
             }
             if (ifaceDef is null) { continue; }
@@ -387,12 +381,8 @@ internal static class MetadataAttributeFactory
                 ITypeDefOrRef capturedIface = impl.Interface;
                 if (capturedIface is not TypeDefinition && capturedIface is not TypeSpecification && context.Cache is not null)
                 {
-                    try
-                    {
-                        TypeDefinition? resolved = capturedIface.Resolve(context.Cache.RuntimeContext);
-                        if (resolved is not null) { capturedIface = resolved; }
-                    }
-                    catch { /* leave as TypeReference */ }
+                    TypeDefinition? resolved = capturedIface.TryResolve(context.Cache.RuntimeContext);
+                    if (resolved is not null) { capturedIface = resolved; }
                 }
                 WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter scratch = new();
                 TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
