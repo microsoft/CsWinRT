@@ -157,6 +157,9 @@ internal static class AbiInterfaceFactory
             [StructLayout(LayoutKind.Sequential)]
             internal unsafe struct {{nameStripped}}Vftbl
             {
+            """, isMultiline: true);
+        writer.IncreaseIndent();
+        writer.Write("""
             public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
             public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
             public delegate* unmanaged[MemberFunction]<void*, uint> Release;
@@ -173,6 +176,7 @@ internal static class AbiInterfaceFactory
             WriteAbiParameterTypesPointer(writer, context, sig);
             writer.WriteLine($", int> {vm};");
         }
+        writer.DecreaseIndent();
         writer.WriteLine("}");
     }
 
@@ -188,6 +192,9 @@ internal static class AbiInterfaceFactory
         writer.Write($$"""
             public static unsafe class {{nameStripped}}Impl
             {
+            """, isMultiline: true);
+        writer.IncreaseIndent();
+        writer.Write($$"""
             [FixedAddressValueType]
             private static readonly {{nameStripped}}Vftbl Vftbl;
             
@@ -353,6 +360,7 @@ internal static class AbiInterfaceFactory
             if (evt.AddMethod is MethodDefinition a) { EmitOneDoAbi(a); }
             if (evt.RemoveMethod is MethodDefinition r) { EmitOneDoAbi(r); }
         }
+        writer.DecreaseIndent();
         writer.WriteLine("}");
     }
 
