@@ -109,61 +109,60 @@ internal static class ClassMembersFactory
             else
             {
                 writer.WriteLine("");
-                using (writer.WriteBlock())
+                writer.WriteLine("{");
+                if (s.HasGetter)
                 {
-                    if (s.HasGetter)
+                    if (!string.IsNullOrEmpty(getterPlat))
                     {
-                        if (!string.IsNullOrEmpty(getterPlat))
+                        writer.Write($"    {getterPlat}");
+                    }
+                    if (context.Settings.ReferenceProjection)
+                    {
+                        writer.WriteLine("    get => throw null;");
+                    }
+                    else if (s.GetterIsGeneric)
+                    {
+                        if (!string.IsNullOrEmpty(s.GetterGenericInteropType))
                         {
-                            writer.Write($"{getterPlat}");
-                        }
-                        if (context.Settings.ReferenceProjection)
-                        {
-                            writer.WriteLine("get => throw null;");
-                        }
-                        else if (s.GetterIsGeneric)
-                        {
-                            if (!string.IsNullOrEmpty(s.GetterGenericInteropType))
-                            {
-                                writer.WriteLine($"get => {s.GetterGenericAccessorName}(null, {s.GetterObjRef});");
-                            }
-                            else
-                            {
-                                writer.WriteLine("get => throw null!;");
-                            }
+                            writer.WriteLine($"    get => {s.GetterGenericAccessorName}(null, {s.GetterObjRef});");
                         }
                         else
                         {
-                            writer.WriteLine($"get => {s.GetterAbiClass}.{kvp.Key}({s.GetterObjRef});");
+                            writer.WriteLine("    get => throw null!;");
                         }
                     }
-                    if (s.HasSetter)
+                    else
                     {
-                        if (!string.IsNullOrEmpty(setterPlat))
-                        {
-                            writer.Write($"{setterPlat}");
-                        }
-                        if (context.Settings.ReferenceProjection)
-                        {
-                            writer.WriteLine("set => throw null;");
-                        }
-                        else if (s.SetterIsGeneric)
-                        {
-                            if (!string.IsNullOrEmpty(s.SetterGenericInteropType))
-                            {
-                                writer.WriteLine($"set => {s.SetterGenericAccessorName}(null, {s.SetterObjRef}, value);");
-                            }
-                            else
-                            {
-                                writer.WriteLine("set => throw null!;");
-                            }
-                        }
-                        else
-                        {
-                            writer.WriteLine($"set => {s.SetterAbiClass}.{kvp.Key}({s.SetterObjRef}, value);");
-                        }
+                        writer.WriteLine($"    get => {s.GetterAbiClass}.{kvp.Key}({s.GetterObjRef});");
                     }
                 }
+                if (s.HasSetter)
+                {
+                    if (!string.IsNullOrEmpty(setterPlat))
+                    {
+                        writer.Write($"    {setterPlat}");
+                    }
+                    if (context.Settings.ReferenceProjection)
+                    {
+                        writer.WriteLine("    set => throw null;");
+                    }
+                    else if (s.SetterIsGeneric)
+                    {
+                        if (!string.IsNullOrEmpty(s.SetterGenericInteropType))
+                        {
+                            writer.WriteLine($"    set => {s.SetterGenericAccessorName}(null, {s.SetterObjRef}, value);");
+                        }
+                        else
+                        {
+                            writer.WriteLine("    set => throw null!;");
+                        }
+                    }
+                    else
+                    {
+                        writer.WriteLine($"    set => {s.SetterAbiClass}.{kvp.Key}({s.SetterObjRef}, value);");
+                    }
+                }
+                writer.WriteLine("}");
             }
 
             // For overridable properties, emit an explicit interface implementation that
