@@ -9,6 +9,8 @@ using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -239,7 +241,7 @@ internal static class AbiInterfaceIDicFactory
         IndentedTextWriter __scratchCcwIfaceName = new();
         TypedefNameWriter.WriteTypedefName(__scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
         string ccwIfaceName = __scratchCcwIfaceName.ToString();
-        if (!ccwIfaceName.StartsWith("global::", System.StringComparison.Ordinal)) { ccwIfaceName = "global::" + ccwIfaceName; }
+        if (!ccwIfaceName.StartsWith(GlobalPrefix, System.StringComparison.Ordinal)) { ccwIfaceName = GlobalPrefix + ccwIfaceName; }
 
         foreach (MethodDefinition method in type.Methods)
         {
@@ -364,12 +366,12 @@ internal static class AbiInterfaceIDicFactory
         IndentedTextWriter __scratchCcwIfaceName = new();
         TypedefNameWriter.WriteTypedefName(__scratchCcwIfaceName, context, type, TypedefNameType.Projected, true);
         string ccwIfaceName = __scratchCcwIfaceName.ToString();
-        if (!ccwIfaceName.StartsWith("global::", System.StringComparison.Ordinal)) { ccwIfaceName = "global::" + ccwIfaceName; }
+        if (!ccwIfaceName.StartsWith(GlobalPrefix, System.StringComparison.Ordinal)) { ccwIfaceName = GlobalPrefix + ccwIfaceName; }
         // The static ABI Methods class name.
         IndentedTextWriter __scratchAbiClass = new();
         TypedefNameWriter.WriteTypedefName(__scratchAbiClass, context, type, TypedefNameType.StaticAbiClass, true);
         string abiClass = __scratchAbiClass.ToString();
-        if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal)) { abiClass = "global::" + abiClass; }
+        if (!abiClass.StartsWith(GlobalPrefix, System.StringComparison.Ordinal)) { abiClass = GlobalPrefix + abiClass; }
 
         foreach (MethodDefinition method in type.Methods)
         {

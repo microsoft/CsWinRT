@@ -8,6 +8,8 @@ using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class ConstructorFactory
@@ -36,7 +38,7 @@ internal static partial class ConstructorFactory
         if (needsClassObjRef)
         {
             string fullName = (classType.Namespace?.Value ?? string.Empty) + "." + (classType.Name?.Value ?? string.Empty);
-            string objRefName = "_objRef_" + IIDExpressionWriter.EscapeTypeNameForIdentifier("global::" + fullName, stripGlobal: true);
+            string objRefName = "_objRef_" + IIDExpressionWriter.EscapeTypeNameForIdentifier(GlobalPrefix + fullName, stripGlobal: true);
             writer.WriteLine("");
             writer.Write($"private static WindowsRuntimeObjectReference {objRefName}");
             if (context.Settings.ReferenceProjection)
@@ -153,7 +155,7 @@ internal static partial class ConstructorFactory
             // the WindowsRuntimeObject base constructor with the activation factory objref.
             // The default interface IID is needed too.
             string fullName = (classType.Namespace?.Value ?? string.Empty) + "." + typeName;
-            string objRefName = "_objRef_" + IIDExpressionWriter.EscapeTypeNameForIdentifier("global::" + fullName, stripGlobal: true);
+            string objRefName = "_objRef_" + IIDExpressionWriter.EscapeTypeNameForIdentifier(GlobalPrefix + fullName, stripGlobal: true);
 
             // Find the default interface IID to use.
             string defaultIfaceIid = GetDefaultInterfaceIid(context, classType);

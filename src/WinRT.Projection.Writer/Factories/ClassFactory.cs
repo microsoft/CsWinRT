@@ -8,6 +8,8 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -225,9 +227,9 @@ internal static class ClassFactory
             IndentedTextWriter __scratchAbiClass = new();
             TypedefNameWriter.WriteTypedefName(__scratchAbiClass, context, staticIface, TypedefNameType.StaticAbiClass, true);
             string abiClass = __scratchAbiClass.ToString();
-            if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal))
+            if (!abiClass.StartsWith(GlobalPrefix, System.StringComparison.Ordinal))
             {
-                abiClass = "global::" + abiClass;
+                abiClass = GlobalPrefix + abiClass;
             }
 
             // Emit the lazy static objref field (mirrors truth's pattern) once per static iface.

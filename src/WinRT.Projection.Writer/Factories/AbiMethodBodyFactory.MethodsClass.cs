@@ -10,6 +10,8 @@ using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class AbiMethodBodyFactory
@@ -121,9 +123,9 @@ internal static partial class AbiMethodBodyFactory
                 IndentedTextWriter __scratchEvSrcGeneric = new();
                 TypedefNameWriter.WriteTypeName(__scratchEvSrcGeneric, context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true);
                 eventSourceProjectedFull = __scratchEvSrcGeneric.ToString();
-                if (!eventSourceProjectedFull.StartsWith("global::", System.StringComparison.Ordinal))
+                if (!eventSourceProjectedFull.StartsWith(GlobalPrefix, System.StringComparison.Ordinal))
                 {
-                    eventSourceProjectedFull = "global::" + eventSourceProjectedFull;
+                    eventSourceProjectedFull = GlobalPrefix + eventSourceProjectedFull;
                 }
             }
             else

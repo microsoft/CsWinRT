@@ -12,6 +12,8 @@ using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Writers;
 
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -45,13 +47,13 @@ internal static class IIDExpressionWriter
     {
         // Escape special chars first, then strip ONLY the prefix (not all occurrences).
         string result = s_typeNameEscapeRe.Replace(typeName, "_");
-        if (stripGlobalABI && typeName.StartsWith("global::ABI.", StringComparison.Ordinal))
+        if (stripGlobalABI && typeName.StartsWith(GlobalAbiPrefix, StringComparison.Ordinal))
         {
-            result = result[12..]; // Remove "global::ABI." (with ":" and "." already replaced)
+            result = result[12..]; // Remove GlobalAbiPrefix (with ":" and "." already replaced)
         }
-        else if (stripGlobal && typeName.StartsWith("global::", StringComparison.Ordinal))
+        else if (stripGlobal && typeName.StartsWith(GlobalPrefix, StringComparison.Ordinal))
         {
-            result = result[8..]; // Remove "global::"
+            result = result[8..]; // Remove GlobalPrefix
         }
         return result;
     }

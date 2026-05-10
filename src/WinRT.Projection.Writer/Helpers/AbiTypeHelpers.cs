@@ -2,13 +2,15 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
-using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Models;
-using WindowsRuntime.ProjectionWriter.Writers;
-using WindowsRuntime.ProjectionWriter.Factories;
-using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.ProjectionWriter.Extensions;
+using WindowsRuntime.ProjectionWriter.Factories;
+using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Writers;
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -360,7 +362,7 @@ internal static class AbiTypeHelpers
                 _ => null
             };
             if (mn is null) { return false; }
-            marshallerName = "ABI.System." + mn + "Marshaller";
+            marshallerName = AbiPrefix + "System." + mn + MarshallerSuffix;
             return true;
         }
         return false;
@@ -405,14 +407,14 @@ internal static class AbiTypeHelpers
     internal static string GetMappedAbiTypeName(TypeSignature sig)
     {
         if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
-        return "global::ABI." + ns + "." + name;
+        return GlobalAbiPrefix + ns + "." + name;
     }
 
     /// <summary>Returns the marshaller class name for a mapped value type (e.g. 'global::ABI.System.TimeSpanMarshaller').</summary>
     internal static string GetMappedMarshallerName(TypeSignature sig)
     {
         if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
-        return "global::ABI." + ns + "." + name + "Marshaller";
+        return GlobalAbiPrefix + ns + "." + name + MarshallerSuffix;
     }
 
     /// <summary>True if the type signature represents an enum (resolves cross-module typerefs).</summary>
@@ -459,7 +461,7 @@ internal static class AbiTypeHelpers
             };
             if (!string.IsNullOrEmpty(typeName))
             {
-                return "global::ABI.System." + typeName + "Marshaller";
+                return GlobalAbiPrefix + "System." + typeName + MarshallerSuffix;
             }
         }
         // For non-primitive types (DateTimeOffset, TimeSpan, struct/enum types), use GetMarshallerFullName.
@@ -543,9 +545,9 @@ internal static class AbiTypeHelpers
             // If the writer is currently in the matching ABI namespace, drop the qualifier.
             if (context.InAbiNamespace && string.Equals(context.CurrentNamespace, ns, System.StringComparison.Ordinal))
             {
-                return nameStripped + "Marshaller";
+                return nameStripped + MarshallerSuffix;
             }
-            return "global::ABI." + ns + "." + nameStripped + "Marshaller";
+            return GlobalAbiPrefix + ns + "." + nameStripped + MarshallerSuffix;
         }
         return "global::ABI.Object.Marshaller";
     }
@@ -723,7 +725,7 @@ internal static class AbiTypeHelpers
             {
                 return nameStripped;
             }
-            return "global::ABI." + ns + "." + nameStripped;
+            return GlobalAbiPrefix + ns + "." + nameStripped;
         }
         return "global::ABI.Object";
     }
@@ -769,7 +771,7 @@ internal static class AbiTypeHelpers
             ns = mapped.MappedNamespace;
             name = mapped.MappedName;
         }
-        return string.IsNullOrEmpty(ns) ? "global::" + name : "global::" + ns + "." + name;
+        return string.IsNullOrEmpty(ns) ? GlobalPrefix + name : GlobalPrefix + ns + "." + name;
     }
 
     private static string GetAbiFundamentalTypeFromCorLib(ElementType et)

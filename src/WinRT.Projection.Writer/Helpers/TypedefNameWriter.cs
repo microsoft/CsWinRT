@@ -7,6 +7,8 @@ using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -80,7 +82,7 @@ internal static class TypedefNameWriter
             (nameToWrite == TypedefNameType.CCW && authoredType && !context.InAbiImplNamespace) ||
             (nameToWrite == TypedefNameType.CCW && !authoredType && (context.InAbiNamespace || context.InAbiImplNamespace)))
         {
-            writer.Write("global::");
+            writer.Write(GlobalPrefix);
             if (nameToWrite is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource)
             {
                 writer.Write("ABI.");
@@ -174,7 +176,7 @@ internal static class TypedefNameWriter
                     }
                     else if (!string.IsNullOrEmpty(ns))
                     {
-                        writer.Write("global::");
+                        writer.Write(GlobalPrefix);
                         if (nameType is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource)
                         {
                             writer.Write("ABI.");
@@ -212,7 +214,7 @@ internal static class TypedefNameWriter
                         (nameType == TypedefNameType.CCW && (context.InAbiNamespace || context.InAbiImplNamespace)));
                     if (needsNsPrefix)
                     {
-                        writer.Write("global::");
+                        writer.Write(GlobalPrefix);
                         if (nameType is TypedefNameType.ABI or TypedefNameType.StaticAbiClass or TypedefNameType.EventSource)
                         {
                             writer.Write("ABI.");

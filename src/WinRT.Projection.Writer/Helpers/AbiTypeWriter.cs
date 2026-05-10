@@ -6,6 +6,8 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -156,7 +158,7 @@ internal static class AbiTypeWriter
                 if (r.IsValueType)
                 {
                     (string rns, string rname) = r.Reference_.Names();
-                    writer.Write("global::");
+                    writer.Write(GlobalPrefix);
                     if (!string.IsNullOrEmpty(rns)) { writer.Write($"{rns}."); }
                     writer.Write(IdentifierEscaping.StripBackticks(rname));
                     break;

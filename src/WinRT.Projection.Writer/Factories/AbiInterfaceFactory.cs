@@ -9,6 +9,8 @@ using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 /// <summary>
@@ -264,8 +266,8 @@ internal static class AbiInterfaceFactory
             string ownerNs = exclusiveToOwner.Namespace?.Value ?? string.Empty;
             string ownerNm = IdentifierEscaping.StripBackticks(exclusiveToOwner.Name?.Value ?? string.Empty);
             ifaceFullName = string.IsNullOrEmpty(ownerNs)
-                ? "global::" + ownerNm
-                : "global::" + ownerNs + "." + ownerNm;
+                ? GlobalPrefix + ownerNm
+                : GlobalPrefix + ownerNs + "." + ownerNm;
         }
         else if (exclusiveToOwner is not null && exclusiveIsFactoryOrStatic)
         {
@@ -284,7 +286,7 @@ internal static class AbiInterfaceFactory
                 TypedefNameWriter.WriteTypedefName(__scratchIfaceFullName, context, type, TypedefNameType.Projected, true);
                 ifaceFullName = __scratchIfaceFullName.ToString();
             }
-            if (!ifaceFullName.StartsWith("global::", System.StringComparison.Ordinal)) { ifaceFullName = "global::" + ifaceFullName; }
+            if (!ifaceFullName.StartsWith(GlobalPrefix, System.StringComparison.Ordinal)) { ifaceFullName = GlobalPrefix + ifaceFullName; }
         }
 
         // Build a map of event add/remove methods to their event so we can emit the table field

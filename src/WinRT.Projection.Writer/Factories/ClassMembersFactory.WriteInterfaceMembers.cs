@@ -11,6 +11,8 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class ClassMembersFactory
@@ -198,9 +200,9 @@ internal static partial class ClassMembersFactory
         IndentedTextWriter __scratchAbiClass = new();
         TypedefNameWriter.WriteTypedefName(__scratchAbiClass, context, abiInterface, TypedefNameType.StaticAbiClass, true);
         string abiClass = __scratchAbiClass.ToString();
-        if (!abiClass.StartsWith("global::", System.StringComparison.Ordinal))
+        if (!abiClass.StartsWith(GlobalPrefix, System.StringComparison.Ordinal))
         {
-            abiClass = "global::" + abiClass;
+            abiClass = GlobalPrefix + abiClass;
         }
         string objRef = ObjRefNameGenerator.GetObjRefName(context, abiInterfaceRef);
 
@@ -434,9 +436,9 @@ internal static partial class ClassMembersFactory
                 eventSourceType = __scratchEventSource.ToString();
             }
             string eventSourceTypeFull = eventSourceType;
-            if (!eventSourceTypeFull.StartsWith("global::", System.StringComparison.Ordinal))
+            if (!eventSourceTypeFull.StartsWith(GlobalPrefix, System.StringComparison.Ordinal))
             {
-                eventSourceTypeFull = "global::" + eventSourceTypeFull;
+                eventSourceTypeFull = GlobalPrefix + eventSourceTypeFull;
             }
             // The "interop" type name string for the EventSource UnsafeAccessor (only needed for generic events).
             string eventSourceInteropType = isGenericEvent

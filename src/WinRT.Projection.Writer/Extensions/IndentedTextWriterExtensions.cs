@@ -49,7 +49,7 @@ internal static class IndentedTextWriterExtensions
         /// <summary>
         /// Writes the C# global namespace prefix (<see cref="References.ProjectionNames.GlobalPrefix"/>)
         /// followed by <paramref name="typeName"/>. Convenience wrapper for the common
-        /// <c>writer.Write("global::"); writer.Write(typeName);</c> pattern.
+        /// <c>writer.Write(GlobalPrefix); writer.Write(typeName);</c> pattern.
         /// </summary>
         /// <param name="typeName">The fully-qualified type name to emit after the <c>global::</c> prefix.</param>
         public void WriteGlobal(string typeName)
@@ -60,7 +60,7 @@ internal static class IndentedTextWriterExtensions
         /// <summary>
         /// Writes the fully-qualified ABI namespace prefix (<see cref="References.ProjectionNames.GlobalAbiPrefix"/>)
         /// followed by <paramref name="typeName"/>. Convenience wrapper for the common
-        /// <c>writer.Write("global::ABI."); writer.Write(typeName);</c> pattern.
+        /// <c>writer.Write(GlobalAbiPrefix); writer.Write(typeName);</c> pattern.
         /// </summary>
         /// <param name="typeName">The dot-qualified type name to emit after the <c>global::ABI.</c> prefix.</param>
         public void WriteGlobalAbi(string typeName)

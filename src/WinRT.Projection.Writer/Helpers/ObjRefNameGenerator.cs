@@ -8,6 +8,8 @@ using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Writers;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -32,7 +34,7 @@ internal static class ObjRefNameGenerator
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            projected = "global::" + ns + "." + IdentifierEscaping.StripBackticks(name);
+            projected = GlobalPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
         else if (ifaceType is TypeReference tr)
         {
@@ -43,7 +45,7 @@ internal static class ObjRefNameGenerator
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            projected = "global::" + ns + "." + IdentifierEscaping.StripBackticks(name);
+            projected = GlobalPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         }
         else
         {
@@ -72,7 +74,7 @@ internal static class ObjRefNameGenerator
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            writer.Write("global::");
+            writer.Write(GlobalPrefix);
             if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
@@ -85,7 +87,7 @@ internal static class ObjRefNameGenerator
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            writer.Write("global::");
+            writer.Write(GlobalPrefix);
             if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
             writer.Write(IdentifierEscaping.StripBackticks(name));
         }
@@ -99,7 +101,7 @@ internal static class ObjRefNameGenerator
                 ns = mapped.MappedNamespace;
                 name = mapped.MappedName;
             }
-            writer.Write("global::");
+            writer.Write(GlobalPrefix);
             if (!string.IsNullOrEmpty(ns)) { writer.Write($"{ns}."); }
             writer.Write($"{IdentifierEscaping.StripBackticks(name)}<");
             for (int i = 0; i < gi.TypeArguments.Count; i++)
@@ -163,7 +165,7 @@ internal static class ObjRefNameGenerator
         else
         {
             // Non-mapped, non-generic: ABI.InterfaceIIDs.IID_<EscapedABIName>.
-            string abiQualified = "global::ABI." + ns + "." + IdentifierEscaping.StripBackticks(name);
+            string abiQualified = GlobalAbiPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
             string id = IIDExpressionWriter.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
             writer.Write($"global::ABI.InterfaceIIDs.IID_{id}");
         }
@@ -215,7 +217,7 @@ internal static class ObjRefNameGenerator
     public static void WriteIidReferenceExpression(IndentedTextWriter writer, TypeDefinition type)
     {
         (string ns, string name) = type.Names();
-        string abiQualified = "global::ABI." + ns + "." + IdentifierEscaping.StripBackticks(name);
+        string abiQualified = GlobalAbiPrefix + ns + "." + IdentifierEscaping.StripBackticks(name);
         string id = IIDExpressionWriter.EscapeTypeNameForIdentifier(abiQualified, stripGlobal: false, stripGlobalABI: true);
         writer.Write($"global::ABI.InterfaceIIDs.IID_{id}Reference");
     }
