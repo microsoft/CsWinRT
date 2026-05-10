@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Writers;
+using static WindowsRuntime.ProjectionWriter.References.ProjectionNames;
 
 namespace WindowsRuntime.ProjectionWriter.Extensions;
 
@@ -47,25 +49,66 @@ internal static class IndentedTextWriterExtensions
         }
 
         /// <summary>
-        /// Writes the C# global namespace prefix (<see cref="References.ProjectionNames.GlobalPrefix"/>)
-        /// followed by <paramref name="typeName"/>. Convenience wrapper for the common
+        /// Writes the C# global namespace prefix (<see cref="GlobalPrefix"/>) followed by
+        /// <paramref name="typeName"/>. Convenience wrapper for the common
         /// <c>writer.Write(GlobalPrefix); writer.Write(typeName);</c> pattern.
         /// </summary>
         /// <param name="typeName">The fully-qualified type name to emit after the <c>global::</c> prefix.</param>
         public void WriteGlobal(string typeName)
         {
-            writer.Write($"{References.ProjectionNames.GlobalPrefix}{typeName}");
+            writer.Write($"{GlobalPrefix}{typeName}");
         }
 
         /// <summary>
-        /// Writes the fully-qualified ABI namespace prefix (<see cref="References.ProjectionNames.GlobalAbiPrefix"/>)
-        /// followed by <paramref name="typeName"/>. Convenience wrapper for the common
+        /// Writes the fully-qualified ABI namespace prefix (<see cref="GlobalAbiPrefix"/>) followed
+        /// by <paramref name="typeName"/>. Convenience wrapper for the common
         /// <c>writer.Write(GlobalAbiPrefix); writer.Write(typeName);</c> pattern.
         /// </summary>
         /// <param name="typeName">The dot-qualified type name to emit after the <c>global::ABI.</c> prefix.</param>
         public void WriteGlobalAbi(string typeName)
         {
-            writer.Write($"{References.ProjectionNames.GlobalAbiPrefix}{typeName}");
+            writer.Write($"{GlobalAbiPrefix}{typeName}");
+        }
+
+        /// <summary>
+        /// Writes the projection-wide accessibility modifier (<c>"internal"</c> when
+        /// <see cref="Settings.Internal"/> or <see cref="Settings.Embedded"/> is set; otherwise
+        /// <c>"public"</c>) for an emitted top-level type.
+        /// </summary>
+        /// <param name="settings">The active projection settings.</param>
+        public void WriteAccessibility(Settings settings)
+        {
+            writer.Write(AccessibilityHelper.InternalAccessibility(settings));
+        }
+
+        /// <summary>
+        /// Writes a single C# attribute application of the form <c>[name(args)]</c> on its own
+        /// line. When <paramref name="args"/> is <see langword="null"/> or empty, the parenthesis
+        /// list is omitted.
+        /// </summary>
+        /// <param name="name">The unqualified attribute name (without the trailing <c>Attribute</c> suffix).</param>
+        /// <param name="args">The argument list to render between parentheses, or <see langword="null"/> for no arguments.</param>
+        public void WriteAttribute(string name, string? args = null)
+        {
+            if (string.IsNullOrEmpty(args))
+            {
+                writer.WriteLine($"[{name}]");
+            }
+            else
+            {
+                writer.WriteLine($"[{name}({args})]");
+            }
+        }
+
+        /// <summary>
+        /// Writes a fully-qualified reference to a well-known interface IID field
+        /// (<c>global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_<paramref name="interfaceName"/></c>).
+        /// </summary>
+        /// <param name="interfaceName">The bare interface name (e.g. <c>"IInspectable"</c>).</param>
+        public void WriteWellKnownIIDFieldRef(string interfaceName)
+        {
+            writer.Write($"global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_{interfaceName}");
         }
     }
 }
+

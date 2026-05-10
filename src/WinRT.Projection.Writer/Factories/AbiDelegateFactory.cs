@@ -183,20 +183,13 @@ internal static class AbiDelegateFactory
                     Entries.Delegate.Vtable = {{nameStripped}}Impl.Vtable;
                     Entries.DelegateReference.IID = {{iidRefExpr}};
                     Entries.DelegateReference.Vtable = {{nameStripped}}ReferenceImpl.Vtable;
-                    Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;
-                    Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;
-                    Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;
-                    Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;
-                    Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;
-                    Entries.IWeakReferenceSource.Vtable = global::WindowsRuntime.InteropServices.IWeakReferenceSourceImpl.Vtable;
-                    Entries.IMarshal.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IMarshal;
-                    Entries.IMarshal.Vtable = global::WindowsRuntime.InteropServices.IMarshalImpl.Vtable;
-                    Entries.IAgileObject.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IAgileObject;
-                    Entries.IAgileObject.Vtable = global::WindowsRuntime.InteropServices.IAgileObjectImpl.Vtable;
-                    Entries.IInspectable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IInspectable;
-                    Entries.IInspectable.Vtable = global::WindowsRuntime.InteropServices.IInspectableImpl.Vtable;
-                    Entries.IUnknown.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IUnknown;
-                    Entries.IUnknown.Vtable = global::WindowsRuntime.InteropServices.IUnknownImpl.Vtable;
+            """, isMultiline: true);
+        writer.IncreaseIndent();
+        writer.IncreaseIndent();
+        WellKnownInterfaceEntriesEmitter.EmitDelegateReferenceWellKnownEntries(writer);
+        writer.DecreaseIndent();
+        writer.DecreaseIndent();
+        writer.Write("""
                 }
             }
             """, isMultiline: true);
