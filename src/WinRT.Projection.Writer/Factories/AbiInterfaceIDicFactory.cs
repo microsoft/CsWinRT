@@ -297,31 +297,38 @@ internal static class AbiInterfaceIDicFactory
             case "IClosable":
                 // IClosable maps to IDisposable. Forward Dispose() to the
                 // WindowsRuntimeObject base which has the actual implementation.
-                writer.Write("\nvoid global::System.IDisposable.Dispose() => ((global::System.IDisposable)(WindowsRuntimeObject)this).Dispose();\n");
+                writer.WriteLine("");
+                writer.WriteLine("void global::System.IDisposable.Dispose() => ((global::System.IDisposable)(WindowsRuntimeObject)this).Dispose();");
                 break;
             case "IBindableVector":
                 // IList covers IList, ICollection, and IEnumerable members.
-                writer.Write("\n");
-                writer.WriteLine("int global::System.Collections.ICollection.Count => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Count;");
-                writer.WriteLine("bool global::System.Collections.ICollection.IsSynchronized => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsSynchronized;");
-                writer.WriteLine("object global::System.Collections.ICollection.SyncRoot => ((global::System.Collections.IList)(WindowsRuntimeObject)this).SyncRoot;");
-                writer.Write("void global::System.Collections.ICollection.CopyTo(Array array, int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).CopyTo(array, index);\n\n");
-                writer.Write("object global::System.Collections.IList.this[int index]\n{\n");
-                writer.WriteLine("get => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index];");
-                writer.Write("set => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index] = value;\n}\n");
-                writer.WriteLine("bool global::System.Collections.IList.IsFixedSize => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsFixedSize;");
-                writer.WriteLine("bool global::System.Collections.IList.IsReadOnly => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsReadOnly;");
-                writer.WriteLine("int global::System.Collections.IList.Add(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Add(value);");
-                writer.WriteLine("void global::System.Collections.IList.Clear() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Clear();");
-                writer.WriteLine("bool global::System.Collections.IList.Contains(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Contains(value);");
-                writer.WriteLine("int global::System.Collections.IList.IndexOf(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IndexOf(value);");
-                writer.WriteLine("void global::System.Collections.IList.Insert(int index, object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Insert(index, value);");
-                writer.WriteLine("void global::System.Collections.IList.Remove(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Remove(value);");
-                writer.Write("void global::System.Collections.IList.RemoveAt(int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).RemoveAt(index);\n\n");
-                writer.WriteLine("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).GetEnumerator();");
+                writer.WriteLine("");
+                writer.Write("""
+                    int global::System.Collections.ICollection.Count => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Count;
+                    bool global::System.Collections.ICollection.IsSynchronized => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsSynchronized;
+                    object global::System.Collections.ICollection.SyncRoot => ((global::System.Collections.IList)(WindowsRuntimeObject)this).SyncRoot;
+                    void global::System.Collections.ICollection.CopyTo(Array array, int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).CopyTo(array, index);
+                    
+                    object global::System.Collections.IList.this[int index]
+                    {
+                    get => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index];
+                    set => ((global::System.Collections.IList)(WindowsRuntimeObject)this)[index] = value;
+                    }
+                    bool global::System.Collections.IList.IsFixedSize => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsFixedSize;
+                    bool global::System.Collections.IList.IsReadOnly => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IsReadOnly;
+                    int global::System.Collections.IList.Add(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Add(value);
+                    void global::System.Collections.IList.Clear() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Clear();
+                    bool global::System.Collections.IList.Contains(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Contains(value);
+                    int global::System.Collections.IList.IndexOf(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).IndexOf(value);
+                    void global::System.Collections.IList.Insert(int index, object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Insert(index, value);
+                    void global::System.Collections.IList.Remove(object value) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).Remove(value);
+                    void global::System.Collections.IList.RemoveAt(int index) => ((global::System.Collections.IList)(WindowsRuntimeObject)this).RemoveAt(index);
+                    
+                    IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IList)(WindowsRuntimeObject)this).GetEnumerator();
+                    """, isMultiline: true);
                 break;
             case "IBindableIterable":
-                writer.Write("\n");
+                writer.WriteLine("");
                 writer.WriteLine("IEnumerator IEnumerable.GetEnumerator() => ((global::System.Collections.IEnumerable)(WindowsRuntimeObject)this).GetEnumerator();");
                 break;
         }
