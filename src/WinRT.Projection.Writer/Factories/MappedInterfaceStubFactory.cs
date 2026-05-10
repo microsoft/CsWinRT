@@ -130,7 +130,9 @@ internal static class MappedInterfaceStubFactory
         writer.WriteLine("");
         EmitUnsafeAccessor(writer, "GetEnumerator", $"IEnumerator<{t}>", $"{prefix}GetEnumerator", interopType, "");
 
-        writer.WriteLine($"{$"\npublic IEnumerator<{t}> GetEnumerator() => {prefix}GetEnumerator(null, {objRefName});\n"}global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();");
+        writer.WriteLine("");
+        writer.WriteLine($"public IEnumerator<{t}> GetEnumerator() => {prefix}GetEnumerator(null, {objRefName});");
+        writer.WriteLine("global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();");
     }
 
     private static void EmitGenericEnumerator(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
@@ -227,7 +229,13 @@ internal static class MappedInterfaceStubFactory
 
         // GetEnumerator is NOT emitted here -- it's handled separately by IIterable<KVP>'s
         // EmitGenericEnumerable invocation.
-        writer.Write($"{$"\npublic {v} this[{k} key] => {prefix}Item(null, {objRefName}, key);\n"}{$"public IEnumerable<{k}> Keys => {prefix}Keys(null, {objRefName});\n"}{$"public IEnumerable<{v}> Values => {prefix}Values(null, {objRefName});\n"}{$"public int Count => {prefix}Count(null, {objRefName});\n"}{$"public bool ContainsKey({k} key) => {prefix}ContainsKey(null, {objRefName}, key);\n"}{$"public bool TryGetValue({k} key, out {v} value) => {prefix}TryGetValue(null, {objRefName}, key, out value);\n"}");
+        writer.WriteLine("");
+        writer.WriteLine($"public {v} this[{k} key] => {prefix}Item(null, {objRefName}, key);");
+        writer.WriteLine($"public IEnumerable<{k}> Keys => {prefix}Keys(null, {objRefName});");
+        writer.WriteLine($"public IEnumerable<{v}> Values => {prefix}Values(null, {objRefName});");
+        writer.WriteLine($"public int Count => {prefix}Count(null, {objRefName});");
+        writer.WriteLine($"public bool ContainsKey({k} key) => {prefix}ContainsKey(null, {objRefName}, key);");
+        writer.WriteLine($"public bool TryGetValue({k} key, out {v} value) => {prefix}TryGetValue(null, {objRefName}, key, out value);");
     }
 
     private static void EmitReadOnlyList(IndentedTextWriter writer, ProjectionEmitContext context, List<TypeSemantics> args, List<TypeSignature> argSigs, string objRefName)
