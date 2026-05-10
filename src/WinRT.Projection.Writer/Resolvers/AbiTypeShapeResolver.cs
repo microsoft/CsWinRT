@@ -3,25 +3,19 @@
 
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Extensions;
-using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Models;
+
 namespace WindowsRuntime.ProjectionWriter.Resolvers;
 
 /// <summary>
 /// Classifies WinRT type signatures by their ABI marshalling shape (see <see cref="AbiTypeShapeKind"/>).
 /// </summary>
 /// <remarks>
-/// <para>
 /// The resolver is constructed with a reference to the <see cref="MetadataCache"/> so it can
 /// perform cross-module type resolution (e.g. resolving an enum that lives in a different
 /// reference assembly than the one currently being projected).
-/// </para>
-/// <para>
-/// This is the long-term replacement for the cache-dependent inline predicates
-/// (<c>IsBlittablePrimitive</c>, <c>IsAnyStruct</c>, <c>IsComplexStruct</c>, etc.) that
-/// currently live as private static methods inside <c>AbiTypeHelpers.cs</c>. Migration of
-/// callsites happens incrementally in subsequent commits within Pass 18.
-/// </para>
 /// </remarks>
 /// <param name="cache">The metadata cache used for cross-module type resolution.</param>
 internal sealed class AbiTypeShapeResolver(MetadataCache cache)
@@ -59,11 +53,27 @@ internal sealed class AbiTypeShapeResolver(MetadataCache cache)
         if (signature is SzArrayTypeSignature) { return AbiTypeShapeKind.Array; }
         if (signature.IsGenericInstance()) { return AbiTypeShapeKind.GenericInstance; }
 
-        // The richer cache-aware classification (BlittablePrimitive vs Enum vs BlittableStruct
-        // vs ComplexStruct vs MappedAbiValueType vs RuntimeClassOrInterface vs Delegate) will
-        // be folded in here as the inline predicates from AbiTypeHelpers.cs migrate over.
-        // For now the resolver returns Unknown for those cases so callsites can fall through
-        // to the legacy predicates without changing behavior.
+        // Cache-aware classifications. These are evaluated in the same order the writer's
+        // emission paths historically queried the inline AbiTypeHelpers predicates so the
+        // resolver returns the same shape the legacy code path would have inferred.
+        if (AbiTypeHelpers.IsMappedAbiValueType(signature)) { return AbiTypeShapeKind.MappedAbiValueType; }
+        if (AbiTypeHelpers.IsBlittablePrimitive(Cache, signature))
+        {
+            return signature is CorLibTypeSignature ? AbiTypeShapeKind.BlittablePrimitive : AbiTypeShapeKind.Enum;
+        }
+        if (AbiTypeHelpers.IsComplexStruct(Cache, signature)) { return AbiTypeShapeKind.ComplexStruct; }
+        if (AbiTypeHelpers.IsAnyStruct(Cache, signature)) { return AbiTypeShapeKind.BlittableStruct; }
+        if (AbiTypeHelpers.IsRuntimeClassOrInterface(Cache, signature))
+        {
+            if (signature is TypeDefOrRefSignature td &&
+                td.Type is AsmResolver.DotNet.TypeDefinition def &&
+                TypeCategorization.GetCategory(def) == TypeCategory.Delegate)
+            {
+                return AbiTypeShapeKind.Delegate;
+            }
+            return AbiTypeShapeKind.RuntimeClassOrInterface;
+        }
+
         return AbiTypeShapeKind.Unknown;
     }
 }

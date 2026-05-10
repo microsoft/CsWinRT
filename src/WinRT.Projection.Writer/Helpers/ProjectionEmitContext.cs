@@ -3,6 +3,8 @@
 
 using System;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Resolvers;
+
 namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 /// <summary>
@@ -26,6 +28,7 @@ internal sealed class ProjectionEmitContext
         Settings = settings;
         Cache = cache;
         CurrentNamespace = currentNamespace;
+        AbiTypeShapeResolver = new AbiTypeShapeResolver(cache);
     }
 
     /// <summary>Gets the active projection settings.</summary>
@@ -36,6 +39,9 @@ internal sealed class ProjectionEmitContext
 
     /// <summary>Gets the namespace currently being emitted, or <see cref="string.Empty"/> when not in a per-namespace pass.</summary>
     public string CurrentNamespace { get; }
+
+    /// <summary>Gets the resolver used to classify type signatures by their ABI marshalling shape.</summary>
+    public AbiTypeShapeResolver AbiTypeShapeResolver { get; }
 
     /// <summary>Gets a value indicating whether the writer is currently inside an ABI namespace block.</summary>
     public bool InAbiNamespace { get; private set; }

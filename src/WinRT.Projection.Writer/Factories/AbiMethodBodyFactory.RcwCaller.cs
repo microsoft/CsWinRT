@@ -32,17 +32,19 @@ internal static partial class AbiMethodBodyFactory
     {
         TypeSignature? rt = sig.ReturnType;
 
-        bool returnIsString = rt is not null && rt.IsString();
-        bool returnIsRefType = rt is not null && (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, rt) || rt.IsObject() || rt.IsGenericInstance());
-        bool returnIsAnyStruct = rt is not null && AbiTypeHelpers.IsAnyStruct(context.Cache, rt);
-        bool returnIsComplexStruct = rt is not null && AbiTypeHelpers.IsComplexStruct(context.Cache, rt);
+        AbiTypeShapeKind returnShape = rt is null ? AbiTypeShapeKind.Unknown : context.AbiTypeShapeResolver.Resolve(rt).Kind;
+
+        bool returnIsString = returnShape == AbiTypeShapeKind.String;
+        bool returnIsRefType = returnShape is AbiTypeShapeKind.RuntimeClassOrInterface or AbiTypeShapeKind.Delegate or AbiTypeShapeKind.Object or AbiTypeShapeKind.GenericInstance;
+        bool returnIsAnyStruct = returnShape is AbiTypeShapeKind.BlittableStruct or AbiTypeShapeKind.ComplexStruct;
+        bool returnIsComplexStruct = returnShape == AbiTypeShapeKind.ComplexStruct;
         bool returnIsReceiveArray = rt is SzArrayTypeSignature retSzCheck
             && (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, retSzCheck.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, retSzCheck.BaseType)
                 || retSzCheck.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSzCheck.BaseType) || retSzCheck.BaseType.IsObject()
                 || AbiTypeHelpers.IsComplexStruct(context.Cache, retSzCheck.BaseType)
                 || retSzCheck.BaseType.IsHResultException()
                 || AbiTypeHelpers.IsMappedAbiValueType(retSzCheck.BaseType));
-        bool returnIsHResultException = rt is not null && rt.IsHResultException();
+        bool returnIsHResultException = returnShape == AbiTypeShapeKind.HResultException;
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
         System.Text.StringBuilder fp = new();
