@@ -19,19 +19,34 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!--
+      All PRs UndefineProperties=PublishAot: this csproj is the AOT publish root.
+      We pass PublishAot=true as a global from the consumer vcxproj's CsWinRTLink target
+      so NuGet Restore pulls in the ILC runtime package. Without these UndefineProperties
+      the global propagates transitively to managed-only PRs (e.g. Projections/Windows
+      -> WinRT.Generator.Tasks targeting netstandard2.0) and triggers NETSDK1207.
+    -->
     <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
       <!--
-        Override AuthoringTest's own Directory.Build.props PublishAot block so it builds as a
-        plain managed library here. This .AOT host does the AOT linking; AuthoringTest is just
-        a managed input. Without this, AuthoringTest copies WinAppSDK runtimes to its bin and
-        we hit NETSDK1152 duplicate publish output errors.
+        Suppress AuthoringTest's own Directory.Build.props PublishAot block so it builds
+        as a plain CsWinRT component library, not an exe with the WinAppSDK runtime
+        payload. This .AOT host does the AOT linking.
       -->
       <Properties>_AuthoringTestSkipAotPublishConfig=true</Properties>
+      <UndefineProperties>PublishAot</UndefineProperties>
     </ProjectReference>
-    <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj" />
-    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
-    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+    <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj">
+      <UndefineProperties>PublishAot</UndefineProperties>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj">
+      <UndefineProperties>PublishAot</UndefineProperties>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
+      <UndefineProperties>PublishAot</UndefineProperties>
+    </ProjectReference>
+    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj">
+      <UndefineProperties>PublishAot</UndefineProperties>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>
