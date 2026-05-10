@@ -99,7 +99,32 @@
     AuthoringTest2 + runtime + projections into one self-contained native dll exporting
     DllGetActivationFactory. CsWinRTLink target below invokes Publish on it; the resulting
     dll is added to ReferenceCopyLocalPaths so it lands next to the test exe.
+
+    Even though we don't reference the JIT-side projections, runtime, or host shim, we still
+    need both component csprojs built with RuntimeIdentifier set so their .winmd files land
+    at bin\x64\Release\<TFM>\win-x64\ (matching the IsWinMDFile <Reference> HintPath). slnx
+    BuildDependency builds them but doesn't propagate RID, so the winmd lands one folder up.
+    Add ProjectReferences with ReferenceOutputAssembly=false (build ordering only, no managed
+    closure pull-in) and explicit RuntimeIdentifier propagation. UndefineProperties=PublishAot
+    is defensive against the cache-contamination scenario fixed in 892108e9.
   -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
+    <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
+      <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
+      <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
+      <Properties>RuntimeIdentifier=win-$(Platform)</Properties>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+      <UndefineProperties>PublishAot</UndefineProperties>
+    </ProjectReference>
+    <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj">
+      <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
+      <Properties>RuntimeIdentifier=win-$(Platform)</Properties>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+      <UndefineProperties>PublishAot</UndefineProperties>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
     <NativeLibraryProjectName>AuthoringConsumptionTest2.AOT</NativeLibraryProjectName>
     <NativeLibraryProjectDirectory>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\$(NativeLibraryProjectName)'))\</NativeLibraryProjectDirectory>
