@@ -7,6 +7,7 @@ using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Extensions;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Metadata;
+using WindowsRuntime.ProjectionWriter.Writers;
 using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
 
 using static WindowsRuntime.ProjectionWriter.References.WellKnownAttributeNames;
@@ -68,11 +69,12 @@ internal sealed partial class ProjectionGenerator
     /// <param name="componentByModule">The activatable classes grouped by source module name (from <see cref="DiscoverComponentActivatableTypes"/>).</param>
     private void WriteComponentModuleFile(Dictionary<string, HashSet<TypeDefinition>> componentByModule)
     {
-        Writers.IndentedTextWriter wm = new();
-        // MetadataAttributeFactory.WriteFileHeader writes only the auto-generated banner (no usings/pragmas).
-        // Keep delegating through the legacy static helper for now -- the variant on
-        // IndentedTextWriter adds the full prelude (usings + pragmas) which is the wrong shape
-        // for the WinRT_Module.cs / GeneratedInterfaceIIDs.cs / Resources/Base/*.cs outputs.
+        // WinRT_Module.cs (and similar support files like GeneratedInterfaceIIDs.cs and the
+        // base resources under Resources/Base/) require only the auto-generated banner without
+        // the standard usings/pragmas prelude that per-namespace projection files emit, so this
+        // path goes through MetadataAttributeFactory.WriteFileHeader rather than the
+        // IndentedTextWriter extension that includes the full prelude.
+        IndentedTextWriter wm = new();
         MetadataAttributeFactory.WriteFileHeader(wm);
         ComponentFactory.WriteModuleActivationFactory(wm, componentByModule);
         wm.FlushToFile(Path.Combine(_settings.OutputFolder, "WinRT_Module.cs"));

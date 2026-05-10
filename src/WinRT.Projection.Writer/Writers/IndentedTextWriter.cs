@@ -7,12 +7,6 @@
 // a Roslyn source generator (where transient compilation context + zero-alloc are
 // the priority). This variant is a `class` backed by a `StringBuilder` so it can
 // be passed around freely and live as long as needed in a long-running tool.
-//
-// Per the refactor plan (v5, Pass 9), this initial revision intentionally does
-// NOT include custom interpolated-string handlers. Callsite syntax is identical
-// (`writer.Write($"...")`) against either the `string` overload (via interpolation)
-// or a future handler-based overload, so adding handlers later is a non-breaking
-// optimization that does not require any callsite churn.
 
 using System;
 using System.Diagnostics.CodeAnalysis;
