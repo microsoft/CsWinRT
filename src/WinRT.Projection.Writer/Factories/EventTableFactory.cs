@@ -27,24 +27,32 @@ internal static class EventTableFactory
         string evtType = __scratchEvtType.ToString();
 
         writer.WriteLine("");
-        writer.Write($$"""
-            private static ConditionalWeakTable<{{ifaceFullName}}, EventRegistrationTokenTable<{{evtType}}>> _{{evName}}
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get
-                {
-                    [MethodImpl(MethodImplOptions.NoInlining)]
-                    static ConditionalWeakTable<{{ifaceFullName}}, EventRegistrationTokenTable<{{evtType}}>> MakeTable()
-                    {
-                        _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);
-            
-                        return global::System.Threading.Volatile.Read(in field);
-                    }
-            
-                    return global::System.Threading.Volatile.Read(in field) ?? MakeTable();
-                }
-            }
-            """, isMultiline: true);
+        writer.Write("private static ConditionalWeakTable<");
+        writer.Write(ifaceFullName);
+        writer.Write(", EventRegistrationTokenTable<");
+        writer.Write(evtType);
+        writer.Write(">> _");
+        writer.Write(evName);
+        writer.WriteLine("");
+        writer.WriteLine("{");
+        writer.WriteLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
+        writer.WriteLine("    get");
+        writer.WriteLine("    {");
+        writer.WriteLine("        [MethodImpl(MethodImplOptions.NoInlining)]");
+        writer.Write("        static ConditionalWeakTable<");
+        writer.Write(ifaceFullName);
+        writer.Write(", EventRegistrationTokenTable<");
+        writer.Write(evtType);
+        writer.WriteLine(">> MakeTable()");
+        writer.WriteLine("        {");
+        writer.WriteLine("            _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);");
+        writer.WriteLine("");
+        writer.WriteLine("            return global::System.Threading.Volatile.Read(in field);");
+        writer.WriteLine("        }");
+        writer.WriteLine("");
+        writer.WriteLine("        return global::System.Threading.Volatile.Read(in field) ?? MakeTable();");
+        writer.WriteLine("    }");
+        writer.WriteLine("}");
     }
 
     /// <summary>
@@ -78,11 +86,13 @@ internal static class EventTableFactory
             IndentedTextWriter __scratchProjectedTypeName = new();
             MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, evtTypeSig, false);
             string projectedTypeName = __scratchProjectedTypeName.ToString();
-            writer.Write($$"""
-                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
-                        static extern {{projectedTypeName}} ConvertToManaged([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
-                        var __handler = ConvertToManaged(null, {{handlerRef}});
-                """, isMultiline: true);
+            writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
+            writer.Write("        static extern ");
+            writer.Write(projectedTypeName);
+            writer.Write(" ConvertToManaged([UnsafeAccessorType(\"");
+            writer.Write(interopTypeName);
+            writer.WriteLine("\")] object _, void* value);");
+            writer.WriteLine($"        var __handler = ConvertToManaged(null, {handlerRef});");
         }
         else
         {
@@ -91,17 +101,21 @@ internal static class EventTableFactory
             writer.WriteLine($"Marshaller.ConvertToManaged({handlerRef});");
         }
 
-        writer.Write($$"""
-                    *{{cookieName}} = _{{evName}}.GetOrCreateValue(__this).AddEventHandler(__handler);
-                    __this.{{evName}} += __handler;
-                    return 0;
-                }
-                catch (Exception __exception__)
-                {
-                    return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
-                }
-            }
-            """, isMultiline: true);
+        writer.Write("        *");
+        writer.Write(cookieName);
+        writer.Write(" = _");
+        writer.Write(evName);
+        writer.WriteLine(".GetOrCreateValue(__this).AddEventHandler(__handler);");
+        writer.Write("        __this.");
+        writer.Write(evName);
+        writer.WriteLine(" += __handler;");
+        writer.WriteLine("        return 0;");
+        writer.WriteLine("    }");
+        writer.WriteLine("    catch (Exception __exception__)");
+        writer.WriteLine("    {");
+        writer.WriteLine("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);");
+        writer.WriteLine("    }");
+        writer.WriteLine("}");
     }
 
     /// <summary>
@@ -115,22 +129,28 @@ internal static class EventTableFactory
         string tokenRef = CSharpKeywords.IsKeyword(tokenRawName) ? "@" + tokenRawName : tokenRawName;
 
         writer.WriteLine("");
-        writer.Write($$"""
-            {
-                try
-                {
-                    var __this = ComInterfaceDispatch.GetInstance<{{ifaceFullName}}>((ComInterfaceDispatch*)thisPtr);
-                    if(__this is not null && _{{evName}}.TryGetValue(__this, out var __table) && __table.RemoveEventHandler({{tokenRef}}, out var __handler))
-                    {
-                        __this.{{evName}} -= __handler;
-                    }
-                    return 0;
-                }
-                catch (Exception __exception__)
-                {
-                    return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
-                }
-            }
-            """, isMultiline: true);
+        writer.WriteLine("{");
+        writer.WriteLine("    try");
+        writer.WriteLine("    {");
+        writer.Write("        var __this = ComInterfaceDispatch.GetInstance<");
+        writer.Write(ifaceFullName);
+        writer.WriteLine(">((ComInterfaceDispatch*)thisPtr);");
+        writer.Write("        if(__this is not null && _");
+        writer.Write(evName);
+        writer.Write(".TryGetValue(__this, out var __table) && __table.RemoveEventHandler(");
+        writer.Write(tokenRef);
+        writer.WriteLine(", out var __handler))");
+        writer.WriteLine("        {");
+        writer.Write("            __this.");
+        writer.Write(evName);
+        writer.WriteLine(" -= __handler;");
+        writer.WriteLine("        }");
+        writer.WriteLine("        return 0;");
+        writer.WriteLine("    }");
+        writer.WriteLine("    catch (Exception __exception__)");
+        writer.WriteLine("    {");
+        writer.WriteLine("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);");
+        writer.WriteLine("    }");
+        writer.WriteLine("}");
     }
 }
