@@ -18,8 +18,17 @@ internal readonly struct TypeFilter
     private readonly List<string> _include;
     private readonly List<string> _exclude;
 
+    /// <summary>
+    /// Gets a default <see cref="TypeFilter"/> that has no include and no exclude rules
+    /// (and therefore matches every type).
+    /// </summary>
     public static TypeFilter Empty { get; } = new([], []);
 
+    /// <summary>
+    /// Initializes a new <see cref="TypeFilter"/> with the given include and exclude prefix lists.
+    /// </summary>
+    /// <param name="include">The include prefixes (a type matches if any prefix matches; empty means match-all).</param>
+    /// <param name="exclude">The exclude prefixes (a type is rejected if any prefix matches and no include prefix wins).</param>
     public TypeFilter(IEnumerable<string> include, IEnumerable<string> exclude)
     {
         _include = [.. include.OrderByDescending(s => s.Length)];

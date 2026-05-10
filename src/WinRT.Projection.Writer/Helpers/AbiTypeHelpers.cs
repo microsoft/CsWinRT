@@ -79,6 +79,15 @@ internal static partial class AbiTypeHelpers
         }
         return null;
     }
+
+    /// <summary>
+    /// Returns the unique virtual-method name used to refer to <paramref name="method"/> on
+    /// <paramref name="type"/>'s vtable: the method's metadata name suffixed with its zero-based
+    /// index in the type's method list, so overloads disambiguate (e.g. <c>get_Item_4</c>).
+    /// </summary>
+    /// <param name="type">The interface declaring the method.</param>
+    /// <param name="method">The method whose vtable name to compute.</param>
+    /// <returns>The virtual method name (<c>name_index</c>).</returns>
     public static string GetVirtualMethodName(TypeDefinition type, MethodDefinition method)
     {
         // Index of method in the type's method list
@@ -253,16 +262,30 @@ internal static partial class AbiTypeHelpers
         }
     }
 
+    /// <summary>
+    /// Returns the C#-callsite name for <paramref name="p"/> (the metadata name, escaped with
+    /// <c>@</c> when it collides with a C# keyword). When <paramref name="paramNameOverride"/> is
+    /// non-<see langword="null"/>, it replaces the metadata name.
+    /// </summary>
+    /// <param name="p">The parameter to name.</param>
+    /// <param name="paramNameOverride">Optional override (FastAbi-merged Methods classes use this to inject a synthesized name).</param>
+    /// <returns>The escaped parameter name.</returns>
     internal static string GetParamName(ParameterInfo p, string? paramNameOverride)
     {
         string name = paramNameOverride ?? p.Parameter.Name ?? "param";
         return CSharpKeywords.IsKeyword(name) ? "@" + name : name;
     }
 
+    /// <summary>
+    /// Returns the local-variable name for <paramref name="p"/> (the metadata name without
+    /// the C#-keyword <c>@</c> escape, since helper local names like <c>__event</c> are valid
+    /// even when the underlying parameter name is a C# keyword).
+    /// </summary>
+    /// <param name="p">The parameter to name.</param>
+    /// <param name="paramNameOverride">Optional override.</param>
+    /// <returns>The unescaped local-variable name.</returns>
     internal static string GetParamLocalName(ParameterInfo p, string? paramNameOverride)
     {
-        // For local helper variables (e.g. __<name>), strip the @ escape since `__event` is valid.
         return paramNameOverride ?? p.Parameter.Name ?? "param";
     }
-
 }
