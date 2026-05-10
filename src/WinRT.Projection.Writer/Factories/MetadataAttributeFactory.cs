@@ -162,12 +162,7 @@ internal static class MetadataAttributeFactory
         TypedefNameWriter.WriteTypeParams(scratch, type);
         string projectionName = scratch.ToString();
 
-        writer.WriteLine("");
-        writer.Write($$"""
-            [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
-                value: "{{projectionName}}",
-                target: typeof(
-            """, isMultiline: true);
+        writer.Write($"\n[assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(\n    value: \"{projectionName}\",\n    target: typeof(");
         if (context.Settings.Component)
         {
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
@@ -177,19 +172,11 @@ internal static class MetadataAttributeFactory
         {
             writer.Write(projectionName);
         }
-        writer.Write($$"""
-            ),
-                trimTarget: typeof({{projectionName}}))]
-            """, isMultiline: true);
+        writer.WriteLine($"),\n    trimTarget: typeof({projectionName}))]");
 
         if (context.Settings.Component)
         {
-            writer.WriteLine("");
-            writer.Write($$"""
-                [assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
-                    source: typeof({{projectionName}}),
-                    proxy: typeof(
-                """, isMultiline: true);
+            writer.Write($"\n[assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(\n    source: typeof({projectionName}),\n    proxy: typeof(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
             TypedefNameWriter.WriteTypeParams(writer, type);
             writer.WriteLine("))]");
@@ -238,21 +225,13 @@ internal static class MetadataAttributeFactory
         {
             writer.Write(projectionName);
         }
-        writer.Write($$"""
-            ),
-                trimTarget: typeof({{projectionName}}))]
-            """, isMultiline: true);
+        writer.WriteLine($"),\n    trimTarget: typeof({projectionName}))]");
 
         // For non-interface, non-struct authored types, emit proxy association.
         TypeCategory cat = TypeCategorization.GetCategory(type);
         if (cat is not (TypeCategory.Interface or TypeCategory.Struct) && context.Settings.Component)
         {
-            writer.WriteLine("");
-            writer.Write($$"""
-                [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
-                    source: typeof({{projectionName}}),
-                    proxy: typeof(
-                """, isMultiline: true);
+            writer.Write($"\n[assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(\n    source: typeof({projectionName}),\n    proxy: typeof(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, true);
             TypedefNameWriter.WriteTypeParams(writer, type);
             writer.WriteLine("))]");

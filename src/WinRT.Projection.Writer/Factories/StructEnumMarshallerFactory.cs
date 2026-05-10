@@ -49,10 +49,7 @@ internal static class StructEnumMarshallerFactory
         bool isMappedStruct = isComplexStruct && MappedTypes.Get(typeNs, typeNm) is not null;
         if (isMappedStruct) { isComplexStruct = false; }
 
-        writer.Write($$"""
-            public static unsafe class {{nameStripped}}Marshaller
-            {
-            """, isMultiline: true);
+        writer.Write($"public static unsafe class {nameStripped}Marshaller\n{{\n");
 
         if (isComplexStruct)
         {
@@ -225,11 +222,7 @@ internal static class StructEnumMarshallerFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
         if (isEnum || almostBlittable || isComplexStruct)
         {
-            writer.Write($$"""
-                ? value)
-                    {
-                        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.{{(hasReferenceFields ? "TrackerSupport" : "None")}}, in 
-                """, isMultiline: true);
+            writer.Write($"? value)\n    {{\n        return WindowsRuntimeValueTypeMarshaller.BoxToUnmanaged(value, CreateComInterfaceFlags.{(hasReferenceFields ? "TrackerSupport" : "None")}, in ");
             ObjRefNameGenerator.WriteIidReferenceExpression(writer, type);
             writer.Write("""
                 );
@@ -350,27 +343,21 @@ internal static class StructEnumMarshallerFactory
             if (context.Settings.Component && cat == TypeCategory.Struct) { return; }
 
             // ComWrappersMarshallerAttribute (full body)
-            writer.Write($$"""
-                internal sealed unsafe class {{nameStripped}}ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute
-                {
-                    public override void* GetOrCreateComInterfaceForObject(object value)
-                    {
-                        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.{{(hasReferenceFields ? "TrackerSupport" : "None")}}
-                """, isMultiline: true);
-            writer.Write($$"""
-                );
-                    }
-                
-                    public override ComInterfaceEntry* ComputeVtables(out int count)
-                    {
-                        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);
-                        return (ComInterfaceEntry*)Unsafe.AsPointer(in {{nameStripped}}InterfaceEntriesImpl.Entries);
-                    }
-                
-                    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)
-                    {
-                        wrapperFlags = CreatedWrapperFlags.NonWrapping;
-                """, isMultiline: true);
+            writer.Write("internal sealed unsafe class ");
+            writer.Write(nameStripped);
+            writer.WriteLine("ComWrappersMarshallerAttribute : WindowsRuntimeComWrappersMarshallerAttribute");
+            writer.WriteLine("{");
+            writer.WriteLine("    public override void* GetOrCreateComInterfaceForObject(object value)");
+            writer.WriteLine("    {");
+            writer.Write("        return WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.");
+            writer.Write(hasReferenceFields ? "TrackerSupport" : "None");
+            writer.WriteLine(");");
+            writer.WriteLine("    }");
+            writer.WriteLine("");
+            writer.WriteLine("    public override ComInterfaceEntry* ComputeVtables(out int count)");
+            writer.WriteLine("    {");
+            writer.WriteLine("        count = sizeof(ReferenceInterfaceEntries) / sizeof(ComInterfaceEntry);");
+            writer.WriteLine($"        return (ComInterfaceEntry*)Unsafe.AsPointer(in {nameStripped}InterfaceEntriesImpl.Entries);\n    }}\n\n    public override object CreateObject(void* value, out CreatedWrapperFlags wrapperFlags)\n    {{\n        wrapperFlags = CreatedWrapperFlags.NonWrapping;");
             if (isComplexStruct)
             {
                 writer.Write($"        return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<");
@@ -391,11 +378,7 @@ internal static class StructEnumMarshallerFactory
         else
         {
             // Fallback: keep the placeholder class so consumer attribute references resolve.
-            writer.Write($$"""
-                internal sealed class {{nameStripped}}ComWrappersMarshallerAttribute : global::System.Attribute
-                {
-                }
-                """, isMultiline: true);
+            writer.Write($"internal sealed class {nameStripped}ComWrappersMarshallerAttribute : global::System.Attribute\n{{\n}}\n");
         }
     }
 }

@@ -186,16 +186,12 @@ internal static class AbiInterfaceFactory
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
         writer.WriteLine("");
-        writer.Write($$"""
-            public static unsafe class {{nameStripped}}Impl
-            {
-            [FixedAddressValueType]
-            private static readonly {{nameStripped}}Vftbl Vftbl;
-            
-            static {{nameStripped}}Impl()
-            {
-                *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
-            """, isMultiline: true);
+        writer.Write("public static unsafe class ");
+        writer.Write(nameStripped);
+        writer.WriteLine("Impl");
+        writer.WriteLine("{");
+        writer.WriteLine("[FixedAddressValueType]");
+        writer.WriteLine($"private static readonly {nameStripped}Vftbl Vftbl;\n\nstatic {nameStripped}Impl()\n{{\n    *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;");
         foreach (MethodDefinition method in type.Methods)
         {
             string vm = AbiTypeHelpers.GetVMethodName(type, method);
@@ -364,13 +360,7 @@ internal static class AbiInterfaceFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        writer.WriteLine("");
-        writer.Write($$"""
-            #nullable enable
-            public static unsafe class {{nameStripped}}Marshaller
-            {
-                public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(
-            """, isMultiline: true);
+        writer.Write($"\n#nullable enable\npublic static unsafe class {nameStripped}Marshaller\n{{\n    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write("""
@@ -491,10 +481,7 @@ internal static class AbiInterfaceFactory
         }
         if (!hasAnyMember) { return; }
 
-        writer.Write($$"""
-            {{(useInternal ? "internal static class " : "public static class ")}}{{nameStripped}}Methods
-            {
-            """, isMultiline: true);
+        writer.Write($"{(useInternal ? "internal static class " : "public static class ")}{nameStripped}Methods\n{{\n");
 
         foreach ((TypeDefinition iface, int startSlot, bool segSkipEvents) in segments)
         {

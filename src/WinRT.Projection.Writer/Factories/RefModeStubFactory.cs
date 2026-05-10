@@ -39,8 +39,7 @@ internal static class RefModeStubFactory
     /// <param name="typeName">The type name to emit the synthetic constructor for.</param>
     public static void EmitSyntheticPrivateCtor(IndentedTextWriter writer, string typeName)
     {
-        writer.WriteLine("");
-        writer.WriteLine($"private {typeName}() {{ throw null; }}");
+        writer.WriteLine($"\nprivate {typeName}() {{ throw null; }}");
     }
 
     /// <summary>

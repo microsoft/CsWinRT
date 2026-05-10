@@ -66,13 +66,11 @@ internal static class EventTableFactory
         bool isGeneric = evtTypeSig is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature;
 
         writer.WriteLine("");
-        writer.Write($$"""
-            {
-                *{{cookieName}} = default;
-                try
-                {
-                    var __this = ComInterfaceDispatch.GetInstance<{{ifaceFullName}}>((ComInterfaceDispatch*)thisPtr);
-            """, isMultiline: true);
+        writer.WriteLine("{");
+        writer.Write("    *");
+        writer.Write(cookieName);
+        writer.WriteLine(" = default;");
+        writer.WriteLine($"    try\n    {{\n        var __this = ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr);");
 
         if (isGeneric)
         {

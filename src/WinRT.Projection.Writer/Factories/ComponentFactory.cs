@@ -61,8 +61,7 @@ internal static class ComponentFactory
             }
         }
 
-        writer.WriteLine("");
-        writer.Write($"internal sealed class {factoryTypeName} : global::WindowsRuntime.InteropServices.IActivationFactory");
+        writer.Write($"\ninternal sealed class {factoryTypeName} : global::WindowsRuntime.InteropServices.IActivationFactory");
         foreach (TypeDefinition iface in factoryInterfaces)
         {
             writer.Write(", ");
@@ -147,8 +146,7 @@ internal static class ComponentFactory
     {
         if (method.IsSpecialName) { return; }
         string methodName = method.Name?.Value ?? string.Empty;
-        writer.WriteLine("");
-        writer.Write($"public {projectedTypeName} {methodName}(");
+        writer.Write($"\npublic {projectedTypeName} {methodName}(");
         WriteFactoryMethodParameters(writer, context, method, includeTypes: true);
         writer.Write($") => new {projectedTypeName}(");
         WriteFactoryMethodParameters(writer, context, method, includeTypes: false);
@@ -190,10 +188,7 @@ internal static class ComponentFactory
         writer.WriteLine("");
         writer.Write("public ");
         WriteFactoryPropertyType(writer, context, prop);
-        writer.Write($$"""
-             {{propName}}
-            {
-            """, isMultiline: true);
+        writer.Write($" {propName}\n{{\n");
         if (getter is not null)
         {
             writer.WriteLine($"get => {projectedTypeName}.{propName};");
@@ -273,17 +268,7 @@ internal static class ComponentFactory
         writer.WriteLine("using System;");
         foreach (KeyValuePair<string, HashSet<TypeDefinition>> kv in typesByModule)
         {
-            writer.WriteLine("");
-            writer.Write($$"""
-                namespace ABI.{{kv.Key}}
-                {
-                public static class ManagedExports
-                {
-                public static unsafe void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)
-                {
-                switch (activatableClassId)
-                {
-                """, isMultiline: true);
+            writer.Write($"\nnamespace ABI.{kv.Key}\n{{\npublic static class ManagedExports\n{{\npublic static unsafe void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)\n{{\nswitch (activatableClassId)\n{{\n");
             // Sort by the type's metadata token / row index so cases appear in WinMD declaration order.
             List<TypeDefinition> orderedTypes = [.. kv.Value];
             orderedTypes.Sort((a, b) =>
@@ -295,10 +280,7 @@ internal static class ComponentFactory
             foreach (TypeDefinition type in orderedTypes)
             {
                 (string ns, string name) = type.Names();
-                writer.Write($$"""
-                    case "{{ns}}.{{name}}":
-                        return global::ABI.Impl.{{ns}}.{{IdentifierEscaping.StripBackticks(name)}}ServerActivationFactory.Make();
-                    """, isMultiline: true);
+                writer.WriteLine($"case \"{ns}.{name}\":\n    return global::ABI.Impl.{ns}.{IdentifierEscaping.StripBackticks(name)}ServerActivationFactory.Make();");
             }
             writer.Write("""
                 default:

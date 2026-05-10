@@ -283,12 +283,7 @@ internal static class ClassMembersFactory
                 writer.WriteLine("");
                 writer.Write("WindowsRuntimeObjectReferenceValue IWindowsRuntimeInterface<");
                 WriteInterfaceTypeNameForCcw(writer, context, substitutedInterface);
-                writer.Write($$"""
-                    >.GetInterface()
-                    {
-                    return {{giObjRefName}}.AsValue();
-                    }
-                    """, isMultiline: true);
+                writer.Write($">.GetInterface()\n{{\nreturn {giObjRefName}.AsValue();\n}}\n");
             }
             else if (impl.IsDefaultInterface() && !classType.IsSealed)
             {
@@ -310,12 +305,7 @@ internal static class ClassMembersFactory
                 writer.WriteLine("");
                 writer.Write("internal ");
                 if (hasBaseType) { writer.Write("new "); }
-                writer.Write($$"""
-                    WindowsRuntimeObjectReferenceValue GetDefaultInterface()
-                    {
-                    return {{giObjRefName}}.AsValue();
-                    }
-                    """, isMultiline: true);
+                writer.Write($"WindowsRuntimeObjectReferenceValue GetDefaultInterface()\n{{\nreturn {giObjRefName}.AsValue();\n}}\n");
             }
 
             // For mapped interfaces with custom members output (e.g. IClosable -> IDisposable, IMap`2
@@ -689,13 +679,7 @@ internal static class ClassMembersFactory
             // don't reference the field,
             if (!context.Settings.ReferenceProjection && inlineEventSourceField)
             {
-                writer.WriteLine("");
-                writer.Write($$"""
-                    private {{eventSourceTypeFull}} _eventSource_{{name}}
-                    {
-                        get
-                        {
-                    """, isMultiline: true);
+                writer.Write($"\nprivate {eventSourceTypeFull} _eventSource_{name}\n{{\n    get\n    {{\n");
                 if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
                 {
                     writer.Write($$"""
@@ -741,10 +725,7 @@ internal static class ClassMembersFactory
             if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
             writer.Write($"{access}{methodSpec}event ");
             TypedefNameWriter.WriteEventType(writer, context, evt, currentInstance);
-            writer.Write($$"""
-                 {{name}}
-                {
-                """, isMultiline: true);
+            writer.Write($" {name}\n{{\n");
             if (context.Settings.ReferenceProjection)
             {
                 writer.Write("""
