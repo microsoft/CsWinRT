@@ -181,7 +181,7 @@ internal static class InterfaceFactory
         {
             if (method.IsSpecial()) { continue; }
             MethodSig sig = new(method);
-            writer.Write("\n");
+            writer.WriteLine("");
             // Only emit Windows.Foundation.Metadata attributes that have a projected form
             // (Overload, DefaultOverload, AttributeUsage, Experimental).
             WriteMethodCustomAttributes(writer, method);
@@ -209,7 +209,8 @@ internal static class InterfaceFactory
 
         foreach (EventDefinition evt in type.Events)
         {
-            writer.Write("\nevent ");
+            writer.WriteLine("");
+            writer.Write("event ");
             TypedefNameWriter.WriteEventType(writer, context, evt);
             writer.Write($" {evt.Name?.Value ?? string.Empty};");
         }
@@ -340,10 +341,10 @@ internal static class InterfaceFactory
             return;
         }
 
-        writer.Write("\n");
+        writer.WriteLine("");
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         WriteGuidAttribute(writer, type);
-        writer.Write("\n");
+        writer.WriteLine("");
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
 
         bool isInternal = (TypeCategorization.IsExclusiveTo(type) && !context.Settings.PublicExclusiveTo) ||
@@ -352,9 +353,11 @@ internal static class InterfaceFactory
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.CCW, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         WriteTypeInheritance(writer, context, type, false, false);
-        writer.Write("\n{");
+        writer.WriteLine("");
+        writer.Write("{");
         WriteInterfaceMemberSignatures(writer, context, type);
-        writer.Write("\n}\n");
+        writer.WriteLine("");
+        writer.WriteLine("}");
     }
     /// <summary>Returns true if the given exclusive interface is referenced as a [Default] or
     /// [Overridable] interface impl on the class it's exclusive to.</summary>

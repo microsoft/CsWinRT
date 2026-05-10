@@ -115,7 +115,7 @@ internal static class MappedInterfaceStubFactory
         string interopType = "ABI.System.Collections.Generic.<#corlib>IEnumerable'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IEnumerableMethods_" + elementId + "_";
 
-        writer.Write("\n");
+        writer.WriteLine("");
         EmitUnsafeAccessor(writer, "GetEnumerator", $"IEnumerator<{t}>", $"{prefix}GetEnumerator", interopType, "");
 
         writer.WriteLine($"{$"\npublic IEnumerator<{t}> GetEnumerator() => {prefix}GetEnumerator(null, {objRefName});\n"}global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();");
@@ -130,7 +130,7 @@ internal static class MappedInterfaceStubFactory
         string interopType = "ABI.System.Collections.Generic.<#corlib>IEnumerator'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IEnumeratorMethods_" + elementId + "_";
 
-        writer.Write("\n");
+        writer.WriteLine("");
         EmitUnsafeAccessor(writer, "Current", t, $"{prefix}Current", interopType, "");
         EmitUnsafeAccessor(writer, "MoveNext", "bool", $"{prefix}MoveNext", interopType, "");
 
@@ -162,7 +162,7 @@ internal static class MappedInterfaceStubFactory
         // The IEnumerable<KeyValuePair<K,V>> objref name (matches what WriteClassObjRefDefinitions emits transitively).
         string enumerableObjRefName = "_objRef_System_Collections_Generic_IEnumerable_" + IIDExpressionWriter.EscapeTypeNameForIdentifier(kvLong, stripGlobal: false) + "_";
 
-        writer.Write("\n");
+        writer.WriteLine("");
         EmitUnsafeAccessor(writer, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "");
         EmitUnsafeAccessor(writer, "Values", $"ICollection<{v}>", $"{prefix}Values", interopType, "");
         EmitUnsafeAccessor(writer, "Count", "int", $"{prefix}Count", interopType, "");
@@ -200,7 +200,7 @@ internal static class MappedInterfaceStubFactory
         string interopType = "ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
         string prefix = "IReadOnlyDictionaryMethods_" + keyId + "_" + valId + "_";
 
-        writer.Write("\n");
+        writer.WriteLine("");
         EmitUnsafeAccessor(writer, "Keys", $"ICollection<{k}>", $"{prefix}Keys", interopType, "");
         EmitUnsafeAccessor(writer, "Values", $"ICollection<{v}>", $"{prefix}Values", interopType, "");
         EmitUnsafeAccessor(writer, "Count", "int", $"{prefix}Count", interopType, "");
@@ -222,7 +222,7 @@ internal static class MappedInterfaceStubFactory
         string interopType = "ABI.System.Collections.Generic.<#corlib>IReadOnlyList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IReadOnlyListMethods_" + elementId + "_";
 
-        writer.Write("\n");
+        writer.WriteLine("");
         EmitUnsafeAccessor(writer, "Count", "int", $"{prefix}Count", interopType, "");
         EmitUnsafeAccessor(writer, "Item", t, $"{prefix}Item", interopType, ", int index");
 
@@ -260,7 +260,7 @@ internal static class MappedInterfaceStubFactory
         string interopType = "ABI.System.Collections.Generic.<#corlib>IList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IListMethods_" + elementId + "_";
 
-        writer.Write("\n");
+        writer.WriteLine("");
         EmitUnsafeAccessor(writer, "Count", "int", $"{prefix}Count", interopType, "");
         EmitUnsafeAccessor(writer, "Item", t, $"{prefix}Item", interopType, ", int index");
         EmitUnsafeAccessor(writer, "Item", "void", $"{prefix}Item", interopType, $", int index, {t} value");
@@ -295,7 +295,8 @@ internal static class MappedInterfaceStubFactory
 
     private static void EmitNonGenericList(IndentedTextWriter writer, string objRefName)
     {
-        writer.Write("\n[global::System.Runtime.CompilerServices.IndexerName(\"NonGenericListItem\")]\n");
+        writer.WriteLine("");
+        writer.WriteLine("[global::System.Runtime.CompilerServices.IndexerName(\"NonGenericListItem\")]");
         writer.Write($"public object this[int index]\n{{\n    get => global::ABI.System.Collections.IListMethods.Item({objRefName}, index);\n    set => global::ABI.System.Collections.IListMethods.Item({objRefName}, index, value);\n}}\n");
         writer.Write($"public int Count => global::ABI.System.Collections.IListMethods.Count({objRefName});\n");
         writer.WriteLine("public bool IsReadOnly => false;");

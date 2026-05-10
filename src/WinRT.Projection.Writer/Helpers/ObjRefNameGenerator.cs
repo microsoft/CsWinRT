@@ -325,16 +325,25 @@ internal static class ObjRefNameGenerator
             // constructor can assign NativeObjectReference for the exact-type case.
             writer.Write("private WindowsRuntimeObjectReference ");
             writer.Write(objRefName);
-            writer.Write("\n{\n");
-            writer.Write("    get\n    {\n");
+            writer.WriteLine("");
+            writer.WriteLine("{");
+            writer.WriteLine("    get");
+            writer.WriteLine("    {");
             writer.WriteLine("        [MethodImpl(MethodImplOptions.NoInlining)]");
-            writer.Write("        WindowsRuntimeObjectReference MakeObjectReference()\n        {\n");
+            writer.WriteLine("        WindowsRuntimeObjectReference MakeObjectReference()");
+            writer.WriteLine("        {");
             writer.WriteLine("            _ = global::System.Threading.Interlocked.CompareExchange(");
             writer.WriteLine("                location1: ref field,");
             writer.Write("                value: NativeObjectReference.As(");
             WriteIidExpression(writer, context, ifaceRef);
             writer.WriteLine("),");
-            writer.Write("                comparand: null);\n\n            return field;\n        }\n\n        return field ?? MakeObjectReference();\n    }\n");
+            writer.WriteLine("                comparand: null);");
+            writer.WriteLine("");
+            writer.WriteLine("            return field;");
+            writer.WriteLine("        }");
+            writer.WriteLine("");
+            writer.WriteLine("        return field ?? MakeObjectReference();");
+            writer.WriteLine("    }");
             if (isDefault) { writer.WriteLine("    init;"); }
             writer.WriteLine("}");
         }

@@ -69,22 +69,34 @@ internal static class ComponentFactory
             TypedefNameWriter.WriteTypedefName(writer, context, iface, TypedefNameType.CCW, false);
             TypedefNameWriter.WriteTypeParams(writer, iface);
         }
-        writer.Write("\n{\n");
+        writer.WriteLine("");
+        writer.WriteLine("{");
 
         writer.Write("static ");
         writer.Write(factoryTypeName);
-        writer.Write("()\n{\n");
+        writer.WriteLine("()");
+        writer.WriteLine("{");
         writer.Write("global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(");
         writer.Write(projectedTypeName);
-        writer.Write(").TypeHandle);\n}\n");
+        writer.WriteLine(").TypeHandle);");
+        writer.WriteLine("}");
 
-        writer.Write("\npublic static unsafe void* Make()\n{\nreturn global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeInterfaceMarshaller<global::WindowsRuntime.InteropServices.IActivationFactory>\n    .ConvertToUnmanaged(_factory, in global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IActivationFactory)\n    .DetachThisPtrUnsafe();\n}\n");
+        writer.WriteLine("");
+        writer.WriteLine("public static unsafe void* Make()");
+        writer.WriteLine("{");
+        writer.WriteLine("return global::WindowsRuntime.InteropServices.Marshalling.WindowsRuntimeInterfaceMarshaller<global::WindowsRuntime.InteropServices.IActivationFactory>");
+        writer.WriteLine("    .ConvertToUnmanaged(_factory, in global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IActivationFactory)");
+        writer.WriteLine("    .DetachThisPtrUnsafe();");
+        writer.WriteLine("}");
 
-        writer.Write("\nprivate static readonly ");
+        writer.WriteLine("");
+        writer.Write("private static readonly ");
         writer.Write(factoryTypeName);
         writer.WriteLine(" _factory = new();");
 
-        writer.Write("\npublic object ActivateInstance()\n{\n");
+        writer.WriteLine("");
+        writer.WriteLine("public object ActivateInstance()");
+        writer.WriteLine("{");
         if (isActivatable)
         {
             writer.Write($"return new {projectedTypeName}();");
@@ -93,7 +105,8 @@ internal static class ComponentFactory
         {
             writer.Write("throw new NotImplementedException();");
         }
-        writer.Write("\n}\n");
+        writer.WriteLine("");
+        writer.WriteLine("}");
 
         // Emit factory-class members: forwarding methods/properties/events for static factory
         // interfaces, and constructor wrappers for activatable factory interfaces.
@@ -156,7 +169,8 @@ internal static class ComponentFactory
     {
         if (method.IsSpecialName) { return; }
         string methodName = method.Name?.Value ?? string.Empty;
-        writer.Write("\npublic ");
+        writer.WriteLine("");
+        writer.Write("public ");
         WriteFactoryReturnType(writer, context, method);
         writer.Write($" {methodName}(");
         WriteFactoryMethodParameters(writer, context, method, includeTypes: true);
@@ -173,12 +187,14 @@ internal static class ComponentFactory
         // Single-line form when no setter is present.
         if (setter is null)
         {
-            writer.Write("\npublic ");
+            writer.WriteLine("");
+            writer.Write("public ");
             WriteFactoryPropertyType(writer, context, prop);
             writer.WriteLine($" {propName} => {projectedTypeName}.{propName};");
             return;
         }
-        writer.Write("\npublic ");
+        writer.WriteLine("");
+        writer.Write("public ");
         WriteFactoryPropertyType(writer, context, prop);
         writer.Write($" {propName}\n{{\n");
         if (getter is not null)
@@ -197,7 +213,8 @@ internal static class ComponentFactory
     private static void WriteStaticFactoryEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string projectedTypeName)
     {
         string evtName = evt.Name?.Value ?? string.Empty;
-        writer.Write("\npublic event ");
+        writer.WriteLine("");
+        writer.Write("public event ");
         if (evt.EventType is not null)
         {
             TypeSemantics evtSemantics = TypeSemanticsFactory.GetFromTypeDefOrRef(evt.EventType);
@@ -205,7 +222,8 @@ internal static class ComponentFactory
         }
         writer.Write(" ");
         writer.Write(evtName);
-        writer.Write("\n{\n");
+        writer.WriteLine("");
+        writer.WriteLine("{");
         writer.Write("add => ");
         writer.Write(projectedTypeName);
         writer.Write(".");
@@ -264,7 +282,8 @@ internal static class ComponentFactory
     /// <summary>Writes the per-module activation-factory dispatch helper.</summary>
     public static void WriteModuleActivationFactory(IndentedTextWriter writer, IReadOnlyDictionary<string, HashSet<TypeDefinition>> typesByModule)
     {
-        writer.Write("\nusing System;\n");
+        writer.WriteLine("");
+        writer.WriteLine("using System;");
         foreach (KeyValuePair<string, HashSet<TypeDefinition>> kv in typesByModule)
         {
             writer.Write($"\nnamespace ABI.{kv.Key}\n{{\npublic static class ManagedExports\n{{\npublic static unsafe void* GetActivationFactory(ReadOnlySpan<char> activatableClassId)\n{{\nswitch (activatableClassId)\n{{\n");
@@ -281,7 +300,12 @@ internal static class ComponentFactory
                 (string ns, string name) = type.Names();
                 writer.WriteLine($"case \"{ns}.{name}\":\n    return global::ABI.Impl.{ns}.{IdentifierEscaping.StripBackticks(name)}ServerActivationFactory.Make();");
             }
-            writer.Write("default:\n    return null;\n}\n}\n}\n}\n");
+            writer.WriteLine("default:");
+            writer.WriteLine("    return null;");
+            writer.WriteLine("}");
+            writer.WriteLine("}");
+            writer.WriteLine("}");
+            writer.WriteLine("}");
         }
     }
 }

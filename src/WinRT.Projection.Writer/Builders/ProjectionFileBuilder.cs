@@ -90,11 +90,12 @@ internal static class ProjectionFileBuilder
 
         if (isFlags)
         {
-            writer.Write("\n[FlagsAttribute]\n");
+            writer.WriteLine("");
+            writer.WriteLine("[FlagsAttribute]");
         }
         else
         {
-            writer.Write("\n");
+            writer.WriteLine("");
         }
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
@@ -116,7 +117,8 @@ internal static class ProjectionFileBuilder
             CustomAttributeFactory.WritePlatformAttribute(writer, context, field);
             writer.WriteLine($"{fieldName} = unchecked(({enumUnderlyingType}){constantValue}),");
         }
-        writer.Write("}\n\n");
+        writer.WriteLine("}");
+        writer.WriteLine("");
     }
     /// <summary>Formats a metadata Constant value as a C# literal.</summary>
     internal static string FormatConstant(AsmResolver.DotNet.Constant constant)
@@ -192,7 +194,8 @@ internal static class ProjectionFileBuilder
             writer.Write($"{fields[i].TypeStr} ");
             IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
         }
-        writer.Write(")\n{\n");
+        writer.WriteLine(")");
+        writer.WriteLine("{");
         foreach ((string _, string name, string paramName, bool _) in fields)
         {
             // When the param name matches the field name (i.e. ToCamelCase couldn't change casing),
@@ -210,7 +213,8 @@ internal static class ProjectionFileBuilder
                 writer.Write("; ");
             }
         }
-        writer.Write("\n}\n");
+        writer.WriteLine("");
+        writer.WriteLine("}");
 
         // properties
         foreach ((string typeStr, string name, string _, bool _) in fields)
@@ -265,7 +269,8 @@ internal static class ProjectionFileBuilder
             }
         }
         writer.WriteLine(";");
-        writer.Write("}\n\n");
+        writer.WriteLine("}");
+        writer.WriteLine("");
     }
     /// <summary>Writes a projected API contract (an empty enum stand-in).</summary>
     public static void WriteContract(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -285,7 +290,7 @@ internal static class ProjectionFileBuilder
         if (invoke is null) { return; }
         MethodSig sig = new(invoke);
 
-        writer.Write("\n");
+        writer.WriteLine("");
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
         MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);

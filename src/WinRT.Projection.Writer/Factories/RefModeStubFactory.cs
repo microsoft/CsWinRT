@@ -19,7 +19,13 @@ internal static class RefModeStubFactory
     /// <param name="writer">The writer to emit to.</param>
     public static void EmitRefModeObjRefGetterBody(IndentedTextWriter writer)
     {
-        writer.Write("\n{\n    get\n    {\n        throw null;\n    }\n}\n");
+        writer.WriteLine("");
+        writer.WriteLine("{");
+        writer.WriteLine("    get");
+        writer.WriteLine("    {");
+        writer.WriteLine("        throw null;");
+        writer.WriteLine("    }");
+        writer.WriteLine("}");
     }
 
     /// <summary>
@@ -40,6 +46,8 @@ internal static class RefModeStubFactory
     /// <param name="writer">The writer to emit to.</param>
     public static void EmitRefModeInvokeBody(IndentedTextWriter writer)
     {
-        writer.Write("        throw null;\n    }\n}\n");
+        writer.WriteLine("        throw null;");
+        writer.WriteLine("    }");
+        writer.WriteLine("}");
     }
 }

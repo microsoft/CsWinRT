@@ -153,10 +153,12 @@ internal static class AbiInterfaceFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        writer.Write("\n[StructLayout(LayoutKind.Sequential)]\n");
+        writer.WriteLine("");
+        writer.WriteLine("[StructLayout(LayoutKind.Sequential)]");
         writer.Write("internal unsafe struct ");
         writer.Write(nameStripped);
-        writer.Write("Vftbl\n{\n");
+        writer.WriteLine("Vftbl");
+        writer.WriteLine("{");
         writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;");
         writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;");
         writer.WriteLine("public delegate* unmanaged[MemberFunction]<void*, uint> Release;");
@@ -183,9 +185,11 @@ internal static class AbiInterfaceFactory
         string name = type.Name?.Value ?? string.Empty;
         string nameStripped = IdentifierEscaping.StripBackticks(name);
 
-        writer.Write("\npublic static unsafe class ");
+        writer.WriteLine("");
+        writer.Write("public static unsafe class ");
         writer.Write(nameStripped);
-        writer.Write("Impl\n{\n");
+        writer.WriteLine("Impl");
+        writer.WriteLine("{");
         writer.WriteLine("[FixedAddressValueType]");
         writer.WriteLine($"private static readonly {nameStripped}Vftbl Vftbl;\n\nstatic {nameStripped}Impl()\n{{\n    *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;");
         foreach (MethodDefinition method in type.Methods)
@@ -193,9 +197,22 @@ internal static class AbiInterfaceFactory
             string vm = AbiTypeHelpers.GetVMethodName(type, method);
             writer.WriteLine($"    Vftbl.{vm} = &Do_Abi_{vm};");
         }
-        writer.Write("}\n\npublic static ref readonly Guid IID\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => ref ");
+        writer.WriteLine("}");
+        writer.WriteLine("");
+        writer.WriteLine("public static ref readonly Guid IID");
+        writer.WriteLine("{");
+        writer.WriteLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
+        writer.Write("    get => ref ");
         AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.Write(";\n}\n\npublic static nint Vtable\n{\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\n    get => (nint)Unsafe.AsPointer(in Vftbl);\n}\n\n");
+        writer.WriteLine(";");
+        writer.WriteLine("}");
+        writer.WriteLine("");
+        writer.WriteLine("public static nint Vtable");
+        writer.WriteLine("{");
+        writer.WriteLine("    [MethodImpl(MethodImplOptions.AggressiveInlining)]");
+        writer.WriteLine("    get => (nint)Unsafe.AsPointer(in Vftbl);");
+        writer.WriteLine("}");
+        writer.WriteLine("");
 
         // Do_Abi_* implementations: emit real bodies for simple primitive cases,
         // throw null! for everything else (deferred — needs full per-parameter marshalling).
@@ -340,18 +357,28 @@ internal static class AbiInterfaceFactory
         writer.Write($"\n#nullable enable\npublic static unsafe class {nameStripped}Marshaller\n{{\n    public static WindowsRuntimeObjectReferenceValue ConvertToUnmanaged(");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write(" value)\n    {\n        return WindowsRuntimeInterfaceMarshaller<");
+        writer.WriteLine(" value)");
+        writer.WriteLine("    {");
+        writer.Write("        return WindowsRuntimeInterfaceMarshaller<");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
         writer.Write(">.ConvertToUnmanaged(value, ");
         AbiTypeHelpers.WriteIidGuidReference(writer, context, type);
-        writer.Write(");\n    }\n\n    public static ");
+        writer.WriteLine(");");
+        writer.WriteLine("    }");
+        writer.WriteLine("");
+        writer.Write("    public static ");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.Write("? ConvertToManaged(void* value)\n    {\n        return (");
+        writer.WriteLine("? ConvertToManaged(void* value)");
+        writer.WriteLine("    {");
+        writer.Write("        return (");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
         TypedefNameWriter.WriteTypeParams(writer, type);
-        writer.WriteLine("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);\n    }\n}\n#nullable disable");
+        writer.WriteLine("?) WindowsRuntimeObjectMarshaller.ConvertToManaged(value);");
+        writer.WriteLine("    }");
+        writer.WriteLine("}");
+        writer.WriteLine("#nullable disable");
     }
 
     /// <summary>

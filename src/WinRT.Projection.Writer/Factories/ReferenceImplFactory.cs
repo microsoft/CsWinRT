@@ -23,19 +23,30 @@ internal static class ReferenceImplFactory
         string visibility = context.Settings.Component ? "public" : "file";
         bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
 
-        writer.Write("\n");
+        writer.WriteLine("");
         writer.Write(visibility);
         writer.Write(" static unsafe class ");
         writer.Write(nameStripped);
-        writer.Write("ReferenceImpl\n{\n");
+        writer.WriteLine("ReferenceImpl");
+        writer.WriteLine("{");
         writer.WriteLine("    [FixedAddressValueType]");
-        writer.Write("    private static readonly ReferenceVftbl Vftbl;\n\n");
+        writer.WriteLine("    private static readonly ReferenceVftbl Vftbl;");
+        writer.WriteLine("");
         writer.Write("    static ");
         writer.Write(nameStripped);
-        writer.Write("ReferenceImpl()\n    {\n");
+        writer.WriteLine("ReferenceImpl()");
+        writer.WriteLine("    {");
         writer.WriteLine("        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;");
         writer.WriteLine("        Vftbl.get_Value = &get_Value;");
-        writer.WriteLine("    }\n\n    public static nint Vtable\n    {\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\n        get => (nint)Unsafe.AsPointer(in Vftbl);\n    }\n\n    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]");
+        writer.WriteLine("    }");
+        writer.WriteLine("");
+        writer.WriteLine("    public static nint Vtable");
+        writer.WriteLine("    {");
+        writer.WriteLine("        [MethodImpl(MethodImplOptions.AggressiveInlining)]");
+        writer.WriteLine("        get => (nint)Unsafe.AsPointer(in Vftbl);");
+        writer.WriteLine("    }");
+        writer.WriteLine("");
+        writer.WriteLine("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]");
         bool isBlittableStructType = blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
         bool isNonBlittableStructType = !blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
         if ((blittable && TypeCategorization.GetCategory(type) != TypeCategory.Struct)
@@ -43,19 +54,43 @@ internal static class ReferenceImplFactory
         {
             // For blittable types and blittable structs: direct memcpy via C# struct assignment.
             // Even bool/char fields work because their managed layout matches the WinRT ABI.
-            writer.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n        if (result is null)\n        {\n            return unchecked((int)0x80004003);\n        }\n\n        try\n        {\n            var value = (");
+            writer.WriteLine("    public static int get_Value(void* thisPtr, void* result)");
+            writer.WriteLine("    {");
+            writer.WriteLine("        if (result is null)");
+            writer.WriteLine("        {");
+            writer.WriteLine("            return unchecked((int)0x80004003);");
+            writer.WriteLine("        }");
+            writer.WriteLine("");
+            writer.WriteLine("        try");
+            writer.WriteLine("        {");
+            writer.Write("            var value = (");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.WriteLine(")(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));");
             writer.Write("            *(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.WriteLine("*)result = value;");
-            writer.WriteLine("            return 0;\n        }\n        catch (Exception e)\n        {\n            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n    }");
+            writer.WriteLine("            return 0;");
+            writer.WriteLine("        }");
+            writer.WriteLine("        catch (Exception e)");
+            writer.WriteLine("        {");
+            writer.WriteLine("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);");
+            writer.WriteLine("        }");
+            writer.WriteLine("    }");
         }
         else if (isNonBlittableStructType)
         {
             // Non-blittable struct: marshal via <Name>Marshaller.ConvertToUnmanaged then write the
             // (ABI) struct value into the result pointer.
-            writer.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n        if (result is null)\n        {\n            return unchecked((int)0x80004003);\n        }\n\n        try\n        {\n            ");
+            writer.WriteLine("    public static int get_Value(void* thisPtr, void* result)");
+            writer.WriteLine("    {");
+            writer.WriteLine("        if (result is null)");
+            writer.WriteLine("        {");
+            writer.WriteLine("            return unchecked((int)0x80004003);");
+            writer.WriteLine("        }");
+            writer.WriteLine("");
+            writer.WriteLine("        try");
+            writer.WriteLine("        {");
+            writer.Write("            ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" unboxedValue = (");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
@@ -68,12 +103,27 @@ internal static class ReferenceImplFactory
             writer.Write("            *(");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.WriteLine("*)result = value;");
-            writer.WriteLine("            return 0;\n        }\n        catch (Exception e)\n        {\n            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n    }");
+            writer.WriteLine("            return 0;");
+            writer.WriteLine("        }");
+            writer.WriteLine("        catch (Exception e)");
+            writer.WriteLine("        {");
+            writer.WriteLine("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);");
+            writer.WriteLine("        }");
+            writer.WriteLine("    }");
         }
         else if (TypeCategorization.GetCategory(type) is TypeCategory.Class or TypeCategory.Delegate)
         {
             // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
-            writer.Write("    public static int get_Value(void* thisPtr, void* result)\n    {\n        if (result is null)\n        {\n            return unchecked((int)0x80004003);\n        }\n\n        try\n        {\n            ");
+            writer.WriteLine("    public static int get_Value(void* thisPtr, void* result)");
+            writer.WriteLine("    {");
+            writer.WriteLine("        if (result is null)");
+            writer.WriteLine("        {");
+            writer.WriteLine("            return unchecked((int)0x80004003);");
+            writer.WriteLine("        }");
+            writer.WriteLine("");
+            writer.WriteLine("        try");
+            writer.WriteLine("        {");
+            writer.Write("            ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" unboxedValue = (");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
@@ -83,7 +133,13 @@ internal static class ReferenceImplFactory
             writer.Write(nameStripped);
             writer.WriteLine("Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();");
             writer.WriteLine("            *(void**)result = value;");
-            writer.WriteLine("            return 0;\n        }\n        catch (Exception e)\n        {\n            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);\n        }\n    }");
+            writer.WriteLine("            return 0;");
+            writer.WriteLine("        }");
+            writer.WriteLine("        catch (Exception e)");
+            writer.WriteLine("        {");
+            writer.WriteLine("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);");
+            writer.WriteLine("        }");
+            writer.WriteLine("    }");
         }
         else
         {
@@ -94,10 +150,15 @@ internal static class ReferenceImplFactory
                 $"for type '{type.FullName}'. Expected enum/struct/delegate.");
         }
         // IID property: 'public static ref readonly Guid IID' pointing at the reference type's IID.
-        writer.Write("\n    public static ref readonly Guid IID\n    {\n");
+        writer.WriteLine("");
+        writer.WriteLine("    public static ref readonly Guid IID");
+        writer.WriteLine("    {");
         writer.WriteLine("        [MethodImpl(MethodImplOptions.AggressiveInlining)]");
         writer.Write("        get => ref global::ABI.InterfaceIIDs.");
         IIDExpressionWriter.WriteIidReferenceGuidPropertyName(writer, context, type);
-        writer.Write(";\n    }\n}\n\n");
+        writer.WriteLine(";");
+        writer.WriteLine("    }");
+        writer.WriteLine("}");
+        writer.WriteLine("");
     }
 }

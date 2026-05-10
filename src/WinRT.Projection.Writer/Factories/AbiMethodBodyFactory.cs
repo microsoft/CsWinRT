@@ -55,7 +55,8 @@ internal static class AbiMethodBodyFactory
                 $"on '{ifaceFullName}'. Events should dispatch through EmitDoAbiAddEvent / EmitDoAbiRemoveEvent.");
         }
 
-        writer.Write("\n{\n");
+        writer.WriteLine("");
+        writer.WriteLine("{");
         string retParamName = AbiTypeHelpers.GetReturnParamName(sig);
         string retSizeParamName = AbiTypeHelpers.GetReturnSizeParamName(sig);
         // The local name for the unmarshalled return value uses the standard pattern
@@ -257,7 +258,8 @@ internal static class AbiMethodBodyFactory
             else
             {
                 // Non-blittable element: InlineArray16<T> + ArrayPool<T> with size from ABI.
-                writer.Write("\n    Unsafe.SkipInit(out InlineArray16<");
+                writer.WriteLine("");
+                writer.Write("    Unsafe.SkipInit(out InlineArray16<");
                 writer.Write(elementProjected);
                 writer.Write("> __");
                 writer.Write(raw);
@@ -270,7 +272,8 @@ internal static class AbiMethodBodyFactory
                 writer.WriteLine($"    Span<{elementProjected}> __{raw} = __{raw}Size <= 16\n        ? __{raw}_inlineArray[..(int)__{raw}Size]\n        : (__{raw}_arrayFromPool = global::System.Buffers.ArrayPool<{elementProjected}>.Shared.Rent((int)__{raw}Size));");
             }
         }
-        writer.Write("    try\n    {\n");
+        writer.WriteLine("    try");
+        writer.WriteLine("    {");
 
         // For non-blittable PassArray params (read-only input arrays), emit CopyToManaged_<name>
         // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
@@ -394,7 +397,11 @@ internal static class AbiMethodBodyFactory
             writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{methodName}(");
             for (int i = 0; i < sig.Params.Count; i++)
             {
-                if (i > 0) { writer.Write(",\n  "); }
+                if (i > 0)
+                {
+                    writer.WriteLine(",");
+                    writer.Write("  ");
+                }
                 ParamInfo p = sig.Params[i];
                 ParamCategory cat = ParamHelpers.GetParamCategory(p);
                 if (cat == ParamCategory.Out)
@@ -677,7 +684,12 @@ internal static class AbiMethodBodyFactory
                 }
             }
         }
-        writer.Write("        return 0;\n    }\n    catch (Exception __exception__)\n    {\n        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\n    }\n");
+        writer.WriteLine("        return 0;");
+        writer.WriteLine("    }");
+        writer.WriteLine("    catch (Exception __exception__)");
+        writer.WriteLine("    {");
+        writer.WriteLine("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);");
+        writer.WriteLine("    }");
 
         // For non-blittable PassArray params, emit finally block with ArrayPool<T>.Shared.Return.
         bool hasNonBlittableArrayDoAbi = false;
@@ -693,7 +705,8 @@ internal static class AbiMethodBodyFactory
         }
         if (hasNonBlittableArrayDoAbi)
         {
-            writer.Write("    finally\n    {\n");
+            writer.WriteLine("    finally");
+            writer.WriteLine("    {");
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 ParamInfo p = sig.Params[i];
@@ -710,7 +723,8 @@ internal static class AbiMethodBodyFactory
             writer.WriteLine("    }");
         }
 
-        writer.Write("}\n\n");
+        writer.WriteLine("}");
+        writer.WriteLine("");
         _ = hasStringParams;
     }
 
@@ -899,18 +913,23 @@ internal static class AbiMethodBodyFactory
                 : string.Empty;
 
             // Emit the per-event ConditionalWeakTable static field.
-            writer.Write("\n    private static ConditionalWeakTable<object, ");
+            writer.WriteLine("");
+            writer.Write("    private static ConditionalWeakTable<object, ");
             writer.Write(eventSourceProjectedFull);
             writer.Write("> _");
             writer.Write(evtName);
-            writer.Write("\n    {\n");
+            writer.WriteLine("");
+            writer.WriteLine("    {");
             writer.WriteLine("        [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            writer.Write("        get\n        {\n");
+            writer.WriteLine("        get");
+            writer.WriteLine("        {");
             writer.WriteLine("            [MethodImpl(MethodImplOptions.NoInlining)]");
             writer.Write("            static ConditionalWeakTable<object, ");
             writer.Write(eventSourceProjectedFull);
-            writer.Write("> MakeTable()\n            {\n");
-            writer.Write("                _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);\n\n");
+            writer.WriteLine("> MakeTable()");
+            writer.WriteLine("            {");
+            writer.WriteLine("                _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);");
+            writer.WriteLine("");
             writer.WriteLine("                return global::System.Threading.Volatile.Read(in field);");
             writer.Write($"            }}\n\n            return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n        }}\n    }}\n\n    public static {eventSourceProjectedFull} {evtName}(object thisObject, WindowsRuntimeObjectReference thisReference)\n    {{\n");
             if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
@@ -919,7 +938,8 @@ internal static class AbiMethodBodyFactory
                 writer.Write("        [return: UnsafeAccessorType(\"");
                 writer.Write(eventSourceInteropType);
                 writer.WriteLine("\")]");
-                writer.Write("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);\n\n");
+                writer.WriteLine("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);");
+                writer.WriteLine("");
                 writer.Write("        return _");
                 writer.Write(evtName);
                 writer.WriteLine(".GetOrAdd(");
@@ -1089,7 +1109,8 @@ internal static class AbiMethodBodyFactory
         }
         fp.Append(", int");
 
-        writer.Write("\n    {\n");
+        writer.WriteLine("");
+        writer.WriteLine("    {");
         writer.WriteLine("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();");
         writer.WriteLine("        void* ThisPtr = thisValue.GetThisPtrUnsafe();");
 
@@ -1241,7 +1262,8 @@ internal static class AbiMethodBodyFactory
                     : szArr.BaseType.IsHResultException()
                         ? "global::ABI.System.Exception"
                         : "nint";
-            writer.Write("\n        Unsafe.SkipInit(out InlineArray16<");
+            writer.WriteLine("");
+            writer.Write("        Unsafe.SkipInit(out InlineArray16<");
             writer.Write(storageT);
             writer.Write("> __");
             writer.Write(localName);
@@ -1258,7 +1280,8 @@ internal static class AbiMethodBodyFactory
                 // Strings need an additional InlineArray16<HStringHeader> + InlineArray16<nint> (pinned handles).
                 // Only required for PassArray (managed -> HSTRING conversion); FillArray's native side
                 // fills HSTRING handles directly into the nint storage.
-                writer.Write("\n        Unsafe.SkipInit(out InlineArray16<HStringHeader> __");
+                writer.WriteLine("");
+                writer.Write("        Unsafe.SkipInit(out InlineArray16<HStringHeader> __");
                 writer.Write(localName);
                 writer.WriteLine("_inlineHeaderArray);");
                 writer.Write("        HStringHeader[] __");
@@ -1268,17 +1291,20 @@ internal static class AbiMethodBodyFactory
                 writer.Write(localName);
                 writer.Write("_headerSpan = ");
                 writer.Write(callName);
-                writer.Write(".Length <= 16\n            ? __");
+                writer.WriteLine(".Length <= 16");
+                writer.Write("            ? __");
                 writer.Write(localName);
                 writer.Write("_inlineHeaderArray[..");
                 writer.Write(callName);
-                writer.Write(".Length]\n            : (__");
+                writer.WriteLine(".Length]");
+                writer.Write("            : (__");
                 writer.Write(localName);
                 writer.Write("_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent(");
                 writer.Write(callName);
                 writer.WriteLine(".Length));");
 
-                writer.Write("\n        Unsafe.SkipInit(out InlineArray16<nint> __");
+                writer.WriteLine("");
+                writer.Write("        Unsafe.SkipInit(out InlineArray16<nint> __");
                 writer.Write(localName);
                 writer.WriteLine("_inlinePinnedHandleArray);");
                 writer.Write("        nint[] __");
@@ -1391,7 +1417,11 @@ internal static class AbiMethodBodyFactory
         // C++ abi_marshaler::write_dispose path for is_out + non-empty marshaler_type.
         bool returnIsSystemTypeForCleanup = rt is not null && rt.IsSystemType();
         bool needsTryFinally = returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct || hasNonBlittablePassArray || hasComplexStructInput || returnIsSystemTypeForCleanup;
-        if (needsTryFinally) { writer.Write("        try\n        {\n"); }
+        if (needsTryFinally)
+        {
+            writer.WriteLine("        try");
+            writer.WriteLine("        {");
+        }
 
         string indent = needsTryFinally ? "            " : "        ";
 
@@ -1687,7 +1717,8 @@ internal static class AbiMethodBodyFactory
                 }
                 continue;
             }
-            writer.Write(",\n  ");
+            writer.WriteLine(",");
+            writer.Write("  ");
             if (p.Type.IsHResultException())
             {
                 writer.Write($"__{AbiTypeHelpers.GetParamLocalName(p, paramNameOverride)}");
@@ -1726,11 +1757,13 @@ internal static class AbiMethodBodyFactory
         }
         if (returnIsReceiveArray)
         {
-            writer.Write(",\n  &__retval_length, &__retval_data");
+            writer.WriteLine(",");
+            writer.Write("  &__retval_length, &__retval_data");
         }
         else if (rt is not null)
         {
-            writer.Write(",\n  &__retval");
+            writer.WriteLine(",");
+            writer.Write("  &__retval");
         }
         // Close the vtable call. One less ')' when noexcept (no ThrowExceptionForHR wrap).
         writer.Write(isNoExcept ? ");\n" : "));\n");
@@ -2045,7 +2078,9 @@ internal static class AbiMethodBodyFactory
 
         if (needsTryFinally)
         {
-            writer.Write("        }\n        finally\n        {\n");
+            writer.WriteLine("        }");
+            writer.WriteLine("        finally");
+            writer.WriteLine("        {");
 
             // Order matches truth:
             // 0. Complex-struct input param Dispose (e.g. ProfileUsageMarshaller.Dispose(__value))
