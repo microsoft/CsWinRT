@@ -18,7 +18,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class InterfaceFactory
 {
-    /// <summary>Writes the <c>[Guid("...")]</c> attribute for a type.</summary>
+    /// <summary>
+    /// Writes the <c>[Guid("...")]</c> attribute for a type.
+    /// </summary>
     public static void WriteGuidAttribute(IndentedTextWriter writer, TypeDefinition type)
     {
         bool fullyQualify = type.Namespace == "Windows.Foundation.Metadata";
@@ -26,7 +28,9 @@ internal static class InterfaceFactory
         IIDExpressionWriter.WriteGuid(writer, type, false);
         writer.Write("\")]");
     }
-    /// <summary>Writes a class or interface inheritance clause: " : Base, Iface1, Iface2&lt;T&gt;".</summary>
+    /// <summary>
+    /// Writes a class or interface inheritance clause: " : Base, Iface1, Iface2&lt;T&gt;".
+    /// </summary>
     public static void WriteTypeInheritance(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, bool includeExclusiveInterface, bool includeWindowsRuntimeObject)
     {
         string delimiter = " : ";
@@ -163,11 +167,15 @@ internal static class InterfaceFactory
             writer.Write(">");
         }
     }
-    /// <summary>Returns the projected property type for <paramref name="prop"/>.</summary>
+    /// <summary>
+    /// Returns the projected property type for <paramref name="prop"/>.
+    /// </summary>
     public static string WritePropType(ProjectionEmitContext context, PropertyDefinition prop, bool isSetProperty = false)
         => WritePropType(context, prop, null, isSetProperty);
 
-    /// <summary>Returns the projected property type for <paramref name="prop"/>, optionally substituting generic args.</summary>
+    /// <summary>
+    /// Returns the projected property type for <paramref name="prop"/>, optionally substituting generic args.
+    /// </summary>
     public static string WritePropType(ProjectionEmitContext context, PropertyDefinition prop, GenericContext? genCtx, bool isSetProperty = false)
     {
         TypeSignature? typeSig = prop.Signature?.ReturnType;
@@ -178,7 +186,9 @@ internal static class InterfaceFactory
         return scratch.ToString();
     }
 
-    /// <summary>Emits all method, property, and event signatures of an interface.</summary>
+    /// <summary>
+    /// Emits all method, property, and event signatures of an interface.
+    /// </summary>
     public static void WriteInterfaceMemberSignatures(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         foreach (MethodDefinition method in type.Methods)
@@ -327,7 +337,9 @@ internal static class InterfaceFactory
         }
     }
 
-    /// <summary>Writes a projected interface declaration.</summary>
+    /// <summary>
+    /// Writes a projected interface declaration.
+    /// </summary>
     public static void WriteInterface(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         // [Default] and overridable interfaces aren't used in the projection. Skip them unless

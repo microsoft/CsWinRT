@@ -184,7 +184,9 @@ internal static class AbiInterfaceFactory
         }
     }
 
-    /// <summary>Emits the ABI implementation for a runtime interface type (vtable struct, IUnknown/IInspectable entries, Methods class, and CCW Do_Abi handlers).</summary>
+    /// <summary>
+    /// Emits the ABI implementation for a runtime interface type (vtable struct, IUnknown/IInspectable entries, Methods class, and CCW Do_Abi handlers).
+    /// </summary>
     public static void WriteInterfaceImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (!AbiClassFactory.EmitImplType(writer, context, type)) { return; }

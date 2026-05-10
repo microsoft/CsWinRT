@@ -23,7 +23,9 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// </summary>
 internal static class IIDExpressionWriter
 {
-    /// <summary>Returns the GUID-signature character code for a fundamental WinRT type.</summary>
+    /// <summary>
+    /// Returns the GUID-signature character code for a fundamental WinRT type.
+    /// </summary>
     public static string GetFundamentalTypeGuidSignature(FundamentalType t) => t switch
     {
         FundamentalType.Boolean => "b1",
@@ -44,7 +46,9 @@ internal static class IIDExpressionWriter
 
     private static readonly Regex s_typeNameEscapeRe = new(@"[ :<>`,.]", RegexOptions.Compiled);
 
-    /// <summary>Escapes a type name into a C# identifier-safe form.</summary>
+    /// <summary>
+    /// Escapes a type name into a C# identifier-safe form.
+    /// </summary>
     public static string EscapeTypeNameForIdentifier(string typeName, bool stripGlobal = false, bool stripGlobalABI = false)
     {
         // Escape special chars first, then strip ONLY the prefix (not all occurrences).
@@ -102,7 +106,9 @@ internal static class IIDExpressionWriter
         };
     }
 
-    /// <summary>Writes the GUID for <paramref name="type"/> in canonical hyphenated string form.</summary>
+    /// <summary>
+    /// Writes the GUID for <paramref name="type"/> in canonical hyphenated string form.
+    /// </summary>
     public static void WriteGuid(IndentedTextWriter writer, TypeDefinition type, bool lowerCase)
     {
         (uint data1, ushort data2, ushort data3, byte[] data4) = GetGuidFields(type) ?? throw WellKnownProjectionWriterExceptions.MissingGuidAttribute($"{type.Namespace}.{type.Name}");
@@ -113,7 +119,9 @@ internal static class IIDExpressionWriter
         writer.Write("-");
         for (int i = 2; i < 8; i++) { writer.Write(data4[i].ToString(fmt + "2", CultureInfo.InvariantCulture)); }
     }
-    /// <summary>Writes the GUID bytes for <paramref name="type"/> as a hex byte list.</summary>
+    /// <summary>
+    /// Writes the GUID bytes for <paramref name="type"/> as a hex byte list.
+    /// </summary>
     public static void WriteGuidBytes(IndentedTextWriter writer, TypeDefinition type)
     {
         (uint data1, ushort data2, ushort data3, byte[] data4) = GetGuidFields(type) ?? throw WellKnownProjectionWriterExceptions.MissingGuidAttribute($"{type.Namespace}.{type.Name}");
@@ -133,7 +141,9 @@ internal static class IIDExpressionWriter
         writer.Write($"0x{(b & 0xFF).ToString("X", CultureInfo.InvariantCulture)}");
     }
 
-    /// <summary>Writes the property name <c>IID_X</c> for the IID property of <paramref name="type"/>.</summary>
+    /// <summary>
+    /// Writes the property name <c>IID_X</c> for the IID property of <paramref name="type"/>.
+    /// </summary>
     public static void WriteIidGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         IndentedTextWriter scratch = new();
@@ -142,7 +152,9 @@ internal static class IIDExpressionWriter
         string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
         writer.Write($"IID_{name}");
     }
-    /// <summary>Writes the property name <c>IID_XReference</c> for the reference IID property.</summary>
+    /// <summary>
+    /// Writes the property name <c>IID_XReference</c> for the reference IID property.
+    /// </summary>
     public static void WriteIidReferenceGuidPropertyName(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         IndentedTextWriter scratch = new();
@@ -151,7 +163,9 @@ internal static class IIDExpressionWriter
         string name = EscapeTypeNameForIdentifier(scratch.ToString(), true, true);
         writer.Write($"IID_{name}Reference");
     }
-    /// <summary>Writes a static IID property whose body is built from the [Guid] attribute bytes.</summary>
+    /// <summary>
+    /// Writes a static IID property whose body is built from the [Guid] attribute bytes.
+    /// </summary>
     public static void WriteIidGuidPropertyFromType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         writer.Write("public static ref readonly Guid ");
@@ -176,7 +190,9 @@ internal static class IIDExpressionWriter
             """, isMultiline: true);
         writer.WriteLine("");
     }
-    /// <summary>Writes the WinRT GUID parametric signature string for a type semantics.</summary>
+    /// <summary>
+    /// Writes the WinRT GUID parametric signature string for a type semantics.
+    /// </summary>
     public static void WriteGuidSignature(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics)
     {
         switch (semantics)
@@ -310,7 +326,9 @@ internal static class IIDExpressionWriter
         }
     }
 
-    /// <summary>Writes a static IID property whose body is built from the parametric GUID signature.</summary>
+    /// <summary>
+    /// Writes a static IID property whose body is built from the parametric GUID signature.
+    /// </summary>
     public static void WriteIidGuidPropertyFromSignature(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         IndentedTextWriter scratch = new();
@@ -346,7 +364,9 @@ internal static class IIDExpressionWriter
             """, isMultiline: true);
         writer.WriteLine("");
     }
-    /// <summary>Emits IID properties for any not-included interfaces transitively implemented by a class.</summary>
+    /// <summary>
+    /// Emits IID properties for any not-included interfaces transitively implemented by a class.
+    /// </summary>
     public static void WriteIidGuidPropertyForClassInterfaces(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, System.Collections.Generic.HashSet<TypeDefinition> interfacesEmitted)
     {
         foreach (InterfaceImplementation impl in type.Interfaces)
@@ -382,7 +402,9 @@ internal static class IIDExpressionWriter
         return cache.Find(string.IsNullOrEmpty(ns) ? name : (ns + "." + name));
     }
 
-    /// <summary>Writes the InterfaceIIDs file header.</summary>
+    /// <summary>
+    /// Writes the InterfaceIIDs file header.
+    /// </summary>
     public static void WriteInterfaceIidsBegin(IndentedTextWriter writer)
     {
         writer.WriteLine("");
@@ -407,7 +429,9 @@ internal static class IIDExpressionWriter
             """, isMultiline: true);
     }
 
-    /// <summary>Writes the InterfaceIIDs file footer.</summary>
+    /// <summary>
+    /// Writes the InterfaceIIDs file footer.
+    /// </summary>
     public static void WriteInterfaceIidsEnd(IndentedTextWriter writer)
     {
         writer.WriteLine("}");

@@ -80,7 +80,9 @@ internal static partial class ConstructorFactory
         }
     }
 
-    /// <summary>Emits the public constructors generated from a [Activatable] factory type.</summary>
+    /// <summary>
+    /// Emits the public constructors generated from a [Activatable] factory type.
+    /// </summary>
     public static void WriteFactoryConstructors(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition? factoryType, TypeDefinition classType)
     {
         string typeName = classType.Name?.Value ?? string.Empty;

@@ -64,46 +64,68 @@ internal abstract record TypeSemantics
 {
     private TypeSemantics() { }
 
-    /// <summary>A fundamental WinRT primitive (see <see cref="FundamentalType"/>).</summary>
+    /// <summary>
+    /// A fundamental WinRT primitive (see <see cref="FundamentalType"/>).
+    /// </summary>
     /// <param name="Type">The underlying fundamental type.</param>
     public sealed record Fundamental(FundamentalType Type) : TypeSemantics;
 
-    /// <summary>The corlib <see cref="System.Object"/> type.</summary>
+    /// <summary>
+    /// The corlib <see cref="System.Object"/> type.
+    /// </summary>
     public sealed record Object_ : TypeSemantics;
 
-    /// <summary>The corlib <see cref="System.Guid"/> type.</summary>
+    /// <summary>
+    /// The corlib <see cref="System.Guid"/> type.
+    /// </summary>
     public sealed record Guid_ : TypeSemantics;
 
-    /// <summary>The corlib <see cref="System.Type"/> type.</summary>
+    /// <summary>
+    /// The corlib <see cref="System.Type"/> type.
+    /// </summary>
     public sealed record Type_ : TypeSemantics;
 
-    /// <summary>A WinRT class / interface / struct / enum / delegate defined in the loaded metadata.</summary>
+    /// <summary>
+    /// A WinRT class / interface / struct / enum / delegate defined in the loaded metadata.
+    /// </summary>
     /// <param name="Type">The type definition.</param>
     public sealed record Definition(TypeDefinition Type) : TypeSemantics;
 
-    /// <summary>A closed generic instantiation whose generic type is resolved.</summary>
+    /// <summary>
+    /// A closed generic instantiation whose generic type is resolved.
+    /// </summary>
     /// <param name="GenericType">The open generic type definition.</param>
     /// <param name="GenericArgs">The instantiation arguments.</param>
     public sealed record GenericInstance(TypeDefinition GenericType, List<TypeSemantics> GenericArgs) : TypeSemantics;
 
-    /// <summary>A closed generic instantiation whose generic type is referenced (cross-assembly).</summary>
+    /// <summary>
+    /// A closed generic instantiation whose generic type is referenced (cross-assembly).
+    /// </summary>
     /// <param name="GenericType">The open generic type reference.</param>
     /// <param name="GenericArgs">The instantiation arguments.</param>
     public sealed record GenericInstanceRef(ITypeDefOrRef GenericType, List<TypeSemantics> GenericArgs) : TypeSemantics;
 
-    /// <summary>A reference to a type generic parameter at the specified index.</summary>
+    /// <summary>
+    /// A reference to a type generic parameter at the specified index.
+    /// </summary>
     /// <param name="Index">The zero-based parameter index.</param>
     public sealed record GenericTypeIndex(int Index) : TypeSemantics;
 
-    /// <summary>A reference to a method generic parameter at the specified index.</summary>
+    /// <summary>
+    /// A reference to a method generic parameter at the specified index.
+    /// </summary>
     /// <param name="Index">The zero-based parameter index.</param>
     public sealed record GenericMethodIndex(int Index) : TypeSemantics;
 
-    /// <summary>A bound generic parameter token (rare; appears in nested generics).</summary>
+    /// <summary>
+    /// A bound generic parameter token (rare; appears in nested generics).
+    /// </summary>
     /// <param name="Parameter">The generic parameter.</param>
     public sealed record GenericParameter_(GenericParameter Parameter) : TypeSemantics;
 
-    /// <summary>A reference to a type defined in another assembly.</summary>
+    /// <summary>
+    /// A reference to a type defined in another assembly.
+    /// </summary>
     /// <param name="Reference_">The type reference.</param>
     /// <param name="IsValueType">Whether the reference points at a value type (struct/enum) or a reference type.</param>
     public sealed record Reference(TypeReference Reference_, bool IsValueType = false) : TypeSemantics;

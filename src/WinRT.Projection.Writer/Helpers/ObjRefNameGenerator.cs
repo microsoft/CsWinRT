@@ -287,7 +287,9 @@ internal static class ObjRefNameGenerator
             EmitTransitiveInterfaceObjRefs(writer, context, impl.Interface, emitted);
         }
     }
-    /// <summary>Emits an _objRef_ field for a single interface impl reference.</summary>
+    /// <summary>
+    /// Emits an _objRef_ field for a single interface impl reference.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="ifaceRef">The interface reference being objref-d.</param>

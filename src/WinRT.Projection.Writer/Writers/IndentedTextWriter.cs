@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Text;
 
 namespace WindowsRuntime.ProjectionWriter.Writers;
@@ -40,24 +41,36 @@ namespace WindowsRuntime.ProjectionWriter.Writers;
 /// </remarks>
 internal sealed class IndentedTextWriter
 {
-    /// <summary>The default indentation (4 spaces).</summary>
+    /// <summary>
+    /// The default indentation (4 spaces).
+    /// </summary>
     private const string DefaultIndentation = "    ";
 
-    /// <summary>The default new line character (<c>'\n'</c>).</summary>
+    /// <summary>
+    /// The default new line character (<c>'\n'</c>).
+    /// </summary>
     private const char DefaultNewLine = '\n';
 
-    /// <summary>The underlying buffer that text is written to.</summary>
+    /// <summary>
+    /// The underlying buffer that text is written to.
+    /// </summary>
     private readonly StringBuilder _buffer;
 
-    /// <summary>The current indentation level (number of <see cref="DefaultIndentation"/> repeats).</summary>
+    /// <summary>
+    /// The current indentation level (number of <see cref="DefaultIndentation"/> repeats).
+    /// </summary>
     [SuppressMessage("Style", "IDE0032:Use auto property",
         Justification = "CurrentIndentLevel exposes the field directly via a property; the field is mutated in hot paths and an auto-property would not be inlined as cleanly.")]
     private int _currentIndentationLevel;
 
-    /// <summary>The current indentation string (cached for fast reuse).</summary>
+    /// <summary>
+    /// The current indentation string (cached for fast reuse).
+    /// </summary>
     private string _currentIndentation;
 
-    /// <summary>Cached pre-built indentation strings indexed by indentation level.</summary>
+    /// <summary>
+    /// Cached pre-built indentation strings indexed by indentation level.
+    /// </summary>
     private string[] _availableIndentations;
 
     /// <summary>
@@ -76,7 +89,9 @@ internal sealed class IndentedTextWriter
         }
     }
 
-    /// <summary>Increases the current indentation level by one.</summary>
+    /// <summary>
+    /// Increases the current indentation level by one.
+    /// </summary>
     public void IncreaseIndent()
     {
         _currentIndentationLevel++;
@@ -90,7 +105,9 @@ internal sealed class IndentedTextWriter
             ??= _availableIndentations[_currentIndentationLevel - 1] + DefaultIndentation;
     }
 
-    /// <summary>Decreases the current indentation level by one.</summary>
+    /// <summary>
+    /// Decreases the current indentation level by one.
+    /// </summary>
     public void DecreaseIndent()
     {
         _currentIndentationLevel--;
@@ -316,7 +333,9 @@ internal sealed class IndentedTextWriter
         WriteLine();
     }
 
-    /// <summary>Writes a newline if <paramref name="condition"/> is <see langword="true"/>.</summary>
+    /// <summary>
+    /// Writes a newline if <paramref name="condition"/> is <see langword="true"/>.
+    /// </summary>
     /// <param name="condition">When <see langword="true"/>, writes a newline; otherwise this call is a no-op.</param>
     public void WriteLineIf(bool condition)
     {
@@ -326,7 +345,9 @@ internal sealed class IndentedTextWriter
         }
     }
 
-    /// <summary>Writes <paramref name="content"/> followed by a newline if <paramref name="condition"/> is <see langword="true"/>.</summary>
+    /// <summary>
+    /// Writes <paramref name="content"/> followed by a newline if <paramref name="condition"/> is <see langword="true"/>.
+    /// </summary>
     /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
@@ -338,7 +359,9 @@ internal sealed class IndentedTextWriter
         }
     }
 
-    /// <summary>Writes <paramref name="content"/> followed by a newline if <paramref name="condition"/> is <see langword="true"/>.</summary>
+    /// <summary>
+    /// Writes <paramref name="content"/> followed by a newline if <paramref name="condition"/> is <see langword="true"/>.
+    /// </summary>
     /// <param name="condition">When <see langword="true"/>, writes <paramref name="content"/>+newline; otherwise this call is a no-op.</param>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
@@ -362,27 +385,39 @@ internal sealed class IndentedTextWriter
         return text;
     }
 
-    /// <summary>Returns the current buffer contents without modifying the buffer.</summary>
+    /// <summary>
+    /// Returns the current buffer contents without modifying the buffer.
+    /// </summary>
     public override string ToString() => _buffer.ToString();
 
-    /// <summary>Gets the current length (in chars) of the underlying buffer.</summary>
+    /// <summary>
+    /// Gets the current length (in chars) of the underlying buffer.
+    /// </summary>
     public int Length => _buffer.Length;
 
-    /// <summary>Returns the last character written to the buffer, or <c>'\0'</c> if the buffer is empty.</summary>
+    /// <summary>
+    /// Returns the last character written to the buffer, or <c>'\0'</c> if the buffer is empty.
+    /// </summary>
     public char Back() => _buffer.Length == 0 ? '\0' : _buffer[^1];
 
-    /// <summary>Returns the contents of a substring of the buffer (used for capture-and-restore patterns).</summary>
+    /// <summary>
+    /// Returns the contents of a substring of the buffer (used for capture-and-restore patterns).
+    /// </summary>
     /// <param name="startIndex">The starting position.</param>
     /// <param name="length">The length of the substring to return.</param>
     /// <returns>The substring of the buffer at the requested position.</returns>
     public string GetSubstring(int startIndex, int length) => _buffer.ToString(startIndex, length);
 
-    /// <summary>Removes a range of characters from the buffer.</summary>
+    /// <summary>
+    /// Removes a range of characters from the buffer.
+    /// </summary>
     /// <param name="startIndex">The starting position to remove.</param>
     /// <param name="length">The number of characters to remove.</param>
     public void Remove(int startIndex, int length) => _buffer.Remove(startIndex, length);
 
-    /// <summary>Returns the current indent level (number of <see cref="Block"/>-equivalent units of indentation).</summary>
+    /// <summary>
+    /// Returns the current indent level (number of <see cref="Block"/>-equivalent units of indentation).
+    /// </summary>
     public int CurrentIndentLevel => _currentIndentationLevel;
 
     /// <summary>
@@ -398,15 +433,22 @@ internal sealed class IndentedTextWriter
     /// Flushes the current buffer to <paramref name="path"/> (skipping the write if the file
     /// already exists with identical content), then clears the buffer.
     /// </summary>
+    /// <remarks>
+    /// If the destination file exists but cannot be read (e.g. due to a transient I/O failure or
+    /// access denial), the catch block silently falls through to a fresh write. This is the
+    /// intended behavior for a build tool: the worst case is an extra write of identical content
+    /// that the OS will then re-permit; the alternative (failing the build) would create
+    /// brittleness around incidental file-system noise.
+    /// </remarks>
     /// <param name="path">The destination file path.</param>
     public void FlushToFile(string path)
     {
         string content = _buffer.ToString();
-        if (System.IO.File.Exists(path))
+        if (File.Exists(path))
         {
             try
             {
-                if (System.IO.File.ReadAllText(path) == content)
+                if (File.ReadAllText(path) == content)
                 {
                     _ = _buffer.Clear();
                     return;
@@ -414,10 +456,10 @@ internal sealed class IndentedTextWriter
             }
             catch
             {
-                // fall through to overwrite
+                // Intentional: see <remarks/> -- a failed read falls through to a fresh write.
             }
         }
-        System.IO.File.WriteAllText(path, content);
+        File.WriteAllText(path, content);
         _ = _buffer.Clear();
     }
 

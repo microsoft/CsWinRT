@@ -732,7 +732,9 @@ internal static partial class AbiMethodBodyFactory
         _ = hasStringParams;
     }
 
-    /// <summary>Converts an ABI parameter to its projected (managed) form for the Do_Abi call.</summary>
+    /// <summary>
+    /// Converts an ABI parameter to its projected (managed) form for the Do_Abi call.
+    /// </summary>
     internal static void EmitDoAbiParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p)
     {
         string rawName = p.Parameter.Name ?? "param";

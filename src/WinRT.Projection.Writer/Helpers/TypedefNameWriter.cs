@@ -16,7 +16,9 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// </summary>
 internal static class TypedefNameWriter
 {
-    /// <summary>Writes a fundamental (primitive) type's projected name.</summary>
+    /// <summary>
+    /// Writes a fundamental (primitive) type's projected name.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="t">The fundamental type.</param>
     public static void WriteFundamentalType(IndentedTextWriter writer, FundamentalType t)
@@ -24,7 +26,9 @@ internal static class TypedefNameWriter
         writer.Write(FundamentalTypes.ToCSharpType(t));
     }
 
-    /// <summary>Writes a fundamental (primitive) type's non-projected (.NET BCL) name.</summary>
+    /// <summary>
+    /// Writes a fundamental (primitive) type's non-projected (.NET BCL) name.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="t">The fundamental type.</param>
     public static void WriteFundamentalNonProjectedType(IndentedTextWriter writer, FundamentalType t)
@@ -32,7 +36,9 @@ internal static class TypedefNameWriter
         writer.Write(FundamentalTypes.ToDotNetType(t));
     }
 
-    /// <summary>Writes the C# type name for a typed reference.</summary>
+    /// <summary>
+    /// Writes the C# type name for a typed reference.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context (provides settings, current namespace, ABI/ABI.Impl mode flags).</param>
     /// <param name="type">The type definition to emit the name of.</param>
@@ -108,7 +114,9 @@ internal static class TypedefNameWriter
         }
     }
 
-    /// <summary>Writes <c>&lt;T1, T2&gt;</c> for generic types.</summary>
+    /// <summary>
+    /// Writes <c>&lt;T1, T2&gt;</c> for generic types.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="type">The (potentially generic) type definition.</param>
     public static void WriteTypeParams(IndentedTextWriter writer, TypeDefinition type)
@@ -124,7 +132,9 @@ internal static class TypedefNameWriter
         writer.Write(">");
     }
 
-    /// <summary>Writes the typedef name + generic params for a <see cref="TypeSemantics"/> handle.</summary>
+    /// <summary>
+    /// Writes the typedef name + generic params for a <see cref="TypeSemantics"/> handle.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="semantics">The semantic representation of the type.</param>
@@ -232,7 +242,9 @@ internal static class TypedefNameWriter
         }
     }
 
-    /// <summary>Writes a projected type name (.NET-style).</summary>
+    /// <summary>
+    /// Writes a projected type name (.NET-style).
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="semantics">The semantic representation of the type.</param>

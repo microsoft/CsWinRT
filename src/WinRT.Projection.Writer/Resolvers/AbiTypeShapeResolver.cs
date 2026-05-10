@@ -20,7 +20,9 @@ namespace WindowsRuntime.ProjectionWriter.Resolvers;
 /// <param name="cache">The metadata cache used for cross-module type resolution.</param>
 internal sealed class AbiTypeShapeResolver(MetadataCache cache)
 {
-    /// <summary>Gets the metadata cache used for cross-module type resolution.</summary>
+    /// <summary>
+    /// Gets the metadata cache used for cross-module type resolution.
+    /// </summary>
     public MetadataCache Cache { get; } = cache;
 
     /// <summary>

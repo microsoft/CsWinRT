@@ -23,7 +23,9 @@ internal enum TypeCategory
 /// </summary>
 internal static class TypeCategorization
 {
-    /// <summary>Determines a type's category (class/interface/enum/struct/delegate).</summary>
+    /// <summary>
+    /// Determines a type's category (class/interface/enum/struct/delegate).
+    /// </summary>
     public static TypeCategory GetCategory(TypeDefinition type)
     {
         if (type.IsInterface)
@@ -52,7 +54,9 @@ internal static class TypeCategorization
         return TypeCategory.Class;
     }
 
-    /// <summary>True if this is an Attribute-derived class.</summary>
+    /// <summary>
+    /// True if this is an Attribute-derived class.
+    /// </summary>
     public static bool IsAttributeType(TypeDefinition type)
     {
         if (GetCategory(type) != TypeCategory.Class)
@@ -74,46 +78,60 @@ internal static class TypeCategorization
         return false;
     }
 
-    /// <summary>True if this is an API contract struct type.</summary>
+    /// <summary>
+    /// True if this is an API contract struct type.
+    /// </summary>
     public static bool IsApiContractType(TypeDefinition type)
     {
         return GetCategory(type) == TypeCategory.Struct &&
                HasAttribute(type, "Windows.Foundation.Metadata", "ApiContractAttribute");
     }
 
-    /// <summary>True if this type is a static class (abstract+sealed).</summary>
+    /// <summary>
+    /// True if this type is a static class (abstract+sealed).
+    /// </summary>
     public static bool IsStatic(TypeDefinition type)
     {
         return GetCategory(type) == TypeCategory.Class && type.IsAbstract && type.IsSealed;
     }
 
-    /// <summary>True if this is an interface marked [ExclusiveTo].</summary>
+    /// <summary>
+    /// True if this is an interface marked [ExclusiveTo].
+    /// </summary>
     public static bool IsExclusiveTo(TypeDefinition type)
     {
         return GetCategory(type) == TypeCategory.Interface &&
                HasAttribute(type, "Windows.Foundation.Metadata", "ExclusiveToAttribute");
     }
 
-    /// <summary>True if this is a [Flags] enum.</summary>
+    /// <summary>
+    /// True if this is a [Flags] enum.
+    /// </summary>
     public static bool IsFlagsEnum(TypeDefinition type)
     {
         return GetCategory(type) == TypeCategory.Enum &&
                HasAttribute(type, "System", "FlagsAttribute");
     }
 
-    /// <summary>True if this is a generic type (has type parameters).</summary>
+    /// <summary>
+    /// True if this is a generic type (has type parameters).
+    /// </summary>
     public static bool IsGeneric(TypeDefinition type)
     {
         return type.GenericParameters.Count > 0;
     }
 
-    /// <summary>True if this type is marked [ProjectionInternal].</summary>
+    /// <summary>
+    /// True if this type is marked [ProjectionInternal].
+    /// </summary>
     public static bool IsProjectionInternal(TypeDefinition type)
     {
         return HasAttribute(type, "WindowsRuntime.Internal", "ProjectionInternalAttribute");
     }
 
-    /// <summary>True if this type's CustomAttributes contains the given attribute.</summary>
+    /// <summary>
+    /// True if this type's CustomAttributes contains the given attribute.
+    /// </summary>
     public static bool HasAttribute(IHasCustomAttribute member, string ns, string name)
     {
         for (int i = 0; i < member.CustomAttributes.Count; i++)
@@ -128,7 +146,9 @@ internal static class TypeCategorization
         return false;
     }
 
-    /// <summary>Gets the matching CustomAttribute or null.</summary>
+    /// <summary>
+    /// Gets the matching CustomAttribute or null.
+    /// </summary>
     public static CustomAttribute? GetAttribute(IHasCustomAttribute member, string ns, string name)
     {
         for (int i = 0; i < member.CustomAttributes.Count; i++)

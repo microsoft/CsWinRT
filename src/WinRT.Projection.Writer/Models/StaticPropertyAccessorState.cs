@@ -9,25 +9,39 @@ namespace WindowsRuntime.ProjectionWriter.Models;
 /// </summary>
 internal sealed class StaticPropertyAccessorState
 {
-    /// <summary>Gets or sets whether a static getter accessor has been seen for this property.</summary>
+    /// <summary>
+    /// Gets or sets whether a static getter accessor has been seen for this property.
+    /// </summary>
     public bool HasGetter;
 
-    /// <summary>Gets or sets whether a static setter accessor has been seen for this property.</summary>
+    /// <summary>
+    /// Gets or sets whether a static setter accessor has been seen for this property.
+    /// </summary>
     public bool HasSetter;
 
-    /// <summary>Gets or sets the projected C# type text of the property (for the unified getter+setter declaration).</summary>
+    /// <summary>
+    /// Gets or sets the projected C# type text of the property (for the unified getter+setter declaration).
+    /// </summary>
     public string PropTypeText = string.Empty;
 
-    /// <summary>Gets or sets the ABI Methods class name used by the getter dispatch.</summary>
+    /// <summary>
+    /// Gets or sets the ABI Methods class name used by the getter dispatch.
+    /// </summary>
     public string GetterAbiClass = string.Empty;
 
-    /// <summary>Gets or sets the field name of the <c>_objRef_</c> the getter dispatches through.</summary>
+    /// <summary>
+    /// Gets or sets the field name of the <c>_objRef_</c> the getter dispatches through.
+    /// </summary>
     public string GetterObjRef = string.Empty;
 
-    /// <summary>Gets or sets the ABI Methods class name used by the setter dispatch.</summary>
+    /// <summary>
+    /// Gets or sets the ABI Methods class name used by the setter dispatch.
+    /// </summary>
     public string SetterAbiClass = string.Empty;
 
-    /// <summary>Gets or sets the field name of the <c>_objRef_</c> the setter dispatches through.</summary>
+    /// <summary>
+    /// Gets or sets the field name of the <c>_objRef_</c> the setter dispatches through.
+    /// </summary>
     public string SetterObjRef = string.Empty;
 
     /// <summary>

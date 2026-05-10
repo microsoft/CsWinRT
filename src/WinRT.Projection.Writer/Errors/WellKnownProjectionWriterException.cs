@@ -14,7 +14,9 @@ namespace WindowsRuntime.ProjectionWriter.Errors;
 /// </summary>
 internal sealed class WellKnownProjectionWriterException : Exception
 {
-    /// <summary>The outer exception to include in the output, if available.</summary>
+    /// <summary>
+    /// The outer exception to include in the output, if available.
+    /// </summary>
     private WellKnownProjectionWriterException? _outerException;
 
     /// <summary>
@@ -29,7 +31,9 @@ internal sealed class WellKnownProjectionWriterException : Exception
         Id = id;
     }
 
-    /// <summary>Gets the id of the exception.</summary>
+    /// <summary>
+    /// Gets the id of the exception.
+    /// </summary>
     public string Id { get; }
 
     /// <inheritdoc/>

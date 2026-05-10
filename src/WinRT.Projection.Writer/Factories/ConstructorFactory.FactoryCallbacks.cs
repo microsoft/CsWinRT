@@ -15,7 +15,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class ConstructorFactory
 {
-    /// <summary>Emits the <c>private readonly ref struct &lt;Name&gt;Args(args...) {...}</c>.</summary>
+    /// <summary>
+    /// Emits the <c>private readonly ref struct &lt;Name&gt;Args(args...) {...}</c>.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="sig">The factory method signature whose parameters are turned into struct fields.</param>
@@ -51,7 +53,9 @@ internal static partial class ConstructorFactory
         writer.WriteLine("}");
     }
 
-    /// <summary>Emits the <c>private sealed class &lt;Name&gt; : WindowsRuntimeActivationFactoryCallback.DerivedSealed</c>.</summary>
+    /// <summary>
+    /// Emits the <c>private sealed class &lt;Name&gt; : WindowsRuntimeActivationFactoryCallback.DerivedSealed</c>.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="sig">The factory method signature.</param>
@@ -550,7 +554,9 @@ internal static partial class ConstructorFactory
             """, isMultiline: true);
     }
 
-    /// <summary>Returns the IID expression for the class's default interface.</summary>
+    /// <summary>
+    /// Returns the IID expression for the class's default interface.
+    /// </summary>
     private static string GetDefaultInterfaceIid(ProjectionEmitContext context, TypeDefinition classType)
     {
         ITypeDefOrRef? defaultIface = classType.GetDefaultInterface();

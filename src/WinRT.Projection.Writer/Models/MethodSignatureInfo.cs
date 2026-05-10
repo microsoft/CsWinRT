@@ -16,10 +16,14 @@ namespace WindowsRuntime.ProjectionWriter.Models;
 /// </summary>
 internal sealed class MethodSignatureInfo
 {
-    /// <summary>Gets the underlying method definition.</summary>
+    /// <summary>
+    /// Gets the underlying method definition.
+    /// </summary>
     public MethodDefinition Method { get; }
 
-    /// <summary>Gets the per-parameter info for the method, in declaration order.</summary>
+    /// <summary>
+    /// Gets the per-parameter info for the method, in declaration order.
+    /// </summary>
     public IReadOnlyList<ParameterInfo> Params => _params;
 
     private readonly List<ParameterInfo> _params;

@@ -25,7 +25,9 @@ internal sealed partial class ProjectionGenerator
     private readonly MetadataCache _cache;
     private readonly CancellationToken _token;
 
-    /// <summary>Initializes a new <see cref="ProjectionGenerator"/>.</summary>
+    /// <summary>
+    /// Initializes a new <see cref="ProjectionGenerator"/>.
+    /// </summary>
     /// <param name="settings">The active projection settings.</param>
     /// <param name="cache">The metadata cache built from the input <c>.winmd</c> files.</param>
     /// <param name="token">The cancellation token observed across all phases.</param>
@@ -36,7 +38,9 @@ internal sealed partial class ProjectionGenerator
         _token = token;
     }
 
-    /// <summary>Runs the projection-generation pipeline end-to-end.</summary>
+    /// <summary>
+    /// Runs the projection-generation pipeline end-to-end.
+    /// </summary>
     public void Run()
     {
         HashSet<TypeDefinition> componentActivatable;

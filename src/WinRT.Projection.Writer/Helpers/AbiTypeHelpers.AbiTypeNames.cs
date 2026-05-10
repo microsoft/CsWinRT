@@ -15,7 +15,9 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 internal static partial class AbiTypeHelpers
 {
-    /// <summary>Returns the ABI type name for a blittable struct (the projected type name).</summary>
+    /// <summary>
+    /// Returns the ABI type name for a blittable struct (the projected type name).
+    /// </summary>
     internal static string GetBlittableStructAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig)
     {
         // Mapped value types (DateTime/TimeSpan) use the ABI type, not the projected type.

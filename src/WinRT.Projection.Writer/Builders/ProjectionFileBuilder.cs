@@ -20,7 +20,9 @@ namespace WindowsRuntime.ProjectionWriter.Builders;
 /// </summary>
 internal static class ProjectionFileBuilder
 {
-    /// <summary>Dispatches type emission based on the type category.</summary>
+    /// <summary>
+    /// Dispatches type emission based on the type category.
+    /// </summary>
     public static void WriteType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeCategory category)
     {
         switch (category)
@@ -59,7 +61,9 @@ internal static class ProjectionFileBuilder
         }
     }
 
-    /// <summary>Dispatches ABI emission based on the type category.</summary>
+    /// <summary>
+    /// Dispatches ABI emission based on the type category.
+    /// </summary>
     public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, TypeCategory category)
     {
         switch (category)
@@ -85,7 +89,9 @@ internal static class ProjectionFileBuilder
         }
     }
 
-    /// <summary>Writes a projected enum (with [Flags] when applicable).</summary>
+    /// <summary>
+    /// Writes a projected enum (with [Flags] when applicable).
+    /// </summary>
     public static void WriteEnum(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (context.Settings.Component)
@@ -133,7 +139,9 @@ internal static class ProjectionFileBuilder
         }
         writer.WriteLine("");
     }
-    /// <summary>Formats a metadata Constant value as a C# literal.</summary>
+    /// <summary>
+    /// Formats a metadata Constant value as a C# literal.
+    /// </summary>
     internal static string FormatConstant(Constant constant)
     {
         // The Constant.Value contains raw bytes representing the value
@@ -161,7 +169,9 @@ internal static class ProjectionFileBuilder
         return "0x" + v.ToString("x", CultureInfo.InvariantCulture);
     }
 
-    /// <summary>Writes a projected struct.</summary>
+    /// <summary>
+    /// Writes a projected struct.
+    /// </summary>
     public static void WriteStruct(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (context.Settings.Component) { return; }
@@ -285,7 +295,9 @@ internal static class ProjectionFileBuilder
             """, isMultiline: true);
         writer.WriteLine("");
     }
-    /// <summary>Writes a projected API contract (an empty enum stand-in).</summary>
+    /// <summary>
+    /// Writes a projected API contract (an empty enum stand-in).
+    /// </summary>
     public static void WriteContract(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (context.Settings.Component) { return; }
@@ -298,7 +310,9 @@ internal static class ProjectionFileBuilder
             }
             """, isMultiline: true);
     }
-    /// <summary>Writes a projected delegate.</summary>
+    /// <summary>
+    /// Writes a projected delegate.
+    /// </summary>
     public static void WriteDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (context.Settings.Component) { return; }
@@ -327,7 +341,9 @@ internal static class ProjectionFileBuilder
         MethodFactory.WriteParameterList(writer, context, sig);
         writer.WriteLine(");");
     }
-    /// <summary>Writes a projected attribute class.</summary>
+    /// <summary>
+    /// Writes a projected attribute class.
+    /// </summary>
     public static void WriteAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string typeName = type.Name?.Value ?? string.Empty;
@@ -357,7 +373,9 @@ internal static class ProjectionFileBuilder
         }
     }
 
-    /// <summary>Returns the camel-case form of <paramref name="name"/>.</summary>
+    /// <summary>
+    /// Returns the camel-case form of <paramref name="name"/>.
+    /// </summary>
     public static string ToCamelCase(string name)
     {
         if (string.IsNullOrEmpty(name)) { return name; }

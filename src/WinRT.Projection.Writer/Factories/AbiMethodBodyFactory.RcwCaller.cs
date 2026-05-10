@@ -1335,7 +1335,9 @@ internal static partial class AbiMethodBodyFactory
         writer.WriteLine("    }");
     }
 
-    /// <summary>Emits the conversion of a parameter from its projected (managed) form to the ABI argument form.</summary>
+    /// <summary>
+    /// Emits the conversion of a parameter from its projected (managed) form to the ABI argument form.
+    /// </summary>
     internal static void EmitParamArgConversion(IndentedTextWriter writer, ProjectionEmitContext context, ParameterInfo p, string? paramNameOverride = null)
     {
         string pname = paramNameOverride ?? p.Parameter.Name ?? "param";

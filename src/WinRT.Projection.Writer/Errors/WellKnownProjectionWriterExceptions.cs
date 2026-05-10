@@ -11,7 +11,9 @@ namespace WindowsRuntime.ProjectionWriter.Errors;
 /// </summary>
 internal static class WellKnownProjectionWriterExceptions
 {
-    /// <summary>The prefix for all error IDs produced by this tool.</summary>
+    /// <summary>
+    /// The prefix for all error IDs produced by this tool.
+    /// </summary>
     public const string ErrorPrefix = "CSWINRTPROJECTIONGEN";
 
     /// <summary>

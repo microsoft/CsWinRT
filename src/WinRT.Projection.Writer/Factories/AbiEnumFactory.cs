@@ -11,7 +11,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class AbiEnumFactory
 {
-    /// <summary>Writes the ABI marshaller class and IReference impl for an enum type.</summary>
+    /// <summary>
+    /// Writes the ABI marshaller class and IReference impl for an enum type.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The enum type definition.</param>

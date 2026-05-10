@@ -10,7 +10,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class AbiMethodBodyFactory
 {
-    /// <summary>Emits the call to the appropriate marshaller's ConvertToUnmanaged for a runtime class / object input parameter.</summary>
+    /// <summary>
+    /// Emits the call to the appropriate marshaller's ConvertToUnmanaged for a runtime class / object input parameter.
+    /// </summary>
     internal static void EmitMarshallerConvertToUnmanaged(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig, string argName)
     {
         if (sig.IsObject())
@@ -22,7 +24,9 @@ internal static partial class AbiMethodBodyFactory
         writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, sig)}.ConvertToUnmanaged({argName})");
     }
 
-    /// <summary>Emits the call to the appropriate marshaller's ConvertToManaged for a runtime class / object return value.</summary>
+    /// <summary>
+    /// Emits the call to the appropriate marshaller's ConvertToManaged for a runtime class / object return value.
+    /// </summary>
     internal static void EmitMarshallerConvertToManaged(IndentedTextWriter writer, ProjectionEmitContext context, TypeSignature sig, string argName)
     {
         if (sig.IsObject())

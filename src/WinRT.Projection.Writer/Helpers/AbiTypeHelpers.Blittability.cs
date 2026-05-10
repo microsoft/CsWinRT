@@ -11,7 +11,9 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 internal static partial class AbiTypeHelpers
 {
-    /// <summary>Returns whether the given type can be passed across the ABI boundary without per-field marshalling (struct layout matches the ABI representation).</summary>
+    /// <summary>
+    /// Returns whether the given type can be passed across the ABI boundary without per-field marshalling (struct layout matches the ABI representation).
+    /// </summary>
     public static bool IsTypeBlittable(MetadataCache cache, TypeDefinition type)
     {
         TypeCategory cat = TypeCategorization.GetCategory(type);
@@ -96,7 +98,9 @@ internal static partial class AbiTypeHelpers
         return null;
     }
 
-    /// <summary>True if the type signature represents an enum (resolves cross-module typerefs).</summary>
+    /// <summary>
+    /// True if the type signature represents an enum (resolves cross-module typerefs).
+    /// </summary>
     internal static bool IsEnumType(MetadataCache cache, TypeSignature sig)
     {
         if (sig is not TypeDefOrRefSignature td) { return false; }
@@ -113,7 +117,9 @@ internal static partial class AbiTypeHelpers
         return false;
     }
 
-    /// <summary>True if the type signature represents a WinRT runtime class, interface, or delegate (reference type marshallable via *Marshaller).</summary>
+    /// <summary>
+    /// True if the type signature represents a WinRT runtime class, interface, or delegate (reference type marshallable via *Marshaller).
+    /// </summary>
     internal static bool IsRuntimeClassOrInterface(MetadataCache cache, TypeSignature sig)
     {
         if (sig is TypeDefOrRefSignature td)

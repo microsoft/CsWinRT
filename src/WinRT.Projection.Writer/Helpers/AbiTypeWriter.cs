@@ -15,7 +15,9 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// </summary>
 internal static class AbiTypeWriter
 {
-    /// <summary>Writes the C# representation of the ABI type for the given <paramref name="semantics"/> (e.g. fundamental primitives, <c>void*</c> for object/interface types, etc.).</summary>
+    /// <summary>
+    /// Writes the C# representation of the ABI type for the given <paramref name="semantics"/> (e.g. fundamental primitives, <c>void*</c> for object/interface types, etc.).
+    /// </summary>
     public static void WriteAbiType(IndentedTextWriter writer, ProjectionEmitContext context, TypeSemantics semantics)
     {
         switch (semantics)

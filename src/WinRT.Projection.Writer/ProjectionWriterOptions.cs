@@ -39,30 +39,48 @@ public sealed class ProjectionWriterOptions
     /// </summary>
     public IReadOnlyList<string> AdditionExclude { get; init; } = [];
 
-    /// <summary>Generate a Windows Runtime component projection.</summary>
+    /// <summary>
+    /// Generate a Windows Runtime component projection.
+    /// </summary>
     public bool Component { get; init; }
 
-    /// <summary>Generate an internal (non-public) projection.</summary>
+    /// <summary>
+    /// Generate an internal (non-public) projection.
+    /// </summary>
     public bool Internal { get; init; }
 
-    /// <summary>Generate an embedded projection.</summary>
+    /// <summary>
+    /// Generate an embedded projection.
+    /// </summary>
     public bool Embedded { get; init; }
 
-    /// <summary>If <c>true</c> with embedded option, generate enums as public.</summary>
+    /// <summary>
+    /// If <c>true</c> with embedded option, generate enums as public.
+    /// </summary>
     public bool PublicEnums { get; init; }
 
-    /// <summary>Make exclusive-to interfaces public in the projection (default is internal).</summary>
+    /// <summary>
+    /// Make exclusive-to interfaces public in the projection (default is internal).
+    /// </summary>
     public bool PublicExclusiveTo { get; init; }
 
-    /// <summary>Make exclusive-to interfaces support <c>IDynamicInterfaceCastable</c>.</summary>
+    /// <summary>
+    /// Make exclusive-to interfaces support <c>IDynamicInterfaceCastable</c>.
+    /// </summary>
     public bool IdicExclusiveTo { get; init; }
 
-    /// <summary>Generate a projection to be used as a reference assembly.</summary>
+    /// <summary>
+    /// Generate a projection to be used as a reference assembly.
+    /// </summary>
     public bool ReferenceProjection { get; init; }
 
-    /// <summary>Show detailed progress information.</summary>
+    /// <summary>
+    /// Show detailed progress information.
+    /// </summary>
     public bool Verbose { get; init; }
 
-    /// <summary>Cancellation token for the operation.</summary>
+    /// <summary>
+    /// Cancellation token for the operation.
+    /// </summary>
     public CancellationToken CancellationToken { get; init; }
 }

@@ -15,7 +15,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class MethodFactory
 {
-    /// <summary>Writes the projected C# type for the given <paramref name="typeSig"/>.</summary>
+    /// <summary>
+    /// Writes the projected C# type for the given <paramref name="typeSig"/>.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="typeSig">The signature to project.</param>
@@ -47,7 +49,9 @@ internal static class MethodFactory
         TypedefNameWriter.WriteProjectionType(writer, context, TypeSemanticsFactory.Get(typeSig));
     }
 
-    /// <summary>Writes a parameter's projected type, applying the <see cref="ParameterCategory"/>-specific transformations.</summary>
+    /// <summary>
+    /// Writes a parameter's projected type, applying the <see cref="ParameterCategory"/>-specific transformations.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="p">The parameter info.</param>
@@ -96,7 +100,9 @@ internal static class MethodFactory
         }
     }
 
-    /// <summary>Writes the parameter name (escaped if it would clash with a C# keyword).</summary>
+    /// <summary>
+    /// Writes the parameter name (escaped if it would clash with a C# keyword).
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="p">The parameter info.</param>
     public static void WriteParameterName(IndentedTextWriter writer, ParameterInfo p)
@@ -106,7 +112,9 @@ internal static class MethodFactory
         writer.Write(name);
     }
 
-    /// <summary>Writes the parameter's projected type + name (e.g. <c>int @value</c>).</summary>
+    /// <summary>
+    /// Writes the parameter's projected type + name (e.g. <c>int @value</c>).
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="p">The parameter info.</param>
@@ -117,7 +125,9 @@ internal static class MethodFactory
         WriteParameterName(writer, p);
     }
 
-    /// <summary>Writes the projected return type of <paramref name="sig"/> (or <c>"void"</c>).</summary>
+    /// <summary>
+    /// Writes the projected return type of <paramref name="sig"/> (or <c>"void"</c>).
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="sig">The method signature.</param>
@@ -132,7 +142,9 @@ internal static class MethodFactory
         WriteProjectedSignature(writer, context, rt, false);
     }
 
-    /// <summary>Writes a comma-separated parameter list.</summary>
+    /// <summary>
+    /// Writes a comma-separated parameter list.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="sig">The method signature whose parameters to enumerate.</param>
@@ -145,7 +157,9 @@ internal static class MethodFactory
         }
     }
 
-    /// <summary>Returns the C# literal text for a constant field's value (or empty when no constant).</summary>
+    /// <summary>
+    /// Returns the C# literal text for a constant field's value (or empty when no constant).
+    /// </summary>
     /// <param name="field">The field definition.</param>
     /// <returns>The formatted constant value, or an empty string.</returns>
     public static string FormatField(FieldDefinition field)

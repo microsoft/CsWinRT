@@ -257,7 +257,9 @@ internal static class InteropTypeNameWriter
         return "<#Windows>";
     }
 
-    /// <summary>Returns whether the type lives in <c>System.ObjectModel</c> and is one of the recognized mapped types (used by interop type-name encoding).</summary>
+    /// <summary>
+    /// Returns whether the type lives in <c>System.ObjectModel</c> and is one of the recognized mapped types (used by interop type-name encoding).
+    /// </summary>
     private static bool IsMappedTypeInSystemObjectModel(string typeNs, string typeName)
     {
         if (typeNs == "System.Collections.Specialized")
@@ -282,7 +284,9 @@ internal static class InteropTypeNameWriter
         return false;
     }
 
-    /// <summary>Returns whether the type lives in <c>System.Numerics.Vectors</c> and is one of the recognized mapped types (used by interop type-name encoding).</summary>
+    /// <summary>
+    /// Returns whether the type lives in <c>System.Numerics.Vectors</c> and is one of the recognized mapped types (used by interop type-name encoding).
+    /// </summary>
     private static bool IsMappedTypeInSystemNumericsVectors(string typeNs)
     {
         return typeNs == "System.Numerics";

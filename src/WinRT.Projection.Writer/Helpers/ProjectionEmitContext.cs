@@ -19,7 +19,9 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 /// </remarks>
 internal sealed class ProjectionEmitContext
 {
-    /// <summary>Initializes a new <see cref="ProjectionEmitContext"/>.</summary>
+    /// <summary>
+    /// Initializes a new <see cref="ProjectionEmitContext"/>.
+    /// </summary>
     /// <param name="settings">The active projection settings.</param>
     /// <param name="cache">The metadata cache for the current generation.</param>
     /// <param name="currentNamespace">The namespace currently being emitted (or <see cref="string.Empty"/> when not in a per-namespace pass).</param>
@@ -31,22 +33,34 @@ internal sealed class ProjectionEmitContext
         AbiTypeShapeResolver = new AbiTypeShapeResolver(cache);
     }
 
-    /// <summary>Gets the active projection settings.</summary>
+    /// <summary>
+    /// Gets the active projection settings.
+    /// </summary>
     public Settings Settings { get; }
 
-    /// <summary>Gets the metadata cache for the current generation.</summary>
+    /// <summary>
+    /// Gets the metadata cache for the current generation.
+    /// </summary>
     public MetadataCache Cache { get; }
 
-    /// <summary>Gets the namespace currently being emitted, or <see cref="string.Empty"/> when not in a per-namespace pass.</summary>
+    /// <summary>
+    /// Gets the namespace currently being emitted, or <see cref="string.Empty"/> when not in a per-namespace pass.
+    /// </summary>
     public string CurrentNamespace { get; }
 
-    /// <summary>Gets the resolver used to classify type signatures by their ABI marshalling shape.</summary>
+    /// <summary>
+    /// Gets the resolver used to classify type signatures by their ABI marshalling shape.
+    /// </summary>
     public AbiTypeShapeResolver AbiTypeShapeResolver { get; }
 
-    /// <summary>Gets a value indicating whether the writer is currently inside an ABI namespace block.</summary>
+    /// <summary>
+    /// Gets a value indicating whether the writer is currently inside an ABI namespace block.
+    /// </summary>
     public bool InAbiNamespace { get; private set; }
 
-    /// <summary>Gets a value indicating whether the writer is currently inside an ABI.Impl namespace block.</summary>
+    /// <summary>
+    /// Gets a value indicating whether the writer is currently inside an ABI.Impl namespace block.
+    /// </summary>
     public bool InAbiImplNamespace { get; private set; }
 
     /// <summary>
@@ -57,7 +71,9 @@ internal sealed class ProjectionEmitContext
     /// </summary>
     public bool CheckPlatform { get; private set; }
 
-    /// <summary>Gets the active platform string for the platform-attribute suppression mode.</summary>
+    /// <summary>
+    /// Gets the active platform string for the platform-attribute suppression mode.
+    /// </summary>
     /// <remarks>
     /// The setter is internal and is used by both the scope helper (to install/restore the
     /// surrounding scope's platform) and the platform-attribute algorithm itself (which seeds
@@ -104,14 +120,18 @@ internal sealed class ProjectionEmitContext
         return new PlatformSuppressionScope(this, prevCheck, prevPlatform);
     }
 
-    /// <summary>Scope token for <see cref="EnterAbiNamespace"/>.</summary>
+    /// <summary>
+    /// Scope token for <see cref="EnterAbiNamespace"/>.
+    /// </summary>
     public struct AbiNamespaceScope : IDisposable
     {
         private ProjectionEmitContext? _context;
 
         internal AbiNamespaceScope(ProjectionEmitContext context) { _context = context; }
 
-        /// <summary>Resets the ABI namespace mode.</summary>
+        /// <summary>
+        /// Resets the ABI namespace mode.
+        /// </summary>
         public void Dispose()
         {
             if (_context is { } context)
@@ -122,14 +142,18 @@ internal sealed class ProjectionEmitContext
         }
     }
 
-    /// <summary>Scope token for <see cref="EnterAbiImplNamespace"/>.</summary>
+    /// <summary>
+    /// Scope token for <see cref="EnterAbiImplNamespace"/>.
+    /// </summary>
     public struct AbiImplNamespaceScope : IDisposable
     {
         private ProjectionEmitContext? _context;
 
         internal AbiImplNamespaceScope(ProjectionEmitContext context) { _context = context; }
 
-        /// <summary>Resets the ABI.Impl namespace mode.</summary>
+        /// <summary>
+        /// Resets the ABI.Impl namespace mode.
+        /// </summary>
         public void Dispose()
         {
             if (_context is { } context)
@@ -140,7 +164,9 @@ internal sealed class ProjectionEmitContext
         }
     }
 
-    /// <summary>Scope token for <see cref="EnterPlatformSuppressionScope(string)"/>.</summary>
+    /// <summary>
+    /// Scope token for <see cref="EnterPlatformSuppressionScope(string)"/>.
+    /// </summary>
     public struct PlatformSuppressionScope : IDisposable
     {
         private ProjectionEmitContext? _context;
@@ -154,7 +180,9 @@ internal sealed class ProjectionEmitContext
             _prevPlatform = prevPlatform;
         }
 
-        /// <summary>Restores the prior platform-suppression state.</summary>
+        /// <summary>
+        /// Restores the prior platform-suppression state.
+        /// </summary>
         public void Dispose()
         {
             if (_context is { } context)

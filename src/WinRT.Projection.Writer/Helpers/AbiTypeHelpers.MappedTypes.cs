@@ -10,7 +10,9 @@ namespace WindowsRuntime.ProjectionWriter.Helpers;
 
 internal static partial class AbiTypeHelpers
 {
-    /// <summary>Returns the (possibly mapped) namespace of a type signature, or 'System' for fundamentals.</summary>
+    /// <summary>
+    /// Returns the (possibly mapped) namespace of a type signature, or 'System' for fundamentals.
+    /// </summary>
     internal static string GetMappedNamespace(TypeSignature sig)
     {
         // Fundamentals (string, bool, int, etc.) live in 'System' for ArrayMarshaller path purposes.
@@ -51,7 +53,9 @@ internal static partial class AbiTypeHelpers
         return false;
     }
 
-    /// <summary>True if the type is a mapped value type that needs ABI marshalling (excluding HResult, handled separately).</summary>
+    /// <summary>
+    /// True if the type is a mapped value type that needs ABI marshalling (excluding HResult, handled separately).
+    /// </summary>
     internal static bool IsMappedAbiValueType(TypeSignature sig)
     {
         if (!IsMappedMarshalingValueType(sig, out _, out string mappedName)) { return false; }
@@ -59,14 +63,18 @@ internal static partial class AbiTypeHelpers
         return mappedName != "Exception";
     }
 
-    /// <summary>Returns the ABI type name for a mapped value type (e.g. 'global::ABI.System.TimeSpan').</summary>
+    /// <summary>
+    /// Returns the ABI type name for a mapped value type (e.g. 'global::ABI.System.TimeSpan').
+    /// </summary>
     internal static string GetMappedAbiTypeName(TypeSignature sig)
     {
         if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }
         return GlobalAbiPrefix + ns + "." + name;
     }
 
-    /// <summary>Returns the marshaller class name for a mapped value type (e.g. 'global::ABI.System.TimeSpanMarshaller').</summary>
+    /// <summary>
+    /// Returns the marshaller class name for a mapped value type (e.g. 'global::ABI.System.TimeSpanMarshaller').
+    /// </summary>
     internal static string GetMappedMarshallerName(TypeSignature sig)
     {
         if (!IsMappedMarshalingValueType(sig, out string ns, out string name)) { return string.Empty; }

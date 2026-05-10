@@ -27,7 +27,9 @@ internal static class ClassFactory
         // netstandard_compat gate -- it was always false in the C# port.)
         return type.HasAttribute("Windows.Foundation.Metadata", "FastAbiAttribute");
     }
-    /// <summary>Writes the class modifiers ('static '/'sealed ').</summary>
+    /// <summary>
+    /// Writes the class modifiers ('static '/'sealed ').
+    /// </summary>
     public static void WriteClassModifiers(IndentedTextWriter writer, TypeDefinition type)
     {
         if (TypeCategorization.IsStatic(type))
@@ -189,7 +191,9 @@ internal static class ClassFactory
             _ => 0
         };
     }
-    /// <summary>Writes a static class declaration with [ContractVersion]-derived platform suppression.</summary>
+    /// <summary>
+    /// Writes a static class declaration with [ContractVersion]-derived platform suppression.
+    /// </summary>
     public static void WriteStaticClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         using (context.EnterPlatformSuppressionScope(string.Empty))
@@ -206,7 +210,9 @@ internal static class ClassFactory
             }
         }
     }
-    /// <summary>Emits static members from [Static] factory interfaces.</summary>
+    /// <summary>
+    /// Emits static members from [Static] factory interfaces.
+    /// </summary>
     public static void WriteStaticClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (context.Cache is null) { return; }
@@ -440,7 +446,9 @@ internal static class ClassFactory
             }
             """, isMultiline: true);
     }
-    /// <summary>Writes a projected runtime class.</summary>
+    /// <summary>
+    /// Writes a projected runtime class.
+    /// </summary>
     public static void WriteClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (context.Settings.Component) { return; }

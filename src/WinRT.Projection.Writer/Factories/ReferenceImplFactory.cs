@@ -15,7 +15,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class ReferenceImplFactory
 {
-    /// <summary>Writes the IReference impl class for a struct/enum/delegate type.</summary>
+    /// <summary>
+    /// Writes the IReference impl class for a struct/enum/delegate type.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>

@@ -351,7 +351,9 @@ internal static class CustomAttributeFactory
         }
     }
 
-    /// <summary>Writes the type-level custom attributes for <paramref name="type"/>.</summary>
+    /// <summary>
+    /// Writes the type-level custom attributes for <paramref name="type"/>.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>

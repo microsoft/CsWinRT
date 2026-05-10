@@ -15,7 +15,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class AbiStructFactory
 {
-    /// <summary>Writes the ABI struct, marshaller class, and IReference impl for a struct type.</summary>
+    /// <summary>
+    /// Writes the ABI struct, marshaller class, and IReference impl for a struct type.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The struct type definition.</param>

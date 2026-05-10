@@ -52,7 +52,9 @@ internal static partial class AbiTypeHelpers
         return null;
     }
 
-    /// <summary>Resolves an InterfaceImpl's interface reference to a TypeDefinition (same module or via metadata cache).</summary>
+    /// <summary>
+    /// Resolves an InterfaceImpl's interface reference to a TypeDefinition (same module or via metadata cache).
+    /// </summary>
     internal static TypeDefinition? ResolveInterfaceTypeDef(MetadataCache cache, ITypeDefOrRef ifaceRef)
     {
         if (ifaceRef is TypeDefinition td) { return td; }
@@ -105,13 +107,17 @@ internal static partial class AbiTypeHelpers
         return "__" + GetReturnParamName(sig);
     }
 
-    /// <summary>Returns '__&lt;returnName&gt;Size' — by default '____return_value__Size' for the standard '__return_value__' return param.</summary>
+    /// <summary>
+    /// Returns '__&lt;returnName&gt;Size' — by default '____return_value__Size' for the standard '__return_value__' return param.
+    /// </summary>
     internal static string GetReturnSizeParamName(MethodSignatureInfo sig)
     {
         return "__" + GetReturnParamName(sig) + "Size";
     }
 
-    /// <summary>Build a method-to-event map for add/remove accessors of a type.</summary>
+    /// <summary>
+    /// Build a method-to-event map for add/remove accessors of a type.
+    /// </summary>
     internal static Dictionary<MethodDefinition, EventDefinition>? BuildEventMethodMap(TypeDefinition type)
     {
         if (type.Events.Count == 0) { return null; }
@@ -124,7 +130,9 @@ internal static partial class AbiTypeHelpers
         return map;
     }
 
-    /// <summary>Writes the IID GUID literal expression for the given runtime type (used by ABI emission paths).</summary>
+    /// <summary>
+    /// Writes the IID GUID literal expression for the given runtime type (used by ABI emission paths).
+    /// </summary>
     public static void WriteIidGuidReference(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (type.GenericParameters.Count != 0)
@@ -144,7 +152,9 @@ internal static partial class AbiTypeHelpers
         IIDExpressionWriter.WriteIidGuidPropertyName(writer, context, type);
     }
 
-    /// <summary>True if EmitNativeDelegateBody can emit a real (non-throw) body for this signature.</summary>
+    /// <summary>
+    /// True if EmitNativeDelegateBody can emit a real (non-throw) body for this signature.
+    /// </summary>
     internal static bool IsDelegateInvokeNativeSupported(MetadataCache cache, MethodSignatureInfo sig)
     {
         TypeSignature? rt = sig.ReturnType;
@@ -179,7 +189,9 @@ internal static partial class AbiTypeHelpers
         return true;
     }
 
-    /// <summary>True if the interface has at least one non-special method, property, or non-skipped event.</summary>
+    /// <summary>
+    /// True if the interface has at least one non-special method, property, or non-skipped event.
+    /// </summary>
     internal static bool HasEmittableMembers(TypeDefinition iface, bool skipExclusiveEvents)
     {
         foreach (MethodDefinition m in iface.Methods)
@@ -194,7 +206,9 @@ internal static partial class AbiTypeHelpers
         return false;
     }
 
-    /// <summary>Returns the number of methods (including special accessors) on the interface.</summary>
+    /// <summary>
+    /// Returns the number of methods (including special accessors) on the interface.
+    /// </summary>
     internal static int CountMethods(TypeDefinition iface)
     {
         int count = 0;
@@ -202,7 +216,9 @@ internal static partial class AbiTypeHelpers
         return count;
     }
 
-    /// <summary>Returns the number of base classes between <paramref name="classType"/> and <see cref="object"/>.</summary>
+    /// <summary>
+    /// Returns the number of base classes between <paramref name="classType"/> and <see cref="object"/>.
+    /// </summary>
     internal static int GetClassHierarchyIndex(MetadataCache cache, TypeDefinition classType)
     {
         if (classType.BaseType is null) { return 0; }

@@ -17,7 +17,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class ComponentFactory
 {
-    /// <summary>Adds a (projected -> CCW) type-name pair to the metadata-type map.</summary>
+    /// <summary>
+    /// Adds a (projected -> CCW) type-name pair to the metadata-type map.
+    /// </summary>
     public static void AddMetadataTypeEntry(ProjectionEmitContext context, TypeDefinition type, ConcurrentDictionary<string, string> map)
     {
         if (!context.Settings.Component) { return; }
@@ -39,7 +41,9 @@ internal static class ComponentFactory
 
         _ = map.TryAdd(typeName, metadataTypeName);
     }
-    /// <summary>Writes the per-runtime-class server-activation-factory type for component mode.</summary>
+    /// <summary>
+    /// Writes the per-runtime-class server-activation-factory type for component mode.
+    /// </summary>
     public static void WriteFactoryClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         string typeName = type.Name?.Value ?? string.Empty;
@@ -176,7 +180,9 @@ internal static class ComponentFactory
         writer.WriteLine(");");
     }
 
-    /// <summary>Writes a static-factory forwarding property (single-line getter or full block).</summary>
+    /// <summary>
+    /// Writes a static-factory forwarding property (single-line getter or full block).
+    /// </summary>
     private static void WriteStaticFactoryProperty(IndentedTextWriter writer, ProjectionEmitContext context, PropertyDefinition prop, string projectedTypeName)
     {
         string propName = prop.Name?.Value ?? string.Empty;
@@ -207,7 +213,9 @@ internal static class ComponentFactory
             """, isMultiline: true);
     }
 
-    /// <summary>Writes a static-factory forwarding event as a multi-line block.</summary>
+    /// <summary>
+    /// Writes a static-factory forwarding event as a multi-line block.
+    /// </summary>
     private static void WriteStaticFactoryEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string projectedTypeName)
     {
         string evtName = evt.Name?.Value ?? string.Empty;
@@ -269,7 +277,9 @@ internal static class ComponentFactory
         }
     }
 
-    /// <summary>Writes the per-module activation-factory dispatch helper.</summary>
+    /// <summary>
+    /// Writes the per-module activation-factory dispatch helper.
+    /// </summary>
     public static void WriteModuleActivationFactory(IndentedTextWriter writer, IReadOnlyDictionary<string, HashSet<TypeDefinition>> typesByModule)
     {
         writer.WriteLine("");

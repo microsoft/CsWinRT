@@ -72,7 +72,9 @@ internal static class ProjectionWriterExtensions
             writer.IncreaseIndent();
         }
 
-        /// <summary>Writes the closing <c>}</c> for the projected namespace.</summary>
+        /// <summary>
+        /// Writes the closing <c>}</c> for the projected namespace.
+        /// </summary>
         public void WriteEndProjectedNamespace()
         {
             writer.DecreaseIndent();

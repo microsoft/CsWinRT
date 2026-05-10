@@ -18,7 +18,9 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 /// </summary>
 internal static class MetadataAttributeFactory
 {
-    /// <summary>Writes <c>#pragma warning disable IL2026</c>.</summary>
+    /// <summary>
+    /// Writes <c>#pragma warning disable IL2026</c>.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     public static void WritePragmaDisableIL2026(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer)
     {
@@ -26,7 +28,9 @@ internal static class MetadataAttributeFactory
         writer.WriteLine("#pragma warning disable IL2026");
     }
 
-    /// <summary>Writes <c>#pragma warning restore IL2026</c>.</summary>
+    /// <summary>
+    /// Writes <c>#pragma warning restore IL2026</c>.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     public static void WritePragmaRestoreIL2026(WindowsRuntime.ProjectionWriter.Writers.IndentedTextWriter writer)
     {
@@ -73,7 +77,9 @@ internal static class MetadataAttributeFactory
             """, isMultiline: true);
     }
 
-    /// <summary>Writes a <c>[WindowsRuntimeMetadata]</c> attribute decorating <paramref name="type"/> with its source <c>.winmd</c> module name.</summary>
+    /// <summary>
+    /// Writes a <c>[WindowsRuntimeMetadata]</c> attribute decorating <paramref name="type"/> with its source <c>.winmd</c> module name.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="type">The type definition.</param>
     /// <param name="cache">The metadata cache used to resolve the source module path.</param>
@@ -84,7 +90,9 @@ internal static class MetadataAttributeFactory
         writer.WriteLine($"[WindowsRuntimeMetadata(\"{stem}\")]");
     }
 
-    /// <summary>Writes a <c>[WindowsRuntimeMetadataTypeName]</c> attribute carrying the WinRT type name string.</summary>
+    /// <summary>
+    /// Writes a <c>[WindowsRuntimeMetadataTypeName]</c> attribute carrying the WinRT type name string.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>
@@ -96,7 +104,9 @@ internal static class MetadataAttributeFactory
         writer.WriteLine("\")]");
     }
 
-    /// <summary>Writes a <c>[WindowsRuntimeMappedType]</c> attribute pointing at the projected type.</summary>
+    /// <summary>
+    /// Writes a <c>[WindowsRuntimeMappedType]</c> attribute pointing at the projected type.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>
@@ -108,7 +118,9 @@ internal static class MetadataAttributeFactory
         writer.WriteLine("))]");
     }
 
-    /// <summary>Writes a <c>[WindowsRuntimeClassName("Windows.Foundation.IReference`1&lt;NS.Name&gt;")]</c> attribute for a value type.</summary>
+    /// <summary>
+    /// Writes a <c>[WindowsRuntimeClassName("Windows.Foundation.IReference`1&lt;NS.Name&gt;")]</c> attribute for a value type.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The value type definition.</param>
@@ -119,7 +131,9 @@ internal static class MetadataAttributeFactory
         writer.WriteLine($"[WindowsRuntimeClassName(\"Windows.Foundation.IReference`1<{ns}.{name}>\")]");
     }
 
-    /// <summary>Writes a <c>[WindowsRuntimeReferenceType(typeof(NullableX))]</c> attribute on a reference type.</summary>
+    /// <summary>
+    /// Writes a <c>[WindowsRuntimeReferenceType(typeof(NullableX))]</c> attribute on a reference type.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The reference type definition.</param>
@@ -132,7 +146,9 @@ internal static class MetadataAttributeFactory
         writer.WriteLine("?))]");
     }
 
-    /// <summary>Writes the <c>[ABI.NS.NameComWrappersMarshaller]</c> attribute.</summary>
+    /// <summary>
+    /// Writes the <c>[ABI.NS.NameComWrappersMarshaller]</c> attribute.
+    /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="context">The active emit context.</param>
     /// <param name="type">The type definition.</param>
@@ -298,7 +314,9 @@ internal static class MetadataAttributeFactory
         writer.WriteLine("");
     }
 
-    /// <summary>Adds an entry to the default-interface map for a class type.</summary>
+    /// <summary>
+    /// Adds an entry to the default-interface map for a class type.
+    /// </summary>
     public static void AddDefaultInterfaceEntry(ProjectionEmitContext context, TypeDefinition type, System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
     {
         if (context.Settings.ReferenceProjection) { return; }
@@ -330,7 +348,9 @@ internal static class MetadataAttributeFactory
 
         _ = entries.TryAdd(className, interfaceName);
     }
-    /// <summary>Adds entries for [ExclusiveTo] interfaces of the class type.</summary>
+    /// <summary>
+    /// Adds entries for [ExclusiveTo] interfaces of the class type.
+    /// </summary>
     public static void AddExclusiveToInterfaceEntries(ProjectionEmitContext context, TypeDefinition type, System.Collections.Concurrent.ConcurrentBag<KeyValuePair<string, string>> entries)
     {
         if (!context.Settings.Component || context.Settings.ReferenceProjection) { return; }
@@ -382,7 +402,9 @@ internal static class MetadataAttributeFactory
             }
         }
     }
-    /// <summary>Writes the generated WindowsRuntimeDefaultInterfaces.cs file.</summary>
+    /// <summary>
+    /// Writes the generated WindowsRuntimeDefaultInterfaces.cs file.
+    /// </summary>
     public static void WriteDefaultInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
         if (sortedEntries.Count == 0) { return; }
@@ -408,7 +430,9 @@ internal static class MetadataAttributeFactory
         w.FlushToFile(Path.Combine(settings.OutputFolder, "WindowsRuntimeDefaultInterfaces.cs"));
     }
 
-    /// <summary>Writes the generated WindowsRuntimeExclusiveToInterfaces.cs file.</summary>
+    /// <summary>
+    /// Writes the generated WindowsRuntimeExclusiveToInterfaces.cs file.
+    /// </summary>
     public static void WriteExclusiveToInterfacesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
     {
         if (sortedEntries.Count == 0) { return; }

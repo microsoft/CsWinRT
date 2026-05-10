@@ -46,7 +46,9 @@ internal static class AbiDelegateFactory
         }
     }
 
-    /// <summary>Emits the <c>&lt;DelegateName&gt;Impl</c> static class providing the CCW vtable for a delegate.</summary>
+    /// <summary>
+    /// Emits the <c>&lt;DelegateName&gt;Impl</c> static class providing the CCW vtable for a delegate.
+    /// </summary>
     private static void WriteDelegateImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
         if (type.GenericParameters.Count > 0) { return; }
