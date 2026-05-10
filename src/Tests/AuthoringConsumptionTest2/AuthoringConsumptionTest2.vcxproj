@@ -86,8 +86,7 @@
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
       <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
     </ProjectReference>
-    <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
-      <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
+    <ProjectReference Include="..\AuthoringTest3\AuthoringTest3.csproj">
       <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj">
@@ -99,8 +98,7 @@
        win-<Platform>\ subfolder the IsWinMDFile HintPath expects. ReferenceOutputAssembly=false
        drives build ordering only; cppwinrt consumes only the explicit IsWinMDFile References. -->
   <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
-    <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
-      <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
+    <ProjectReference Include="..\AuthoringTest3\AuthoringTest3.csproj">
       <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
       <Properties>RuntimeIdentifier=win-$(Platform)</Properties>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
@@ -132,8 +130,8 @@
     </ItemGroup>
   </Target>
   <ItemGroup Condition="!('$(Configuration)' == 'Release' and '$(Platform)' == 'x64')">
-    <Reference Include="AuthoringTest">
-      <HintPath>..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\AuthoringTest.winmd</HintPath>
+    <Reference Include="AuthoringTest3">
+      <HintPath>..\AuthoringTest3\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\AuthoringTest3.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
     <Reference Include="AuthoringTest2">
@@ -141,11 +139,11 @@
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>
-  <!-- For Release|x64 the test exe still needs the cppwinrt projection of AuthoringTest /
+  <!-- For Release|x64 the test exe still needs the cppwinrt projection of AuthoringTest3 /
        AuthoringTest2 winmds at compile time (it consumes the C++ projected types). -->
   <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
-    <Reference Include="AuthoringTest">
-      <HintPath>..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\AuthoringTest.winmd</HintPath>
+    <Reference Include="AuthoringTest3">
+      <HintPath>..\AuthoringTest3\bin\$(_WinMDPlatform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\AuthoringTest3.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
       <Implementation>AuthoringConsumptionTest2.AOT.dll</Implementation>
     </Reference>

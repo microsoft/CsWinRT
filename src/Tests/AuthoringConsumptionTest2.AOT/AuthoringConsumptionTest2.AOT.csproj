@@ -16,14 +16,11 @@
     <OutputType>Exe</OutputType>
     <CustomNativeMain>true</CustomNativeMain>
     <IsTrimmable>true</IsTrimmable>
+      <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- _AuthoringTestSkipAotPublishConfig suppresses AuthoringTest's own AOT publish block
-         (Directory.Build.props) so AuthoringTest is just a plain managed input here. -->
-    <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
-      <Properties>_AuthoringTestSkipAotPublishConfig=true</Properties>
-    </ProjectReference>
+    <ProjectReference Include="..\AuthoringTest3\AuthoringTest3.csproj" />
     <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
@@ -32,8 +29,8 @@
 
   <ItemGroup>
     <!-- WebView2.Core.Projection.dll references the official signed Microsoft.Windows.SDK.NET,
-         which conflicts with our locally-built unsigned one. AuthoringTest excludes WebView2
-         locally but doesn't block transitive flow, so exclude it here too. -->
+         which conflicts with our locally-built unsigned one. Exclude WebView2 from this csproj's
+         compile/runtime closure to avoid NETSDK1148. -->
     <PackageReference Include="Microsoft.Web.WebView2">
       <ExcludeAssets>all</ExcludeAssets>
     </PackageReference>

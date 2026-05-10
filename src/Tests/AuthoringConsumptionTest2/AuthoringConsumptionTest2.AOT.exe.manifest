@@ -3,7 +3,7 @@
   <assemblyIdentity version="1.0.0.0" name="AuthoringConsumptionTest2"/>
   <file name="AuthoringConsumptionTest2.AOT.dll">
     <activatableClass
-        name="AuthoringTest.TestClass"
+        name="AuthoringTest3.Calculator"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass

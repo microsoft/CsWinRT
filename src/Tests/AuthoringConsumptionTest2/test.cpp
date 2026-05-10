@@ -4,15 +4,15 @@ using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 
-// Activation tests across two CsWinRT components aggregated into one WinRT.Component.dll.
+// Activation tests across two CsWinRT components aggregated into one merged AOT host.
 
-TEST(MultiComponent, AuthoringTestStatics)
+TEST(MultiComponent, CalculatorStatics)
 {
-    EXPECT_EQ(AuthoringTest::TestClass::GetDefaultFactor(), 1);
-    EXPECT_EQ(AuthoringTest::TestClass::GetDefaultNumber(), 2);
+    EXPECT_EQ(AuthoringTest3::Calculator::GetDefaultFactor(), 1);
+    EXPECT_EQ(AuthoringTest3::Calculator::GetDefaultNumber(), 2);
 }
 
-TEST(MultiComponent, AuthoringTest2Greeter)
+TEST(MultiComponent, GreeterMethods)
 {
     AuthoringTest2::Greeter greeter;
     EXPECT_EQ(greeter.Greet(L"world"), hstring(L"Hello, world!"));
@@ -21,14 +21,14 @@ TEST(MultiComponent, AuthoringTest2Greeter)
 
 TEST(MultiComponent, BothComponentsActivateInOneProcess)
 {
-    AuthoringTest::TestClass first;
+    AuthoringTest3::Calculator first;
     AuthoringTest2::Greeter second;
 
     EXPECT_EQ(first.GetFactor(), 1);
     EXPECT_EQ(second.Add(10, 20), 30);
 }
 
-// Generic instantiations from both components flow through the merged WinRT.Interop.dll.
+// Generic instantiations from both components flow through the merged interop closure.
 // If per-component interop generation had run independently, type-map registration would
 // fail at publish time or these calls would fail at runtime.
 
@@ -40,10 +40,11 @@ TEST(MultiComponent, GenericCollectionsFromBothComponents)
     EXPECT_EQ(numbers.GetAt(0), 1);
     EXPECT_EQ(numbers.GetAt(5), 13);
 
-    auto bools = AuthoringTest::TestClass::GetBools();
+    AuthoringTest3::Calculator calculator;
+    auto bools = calculator.GetBools();
     EXPECT_GT(bools.Size(), 0u);
 
-    auto uris = AuthoringTest::TestClass::GetUris();
+    auto uris = calculator.GetUris();
     EXPECT_GT(uris.Size(), 0u);
 }
 

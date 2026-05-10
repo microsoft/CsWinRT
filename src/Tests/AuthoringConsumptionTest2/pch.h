@@ -16,7 +16,7 @@
 #pragma pop_macro("X64")
 #pragma pop_macro("X86")
 
-#include <winrt/AuthoringTest.h>
+#include <winrt/AuthoringTest3.h>
 #include <winrt/AuthoringTest2.h>
 
 #include "gtest/gtest.h"
