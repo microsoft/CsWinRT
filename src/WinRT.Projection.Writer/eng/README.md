@@ -52,3 +52,15 @@ Drift is reported with file-by-file diffs (added / removed / changed).
 - Pass 16 (output-format cleanup) intentionally broke byte identity. If you
   need to validate parse-equivalence rather than byte identity, use the
   Roslyn-based parse validator alongside this harness.
+
+## Why no xunit / unit test project?
+
+The writer's correctness is verified end-to-end via this harness rather than
+through a parallel xunit test project, mirroring the convention used by
+`WinRT.Interop.Generator` (which also has no xunit tests of its own — its
+correctness is validated by integration-level tests in `src/Tests/`).
+End-to-end byte-identity testing across the eight projection scenarios catches
+real correctness regressions at a granularity that unit tests of helpers like
+`IndentedTextWriter` would miss (e.g. interactions between brace-prepend
+rules, namespace nesting, and the multi-line raw-string emission paths).
+

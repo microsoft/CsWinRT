@@ -28,8 +28,17 @@
     <Features>strict</Features>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
+    <!--
+      The writer enables the strictest analysis posture (AnalysisLevel=latest +
+      AnalysisLevelStyle=latest-all) so every IDE rule fires as a warning. The five entries
+      below are intentional permanent suppressions; each is a documented preference that
+      conflicts with one of the rules promoted by latest-all. By comparison
+      WinRT.Interop.Generator runs only AnalysisLevel=latest (without latest-all), so it never
+      sees these warnings in the first place and has zero suppressions. The writer's stricter
+      posture intentionally errs on the side of more analysis with a small documented opt-out.
+    -->
     <!-- IDE0010 / IDE0072: Add missing cases to switch over a large enum (ElementType etc.) — too noisy to enumerate every case. -->
-    <!-- IDE0022: Use expression body for method — preference; method bodies left as block-bodied throughout. -->
+    <!-- IDE0022: Use expression body for method — writer prefers expression bodies for one-liners. -->
     <!-- IDE0028: Use collection expression — limited to cases where comparer arguments don't fit collection-expression syntax. -->
     <!-- IDE0046: 'if' statement can be simplified — if/else if chains over type-class predicates are more readable than nested ternaries. -->
     <!-- IDE0060: Remove unused parameter — keep for API consistency across factory helpers. -->
