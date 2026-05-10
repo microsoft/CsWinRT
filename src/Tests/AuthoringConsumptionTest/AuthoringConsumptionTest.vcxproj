@@ -119,14 +119,8 @@
 		  Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
 		  Inputs="$(NativeLibraryDllPath)"
 		  Outputs="@(ReferenceCopyLocalPaths)">
-    <!--
-      Publish the managed library with NativeAOT. Pass the AOT switches explicitly
-      (rather than relying on AuthoringTest's Directory.Build.props evaluation) because
-      <MSBuild Targets="Publish"> doesn't reliably trigger the ILC pipeline from
-      Directory.Build.props alone - without these, Publish silently falls back to
-      PublishTrimmed JIT and ILLink runs instead of ILC.
-    -->
-    <MSBuild Projects="$(NativeLibraryProjectFilePath)" Targets="Publish" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net10.0-windows10.0.26100.1;PublishAot=true;NativeLib=Shared;SelfContained=true;OutputType=Exe;CustomNativeMain=true" />
+    <!-- Publish the managed library with NativeAOT -->
+    <MSBuild Projects="$(NativeLibraryProjectFilePath)" Targets="Publish" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net10.0-windows10.0.26100.1" />
     <!-- Copy the .dll to our output folder -->
     <ItemGroup>
       <ReferenceCopyLocalPaths Remove="$(NativeLibraryDllPath)" />

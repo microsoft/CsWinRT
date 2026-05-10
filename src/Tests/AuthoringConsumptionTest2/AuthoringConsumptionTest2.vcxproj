@@ -111,11 +111,9 @@
           Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
           Inputs="$(NativeLibraryProjectFilePath)"
           Outputs="$(NativeLibraryPublishedDllPath)">
-    <!-- Pass AOT switches explicitly so <MSBuild Targets="Publish"> reliably triggers the
-         ILC pipeline (Directory.Build.props evaluation alone is not sufficient here). -->
     <MSBuild Projects="$(NativeLibraryProjectFilePath)"
              Targets="Publish"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net10.0-windows10.0.26100.1;PublishAot=true;NativeLib=Shared;SelfContained=true;OutputType=Exe;CustomNativeMain=true" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net10.0-windows10.0.26100.1" />
     <ItemGroup>
       <ReferenceCopyLocalPaths Include="$(NativeLibraryPublishedDllPath)" />
     </ItemGroup>
