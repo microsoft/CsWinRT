@@ -19,14 +19,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!--
-      AuthoringTest defaults to PublishAot in its Directory.Build.props for Release|x64
-      (used by AuthoringConsumptionTest's single-component AOT scenario). This .AOT host
-      bundles AuthoringTest as a managed-only input - we want it built as a plain CsWinRT
-      component library so its bin doesn't pull in the WinAppSDK runtime payload (which
-      would collide with our own AOT publish closure on NETSDK1152). Pass the opt-out
-      property to suppress that block.
-    -->
+    <!-- _AuthoringTestSkipAotPublishConfig suppresses AuthoringTest's own AOT publish block
+         (Directory.Build.props) so AuthoringTest is just a plain managed input here. -->
     <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
       <Properties>_AuthoringTestSkipAotPublishConfig=true</Properties>
     </ProjectReference>
@@ -37,17 +31,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!--
-      AuthoringTest declares <PackageReference Include="Microsoft.Web.WebView2" ExcludeAssets="all"/>
-      which suppresses WebView2 in AuthoringTest's own compile but does NOT block transitive
-      flow to consumers. WebView2's Microsoft.Web.WebView2.Core.Projection.dll embeds an
-      assembly reference to the official signed Microsoft.Windows.SDK.NET (Version=10.0.17763.38,
-      PKT=31bf3856ad364e35), which RAR cannot unify with our locally-built unsigned v1.0.0.0 -
-      manifests as NETSDK1148 here.
-
-      Add the PackageReference at the AOT host with ExcludeAssets="all" so this csproj also
-      excludes the WebView2 assets from its compile/runtime closure.
-    -->
+    <!-- WebView2.Core.Projection.dll references the official signed Microsoft.Windows.SDK.NET
+         (v10.0.17763.38, PKT=31bf3856ad364e35), which conflicts with our locally-built unsigned
+         v1.0.0.0 -> NETSDK1148. AuthoringTest excludes WebView2 locally but doesn't block
+         transitive flow, so exclude it here too. -->
     <PackageReference Include="Microsoft.Web.WebView2">
       <ExcludeAssets>all</ExcludeAssets>
     </PackageReference>

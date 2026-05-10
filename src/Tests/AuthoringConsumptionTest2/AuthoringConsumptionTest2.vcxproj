@@ -94,17 +94,10 @@
       <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
     </ProjectReference>
   </ItemGroup>
-  <!--
-    Release|x64: AOT-merged host. The .AOT.csproj sibling project bundles AuthoringTest +
-    AuthoringTest2 + runtime + projections into one self-contained native dll exporting
-    DllGetActivationFactory. CsWinRTLink target below invokes Publish on it; the resulting
-    dll is added to ReferenceCopyLocalPaths so it lands next to the test exe.
-
-    Build the two component csprojs with RuntimeIdentifier propagated, so their .winmd files
-    land at bin\<Platform>\<Config>\<TFM>\win-<Platform>\ (matching the IsWinMDFile <Reference>
-    HintPath below). ReferenceOutputAssembly=false drives build ordering only - cppwinrt
-    consumes the explicit IsWinMDFile <Reference> items, not the managed assembly closure.
-  -->
+  <!-- Release|x64 builds the merged AOT host (.AOT.csproj sibling, slnx top-level). Build the
+       component csprojs with RuntimeIdentifier propagated so their .winmd files land at the
+       win-<Platform>\ subfolder the IsWinMDFile HintPath expects. ReferenceOutputAssembly=false
+       drives build ordering only; cppwinrt consumes only the explicit IsWinMDFile References. -->
   <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
     <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
       <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
@@ -127,16 +120,11 @@
     <NativeLibraryPublishFolder>$(NativeLibraryProjectDirectory)bin\$(Platform)\$(Configuration)\net10.0-windows10.0.26100.1\win-$(Platform)\publish\</NativeLibraryPublishFolder>
     <NativeLibraryPublishedDllPath>$(NativeLibraryPublishFolder)$(NativeLibraryProjectName).dll</NativeLibraryPublishedDllPath>
   </PropertyGroup>
+  <!-- .AOT.csproj is a slnx top-level project; it's already published. Just pick up the dll. -->
   <Target Name="CsWinRTLink" DependsOnTargets="ComputeLinkSwitches" BeforeTargets="Link"
           Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
           Inputs="$(NativeLibraryPublishedDllPath)"
           Outputs="@(ReferenceCopyLocalPaths)">
-    <!--
-      AuthoringConsumptionTest2.AOT.csproj is a top-level slnx project that publishes
-      the merged AOT host as part of the normal slnx build (see slnx BuildDependency
-      chain). All this target does is pick up the already-published dll and add it to
-      ReferenceCopyLocalPaths so it lands next to the test exe.
-    -->
     <Error Condition="!Exists('$(NativeLibraryPublishedDllPath)')"
            Text="Expected published AOT host '$(NativeLibraryPublishedDllPath)' was not produced. Verify slnx built AuthoringConsumptionTest2.AOT.csproj for Release|x64." />
     <ItemGroup>

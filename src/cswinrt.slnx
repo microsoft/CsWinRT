@@ -182,13 +182,7 @@
       <Build Solution="*|ARM" Project="false" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
-    <!--
-      AuthoringConsumptionTest2.AOT is the merged AOT host csproj that bundles AuthoringTest +
-      AuthoringTest2 + runtime + projections into one self-contained native dll. Built only
-      for x64 Release (the AOT-merging scenario). slnx-level build keeps its globals matching
-      every other slnx project so descendant PRs (Projections/Windows -> WinRT.Generator.Tasks)
-      reuse the same MSBuild project instance and don't race for shared output paths.
-    -->
+    <!-- Merged AOT host for the AuthoringConsumptionTest2 multi-component scenario. x64 Release only. -->
     <Project Path="Tests/AuthoringConsumptionTest2.AOT/AuthoringConsumptionTest2.AOT.csproj">
       <BuildDependency Project="Tests/AuthoringTest/AuthoringTest.csproj" />
       <BuildDependency Project="Tests/AuthoringTest2/AuthoringTest2.csproj" />
