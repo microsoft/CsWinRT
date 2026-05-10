@@ -23,12 +23,12 @@ internal static class ClassMembersFactory
     /// </summary>
     public static void WriteClassMembers(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        HashSet<string> writtenMethods = new(System.StringComparer.Ordinal);
+        HashSet<string> writtenMethods = [];
         // For properties: track per-name accessor presence so we can merge get/set across interfaces.
         // Use insertion-order Dictionary so the per-class property emission order matches the
         // .winmd metadata definition order order).
-        Dictionary<string, PropertyAccessorState> propertyState = new(System.StringComparer.Ordinal);
-        HashSet<string> writtenEvents = new(System.StringComparer.Ordinal);
+        Dictionary<string, PropertyAccessorState> propertyState = [];
+        HashSet<string> writtenEvents = [];
         HashSet<TypeDefinition> writtenInterfaces = [];
         // interface inside WriteInterfaceMembersRecursive (right before that interface's
         // members), instead of one upfront block. This interleaves the GetInterface() impls
@@ -194,14 +194,14 @@ internal static class ClassMembersFactory
     private static string BuildMethodSignatureKey(string name, MethodSig sig)
     {
         System.Text.StringBuilder sb = new();
-        sb.Append(name);
-        sb.Append('(');
+        _ = sb.Append(name);
+        _ = sb.Append('(');
         for (int i = 0; i < sig.Params.Count; i++)
         {
-            if (i > 0) { sb.Append(','); }
-            sb.Append(sig.Params[i].Type?.FullName ?? "?");
+            if (i > 0) { _ = sb.Append(','); }
+            _ = sb.Append(sig.Params[i].Type?.FullName ?? "?");
         }
-        sb.Append(')');
+        _ = sb.Append(')');
         return sb.ToString();
     }
 

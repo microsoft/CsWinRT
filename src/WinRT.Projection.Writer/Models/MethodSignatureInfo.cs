@@ -41,7 +41,9 @@ internal sealed class MethodSig
     public MethodSig(MethodDefinition method, GenericContext? genCtx)
     {
         Method = method;
+#pragma warning disable IDE0028 // Use collection expression -- intentional capacity hint
         Params = new List<ParamInfo>(method.Parameters.Count);
+#pragma warning restore IDE0028
         ReturnParam = null;
         foreach (ParameterDefinition p in method.ParameterDefinitions)
         {

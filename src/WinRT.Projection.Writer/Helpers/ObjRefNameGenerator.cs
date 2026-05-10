@@ -203,7 +203,7 @@ internal static class ObjRefNameGenerator
         System.Text.StringBuilder sb = new(s.Length);
         foreach (char c in s)
         {
-            sb.Append(c is ' ' or ':' or '<' or '>' or '`' or ',' or '.' ? '_' : c);
+            _ = sb.Append(c is ' ' or ':' or '<' or '>' or '`' or ',' or '.' ? '_' : c);
         }
         return sb.ToString();
     }
@@ -234,7 +234,7 @@ internal static class ObjRefNameGenerator
 
         // Track names emitted so we don't emit duplicates (e.g. when both IFoo and IFoo2
         // produce the same _objRef_<name>).
-        HashSet<string> emitted = new(System.StringComparer.Ordinal);
+        HashSet<string> emitted = [];
         bool isSealed = type.IsSealed;
 
         // Pass 1: emit objrefs for ALL directly-declared interfaces first (in InterfaceImpl

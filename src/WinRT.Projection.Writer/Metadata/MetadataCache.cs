@@ -16,8 +16,8 @@ namespace WindowsRuntime.ProjectionWriter;
 /// </summary>
 internal sealed class MetadataCache
 {
-    private readonly Dictionary<string, NamespaceMembers> _namespaces = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, TypeDefinition> _typesByFullName = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, NamespaceMembers> _namespaces = [];
+    private readonly Dictionary<string, TypeDefinition> _typesByFullName = [];
     private readonly Dictionary<TypeDefinition, string> _typeToModulePath = [];
     private readonly List<ModuleDefinition> _modules = [];
 
@@ -45,7 +45,9 @@ internal sealed class MetadataCache
         // and one picked up by an enclosing directory scan) is only loaded once. Loading the same
         // .winmd twice causes duplicate types to be added to NamespaceMembers.Types and ultimately
         // emitted twice in the same output file (CS0101).
+#pragma warning disable IDE0028 // Use collection expression -- needs StringComparer.OrdinalIgnoreCase
         HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
+#pragma warning restore IDE0028
         List<string> winmdFiles = [];
         foreach (string input in inputs)
         {

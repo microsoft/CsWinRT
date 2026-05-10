@@ -37,14 +37,14 @@ internal static class MappedTypes
 
     private static Dictionary<string, Dictionary<string, MappedType>> Build()
     {
-        Dictionary<string, Dictionary<string, MappedType>> result = new(System.StringComparer.Ordinal);
+        Dictionary<string, Dictionary<string, MappedType>> result = [];
 
         // helper to add a type entry
         void Add(string ns, MappedType mt)
         {
             if (!result.TryGetValue(ns, out Dictionary<string, MappedType>? bag))
             {
-                bag = new Dictionary<string, MappedType>(System.StringComparer.Ordinal);
+                bag = [];
                 result[ns] = bag;
             }
             bag[mt.AbiName] = mt;

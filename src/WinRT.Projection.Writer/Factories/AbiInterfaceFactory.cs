@@ -297,8 +297,8 @@ internal static class AbiInterfaceFactory
         System.Collections.Generic.HashSet<MethodDefinition> propertyAccessors = [];
         foreach (PropertyDefinition prop in type.Properties)
         {
-            if (prop.GetMethod is MethodDefinition g) { propertyAccessors.Add(g); }
-            if (prop.SetMethod is MethodDefinition s) { propertyAccessors.Add(s); }
+            if (prop.GetMethod is MethodDefinition g) { _ = propertyAccessors.Add(g); }
+            if (prop.SetMethod is MethodDefinition s) { _ = propertyAccessors.Add(s); }
         }
 
         // Local helper to emit a single Do_Abi method body for a given MethodDefinition.

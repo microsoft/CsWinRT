@@ -36,8 +36,9 @@ internal static class InteropTypeNameWriter
             && gtd.Type?.Namespace?.Value == "System"
             && gtd.Type?.Name?.Value == "Guid")
         {
-            if (nameType == TypedefNameType.Projected) { sb.Append("System-Guid"); }
-            else { sb.Append("ABI.System.<<#corlib>Guid>"); }
+            _ = nameType == TypedefNameType.Projected
+                ? sb.Append("System-Guid")
+                : sb.Append("ABI.System.<<#corlib>Guid>");
             return;
         }
         switch (sig)
@@ -58,9 +59,9 @@ internal static class InteropTypeNameWriter
                 }
                 else
                 {
-                    sb.Append("ABI.System.<");
+                    _ = sb.Append("ABI.System.<");
                     EncodeInteropTypeNameInto(sb, sz.BaseType, TypedefNameType.Projected);
-                    sb.Append(">");
+                    _ = sb.Append(">");
                 }
                 return;
             case ByReferenceTypeSignature br:
@@ -70,7 +71,7 @@ internal static class InteropTypeNameWriter
                 EncodeInteropTypeNameInto(sb, cm.BaseType, nameType);
                 return;
             default:
-                sb.Append(sig.FullName);
+                _ = sb.Append(sig.FullName);
                 return;
         }
     }
@@ -80,26 +81,27 @@ internal static class InteropTypeNameWriter
         switch (corlib.ElementType)
         {
             case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Object:
-                if (nameType == TypedefNameType.Projected) { sb.Append("object"); }
-                else { sb.Append("ABI.System.<object>"); }
+                _ = nameType == TypedefNameType.Projected
+                    ? sb.Append("object")
+                    : sb.Append("ABI.System.<object>");
                 return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean: sb.Append("bool"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char: sb.Append("char"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1: sb.Append("sbyte"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1: sb.Append("byte"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2: sb.Append("short"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2: sb.Append("ushort"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4: sb.Append("int"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4: sb.Append("uint"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8: sb.Append("long"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8: sb.Append("ulong"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R4: sb.Append("float"); return;
-            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8: sb.Append("double"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean: _ = sb.Append("bool"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char: _ = sb.Append("char"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I1: _ = sb.Append("sbyte"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U1: _ = sb.Append("byte"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I2: _ = sb.Append("short"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U2: _ = sb.Append("ushort"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I4: _ = sb.Append("int"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U4: _ = sb.Append("uint"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.I8: _ = sb.Append("long"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.U8: _ = sb.Append("ulong"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R4: _ = sb.Append("float"); return;
+            case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.R8: _ = sb.Append("double"); return;
             case AsmResolver.PE.DotNet.Metadata.Tables.ElementType.String:
-                sb.Append("string");
+                _ = sb.Append("string");
                 return;
         }
-        sb.Append(corlib.FullName);
+        _ = sb.Append(corlib.FullName);
     }
 
     private static void EncodeForTypeDef(StringBuilder sb, ITypeDefOrRef type, TypedefNameType nameType, System.Collections.Generic.IList<TypeSignature>? generic_args)
@@ -107,7 +109,7 @@ internal static class InteropTypeNameWriter
         (string typeNs, string typeName) = type.Names();
 
         bool isAbi = nameType is not (TypedefNameType.Projected or TypedefNameType.InteropIID);
-        if (isAbi) { sb.Append("ABI."); }
+        if (isAbi) { _ = sb.Append("ABI."); }
 
         // Special case for EventSource on Windows.Foundation event-handler delegate types
         // (e.g. EventHandler<T>, TypedEventHandler<S,R>).
@@ -120,18 +122,18 @@ internal static class InteropTypeNameWriter
             {
                 arity = parsed;
             }
-            sb.Append("WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'");
-            sb.Append(arity.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            _ = sb.Append("WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'");
+            _ = sb.Append(arity.ToString(System.Globalization.CultureInfo.InvariantCulture));
             // Append the generic args (if any).
             if (generic_args is { Count: > 0 })
             {
-                sb.Append('<');
+                _ = sb.Append('<');
                 for (int i = 0; i < generic_args.Count; i++)
                 {
-                    if (i > 0) { sb.Append('|'); }
+                    if (i > 0) { _ = sb.Append('|'); }
                     EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
                 }
-                sb.Append('>');
+                _ = sb.Append('>');
             }
             return;
         }
@@ -148,49 +150,49 @@ internal static class InteropTypeNameWriter
 
         if (nameType == TypedefNameType.InteropIID)
         {
-            sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
-            sb.Append(typeName);
+            _ = sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
+            _ = sb.Append(typeName);
         }
         else if (nameType == TypedefNameType.Projected)
         {
             // Replace namespace separator with - within the generic.
             string nsHyphenated = typeNs.Replace('.', '-');
-            sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
-            sb.Append(nsHyphenated);
-            sb.Append('-');
-            sb.Append(typeName);
+            _ = sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
+            _ = sb.Append(nsHyphenated);
+            _ = sb.Append('-');
+            _ = sb.Append(typeName);
         }
         else
         {
-            sb.Append(typeNs);
-            sb.Append('.');
-            sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
-            sb.Append(typeName);
+            _ = sb.Append(typeNs);
+            _ = sb.Append('.');
+            _ = sb.Append(GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
+            _ = sb.Append(typeName);
         }
 
         if (generic_args is { Count: > 0 })
         {
-            sb.Append('<');
+            _ = sb.Append('<');
             for (int i = 0; i < generic_args.Count; i++)
             {
-                if (i > 0) { sb.Append('|'); }
+                if (i > 0) { _ = sb.Append('|'); }
                 EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
             }
-            sb.Append('>');
+            _ = sb.Append('>');
         }
 
         // Append the type-kind suffix (matches C++ write_interop_dll_type_name_for_typedef).
         if (nameType == TypedefNameType.StaticAbiClass)
         {
-            sb.Append("Methods");
+            _ = sb.Append("Methods");
         }
         else if (nameType == TypedefNameType.ABI)
         {
-            sb.Append("Marshaller");
+            _ = sb.Append("Marshaller");
         }
         else if (nameType == TypedefNameType.EventSource)
         {
-            sb.Append("EventSource");
+            _ = sb.Append("EventSource");
         }
     }
 

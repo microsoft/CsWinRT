@@ -30,7 +30,7 @@ internal static class AttributedTypes
     /// </summary>
     public static IEnumerable<KeyValuePair<string, AttributedType>> Get(TypeDefinition type, MetadataCache cache)
     {
-        Dictionary<string, AttributedType> result = new(System.StringComparer.Ordinal);
+        Dictionary<string, AttributedType> result = [];
 
         for (int i = 0; i < type.CustomAttributes.Count; i++)
         {
@@ -67,7 +67,7 @@ internal static class AttributedTypes
         // C++ uses std::map<std::string, attributed_type> which iterates in sorted-by-key order.
         // The key is the factory-interface type name (e.g. 'IButtonUtilsStatic'), so the inheritance
         // order in the generated code is alphabetical by interface name.
-        SortedDictionary<string, AttributedType> sorted = new(System.StringComparer.Ordinal);
+        SortedDictionary<string, AttributedType> sorted = [];
         foreach (KeyValuePair<string, AttributedType> kv in result)
         {
             sorted[kv.Key] = kv.Value;

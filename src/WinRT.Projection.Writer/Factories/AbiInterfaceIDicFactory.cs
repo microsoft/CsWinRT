@@ -79,7 +79,7 @@ internal static class AbiInterfaceIDicFactory
                     {
                         if (impl2.Interface is null) { continue; }
                         TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
-                        if (r2 is not null) { visited.Add(r2); }
+                        if (r2 is not null) { _ = visited.Add(r2); }
                     }
                 }
                 continue;
@@ -103,7 +103,7 @@ internal static class AbiInterfaceIDicFactory
                     {
                         if (impl2.Interface is null) { continue; }
                         TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
-                        if (r2 is not null) { visited.Add(r2); }
+                        if (r2 is not null) { _ = visited.Add(r2); }
                     }
                 }
                 continue;
@@ -120,7 +120,7 @@ internal static class AbiInterfaceIDicFactory
                     {
                         if (impl2.Interface is null) { continue; }
                         TypeDefinition? r2 = AbiTypeHelpers.ResolveInterfaceTypeDef(context.Cache, impl2.Interface);
-                        if (r2 is not null) { visited.Add(r2); }
+                        if (r2 is not null) { _ = visited.Add(r2); }
                     }
                 }
                 continue;

@@ -215,9 +215,9 @@ internal static class ClassFactory
     {
         if (context.Cache is null) { return; }
         // Per-property accessor state (origin tracking for getter/setter)
-        Dictionary<string, StaticPropertyAccessorState> properties = new(System.StringComparer.Ordinal);
+        Dictionary<string, StaticPropertyAccessorState> properties = [];
         // Track the static factory ifaces we've emitted objref fields for (to dedupe)
-        HashSet<string> emittedObjRefs = new(System.StringComparer.Ordinal);
+        HashSet<string> emittedObjRefs = [];
 
         string runtimeClassFullName = (type.Namespace?.Value ?? string.Empty) + "." + (type.Name?.Value ?? string.Empty);
 

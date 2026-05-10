@@ -43,9 +43,9 @@ internal sealed partial class ProjectionGenerator
         WriteGeneratedInterfaceIIDsFile();
 
         // Phase 3: per-namespace processing.
-        ConcurrentDictionary<string, string> defaultInterfaceEntries = new();
-        ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries = new();
-        ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = new();
+        ConcurrentDictionary<string, string> defaultInterfaceEntries = [];
+        ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries = [];
+        ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = [];
         bool projectionFileWritten = false;
 
         // Process namespaces sequentially for now (C++ used task_group / parallel processing).

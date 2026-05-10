@@ -28,8 +28,7 @@ internal static class CustomAttributeFactory
 
         // Detect AttributeUsage which takes an AttributeTargets enum
         ITypeDefOrRef? attrType = attribute.Constructor?.DeclaringType;
-        bool isAttributeUsage = attrType?.Name == "AttributeUsageAttribute" ||
-                                attrType?.Name == "AttributeUsage";
+        bool isAttributeUsage = attrType?.Name?.Value is "AttributeUsageAttribute" or "AttributeUsage";
 
         for (int i = 0; i < attribute.Signature.FixedArguments.Count; i++)
         {
@@ -156,13 +155,13 @@ internal static class CustomAttributeFactory
             }
             if (prevEscape && c != '\\' && c != '\'' && c != '"')
             {
-                sb.Append('\\');
+                _ = sb.Append('\\');
             }
             prevEscape = false;
-            sb.Append(c);
-            if (c == '"') { sb.Append('"'); }
+            _ = sb.Append(c);
+            if (c == '"') { _ = sb.Append('"'); }
         }
-        if (prevEscape) { sb.Append('\\'); }
+        if (prevEscape) { _ = sb.Append('\\'); }
         return sb.ToString();
     }
 
@@ -272,7 +271,7 @@ internal static class CustomAttributeFactory
     /// <param name="enablePlatformAttrib">Whether to also emit a <c>[SupportedOSPlatform]</c> attribute synthesized from any <c>[ContractVersion]</c>.</param>
     public static void WriteCustomAttributes(IndentedTextWriter writer, ProjectionEmitContext context, IHasCustomAttribute member, bool enablePlatformAttrib)
     {
-        Dictionary<string, List<string>> attributes = new(System.StringComparer.Ordinal);
+        Dictionary<string, List<string>> attributes = [];
         bool allowMultiple = false;
 
         for (int i = 0; i < member.CustomAttributes.Count; i++)

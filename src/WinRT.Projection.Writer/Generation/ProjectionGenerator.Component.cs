@@ -26,7 +26,7 @@ internal sealed partial class ProjectionGenerator
     private (HashSet<TypeDefinition> ComponentActivatable, Dictionary<string, HashSet<TypeDefinition>> ByModule) DiscoverComponentActivatableTypes()
     {
         HashSet<TypeDefinition> componentActivatable = [];
-        Dictionary<string, HashSet<TypeDefinition>> componentByModule = new(System.StringComparer.Ordinal);
+        Dictionary<string, HashSet<TypeDefinition>> componentByModule = [];
 
         if (!_settings.Component)
         {

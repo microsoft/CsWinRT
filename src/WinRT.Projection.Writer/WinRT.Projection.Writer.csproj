@@ -28,8 +28,12 @@
     <Features>strict</Features>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!-- We don't need XML documentation warnings for the internals here -->
-    <NoWarn>$(NoWarn);IDE0060;IDE0010;IDE0022;IDE0028;IDE0046;IDE0078;IDE0072;IDE0058</NoWarn>
+    <!-- IDE0010 / IDE0072: Add missing cases to switch over a large enum (ElementType etc.) — too noisy to enumerate every case. -->
+    <!-- IDE0022: Use expression body for method — preference; method bodies left as block-bodied throughout. -->
+    <!-- IDE0028: Use collection expression — limited to cases where comparer arguments don't fit collection-expression syntax. -->
+    <!-- IDE0046: 'if' statement can be simplified — if/else if chains over type-class predicates are more readable than nested ternaries. -->
+    <!-- IDE0060: Remove unused parameter — keep for API consistency across factory helpers. -->
+    <NoWarn>$(NoWarn);IDE0010;IDE0022;IDE0046;IDE0060;IDE0072</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

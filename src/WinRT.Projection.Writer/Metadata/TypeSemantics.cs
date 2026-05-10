@@ -116,7 +116,9 @@ internal static class TypeSemanticsFactory
     {
         ITypeDefOrRef genericType = gi.GenericType;
         // Always preserve the type arguments.
+#pragma warning disable IDE0028 // Use collection expression -- intentional capacity hint
         List<TypeSemantics> args = new(gi.TypeArguments.Count);
+#pragma warning restore IDE0028
         foreach (TypeSignature arg in gi.TypeArguments)
         {
             args.Add(Get(arg));

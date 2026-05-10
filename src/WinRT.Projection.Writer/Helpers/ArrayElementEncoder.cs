@@ -52,7 +52,7 @@ internal static class ArrayElementEncoder
             && gtd.Type?.Namespace?.Value == "System"
             && gtd.Type?.Name?.Value == "Guid")
         {
-            sb.Append("<#corlib>Guid");
+            _ = sb.Append("<#corlib>Guid");
             return;
         }
         switch (sig)
@@ -67,7 +67,7 @@ internal static class ArrayElementEncoder
                 EncodeArrayElementForTypeDef(sb, gi.GenericType, generic_args: gi.TypeArguments);
                 return;
             default:
-                sb.Append(sig.FullName);
+                _ = sb.Append(sig.FullName);
                 return;
         }
     }
@@ -88,20 +88,20 @@ internal static class ArrayElementEncoder
         // Assembly marker prefix. Pass the type so that third-party (e.g. component-authored)
         // types resolve to their actual assembly name (e.g. <AuthoringTest>) instead of
         // defaulting to <#Windows>.
-        sb.Append(InteropTypeNameWriter.GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
+        _ = sb.Append(InteropTypeNameWriter.GetInteropAssemblyMarker(typeNs, typeName, mapped, type));
         // Top-level: just the type name (no namespace).
-        sb.Append(typeName);
+        _ = sb.Append(typeName);
 
         // Generic arguments use the standard EncodeInteropTypeNameInto (depth > 0).
         if (generic_args is { Count: > 0 })
         {
-            sb.Append('<');
+            _ = sb.Append('<');
             for (int i = 0; i < generic_args.Count; i++)
             {
-                if (i > 0) { sb.Append('|'); }
+                if (i > 0) { _ = sb.Append('|'); }
                 InteropTypeNameWriter.EncodeInteropTypeNameInto(sb, generic_args[i], TypedefNameType.Projected);
             }
-            sb.Append('>');
+            _ = sb.Append('>');
         }
     }
 }

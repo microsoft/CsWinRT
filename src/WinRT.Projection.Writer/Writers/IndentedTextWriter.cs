@@ -143,7 +143,7 @@ internal sealed class IndentedTextWriter
             && (_buffer[^1] == '{' || _buffer[^1] == '}')
             && (isMultiline || content[0] == ' ' || content[0] == '\t'))
         {
-            _buffer.Append(DefaultNewLine);
+            _ = _buffer.Append(DefaultNewLine);
         }
 
         if (isMultiline)
@@ -258,7 +258,7 @@ internal sealed class IndentedTextWriter
             }
         }
 
-        _buffer.Append(DefaultNewLine);
+        _ = _buffer.Append(DefaultNewLine);
     }
 
     /// <summary>
@@ -268,7 +268,7 @@ internal sealed class IndentedTextWriter
     /// </summary>
     public void WriteRawNewLine()
     {
-        _buffer.Append(DefaultNewLine);
+        _ = _buffer.Append(DefaultNewLine);
     }
 
     /// <summary>
@@ -308,7 +308,7 @@ internal sealed class IndentedTextWriter
     {
         if (_buffer.Length > 0 && (_buffer[^1] == '}' || _buffer[^1] == '{'))
         {
-            _buffer.Append(DefaultNewLine);
+            _ = _buffer.Append(DefaultNewLine);
         }
 
         Write(content, isMultiline);
@@ -357,7 +357,7 @@ internal sealed class IndentedTextWriter
     public string ToStringAndClear()
     {
         string text = _buffer.ToString().Trim();
-        _buffer.Clear();
+        _ = _buffer.Clear();
         return text;
     }
 
@@ -407,7 +407,7 @@ internal sealed class IndentedTextWriter
             {
                 if (System.IO.File.ReadAllText(path) == content)
                 {
-                    _buffer.Clear();
+                    _ = _buffer.Clear();
                     return;
                 }
             }
@@ -417,7 +417,7 @@ internal sealed class IndentedTextWriter
             }
         }
         System.IO.File.WriteAllText(path, content);
-        _buffer.Clear();
+        _ = _buffer.Clear();
     }
 
     /// <summary>
@@ -427,7 +427,7 @@ internal sealed class IndentedTextWriter
     public string FlushToString()
     {
         string text = _buffer.ToString();
-        _buffer.Clear();
+        _ = _buffer.Clear();
         return text;
     }
 
@@ -447,10 +447,10 @@ internal sealed class IndentedTextWriter
 
         if (_buffer.Length == 0 || _buffer[^1] == DefaultNewLine)
         {
-            _buffer.Append(_currentIndentation);
+            _ = _buffer.Append(_currentIndentation);
         }
 
-        _buffer.Append(content);
+        _ = _buffer.Append(content);
     }
 
     /// <summary>

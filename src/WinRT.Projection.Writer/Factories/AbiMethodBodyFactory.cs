@@ -985,6 +985,8 @@ internal static class AbiMethodBodyFactory
     /// <c>RestrictedErrorInfo.ThrowExceptionForHR(...)</c> wrap (methods/properties annotated with
     /// <c>[Windows.Foundation.Metadata.NoExceptionAttribute]</c>, or remove-overload methods,
     /// contractually return <c>S_OK</c>).</param>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0045:Convert to conditional expression",
+        Justification = "if/else if chains over type-class predicates are more readable than nested ternaries.")]
     internal static void EmitAbiMethodBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSig sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
     {
         AsmResolver.DotNet.Signatures.TypeSignature? rt = sig.ReturnType;
@@ -1003,114 +1005,122 @@ internal static class AbiMethodBodyFactory
 
         // Build the function pointer signature: void*, [paramAbiType...,] [retAbiType*,] int
         System.Text.StringBuilder fp = new();
-        fp.Append("void*");
+        _ = fp.Append("void*");
         foreach (ParamInfo p in sig.Params)
         {
             ParamCategory cat = ParamHelpers.GetParamCategory(p);
             if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
             {
-                fp.Append(", uint, void*");
+                _ = fp.Append(", uint, void*");
                 continue;
             }
             if (cat == ParamCategory.Out)
             {
                 AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                fp.Append(", ");
-                if (uOut.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsObject() || uOut.IsGenericInstance()) { fp.Append("void**"); }
-                else if (uOut.IsSystemType()) { fp.Append("global::ABI.System.Type*"); }
-                else if (AbiTypeHelpers.IsComplexStruct(context.Cache, uOut)) { fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, uOut)); fp.Append('*'); }
-                else if (AbiTypeHelpers.IsAnyStruct(context.Cache, uOut)) { fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, uOut)); fp.Append('*'); }
-                else { fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uOut)); fp.Append('*'); }
+                _ = fp.Append(", ");
+                if (uOut.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uOut) || uOut.IsObject() || uOut.IsGenericInstance()) { _ = fp.Append("void**"); }
+                else if (uOut.IsSystemType()) { _ = fp.Append("global::ABI.System.Type*"); }
+                else if (AbiTypeHelpers.IsComplexStruct(context.Cache, uOut)) { _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, uOut)); _ = fp.Append('*'); }
+                else if (AbiTypeHelpers.IsAnyStruct(context.Cache, uOut)) { _ = fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, uOut)); _ = fp.Append('*'); }
+                else { _ = fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uOut)); _ = fp.Append('*'); }
                 continue;
             }
             if (cat == ParamCategory.Ref)
             {
                 AsmResolver.DotNet.Signatures.TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                fp.Append(", ");
-                if (AbiTypeHelpers.IsComplexStruct(context.Cache, uRef)) { fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, uRef)); fp.Append('*'); }
-                else if (AbiTypeHelpers.IsAnyStruct(context.Cache, uRef)) { fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, uRef)); fp.Append('*'); }
-                else { fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uRef)); fp.Append('*'); }
+                _ = fp.Append(", ");
+                if (AbiTypeHelpers.IsComplexStruct(context.Cache, uRef)) { _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, uRef)); _ = fp.Append('*'); }
+                else if (AbiTypeHelpers.IsAnyStruct(context.Cache, uRef)) { _ = fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, uRef)); _ = fp.Append('*'); }
+                else { _ = fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, uRef)); _ = fp.Append('*'); }
                 continue;
             }
             if (cat == ParamCategory.ReceiveArray)
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                fp.Append(", uint*, ");
+                _ = fp.Append(", uint*, ");
                 if (sza.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject())
                 {
-                    fp.Append("void*");
+                    _ = fp.Append("void*");
                 }
                 else if (sza.BaseType.IsHResultException())
                 {
-                    fp.Append("global::ABI.System.Exception");
+                    _ = fp.Append("global::ABI.System.Exception");
                 }
                 else if (AbiTypeHelpers.IsMappedAbiValueType(sza.BaseType))
                 {
-                    fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(sza.BaseType));
+                    _ = fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(sza.BaseType));
                 }
-                else if (AbiTypeHelpers.IsComplexStruct(context.Cache, sza.BaseType)) { fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType)); }
-                else if (AbiTypeHelpers.IsAnyStruct(context.Cache, sza.BaseType)) { fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)); }
-                else { fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType)); }
-                fp.Append("**");
+                else if (AbiTypeHelpers.IsComplexStruct(context.Cache, sza.BaseType)) { _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType)); }
+                else
+                {
+                    _ = fp.Append(AbiTypeHelpers.IsAnyStruct(context.Cache, sza.BaseType)
+                        ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)
+                        : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType));
+                }
+                _ = fp.Append("**");
                 continue;
             }
-            fp.Append(", ");
-            if (p.Type.IsHResultException()) { fp.Append("global::ABI.System.Exception"); }
-            else if (p.Type.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance()) { fp.Append("void*"); }
-            else if (p.Type.IsSystemType()) { fp.Append("global::ABI.System.Type"); }
-            else if (AbiTypeHelpers.IsAnyStruct(context.Cache, p.Type)) { fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, p.Type)); }
-            else if (AbiTypeHelpers.IsMappedAbiValueType(p.Type)) { fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(p.Type)); }
-            else if (AbiTypeHelpers.IsComplexStruct(context.Cache, p.Type)) { fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, p.Type)); }
-            else { fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, p.Type)); }
+            _ = fp.Append(", ");
+            if (p.Type.IsHResultException()) { _ = fp.Append("global::ABI.System.Exception"); }
+            else if (p.Type.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, p.Type) || p.Type.IsObject() || p.Type.IsGenericInstance()) { _ = fp.Append("void*"); }
+            else if (p.Type.IsSystemType()) { _ = fp.Append("global::ABI.System.Type"); }
+            else if (AbiTypeHelpers.IsAnyStruct(context.Cache, p.Type)) { _ = fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, p.Type)); }
+            else if (AbiTypeHelpers.IsMappedAbiValueType(p.Type)) { _ = fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(p.Type)); }
+            else
+            {
+                _ = fp.Append(AbiTypeHelpers.IsComplexStruct(context.Cache, p.Type)
+                    ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, p.Type)
+                    : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, p.Type));
+            }
         }
         if (rt is not null)
         {
             if (returnIsReceiveArray)
             {
                 AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt;
-                fp.Append(", uint*, ");
+                _ = fp.Append(", uint*, ");
                 if (retSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject())
                 {
-                    fp.Append("void*");
+                    _ = fp.Append("void*");
                 }
                 else if (AbiTypeHelpers.IsComplexStruct(context.Cache, retSz.BaseType))
                 {
-                    fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType));
+                    _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSz.BaseType));
                 }
                 else if (retSz.BaseType.IsHResultException())
                 {
-                    fp.Append("global::ABI.System.Exception");
+                    _ = fp.Append("global::ABI.System.Exception");
                 }
                 else if (AbiTypeHelpers.IsMappedAbiValueType(retSz.BaseType))
                 {
-                    fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(retSz.BaseType));
+                    _ = fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(retSz.BaseType));
                 }
                 else if (AbiTypeHelpers.IsAnyStruct(context.Cache, retSz.BaseType))
                 {
-                    fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSz.BaseType));
+                    _ = fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSz.BaseType));
                 }
                 else
                 {
-                    fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType));
+                    _ = fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSz.BaseType));
                 }
-                fp.Append("**");
+                _ = fp.Append("**");
             }
             else if (returnIsHResultException)
             {
-                fp.Append(", global::ABI.System.Exception*");
+                _ = fp.Append(", global::ABI.System.Exception*");
             }
             else
             {
-                fp.Append(", ");
-                if (returnIsString || returnIsRefType) { fp.Append("void**"); }
-                else if (rt is not null && rt.IsSystemType()) { fp.Append("global::ABI.System.Type*"); }
-                else if (returnIsAnyStruct) { fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, rt!)); fp.Append('*'); }
-                else if (returnIsComplexStruct) { fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, rt!)); fp.Append('*'); }
-                else if (rt is not null && AbiTypeHelpers.IsMappedAbiValueType(rt)) { fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(rt)); fp.Append('*'); }
-                else { fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt!)); fp.Append('*'); }
+                _ = fp.Append(", ");
+                if (returnIsString || returnIsRefType) { _ = fp.Append("void**"); }
+                else if (rt is not null && rt.IsSystemType()) { _ = fp.Append("global::ABI.System.Type*"); }
+                else if (returnIsAnyStruct) { _ = fp.Append(AbiTypeHelpers.GetBlittableStructAbiType(writer, context, rt!)); _ = fp.Append('*'); }
+                else if (returnIsComplexStruct) { _ = fp.Append(AbiTypeHelpers.GetAbiStructTypeName(writer, context, rt!)); _ = fp.Append('*'); }
+                else if (rt is not null && AbiTypeHelpers.IsMappedAbiValueType(rt)) { _ = fp.Append(AbiTypeHelpers.GetMappedAbiTypeName(rt)); _ = fp.Append('*'); }
+                else { _ = fp.Append(AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, rt!)); _ = fp.Append('*'); }
             }
         }
-        fp.Append(", int");
+        _ = fp.Append(", int");
 
         writer.WriteLine("");
         writer.Write("""
