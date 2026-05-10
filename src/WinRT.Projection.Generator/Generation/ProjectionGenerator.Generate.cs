@@ -9,6 +9,7 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionGenerator.Errors;
 using WindowsRuntime.ProjectionWriter;
+using WindowsRuntime.ProjectionWriter.Helpers;
 
 #pragma warning disable IDE0270
 
@@ -237,9 +238,8 @@ internal partial class ProjectionGenerator
             excludes.Add("Windows");
         }
 
-        // Expand the windows metadata token (path | "local" | "sdk[+]" | version[+]) into actual
-        // .winmd file paths (or directories the writer will recursively scan). The C++ cswinrt.exe
-        // tool did this in cmd_reader.h via reader.files() — see WindowsMetadataExpander.
+        // Expand the windows metadata token (path | "local" | "sdk[+]" | version[+]) into
+        // actual .winmd file paths (or directories the writer will recursively scan).
         winmdInputs.AddRange(WindowsMetadataExpander.Expand(args.WindowsMetadata));
 
         // When generating 'WinRT.Component.dll', enable component-specific code generation
