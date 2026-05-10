@@ -1405,8 +1405,7 @@ internal static class AbiMethodBodyFactory
             if ((cat is ParamCategory.In or ParamCategory.Ref) && AbiTypeHelpers.IsComplexStruct(context.Cache, AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type))) { hasComplexStructInput = true; break; }
         }
         // System.Type return: ABI.System.Type contains an HSTRING that must be disposed
-        // after marshalling to managed System.Type, otherwise the HSTRING leaks. Mirrors
-        // C++ abi_marshaler::write_dispose path for is_out + non-empty marshaler_type.
+        // after marshalling to managed System.Type, otherwise the HSTRING leaks.
         bool returnIsSystemTypeForCleanup = rt is not null && rt.IsSystemType();
         bool needsTryFinally = returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct || hasNonBlittablePassArray || hasComplexStructInput || returnIsSystemTypeForCleanup;
         if (needsTryFinally)
@@ -1433,7 +1432,7 @@ internal static class AbiMethodBodyFactory
             string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
             writer.WriteLine($"{indent}__{localName} = {AbiTypeHelpers.GetMarshallerFullName(writer, context, pType)}.ConvertToUnmanaged({callName});");
         }
-        // Type input params: set up TypeReference locals before the fixed block. Mirrors truth:
+        // Type input params: set up TypeReference locals before the fixed block:
         //   global::ABI.System.TypeMarshaller.ConvertToUnmanagedUnsafe(forType, out TypeReference __forType);
         for (int i = 0; i < sig.Params.Count; i++)
         {

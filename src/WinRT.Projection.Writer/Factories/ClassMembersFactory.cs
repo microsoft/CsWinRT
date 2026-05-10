@@ -69,8 +69,7 @@ internal static class ClassMembersFactory
             bool bothSidesPresent = s.HasGetter && s.HasSetter;
             if (!bothSidesPresent || getterPlat == setterPlat)
             {
-                // Collapse: prefer the populated side (matches C++ which compares string_view equality
-                // including both being empty).
+                // Collapse: prefer the populated side (treats both-empty as equal).
                 propertyPlat = !string.IsNullOrEmpty(getterPlat) ? getterPlat : setterPlat;
                 getterPlat = string.Empty;
                 setterPlat = string.Empty;
@@ -243,8 +242,7 @@ internal static class ClassMembersFactory
             // any references to this interface. This is critical for nested recursion: e.g. when
             // emitting members for IObservableMap<string, object>'s base IMap<!0, !1>, we need to
             // substitute !0/!1 with string/object so the generated code references
-            // IDictionary<string, object> instead of IDictionary<T0, T1>. Mirrors the original code's
-            // writer.push_generic_args() stack inside for_typedef().
+            // IDictionary<string, object> instead of IDictionary<T0, T1>.
             ITypeDefOrRef substitutedInterface = impl.Interface;
             AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature? nextInstance = null;
             if (impl.Interface is TypeSpecification ts && ts.Signature is AsmResolver.DotNet.Signatures.GenericInstanceTypeSignature gi)

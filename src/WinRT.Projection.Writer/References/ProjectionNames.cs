@@ -4,9 +4,8 @@
 namespace WindowsRuntime.ProjectionWriter.References;
 
 /// <summary>
-/// Common string literals used throughout the projection writer (prefixes, suffixes, conventions).
-/// Mirrors the `WinRT.Interop.Generator/References/InteropNames.cs` pattern -- centralizing
-/// repeated literals so they have a single canonical source.
+/// Common string literals used throughout the projection writer (prefixes, suffixes, conventions),
+/// centralized so they have a single canonical source.
 /// </summary>
 internal static class ProjectionNames
 {

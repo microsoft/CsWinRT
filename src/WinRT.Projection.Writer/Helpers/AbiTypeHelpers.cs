@@ -9,9 +9,8 @@ using WindowsRuntime.ProjectionWriter.Writers;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// ABI emission helpers (structs, enums, delegates, interfaces, classes).
-/// Mirrors the C++ <c>write_abi_*</c> family. Initial port: emits the foundational
-/// ABI scaffolding only; full marshaller/vtable emission to be filled in later.
+/// ABI emission helpers for structs, enums, delegates, interfaces, and classes.
+/// Provides predicates and writer helpers used by the per-kind ABI factories.
 /// </summary>
 internal static class AbiTypeHelpers
 {
@@ -200,7 +199,7 @@ internal static class AbiTypeHelpers
         return "__" + GetReturnParamName(sig);
     }
 
-    /// <summary>Returns '__&lt;returnName&gt;Size' (matches C++ '__%Size' convention) — by default '____return_value__Size' for the standard '__return_value__' return param.</summary>
+    /// <summary>Returns '__&lt;returnName&gt;Size' — by default '____return_value__Size' for the standard '__return_value__' return param.</summary>
     internal static string GetReturnSizeParamName(MethodSig sig)
     {
         return "__" + GetReturnParamName(sig) + "Size";
@@ -759,7 +758,7 @@ internal static class AbiTypeHelpers
         (string ns, string name) = def.Names();
         // Apply mapped-type translation so consumers see the projected (.NET) enum name
         // (e.g. Windows.UI.Xaml.Interop.NotifyCollectionChangedAction →
-        // System.Collections.Specialized.NotifyCollectionChangedAction). Mirrors the same
+        // System.Collections.Specialized.NotifyCollectionChangedAction). Same
         // remapping that WriteTypedefName performs.
         MappedType? mapped = MappedTypes.Get(ns, name);
         if (mapped is not null)

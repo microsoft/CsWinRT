@@ -7,7 +7,7 @@ using AsmResolver.DotNet;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Mirrors the C++ <c>category</c> enum in <c>winmd::reader::category</c>.
+/// Categorization of a Windows Runtime type definition.
 /// </summary>
 internal enum TypeCategory
 {

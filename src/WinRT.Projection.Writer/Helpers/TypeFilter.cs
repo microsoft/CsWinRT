@@ -10,9 +10,8 @@ using AsmResolver.DotNet;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Mirrors the C++ <c>winmd::reader::filter</c> include/exclude logic.
-/// Filters use longest-prefix-match semantics: type/namespace is checked against
-/// each prefix in include/exclude lists, and the longest matching prefix wins.
+/// Include/exclude type filter using longest-prefix-match semantics: type/namespace is checked
+/// against each prefix in the include/exclude lists, and the longest matching prefix wins.
 /// </summary>
 internal readonly struct TypeFilter
 {
@@ -34,10 +33,10 @@ internal readonly struct TypeFilter
 
     /// <summary>
     /// Returns whether the given type name passes the include/exclude filter.
-    /// Mirrors the C++ <c>winmd::reader::filter</c> algorithm: rules are sorted by descending
-    /// prefix length (with includes winning ties over excludes); the first matching rule wins.
-    /// Match semantics split the full type name into <c>namespace.typeName</c> parts and treat
-    /// the rule prefix as either a namespace-prefix or a namespace + typename-prefix.
+    /// Rules are sorted by descending prefix length (with includes winning ties over excludes);
+    /// the first matching rule wins. Match semantics split the full type name into
+    /// <c>namespace.typeName</c> parts and treat the rule prefix as either a namespace-prefix or
+    /// a namespace + typename-prefix.
     /// </summary>
     public bool Includes(string fullName)
     {
@@ -82,7 +81,7 @@ internal readonly struct TypeFilter
             }
             else
             {
-                // Equal length: include wins (matches C++ sort key 'pair{size, !isInclude}' descending).
+                // Equal length: include wins (this is the documented tie-breaker).
                 pickInclude = incRule.Length >= excRule.Length;
             }
 

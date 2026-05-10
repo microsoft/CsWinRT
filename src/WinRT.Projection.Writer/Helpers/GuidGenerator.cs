@@ -8,8 +8,8 @@ using System.Text;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Mirrors the C++ <c>guid_generator.h</c>. Generates Windows Runtime parameterized GUIDs (PIIDs)
-/// using the WinRT-defined namespace GUID (d57af411-737b-c042-abae-878b1e16adee) and SHA-1.
+/// Generates Windows Runtime parameterized GUIDs (PIIDs) using the WinRT-defined namespace GUID
+/// (d57af411-737b-c042-abae-878b1e16adee) and SHA-1.
 /// </summary>
 internal static class GuidGenerator
 {

@@ -19,7 +19,7 @@ namespace WindowsRuntime.ProjectionWriter.Extensions;
 internal static class ProjectionWriterExtensions
 {
     /// <summary>
-    /// Writes the standard auto-generated file header (the C++ <c>cswinrt.exe</c> banner +
+    /// Writes the standard auto-generated file header (the <c>cswinrt.exe</c> banner +
     /// canonical <c>using</c> imports + suppression pragmas) at the top of every emitted
     /// <c>.cs</c> file.
     /// </summary>

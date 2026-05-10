@@ -53,8 +53,9 @@ internal sealed class ProjectionEmitContext
 
     /// <summary>
     /// Gets or sets a value indicating whether platform-attribute computation should suppress
-    /// platforms that are less than or equal to <see cref="Platform"/>. Mirrors the historical
-    /// C++ writer's class-scope platform suppression mode.
+    /// platforms that are less than or equal to <see cref="Platform"/>. Used to apply class-scope
+    /// platform suppression so member-level <c>[SupportedOSPlatform]</c> attributes don't repeat
+    /// information already on the enclosing type.
     /// </summary>
     public bool CheckPlatform { get; set; }
 

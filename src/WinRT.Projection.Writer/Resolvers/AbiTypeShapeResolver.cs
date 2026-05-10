@@ -9,7 +9,6 @@ namespace WindowsRuntime.ProjectionWriter.Resolvers;
 
 /// <summary>
 /// Classifies WinRT type signatures by their ABI marshalling shape (see <see cref="AbiTypeShapeKind"/>).
-/// Mirrors the classification logic that historically lived inline in the ABI emitters.
 /// </summary>
 /// <remarks>
 /// <para>

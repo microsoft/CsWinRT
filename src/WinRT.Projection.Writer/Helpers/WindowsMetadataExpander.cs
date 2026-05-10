@@ -11,10 +11,8 @@ using Microsoft.Win32;
 namespace WindowsRuntime.ProjectionWriter;
 
 /// <summary>
-/// Expands a Windows metadata token (e.g. <c>"sdk"</c>, <c>"sdk+"</c>, <c>"local"</c>, <c>"10.0.26100.0"</c>,
-/// or a literal path) into the set of <c>.winmd</c> files that the C++ <c>cswinrt.exe</c> tool's
-/// <c>cmd_reader.h</c> would have expanded for the same input. Mirrors the logic in
-/// <c>src/cswinrt/cmd_reader.h</c>.
+/// Expands a Windows metadata token (e.g. <c>"sdk"</c>, <c>"sdk+"</c>, <c>"local"</c>,
+/// <c>"10.0.26100.0"</c>, or a literal path) into the set of <c>.winmd</c> files for that input.
 /// </summary>
 public static partial class WindowsMetadataExpander
 {
@@ -120,7 +118,7 @@ public static partial class WindowsMetadataExpander
             return string.Empty;
         }
         // HKLM\SOFTWARE\Microsoft\Windows Kits\Installed Roots\KitsRoot10
-        // Try the WOW64 view first (matches C++ KEY_WOW64_32KEY), then default view.
+        // Try the WOW64 view first (the SDK installer registers under the 32-bit hive), then default view.
         const string subKey = @"SOFTWARE\Microsoft\Windows Kits\Installed Roots";
         try
         {

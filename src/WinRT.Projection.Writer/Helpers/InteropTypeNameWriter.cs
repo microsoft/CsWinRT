@@ -31,7 +31,7 @@ internal static class InteropTypeNameWriter
 
     internal static void EncodeInteropTypeNameInto(StringBuilder sb, TypeSignature sig, TypedefNameType nameType)
     {
-        // Special case for System.Guid: matches C++ guid_type case in write_interop_dll_type_name.
+        // Special case for System.Guid: emitted with assembly-qualified form.
         if (sig is TypeDefOrRefSignature gtd
             && gtd.Type?.Namespace?.Value == "System"
             && gtd.Type?.Name?.Value == "Guid")
@@ -181,7 +181,7 @@ internal static class InteropTypeNameWriter
             _ = sb.Append('>');
         }
 
-        // Append the type-kind suffix (matches C++ write_interop_dll_type_name_for_typedef).
+        // Append the type-kind suffix (e.g. "Methods" for the static ABI methods class).
         if (nameType == TypedefNameType.StaticAbiClass)
         {
             _ = sb.Append("Methods");
@@ -248,7 +248,7 @@ internal static class InteropTypeNameWriter
             string? asmName = GetTypeAssemblyName(type);
             if (!string.IsNullOrEmpty(asmName))
             {
-                // Replace '.' with '-' (matches C++ which does std::replace('.', '-')).
+                // Replace '.' with '-' for the assembly tag (e.g. "WinRT.Interop" -> "WinRT-Interop").
                 string hyphenated = asmName.Replace('.', '-');
                 return "<" + hyphenated + ">";
             }

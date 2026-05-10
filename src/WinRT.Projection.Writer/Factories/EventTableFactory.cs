@@ -14,10 +14,9 @@ internal static class EventTableFactory
 {
     /// <summary>
     /// Emits the per-event <c>ConditionalWeakTable&lt;TInterface, EventRegistrationTokenTable&lt;THandler&gt;&gt;</c>
-    /// backing field property. Mirrors the table emission in C++ <c>write_event_abi_invoke</c>.
-    /// The <paramref name="ifaceFullName"/> is the dispatch target type for the CCW (computed by
-    /// the caller in EmitDoAbiBodyIfSimple) — for instance events on authored classes this is
-    /// the runtime class type, NOT the ABI.Impl interface.
+    /// backing field property. The <paramref name="ifaceFullName"/> is the dispatch target type
+    /// for the CCW (computed by the caller in EmitDoAbiBodyIfSimple) — for instance events on
+    /// authored classes this is the runtime class type, NOT the ABI.Impl interface.
     /// </summary>
     internal static void EmitEventTableField(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, string ifaceFullName)
     {
@@ -48,8 +47,7 @@ internal static class EventTableFactory
     }
 
     /// <summary>
-    /// Emits the body of the <c>Do_Abi_add_&lt;EventName&gt;_N</c> method. Mirrors the corresponding
-    /// branch in C++ <c>write_event_abi_invoke</c>.
+    /// Emits the body of the <c>Do_Abi_add_&lt;EventName&gt;_N</c> method.
     /// </summary>
     internal static void EmitDoAbiAddEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, MethodSig sig, string ifaceFullName)
     {
@@ -107,8 +105,7 @@ internal static class EventTableFactory
     }
 
     /// <summary>
-    /// Emits the body of the <c>Do_Abi_remove_&lt;EventName&gt;_N</c> method. Mirrors the corresponding
-    /// branch in C++ <c>write_event_abi_invoke</c>.
+    /// Emits the body of the <c>Do_Abi_remove_&lt;EventName&gt;_N</c> method.
     /// </summary>
     internal static void EmitDoAbiRemoveEvent(IndentedTextWriter writer, ProjectionEmitContext context, EventDefinition evt, MethodSig sig, string ifaceFullName)
     {
