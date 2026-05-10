@@ -279,7 +279,10 @@ internal static class AbiMethodBodyFactory
                     """, isMultiline: true);
                 }
             }
-            writer.Write("try\r\n    {", isMultiline: true);
+            writer.Write("""
+                try
+                {
+                """, isMultiline: true);
 
             // For non-blittable PassArray params (read-only input arrays), emit CopyToManaged_<name>
             // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
@@ -676,7 +679,14 @@ internal static class AbiMethodBodyFactory
                     }
                 }
             }
-            writer.Write("    return 0;\r\n    }\r\n    catch (Exception __exception__)\r\n    {\r\n        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\r\n    }", isMultiline: true);
+            writer.Write("""
+                    return 0;
+                }
+                catch (Exception __exception__)
+                {
+                    return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);
+                }
+                """, isMultiline: true);
 
             // For non-blittable PassArray params, emit finally block with ArrayPool<T>.Shared.Return.
             bool hasNonBlittableArrayDoAbi = false;
@@ -692,7 +702,10 @@ internal static class AbiMethodBodyFactory
             }
             if (hasNonBlittableArrayDoAbi)
             {
-                writer.Write("finally\r\n    {", isMultiline: true);
+                writer.Write("""
+                    finally
+                    {
+                    """, isMultiline: true);
                 for (int i = 0; i < sig.Params.Count; i++)
                 {
                     ParamInfo p = sig.Params[i];
@@ -1744,7 +1757,7 @@ internal static class AbiMethodBodyFactory
                 """, isMultiline: true);
         }
         // Close the vtable call. One less ')' when noexcept (no ThrowExceptionForHR wrap).
-        writer.Write(isNoExcept ? ");\n" : "));\n");
+        writer.WriteLine(isNoExcept ? ");" : "));");
 
         // After call: copy native-filled values back into the user's managed Span<T> for
         // FillArray of non-blittable element types. The native callee wrote into our
