@@ -243,6 +243,14 @@ internal sealed class IndentedTextWriter
     /// <summary>
     /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
     /// </summary>
+    /// <remarks>
+    /// If the buffer is mid-line (does not end with a newline) <em>and</em> the buffer's last
+    /// character is a closing brace (<c>}</c>), a newline is inserted before <paramref name="content"/>
+    /// is written so the line starts fresh. This prevents <see cref="WriteLine(string, bool)"/>
+    /// from jamming a closing brace onto the previous line when the previous content was a
+    /// multi-line raw string that ended with <c>}</c> (raw <c>"""..."""</c> strings never include
+    /// a trailing newline before the closing token).
+    /// </remarks>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
     public void WriteLine(string content, bool isMultiline = false)
@@ -253,10 +261,23 @@ internal sealed class IndentedTextWriter
     /// <summary>
     /// Writes <paramref name="content"/> to the underlying buffer and appends a trailing newline.
     /// </summary>
+    /// <remarks>
+    /// If the buffer is mid-line (does not end with a newline) <em>and</em> the buffer's last
+    /// character is a closing brace (<c>}</c>), a newline is inserted before <paramref name="content"/>
+    /// is written so the line starts fresh. This prevents <see cref="WriteLine(string, bool)"/>
+    /// from jamming a closing brace onto the previous line when the previous content was a
+    /// multi-line raw string that ended with <c>}</c> (raw <c>"""..."""</c> strings never include
+    /// a trailing newline before the closing token).
+    /// </remarks>
     /// <param name="content">The content to write.</param>
     /// <param name="isMultiline">When <see langword="true"/>, treats <paramref name="content"/> as multiline.</param>
     public void WriteLine(scoped ReadOnlySpan<char> content, bool isMultiline = false)
     {
+        if (_buffer.Length > 0 && _buffer[^1] == '}')
+        {
+            _buffer.Append(DefaultNewLine);
+        }
+
         Write(content, isMultiline);
         WriteLine();
     }
