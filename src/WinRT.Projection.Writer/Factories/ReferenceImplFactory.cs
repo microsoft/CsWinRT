@@ -24,29 +24,26 @@ internal static class ReferenceImplFactory
         bool blittable = AbiTypeHelpers.IsTypeBlittable(context.Cache, type);
 
         writer.WriteLine("");
-        writer.Write(visibility);
-        writer.Write(" static unsafe class ");
-        writer.Write(nameStripped);
-        writer.WriteLine("ReferenceImpl");
-        writer.WriteLine("{");
-        writer.WriteLine("    [FixedAddressValueType]");
-        writer.WriteLine("    private static readonly ReferenceVftbl Vftbl;");
-        writer.WriteLine("");
-        writer.Write("    static ");
-        writer.Write(nameStripped);
-        writer.WriteLine("ReferenceImpl()");
-        writer.WriteLine("    {");
-        writer.WriteLine("        *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;");
-        writer.WriteLine("        Vftbl.get_Value = &get_Value;");
-        writer.WriteLine("    }");
-        writer.WriteLine("");
-        writer.WriteLine("    public static nint Vtable");
-        writer.WriteLine("    {");
-        writer.WriteLine("        [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-        writer.WriteLine("        get => (nint)Unsafe.AsPointer(in Vftbl);");
-        writer.WriteLine("    }");
-        writer.WriteLine("");
-        writer.WriteLine("    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]");
+        writer.Write($$"""
+            {{visibility}} static unsafe class {{nameStripped}}ReferenceImpl
+            {
+                [FixedAddressValueType]
+                private static readonly ReferenceVftbl Vftbl;
+            
+                static {{nameStripped}}ReferenceImpl()
+                {
+                    *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
+                    Vftbl.get_Value = &get_Value;
+                }
+            
+                public static nint Vtable
+                {
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    get => (nint)Unsafe.AsPointer(in Vftbl);
+                }
+            
+                [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+            """, isMultiline: true);
         bool isBlittableStructType = blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
         bool isNonBlittableStructType = !blittable && TypeCategorization.GetCategory(type) == TypeCategory.Struct;
         if ((blittable && TypeCategorization.GetCategory(type) != TypeCategory.Struct)
@@ -54,92 +51,105 @@ internal static class ReferenceImplFactory
         {
             // For blittable types and blittable structs: direct memcpy via C# struct assignment.
             // Even bool/char fields work because their managed layout matches the WinRT ABI.
-            writer.WriteLine("    public static int get_Value(void* thisPtr, void* result)");
-            writer.WriteLine("    {");
-            writer.WriteLine("        if (result is null)");
-            writer.WriteLine("        {");
-            writer.WriteLine("            return unchecked((int)0x80004003);");
-            writer.WriteLine("        }");
-            writer.WriteLine("");
-            writer.WriteLine("        try");
-            writer.WriteLine("        {");
-            writer.Write("            var value = (");
+            writer.Write("""
+                    public static int get_Value(void* thisPtr, void* result)
+                    {
+                        if (result is null)
+                        {
+                            return unchecked((int)0x80004003);
+                        }
+                
+                        try
+                        {
+                            var value = (
+                """, isMultiline: true);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine(")(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));");
-            writer.Write("            *(");
+            writer.Write("""
+                )(ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr));
+                            *(
+                """, isMultiline: true);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine("*)result = value;");
-            writer.WriteLine("            return 0;");
-            writer.WriteLine("        }");
-            writer.WriteLine("        catch (Exception e)");
-            writer.WriteLine("        {");
-            writer.WriteLine("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);");
-            writer.WriteLine("        }");
-            writer.WriteLine("    }");
+            writer.Write("""
+                *)result = value;
+                            return 0;
+                        }
+                        catch (Exception e)
+                        {
+                            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+                        }
+                    }
+                """, isMultiline: true);
         }
         else if (isNonBlittableStructType)
         {
             // Non-blittable struct: marshal via <Name>Marshaller.ConvertToUnmanaged then write the
             // (ABI) struct value into the result pointer.
-            writer.WriteLine("    public static int get_Value(void* thisPtr, void* result)");
-            writer.WriteLine("    {");
-            writer.WriteLine("        if (result is null)");
-            writer.WriteLine("        {");
-            writer.WriteLine("            return unchecked((int)0x80004003);");
-            writer.WriteLine("        }");
-            writer.WriteLine("");
-            writer.WriteLine("        try");
-            writer.WriteLine("        {");
-            writer.Write("            ");
+            writer.Write("""
+                    public static int get_Value(void* thisPtr, void* result)
+                    {
+                        if (result is null)
+                        {
+                            return unchecked((int)0x80004003);
+                        }
+                
+                        try
+                        {
+                            
+                """, isMultiline: true);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" unboxedValue = (");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);");
-            writer.Write("            ");
+            writer.Write("""
+                )ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+                            
+                """, isMultiline: true);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.Write(" value = ");
-            writer.Write(nameStripped);
-            writer.WriteLine("Marshaller.ConvertToUnmanaged(unboxedValue);");
-            writer.Write("            *(");
+            writer.Write($$"""
+                 value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue);
+                            *(
+                """, isMultiline: true);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
-            writer.WriteLine("*)result = value;");
-            writer.WriteLine("            return 0;");
-            writer.WriteLine("        }");
-            writer.WriteLine("        catch (Exception e)");
-            writer.WriteLine("        {");
-            writer.WriteLine("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);");
-            writer.WriteLine("        }");
-            writer.WriteLine("    }");
+            writer.Write("""
+                *)result = value;
+                            return 0;
+                        }
+                        catch (Exception e)
+                        {
+                            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+                        }
+                    }
+                """, isMultiline: true);
         }
         else if (TypeCategorization.GetCategory(type) is TypeCategory.Class or TypeCategory.Delegate)
         {
             // Non-blittable runtime class / delegate: marshal via <Name>Marshaller and detach.
-            writer.WriteLine("    public static int get_Value(void* thisPtr, void* result)");
-            writer.WriteLine("    {");
-            writer.WriteLine("        if (result is null)");
-            writer.WriteLine("        {");
-            writer.WriteLine("            return unchecked((int)0x80004003);");
-            writer.WriteLine("        }");
-            writer.WriteLine("");
-            writer.WriteLine("        try");
-            writer.WriteLine("        {");
-            writer.Write("            ");
+            writer.Write("""
+                    public static int get_Value(void* thisPtr, void* result)
+                    {
+                        if (result is null)
+                        {
+                            return unchecked((int)0x80004003);
+                        }
+                
+                        try
+                        {
+                            
+                """, isMultiline: true);
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
             writer.Write(" unboxedValue = (");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, true);
-            writer.WriteLine(")ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);");
-            writer.Write("            void* value = ");
-            // Use the same-namespace short marshaller name (we're in the ABI namespace).
-            writer.Write(nameStripped);
-            writer.WriteLine("Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();");
-            writer.WriteLine("            *(void**)result = value;");
-            writer.WriteLine("            return 0;");
-            writer.WriteLine("        }");
-            writer.WriteLine("        catch (Exception e)");
-            writer.WriteLine("        {");
-            writer.WriteLine("            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);");
-            writer.WriteLine("        }");
-            writer.WriteLine("    }");
+            writer.Write($$"""
+                )ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+                            void* value = {{nameStripped}}Marshaller.ConvertToUnmanaged(unboxedValue).DetachThisPtrUnsafe();
+                            *(void**)result = value;
+                            return 0;
+                        }
+                        catch (Exception e)
+                        {
+                            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+                        }
+                    }
+                """, isMultiline: true);
         }
         else
         {
@@ -151,14 +161,18 @@ internal static class ReferenceImplFactory
         }
         // IID property: 'public static ref readonly Guid IID' pointing at the reference type's IID.
         writer.WriteLine("");
-        writer.WriteLine("    public static ref readonly Guid IID");
-        writer.WriteLine("    {");
-        writer.WriteLine("        [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-        writer.Write("        get => ref global::ABI.InterfaceIIDs.");
+        writer.Write("""
+                public static ref readonly Guid IID
+                {
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    get => ref global::ABI.InterfaceIIDs.
+            """, isMultiline: true);
         IIDExpressionWriter.WriteIidReferenceGuidPropertyName(writer, context, type);
-        writer.WriteLine(";");
-        writer.WriteLine("    }");
-        writer.WriteLine("}");
+        writer.Write("""
+            ;
+                }
+            }
+            """, isMultiline: true);
         writer.WriteLine("");
     }
 }

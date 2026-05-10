@@ -689,7 +689,6 @@ internal static class AbiTypeHelpers
     /// <summary>Returns the ABI type name for a blittable struct (the projected type name).</summary>
     internal static string GetBlittableStructAbiType(IndentedTextWriter writer, ProjectionEmitContext context, AsmResolver.DotNet.Signatures.TypeSignature sig)
     {
-        _ = writer;
         // Mapped value types (DateTime/TimeSpan) use the ABI type, not the projected type.
         if (IsMappedAbiValueType(sig)) { return GetMappedAbiTypeName(sig); }
         IndentedTextWriter __scratchProj = new();

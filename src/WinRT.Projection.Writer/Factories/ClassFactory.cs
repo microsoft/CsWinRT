@@ -199,9 +199,10 @@ internal static class ClassFactory
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
             TypedefNameWriter.WriteTypeParams(writer, type);
             writer.WriteLine("");
-            writer.WriteLine("{");
-            WriteStaticClassMembers(writer, context, type);
-            writer.WriteLine("}");
+            using (writer.WriteBlock())
+            {
+                WriteStaticClassMembers(writer, context, type);
+            }
         }
         finally
         {
@@ -285,25 +286,24 @@ internal static class ClassFactory
                 if (!string.IsNullOrEmpty(platformAttribute)) { writer.Write(platformAttribute); }
                 writer.Write("public static event ");
                 TypedefNameWriter.WriteEventType(writer, context, evt);
-                writer.Write($" {evtName}\n{{\n");
+                writer.Write($$"""
+                     {{evtName}}
+                    {
+                    """, isMultiline: true);
                 if (context.Settings.ReferenceProjection)
                 {
                     // event accessor bodies become 'throw null' in reference projection mode.
-                    writer.WriteLine("    add => throw null;");
-                    writer.WriteLine("    remove => throw null;");
+                    writer.Write("""
+                            add => throw null;
+                            remove => throw null;
+                        """, isMultiline: true);
                 }
                 else
                 {
-                    writer.Write("    add => ");
-                    writer.Write(abiClass);
-                    writer.Write(".");
-                    writer.Write(evtName);
-                    writer.Write("(");
-                    writer.Write(objRef);
-                    writer.Write(", ");
-                    writer.Write(objRef);
-                    writer.WriteLine(").Subscribe(value);");
-                    writer.WriteLine($"    remove => {abiClass}.{evtName}({objRef}, {objRef}).Unsubscribe(value);");
+                    writer.Write($$"""
+                            add => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Subscribe(value);
+                            remove => {{abiClass}}.{{evtName}}({{objRef}}, {{objRef}}).Unsubscribe(value);
+                        """, isMultiline: true);
                 }
                 writer.WriteLine("}");
             }
@@ -373,32 +373,33 @@ internal static class ClassFactory
             else
             {
                 writer.WriteLine("");
-                writer.WriteLine("{");
-                if (s.HasGetter)
+                using (writer.WriteBlock())
                 {
-                    if (!string.IsNullOrEmpty(getterPlat)) { writer.Write(getterPlat); }
-                    if (context.Settings.ReferenceProjection)
+                    if (s.HasGetter)
                     {
-                        writer.WriteLine("get => throw null;");
+                        if (!string.IsNullOrEmpty(getterPlat)) { writer.Write(getterPlat); }
+                        if (context.Settings.ReferenceProjection)
+                        {
+                            writer.WriteLine("get => throw null;");
+                        }
+                        else
+                        {
+                            writer.WriteLine($"get => {s.GetterAbiClass}.{kv.Key}({s.GetterObjRef});");
+                        }
                     }
-                    else
+                    if (s.HasSetter)
                     {
-                        writer.WriteLine($"get => {s.GetterAbiClass}.{kv.Key}({s.GetterObjRef});");
+                        if (!string.IsNullOrEmpty(setterPlat)) { writer.Write(setterPlat); }
+                        if (context.Settings.ReferenceProjection)
+                        {
+                            writer.WriteLine("set => throw null;");
+                        }
+                        else
+                        {
+                            writer.WriteLine($"set => {s.SetterAbiClass}.{kv.Key}({s.SetterObjRef}, value);");
+                        }
                     }
                 }
-                if (s.HasSetter)
-                {
-                    if (!string.IsNullOrEmpty(setterPlat)) { writer.Write(setterPlat); }
-                    if (context.Settings.ReferenceProjection)
-                    {
-                        writer.WriteLine("set => throw null;");
-                    }
-                    else
-                    {
-                        writer.WriteLine($"set => {s.SetterAbiClass}.{kv.Key}({s.SetterObjRef}, value);");
-                    }
-                }
-                writer.WriteLine("}");
             }
         }
     }
@@ -409,27 +410,39 @@ internal static class ClassFactory
     /// </summary>
     internal static void WriteStaticFactoryObjRef(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
     {
-        writer.Write($"\nprivate static WindowsRuntimeObjectReference {objRefName}\n{{\n");
+        writer.WriteLine("");
+        writer.Write($$"""
+            private static WindowsRuntimeObjectReference {{objRefName}}
+            {
+            """, isMultiline: true);
         if (context.Settings.ReferenceProjection)
         {
             // the static factory objref getter body is just 'throw null;'.
-            writer.WriteLine("    get");
-            writer.WriteLine("    {");
-            writer.WriteLine("        throw null;");
-            writer.WriteLine("    }");
-            writer.WriteLine("}");
+            writer.Write("""
+                    get
+                    {
+                        throw null;
+                    }
+                }
+                """, isMultiline: true);
             return;
         }
-        writer.WriteLine("    get");
-        writer.WriteLine("    {");
-        writer.Write("        var __");
-        writer.Write(objRefName);
-        writer.WriteLine(" = field;");
-        writer.Write($"        if (__{objRefName} != null && __{objRefName}.IsInCurrentContext)\n        {{\n            return __{objRefName};\n        }}\n        return field = WindowsRuntimeObjectReference.GetActivationFactory(\"{runtimeClassFullName}\", ");
+        writer.Write($$"""
+                get
+                {
+                    var __{{objRefName}} = field;
+                    if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
+                    {
+                        return __{{objRefName}};
+                    }
+                    return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", 
+            """, isMultiline: true);
         ObjRefNameGenerator.WriteIidExpression(writer, context, staticIface);
-        writer.WriteLine(");");
-        writer.WriteLine("    }");
-        writer.WriteLine("}");
+        writer.Write("""
+            );
+                }
+            }
+            """, isMultiline: true);
     }
     /// <summary>Writes a projected runtime class.</summary>
     public static void WriteClass(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -487,7 +500,12 @@ internal static class ClassFactory
         if (!context.Settings.ReferenceProjection)
         {
             string ctorAccess = type.IsSealed ? "internal" : "protected internal";
-            writer.Write($"\n{ctorAccess} {typeName}(WindowsRuntimeObjectReference nativeObjectReference)\n: base(nativeObjectReference)\n{{\n");
+            writer.WriteLine("");
+            writer.Write($$"""
+                {{ctorAccess}} {{typeName}}(WindowsRuntimeObjectReference nativeObjectReference)
+                : base(nativeObjectReference)
+                {
+                """, isMultiline: true);
             if (!type.IsSealed)
             {
                 // For unsealed classes, the default interface objref needs to be initialized only
@@ -497,13 +515,12 @@ internal static class ClassFactory
                 if (defaultIface is not null)
                 {
                     string defaultObjRefName = ObjRefNameGenerator.GetObjRefName(context, defaultIface);
-                    writer.Write("if (GetType() == typeof(");
-                    writer.Write(typeName);
-                    writer.WriteLine("))");
-                    writer.WriteLine("{");
-                    writer.Write(defaultObjRefName);
-                    writer.WriteLine(" = NativeObjectReference;");
-                    writer.WriteLine("}");
+                    writer.Write($$"""
+                        if (GetType() == typeof({{typeName}}))
+                        {
+                        {{defaultObjRefName}} = NativeObjectReference;
+                        }
+                        """, isMultiline: true);
                 }
             }
             if (gcPressure > 0)
@@ -555,7 +572,12 @@ internal static class ClassFactory
         // Conditional finalizer
         if (gcPressure > 0)
         {
-            writer.Write($"~{typeName}()\n{{\nGC.RemoveMemoryPressure({gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture)});\n}}\n");
+            writer.Write($$"""
+                ~{{typeName}}()
+                {
+                GC.RemoveMemoryPressure({{gcPressure.ToString(System.Globalization.CultureInfo.InvariantCulture)}});
+                }
+                """, isMultiline: true);
         }
 
         // Class members from interfaces (instance methods, properties, events)

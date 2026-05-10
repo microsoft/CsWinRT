@@ -56,657 +56,630 @@ internal static class AbiMethodBodyFactory
         }
 
         writer.WriteLine("");
-        writer.WriteLine("{");
-        string retParamName = AbiTypeHelpers.GetReturnParamName(sig);
-        string retSizeParamName = AbiTypeHelpers.GetReturnSizeParamName(sig);
-        // The local name for the unmarshalled return value uses the standard pattern
-        // of prefixing '__' to the param name. For the default '__return_value__' param
-        // this becomes '____return_value__'.
-        string retLocalName = "__" + retParamName;
-        // at the TOP of the method body (before local declarations and the try block). The
-        // actual call sites later in the body just reference the already-declared accessor.
-        // For a generic-instance return type, the accessor is named ConvertToUnmanaged_<retParamName>.
-        // Skip Nullable<T> returns: those use <T>Marshaller.BoxToUnmanaged at the call site
-        // instead of the generic-instance UnsafeAccessor (V3-M7).
-        if (returnIsGenericInstance && !(rt is not null && rt.IsNullableT()))
+        using (writer.WriteBlock())
         {
-            string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
-            IndentedTextWriter __scratchProjectedTypeName = new();
-            MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, rt!, false);
-            string projectedTypeName = __scratchProjectedTypeName.ToString();
-            writer.WriteLine("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
-            writer.Write($"    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{retParamName}([UnsafeAccessorType(\"{interopTypeName}\")] object _, {projectedTypeName} value);\n\n");
-        }
+            string retParamName = AbiTypeHelpers.GetReturnParamName(sig);
+            string retSizeParamName = AbiTypeHelpers.GetReturnSizeParamName(sig);
+            // The local name for the unmarshalled return value uses the standard pattern
+            // of prefixing '__' to the param name. For the default '__return_value__' param
+            // this becomes '____return_value__'.
+            string retLocalName = "__" + retParamName;
+            // at the TOP of the method body (before local declarations and the try block). The
+            // actual call sites later in the body just reference the already-declared accessor.
+            // For a generic-instance return type, the accessor is named ConvertToUnmanaged_<retParamName>.
+            // Skip Nullable<T> returns: those use <T>Marshaller.BoxToUnmanaged at the call site
+            // instead of the generic-instance UnsafeAccessor (V3-M7).
+            if (returnIsGenericInstance && !(rt is not null && rt.IsNullableT()))
+            {
+                string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(rt!, TypedefNameType.ABI) + ", WinRT.Interop";
+                IndentedTextWriter __scratchProjectedTypeName = new();
+                MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, rt!, false);
+                string projectedTypeName = __scratchProjectedTypeName.ToString();
+                writer.Write($$"""
+                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+                    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{retParamName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
+                """, isMultiline: true);
+                writer.WriteLine("");
+            }
 
-        // Hoist [UnsafeAccessor] declarations for Out generic-instance params:
-        // ConvertToUnmanaged_<name> wraps the projected value into a WindowsRuntimeObjectReferenceValue.
-        // The body's writeback later references these already-declared accessors.
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.Out) { continue; }
-            AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-            if (!uOut.IsGenericInstance()) { continue; }
-            string raw = p.Parameter.Name ?? "param";
-            string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
-            IndentedTextWriter __scratchProjectedTypeName = new();
-            MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
-            string projectedTypeName = __scratchProjectedTypeName.ToString();
-            writer.WriteLine("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
-            writer.Write($"    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{raw}([UnsafeAccessorType(\"{interopTypeName}\")] object _, {projectedTypeName} value);\n\n");
-        }
-        // ConvertToUnmanaged_<param> and the return-array ConvertToUnmanaged_<retParam> to the
-        // top of the method body, before locals and the try block. The actual call sites later
-        // in the body reference these already-declared accessors.
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.ReceiveArray) { continue; }
-            string raw = p.Parameter.Name ?? "param";
-            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-            IndentedTextWriter __scratchElementProjected = new();
-            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
-            string elementProjected = __scratchElementProjected.ToString();
-            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
+            // Hoist [UnsafeAccessor] declarations for Out generic-instance params:
+            // ConvertToUnmanaged_<name> wraps the projected value into a WindowsRuntimeObjectReferenceValue.
+            // The body's writeback later references these already-declared accessors.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.Out) { continue; }
+                AsmResolver.DotNet.Signatures.TypeSignature uOut = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                if (!uOut.IsGenericInstance()) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(uOut, TypedefNameType.ABI) + ", WinRT.Interop";
+                IndentedTextWriter __scratchProjectedTypeName = new();
+                MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
+                string projectedTypeName = __scratchProjectedTypeName.ToString();
+                writer.Write($$"""
+                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+                    static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
+                """, isMultiline: true);
+                writer.WriteLine("");
+            }
+            // ConvertToUnmanaged_<param> and the return-array ConvertToUnmanaged_<retParam> to the
+            // top of the method body, before locals and the try block. The actual call sites later
+            // in the body reference these already-declared accessors.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.ReceiveArray) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                IndentedTextWriter __scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
+                string elementProjected = __scratchElementProjected.ToString();
+                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(sza.BaseType, TypedefNameType.Projected);
 
-            _ = elementInteropArg;
-            string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
-            string elementAbi = sza.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject()
-                ? "void*"
-                : AbiTypeHelpers.IsComplexStruct(context.Cache, sza.BaseType)
-                    ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType)
-                    : AbiTypeHelpers.IsAnyStruct(context.Cache, sza.BaseType)
-                        ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)
-                        : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType);
-            writer.WriteLine("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
-            writer.Write($"    static extern void ConvertToUnmanaged_{raw}([UnsafeAccessorType(\"{marshallerPath}\")] object _, ReadOnlySpan<{elementProjected}> span, out uint length, out {elementAbi}* data);\n\n");
-        }
-        if (returnIsReceiveArrayDoAbi && rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzHoist)
-        {
-            IndentedTextWriter __scratchElementProjected = new();
-            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
-            string elementProjected = __scratchElementProjected.ToString();
-            string elementAbi = retSzHoist.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSzHoist.BaseType) || retSzHoist.BaseType.IsObject()
-                ? "void*"
-                : AbiTypeHelpers.IsComplexStruct(context.Cache, retSzHoist.BaseType)
-                    ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSzHoist.BaseType)
-                    : AbiTypeHelpers.IsAnyStruct(context.Cache, retSzHoist.BaseType)
-                        ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSzHoist.BaseType)
-                        : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSzHoist.BaseType);
-            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSzHoist.BaseType, TypedefNameType.Projected);
+                _ = elementInteropArg;
+                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
+                string elementAbi = sza.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject()
+                    ? "void*"
+                    : AbiTypeHelpers.IsComplexStruct(context.Cache, sza.BaseType)
+                        ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, sza.BaseType)
+                        : AbiTypeHelpers.IsAnyStruct(context.Cache, sza.BaseType)
+                            ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, sza.BaseType)
+                            : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, sza.BaseType);
+                writer.Write($$"""
+                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+                    static extern void ConvertToUnmanaged_{{raw}}([UnsafeAccessorType("{{marshallerPath}}")] object _, ReadOnlySpan<{{elementProjected}}> span, out uint length, out {{elementAbi}}* data);
+                """, isMultiline: true);
+                writer.WriteLine("");
+            }
+            if (returnIsReceiveArrayDoAbi && rt is AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSzHoist)
+            {
+                IndentedTextWriter __scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(retSzHoist.BaseType));
+                string elementProjected = __scratchElementProjected.ToString();
+                string elementAbi = retSzHoist.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSzHoist.BaseType) || retSzHoist.BaseType.IsObject()
+                    ? "void*"
+                    : AbiTypeHelpers.IsComplexStruct(context.Cache, retSzHoist.BaseType)
+                        ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, retSzHoist.BaseType)
+                        : AbiTypeHelpers.IsAnyStruct(context.Cache, retSzHoist.BaseType)
+                            ? AbiTypeHelpers.GetBlittableStructAbiType(writer, context, retSzHoist.BaseType)
+                            : AbiTypeHelpers.GetAbiPrimitiveType(context.Cache, retSzHoist.BaseType);
+                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSzHoist.BaseType, TypedefNameType.Projected);
 
-            _ = elementInteropArg;
-            string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
-            writer.WriteLine("    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
-            writer.Write($"    static extern void ConvertToUnmanaged_{retParamName}([UnsafeAccessorType(\"{marshallerPath}\")] object _, ReadOnlySpan<{elementProjected}> span, out uint length, out {elementAbi}* data);\n\n");
-        }
-        // the OUT pointer(s). The actual assignment happens inside the try block.
-        if (rt is not null)
-        {
+                _ = elementInteropArg;
+                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(retSzHoist.BaseType);
+                writer.Write($$"""
+                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+                    static extern void ConvertToUnmanaged_{{retParamName}}([UnsafeAccessorType("{{marshallerPath}}")] object _, ReadOnlySpan<{{elementProjected}}> span, out uint length, out {{elementAbi}}* data);
+                """, isMultiline: true);
+                writer.WriteLine("");
+            }
+            // the OUT pointer(s). The actual assignment happens inside the try block.
+            if (rt is not null)
+            {
+                if (returnIsString)
+                {
+                    writer.WriteLine($"string {retLocalName} = default;");
+                }
+                else if (returnIsRefType)
+                {
+                    IndentedTextWriter __scratchProjected = new();
+                    MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
+                    string projected = __scratchProjected.ToString();
+                    writer.WriteLine($"{projected} {retLocalName} = default;");
+                }
+                else if (returnIsReceiveArrayDoAbi)
+                {
+                    IndentedTextWriter __scratchProjected = new();
+                    MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
+                    string projected = __scratchProjected.ToString();
+                    writer.WriteLine($"{projected} {retLocalName} = default;");
+                }
+                else
+                {
+                    IndentedTextWriter __scratchProjected = new();
+                    MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
+                    string projected = __scratchProjected.ToString();
+                    writer.WriteLine($"{projected} {retLocalName} = default;");
+                }
+            }
+
+            if (rt is not null)
+            {
+                if (returnIsReceiveArrayDoAbi)
+                {
+                    writer.Write($$"""
+                    *{{retParamName}} = default;
+                        *{{retSizeParamName}} = default;
+                    """, isMultiline: true);
+                }
+                else
+                {
+                    writer.WriteLine($"*{retParamName} = default;");
+                }
+            }
+            // For each out parameter, clear the destination and declare a local.
+            // NOTE: Ref params (WinRT 'in T' / 'ref const T') are READ-ONLY inputs from the caller's
+            // perspective. Do NOT zero *<name> (it's the input value) and do NOT declare a local
+            // (we read directly via *<name>).
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.Out) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                writer.WriteLine($"*{ptr} = default;");
+            }
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.Out) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                // Use the projected (non-ABI) type for the local variable.
+                // Strip ByRef and CustomModifier wrappers to get the underlying base type.
+                AsmResolver.DotNet.Signatures.TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                IndentedTextWriter __scratchProjected = new();
+                MethodFactory.WriteProjectedSignature(__scratchProjected, context, underlying, false);
+                string projected = __scratchProjected.ToString();
+                writer.WriteLine($"{projected} __{raw} = default;");
+            }
+            // For each ReceiveArray parameter (out T[]), zero the destination + size out pointers
+            // and declare a managed array local. The managed call passes 'out __<name>' and after
+            // the call we copy to the ABI buffer via UnsafeAccessor.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.ReceiveArray) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                IndentedTextWriter __scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
+                string elementProjected = __scratchElementProjected.ToString();
+                writer.Write($$"""
+                *{{ptr}} = default;
+                    *__{{raw}}Size = default;
+                    {{elementProjected}}[] __{{raw}} = default;
+                """, isMultiline: true);
+            }
+            // For each blittable array (PassArray / FillArray) parameter, declare a Span<T> local that
+            // wraps the (length, pointer) pair from the ABI signature.
+            // For non-blittable element types (string/runtime class/object), declare InlineArray16<T> +
+            // ArrayPool fallback then CopyToManaged via UnsafeAccessor.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
+                if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                IndentedTextWriter __scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sz.BaseType));
+                string elementProjected = __scratchElementProjected.ToString();
+                bool isBlittableElem = AbiTypeHelpers.IsBlittablePrimitive(context.Cache, sz.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, sz.BaseType);
+                if (isBlittableElem)
+                {
+                    writer.WriteLine($"{(cat == ParamCategory.PassArray ? "ReadOnlySpan<" : "Span<")}{elementProjected}> __{raw} = new({ptr}, (int)__{raw}Size);");
+                }
+                else
+                {
+                    // Non-blittable element: InlineArray16<T> + ArrayPool<T> with size from ABI.
+                    writer.WriteLine("");
+                    writer.Write($$"""
+                    Unsafe.SkipInit(out InlineArray16<{{elementProjected}}> __{{raw}}_inlineArray);
+                        {{elementProjected}}[] __{{raw}}_arrayFromPool = null;
+                        Span<{{elementProjected}}> __{{raw}} = __{{raw}}Size <= 16
+                            ? __{{raw}}_inlineArray[..(int)__{{raw}}Size]
+                            : (__{{raw}}_arrayFromPool = global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Rent((int)__{{raw}}Size));
+                    """, isMultiline: true);
+                }
+            }
+            writer.Write("try\r\n    {", isMultiline: true);
+
+            // For non-blittable PassArray params (read-only input arrays), emit CopyToManaged_<name>
+            // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
+            // delegate sees. For FillArray params, the buffer is fresh storage the user delegate
+            // fills — the post-call writeback loop handles that.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.PassArray) { continue; }
+                if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+                if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                IndentedTextWriter __scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
+                string elementProjected = __scratchElementProjected.ToString();
+                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
+
+                _ = elementInteropArg;
+                // For complex structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
+                // The Do_Abi parameter we receive is void* (per V3R3-M8), so the call-site needs an
+                // explicit (T*) cast to bridge the type. For ref-types (string/runtime-class/object),
+                // the data param is void** and the cast is (void**).
+                string dataParamType;
+                string dataCastExpr;
+                if (AbiTypeHelpers.IsComplexStruct(context.Cache, szArr.BaseType))
+                {
+                    string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType);
+                    dataParamType = abiStructName + "* data";
+                    dataCastExpr = "(" + abiStructName + "*)" + ptr;
+                }
+                else
+                {
+                    dataParamType = "void** data";
+                    dataCastExpr = "(void**)" + ptr;
+                }
+                writer.Write($$"""
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
+                        static extern void CopyToManaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{dataParamType}}, Span<{{elementProjected}}> span);
+                        CopyToManaged_{{raw}}(null, __{{raw}}Size, {{dataCastExpr}}, __{{raw}});
+                """, isMultiline: true);
+            }
+
+            // For generic instance ABI input parameters, emit local UnsafeAccessor delegates and locals
+            // first so the call site can reference them.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                if (p.Type.IsNullableT())
+                {
+                    // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged.
+                    string rawName = p.Parameter.Name ?? "param";
+                    string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
+                    AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
+                    string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
+                    writer.WriteLine($"    var __arg_{rawName} = {innerMarshaller}.UnboxToManaged({callName});");
+                }
+                else if (p.Type.IsGenericInstance())
+                {
+                    string rawName = p.Parameter.Name ?? "param";
+                    string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
+                    string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
+                    IndentedTextWriter __scratchProjectedTypeName = new();
+                    MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
+                    string projectedTypeName = __scratchProjectedTypeName.ToString();
+                    writer.Write($$"""
+                        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+                            static extern {{projectedTypeName}} ConvertToManaged_arg_{{rawName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
+                            var __arg_{{rawName}} = ConvertToManaged_arg_{{rawName}}(null, {{callName}});
+                    """, isMultiline: true);
+                }
+            }
+
             if (returnIsString)
             {
-                writer.WriteLine($"    string {retLocalName} = default;");
+                writer.Write($"    {retLocalName} = ");
             }
             else if (returnIsRefType)
             {
-                IndentedTextWriter __scratchProjected = new();
-                MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
-                string projected = __scratchProjected.ToString();
-                writer.WriteLine($"    {projected} {retLocalName} = default;");
+                writer.Write($"    {retLocalName} = ");
             }
             else if (returnIsReceiveArrayDoAbi)
             {
-                IndentedTextWriter __scratchProjected = new();
-                MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
-                string projected = __scratchProjected.ToString();
-                writer.WriteLine($"    {projected} {retLocalName} = default;");
+                // For T[] return: assign to existing local.
+                writer.Write($"    {retLocalName} = ");
+            }
+            else if (rt is not null)
+            {
+                writer.Write($"    {retLocalName} = ");
             }
             else
             {
-                IndentedTextWriter __scratchProjected = new();
-                MethodFactory.WriteProjectedSignature(__scratchProjected, context, rt, false);
-                string projected = __scratchProjected.ToString();
-                writer.WriteLine($"    {projected} {retLocalName} = default;");
-            }
-        }
-
-        if (rt is not null)
-        {
-            if (returnIsReceiveArrayDoAbi)
-            {
-                writer.Write("    *");
-                writer.Write(retParamName);
-                writer.WriteLine(" = default;");
-                writer.WriteLine($"    *{retSizeParamName} = default;");
-            }
-            else
-            {
-                writer.WriteLine($"    *{retParamName} = default;");
-            }
-        }
-        // For each out parameter, clear the destination and declare a local.
-        // NOTE: Ref params (WinRT 'in T' / 'ref const T') are READ-ONLY inputs from the caller's
-        // perspective. Do NOT zero *<name> (it's the input value) and do NOT declare a local
-        // (we read directly via *<name>).
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.Out) { continue; }
-            string raw = p.Parameter.Name ?? "param";
-            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            writer.WriteLine($"    *{ptr} = default;");
-        }
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.Out) { continue; }
-            string raw = p.Parameter.Name ?? "param";
-            // Use the projected (non-ABI) type for the local variable.
-            // Strip ByRef and CustomModifier wrappers to get the underlying base type.
-            AsmResolver.DotNet.Signatures.TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-            IndentedTextWriter __scratchProjected = new();
-            MethodFactory.WriteProjectedSignature(__scratchProjected, context, underlying, false);
-            string projected = __scratchProjected.ToString();
-            writer.WriteLine($"    {projected} __{raw} = default;");
-        }
-        // For each ReceiveArray parameter (out T[]), zero the destination + size out pointers
-        // and declare a managed array local. The managed call passes 'out __<name>' and after
-        // the call we copy to the ABI buffer via UnsafeAccessor.
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.ReceiveArray) { continue; }
-            string raw = p.Parameter.Name ?? "param";
-            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-            IndentedTextWriter __scratchElementProjected = new();
-            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sza.BaseType));
-            string elementProjected = __scratchElementProjected.ToString();
-            writer.Write("    *");
-            writer.Write(ptr);
-            writer.WriteLine(" = default;");
-            writer.Write("    *__");
-            writer.Write(raw);
-            writer.WriteLine("Size = default;");
-            writer.WriteLine($"    {elementProjected}[] __{raw} = default;");
-        }
-        // For each blittable array (PassArray / FillArray) parameter, declare a Span<T> local that
-        // wraps the (length, pointer) pair from the ABI signature.
-        // For non-blittable element types (string/runtime class/object), declare InlineArray16<T> +
-        // ArrayPool fallback then CopyToManaged via UnsafeAccessor.
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
-            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature sz) { continue; }
-            string raw = p.Parameter.Name ?? "param";
-            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            IndentedTextWriter __scratchElementProjected = new();
-            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(sz.BaseType));
-            string elementProjected = __scratchElementProjected.ToString();
-            bool isBlittableElem = AbiTypeHelpers.IsBlittablePrimitive(context.Cache, sz.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, sz.BaseType);
-            if (isBlittableElem)
-            {
-                writer.WriteLine($"    {(cat == ParamCategory.PassArray ? "ReadOnlySpan<" : "Span<")}{elementProjected}> __{raw} = new({ptr}, (int)__{raw}Size);");
-            }
-            else
-            {
-                // Non-blittable element: InlineArray16<T> + ArrayPool<T> with size from ABI.
-                writer.WriteLine("");
-                writer.Write("    Unsafe.SkipInit(out InlineArray16<");
-                writer.Write(elementProjected);
-                writer.Write("> __");
-                writer.Write(raw);
-                writer.WriteLine("_inlineArray);");
                 writer.Write("    ");
-                writer.Write(elementProjected);
-                writer.Write("[] __");
-                writer.Write(raw);
-                writer.WriteLine("_arrayFromPool = null;");
-                writer.WriteLine($"    Span<{elementProjected}> __{raw} = __{raw}Size <= 16\n        ? __{raw}_inlineArray[..(int)__{raw}Size]\n        : (__{raw}_arrayFromPool = global::System.Buffers.ArrayPool<{elementProjected}>.Shared.Rent((int)__{raw}Size));");
             }
-        }
-        writer.WriteLine("    try");
-        writer.WriteLine("    {");
 
-        // For non-blittable PassArray params (read-only input arrays), emit CopyToManaged_<name>
-        // via UnsafeAccessor to convert the native ABI buffer into the managed Span<T> the
-        // delegate sees. For FillArray params, the buffer is fresh storage the user delegate
-        // fills — the post-call writeback loop handles that.
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.PassArray) { continue; }
-            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-            if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
-            string raw = p.Parameter.Name ?? "param";
-            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            IndentedTextWriter __scratchElementProjected = new();
-            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
-            string elementProjected = __scratchElementProjected.ToString();
-            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
-
-            _ = elementInteropArg;
-            // For complex structs, the data param is the ABI struct pointer (e.g. BasicStruct*).
-            // The Do_Abi parameter we receive is void* (per V3R3-M8), so the call-site needs an
-            // explicit (T*) cast to bridge the type. For ref-types (string/runtime-class/object),
-            // the data param is void** and the cast is (void**).
-            string dataParamType;
-            string dataCastExpr;
-            if (AbiTypeHelpers.IsComplexStruct(context.Cache, szArr.BaseType))
+            if (isGetter)
             {
-                string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType);
-                dataParamType = abiStructName + "* data";
-                dataCastExpr = "(" + abiStructName + "*)" + ptr;
+                string propName = methodName[4..];
+                writer.WriteLine($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName};");
+            }
+            else if (isSetter)
+            {
+                string propName = methodName[4..];
+                writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName} = ");
+                EmitDoAbiParamArgConversion(writer, context, sig.Params[0]);
+                writer.WriteLine(";");
             }
             else
             {
-                dataParamType = "void** data";
-                dataCastExpr = "(void**)" + ptr;
-            }
-            writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]");
-            writer.Write("        static extern void CopyToManaged_");
-            writer.Write(raw);
-            writer.Write("([UnsafeAccessorType(\"");
-            writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType));
-            writer.Write("\")] object _, uint length, ");
-            writer.Write(dataParamType);
-            writer.Write(", Span<");
-            writer.Write(elementProjected);
-            writer.WriteLine("> span);");
-            writer.WriteLine($"        CopyToManaged_{raw}(null, __{raw}Size, {dataCastExpr}, __{raw});");
-        }
-
-        // For generic instance ABI input parameters, emit local UnsafeAccessor delegates and locals
-        // first so the call site can reference them.
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            if (p.Type.IsNullableT())
-            {
-                // Nullable<T> param (server-side): use <T>Marshaller.UnboxToManaged.
-                string rawName = p.Parameter.Name ?? "param";
-                string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
-                AsmResolver.DotNet.Signatures.TypeSignature inner = p.Type.GetNullableInnerType()!;
-                string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
-                writer.WriteLine($"        var __arg_{rawName} = {innerMarshaller}.UnboxToManaged({callName});");
-            }
-            else if (p.Type.IsGenericInstance())
-            {
-                string rawName = p.Parameter.Name ?? "param";
-                string callName = CSharpKeywords.IsKeyword(rawName) ? "@" + rawName : rawName;
-                string interopTypeName = InteropTypeNameWriter.EncodeInteropTypeName(p.Type, TypedefNameType.ABI) + ", WinRT.Interop";
-                IndentedTextWriter __scratchProjectedTypeName = new();
-                MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
-                string projectedTypeName = __scratchProjectedTypeName.ToString();
-                writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
-                writer.Write("        static extern ");
-                writer.Write(projectedTypeName);
-                writer.Write(" ConvertToManaged_arg_");
-                writer.Write(rawName);
-                writer.Write("([UnsafeAccessorType(\"");
-                writer.Write(interopTypeName);
-                writer.WriteLine("\")] object _, void* value);");
-                writer.WriteLine($"        var __arg_{rawName} = ConvertToManaged_arg_{rawName}(null, {callName});");
-            }
-        }
-
-        if (returnIsString)
-        {
-            writer.Write($"        {retLocalName} = ");
-        }
-        else if (returnIsRefType)
-        {
-            writer.Write($"        {retLocalName} = ");
-        }
-        else if (returnIsReceiveArrayDoAbi)
-        {
-            // For T[] return: assign to existing local.
-            writer.Write($"        {retLocalName} = ");
-        }
-        else if (rt is not null)
-        {
-            writer.Write($"        {retLocalName} = ");
-        }
-        else
-        {
-            writer.Write("        ");
-        }
-
-        if (isGetter)
-        {
-            string propName = methodName[4..];
-            writer.WriteLine($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName};");
-        }
-        else if (isSetter)
-        {
-            string propName = methodName[4..];
-            writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{propName} = ");
-            EmitDoAbiParamArgConversion(writer, context, sig.Params[0]);
-            writer.WriteLine(";");
-        }
-        else
-        {
-            writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{methodName}(");
-            for (int i = 0; i < sig.Params.Count; i++)
-            {
-                if (i > 0)
+                writer.Write($"ComInterfaceDispatch.GetInstance<{ifaceFullName}>((ComInterfaceDispatch*)thisPtr).{methodName}(");
+                for (int i = 0; i < sig.Params.Count; i++)
                 {
-                    writer.WriteLine(",");
-                    writer.Write("  ");
-                }
-                ParamInfo p = sig.Params[i];
-                ParamCategory cat = ParamHelpers.GetParamCategory(p);
-                if (cat == ParamCategory.Out)
-                {
-                    string raw = p.Parameter.Name ?? "param";
-                    writer.Write($"out __{raw}");
-                }
-                else if (cat == ParamCategory.Ref)
-                {
-                    // WinRT 'in T' / 'ref const T' is a read-only by-ref input on the ABI side
-                    // (pointer to a value the native caller owns). On the C# delegate / interface
-                    // side it's projected as 'in T'. Read directly from *<name> via the appropriate
-                    // marshaller — DO NOT zero or write back.
-                    string raw = p.Parameter.Name ?? "param";
-                    string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-                    AsmResolver.DotNet.Signatures.TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-                    if (uRef.IsString())
+                    if (i > 0)
                     {
-                        writer.Write($"HStringMarshaller.ConvertToManaged(*{ptr})");
+                        writer.Write("""
+                        ,
+                          
+                        """, isMultiline: true);
                     }
-                    else if (uRef.IsObject())
+                    ParamInfo p = sig.Params[i];
+                    ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                    if (cat == ParamCategory.Out)
                     {
-                        writer.Write($"WindowsRuntimeObjectMarshaller.ConvertToManaged(*{ptr})");
+                        string raw = p.Parameter.Name ?? "param";
+                        writer.Write($"out __{raw}");
                     }
-                    else if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uRef))
+                    else if (cat == ParamCategory.Ref)
                     {
-                        writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, uRef)}.ConvertToManaged(*{ptr})");
+                        // WinRT 'in T' / 'ref const T' is a read-only by-ref input on the ABI side
+                        // (pointer to a value the native caller owns). On the C# delegate / interface
+                        // side it's projected as 'in T'. Read directly from *<name> via the appropriate
+                        // marshaller — DO NOT zero or write back.
+                        string raw = p.Parameter.Name ?? "param";
+                        string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                        AsmResolver.DotNet.Signatures.TypeSignature uRef = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                        if (uRef.IsString())
+                        {
+                            writer.Write($"HStringMarshaller.ConvertToManaged(*{ptr})");
+                        }
+                        else if (uRef.IsObject())
+                        {
+                            writer.Write($"WindowsRuntimeObjectMarshaller.ConvertToManaged(*{ptr})");
+                        }
+                        else if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, uRef))
+                        {
+                            writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, uRef)}.ConvertToManaged(*{ptr})");
+                        }
+                        else if (AbiTypeHelpers.IsMappedAbiValueType(uRef))
+                        {
+                            writer.Write($"{AbiTypeHelpers.GetMappedMarshallerName(uRef)}.ConvertToManaged(*{ptr})");
+                        }
+                        else if (uRef.IsHResultException())
+                        {
+                            writer.Write($"global::ABI.System.ExceptionMarshaller.ConvertToManaged(*{ptr})");
+                        }
+                        else if (AbiTypeHelpers.IsComplexStruct(context.Cache, uRef))
+                        {
+                            writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, uRef)}.ConvertToManaged(*{ptr})");
+                        }
+                        else if (AbiTypeHelpers.IsAnyStruct(context.Cache, uRef) || AbiTypeHelpers.IsBlittablePrimitive(context.Cache, uRef) || AbiTypeHelpers.IsEnumType(context.Cache, uRef))
+                        {
+                            // Blittable/almost-blittable: ABI layout matches projected layout.
+                            writer.Write($"*{ptr}");
+                        }
+                        else
+                        {
+                            writer.Write($"*{ptr}");
+                        }
                     }
-                    else if (AbiTypeHelpers.IsMappedAbiValueType(uRef))
+                    else if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
                     {
-                        writer.Write($"{AbiTypeHelpers.GetMappedMarshallerName(uRef)}.ConvertToManaged(*{ptr})");
+                        string raw = p.Parameter.Name ?? "param";
+                        writer.Write($"__{raw}");
                     }
-                    else if (uRef.IsHResultException())
+                    else if (cat == ParamCategory.ReceiveArray)
                     {
-                        writer.Write($"global::ABI.System.ExceptionMarshaller.ConvertToManaged(*{ptr})");
-                    }
-                    else if (AbiTypeHelpers.IsComplexStruct(context.Cache, uRef))
-                    {
-                        writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, uRef)}.ConvertToManaged(*{ptr})");
-                    }
-                    else if (AbiTypeHelpers.IsAnyStruct(context.Cache, uRef) || AbiTypeHelpers.IsBlittablePrimitive(context.Cache, uRef) || AbiTypeHelpers.IsEnumType(context.Cache, uRef))
-                    {
-                        // Blittable/almost-blittable: ABI layout matches projected layout.
-                        writer.Write($"*{ptr}");
+                        string raw = p.Parameter.Name ?? "param";
+                        writer.Write($"out __{raw}");
                     }
                     else
                     {
-                        writer.Write($"*{ptr}");
+                        EmitDoAbiParamArgConversion(writer, context, p);
                     }
                 }
-                else if (cat is ParamCategory.PassArray or ParamCategory.FillArray)
+                writer.WriteLine(");");
+            }
+            // After call: write back out params to caller's pointer.
+            // NOTE: Ref params (WinRT 'in T') are read-only inputs — never written back.
+            for (int i = 0; i < sig.Params.Count; i++)
+            {
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.Out) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                AsmResolver.DotNet.Signatures.TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
+                writer.Write($"    *{ptr} = ");
+                // String: HStringMarshaller.ConvertToUnmanaged
+                if (underlying.IsString())
                 {
-                    string raw = p.Parameter.Name ?? "param";
+                    writer.Write($"HStringMarshaller.ConvertToUnmanaged(__{raw})");
+                }
+                // Object/runtime class: <Marshaller>.ConvertToUnmanaged(...).DetachThisPtrUnsafe()
+                else if (underlying.IsObject())
+                {
+                    writer.Write($"WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(__{raw}).DetachThisPtrUnsafe()");
+                }
+                else if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, underlying))
+                {
+                    writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw}).DetachThisPtrUnsafe()");
+                }
+                // Generic instance (e.g. IEnumerable<string>): use the hoisted UnsafeAccessor
+                // 'ConvertToUnmanaged_<name>' declared at the top of the method body.
+                else if (underlying.IsGenericInstance())
+                {
+                    writer.Write($"ConvertToUnmanaged_{raw}(null, __{raw}).DetachThisPtrUnsafe()");
+                }
+                // For enums, function pointer signature uses the projected enum type, no cast needed.
+                // For bool, cast to byte. For char, cast to ushort.
+                else if (AbiTypeHelpers.IsEnumType(context.Cache, underlying))
+                {
                     writer.Write($"__{raw}");
                 }
-                else if (cat == ParamCategory.ReceiveArray)
+                else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool &&
+                         corlibBool.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
                 {
-                    string raw = p.Parameter.Name ?? "param";
-                    writer.Write($"out __{raw}");
+                    writer.Write($"__{raw}");
+                }
+                else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar &&
+                         corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+                {
+                    writer.Write($"__{raw}");
+                }
+                // Non-blittable struct (e.g. authored BasicStruct with string fields): marshal
+                // the local managed value through <Type>Marshaller.ConvertToUnmanaged before
+                // writing it into the *out ABI struct slot.write_marshal_from_managed
+                //: "Marshaller.ConvertToUnmanaged(local)".
+                else if (AbiTypeHelpers.IsComplexStruct(context.Cache, underlying))
+                {
+                    writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw})");
                 }
                 else
                 {
-                    EmitDoAbiParamArgConversion(writer, context, p);
+                    writer.Write($"__{raw}");
                 }
+                writer.WriteLine(";");
             }
-            writer.WriteLine(");");
-        }
-        // After call: write back out params to caller's pointer.
-        // NOTE: Ref params (WinRT 'in T') are read-only inputs — never written back.
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.Out) { continue; }
-            string raw = p.Parameter.Name ?? "param";
-            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            AsmResolver.DotNet.Signatures.TypeSignature underlying = AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-            writer.Write($"        *{ptr} = ");
-            // String: HStringMarshaller.ConvertToUnmanaged
-            if (underlying.IsString())
+            // After call: for ReceiveArray params, emit ConvertToUnmanaged_<name> call (the
+            // [UnsafeAccessor] declaration was hoisted to the top of the method body).
+            for (int i = 0; i < sig.Params.Count; i++)
             {
-                writer.Write($"HStringMarshaller.ConvertToUnmanaged(__{raw})");
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.ReceiveArray) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                writer.WriteLine($"    ConvertToUnmanaged_{raw}(null, __{raw}, out *__{raw}Size, out *{ptr});");
             }
-            // Object/runtime class: <Marshaller>.ConvertToUnmanaged(...).DetachThisPtrUnsafe()
-            else if (underlying.IsObject())
+            // After call: for non-blittable FillArray params (Span<T> where T is string/runtime
+            // class/object/non-blittable struct), copy the managed delegate's writes back into the
+            // native ABI buffer..
+            // which emits 'CopyToUnmanaged_<name>(null, __<name>, __<name>Size, (T*)<name>)'.
+            // Blittable element types don't need this — the Span wraps the native buffer directly.
+            for (int i = 0; i < sig.Params.Count; i++)
             {
-                writer.Write($"WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(__{raw}).DetachThisPtrUnsafe()");
-            }
-            else if (AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, underlying))
-            {
-                writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw}).DetachThisPtrUnsafe()");
-            }
-            // Generic instance (e.g. IEnumerable<string>): use the hoisted UnsafeAccessor
-            // 'ConvertToUnmanaged_<name>' declared at the top of the method body.
-            else if (underlying.IsGenericInstance())
-            {
-                writer.Write($"ConvertToUnmanaged_{raw}(null, __{raw}).DetachThisPtrUnsafe()");
-            }
-            // For enums, function pointer signature uses the projected enum type, no cast needed.
-            // For bool, cast to byte. For char, cast to ushort.
-            else if (AbiTypeHelpers.IsEnumType(context.Cache, underlying))
-            {
-                writer.Write($"__{raw}");
-            }
-            else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibBool &&
-                     corlibBool.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
-            {
-                writer.Write($"__{raw}");
-            }
-            else if (underlying is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlibChar &&
-                     corlibChar.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
-            {
-                writer.Write($"__{raw}");
-            }
-            // Non-blittable struct (e.g. authored BasicStruct with string fields): marshal
-            // the local managed value through <Type>Marshaller.ConvertToUnmanaged before
-            // writing it into the *out ABI struct slot.write_marshal_from_managed
-            //: "Marshaller.ConvertToUnmanaged(local)".
-            else if (AbiTypeHelpers.IsComplexStruct(context.Cache, underlying))
-            {
-                writer.Write($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, underlying)}.ConvertToUnmanaged(__{raw})");
-            }
-            else
-            {
-                writer.Write($"__{raw}");
-            }
-            writer.WriteLine(";");
-        }
-        // After call: for ReceiveArray params, emit ConvertToUnmanaged_<name> call (the
-        // [UnsafeAccessor] declaration was hoisted to the top of the method body).
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.ReceiveArray) { continue; }
-            string raw = p.Parameter.Name ?? "param";
-            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            writer.WriteLine($"        ConvertToUnmanaged_{raw}(null, __{raw}, out *__{raw}Size, out *{ptr});");
-        }
-        // After call: for non-blittable FillArray params (Span<T> where T is string/runtime
-        // class/object/non-blittable struct), copy the managed delegate's writes back into the
-        // native ABI buffer..
-        // which emits 'CopyToUnmanaged_<name>(null, __<name>, __<name>Size, (T*)<name>)'.
-        // Blittable element types don't need this — the Span wraps the native buffer directly.
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat != ParamCategory.FillArray) { continue; }
-            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szFA) { continue; }
-            // Blittable element types: Span wraps the native buffer; no copy-back needed.
-            if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szFA.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szFA.BaseType)) { continue; }
-            string raw = p.Parameter.Name ?? "param";
-            string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
-            IndentedTextWriter __scratchElementProjected = new();
-            TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
-            string elementProjected = __scratchElementProjected.ToString();
-            string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
+                ParamInfo p = sig.Params[i];
+                ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                if (cat != ParamCategory.FillArray) { continue; }
+                if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szFA) { continue; }
+                // Blittable element types: Span wraps the native buffer; no copy-back needed.
+                if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szFA.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szFA.BaseType)) { continue; }
+                string raw = p.Parameter.Name ?? "param";
+                string ptr = CSharpKeywords.IsKeyword(raw) ? "@" + raw : raw;
+                IndentedTextWriter __scratchElementProjected = new();
+                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szFA.BaseType));
+                string elementProjected = __scratchElementProjected.ToString();
+                string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szFA.BaseType, TypedefNameType.Projected);
 
-            _ = elementInteropArg;
-            // Determine the ABI element type for the data pointer cast.
-            // - Strings / runtime classes / objects: void**
-            // - HResult exception: global::ABI.System.Exception*
-            // - Mapped value types (DateTime/TimeSpan): global::ABI.System.{DateTimeOffset/TimeSpan}*
-            // - Complex structs: <ABI struct>*
-            string dataParamType;
-            string dataCastType;
-            if (szFA.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, szFA.BaseType) || szFA.BaseType.IsObject())
-            {
-                dataParamType = "void** data";
-                dataCastType = "(void**)";
-            }
-            else if (szFA.BaseType.IsHResultException())
-            {
-                dataParamType = "global::ABI.System.Exception* data";
-                dataCastType = "(global::ABI.System.Exception*)";
-            }
-            else if (AbiTypeHelpers.IsMappedAbiValueType(szFA.BaseType))
-            {
-                string abiName = AbiTypeHelpers.GetMappedAbiTypeName(szFA.BaseType);
-                dataParamType = abiName + "* data";
-                dataCastType = "(" + abiName + "*)";
-            }
-            else
-            {
-                string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szFA.BaseType);
-                dataParamType = abiStructName + "* data";
-                dataCastType = "(" + abiStructName + "*)";
-            }
-            writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]");
-            writer.Write("        static extern void CopyToUnmanaged_");
-            writer.Write(raw);
-            writer.Write("([UnsafeAccessorType(\"");
-            writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType));
-            writer.Write("\")] object _, ReadOnlySpan<");
-            writer.Write(elementProjected);
-            writer.Write("> span, uint length, ");
-            writer.Write(dataParamType);
-            writer.WriteLine(");");
-            writer.WriteLine($"        CopyToUnmanaged_{raw}(null, __{raw}, __{raw}Size, {dataCastType}{ptr});");
-        }
-        if (rt is not null)
-        {
-            if (returnIsHResultExceptionDoAbi)
-            {
-                writer.WriteLine($"        *{retParamName} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({retLocalName});");
-            }
-            else if (returnIsString)
-            {
-                writer.WriteLine($"        *{retParamName} = HStringMarshaller.ConvertToUnmanaged({retLocalName});");
-            }
-            else if (returnIsRefType)
-            {
-                if (rt is not null && rt.IsNullableT())
+                _ = elementInteropArg;
+                // Determine the ABI element type for the data pointer cast.
+                // - Strings / runtime classes / objects: void**
+                // - HResult exception: global::ABI.System.Exception*
+                // - Mapped value types (DateTime/TimeSpan): global::ABI.System.{DateTimeOffset/TimeSpan}*
+                // - Complex structs: <ABI struct>*
+                string dataParamType;
+                string dataCastType;
+                if (szFA.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, szFA.BaseType) || szFA.BaseType.IsObject())
                 {
-                    // Nullable<T> return (server-side): use <T>Marshaller.BoxToUnmanaged.
-                    AsmResolver.DotNet.Signatures.TypeSignature inner = rt.GetNullableInnerType()!;
-                    string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
-                    writer.WriteLine($"        *{retParamName} = {innerMarshaller}.BoxToUnmanaged({retLocalName}).DetachThisPtrUnsafe();");
+                    dataParamType = "void** data";
+                    dataCastType = "(void**)";
                 }
-                else if (returnIsGenericInstance)
+                else if (szFA.BaseType.IsHResultException())
                 {
-                    // Generic instance return: use the UnsafeAccessor static local function declared at
-                    // the top of the method body via the M12 hoisting pass; just emit the call here.
-                    writer.WriteLine($"        *{retParamName} = ConvertToUnmanaged_{retParamName}(null, {retLocalName}).DetachThisPtrUnsafe();");
+                    dataParamType = "global::ABI.System.Exception* data";
+                    dataCastType = "(global::ABI.System.Exception*)";
+                }
+                else if (AbiTypeHelpers.IsMappedAbiValueType(szFA.BaseType))
+                {
+                    string abiName = AbiTypeHelpers.GetMappedAbiTypeName(szFA.BaseType);
+                    dataParamType = abiName + "* data";
+                    dataCastType = "(" + abiName + "*)";
                 }
                 else
                 {
-                    writer.Write($"        *{retParamName} = ");
-                    EmitMarshallerConvertToUnmanaged(writer, context, rt!, retLocalName);
-                    writer.WriteLine(".DetachThisPtrUnsafe();");
+                    string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(writer, context, szFA.BaseType);
+                    dataParamType = abiStructName + "* data";
+                    dataCastType = "(" + abiStructName + "*)";
                 }
+                writer.Write($$"""
+                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
+                        static extern void CopyToUnmanaged_{{raw}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{dataParamType}});
+                        CopyToUnmanaged_{{raw}}(null, __{{raw}}, __{{raw}}Size, {{dataCastType}}{{ptr}});
+                """, isMultiline: true);
             }
-            else if (returnIsReceiveArrayDoAbi)
+            if (rt is not null)
             {
-                // Return-receive-array: emit ConvertToUnmanaged_<retParam> call (declaration
-                // was hoisted to the top of the method body).
-                writer.WriteLine($"        ConvertToUnmanaged_{retParamName}(null, {retLocalName}, out *{retSizeParamName}, out *{retParamName});");
-            }
-            else if (AbiTypeHelpers.IsMappedAbiValueType(rt))
-            {
-                // Mapped value type return (DateTime/TimeSpan): convert via marshaller.
-                writer.WriteLine($"        *{retParamName} = {AbiTypeHelpers.GetMappedMarshallerName(rt)}.ConvertToUnmanaged({retLocalName});");
-            }
-            else if (rt.IsSystemType())
-            {
-                // System.Type return (server-side): convert managed System.Type to ABI Type struct.
-                writer.WriteLine($"        *{retParamName} = global::ABI.System.TypeMarshaller.ConvertToUnmanaged({retLocalName});");
-            }
-            else if (AbiTypeHelpers.IsComplexStruct(context.Cache, rt))
-            {
-                // Complex struct return (server-side): convert managed struct to ABI struct via marshaller.
-                writer.WriteLine($"        *{retParamName} = {AbiTypeHelpers.GetMarshallerFullName(writer, context, rt)}.ConvertToUnmanaged({retLocalName});");
-            }
-            else if (returnIsBlittableStruct)
-            {
-                writer.WriteLine($"        *{retParamName} = {retLocalName};");
-            }
-            else
-            {
-                writer.Write($"        *{retParamName} = ");
-                if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
-                    corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+                if (returnIsHResultExceptionDoAbi)
                 {
-                    writer.WriteLine($"{retLocalName};");
+                    writer.WriteLine($"    *{retParamName} = global::ABI.System.ExceptionMarshaller.ConvertToUnmanaged({retLocalName});");
                 }
-                else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
-                         corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+                else if (returnIsString)
                 {
-                    writer.WriteLine($"{retLocalName};");
+                    writer.WriteLine($"    *{retParamName} = HStringMarshaller.ConvertToUnmanaged({retLocalName});");
                 }
-                else if (AbiTypeHelpers.IsEnumType(context.Cache, rt))
+                else if (returnIsRefType)
                 {
-                    // Enum: function pointer signature uses the projected enum type, no cast needed.
-                    writer.WriteLine($"{retLocalName};");
+                    if (rt is not null && rt.IsNullableT())
+                    {
+                        // Nullable<T> return (server-side): use <T>Marshaller.BoxToUnmanaged.
+                        AsmResolver.DotNet.Signatures.TypeSignature inner = rt.GetNullableInnerType()!;
+                        string innerMarshaller = AbiTypeHelpers.GetNullableInnerMarshallerName(writer, context, inner);
+                        writer.WriteLine($"    *{retParamName} = {innerMarshaller}.BoxToUnmanaged({retLocalName}).DetachThisPtrUnsafe();");
+                    }
+                    else if (returnIsGenericInstance)
+                    {
+                        // Generic instance return: use the UnsafeAccessor static local function declared at
+                        // the top of the method body via the M12 hoisting pass; just emit the call here.
+                        writer.WriteLine($"    *{retParamName} = ConvertToUnmanaged_{retParamName}(null, {retLocalName}).DetachThisPtrUnsafe();");
+                    }
+                    else
+                    {
+                        writer.Write($"    *{retParamName} = ");
+                        EmitMarshallerConvertToUnmanaged(writer, context, rt!, retLocalName);
+                        writer.WriteLine(".DetachThisPtrUnsafe();");
+                    }
+                }
+                else if (returnIsReceiveArrayDoAbi)
+                {
+                    // Return-receive-array: emit ConvertToUnmanaged_<retParam> call (declaration
+                    // was hoisted to the top of the method body).
+                    writer.WriteLine($"    ConvertToUnmanaged_{retParamName}(null, {retLocalName}, out *{retSizeParamName}, out *{retParamName});");
+                }
+                else if (AbiTypeHelpers.IsMappedAbiValueType(rt))
+                {
+                    // Mapped value type return (DateTime/TimeSpan): convert via marshaller.
+                    writer.WriteLine($"    *{retParamName} = {AbiTypeHelpers.GetMappedMarshallerName(rt)}.ConvertToUnmanaged({retLocalName});");
+                }
+                else if (rt.IsSystemType())
+                {
+                    // System.Type return (server-side): convert managed System.Type to ABI Type struct.
+                    writer.WriteLine($"    *{retParamName} = global::ABI.System.TypeMarshaller.ConvertToUnmanaged({retLocalName});");
+                }
+                else if (AbiTypeHelpers.IsComplexStruct(context.Cache, rt))
+                {
+                    // Complex struct return (server-side): convert managed struct to ABI struct via marshaller.
+                    writer.WriteLine($"    *{retParamName} = {AbiTypeHelpers.GetMarshallerFullName(writer, context, rt)}.ConvertToUnmanaged({retLocalName});");
+                }
+                else if (returnIsBlittableStruct)
+                {
+                    writer.WriteLine($"    *{retParamName} = {retLocalName};");
                 }
                 else
                 {
-                    writer.WriteLine($"{retLocalName};");
+                    writer.Write($"    *{retParamName} = ");
+                    if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib &&
+                        corlib.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Boolean)
+                    {
+                        writer.WriteLine($"{retLocalName};");
+                    }
+                    else if (rt is AsmResolver.DotNet.Signatures.CorLibTypeSignature corlib2 &&
+                             corlib2.ElementType == AsmResolver.PE.DotNet.Metadata.Tables.ElementType.Char)
+                    {
+                        writer.WriteLine($"{retLocalName};");
+                    }
+                    else if (AbiTypeHelpers.IsEnumType(context.Cache, rt))
+                    {
+                        // Enum: function pointer signature uses the projected enum type, no cast needed.
+                        writer.WriteLine($"{retLocalName};");
+                    }
+                    else
+                    {
+                        writer.WriteLine($"{retLocalName};");
+                    }
                 }
             }
-        }
-        writer.WriteLine("        return 0;");
-        writer.WriteLine("    }");
-        writer.WriteLine("    catch (Exception __exception__)");
-        writer.WriteLine("    {");
-        writer.WriteLine("        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);");
-        writer.WriteLine("    }");
+            writer.Write("    return 0;\r\n    }\r\n    catch (Exception __exception__)\r\n    {\r\n        return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(__exception__);\r\n    }", isMultiline: true);
 
-        // For non-blittable PassArray params, emit finally block with ArrayPool<T>.Shared.Return.
-        bool hasNonBlittableArrayDoAbi = false;
-        for (int i = 0; i < sig.Params.Count; i++)
-        {
-            ParamInfo p = sig.Params[i];
-            ParamCategory cat = ParamHelpers.GetParamCategory(p);
-            if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
-            if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
-            if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
-            hasNonBlittableArrayDoAbi = true;
-            break;
-        }
-        if (hasNonBlittableArrayDoAbi)
-        {
-            writer.WriteLine("    finally");
-            writer.WriteLine("    {");
+            // For non-blittable PassArray params, emit finally block with ArrayPool<T>.Shared.Return.
+            bool hasNonBlittableArrayDoAbi = false;
             for (int i = 0; i < sig.Params.Count; i++)
             {
                 ParamInfo p = sig.Params[i];
@@ -714,16 +687,34 @@ internal static class AbiMethodBodyFactory
                 if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
                 if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
                 if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
-                string raw = p.Parameter.Name ?? "param";
-                IndentedTextWriter __scratchElementProjected = new();
-                TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
-                string elementProjected = __scratchElementProjected.ToString();
-                writer.Write($"\n        if (__{raw}_arrayFromPool is not null)\n        {{\n            global::System.Buffers.ArrayPool<{elementProjected}>.Shared.Return(__{raw}_arrayFromPool);\n        }}\n");
+                hasNonBlittableArrayDoAbi = true;
+                break;
             }
-            writer.WriteLine("    }");
+            if (hasNonBlittableArrayDoAbi)
+            {
+                writer.Write("finally\r\n    {", isMultiline: true);
+                for (int i = 0; i < sig.Params.Count; i++)
+                {
+                    ParamInfo p = sig.Params[i];
+                    ParamCategory cat = ParamHelpers.GetParamCategory(p);
+                    if (cat is not (ParamCategory.PassArray or ParamCategory.FillArray)) { continue; }
+                    if (p.Type is not AsmResolver.DotNet.Signatures.SzArrayTypeSignature szArr) { continue; }
+                    if (AbiTypeHelpers.IsBlittablePrimitive(context.Cache, szArr.BaseType) || AbiTypeHelpers.IsAnyStruct(context.Cache, szArr.BaseType)) { continue; }
+                    string raw = p.Parameter.Name ?? "param";
+                    IndentedTextWriter __scratchElementProjected = new();
+                    TypedefNameWriter.WriteProjectionType(__scratchElementProjected, context, TypeSemanticsFactory.Get(szArr.BaseType));
+                    string elementProjected = __scratchElementProjected.ToString();
+                    writer.WriteLine("");
+                    writer.Write($$"""
+                        if (__{{raw}}_arrayFromPool is not null)
+                            {
+                                global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Return(__{{raw}}_arrayFromPool);
+                            }
+                    """, isMultiline: true);
+                }
+                writer.WriteLine("}");
+            }
         }
-
-        writer.WriteLine("}");
         writer.WriteLine("");
         _ = hasStringParams;
     }
@@ -829,8 +820,10 @@ internal static class AbiMethodBodyFactory
             string mname = method.Name?.Value ?? string.Empty;
             MethodSig sig = new(method);
 
-            writer.WriteLine("    [MethodImpl(MethodImplOptions.NoInlining)]");
-            writer.Write("    public static unsafe ");
+            writer.Write("""
+                    [MethodImpl(MethodImplOptions.NoInlining)]
+                    public static unsafe 
+                """, isMultiline: true);
             MethodFactory.WriteProjectionReturnType(writer, context, sig);
             writer.Write($" {mname}(WindowsRuntimeObjectReference thisReference");
             if (sig.Params.Count > 0) { writer.Write(", "); }
@@ -854,15 +847,19 @@ internal static class AbiMethodBodyFactory
             if (gMethod is not null)
             {
                 MethodSig getSig = new(gMethod);
-                writer.WriteLine("    [MethodImpl(MethodImplOptions.NoInlining)]");
-                writer.Write($"    public static unsafe {propType} {pname}(WindowsRuntimeObjectReference thisReference)");
+                writer.Write($$"""
+                        [MethodImpl(MethodImplOptions.NoInlining)]
+                        public static unsafe {{propType}} {{pname}}(WindowsRuntimeObjectReference thisReference)
+                    """, isMultiline: true);
                 EmitAbiMethodBodyIfSimple(writer, context, getSig, methodSlot[gMethod], isNoExcept: propIsNoExcept);
             }
             if (sMethod is not null)
             {
                 MethodSig setSig = new(sMethod);
-                writer.WriteLine("    [MethodImpl(MethodImplOptions.NoInlining)]");
-                writer.Write($"    public static unsafe void {pname}(WindowsRuntimeObjectReference thisReference, {InterfaceFactory.WritePropType(context, prop, isSetProperty: true)} value)");
+                writer.Write($$"""
+                        [MethodImpl(MethodImplOptions.NoInlining)]
+                        public static unsafe void {{pname}}(WindowsRuntimeObjectReference thisReference, {{InterfaceFactory.WritePropType(context, prop, isSetProperty: true)}} value)
+                    """, isMultiline: true);
                 EmitAbiMethodBodyIfSimple(writer, context, setSig, methodSlot[sMethod], paramNameOverride: "value", isNoExcept: propIsNoExcept);
             }
         }
@@ -914,56 +911,49 @@ internal static class AbiMethodBodyFactory
 
             // Emit the per-event ConditionalWeakTable static field.
             writer.WriteLine("");
-            writer.Write("    private static ConditionalWeakTable<object, ");
-            writer.Write(eventSourceProjectedFull);
-            writer.Write("> _");
-            writer.Write(evtName);
-            writer.WriteLine("");
-            writer.WriteLine("    {");
-            writer.WriteLine("        [MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            writer.WriteLine("        get");
-            writer.WriteLine("        {");
-            writer.WriteLine("            [MethodImpl(MethodImplOptions.NoInlining)]");
-            writer.Write("            static ConditionalWeakTable<object, ");
-            writer.Write(eventSourceProjectedFull);
-            writer.WriteLine("> MakeTable()");
-            writer.WriteLine("            {");
-            writer.WriteLine("                _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);");
-            writer.WriteLine("");
-            writer.WriteLine("                return global::System.Threading.Volatile.Read(in field);");
-            writer.Write($"            }}\n\n            return global::System.Threading.Volatile.Read(in field) ?? MakeTable();\n        }}\n    }}\n\n    public static {eventSourceProjectedFull} {evtName}(object thisObject, WindowsRuntimeObjectReference thisReference)\n    {{\n");
+            writer.Write($$"""
+                    private static ConditionalWeakTable<object, {{eventSourceProjectedFull}}> _{{evtName}}
+                    {
+                        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                        get
+                        {
+                            [MethodImpl(MethodImplOptions.NoInlining)]
+                            static ConditionalWeakTable<object, {{eventSourceProjectedFull}}> MakeTable()
+                            {
+                                _ = global::System.Threading.Interlocked.CompareExchange(ref field, [], null);
+                
+                                return global::System.Threading.Volatile.Read(in field);
+                            }
+                
+                            return global::System.Threading.Volatile.Read(in field) ?? MakeTable();
+                        }
+                    }
+                
+                    public static {{eventSourceProjectedFull}} {{evtName}}(object thisObject, WindowsRuntimeObjectReference thisReference)
+                    {
+                """, isMultiline: true);
             if (isGenericEvent && !string.IsNullOrEmpty(eventSourceInteropType))
             {
-                writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.Constructor)]");
-                writer.Write("        [return: UnsafeAccessorType(\"");
-                writer.Write(eventSourceInteropType);
-                writer.WriteLine("\")]");
-                writer.WriteLine("        static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);");
-                writer.WriteLine("");
-                writer.Write("        return _");
-                writer.Write(evtName);
-                writer.WriteLine(".GetOrAdd(");
-                writer.WriteLine("            key: thisObject,");
-                writer.Write("            valueFactory: static (_, thisReference) => Unsafe.As<");
-                writer.Write(eventSourceProjectedFull);
-                writer.Write(">(ctor(thisReference, ");
-                writer.Write(eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                writer.WriteLine(")),");
-                writer.WriteLine("            factoryArgument: thisReference);");
+                writer.Write($$"""
+                            [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
+                            [return: UnsafeAccessorType("{{eventSourceInteropType}}")]
+                            static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
+                    
+                            return _{{evtName}}.GetOrAdd(
+                                key: thisObject,
+                                valueFactory: static (_, thisReference) => Unsafe.As<{{eventSourceProjectedFull}}>(ctor(thisReference, {{eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture)}})),
+                                factoryArgument: thisReference);
+                    """, isMultiline: true);
             }
             else
             {
                 // Non-generic delegate: directly construct.
-                writer.Write("        return _");
-                writer.Write(evtName);
-                writer.WriteLine(".GetOrAdd(");
-                writer.WriteLine("            key: thisObject,");
-                writer.Write("            valueFactory: static (_, thisReference) => new ");
-                writer.Write(eventSourceProjectedFull);
-                writer.Write("(thisReference, ");
-                writer.Write(eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                writer.WriteLine("),");
-                writer.WriteLine("            factoryArgument: thisReference);");
+                writer.Write($$"""
+                            return _{{evtName}}.GetOrAdd(
+                                key: thisObject,
+                                valueFactory: static (_, thisReference) => new {{eventSourceProjectedFull}}(thisReference, {{eventSlot.ToString(System.Globalization.CultureInfo.InvariantCulture)}}),
+                                factoryArgument: thisReference);
+                    """, isMultiline: true);
             }
             writer.WriteLine("    }");
         }
@@ -1110,9 +1100,11 @@ internal static class AbiMethodBodyFactory
         fp.Append(", int");
 
         writer.WriteLine("");
-        writer.WriteLine("    {");
-        writer.WriteLine("        using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();");
-        writer.WriteLine("        void* ThisPtr = thisValue.GetThisPtrUnsafe();");
+        writer.Write("""
+                {
+                    using WindowsRuntimeObjectReferenceValue thisValue = thisReference.AsValue();
+                    void* ThisPtr = thisValue.GetThisPtrUnsafe();
+            """, isMultiline: true);
 
         // Declare 'using' marshaller values for ref-type parameters (these need disposing).
         for (int i = 0; i < sig.Params.Count; i++)
@@ -1144,15 +1136,11 @@ internal static class AbiMethodBodyFactory
                 IndentedTextWriter __scratchProjectedTypeName = new();
                 MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, p.Type, false);
                 string projectedTypeName = __scratchProjectedTypeName.ToString();
-                writer.WriteLine("        [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToUnmanaged\")]");
-                writer.Write("        static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_");
-                writer.Write(localName);
-                writer.Write("([UnsafeAccessorType(\"");
-                writer.Write(interopTypeName);
-                writer.Write("\")] object _, ");
-                writer.Write(projectedTypeName);
-                writer.WriteLine(" value);");
-                writer.WriteLine($"        using WindowsRuntimeObjectReferenceValue __{localName} = ConvertToUnmanaged_{localName}(null, {callName});");
+                writer.Write($$"""
+                            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToUnmanaged")]
+                            static extern WindowsRuntimeObjectReferenceValue ConvertToUnmanaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, {{projectedTypeName}} value);
+                            using WindowsRuntimeObjectReferenceValue __{{localName}} = ConvertToUnmanaged_{{localName}}(null, {{callName}});
+                    """, isMultiline: true);
             }
         }
         // (String input params are now stack-allocated via the fast-path pinning pattern below;
@@ -1215,10 +1203,10 @@ internal static class AbiMethodBodyFactory
             if (cat != ParamCategory.ReceiveArray) { continue; }
             string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature sza = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)AbiTypeHelpers.StripByRefAndCustomModifiers(p.Type);
-            writer.Write("        uint __");
-            writer.Write(localName);
-            writer.WriteLine("_length = default;");
-            writer.Write("        ");
+            writer.Write($$"""
+                        uint __{{localName}}_length = default;
+                        
+                """, isMultiline: true);
             // Element ABI type: void* for ref types; ABI struct for complex/blittable structs;
             // primitive ABI otherwise.
             if (sza.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, sza.BaseType) || sza.BaseType.IsObject())
@@ -1263,17 +1251,13 @@ internal static class AbiMethodBodyFactory
                         ? "global::ABI.System.Exception"
                         : "nint";
             writer.WriteLine("");
-            writer.Write("        Unsafe.SkipInit(out InlineArray16<");
-            writer.Write(storageT);
-            writer.Write("> __");
-            writer.Write(localName);
-            writer.WriteLine("_inlineArray);");
-            writer.Write("        ");
-            writer.Write(storageT);
-            writer.Write("[] __");
-            writer.Write(localName);
-            writer.WriteLine("_arrayFromPool = null;");
-            writer.WriteLine($"        Span<{storageT}> __{localName}_span = {callName}.Length <= 16\n            ? __{localName}_inlineArray[..{callName}.Length]\n            : (__{localName}_arrayFromPool = global::System.Buffers.ArrayPool<{storageT}>.Shared.Rent({callName}.Length));");
+            writer.Write($$"""
+                        Unsafe.SkipInit(out InlineArray16<{{storageT}}> __{{localName}}_inlineArray);
+                        {{storageT}}[] __{{localName}}_arrayFromPool = null;
+                        Span<{{storageT}}> __{{localName}}_span = {{callName}}.Length <= 16
+                            ? __{{localName}}_inlineArray[..{{callName}}.Length]
+                            : (__{{localName}}_arrayFromPool = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length));
+                """, isMultiline: true);
 
             if (szArr.BaseType.IsString() && cat == ParamCategory.PassArray)
             {
@@ -1281,43 +1265,28 @@ internal static class AbiMethodBodyFactory
                 // Only required for PassArray (managed -> HSTRING conversion); FillArray's native side
                 // fills HSTRING handles directly into the nint storage.
                 writer.WriteLine("");
-                writer.Write("        Unsafe.SkipInit(out InlineArray16<HStringHeader> __");
-                writer.Write(localName);
-                writer.WriteLine("_inlineHeaderArray);");
-                writer.Write("        HStringHeader[] __");
-                writer.Write(localName);
-                writer.WriteLine("_headerArrayFromPool = null;");
-                writer.Write("        Span<HStringHeader> __");
-                writer.Write(localName);
-                writer.Write("_headerSpan = ");
-                writer.Write(callName);
-                writer.WriteLine(".Length <= 16");
-                writer.Write("            ? __");
-                writer.Write(localName);
-                writer.Write("_inlineHeaderArray[..");
-                writer.Write(callName);
-                writer.WriteLine(".Length]");
-                writer.Write("            : (__");
-                writer.Write(localName);
-                writer.Write("_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent(");
-                writer.Write(callName);
-                writer.WriteLine(".Length));");
-
-                writer.WriteLine("");
-                writer.Write("        Unsafe.SkipInit(out InlineArray16<nint> __");
-                writer.Write(localName);
-                writer.WriteLine("_inlinePinnedHandleArray);");
-                writer.Write("        nint[] __");
-                writer.Write(localName);
-                writer.WriteLine("_pinnedHandleArrayFromPool = null;");
-                writer.WriteLine($"        Span<nint> __{localName}_pinnedHandleSpan = {callName}.Length <= 16\n            ? __{localName}_inlinePinnedHandleArray[..{callName}.Length]\n            : (__{localName}_pinnedHandleArrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent({callName}.Length));");
+                writer.Write($$"""
+                            Unsafe.SkipInit(out InlineArray16<HStringHeader> __{{localName}}_inlineHeaderArray);
+                            HStringHeader[] __{{localName}}_headerArrayFromPool = null;
+                            Span<HStringHeader> __{{localName}}_headerSpan = {{callName}}.Length <= 16
+                                ? __{{localName}}_inlineHeaderArray[..{{callName}}.Length]
+                                : (__{{localName}}_headerArrayFromPool = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
+                    
+                            Unsafe.SkipInit(out InlineArray16<nint> __{{localName}}_inlinePinnedHandleArray);
+                            nint[] __{{localName}}_pinnedHandleArrayFromPool = null;
+                            Span<nint> __{{localName}}_pinnedHandleSpan = {{callName}}.Length <= 16
+                                ? __{{localName}}_inlinePinnedHandleArray[..{{callName}}.Length]
+                                : (__{{localName}}_pinnedHandleArrayFromPool = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                    """, isMultiline: true);
             }
         }
         if (returnIsReceiveArray)
         {
             AsmResolver.DotNet.Signatures.SzArrayTypeSignature retSz = (AsmResolver.DotNet.Signatures.SzArrayTypeSignature)rt!;
-            writer.WriteLine("        uint __retval_length = default;");
-            writer.Write("        ");
+            writer.Write("""
+                        uint __retval_length = default;
+                        
+                """, isMultiline: true);
             if (retSz.BaseType.IsString() || AbiTypeHelpers.IsRuntimeClassOrInterface(context.Cache, retSz.BaseType) || retSz.BaseType.IsObject())
             {
                 writer.Write("void*");
@@ -1419,8 +1388,10 @@ internal static class AbiMethodBodyFactory
         bool needsTryFinally = returnIsString || returnIsRefType || returnIsReceiveArray || hasOutNeedsCleanup || hasReceiveArray || returnIsComplexStruct || hasNonBlittablePassArray || hasComplexStructInput || returnIsSystemTypeForCleanup;
         if (needsTryFinally)
         {
-            writer.WriteLine("        try");
-            writer.WriteLine("        {");
+            writer.Write("""
+                        try
+                        {
+                """, isMultiline: true);
         }
 
         string indent = needsTryFinally ? "            " : "        ";
@@ -1550,8 +1521,10 @@ internal static class AbiMethodBodyFactory
                     writer.Write(callName);
                 }
             }
-            writer.WriteLine(")");
-            writer.WriteLine($"{indent}{new string(' ', fixedNesting * 4)}{{");
+            writer.Write($$"""
+                )
+                {{indent}}{{new string(' ', fixedNesting * 4)}}{
+                """, isMultiline: true);
             fixedNesting++;
             // Inside the body: emit HStringMarshaller calls for input string params.
             for (int i = 0; i < sig.Params.Count; i++)
@@ -1594,21 +1567,13 @@ internal static class AbiMethodBodyFactory
                 // Skip pre-call ConvertToUnmanagedUnsafe for FillArray of strings — there's
                 // nothing to convert (native fills the handles).
                 if (cat == ParamCategory.FillArray) { continue; }
-                writer.Write(callIndent);
-                writer.WriteLine("HStringArrayMarshaller.ConvertToUnmanagedUnsafe(");
-                writer.Write(callIndent);
-                writer.Write("    source: ");
-                writer.Write(callName);
-                writer.WriteLine(",");
-                writer.Write(callIndent);
-                writer.Write("    hstringHeaders: (HStringHeader*) _");
-                writer.Write(localName);
-                writer.WriteLine("_inlineHeaderArray,");
-                writer.Write(callIndent);
-                writer.Write("    hstrings: __");
-                writer.Write(localName);
-                writer.WriteLine("_span,");
-                writer.WriteLine($"{callIndent}    pinnedGCHandles: __{localName}_pinnedHandleSpan);");
+                writer.Write($$"""
+                    {{callIndent}}HStringArrayMarshaller.ConvertToUnmanagedUnsafe(
+                    {{callIndent}}    source: {{callName}},
+                    {{callIndent}}    hstringHeaders: (HStringHeader*) _{{localName}}_inlineHeaderArray,
+                    {{callIndent}}    hstrings: __{{localName}}_span,
+                    {{callIndent}}    pinnedGCHandles: __{{localName}}_pinnedHandleSpan);
+                    """, isMultiline: true);
             }
             else
             {
@@ -1651,19 +1616,11 @@ internal static class AbiMethodBodyFactory
                     dataParamType = "void**";
                     dataCastType = "(void**)";
                 }
-                writer.Write(callIndent);
-                writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToUnmanaged\")]");
-                writer.Write(callIndent);
-                writer.Write("static extern void CopyToUnmanaged_");
-                writer.Write(localName);
-                writer.Write("([UnsafeAccessorType(\"");
-                writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType));
-                writer.Write("\")] object _, ReadOnlySpan<");
-                writer.Write(elementProjected);
-                writer.Write("> span, uint length, ");
-                writer.Write(dataParamType);
-                writer.WriteLine(" data);");
-                writer.WriteLine($"{callIndent}CopyToUnmanaged_{localName}(null, {callName}, (uint){callName}.Length, {dataCastType}_{localName});");
+                writer.Write($$"""
+                    {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToUnmanaged")]
+                    {{callIndent}}static extern void CopyToUnmanaged_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, ReadOnlySpan<{{elementProjected}}> span, uint length, {{dataParamType}} data);
+                    {{callIndent}}CopyToUnmanaged_{{localName}}(null, {{callName}}, (uint){{callName}}.Length, {{dataCastType}}_{{localName}});
+                    """, isMultiline: true);
             }
         }
 
@@ -1686,19 +1643,28 @@ internal static class AbiMethodBodyFactory
             {
                 string callName = AbiTypeHelpers.GetParamName(p, paramNameOverride);
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-                writer.Write($",\n  (uint){callName}.Length, _{localName}");
+                writer.Write($$"""
+                    ,
+                      (uint){{callName}}.Length, _{{localName}}
+                    """, isMultiline: true);
                 continue;
             }
             if (cat == ParamCategory.Out)
             {
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-                writer.Write($",\n  &__{localName}");
+                writer.Write($$"""
+                    ,
+                      &__{{localName}}
+                    """, isMultiline: true);
                 continue;
             }
             if (cat == ParamCategory.ReceiveArray)
             {
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-                writer.Write($",\n  &__{localName}_length, &__{localName}_data");
+                writer.Write($$"""
+                    ,
+                      &__{{localName}}_length, &__{{localName}}_data
+                    """, isMultiline: true);
                 continue;
             }
             if (cat == ParamCategory.Ref)
@@ -1708,17 +1674,25 @@ internal static class AbiMethodBodyFactory
                 if (AbiTypeHelpers.IsComplexStruct(context.Cache, uRefArg))
                 {
                     // Complex struct 'in' (Ref) param: pass &__local (the marshaled ABI struct).
-                    writer.Write($",\n  &__{localName}");
+                    writer.Write($$"""
+                        ,
+                          &__{{localName}}
+                        """, isMultiline: true);
                 }
                 else
                 {
                     // 'in T' projected param: pass the pinned pointer.
-                    writer.Write($",\n  _{localName}");
+                    writer.Write($$"""
+                        ,
+                          _{{localName}}
+                        """, isMultiline: true);
                 }
                 continue;
             }
-            writer.WriteLine(",");
-            writer.Write("  ");
+            writer.Write("""
+                ,
+                  
+                """, isMultiline: true);
             if (p.Type.IsHResultException())
             {
                 writer.Write($"__{AbiTypeHelpers.GetParamLocalName(p, paramNameOverride)}");
@@ -1757,13 +1731,17 @@ internal static class AbiMethodBodyFactory
         }
         if (returnIsReceiveArray)
         {
-            writer.WriteLine(",");
-            writer.Write("  &__retval_length, &__retval_data");
+            writer.Write("""
+                ,
+                  &__retval_length, &__retval_data
+                """, isMultiline: true);
         }
         else if (rt is not null)
         {
-            writer.WriteLine(",");
-            writer.Write("  &__retval");
+            writer.Write("""
+                ,
+                  &__retval
+                """, isMultiline: true);
         }
         // Close the vtable call. One less ')' when noexcept (no ThrowExceptionForHR wrap).
         writer.Write(isNoExcept ? ");\n" : "));\n");
@@ -1819,19 +1797,11 @@ internal static class AbiMethodBodyFactory
                 dataParamType = abiStructName + "* data";
                 dataCastType = "(" + abiStructName + "*)";
             }
-            writer.Write(callIndent);
-            writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"CopyToManaged\")]");
-            writer.Write(callIndent);
-            writer.Write("static extern void CopyToManaged_");
-            writer.Write(localName);
-            writer.Write("([UnsafeAccessorType(\"");
-            writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType));
-            writer.Write("\")] object _, uint length, ");
-            writer.Write(dataParamType);
-            writer.Write(", Span<");
-            writer.Write(elementProjected);
-            writer.WriteLine("> span);");
-            writer.WriteLine($"{callIndent}CopyToManaged_{localName}(null, (uint)__{localName}_span.Length, {dataCastType}_{localName}, {callName});");
+            writer.Write($$"""
+                {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "CopyToManaged")]
+                {{callIndent}}static extern void CopyToManaged_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType)}}")] object _, uint length, {{dataParamType}}, Span<{{elementProjected}}> span);
+                {{callIndent}}CopyToManaged_{{localName}}(null, (uint)__{{localName}}_span.Length, {{dataCastType}}_{{localName}}, {{callName}});
+                """, isMultiline: true);
         }
 
         // After call: write back Out params to caller's 'out' var.
@@ -1853,17 +1823,11 @@ internal static class AbiMethodBodyFactory
                 IndentedTextWriter __scratchProjectedTypeName = new();
                 MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, uOut, false);
                 string projectedTypeName = __scratchProjectedTypeName.ToString();
-                writer.Write(callIndent);
-                writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
-                writer.Write(callIndent);
-                writer.Write("static extern ");
-                writer.Write(projectedTypeName);
-                writer.Write(" ConvertToManaged_");
-                writer.Write(localName);
-                writer.Write("([UnsafeAccessorType(\"");
-                writer.Write(interopTypeName);
-                writer.WriteLine("\")] object _, void* value);");
-                writer.WriteLine($"{callIndent}{callName} = ConvertToManaged_{localName}(null, __{localName});");
+                writer.Write($$"""
+                    {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+                    {{callIndent}}static extern {{projectedTypeName}} ConvertToManaged_{{localName}}([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
+                    {{callIndent}}{{callName}} = ConvertToManaged_{{localName}}(null, __{{localName}});
+                    """, isMultiline: true);
                 continue;
             }
 
@@ -1939,19 +1903,11 @@ internal static class AbiMethodBodyFactory
 
             _ = elementInteropArg;
             string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
-            writer.Write(callIndent);
-            writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
-            writer.Write(callIndent);
-            writer.Write("static extern ");
-            writer.Write(elementProjected);
-            writer.Write("[] ConvertToManaged_");
-            writer.Write(localName);
-            writer.Write("([UnsafeAccessorType(\"");
-            writer.Write(marshallerPath);
-            writer.Write("\")] object _, uint length, ");
-            writer.Write(elementAbi);
-            writer.WriteLine("* data);");
-            writer.WriteLine($"{callIndent}{callName} = ConvertToManaged_{localName}(null, __{localName}_length, __{localName}_data);");
+            writer.Write($$"""
+                {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+                {{callIndent}}static extern {{elementProjected}}[] ConvertToManaged_{{localName}}([UnsafeAccessorType("{{marshallerPath}}")] object _, uint length, {{elementAbi}}* data);
+                {{callIndent}}{{callName}} = ConvertToManaged_{{localName}}(null, __{{localName}}_length, __{{localName}}_data);
+                """, isMultiline: true);
         }
         if (rt is not null)
         {
@@ -1975,17 +1931,11 @@ internal static class AbiMethodBodyFactory
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
-                writer.Write(callIndent);
-                writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
-                writer.Write(callIndent);
-                writer.Write("static extern ");
-                writer.Write(elementProjected);
-                writer.Write("[] ConvertToManaged_retval([UnsafeAccessorType(\"");
-                writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType));
-                writer.Write("\")] object _, uint length, ");
-                writer.Write(elementAbi);
-                writer.WriteLine("* data);");
-                writer.WriteLine($"{callIndent}return ConvertToManaged_retval(null, __retval_length, __retval_data);");
+                writer.Write($$"""
+                    {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+                    {{callIndent}}static extern {{elementProjected}}[] ConvertToManaged_retval([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType)}}")] object _, uint length, {{elementAbi}}* data);
+                    {{callIndent}}return ConvertToManaged_retval(null, __retval_length, __retval_data);
+                    """, isMultiline: true);
             }
             else if (returnIsHResultException)
             {
@@ -2011,15 +1961,11 @@ internal static class AbiMethodBodyFactory
                     IndentedTextWriter __scratchProjectedTypeName = new();
                     MethodFactory.WriteProjectedSignature(__scratchProjectedTypeName, context, rt, false);
                     string projectedTypeName = __scratchProjectedTypeName.ToString();
-                    writer.Write(callIndent);
-                    writer.WriteLine("[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"ConvertToManaged\")]");
-                    writer.Write(callIndent);
-                    writer.Write("static extern ");
-                    writer.Write(projectedTypeName);
-                    writer.Write(" ConvertToManaged_retval([UnsafeAccessorType(\"");
-                    writer.Write(interopTypeName);
-                    writer.WriteLine("\")] object _, void* value);");
-                    writer.WriteLine($"{callIndent}return ConvertToManaged_retval(null, __retval);");
+                    writer.Write($$"""
+                        {{callIndent}}[UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "ConvertToManaged")]
+                        {{callIndent}}static extern {{projectedTypeName}} ConvertToManaged_retval([UnsafeAccessorType("{{interopTypeName}}")] object _, void* value);
+                        {{callIndent}}return ConvertToManaged_retval(null, __retval);
+                        """, isMultiline: true);
                 }
                 else
                 {
@@ -2078,9 +2024,11 @@ internal static class AbiMethodBodyFactory
 
         if (needsTryFinally)
         {
-            writer.WriteLine("        }");
-            writer.WriteLine("        finally");
-            writer.WriteLine("        {");
+            writer.Write("""
+                        }
+                        finally
+                        {
+                """, isMultiline: true);
 
             // Order matches truth:
             // 0. Complex-struct input param Dispose (e.g. ProfileUsageMarshaller.Dispose(__value))
@@ -2119,7 +2067,13 @@ internal static class AbiMethodBodyFactory
                     // the truth: no Dispose_<name> emitted). Just return the inline-array's pool
                     // using the correct element type (ABI.System.Exception, not nint).
                     string localNameH = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
-                    writer.Write($"\n            if (__{localNameH}_arrayFromPool is not null)\n            {{\n                global::System.Buffers.ArrayPool<global::ABI.System.Exception>.Shared.Return(__{localNameH}_arrayFromPool);\n            }}\n");
+                    writer.WriteLine("");
+                    writer.Write($$"""
+                                    if (__{{localNameH}}_arrayFromPool is not null)
+                                    {
+                                        global::System.Buffers.ArrayPool<global::ABI.System.Exception>.Shared.Return(__{{localNameH}}_arrayFromPool);
+                                    }
+                        """, isMultiline: true);
                     continue;
                 }
                 string localName = AbiTypeHelpers.GetParamLocalName(p, paramNameOverride);
@@ -2131,10 +2085,28 @@ internal static class AbiMethodBodyFactory
                     // array directly, with no per-element pinned handle / header to release.
                     if (cat == ParamCategory.PassArray)
                     {
-                        writer.Write($"            HStringArrayMarshaller.Dispose(__{localName}_pinnedHandleSpan);\n\n            if (__{localName}_pinnedHandleArrayFromPool is not null)\n            {{\n                global::System.Buffers.ArrayPool<nint>.Shared.Return(__{localName}_pinnedHandleArrayFromPool);\n            }}\n\n            if (__{localName}_headerArrayFromPool is not null)\n            {{\n                global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__{localName}_headerArrayFromPool);\n            }}\n");
+                        writer.Write($$"""
+                                        HStringArrayMarshaller.Dispose(__{{localName}}_pinnedHandleSpan);
+                            
+                                        if (__{{localName}}_pinnedHandleArrayFromPool is not null)
+                                        {
+                                            global::System.Buffers.ArrayPool<nint>.Shared.Return(__{{localName}}_pinnedHandleArrayFromPool);
+                                        }
+                            
+                                        if (__{{localName}}_headerArrayFromPool is not null)
+                                        {
+                                            global::System.Buffers.ArrayPool<HStringHeader>.Shared.Return(__{{localName}}_headerArrayFromPool);
+                                        }
+                            """, isMultiline: true);
                     }
                     // Both PassArray and FillArray need the inline-array's nint pool returned.
-                    writer.Write($"\n            if (__{localName}_arrayFromPool is not null)\n            {{\n                global::System.Buffers.ArrayPool<nint>.Shared.Return(__{localName}_arrayFromPool);\n            }}\n");
+                    writer.WriteLine("");
+                    writer.Write($$"""
+                                    if (__{{localName}}_arrayFromPool is not null)
+                                    {
+                                        global::System.Buffers.ArrayPool<nint>.Shared.Return(__{{localName}}_arrayFromPool);
+                                    }
+                        """, isMultiline: true);
                 }
                 else
                 {
@@ -2161,10 +2133,19 @@ internal static class AbiMethodBodyFactory
                     string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(szArr.BaseType, TypedefNameType.Projected);
 
                     _ = elementInteropArg;
-                    writer.WriteLine("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Dispose\")]");
-                    writer.Write($"            static extern void Dispose_{localName}([UnsafeAccessorType(\"{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}\")] object _, uint length, {disposeDataParamType}");
+                    writer.Write($$"""
+                                    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Dispose")]
+                                    static extern void Dispose_{{localName}}([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType)}}")] object _, uint length, {{disposeDataParamType}}
+                        """, isMultiline: true);
                     if (!disposeDataParamType.EndsWith("data", System.StringComparison.Ordinal)) { writer.Write(" data"); }
-                    writer.Write($");\n\n            fixed({fixedPtrType} _{localName} = __{localName}_span)\n            {{\n                Dispose_{localName}(null, (uint) __{localName}_span.Length, {disposeCastType}_{localName});\n            }}\n");
+                    writer.Write($$"""
+                        );
+                        
+                                    fixed({{fixedPtrType}} _{{localName}} = __{{localName}}_span)
+                                    {
+                                        Dispose_{{localName}}(null, (uint) __{{localName}}_span.Length, {{disposeCastType}}_{{localName}});
+                                    }
+                        """, isMultiline: true);
                 }
                 // ArrayPool storage type matches the InlineArray storage (mapped ABI value type
                 // for DateTime/TimeSpan; ABI struct for complex structs; nint otherwise).
@@ -2173,7 +2154,13 @@ internal static class AbiMethodBodyFactory
                     : AbiTypeHelpers.IsComplexStruct(context.Cache, szArr.BaseType)
                         ? AbiTypeHelpers.GetAbiStructTypeName(writer, context, szArr.BaseType)
                         : "nint";
-                writer.Write($"\n            if (__{localName}_arrayFromPool is not null)\n            {{\n                global::System.Buffers.ArrayPool<{poolStorageT}>.Shared.Return(__{localName}_arrayFromPool);\n            }}\n");
+                writer.WriteLine("");
+                writer.Write($$"""
+                                if (__{{localName}}_arrayFromPool is not null)
+                                {
+                                    global::System.Buffers.ArrayPool<{{poolStorageT}}>.Shared.Return(__{{localName}}_arrayFromPool);
+                                }
+                    """, isMultiline: true);
             }
 
             // 2. Free Out string/object/runtime-class params.
@@ -2223,8 +2210,12 @@ internal static class AbiMethodBodyFactory
 
                 _ = elementInteropArg;
                 string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
-                writer.WriteLine("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]");
-                writer.WriteLine($"            static extern void Free_{localName}([UnsafeAccessorType(\"{marshallerPath}\")] object _, uint length, {elementAbi}* data);\n\n            Free_{localName}(null, __{localName}_length, __{localName}_data);");
+                writer.Write($$"""
+                                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Free")]
+                                static extern void Free_{{localName}}([UnsafeAccessorType("{{marshallerPath}}")] object _, uint length, {{elementAbi}}* data);
+                    
+                                Free_{{localName}}(null, __{{localName}}_length, __{{localName}}_data);
+                    """, isMultiline: true);
             }
 
             // 4. Free return value (__retval) — emitted last to match truth ordering.
@@ -2262,13 +2253,11 @@ internal static class AbiMethodBodyFactory
                 string elementInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(retSz.BaseType, TypedefNameType.Projected);
 
                 _ = elementInteropArg;
-                writer.WriteLine("            [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = \"Free\")]");
-                writer.Write("            static extern void Free_retval([UnsafeAccessorType(\"");
-                writer.Write(ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType));
-                writer.Write("\")] object _, uint length, ");
-                writer.Write(elementAbi);
-                writer.WriteLine("* data);");
-                writer.WriteLine("            Free_retval(null, __retval_length, __retval_data);");
+                writer.Write($$"""
+                                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "Free")]
+                                static extern void Free_retval([UnsafeAccessorType("{{ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType)}}")] object _, uint length, {{elementAbi}}* data);
+                                Free_retval(null, __retval_length, __retval_data);
+                    """, isMultiline: true);
             }
 
             writer.WriteLine("        }");

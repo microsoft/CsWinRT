@@ -103,7 +103,10 @@ internal static class ProjectionFileBuilder
         MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
         MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
 
-        writer.Write($"{accessibility} enum {typeName} : {enumUnderlyingType}\n{{\n");
+        writer.Write($$"""
+            {{accessibility}} enum {{typeName}} : {{enumUnderlyingType}}
+            {
+            """, isMultiline: true);
 
         foreach (FieldDefinition field in type.Fields)
         {
@@ -187,15 +190,21 @@ internal static class ProjectionFileBuilder
         MetadataAttributeFactory.WriteWinRTReferenceTypeAttribute(writer, context, type);
         writer.Write("public");
         if (hasAddition) { writer.Write(" partial"); }
-        writer.Write($" struct {projectionName}: IEquatable<{projectionName}>\n{{\npublic {projectionName}(");
+        writer.Write($$"""
+             struct {{projectionName}}: IEquatable<{{projectionName}}>
+            {
+            public {{projectionName}}(
+            """, isMultiline: true);
         for (int i = 0; i < fields.Count; i++)
         {
             if (i > 0) { writer.Write(", "); }
             writer.Write($"{fields[i].TypeStr} ");
             IdentifierEscaping.WriteEscapedIdentifier(writer, fields[i].ParamName);
         }
-        writer.WriteLine(")");
-        writer.WriteLine("{");
+        writer.Write("""
+            )
+            {
+            """, isMultiline: true);
         foreach ((string _, string name, string paramName, bool _) in fields)
         {
             // When the param name matches the field name (i.e. ToCamelCase couldn't change casing),
@@ -219,7 +228,12 @@ internal static class ProjectionFileBuilder
         // properties
         foreach ((string typeStr, string name, string _, bool _) in fields)
         {
-            writer.Write($"public {typeStr} {name}\n{{\nreadonly get; set;\n}}\n");
+            writer.Write($$"""
+                public {{typeStr}} {{name}}
+                {
+                readonly get; set;
+                }
+                """, isMultiline: true);
         }
 
         // ==
@@ -236,26 +250,13 @@ internal static class ProjectionFileBuilder
                 writer.Write($"x.{fields[i].Name} == y.{fields[i].Name}");
             }
         }
-        writer.WriteLine(";");
-
-        // !=
-        writer.Write("public static bool operator !=(");
-        writer.Write(projectionName);
-        writer.Write(" x, ");
-        writer.Write(projectionName);
-        writer.WriteLine(" y) => !(x == y);");
-
-        // equals
-        writer.Write("public bool Equals(");
-        writer.Write(projectionName);
-        writer.WriteLine(" other) => this == other;");
-
-        writer.Write("public override bool Equals(object obj) => obj is ");
-        writer.Write(projectionName);
-        writer.WriteLine(" that && this == that;");
-
-        // hashcode
-        writer.Write("public override int GetHashCode() => ");
+        writer.Write($$"""
+            ;
+            public static bool operator !=({{projectionName}} x, {{projectionName}} y) => !(x == y);
+            public bool Equals({{projectionName}} other) => this == other;
+            public override bool Equals(object obj) => obj is {{projectionName}} that && this == that;
+            public override int GetHashCode() => 
+            """, isMultiline: true);
         if (fields.Count == 0)
         {
             writer.Write("0");
@@ -268,8 +269,10 @@ internal static class ProjectionFileBuilder
                 writer.Write($"{fields[i].Name}.GetHashCode()");
             }
         }
-        writer.WriteLine(";");
-        writer.WriteLine("}");
+        writer.Write("""
+            ;
+            }
+            """, isMultiline: true);
         writer.WriteLine("");
     }
     /// <summary>Writes a projected API contract (an empty enum stand-in).</summary>
@@ -279,7 +282,11 @@ internal static class ProjectionFileBuilder
 
         string typeName = type.Name?.Value ?? string.Empty;
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
-        writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} enum {typeName}\n{{\n}}\n");
+        writer.Write($$"""
+            {{AccessibilityHelper.InternalAccessibility(context.Settings)}} enum {{typeName}}
+            {
+            }
+            """, isMultiline: true);
     }
     /// <summary>Writes a projected delegate.</summary>
     public static void WriteDelegate(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
@@ -317,7 +324,10 @@ internal static class ProjectionFileBuilder
 
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} sealed class {typeName}: Attribute\n{{\n");
+        writer.Write($$"""
+            {{AccessibilityHelper.InternalAccessibility(context.Settings)}} sealed class {{typeName}}: Attribute
+            {
+            """, isMultiline: true);
 
         // Constructors
         foreach (MethodDefinition method in type.Methods)

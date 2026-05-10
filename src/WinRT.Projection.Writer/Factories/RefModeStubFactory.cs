@@ -20,12 +20,14 @@ internal static class RefModeStubFactory
     public static void EmitRefModeObjRefGetterBody(IndentedTextWriter writer)
     {
         writer.WriteLine("");
-        writer.WriteLine("{");
-        writer.WriteLine("    get");
-        writer.WriteLine("    {");
-        writer.WriteLine("        throw null;");
-        writer.WriteLine("    }");
-        writer.WriteLine("}");
+        writer.Write("""
+            {
+                get
+                {
+                    throw null;
+                }
+            }
+            """, isMultiline: true);
     }
 
     /// <summary>
@@ -37,7 +39,8 @@ internal static class RefModeStubFactory
     /// <param name="typeName">The type name to emit the synthetic constructor for.</param>
     public static void EmitSyntheticPrivateCtor(IndentedTextWriter writer, string typeName)
     {
-        writer.WriteLine($"\nprivate {typeName}() {{ throw null; }}");
+        writer.WriteLine("");
+        writer.WriteLine($"private {typeName}() {{ throw null; }}");
     }
 
     /// <summary>
@@ -46,8 +49,10 @@ internal static class RefModeStubFactory
     /// <param name="writer">The writer to emit to.</param>
     public static void EmitRefModeInvokeBody(IndentedTextWriter writer)
     {
-        writer.WriteLine("        throw null;");
-        writer.WriteLine("    }");
-        writer.WriteLine("}");
+        writer.Write("""
+                    throw null;
+                }
+            }
+            """, isMultiline: true);
     }
 }
