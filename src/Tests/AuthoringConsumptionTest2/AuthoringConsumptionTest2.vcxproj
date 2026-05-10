@@ -100,13 +100,10 @@
     DllGetActivationFactory. CsWinRTLink target below invokes Publish on it; the resulting
     dll is added to ReferenceCopyLocalPaths so it lands next to the test exe.
 
-    Even though we don't reference the JIT-side projections, runtime, or host shim, we still
-    need both component csprojs built with RuntimeIdentifier set so their .winmd files land
-    at bin\x64\Release\<TFM>\win-x64\ (matching the IsWinMDFile <Reference> HintPath). slnx
-    BuildDependency builds them but doesn't propagate RID, so the winmd lands one folder up.
-    Add ProjectReferences with ReferenceOutputAssembly=false (build ordering only, no managed
-    closure pull-in) and explicit RuntimeIdentifier propagation. UndefineProperties=PublishAot
-    is defensive against the cache-contamination scenario fixed in 892108e9.
+    Build the two component csprojs with RuntimeIdentifier propagated, so their .winmd files
+    land at bin\<Platform>\<Config>\<TFM>\win-<Platform>\ (matching the IsWinMDFile <Reference>
+    HintPath below). ReferenceOutputAssembly=false drives build ordering only - cppwinrt
+    consumes the explicit IsWinMDFile <Reference> items, not the managed assembly closure.
   -->
   <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
     <ProjectReference Include="..\AuthoringTest\AuthoringTest.csproj">
@@ -115,14 +112,12 @@
       <Properties>RuntimeIdentifier=win-$(Platform)</Properties>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <Private>false</Private>
-      <UndefineProperties>PublishAot</UndefineProperties>
     </ProjectReference>
     <ProjectReference Include="..\AuthoringTest2\AuthoringTest2.csproj">
       <SetTargetFramework>TargetFramework=net10.0-windows10.0.26100.1</SetTargetFramework>
       <Properties>RuntimeIdentifier=win-$(Platform)</Properties>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <Private>false</Private>
-      <UndefineProperties>PublishAot</UndefineProperties>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">
