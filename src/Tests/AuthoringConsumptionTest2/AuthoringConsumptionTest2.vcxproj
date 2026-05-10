@@ -129,11 +129,16 @@
   </PropertyGroup>
   <Target Name="CsWinRTLink" DependsOnTargets="ComputeLinkSwitches" BeforeTargets="Link"
           Condition="'$(Configuration)' == 'Release' and '$(Platform)' == 'x64'"
-          Inputs="$(NativeLibraryProjectFilePath)"
-          Outputs="$(NativeLibraryPublishedDllPath)">
-    <MSBuild Projects="$(NativeLibraryProjectFilePath)"
-             Targets="Restore;Publish"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=win-$(Platform);TargetFramework=net10.0-windows10.0.26100.1;PublishAot=true" />
+          Inputs="$(NativeLibraryPublishedDllPath)"
+          Outputs="@(ReferenceCopyLocalPaths)">
+    <!--
+      AuthoringConsumptionTest2.AOT.csproj is a top-level slnx project that publishes
+      the merged AOT host as part of the normal slnx build (see slnx BuildDependency
+      chain). All this target does is pick up the already-published dll and add it to
+      ReferenceCopyLocalPaths so it lands next to the test exe.
+    -->
+    <Error Condition="!Exists('$(NativeLibraryPublishedDllPath)')"
+           Text="Expected published AOT host '$(NativeLibraryPublishedDllPath)' was not produced. Verify slnx built AuthoringConsumptionTest2.AOT.csproj for Release|x64." />
     <ItemGroup>
       <ReferenceCopyLocalPaths Include="$(NativeLibraryPublishedDllPath)" />
     </ItemGroup>
