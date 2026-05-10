@@ -107,6 +107,7 @@ internal static class ProjectionFileBuilder
             {{accessibility}} enum {{typeName}} : {{enumUnderlyingType}}
             {
             """, isMultiline: true);
+        writer.IncreaseIndent();
 
         foreach (FieldDefinition field in type.Fields)
         {
@@ -120,6 +121,7 @@ internal static class ProjectionFileBuilder
             CustomAttributeFactory.WritePlatformAttribute(writer, context, field);
             writer.WriteLine($"{fieldName} = unchecked(({enumUnderlyingType}){constantValue}),");
         }
+        writer.DecreaseIndent();
         writer.WriteLine("}");
         writer.WriteLine("");
     }
