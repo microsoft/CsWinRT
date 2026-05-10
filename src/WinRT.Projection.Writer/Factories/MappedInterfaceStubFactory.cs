@@ -84,31 +84,20 @@ internal static class MappedInterfaceStubFactory
                 EmitReadOnlyList(writer, context, typeArgs, typeArgSigs, objRefName);
                 break;
             case "IBindableIterable":
-                writer.WriteLine("");
-                writer.WriteLine($"IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => global::ABI.System.Collections.IEnumerableMethods.GetEnumerator({objRefName});");
+                writer.Write($"\nIEnumerator global::System.Collections.IEnumerable.GetEnumerator() => global::ABI.System.Collections.IEnumerableMethods.GetEnumerator({objRefName});\n");
                 break;
             case "IBindableIterator":
-                writer.WriteLine("");
-                writer.Write($$"""
-                    public bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext({{objRefName}});
-                    public void Reset() => throw new NotSupportedException();
-                    public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current({{objRefName}});
-                    """, isMultiline: true);
+                writer.Write($"\npublic bool MoveNext() => global::ABI.System.Collections.IEnumeratorMethods.MoveNext({objRefName});\n");
+                writer.WriteLine("public void Reset() => throw new NotSupportedException();");
+                writer.Write($"public object Current => global::ABI.System.Collections.IEnumeratorMethods.Current({objRefName});\n");
                 break;
             case "IBindableVector":
                 EmitNonGenericList(writer, objRefName);
                 break;
             case "INotifyDataErrorInfo":
-                writer.WriteLine("");
-                writer.Write($$"""
-                    public global::System.Collections.IEnumerable GetErrors(string propertyName) => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.GetErrors({{objRefName}}, propertyName);
-                    public bool HasErrors {get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors({{objRefName}}); }
-                    public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged
-                    {
-                        add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {{objRefName}}).Subscribe(value);
-                        remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {{objRefName}}).Unsubscribe(value);
-                    }
-                    """, isMultiline: true);
+                writer.Write($"\npublic global::System.Collections.IEnumerable GetErrors(string propertyName) => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.GetErrors({objRefName}, propertyName);\n");
+                writer.Write($"public bool HasErrors {{get => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.HasErrors({objRefName}); }}\n");
+                writer.Write($"public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged\n{{\n    add => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {objRefName}).Subscribe(value);\n    remove => global::ABI.System.ComponentModel.INotifyDataErrorInfoMethods.ErrorsChanged(this, {objRefName}).Unsubscribe(value);\n}}\n");
                 break;
         }
     }
