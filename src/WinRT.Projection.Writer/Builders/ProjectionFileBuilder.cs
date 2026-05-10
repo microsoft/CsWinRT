@@ -304,7 +304,7 @@ internal static class ProjectionFileBuilder
         string typeName = type.Name?.Value ?? string.Empty;
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, false);
         writer.Write($$"""
-            {{AccessibilityHelper.InternalAccessibility(context.Settings)}} enum {{typeName}}
+            {{context.Settings.InternalAccessibility}} enum {{typeName}}
             {
             }
             """, isMultiline: true);
@@ -331,7 +331,7 @@ internal static class ProjectionFileBuilder
             IIDExpressionGenerator.WriteGuid(writer, type, false);
             writer.WriteLine("\")]");
         }
-        writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} delegate ");
+        writer.Write($"{context.Settings.InternalAccessibility} delegate ");
         MethodFactory.WriteProjectionReturnType(writer, context, sig);
         writer.Write(" ");
         TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
@@ -349,7 +349,7 @@ internal static class ProjectionFileBuilder
 
         MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
         CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-        writer.WriteLine($"{AccessibilityHelper.InternalAccessibility(context.Settings)} sealed class {typeName}: Attribute");
+        writer.WriteLine($"{context.Settings.InternalAccessibility} sealed class {typeName}: Attribute");
         using (writer.WriteBlock())
         {
             // Constructors

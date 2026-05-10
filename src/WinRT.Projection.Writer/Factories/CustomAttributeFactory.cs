@@ -223,10 +223,7 @@ internal static class CustomAttributeFactory
                 return string.Empty;
             }
             // Only seed Platform on first non-empty observation: higher platforms emit but don't update Platform.
-            if (context.Platform.Length == 0)
-            {
-                context.Platform = platform;
-            }
+            context.SeedPlatform(platform);
         }
         return "\"Windows" + platform + "\"";
     }

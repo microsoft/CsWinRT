@@ -197,7 +197,7 @@ internal static class ClassFactory
         {
             MetadataAttributeFactory.WriteWinRTMetadataAttribute(writer, type, context.Cache);
             CustomAttributeFactory.WriteTypeCustomAttributes(writer, context, type, true);
-            writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} static class ");
+            writer.Write($"{context.Settings.InternalAccessibility} static class ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.Projected, false);
             TypedefNameWriter.WriteTypeParams(writer, type);
             writer.WriteLine();

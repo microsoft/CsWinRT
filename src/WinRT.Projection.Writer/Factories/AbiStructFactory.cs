@@ -45,7 +45,7 @@ internal static class AbiStructFactory
                 MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(writer, context, type);
             }
             MetadataAttributeFactory.WriteValueTypeWinRTClassNameAttribute(writer, context, type);
-            writer.Write($"{AccessibilityHelper.InternalAccessibility(context.Settings)} unsafe struct ");
+            writer.Write($"{context.Settings.InternalAccessibility} unsafe struct ");
             TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.ABI, false);
             writer.WriteLine();
             using (writer.WriteBlock())

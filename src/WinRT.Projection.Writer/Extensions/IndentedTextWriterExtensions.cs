@@ -78,7 +78,7 @@ internal static class IndentedTextWriterExtensions
         /// <param name="settings">The active projection settings.</param>
         public void WriteAccessibility(Settings settings)
         {
-            writer.Write(AccessibilityHelper.InternalAccessibility(settings));
+            writer.Write(settings.InternalAccessibility);
         }
 
         /// <summary>

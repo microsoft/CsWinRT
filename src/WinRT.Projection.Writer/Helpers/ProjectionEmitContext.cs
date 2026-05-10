@@ -61,14 +61,25 @@ internal sealed class ProjectionEmitContext(Settings settings, MetadataCache cac
     public bool CheckPlatform { get; private set; }
 
     /// <summary>
-    /// Gets the active platform string for the platform-attribute suppression mode.
+    /// Gets the active platform string for the platform-attribute suppression mode. Set initially
+    /// by <see cref="EnterPlatformSuppressionScope(string)"/>; subsequently seeded by the
+    /// platform-attribute algorithm on the first non-empty observation within the scope via
+    /// <see cref="SeedPlatform(string)"/>.
     /// </summary>
-    /// <remarks>
-    /// The setter is internal and is used by both the scope helper (to install/restore the
-    /// surrounding scope's platform) and the platform-attribute algorithm itself (which seeds
-    /// the platform on the first non-empty observation within an active scope).
-    /// </remarks>
-    public string Platform { get; internal set; } = string.Empty;
+    public string Platform { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Seeds <see cref="Platform"/> with the first non-empty platform observed by the platform-
+    /// attribute algorithm within an active suppression scope. No-op outside a scope.
+    /// </summary>
+    /// <param name="platform">The platform string observed at the current emission site.</param>
+    public void SeedPlatform(string platform)
+    {
+        if (CheckPlatform && Platform.Length == 0)
+        {
+            Platform = platform;
+        }
+    }
 
     /// <summary>
     /// Enters the ABI namespace mode. Returns an <see cref="IDisposable"/> token that resets the
