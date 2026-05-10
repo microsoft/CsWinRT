@@ -119,6 +119,28 @@ internal static class WellKnownProjectionWriterExceptions
         return Exception(10, message);
     }
 
+    /// <summary>
+    /// Raised when an input metadata path passed to the loader does not point at an existing
+    /// file or directory.
+    /// </summary>
+    /// <param name="path">The path that could not be resolved.</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException InvalidInputPath(string path)
+    {
+        return Exception(11, $"The input metadata path '{path}' does not exist (must be a <c>.winmd</c> file or a directory containing one).");
+    }
+
+    /// <summary>
+    /// Raised when an input <c>.winmd</c> file is malformed or contains an unexpected number of
+    /// modules (every <c>.winmd</c> must contain exactly one module).
+    /// </summary>
+    /// <param name="path">The malformed input path.</param>
+    /// <returns>The constructed exception.</returns>
+    public static WellKnownProjectionWriterException MalformedWinmd(string path)
+    {
+        return Exception(12, $"The input metadata file '{path}' is malformed: expected exactly one module per .winmd file.");
+    }
+
     private static WellKnownProjectionWriterException Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownProjectionWriterException(

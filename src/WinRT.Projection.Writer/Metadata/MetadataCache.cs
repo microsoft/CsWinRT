@@ -78,7 +78,7 @@ internal sealed class MetadataCache
             }
             else
             {
-                throw new FileNotFoundException($"Input metadata file/directory not found: {input}", input);
+                throw WellKnownProjectionWriterExceptions.InvalidInputPath(input);
             }
         }
 
@@ -134,7 +134,7 @@ internal sealed class MetadataCache
         AssemblyDefinition assemblyDefinition = RuntimeContext.LoadAssembly(path);
         if (assemblyDefinition.Modules is not [ModuleDefinition module])
         {
-            throw new BadImageFormatException($"Expected exactly one module in '{path}'.");
+            throw WellKnownProjectionWriterExceptions.MalformedWinmd(path);
         }
         _modules.Add(module);
         string moduleFilePath = path;
